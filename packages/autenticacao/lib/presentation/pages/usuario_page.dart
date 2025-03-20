@@ -16,63 +16,80 @@ class UsuarioPage extends StatelessWidget {
         title: const Text('Usuário'),
         backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          BlocBuilder<UsuarioBloc, UsuarioState>(
-            bloc: sl<UsuarioBloc>()
-              ..add(
-                UsuarioIniciou(
-                  idUsuario: idUsuario,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              BlocProvider(
+                create: (context) => sl<UsuarioBloc>()
+                  ..add(UsuarioIniciou(
+                    idUsuario: idUsuario,
+                  )),
+                child: BlocBuilder<UsuarioBloc, UsuarioState>(
+                  builder: (context, state) {
+                    if (state is UsuarioCarregarFalha) {
+                      return const Text('Falha ao carregar usuário');
+                    }
+                    if (state is UsuarioCarregarSucesso) {
+                      return _usuarioInfos(state.usuario);
+                    }
+                    return const SizedBox();
+                  },
                 ),
-              ),
-            builder: (context, state) {
-              if (state is UsuarioCarregarFalha) {
-                return const Text('Falha ao carregar usuário');
-              }
-              if (state is UsuarioCarregarSucesso) {
-                return _usuarioInfos(state.usuario);
-              }
-              return const SizedBox();
-            },
-          )
-        ],
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _usuarioInfos(Usuario? usuario) => Column(
-        children: [
-          const Text('Nome'),
-          TextField(
-            key: const Key('nome_page_nome_text_field'),
-            decoration: InputDecoration(
-              prefixText: usuario?.id.toString(),
-            ),
-            controller: TextEditingController.fromValue(
-              usuario == null ? null : TextEditingValue(text: usuario.nome),
-            ),
+  Widget _usuarioInfos(Usuario? usuario) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nome'),
+              TextFormField(
+                key: const Key('nome_page_nome_text_field'),
+                decoration: InputDecoration(
+                  prefixText: '${usuario?.id.toString()}  ',
+                ),
+                controller: TextEditingController.fromValue(
+                  usuario == null ? null : TextEditingValue(text: usuario.nome),
+                ),
+              ),
+              const SizedBox(
+                height: 32,
+              ),
+              const Text('Usuário'),
+              TextField(
+                readOnly: true,
+                key: const Key('usuario_page_nome_text_field'),
+                controller: TextEditingController.fromValue(
+                  usuario == null
+                      ? null
+                      : TextEditingValue(text: usuario.login),
+                ),
+              ),
+              const SizedBox(
+                height: 32,
+              ),
+              const Text('Senha'),
+              TextField(
+                readOnly: true,
+                key: const Key('usuario_page_senha_text_field'),
+                controller: TextEditingController.fromValue(
+                  usuario == null
+                      ? null
+                      : const TextEditingValue(text: '*****'),
+                ),
+              ),
+            ],
           ),
-          const Text('Usuário'),
-          TextField(
-            key: const Key('usuario_page_nome_text_field'),
-            controller: TextEditingController.fromValue(
-              usuario == null ? null : TextEditingValue(text: usuario.login),
-            ),
-          ),
-          const Text('Senha'),
-          TextField(
-            key: const Key('usuario_page_nome_text_field'),
-            controller: TextEditingController.fromValue(
-              usuario == null ? null : const TextEditingValue(text: '*****'),
-            ),
-          ),
-          const Text('Senha'),
-          TextField(
-            key: const Key('usuario_page_nome_text_field'),
-            controller: TextEditingController.fromValue(
-              usuario == null ? null : const TextEditingValue(text: '*****'),
-            ),
-          ),
-        ],
+        ),
       );
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:siv_front/main.dart' as app;
@@ -8,14 +8,14 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('fluxo de controle de usuários', () {
+    var application = app.MyApp(
+      routeToTest: '/usuarios',
+    );
     setUpAll(() async {
       await app.configs();
       await AutenticacaoUtils.logarComUsuarioDeTeste();
     });
     testWidgets('exibe usuários cadatrados', (tester) async {
-      var application = app.MyApp(
-        routeToTest: '/usuarios',
-      );
       await tester.pumpWidget(application);
 
       await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -24,17 +24,17 @@ void main() {
       expect(card, findsOneWidget);
     });
     testWidgets('abre pagina do usuário', (tester) async {
-      var application = app.MyApp(
-        routeToTest: '/usuarios',
-      );
       await tester.pumpWidget(application);
 
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      Navigator.of(application.navigatorKey.currentContext!)
+          .pushNamed('/usuarios');
+
+      await tester.pumpAndSettle(const Duration(seconds: 2));
       var developUserTest = 'apollo';
       var card = find.text(developUserTest);
       await tester.tap(card);
 
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(const Duration(seconds: 1));
 
       var nomeTextField = find.byKey(const Key('nome_page_nome_text_field'));
 

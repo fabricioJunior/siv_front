@@ -25,7 +25,13 @@ class UsuariosPage extends StatelessWidget {
               BlocBuilder<UsuariosBloc, UsuariosState>(
                 builder: (context, state) {
                   if (state is UsuariosCarregarEmProgresso) {
-                    return const CircularProgressIndicator.adaptive();
+                    return const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator.adaptive(),
+                      ],
+                    );
                   }
                   if (state is UsuariosCarregarFalha) {
                     return const Text('Falha ao carregar usuários');

@@ -1,0 +1,32 @@
+name: core
+description: "Fornece padronização de métodos dos pacotes da aplicação"
+version: 0.0.1
+homepage:
+isar_version: ^3.1.0+1 # define the version to be used
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1 # 
+  path_provider: ^2.1.5
+  equatable: ^2.0.7
+  mockito: ^5.4.4
+  flutter_bloc: ^9.0.0
+  bloc_test: ^10.0.0
+  get_it: ^8.0.3
+  http_interceptor: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: any
+  
+
+flutter:

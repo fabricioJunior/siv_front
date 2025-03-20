@@ -1,0 +1,14 @@
+[
+    {
+      "criadoEm": "2025-02-17T17:21:40.739",
+      "atualizadoEm": "2025-02-17T17:21:40.739",
+      "id": 0,
+      "usuario": "string",
+      "nome": "string",
+      "situacao": "string",
+      "tipo": "padrao",
+      "terminais": [
+        "string"
+      ]
+    }
+  ]

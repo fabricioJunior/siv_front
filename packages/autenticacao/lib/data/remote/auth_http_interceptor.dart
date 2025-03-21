@@ -1,21 +1,20 @@
 import 'dart:async';
 
+import 'package:autenticacao/domain/data/repositories/i_token_repository.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 
-typedef GetToken = Future<String>;
-
 class AuthHttpInterceptor extends InterceptorContract {
-  final GetToken getToken;
+  final ITokenRepository tokenRepository;
 
-  AuthHttpInterceptor(this.getToken);
+  AuthHttpInterceptor(this.tokenRepository);
 
   @override
   FutureOr<BaseRequest> interceptRequest({required BaseRequest request}) async {
     if (request.url.toString().contains('v1/auth/signIn')) {
       return request;
     }
-    var token = await getToken;
-    request.headers['Authorization'] = 'Bearer $token';
+    var token = await tokenRepository.recuperarToken();
+    request.headers['Authorization'] = 'Bearer ${token!.jwtToken}';
     return request;
   }
 

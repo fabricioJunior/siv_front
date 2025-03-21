@@ -1,7 +1,8 @@
-import 'package:autenticacao/data/remote/dtos/usuario_dto.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:autenticacao/domain/models/usuario.dart';
 import 'package:core/remote_data_sourcers.dart';
+
+import 'dtos/usuario_dto.dart';
 
 class UsuariosRemoteDatasource extends RemoteDataSourceBase
     implements IUsuariosRemoteDataSource {
@@ -24,7 +25,7 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
     var response = await get();
 
     List<dynamic> body = response.body;
-    return body.map((json) => UsuarioDto.fromJson(json).toModel()).toList();
+    return body.map((json) => UsuarioDto.fromJson(json)).toList();
   }
 
   @override
@@ -34,4 +35,14 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
 
   @override
   String get path => 'v1/usuarios/{id}';
+}
+
+extension ToDto on Usuario {
+  UsuarioDto toDto() => UsuarioDto(
+        id: id,
+        login: login,
+        nome: nome,
+        tipo: tipo,
+        senha: senha,
+      );
 }

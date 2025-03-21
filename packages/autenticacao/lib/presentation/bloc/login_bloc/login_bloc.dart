@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
+import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 
@@ -9,9 +10,11 @@ part 'login_event.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final CriarTokenDeAutenticacao _criarTokenDeAutenticacao;
+  final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
 
   LoginBloc(
     this._criarTokenDeAutenticacao,
+    this._recuperarUsuarioDaSessao,
   ) : super(const LoginInicial()) {
     on<LoginAdicionouUsuario>(_onUsuarioAdicionoUsuario);
     on<LoginAdicionouSenha>(_onLoginAdicionouSenha);
@@ -42,6 +45,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         usuario: state.usuario ?? '',
         senha: state.senha ?? '',
       );
+      var usuario = await _recuperarUsuarioDaSessao.call();
       if (token == null) {
         emit(LoginAutenticarFalha(state, erro: 'Usuário ou senha incorretos'));
         return;

@@ -17,43 +17,38 @@ const UsuarioDtoSchema = CollectionSchema(
   name: r'UsuarioDto',
   id: -1363298923562748804,
   properties: {
-    r'atualizadoEm': PropertySchema(
-      id: 0,
-      name: r'atualizadoEm',
-      type: IsarType.dateTime,
-    ),
-    r'criadoEm': PropertySchema(
-      id: 1,
-      name: r'criadoEm',
-      type: IsarType.dateTime,
-    ),
     r'hashCode': PropertySchema(
-      id: 2,
+      id: 0,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 3,
+      id: 1,
       name: r'id',
       type: IsarType.long,
     ),
     r'login': PropertySchema(
-      id: 4,
+      id: 2,
       name: r'login',
       type: IsarType.string,
     ),
     r'nome': PropertySchema(
-      id: 5,
+      id: 3,
       name: r'nome',
       type: IsarType.string,
     ),
+    r'senha': PropertySchema(
+      id: 4,
+      name: r'senha',
+      type: IsarType.string,
+    ),
     r'stringify': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'stringify',
       type: IsarType.bool,
     ),
     r'tipo': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'tipo',
       type: IsarType.string,
     )
@@ -80,6 +75,12 @@ int _usuarioDtoEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.login.length * 3;
   bytesCount += 3 + object.nome.length * 3;
+  {
+    final value = object.senha;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.tipo.length * 3;
   return bytesCount;
 }
@@ -90,14 +91,13 @@ void _usuarioDtoSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.atualizadoEm);
-  writer.writeDateTime(offsets[1], object.criadoEm);
-  writer.writeLong(offsets[2], object.hashCode);
-  writer.writeLong(offsets[3], object.id);
-  writer.writeString(offsets[4], object.login);
-  writer.writeString(offsets[5], object.nome);
-  writer.writeBool(offsets[6], object.stringify);
-  writer.writeString(offsets[7], object.tipo);
+  writer.writeLong(offsets[0], object.hashCode);
+  writer.writeLong(offsets[1], object.id);
+  writer.writeString(offsets[2], object.login);
+  writer.writeString(offsets[3], object.nome);
+  writer.writeString(offsets[4], object.senha);
+  writer.writeBool(offsets[5], object.stringify);
+  writer.writeString(offsets[6], object.tipo);
 }
 
 UsuarioDto _usuarioDtoDeserialize(
@@ -107,12 +107,11 @@ UsuarioDto _usuarioDtoDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = UsuarioDto(
-    atualizadoEm: reader.readDateTime(offsets[0]),
-    criadoEm: reader.readDateTime(offsets[1]),
-    id: reader.readLong(offsets[3]),
-    login: reader.readString(offsets[4]),
-    nome: reader.readString(offsets[5]),
-    tipo: reader.readString(offsets[7]),
+    id: reader.readLong(offsets[1]),
+    login: reader.readString(offsets[2]),
+    nome: reader.readString(offsets[3]),
+    senha: reader.readStringOrNull(offsets[4]),
+    tipo: reader.readString(offsets[6]),
   );
   return object;
 }
@@ -125,20 +124,18 @@ P _usuarioDtoDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
-    case 6:
       return (reader.readBoolOrNull(offset)) as P;
-    case 7:
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -238,116 +235,6 @@ extension UsuarioDtoQueryWhere
 
 extension UsuarioDtoQueryFilter
     on QueryBuilder<UsuarioDto, UsuarioDto, QFilterCondition> {
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-      atualizadoEmEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'atualizadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-      atualizadoEmGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'atualizadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-      atualizadoEmLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'atualizadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-      atualizadoEmBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'atualizadoEm',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> criadoEmEqualTo(
-      DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'criadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-      criadoEmGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'criadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> criadoEmLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'criadoEm',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> criadoEmBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'criadoEm',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> dataBaseIdEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -771,6 +658,153 @@ extension UsuarioDtoQueryFilter
     });
   }
 
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'senha',
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'senha',
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'senha',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'senha',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'senha',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> senhaIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'senha',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
+      senhaIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'senha',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
       stringifyIsNull() {
     return QueryBuilder.apply(this, (query) {
@@ -938,30 +972,6 @@ extension UsuarioDtoQueryLinks
 
 extension UsuarioDtoQuerySortBy
     on QueryBuilder<UsuarioDto, UsuarioDto, QSortBy> {
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByAtualizadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'atualizadoEm', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByAtualizadoEmDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'atualizadoEm', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByCriadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'criadoEm', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByCriadoEmDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'criadoEm', Sort.desc);
-    });
-  }
-
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hashCode', Sort.asc);
@@ -1010,6 +1020,18 @@ extension UsuarioDtoQuerySortBy
     });
   }
 
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortBySenha() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'senha', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortBySenhaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'senha', Sort.desc);
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -1037,30 +1059,6 @@ extension UsuarioDtoQuerySortBy
 
 extension UsuarioDtoQuerySortThenBy
     on QueryBuilder<UsuarioDto, UsuarioDto, QSortThenBy> {
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByAtualizadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'atualizadoEm', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByAtualizadoEmDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'atualizadoEm', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByCriadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'criadoEm', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByCriadoEmDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'criadoEm', Sort.desc);
-    });
-  }
-
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByDataBaseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataBaseId', Sort.asc);
@@ -1121,6 +1119,18 @@ extension UsuarioDtoQuerySortThenBy
     });
   }
 
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenBySenha() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'senha', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenBySenhaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'senha', Sort.desc);
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -1148,18 +1158,6 @@ extension UsuarioDtoQuerySortThenBy
 
 extension UsuarioDtoQueryWhereDistinct
     on QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> {
-  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByAtualizadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'atualizadoEm');
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByCriadoEm() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'criadoEm');
-    });
-  }
-
   QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hashCode');
@@ -1186,6 +1184,13 @@ extension UsuarioDtoQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctBySenha(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'senha', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'stringify');
@@ -1205,18 +1210,6 @@ extension UsuarioDtoQueryProperty
   QueryBuilder<UsuarioDto, int, QQueryOperations> dataBaseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataBaseId');
-    });
-  }
-
-  QueryBuilder<UsuarioDto, DateTime, QQueryOperations> atualizadoEmProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'atualizadoEm');
-    });
-  }
-
-  QueryBuilder<UsuarioDto, DateTime, QQueryOperations> criadoEmProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'criadoEm');
     });
   }
 
@@ -1241,6 +1234,12 @@ extension UsuarioDtoQueryProperty
   QueryBuilder<UsuarioDto, String, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
+    });
+  }
+
+  QueryBuilder<UsuarioDto, String?, QQueryOperations> senhaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'senha');
     });
   }
 

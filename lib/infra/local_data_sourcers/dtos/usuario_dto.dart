@@ -5,13 +5,7 @@ import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 part 'usuario_dto.g.dart';
 
 @Collection(ignore: {'props'})
-class UsuarioDto implements IsarDto, Usuario {
-  @override
-  final DateTime atualizadoEm;
-
-  @override
-  final DateTime criadoEm;
-
+class UsuarioDto with Usuario implements IsarDto {
   @override
   final int id;
 
@@ -27,16 +21,19 @@ class UsuarioDto implements IsarDto, Usuario {
   @override
   Id get dataBaseId => id;
 
-  const UsuarioDto(
-      {required this.atualizadoEm,
-      required this.criadoEm,
-      required this.id,
-      required this.login,
-      required this.nome,
-      required this.tipo});
+  @override
+  final String? senha;
+
+  const UsuarioDto({
+    required this.id,
+    required this.login,
+    required this.nome,
+    required this.tipo,
+    required this.senha,
+  });
 
   @override
-  List<Object?> get props => [id, nome, tipo, criadoEm, atualizadoEm, login];
+  List<Object?> get props => [id, nome, tipo, login];
 
   @override
   bool? get stringify => true;

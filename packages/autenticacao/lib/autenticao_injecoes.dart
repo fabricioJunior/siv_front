@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:autenticacao/data/local/dtos/token_dto.dart';
 import 'package:autenticacao/data/local_data_sources.dart';
-import 'package:autenticacao/data/remote/usuarios_remote_datasource.dart';
 import 'package:autenticacao/data/remote_data_sourcers.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
-import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
@@ -16,9 +14,10 @@ import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuario_bloc/usuario_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuarios_bloc/usuarios_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
-import 'package:core/http/http_implementacao/auth_http_interceptor.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/remote_data_sourcers.dart';
+import 'package:http/http.dart';
 
 import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
 import 'domain/data/repositories/i_token_repository.dart';
@@ -34,6 +33,7 @@ void resolverDependenciasAutenticacao() {
 void _presentation() {
   sl.registerFactory<LoginBloc>(
     () => LoginBloc(
+      sl(),
       sl(),
     ),
   );
@@ -81,6 +81,12 @@ void _usesCases() {
       usuariosRepository: sl(),
     ),
   );
+
+  sl.registerFactory<SalvarUsuario>(
+    () => SalvarUsuario(
+      usuariosRepository: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -109,28 +115,36 @@ void _localData() {
 void _remoteData() {
   sl.registerFactory<ITokenRemoteDataSource>(
     () => TokenRemoteDatasource(
-      informacoesParaRequest: sl(),
+      informacoesParaRequest: _InformacoesParaPrimeiraRequest(
+        httpClient: HttpSource(
+          client: Client(),
+        ),
+        uriBase: Uri.parse(
+          'https://apollo-api-stg.coralcloud.app',
+        ),
+      ),
     ),
   );
-
-  sl.registerFactory<IUsuariosRemoteDataSource>(
-    () => UsuariosRemoteDatasource(
-      informacoesParaRequest: sl(),
-    ),
-  );
-
-  sl.registerFactory<GetToken>(getToken);
 }
 
-Future<String> getToken() async {
-  if (sl.isRegistered<ITokenRepository>()) {
-    var tokenRepository = sl<ITokenRepository>();
-    var token = await tokenRepository.recuperarToken();
-
-    return token!.jwtToken;
-  }
-  return '';
+class _InformacoesParaPrimeiraRequest extends IInformacoesParaRequests {
+  _InformacoesParaPrimeiraRequest({
+    required super.httpClient,
+    required super.uriBase,
+  });
 }
+
+// Future<String> getToken() async {
+//   if (sl.isRegistered<ITokenRepository>()) {
+//     var tokenRepository = sl<ITokenRepository>();
+//     var token = await tokenRepository.recuperarToken();
+//     if (token == null) {
+//       return '';
+//     }
+//     return token.jwtToken;
+//   }
+//   return '';
+// }
 
 Future<Isar> _getIsar({bool? isSyncData = false}) async {
   var instanceName = '${isSyncData ?? false ? 'sync_' : ''} autenticacao';
@@ -149,7 +163,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
         schemas,
         directory: directory.path,
         name: instanceName,
-        inspector: false,
+        inspector: true,
       );
   return isar;
 }

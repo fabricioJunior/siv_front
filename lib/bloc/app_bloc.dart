@@ -14,13 +14,15 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final Deslogar _deslogar;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
 
+  late StreamSubscription<Token> _onAutenticacoSubscription;
   AppBloc(
     this._estaAutenticado,
     this._onAutenticado,
     this._deslogar,
     this._recuperarUsuarioDaSessao,
   ) : super(const AppState()) {
-    _onAutenticado.call().listen((token) => add(AppAutenticou()));
+    _onAutenticacoSubscription =
+        _onAutenticado.call().listen((token) => add(AppAutenticou()));
 
     on<AppIniciou>(_onAppIniciou);
     on<AppAutenticou>(_onAppAutenticou);
@@ -59,7 +61,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   FutureOr<void> _onAppIniciou(AppIniciou event, Emitter<AppState> emit) async {
     try {
       var estaAutenticado = await _estaAutenticado.call();
-      var usuarioDaSessao = await _recuperarUsuarioDaSessao();
+      var usuarioDaSessao =
+          estaAutenticado ? await _recuperarUsuarioDaSessao() : null;
       emit(
         state.copyWith(
           usuarioDaSessao: usuarioDaSessao,
@@ -71,5 +74,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     } catch (e, s) {
       addError(e, s);
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _onAutenticacoSubscription.cancel();
+    return super.close();
   }
 }

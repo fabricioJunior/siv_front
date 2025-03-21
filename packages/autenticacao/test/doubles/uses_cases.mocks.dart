@@ -13,6 +13,7 @@ import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart'
     as _i3;
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart' as _i8;
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart' as _i6;
+import 'package:autenticacao/domain/usecases/salvar_usuario.dart' as _i9;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -109,4 +110,22 @@ class MockRecuperarUsuario extends _i1.Mock implements _i8.RecuperarUsuario {
         ),
         returnValue: _i4.Future<_i7.Usuario?>.value(),
       ) as _i4.Future<_i7.Usuario?>);
+}
+
+/// A class which mocks [SalvarUsuario].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSalvarUsuario extends _i1.Mock implements _i9.SalvarUsuario {
+  MockSalvarUsuario() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.IUsuariosRepository get usuariosRepository => (super.noSuchMethod(
+        Invocation.getter(#usuariosRepository),
+        returnValue: _FakeIUsuariosRepository_0(
+          this,
+          Invocation.getter(#usuariosRepository),
+        ),
+      ) as _i2.IUsuariosRepository);
 }

@@ -43,8 +43,8 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
   Future<void> put(dynamic dto) async {
     var isarInstace = await getIsar();
 
-    await isarInstace.writeTxn(() {
-      return isarInstace.collection<Dto>().put(dto is Dto ? dto : toDto(dto));
+    await isarInstace.writeTxn(() async {
+      await isarInstace.collection<Dto>().put(dto is Dto ? dto : toDto(dto));
     });
   }
 

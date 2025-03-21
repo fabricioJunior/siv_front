@@ -20,11 +20,5 @@ Usuario fakeUsuario({
   String nome = 'nome',
   String tipo = 'padrao',
 }) =>
-    Usuario(
-      id: id,
-      criadoEm: criadoEm ?? DateTime.now(),
-      atualizadoEm: atualizadoEm ?? DateTime.now(),
-      login: login,
-      nome: nome,
-      tipo: tipo,
-    );
+    Usuario.instance(
+        id: id, login: login, nome: nome, tipo: tipo, senha: 'senha');

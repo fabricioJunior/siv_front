@@ -13,6 +13,7 @@ class UsuariosRepository implements IUsuariosRepository {
     required this.usuarioDaSessaoRemoteDataSource,
     required this.usuarioDaSessaoLocalDataSource,
   });
+
   @override
   Future<Iterable<Usuario>> getUsuarios() {
     return usuariosRemoteDataSource.getUsuarios();
@@ -44,5 +45,10 @@ class UsuariosRepository implements IUsuariosRepository {
   @override
   Future<void> salvarUsuarioDaSessao(Usuario usuario) {
     return usuarioDaSessaoLocalDataSource.put(usuario);
+  }
+
+  @override
+  Future<void> salvarUsuario(Usuario usuario) {
+    return usuariosRemoteDataSource.postUsuario(usuario);
   }
 }

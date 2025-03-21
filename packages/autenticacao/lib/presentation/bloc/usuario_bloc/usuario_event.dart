@@ -7,3 +7,19 @@ class UsuarioIniciou extends UsuarioEvent {
 
   UsuarioIniciou({this.idUsuario});
 }
+
+class UsuarioEditou extends UsuarioEvent {
+  final String? nome;
+  final String? login;
+  final String? senha;
+  final String? tipo;
+
+  UsuarioEditou({
+    this.nome,
+    this.login,
+    this.senha,
+    this.tipo,
+  });
+}
+
+class UsuarioSalvou extends UsuarioEvent {}

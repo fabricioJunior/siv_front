@@ -17,6 +17,7 @@ dependencies:
     path: ../core
   mockito: ^5.4.4
   json_annotation: ^4.9.0
+  http: ^1.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

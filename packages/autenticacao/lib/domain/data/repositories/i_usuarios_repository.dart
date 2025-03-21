@@ -14,4 +14,6 @@ abstract class IUsuariosRepository {
   Future<void> salvarUsuarioDaSessao(Usuario usuario);
 
   Future<void> apagarUsuarioDaSessao();
+
+  Future<void> salvarUsuario(Usuario usuario);
 }

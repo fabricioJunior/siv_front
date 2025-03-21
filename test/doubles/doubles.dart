@@ -8,11 +8,10 @@ Usuario fakeUsuario({
   String nome = 'nome do usuario',
   String tipo = 'tipo',
 }) =>
-    Usuario(
+    Usuario.instance(
       id: id,
-      criadoEm: criadoEm ?? DateTime(2020),
-      atualizadoEm: atualizadoEm ?? DateTime(2020),
       login: login,
       nome: nome,
       tipo: tipo,
+      senha: 'senha',
     );

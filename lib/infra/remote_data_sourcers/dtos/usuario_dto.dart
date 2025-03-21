@@ -4,13 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'usuario_dto.g.dart';
 
 @JsonSerializable()
-class UsuarioDto implements Usuario {
-  @override
-  final DateTime atualizadoEm;
-
-  @override
-  final DateTime criadoEm;
-
+class UsuarioDto with Usuario {
   @override
   final int id;
 
@@ -26,12 +20,11 @@ class UsuarioDto implements Usuario {
   final String tipo;
 
   UsuarioDto({
-    required this.atualizadoEm,
-    required this.criadoEm,
     required this.id,
     required this.login,
     required this.nome,
     required this.tipo,
+    this.senha,
   });
 
   Map<String, dynamic> toJson() => _$UsuarioDtoToJson(this);
@@ -51,4 +44,8 @@ class UsuarioDto implements Usuario {
   @override
   @JsonKey(includeFromJson: true)
   bool? get stringify => true;
+
+  @override
+  @JsonKey(includeFromJson: false)
+  final String? senha;
 }

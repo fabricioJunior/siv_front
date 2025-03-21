@@ -38,6 +38,52 @@ void main() {
         UsuarioCarregarSucesso(usuario: usuario),
       ],
     );
+
+    blocTest<UsuarioBloc, UsuarioState>(
+      'emite estado de progresso para edição de dados do usuário',
+      build: () {
+        return usuarioBloc;
+      },
+      setUp: () {},
+      seed: () => UsuarioCarregarSucesso(usuario: usuario),
+      act: (bloc) => bloc.add(UsuarioEditou()),
+      expect: () => [
+        UsuarioEditarEmProgresso(usuario),
+      ],
+    );
+    blocTest<UsuarioBloc, UsuarioState>(
+      'emite estado de progresso para edição de dados do usuário',
+      build: () {
+        return usuarioBloc;
+      },
+      setUp: () {},
+      seed: () => UsuarioNaoInicializado(),
+      act: (bloc) => bloc.add(
+        UsuarioIniciou(),
+      ),
+      expect: () => [
+        UsuarioEditarEmProgresso.empty(),
+      ],
+    );
+    blocTest<UsuarioBloc, UsuarioState>(
+      'emite estado de progresso ao realizar edição de atributo do usuário',
+      build: () {
+        return usuarioBloc;
+      },
+      setUp: () {},
+      seed: () => UsuarioEditarEmProgresso.empty(),
+      act: (bloc) => bloc.add(UsuarioEditou(
+          nome: 'nome editado',
+          login: 'login editado',
+          senha: 'senha editada')),
+      expect: () => [
+        UsuarioEditarEmProgresso.empty(
+          nome: 'nome editado',
+          login: 'login editado',
+          senha: 'senha editada',
+        ),
+      ],
+    );
   });
 }
 

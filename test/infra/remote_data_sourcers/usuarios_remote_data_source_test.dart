@@ -1,3 +1,4 @@
+import 'package:autenticacao/models.dart';
 import 'package:core/http/i_http_source.dart';
 import 'package:core/http/test/informaoces_para_requests_fake.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +33,7 @@ void main() {
         id: 0,
         nome: 'string',
         login: 'string',
-        tipo: 'padrao',
+        tipo: TipoUsuario.padrao,
       );
 
       _setupGetUsuarios();

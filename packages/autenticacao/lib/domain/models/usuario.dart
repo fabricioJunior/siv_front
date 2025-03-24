@@ -4,7 +4,7 @@ mixin Usuario implements EquatableMixin {
   int get id;
   String get login;
   String get nome;
-  String get tipo;
+  TipoUsuario get tipo;
   String? get senha;
 
   Usuario copyWith({
@@ -24,7 +24,7 @@ mixin Usuario implements EquatableMixin {
     required int id,
     required String login,
     required String nome,
-    required String tipo,
+    required TipoUsuario tipo,
     required String? senha,
   }) =>
       _Usuario(
@@ -34,6 +34,16 @@ mixin Usuario implements EquatableMixin {
         tipo: tipo,
         senha: senha,
       );
+}
+
+enum TipoUsuario {
+  padrao(nome: 'Padrão'),
+  administrador(nome: 'Administrador'),
+  sysadmin(nome: 'Sysadmin');
+
+  final String nome;
+
+  const TipoUsuario({required this.nome});
 }
 
 class _Usuario extends Equatable with Usuario {
@@ -63,7 +73,7 @@ class _Usuario extends Equatable with Usuario {
   final String nome;
 
   @override
-  final String tipo;
+  final TipoUsuario tipo;
 
   @override
   final String? senha;

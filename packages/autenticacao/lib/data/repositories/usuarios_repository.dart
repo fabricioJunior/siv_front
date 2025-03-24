@@ -48,7 +48,33 @@ class UsuariosRepository implements IUsuariosRepository {
   }
 
   @override
-  Future<void> salvarUsuario(Usuario usuario) {
-    return usuariosRemoteDataSource.postUsuario(usuario);
+  Future<Usuario> salvarUsuario({
+    int? id,
+    String? login,
+    required String nome,
+    String? senha,
+    required TipoUsuario tipo,
+    String? usuario,
+    required bool ativo,
+  }) {
+    if (id != null) {
+      return usuariosRemoteDataSource.putUsuario(
+        id: id,
+        login: login,
+        nome: nome,
+        senha: senha,
+        tipo: tipo,
+        ativo: ativo,
+      );
+    }
+    return usuariosRemoteDataSource.postUsuario(
+      id: id,
+      login: login,
+      nome: nome,
+      senha: senha,
+      tipo: tipo,
+      ativo: ativo,
+      usuario: usuario!,
+    );
   }
 }

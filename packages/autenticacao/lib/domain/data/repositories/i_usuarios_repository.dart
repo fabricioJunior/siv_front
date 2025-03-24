@@ -15,5 +15,13 @@ abstract class IUsuariosRepository {
 
   Future<void> apagarUsuarioDaSessao();
 
-  Future<void> salvarUsuario(Usuario usuario);
+  Future<Usuario> salvarUsuario({
+    int? id,
+    String? login,
+    required String nome,
+    String? usuario,
+    String? senha,
+    required TipoUsuario tipo,
+    required bool ativo,
+  });
 }

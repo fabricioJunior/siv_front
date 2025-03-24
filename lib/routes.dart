@@ -18,4 +18,4 @@ Map<String, Widget Function(BuildContext)> routes = {
 };
 
 Map<String, dynamic> args(BuildContext context) =>
-    ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};

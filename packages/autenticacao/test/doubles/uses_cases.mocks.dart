@@ -3,17 +3,19 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart'
     as _i2;
-import 'package:autenticacao/domain/models/token.dart' as _i5;
-import 'package:autenticacao/domain/models/usuario.dart' as _i7;
+import 'package:autenticacao/domain/models/token.dart' as _i6;
+import 'package:autenticacao/domain/models/usuario.dart' as _i3;
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart'
-    as _i3;
-import 'package:autenticacao/domain/usecases/recuperar_usuario.dart' as _i8;
-import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart' as _i6;
-import 'package:autenticacao/domain/usecases/salvar_usuario.dart' as _i9;
+    as _i4;
+import 'package:autenticacao/domain/usecases/recuperar_usuario.dart' as _i7;
+import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
+    as _i10;
+import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart' as _i9;
+import 'package:autenticacao/domain/usecases/salvar_usuario.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -40,17 +42,27 @@ class _FakeIUsuariosRepository_0 extends _i1.SmartFake
         );
 }
 
+class _FakeUsuario_1 extends _i1.SmartFake implements _i3.Usuario {
+  _FakeUsuario_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [CriarTokenDeAutenticacao].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCriarTokenDeAutenticacao extends _i1.Mock
-    implements _i3.CriarTokenDeAutenticacao {
+    implements _i4.CriarTokenDeAutenticacao {
   MockCriarTokenDeAutenticacao() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i5.Token?> call({
+  _i5.Future<_i6.Token?> call({
     required String? usuario,
     required String? senha,
   }) =>
@@ -63,32 +75,14 @@ class MockCriarTokenDeAutenticacao extends _i1.Mock
             #senha: senha,
           },
         ),
-        returnValue: _i4.Future<_i5.Token?>.value(),
-      ) as _i4.Future<_i5.Token?>);
-}
-
-/// A class which mocks [RecuperarUsuarios].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockRecuperarUsuarios extends _i1.Mock implements _i6.RecuperarUsuarios {
-  MockRecuperarUsuarios() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i4.Future<Iterable<_i7.Usuario>> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i4.Future<Iterable<_i7.Usuario>>.value(<_i7.Usuario>[]),
-      ) as _i4.Future<Iterable<_i7.Usuario>>);
+        returnValue: _i5.Future<_i6.Token?>.value(),
+      ) as _i5.Future<_i6.Token?>);
 }
 
 /// A class which mocks [RecuperarUsuario].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockRecuperarUsuario extends _i1.Mock implements _i8.RecuperarUsuario {
+class MockRecuperarUsuario extends _i1.Mock implements _i7.RecuperarUsuario {
   MockRecuperarUsuario() {
     _i1.throwOnMissingStub(this);
   }
@@ -103,19 +97,19 @@ class MockRecuperarUsuario extends _i1.Mock implements _i8.RecuperarUsuario {
       ) as _i2.IUsuariosRepository);
 
   @override
-  _i4.Future<_i7.Usuario?> call(int? id) => (super.noSuchMethod(
+  _i5.Future<_i3.Usuario?> call(int? id) => (super.noSuchMethod(
         Invocation.method(
           #call,
           [id],
         ),
-        returnValue: _i4.Future<_i7.Usuario?>.value(),
-      ) as _i4.Future<_i7.Usuario?>);
+        returnValue: _i5.Future<_i3.Usuario?>.value(),
+      ) as _i5.Future<_i3.Usuario?>);
 }
 
 /// A class which mocks [SalvarUsuario].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSalvarUsuario extends _i1.Mock implements _i9.SalvarUsuario {
+class MockSalvarUsuario extends _i1.Mock implements _i8.SalvarUsuario {
   MockSalvarUsuario() {
     _i1.throwOnMissingStub(this);
   }
@@ -128,4 +122,95 @@ class MockSalvarUsuario extends _i1.Mock implements _i9.SalvarUsuario {
           Invocation.getter(#usuariosRepository),
         ),
       ) as _i2.IUsuariosRepository);
+
+  @override
+  _i5.Future<_i3.Usuario> call({
+    required _i3.Usuario? usuario,
+    int? idUsuario,
+    required String? nome,
+    String? login,
+    String? senha,
+    required _i3.TipoUsuario? tipo,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #usuario: usuario,
+            #idUsuario: idUsuario,
+            #nome: nome,
+            #login: login,
+            #senha: senha,
+            #tipo: tipo,
+          },
+        ),
+        returnValue: _i5.Future<_i3.Usuario>.value(_FakeUsuario_1(
+          this,
+          Invocation.method(
+            #call,
+            [],
+            {
+              #usuario: usuario,
+              #idUsuario: idUsuario,
+              #nome: nome,
+              #login: login,
+              #senha: senha,
+              #tipo: tipo,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i3.Usuario>);
+}
+
+/// A class which mocks [RecuperarUsuarios].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarUsuarios extends _i1.Mock implements _i9.RecuperarUsuarios {
+  MockRecuperarUsuarios() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<Iterable<_i3.Usuario>> call() => (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+        ),
+        returnValue: _i5.Future<Iterable<_i3.Usuario>>.value(<_i3.Usuario>[]),
+      ) as _i5.Future<Iterable<_i3.Usuario>>);
+}
+
+/// A class which mocks [RecuperarUsuarioDaSessao].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarUsuarioDaSessao extends _i1.Mock
+    implements _i10.RecuperarUsuarioDaSessao {
+  MockRecuperarUsuarioDaSessao() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.IUsuariosRepository get usuariosRepository => (super.noSuchMethod(
+        Invocation.getter(#usuariosRepository),
+        returnValue: _FakeIUsuariosRepository_0(
+          this,
+          Invocation.getter(#usuariosRepository),
+        ),
+      ) as _i2.IUsuariosRepository);
+
+  @override
+  _i5.Future<_i3.Usuario> call() => (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+        ),
+        returnValue: _i5.Future<_i3.Usuario>.value(_FakeUsuario_1(
+          this,
+          Invocation.method(
+            #call,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i3.Usuario>);
 }

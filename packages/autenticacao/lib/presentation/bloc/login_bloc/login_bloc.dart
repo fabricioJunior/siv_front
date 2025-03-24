@@ -45,7 +45,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         usuario: state.usuario ?? '',
         senha: state.senha ?? '',
       );
-      var usuario = await _recuperarUsuarioDaSessao.call();
+
+      await _recuperarUsuarioDaSessao.call();
       if (token == null) {
         emit(LoginAutenticarFalha(state, erro: 'Usuário ou senha incorretos'));
         return;

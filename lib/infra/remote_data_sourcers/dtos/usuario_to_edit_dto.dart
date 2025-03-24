@@ -1,54 +1,37 @@
 import 'package:autenticacao/models.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'usuario_dto.g.dart';
+part 'usuario_to_edit_dto.g.dart';
 
-@JsonSerializable()
-class UsuarioDto with Usuario {
-  @override
-  final int id;
+@JsonSerializable(includeIfNull: false)
+class UsarioToEditDto {
+  final int? id;
 
-  @override
-  @override
-  @JsonKey(name: 'usuario')
-  final String login;
+  @JsonKey(name: 'usuario', includeToJson: true)
+  final String? login;
 
-  @override
   final String nome;
 
   @JsonKey(fromJson: _tipoUsuarioFromJson, toJson: _tipoUsuarioToJson)
-  @override
   final TipoUsuario tipo;
 
-  UsuarioDto({
+  UsarioToEditDto({
     required this.id,
     required this.login,
     required this.nome,
     required this.tipo,
+    required this.situacao,
     this.senha,
   });
 
-  Map<String, dynamic> toJson() => _$UsuarioDtoToJson(this);
+  Map<String, dynamic> toJson() => _$UsarioToEditDtoToJson(this);
 
-  factory UsuarioDto.fromJson(Map<String, dynamic> json) =>
-      _$UsuarioDtoFromJson(json);
+  // factory UsarioToEditDto.fromJson(Map<String, dynamic> json) =>
+  //     _$UsuarioDtoFromJson(json);
 
-  @override
-  @override
-  @JsonKey(includeFromJson: true)
-  List<Object?> get props => [
-        id,
-        login,
-        nome,
-      ];
-
-  @override
-  @JsonKey(includeFromJson: true)
-  bool? get stringify => true;
-
-  @override
-  @JsonKey(includeFromJson: false)
   final String? senha;
+
+  final String situacao;
 
   static String _tipoUsuarioToJson(TipoUsuario tipo) {
     switch (tipo) {

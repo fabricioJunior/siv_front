@@ -12,7 +12,7 @@ class UsuarioEditou extends UsuarioEvent {
   final String? nome;
   final String? login;
   final String? senha;
-  final String? tipo;
+  final TipoUsuario? tipo;
 
   UsuarioEditou({
     this.nome,

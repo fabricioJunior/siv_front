@@ -5,6 +5,10 @@ abstract class IHttpSource {
     required dynamic body,
     required Uri uri,
   });
+  Future<IHttpResponse> put({
+    required dynamic body,
+    required Uri uri,
+  });
 
   Future<IHttpResponse> get({
     required Uri uri,

@@ -12,13 +12,18 @@ Token fakeToken({
       dataDeExpiracao: DateTime(2024, 05, 1),
     );
 
-Usuario fakeUsuario({
-  int id = 0,
-  DateTime? criadoEm,
-  DateTime? atualizadoEm,
-  String login = 'login',
-  String nome = 'nome',
-  String tipo = 'padrao',
-}) =>
+Usuario fakeUsuario(
+        {int id = 0,
+        DateTime? criadoEm,
+        DateTime? atualizadoEm,
+        String login = 'login',
+        String nome = 'nome',
+        TipoUsuario tipo = TipoUsuario.sysadmin,
+        String senha = 'senha'}) =>
     Usuario.instance(
-        id: id, login: login, nome: nome, tipo: tipo, senha: 'senha');
+      id: id,
+      login: login,
+      nome: nome,
+      tipo: tipo,
+      senha: senha,
+    );

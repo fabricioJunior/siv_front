@@ -6,7 +6,7 @@ Usuario fakeUsuario({
   DateTime? atualizadoEm,
   String login = 'login',
   String nome = 'nome do usuario',
-  String tipo = 'tipo',
+  TipoUsuario tipo = TipoUsuario.padrao,
 }) =>
     Usuario.instance(
       id: id,

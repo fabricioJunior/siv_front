@@ -13,7 +13,7 @@ class UsuariosPage extends StatelessWidget {
     return BlocProvider<UsuariosBloc>(
       create: (context) => sl<UsuariosBloc>()..add(UsuariosIniciou()),
       child: Scaffold(
-        floatingActionButton: _newUserButton(),
+        floatingActionButton: _newUserButton(context),
         appBar: AppBar(
           title: const Text('Usuarios'),
         ),
@@ -55,31 +55,48 @@ class UsuariosPage extends StatelessWidget {
     );
   }
 
-  Widget _newUserButton() => FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.add),
+  Widget _newUserButton(BuildContext _) =>
+      BlocBuilder<UsuariosBloc, UsuariosState>(
+        builder: (context, state) {
+          return FloatingActionButton(
+            onPressed: () async {
+              await Navigator.of(context).pushNamed(
+                '/usuario',
+              );
+              // ignore: use_build_context_synchronously
+              context.read<UsuariosBloc>().add(UsuariosIniciou());
+            },
+            child: const Icon(Icons.add),
+          );
+        },
       );
 
   Widget _usuarioCard(BuildContext context, Usuario usuario) => Ink(
         child: InkWell(
-          onTap: () {
-            Navigator.of(context).pushNamed('/usuario', arguments: {
+          onTap: () async {
+            await Navigator.of(context).pushNamed('/usuario', arguments: {
               'idUsuario': usuario.id,
             });
+            // ignore: use_build_context_synchronously
+            context.read<UsuariosBloc>().add(UsuariosIniciou());
           },
           child: Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        usuario.nome,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Flexible(
+                        child: Text(
+                          usuario.nome,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                       ),
-                      Text(usuario.tipo)
+                      Text(usuario.tipo.nome)
                     ],
                   ),
                   Row(

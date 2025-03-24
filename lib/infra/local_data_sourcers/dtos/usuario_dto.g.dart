@@ -50,7 +50,8 @@ const UsuarioDtoSchema = CollectionSchema(
     r'tipo': PropertySchema(
       id: 6,
       name: r'tipo',
-      type: IsarType.string,
+      type: IsarType.byte,
+      enumMap: _UsuarioDtotipoEnumValueMap,
     )
   },
   estimateSize: _usuarioDtoEstimateSize,
@@ -81,7 +82,6 @@ int _usuarioDtoEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  bytesCount += 3 + object.tipo.length * 3;
   return bytesCount;
 }
 
@@ -97,7 +97,7 @@ void _usuarioDtoSerialize(
   writer.writeString(offsets[3], object.nome);
   writer.writeString(offsets[4], object.senha);
   writer.writeBool(offsets[5], object.stringify);
-  writer.writeString(offsets[6], object.tipo);
+  writer.writeByte(offsets[6], object.tipo.index);
 }
 
 UsuarioDto _usuarioDtoDeserialize(
@@ -111,7 +111,8 @@ UsuarioDto _usuarioDtoDeserialize(
     login: reader.readString(offsets[2]),
     nome: reader.readString(offsets[3]),
     senha: reader.readStringOrNull(offsets[4]),
-    tipo: reader.readString(offsets[6]),
+    tipo: _UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+        TipoUsuario.padrao,
   );
   return object;
 }
@@ -136,11 +137,23 @@ P _usuarioDtoDeserializeProp<P>(
     case 5:
       return (reader.readBoolOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (_UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offset)] ??
+          TipoUsuario.padrao) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _UsuarioDtotipoEnumValueMap = {
+  'padrao': 0,
+  'administrador': 1,
+  'sysadmin': 2,
+};
+const _UsuarioDtotipoValueEnumMap = {
+  0: TipoUsuario.padrao,
+  1: TipoUsuario.administrador,
+  2: TipoUsuario.sysadmin,
+};
 
 Id _usuarioDtoGetId(UsuarioDto object) {
   return object.dataBaseId;
@@ -834,54 +847,46 @@ extension UsuarioDtoQueryFilter
   }
 
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+      TipoUsuario value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'tipo',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoGreaterThan(
-    String value, {
+    TipoUsuario value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'tipo',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoLessThan(
-    String value, {
+    TipoUsuario value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'tipo',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoBetween(
-    String lower,
-    String upper, {
+    TipoUsuario lower,
+    TipoUsuario upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -890,75 +895,6 @@ extension UsuarioDtoQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'tipo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'tipo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'tipo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'tipo',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'tipo',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'tipo',
-        value: '',
       ));
     });
   }
@@ -1197,10 +1133,9 @@ extension UsuarioDtoQueryWhereDistinct
     });
   }
 
-  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByTipo(
-      {bool caseSensitive = true}) {
+  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByTipo() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'tipo', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'tipo');
     });
   }
 }
@@ -1249,7 +1184,7 @@ extension UsuarioDtoQueryProperty
     });
   }
 
-  QueryBuilder<UsuarioDto, String, QQueryOperations> tipoProperty() {
+  QueryBuilder<UsuarioDto, TipoUsuario, QQueryOperations> tipoProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tipo');
     });

@@ -68,6 +68,33 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
       ) as _i4.Future<_i2.IHttpResponse>);
 
   @override
+  _i4.Future<_i2.IHttpResponse> put({
+    required dynamic body,
+    required Uri? uri,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #put,
+          [],
+          {
+            #body: body,
+            #uri: uri,
+          },
+        ),
+        returnValue: _i4.Future<_i2.IHttpResponse>.value(_FakeIHttpResponse_0(
+          this,
+          Invocation.method(
+            #put,
+            [],
+            {
+              #body: body,
+              #uri: uri,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i2.IHttpResponse>);
+
+  @override
   _i4.Future<_i2.IHttpResponse> get({required Uri? uri}) => (super.noSuchMethod(
         Invocation.method(
           #get,

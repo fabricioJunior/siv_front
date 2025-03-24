@@ -3,6 +3,7 @@ import 'package:autenticacao/domain/models/usuario.dart';
 import 'package:core/remote_data_sourcers.dart';
 
 import 'dtos/usuario_dto.dart';
+import 'dtos/usuario_to_edit_dto.dart';
 
 class UsuariosRemoteDatasource extends RemoteDataSourceBase
     implements IUsuariosRemoteDataSource {
@@ -29,12 +30,55 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
-  Future<void> postUsuario(Usuario usuario) {
-    return post(body: usuario.toDto().toJson());
+  Future<Usuario> postUsuario({
+    int? id,
+    String? login,
+    required String nome,
+    required String usuario,
+    String? senha,
+    required TipoUsuario tipo,
+    required bool ativo,
+  }) async {
+    var usuarioToPost = UsarioToEditDto(
+      id: id,
+      login: id != null ? null : login,
+      nome: nome,
+      senha: senha,
+      tipo: tipo,
+      situacao: ativo ? 'ativo' : 'invativo',
+    );
+    var response = await post(body: usuarioToPost.toJson());
+
+    return UsuarioDto.fromJson(response.body);
   }
 
   @override
   String get path => 'v1/usuarios/{id}';
+
+  @override
+  Future<Usuario> putUsuario({
+    required int id,
+    String? login,
+    required String nome,
+    String? senha,
+    required TipoUsuario tipo,
+    required bool ativo,
+  }) async {
+    var pathParameters = {'id': id};
+
+    var usuarioToPost = UsarioToEditDto(
+      id: id,
+      login: login,
+      nome: nome,
+      senha: senha,
+      tipo: tipo,
+      situacao: ativo ? 'ativo' : 'invativo',
+    );
+    var response =
+        await put(body: usuarioToPost.toJson(), pathParameters: pathParameters);
+
+    return UsuarioDto.fromJson(response.body);
+  }
 }
 
 extension ToDto on Usuario {

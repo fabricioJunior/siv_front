@@ -38,7 +38,10 @@ void _presentation() {
     ),
   );
   sl.registerFactory<UsuariosBloc>(() => UsuariosBloc(sl()));
-  sl.registerFactory<UsuarioBloc>(() => UsuarioBloc(sl()));
+  sl.registerFactory<UsuarioBloc>(() => UsuarioBloc(
+        sl(),
+        sl(),
+      ));
 }
 
 void _usesCases() {

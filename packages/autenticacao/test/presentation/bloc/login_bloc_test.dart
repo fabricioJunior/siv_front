@@ -1,6 +1,7 @@
-import 'package:autenticacao/domain/models/token.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
+import 'package:autenticacao/models.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
+import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -10,11 +11,18 @@ import '../../doubles/uses_cases.mocks.dart';
 
 final CriarTokenDeAutenticacao criarTokenDeAutenticacao =
     MockCriarTokenDeAutenticacao();
+final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
+    MockRecuperarUsuarioDaSessao();
 
 late LoginBloc loginBloc;
 void main() {
   setUp(() {
-    loginBloc = LoginBloc(criarTokenDeAutenticacao);
+    loginBloc = LoginBloc(
+      criarTokenDeAutenticacao,
+      recuperarUsuarioDaSessao,
+    );
+    var usuario = fakeUsuario();
+    _setupRecuperarUsuarioDaSessao(usuario);
   });
 
   group('login bloc', () {
@@ -118,4 +126,8 @@ void _setupFalhaCriarTokenDeAutenticacao(
 ) {
   when(criarTokenDeAutenticacao.call(usuario: usuario, senha: senha))
       .thenThrow((_) async => Exception('erro desconhecido'));
+}
+
+void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
+  when(recuperarUsuarioDaSessao.call()).thenAnswer((_) async => usuario);
 }

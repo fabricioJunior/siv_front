@@ -6,8 +6,9 @@ import 'package:mockito/annotations.dart';
 
 @GenerateMocks([
   CriarTokenDeAutenticacao,
-  RecuperarUsuarios,
   RecuperarUsuario,
   SalvarUsuario,
+  RecuperarUsuarios,
+  RecuperarUsuarioDaSessao,
 ])
 void main() {}

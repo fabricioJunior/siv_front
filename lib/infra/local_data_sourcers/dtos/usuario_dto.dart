@@ -16,7 +16,8 @@ class UsuarioDto with Usuario implements IsarDto {
   final String nome;
 
   @override
-  final String tipo;
+  @enumerated
+  final TipoUsuario tipo;
 
   @override
   Id get dataBaseId => id;

@@ -1,0 +1,45 @@
+{
+    "criadoEm": "2025-03-28T16:46:09.514Z",
+    "atualizadoEm": "2025-03-28T16:46:09.514Z",
+    "id": 123,
+    "cnpj": "cnpj",
+    "nome": "nome",
+    "nomeFantasia": "nomeFantasia",
+    "ativa": true,
+    "uf": "uf",
+    "inscricaoEstadual": "inscricao estadual",
+    "codigoDeAtividade": "codigoDeAtividade",
+    "codigoDeNaturezaJuridica": "codigoDeNaturezaJuridica",
+    "regime": "Normal",
+    "substituicaoTributaria": "NaoCalcula",
+    "suframa": "string",
+    "registroMunicipal": "registro municipal",
+    "telefone": "telefone",
+    "email": "email",
+    "data": "2025-03-28T16:46:09.514Z",
+    "terminais": {
+      "criadoEm": "2025-03-28T16:46:09.514Z",
+      "atualizadoEm": "2025-03-28T16:46:09.514Z",
+      "id": 0,
+      "empresaId": 0,
+      "nome": "string",
+      "inativo": true
+    },
+    "formasDePagamento": {
+      "criadoEm": "2025-03-28T16:46:09.514Z",
+      "atualizadoEm": "2025-03-28T16:46:09.514Z",
+      "id": 0,
+      "descricao": "string",
+      "inicio": 0,
+      "parcelas": 0,
+      "tipo": "Dinheiro",
+      "inativa": true
+    },
+    "parametros": {
+      "empresaId": 0,
+      "parametroId": "string",
+      "descricao": "string",
+      "valor": "string",
+      "depreciado": true
+    }
+}

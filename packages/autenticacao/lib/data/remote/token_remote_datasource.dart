@@ -32,3 +32,31 @@ class TokenRemoteDatasource extends RemoteDataSourceBase
     );
   }
 }
+
+class TokenDto extends IRemoteDto implements Token {
+  @override
+  final String jwtToken;
+  @override
+  final DateTime dataDeCriacao;
+  @override
+  final DateTime dataDeExpiracao;
+
+  TokenDto({
+    required this.jwtToken,
+    required this.dataDeCriacao,
+    required this.dataDeExpiracao,
+  });
+
+  @override
+  List<Object?> get props => [
+        jwtToken,
+      ];
+
+  @override
+  bool? get stringify => true;
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {};
+  }
+}

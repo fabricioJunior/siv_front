@@ -38,8 +38,7 @@ class HttpSource implements IHttpSource {
     required Uri uri,
   }) async {
     log(jsonEncode(body));
-    var response = await client.post(uri,
-        body: jsonEncode(body), headers: _defaultHeaders);
+    var response = await client.post(uri, body: body, headers: _defaultHeaders);
 
     return HttpResponse(response: response);
   }

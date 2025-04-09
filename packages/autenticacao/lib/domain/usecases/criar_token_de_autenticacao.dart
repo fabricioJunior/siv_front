@@ -10,6 +10,7 @@ class CriarTokenDeAutenticacao {
   Future<Token?> call({required String usuario, required String senha}) async {
     var token = await _repository.recuperarTokenDoServidor(usuario, senha);
     if (token != null) {
+      await _repository.deleteToken();
       await _repository.putToken(token);
     }
 

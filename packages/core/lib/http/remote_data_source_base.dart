@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:core/http/i_http_source.dart';
 import 'package:core/http/i_http_response.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class RemoteDataSourceBase {
   final IHttpSource httpClient;
@@ -29,7 +32,7 @@ abstract class RemoteDataSourceBase {
   }) async {
     var uri = _wrapUri();
     uri = _insertPath(uri, pathParameters);
-    var libResponse = await httpClient.post(uri: uri, body: body);
+    var libResponse = await httpClient.post(uri: uri, body: jsonEncode(body));
     return libResponse;
   }
 
@@ -51,6 +54,20 @@ abstract class RemoteDataSourceBase {
       path: path,
       queryParameters: queryParameters,
     );
+  }
+
+  @visibleForTesting
+  Uri getPath({
+    Map<String, dynamic>? pathParameters,
+  }) {
+    var uri = _wrapUri();
+    uri = _insertPath(uri, pathParameters);
+    return uri;
+  }
+
+  @visibleForTesting
+  String toJson(Map<String, dynamic> json) {
+    return jsonEncode(json);
   }
 
   Uri _insertPath(Uri uri, Map<String, dynamic>? pathParameters) {
@@ -78,6 +95,10 @@ abstract class RemoteDataSourceBase {
     }
     return data.toString();
   }
+}
+
+abstract class IRemoteDto {
+  Map<String, dynamic> toJson();
 }
 
 abstract class IInformacoesParaRequests {

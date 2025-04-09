@@ -40,16 +40,15 @@ void main() {
 
       var result = await usuariosRemoteDatasource.getUsuarios();
 
-      expect(result, [usuario]);
+      expect(result, [usuario.toDto()]);
     });
   });
 }
 
 void _setupGetUsuarios() {
-  var uriToPost = uriBase.replace(
-    path: usuariosRemoteDatasource.path,
-  );
-  var body = RequestTestUtils.jsonFromFile('test/resources/usuarios.json');
+  var uriToPost = usuariosRemoteDatasource.getPath();
+  var body =
+      RequestTestUtils.jsonFromFile('siv_front/test/resources/usuarios.json');
   when(client.get(uri: uriToPost)).thenAnswer(
     (_) async => FakeReponse(
       statusCode: 200,

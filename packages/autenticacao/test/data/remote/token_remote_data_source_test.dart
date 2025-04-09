@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:autenticacao/data/remote_data_sourcers.dart';
 import 'package:autenticacao/domain/models/token.dart';
 import 'package:core/http/i_http_source.dart';
@@ -52,7 +54,7 @@ void _setupCreateToken(
   when(
     client.post(
       uri: uriToPost,
-      body: {"usuario": usuario, "senha": senha},
+      body: jsonEncode({"usuario": usuario, "senha": senha}),
     ),
   ).thenAnswer(
       (_) async => FakeReponse(statusCode: 200, body: {'token': 'token'}));

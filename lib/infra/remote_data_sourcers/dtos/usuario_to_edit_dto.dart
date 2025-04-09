@@ -26,8 +26,8 @@ class UsarioToEditDto {
 
   Map<String, dynamic> toJson() => _$UsarioToEditDtoToJson(this);
 
-  // factory UsarioToEditDto.fromJson(Map<String, dynamic> json) =>
-  //     _$UsuarioDtoFromJson(json);
+  factory UsarioToEditDto.fromJson(Map<String, dynamic> json) =>
+      _$UsarioToEditDtoFromJson(json);
 
   final String? senha;
 

@@ -20,6 +20,14 @@ mixin Usuario implements EquatableMixin {
         senha: senha ?? this.senha,
       );
 
+  @override
+  List<Object?> get props => [
+        id,
+        login,
+        nome,
+        tipo,
+      ];
+
   static Usuario instance({
     required int id,
     required String login,

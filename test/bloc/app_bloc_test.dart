@@ -75,6 +75,9 @@ void main() {
     setUp: () {
       _setupOnTokenCriado(null);
     },
+    act: (bloc) {
+      bloc.add(AppDesautenticou());
+    },
     build: () {
       return AppBloc(
           estaAutenticado, onAutenticado, deslogar, recuperarUsuarioDaSessao);

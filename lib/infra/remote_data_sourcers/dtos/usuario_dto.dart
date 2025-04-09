@@ -1,10 +1,11 @@
 import 'package:autenticacao/models.dart';
+import 'package:core/equals.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'usuario_dto.g.dart';
 
 @JsonSerializable()
-class UsuarioDto with Usuario {
+class UsuarioDto with Usuario, EquatableMixin {
   @override
   final int id;
 
@@ -27,8 +28,6 @@ class UsuarioDto with Usuario {
     required this.tipo,
     this.senha,
   });
-
-  Map<String, dynamic> toJson() => _$UsuarioDtoToJson(this);
 
   factory UsuarioDto.fromJson(Map<String, dynamic> json) =>
       _$UsuarioDtoFromJson(json);

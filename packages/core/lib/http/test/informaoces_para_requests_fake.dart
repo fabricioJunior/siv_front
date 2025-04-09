@@ -17,7 +17,12 @@ class RequisitosParaRequestFake implements IInformacoesParaRequests {
 
 class RequestTestUtils {
   static dynamic jsonFromFile(String pathFile) {
-    var file = File(pathFile);
+    var dir = Directory.current;
+    while (
+        dir.listSync().any((entity) => entity.path.endsWith('pubspec.yaml'))) {
+      dir = dir.parent;
+    }
+    var file = File('${dir.path}/$pathFile');
     var jsonString = file.readAsStringSync();
     return jsonDecode(jsonString);
   }

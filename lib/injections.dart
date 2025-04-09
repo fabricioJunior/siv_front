@@ -7,6 +7,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
@@ -20,6 +21,7 @@ void resolverDependenciasApp() {
   _remoteDataSources();
   coreInjections();
   resolverDependenciasAutenticacao();
+  resolverDependenciasEmpresas();
   _presentation();
   sl.registerLazySingleton<IHttpSource>(
     () => HttpSource(
@@ -35,12 +37,6 @@ void resolverDependenciasApp() {
 }
 
 void _remoteDataSources() {
-  sl.registerFactory<IInformacoesParaRequests>(
-    () => InformacoesParaRequest(
-      httpSource: sl(),
-    ),
-  );
-
   sl.registerFactory<IUsuarioDaSessaoRemoteDataSource>(
     () => UsuarioDaSessaoRemoteDataSource(
       informacoesParaRequest: InformacoesParaRequest(

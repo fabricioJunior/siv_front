@@ -1,0 +1,38 @@
+[
+    {
+      "id": 1,
+      "componenteId": 101,
+      "componenteNome": "Componente A",
+      "descontinuado": false,
+      "empresaId": 201,
+      "grupo": "Grupo A",
+      "grupoId": 301
+    },
+    {
+      "id": 2,
+      "componenteId": 102,
+      "componenteNome": "Componente B",
+      "descontinuado": true,
+      "empresaId": 202,
+      "grupo": "Grupo B",
+      "grupoId": 302
+    },
+    {
+      "id": 3,
+      "componenteId": 103,
+      "componenteNome": "Componente C",
+      "descontinuado": false,
+      "empresaId": 203,
+      "grupo": "Grupo C",
+      "grupoId": 303
+    },
+    {
+      "id": 4,
+      "componenteId": 104,
+      "componenteNome": "Componente D",
+      "descontinuado": true,
+      "empresaId": 204,
+      "grupo": "Grupo D",
+      "grupoId": 304
+    }
+  ]

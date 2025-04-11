@@ -11,6 +11,7 @@ import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
+import 'package:autenticacao/presentation/bloc/permissoes_bloc/permissoes_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuario_bloc/usuario_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuarios_bloc/usuarios_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
@@ -19,7 +20,9 @@ import 'package:core/isar_anotacoes.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:http/http.dart';
 
+import 'data/repositories/permissoes_repository.dart';
 import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
+import 'domain/data/repositories/i_permissoes_repository.dart';
 import 'domain/data/repositories/i_token_repository.dart';
 
 void resolverDependenciasAutenticacao() {
@@ -42,6 +45,12 @@ void _presentation() {
         sl(),
         sl(),
       ));
+
+  sl.registerFactory<PermissoesBloc>(
+    () => PermissoesBloc(
+      recuperarPermissoes: sl(),
+    ),
+  );
 }
 
 void _usesCases() {
@@ -90,6 +99,12 @@ void _usesCases() {
       usuariosRepository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarPermissoes>(
+    () => RecuperarPermissoes(
+      permissoesRepository: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -105,6 +120,14 @@ void _repositories() {
       usuariosRemoteDataSource: sl(),
       usuarioDaSessaoRemoteDataSource: sl(),
       usuarioDaSessaoLocalDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IPermissoesRepository>(
+    () => PermissoesRepository(
+      sl(),
+      sl(),
+      permissoesRemoteDataSource: sl(),
     ),
   );
 }

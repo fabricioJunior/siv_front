@@ -18,7 +18,7 @@ final IHttpSource client = MockIHttpSource();
 void main() {
   setUp(() {
     usuariosRemoteDatasource = UsuariosRemoteDatasource(
-      informacoesParaRequest: RequisitosParaRequestFake(
+      informacoesParaRequest: MockInformacoesParaRequests(
         httpClient: client,
         uriBase: uriBase,
       ),
@@ -50,7 +50,7 @@ void _setupGetUsuarios() {
   var body =
       RequestTestUtils.jsonFromFile('siv_front/test/resources/usuarios.json');
   when(client.get(uri: uriToPost)).thenAnswer(
-    (_) async => FakeReponse(
+    (_) async => FakeHttpResponse(
       statusCode: 200,
       body: body,
     ),

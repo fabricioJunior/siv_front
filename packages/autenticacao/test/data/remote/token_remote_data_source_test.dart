@@ -20,7 +20,7 @@ final IHttpSource client = MockIHttpSource();
 void main() {
   setUp(() {
     remoteDatasource = TokenRemoteDatasource(
-        informacoesParaRequest: RequisitosParaRequestFake(
+        informacoesParaRequest: MockInformacoesParaRequests(
       uriBase: uriBase,
       httpClient: client,
     ));
@@ -57,5 +57,5 @@ void _setupCreateToken(
       body: jsonEncode({"usuario": usuario, "senha": senha}),
     ),
   ).thenAnswer(
-      (_) async => FakeReponse(statusCode: 200, body: {'token': 'token'}));
+      (_) async => FakeHttpResponse(statusCode: 200, body: {'token': 'token'}));
 }

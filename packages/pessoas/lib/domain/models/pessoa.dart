@@ -30,19 +30,20 @@ mixin Pessoa {
     required String uf,
   }) =>
       _Pessoa(
-          id: id,
-          bloqueado: bloqueado,
-          contato: contato,
-          documento: documento,
-          eCliente: eCliente,
-          eFornecedor: eFornecedor,
-          eFuncionario: eFuncionario,
-          email: email,
-          nome: nome,
-          tipoContato: tipoContato,
-          tipoPessoa: tipoPessoa,
-          inscricaoEstadual: inscricaoEstadual,
-          uf: uf);
+        id: id,
+        bloqueado: bloqueado,
+        contato: contato,
+        documento: documento,
+        eCliente: eCliente,
+        eFornecedor: eFornecedor,
+        eFuncionario: eFuncionario,
+        email: email,
+        nome: nome,
+        tipoContato: tipoContato,
+        tipoPessoa: tipoPessoa,
+        inscricaoEstadual: inscricaoEstadual,
+        uf: uf,
+      );
 }
 
 class _Pessoa with Pessoa {

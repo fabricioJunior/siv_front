@@ -6,3 +6,4 @@ export 'domain/usecases/esta_autenticado.dart';
 export 'domain/usecases/deslogar.dart';
 export 'domain/usecases/recuperar_usuario_da_sessao.dart';
 export 'domain/usecases/salvar_usuario.dart';
+export 'domain/usecases/recuperar_permissoes.dart';

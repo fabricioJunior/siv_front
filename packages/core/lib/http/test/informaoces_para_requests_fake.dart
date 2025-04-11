@@ -5,14 +5,15 @@ import 'package:core/remote_data_sourcers.dart';
 import 'package:flutter/foundation.dart';
 
 @visibleForTesting
-class RequisitosParaRequestFake implements IInformacoesParaRequests {
+class MockInformacoesParaRequests implements IInformacoesParaRequests {
   @override
   final IHttpSource httpClient;
 
   @override
   final Uri uriBase;
 
-  RequisitosParaRequestFake({required this.httpClient, required this.uriBase});
+  MockInformacoesParaRequests(
+      {required this.httpClient, required this.uriBase});
 }
 
 class RequestTestUtils {
@@ -28,7 +29,7 @@ class RequestTestUtils {
   }
 }
 
-class FakeReponse implements IHttpResponse {
+class FakeHttpResponse implements IHttpResponse {
   @override
   final Object? body;
 
@@ -41,5 +42,6 @@ class FakeReponse implements IHttpResponse {
   @override
   final Uri? uri;
 
-  FakeReponse({this.body, this.message, required this.statusCode, this.uri});
+  FakeHttpResponse(
+      {this.body, this.message, required this.statusCode, this.uri});
 }

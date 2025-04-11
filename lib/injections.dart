@@ -11,6 +11,7 @@ import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
+import 'package:siv_front/infra/local_data_sourcers/permissoes_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/usuario_da_sessa_local_data_source.dart';
 import 'package:siv_front/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
 
@@ -54,6 +55,9 @@ void _remoteDataSources() {
 void _localDataSource() {
   sl.registerFactory<IUsuarioDaSessaoLocalDataSource>(
       () => UsuarioDaSessaLocalDataSource(getIsar: _getIsar));
+  sl.registerFactory<IPermissoesLocalDataSource>(
+    () => PermissoesLocalDataSource(getIsar: _getIsar),
+  );
 }
 
 void _presentation() {

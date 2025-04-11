@@ -22,6 +22,7 @@ abstract class RemoteDataSourceBase {
     var uri = _wrapUri();
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.get(uri: uri);
+    _validateResponse(libResponse);
     return libResponse;
   }
 
@@ -33,6 +34,7 @@ abstract class RemoteDataSourceBase {
     var uri = _wrapUri();
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.post(uri: uri, body: jsonEncode(body));
+    _validateResponse(libResponse);
     return libResponse;
   }
 
@@ -44,6 +46,7 @@ abstract class RemoteDataSourceBase {
     var uri = _wrapUri();
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.put(uri: uri, body: body);
+    _validateResponse(libResponse);
     return libResponse;
   }
 
@@ -95,6 +98,57 @@ abstract class RemoteDataSourceBase {
     }
     return data.toString();
   }
+
+  void _validateResponse(IHttpResponse response) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      String errorMessage;
+
+      switch (response.statusCode) {
+        case 400:
+          errorMessage =
+              'Requisição inválida (Bad Request). Verifique os dados enviados.';
+          break;
+        case 401:
+          errorMessage =
+              'Não autorizado (Unauthorized). Verifique suas credenciais.';
+          break;
+        case 403:
+          errorMessage =
+              'Proibido (Forbidden). Você não tem permissão para acessar este recurso.';
+          break;
+        case 404:
+          errorMessage =
+              'Recurso não encontrado (Not Found). Verifique o endpoint ou o recurso solicitado.';
+          break;
+        case 500:
+          errorMessage =
+              'Erro interno do servidor (Internal Server Error). Tente novamente mais tarde.';
+          break;
+        case 503:
+          errorMessage =
+              'Serviço indisponível (Service Unavailable). O servidor está temporariamente fora do ar.';
+          break;
+        default:
+          errorMessage =
+              'Erro inesperado: Código ${response.statusCode}. Mensagem: ${response.body}';
+      }
+
+      throw HttpException(
+        errorMessage,
+        statusCode: response.statusCode,
+      );
+    }
+  }
+}
+
+class HttpException implements Exception {
+  final String message;
+  final int statusCode;
+
+  HttpException(this.message, {required this.statusCode});
+
+  @override
+  String toString() => 'HttpException: $message (Status code: $statusCode)';
 }
 
 abstract class IRemoteDto {

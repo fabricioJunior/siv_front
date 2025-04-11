@@ -10,5 +10,6 @@ import 'package:mockito/annotations.dart';
   SalvarUsuario,
   RecuperarUsuarios,
   RecuperarUsuarioDaSessao,
+  RecuperarPermissoes,
 ])
 void main() {}

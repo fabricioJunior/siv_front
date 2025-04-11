@@ -1,3 +1,4 @@
+import 'package:autenticacao/domain/models/permissao.dart';
 import 'package:autenticacao/domain/models/token.dart';
 import 'package:autenticacao/domain/models/usuario.dart';
 
@@ -27,3 +28,15 @@ Usuario fakeUsuario(
       tipo: tipo,
       senha: senha,
     );
+
+Permissao fakePermissao({
+  int id = 1,
+  String nome = "Teste",
+  bool descontinuado = false,
+}) {
+  return Permissao.instance(
+    id: id,
+    nome: nome,
+    descontinuado: descontinuado,
+  );
+}

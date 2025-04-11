@@ -17,7 +17,7 @@ late EmpresasRemoteDataSource empresasRemoteDataSource;
 void main() {
   setUp(() {
     empresasRemoteDataSource = EmpresasRemoteDataSource(
-      informacoesParaRequest: RequisitosParaRequestFake(
+      informacoesParaRequest: MockInformacoesParaRequests(
         httpClient: httpSource,
         uriBase: uriBase,
       ),
@@ -48,6 +48,6 @@ void _setupPostEmpresa(Empresa empresa) {
       uri: uri,
     ),
   ).thenAnswer(
-    (_) async => FakeReponse(statusCode: 200, body: body),
+    (_) async => FakeHttpResponse(statusCode: 200, body: body),
   );
 }

@@ -7,7 +7,7 @@ part 'permissao_dto.g.dart';
 @Collection(ignore: {'props'})
 class PermissaoDto with Permissao implements IsarDto {
   @override
-  final int id;
+  final String id;
 
   @override
   final String nome;
@@ -22,7 +22,7 @@ class PermissaoDto with Permissao implements IsarDto {
   });
 
   @override
-  Id get dataBaseId => id;
+  Id get dataBaseId => fastHash(id);
 }
 
 extension PermissaoToDtoExtension on Permissao {

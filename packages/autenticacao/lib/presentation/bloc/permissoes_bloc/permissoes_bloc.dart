@@ -39,7 +39,9 @@ class PermissoesBloc extends Bloc<PermissoesEvent, PermissoesState> {
     final permissao = event.permissao;
     final permissoesSelecionadas = [...permissoes, permissao];
     emit(PermissoesSelecionarSucesso(
-        permissoesSelecionadas: permissoesSelecionadas));
+      permissoesSelecionadas: permissoesSelecionadas,
+      permissoes: state.permissoes ?? <Permissao>[],
+    ));
   }
 
   Future<void> _onPermissoesDesselecionou(
@@ -51,7 +53,11 @@ class PermissoesBloc extends Bloc<PermissoesEvent, PermissoesState> {
     final permissao = event.permissao;
     final permissoesSelecionadas =
         permissoes.where((p) => p != permissao).toList();
-    emit(PermissoesSelecionarSucesso(
-        permissoesSelecionadas: permissoesSelecionadas));
+    emit(
+      PermissoesSelecionarSucesso(
+        permissoesSelecionadas: permissoesSelecionadas,
+        permissoes: state.permissoes ?? <Permissao>[],
+      ),
+    );
   }
 }

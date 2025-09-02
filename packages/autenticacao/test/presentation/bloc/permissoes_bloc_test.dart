@@ -60,22 +60,22 @@ void _setupRecuperarPermissoes(List<Permissao> permissoesFake) {
 List<Permissao> _permissoesFake() {
   return [
     fakePermissao(
-      id: 1,
+      id: 1.toString(),
       nome: "Componente A",
       descontinuado: false,
     ),
     fakePermissao(
-      id: 2,
+      id: 2.toString(),
       nome: "Componente B",
       descontinuado: true,
     ),
     fakePermissao(
-      id: 3,
+      id: 3.toString(),
       nome: "Componente C",
       descontinuado: false,
     ),
     fakePermissao(
-      id: 4,
+      id: 4.toString(),
       nome: "Componente D",
       descontinuado: true,
     ),

@@ -7,7 +7,7 @@ part 'permissao_dto.g.dart';
 @JsonSerializable()
 class PermissaoDto with Permissao, EquatableMixin {
   @override
-  final int id;
+  final String id;
 
   @override
   final String nome;

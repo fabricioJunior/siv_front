@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:core/http/i_http_source.dart';
 import 'package:core/http/i_http_response.dart';
@@ -100,7 +101,9 @@ abstract class RemoteDataSourceBase {
   }
 
   void _validateResponse(IHttpResponse response) {
-    if (response.statusCode != 200 && response.statusCode != 204) {
+    if (response.statusCode != 200 &&
+        response.statusCode != 204 &&
+        response.statusCode != 201) {
       String errorMessage;
 
       switch (response.statusCode) {
@@ -132,7 +135,7 @@ abstract class RemoteDataSourceBase {
           errorMessage =
               'Erro inesperado: Código ${response.statusCode}. Mensagem: ${response.body}';
       }
-
+      log(response.body.toString());
       throw HttpException(
         errorMessage,
         statusCode: response.statusCode,

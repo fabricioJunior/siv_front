@@ -15,16 +15,21 @@ dependencies:
     sdk: flutter
   core:
     path: ../core
-  mockito: ^5.4.4
+  mockito: ^5.0.0
   json_annotation: ^4.9.0
   http: ^1.2.2
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  isar_generator: 3.1.0+1
+  isar_generator: 
+    version: 3.1.8
+    hosted: https://pub.isar-community.dev/
+
   build_runner: any
-  json_serializable: ^6.8.0
+  json_serializable: ^6.9.0
 
 
 flutter:

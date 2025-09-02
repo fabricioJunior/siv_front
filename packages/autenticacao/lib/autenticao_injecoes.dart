@@ -2,12 +2,18 @@ import 'dart:io';
 
 import 'package:autenticacao/data/local/dtos/token_dto.dart';
 import 'package:autenticacao/data/local_data_sources.dart';
+import 'package:autenticacao/data/remote/grupos_de_acesso_remote_data_source.dart';
+import 'package:autenticacao/data/remote/permissoes_remote_data_source.dart';
 import 'package:autenticacao/data/remote_data_sourcers.dart';
+import 'package:autenticacao/data/repositories/grupos_de_acesso_repository.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
+import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
+import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
+import 'package:autenticacao/domain/usecases/recuperar_grupo_de_acessos.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
@@ -20,10 +26,17 @@ import 'package:core/isar_anotacoes.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:http/http.dart';
 
+import 'data/remote/permissoes_do_grupo_acesso_remote_data_source.dart';
+import 'data/remote/permissoes_do_usuario_remote_data_source.dart';
 import 'data/repositories/permissoes_repository.dart';
 import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
+import 'domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
+import 'domain/data/data_sourcers/remote/i_permissoes_do_usuario_remote_data_source.dart';
+import 'domain/data/data_sourcers/remote/i_permissoes_remote_data_source.dart';
 import 'domain/data/repositories/i_permissoes_repository.dart';
 import 'domain/data/repositories/i_token_repository.dart';
+import 'presentation/bloc/grupo_de_acesso_bloc/grupo_de_acesso_bloc.dart';
+import 'presentation/bloc/grupos_de_acesso_bloc/grupos_de_acesso_bloc.dart';
 
 void resolverDependenciasAutenticacao() {
   _remoteData();
@@ -50,6 +63,15 @@ void _presentation() {
     () => PermissoesBloc(
       recuperarPermissoes: sl(),
     ),
+  );
+  sl.registerFactory<GruposDeAcessoBloc>(
+    () => GruposDeAcessoBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<GrupoDeAcessoBloc>(
+    () => GrupoDeAcessoBloc(sl(), sl(), sl()),
   );
 }
 
@@ -105,6 +127,29 @@ void _usesCases() {
       permissoesRepository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarGrupoDeAcessos>(
+    () => RecuperarGrupoDeAcessos(
+      sl(),
+    ),
+  );
+  sl.registerFactory<RecuperarGrupoDeAcesso>(
+    () => RecuperarGrupoDeAcesso(
+      gruposDeAcessoRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<CriarGrupoDeAcesso>(
+    () => CriarGrupoDeAcesso(
+      gruposDeAcessoRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<AtualizarGrupoDeAcesso>(
+    () => AtualizarGrupoDeAcesso(
+      gruposDeAcessoRepository: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -130,6 +175,13 @@ void _repositories() {
       permissoesRemoteDataSource: sl(),
     ),
   );
+
+  sl.registerFactory<IGruposDeAcessoRepository>(
+    () => GruposDeAcessoRepository(
+      gruposDeAcessoRemoteDataSource: sl(),
+      permissoesDoGrupoAcessoRemoteDataSource: sl(),
+    ),
+  );
 }
 
 void _localData() {
@@ -149,6 +201,29 @@ void _remoteData() {
           'https://apollo-api-stg.coralcloud.app',
         ),
       ),
+    ),
+  );
+
+  sl.registerFactory<IGruposDeAcessoRemoteDataSource>(
+    () => GruposDeAcessoRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+  sl.registerFactory<IPermissoesDoGrupoAcessoRemoteDataSource>(
+    () => PermissoesDoGrupoAcessoRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IPermissoesDoUsuarioRemoteDataSource>(
+    () => PermissoesDoUsuarioRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IPermissoesRemoteDataSource>(
+    () => PermissoesRemoteDataSource(
+      informacoesParaRequest: sl(),
     ),
   );
 }

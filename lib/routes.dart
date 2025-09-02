@@ -1,6 +1,4 @@
-import 'package:autenticacao/presentation/pages/login_page.dart';
-import 'package:autenticacao/presentation/pages/usuario_page.dart';
-import 'package:autenticacao/presentation/pages/usuarios_page.dart';
+import 'package:autenticacao/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/pages/home_page.dart';
@@ -23,7 +21,15 @@ Map<String, Widget Function(BuildContext)> routes = {
     return EmpresaPage(
       idEmpresa: args(context)['idEmpresa'],
     );
-  }
+  },
+  '/grupos_de_acesso': (context) {
+    return const GruposDeAcessoPage();
+  },
+  '/grupo_de_acesso': (context) {
+    return GrupoDeAcessoPage(
+      idGrupoDeAcesso: args(context)['idGrupoDeAcesso'],
+    );
+  },
 };
 
 Map<String, dynamic> args(BuildContext context) =>

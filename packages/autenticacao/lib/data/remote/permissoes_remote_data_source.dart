@@ -9,7 +9,7 @@ class PermissoesRemoteDataSource extends RemoteDataSourceBase
   PermissoesRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => 'componentes';
+  String get path => '/v1/componentes';
 
   @override
   Future<Iterable<Permissao>> getPermissoes() async {

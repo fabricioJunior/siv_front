@@ -30,7 +30,7 @@ const PermissaoDtoSchema = CollectionSchema(
     r'id': PropertySchema(
       id: 2,
       name: r'id',
-      type: IsarType.long,
+      type: IsarType.string,
     ),
     r'nome': PropertySchema(
       id: 3,
@@ -63,6 +63,7 @@ int _permissaoDtoEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.id.length * 3;
   bytesCount += 3 + object.nome.length * 3;
   return bytesCount;
 }
@@ -75,7 +76,7 @@ void _permissaoDtoSerialize(
 ) {
   writer.writeBool(offsets[0], object.descontinuado);
   writer.writeLong(offsets[1], object.hashCode);
-  writer.writeLong(offsets[2], object.id);
+  writer.writeString(offsets[2], object.id);
   writer.writeString(offsets[3], object.nome);
   writer.writeBool(offsets[4], object.stringify);
 }
@@ -88,7 +89,7 @@ PermissaoDto _permissaoDtoDeserialize(
 ) {
   final object = PermissaoDto(
     descontinuado: reader.readBool(offsets[0]),
-    id: reader.readLong(offsets[2]),
+    id: reader.readString(offsets[2]),
     nome: reader.readString(offsets[3]),
   );
   return object;
@@ -106,7 +107,7 @@ P _permissaoDtoDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
@@ -331,46 +332,54 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idEqualTo(
-      int value) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idGreaterThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'id',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idLessThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'id',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idBetween(
-    int lower,
-    int upper, {
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -379,6 +388,76 @@ extension PermissaoDtoQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'id',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'id',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'id',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'id',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+      idIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'id',
+        value: '',
       ));
     });
   }
@@ -708,9 +787,10 @@ extension PermissaoDtoQueryWhereDistinct
     });
   }
 
-  QueryBuilder<PermissaoDto, PermissaoDto, QDistinct> distinctById() {
+  QueryBuilder<PermissaoDto, PermissaoDto, QDistinct> distinctById(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'id');
+      return query.addDistinctBy(r'id', caseSensitive: caseSensitive);
     });
   }
 
@@ -748,7 +828,7 @@ extension PermissaoDtoQueryProperty
     });
   }
 
-  QueryBuilder<PermissaoDto, int, QQueryOperations> idProperty() {
+  QueryBuilder<PermissaoDto, String, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });

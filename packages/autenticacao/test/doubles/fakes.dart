@@ -30,7 +30,7 @@ Usuario fakeUsuario(
     );
 
 Permissao fakePermissao({
-  int id = 1,
+  String id = '1',
   String nome = "Teste",
   bool descontinuado = false,
 }) {

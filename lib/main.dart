@@ -9,6 +9,7 @@ import 'package:siv_front/injections.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
+
 void main() async {
   await sl.reset();
   await configs();

@@ -54,7 +54,7 @@ const PermissaoDtoSchema = CollectionSchema(
   getId: _permissaoDtoGetId,
   getLinks: _permissaoDtoGetLinks,
   attach: _permissaoDtoAttach,
-  version: '3.1.0+1',
+  version: '3.1.8',
 );
 
 int _permissaoDtoEstimateSize(

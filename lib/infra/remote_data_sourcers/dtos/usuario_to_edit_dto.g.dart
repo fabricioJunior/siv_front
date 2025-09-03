@@ -16,20 +16,12 @@ UsarioToEditDto _$UsarioToEditDtoFromJson(Map<String, dynamic> json) =>
       senha: json['senha'] as String?,
     );
 
-Map<String, dynamic> _$UsarioToEditDtoToJson(UsarioToEditDto instance) {
-  final val = <String, dynamic>{};
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('id', instance.id);
-  writeNotNull('usuario', instance.login);
-  val['nome'] = instance.nome;
-  val['tipo'] = UsarioToEditDto._tipoUsuarioToJson(instance.tipo);
-  writeNotNull('senha', instance.senha);
-  val['situacao'] = instance.situacao;
-  return val;
-}
+Map<String, dynamic> _$UsarioToEditDtoToJson(UsarioToEditDto instance) =>
+    <String, dynamic>{
+      if (instance.id case final value?) 'id': value,
+      if (instance.login case final value?) 'usuario': value,
+      'nome': instance.nome,
+      'tipo': UsarioToEditDto._tipoUsuarioToJson(instance.tipo),
+      if (instance.senha case final value?) 'senha': value,
+      'situacao': instance.situacao,
+    };

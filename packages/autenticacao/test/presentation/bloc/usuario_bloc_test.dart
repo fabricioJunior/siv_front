@@ -11,6 +11,10 @@ import '../../doubles/uses_cases.mocks.dart';
 
 final RecuperarUsuario recuperarUsuario = MockRecuperarUsuario();
 final SalvarUsuario salvarUsuario = MockSalvarUsuario();
+final RecuperarGrupoDeAcessoDoUsuario recuperarGrupoDeAcessoDoUsuario =
+    MockRecuperarGrupoDeAcessoDoUsuario();
+final VincularUsuarioAoGrupoDeAcesso vincularUsuarioAoGrupoDeAcesso =
+    MockVincularUsuarioAoGrupoDeAcesso();
 late UsuarioBloc usuarioBloc;
 void main() {
   group('usuario bloc', () {
@@ -146,4 +150,23 @@ void _setupSalvarUsuario({
     senha: senha,
     tipo: tipo,
   )).thenAnswer((_) async => response);
+}
+
+void _setupVincularUsuarioAoGrupoDeAcesso({
+  required int idUsuario,
+  required int idGrupoDeAcesso,
+}) {
+  when(vincularUsuarioAoGrupoDeAcesso.call(
+          idUsuario: idUsuario, idGrupoDeAcesso: idGrupoDeAcesso))
+      .thenAnswer(
+    (_) async {},
+  );
+}
+
+void _setupRecuperaGrupoDeAcessoDoUsuario({
+  required GrupoDeAcesso? grupoDeAcesso,
+  required int idUsuario,
+}) {
+  when(recuperarGrupoDeAcessoDoUsuario.call(idUsuario: idUsuario))
+      .thenAnswer((_) async => grupoDeAcesso);
 }

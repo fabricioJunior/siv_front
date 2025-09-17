@@ -39,3 +39,5 @@ class GrupoDeAcessoRemoveuPermissao extends GrupoDeAcessoEvent {
 }
 
 class GrupoDeAcessoSalvou extends GrupoDeAcessoEvent {}
+
+class GrupoExcluiu extends GrupoDeAcessoEvent {}

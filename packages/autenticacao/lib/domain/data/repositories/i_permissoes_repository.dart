@@ -13,4 +13,8 @@ abstract class IPermissoesRepository {
   Future<Iterable<Permissao>> recuperarPermissoesDoUsuario(int idUsuario);
 
   Future<Iterable<Permissao>> recuperarPermissoes();
+
+  Future<Iterable<Permissao>> recuperarPermissoesDoGrupoDeAcesso(
+    int idGrupoDeAcesso,
+  );
 }

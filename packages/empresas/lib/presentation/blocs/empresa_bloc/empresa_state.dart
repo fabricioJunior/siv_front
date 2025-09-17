@@ -55,7 +55,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     this.empresa,
   });
 
-  EmpresaEditarEmProgresso.fromEmpresa(Empresa? this.empresa)
+  EmpresaEditarEmProgresso.fromEmpresa(this.empresa)
       : cnpj = empresa?.cnpj,
         codigoDeAtividade = empresa?.codigoDeAtividade,
         codigoDeNaturezaJuridica = empresa?.codigoDeNaturezaJuridica,

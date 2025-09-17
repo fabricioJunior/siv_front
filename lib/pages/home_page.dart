@@ -31,17 +31,26 @@ class HomePage extends StatelessWidget {
                       height: 32,
                     ),
                     const Text('Home page'),
+                    const SizedBox(
+                      height: 16,
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/usuarios');
                       },
                       child: const Text('Usuários'),
                     ),
+                    const SizedBox(
+                      height: 16,
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/grupos_de_acesso');
                       },
                       child: const Text('Grupos de Acesso'),
+                    ),
+                    const SizedBox(
+                      height: 16,
                     ),
                     ElevatedButton(
                       onPressed: () {

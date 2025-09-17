@@ -51,6 +51,17 @@ abstract class RemoteDataSourceBase {
     return libResponse;
   }
 
+  Future<IHttpResponse> delete({
+    Map<String, String>? queryParameters,
+    Map<String, dynamic>? pathParameters,
+  }) async {
+    var uri = _wrapUri();
+    uri = _insertPath(uri, pathParameters);
+    var libResponse = await httpClient.delete(uri: uri);
+    _validateResponse(libResponse);
+    return libResponse;
+  }
+
   Uri _wrapUri({
     Map<String, String>? queryParameters,
   }) {

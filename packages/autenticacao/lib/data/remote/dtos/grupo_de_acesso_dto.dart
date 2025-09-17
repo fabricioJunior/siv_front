@@ -14,17 +14,10 @@ class GrupoDeAcessoDto with GrupoDeAcesso {
 
   @override
   @JsonKey(includeToJson: false, includeFromJson: true, name: 'itens')
-  final Iterable<PermissaoDto> permissoes;
+  final List<PermissaoDto> permissoes;
 
-  // // ignore: library_private_types_in_public_api
-  // @JsonKey(includeToJson: false, includeFromJson: true, defaultValue: [])
-  // final Iterable<_Item> itens;
-
-  GrupoDeAcessoDto({
-    required this.id,
-    required this.nome,
-    required this.permissoes,
-  });
+  GrupoDeAcessoDto(
+      {required this.id, required this.nome, required this.permissoes});
 
   factory GrupoDeAcessoDto.fromJson(Map<String, dynamic> json) =>
       _$GrupoDeAcessoDtoFromJson(json);

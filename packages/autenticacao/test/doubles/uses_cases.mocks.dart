@@ -9,17 +9,22 @@ import 'package:autenticacao/domain/data/repositories/i_permissoes_repository.da
     as _i4;
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart'
     as _i2;
+import 'package:autenticacao/domain/models/grupo_de_acesso.dart' as _i15;
 import 'package:autenticacao/domain/models/permissao.dart' as _i13;
 import 'package:autenticacao/domain/models/token.dart' as _i7;
 import 'package:autenticacao/domain/models/usuario.dart' as _i3;
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart'
     as _i5;
+import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acesso_do_usuario.dart'
+    as _i14;
 import 'package:autenticacao/domain/usecases/recuperar_permissoes.dart' as _i12;
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart' as _i8;
 import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
     as _i11;
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart' as _i10;
 import 'package:autenticacao/domain/usecases/salvar_usuario.dart' as _i9;
+import 'package:autenticacao/domain/usecases/grupos_de_acesso/vincular_usuario_ao_grupo_de_acesso.dart'
+    as _i16;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -258,4 +263,53 @@ class MockRecuperarPermissoes extends _i1.Mock
         returnValue:
             _i6.Future<Iterable<_i13.Permissao>>.value(<_i13.Permissao>[]),
       ) as _i6.Future<Iterable<_i13.Permissao>>);
+}
+
+/// A class which mocks [RecuperarGrupoDeAcessoDoUsuario].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarGrupoDeAcessoDoUsuario extends _i1.Mock
+    implements _i14.RecuperarGrupoDeAcessoDoUsuario {
+  MockRecuperarGrupoDeAcessoDoUsuario() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<_i15.GrupoDeAcesso?> call({required int? idUsuario}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {#idUsuario: idUsuario},
+        ),
+        returnValue: _i6.Future<_i15.GrupoDeAcesso?>.value(),
+      ) as _i6.Future<_i15.GrupoDeAcesso?>);
+}
+
+/// A class which mocks [VincularUsuarioAoGrupoDeAcesso].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockVincularUsuarioAoGrupoDeAcesso extends _i1.Mock
+    implements _i16.VincularUsuarioAoGrupoDeAcesso {
+  MockVincularUsuarioAoGrupoDeAcesso() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<void> call({
+    required int? idUsuario,
+    required int? idGrupoDeAcesso,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #idUsuario: idUsuario,
+            #idGrupoDeAcesso: idGrupoDeAcesso,
+          },
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 }

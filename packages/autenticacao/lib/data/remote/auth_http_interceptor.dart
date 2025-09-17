@@ -19,7 +19,12 @@ class AuthHttpInterceptor extends InterceptorContract {
   }
 
   @override
-  FutureOr<BaseResponse> interceptResponse({required BaseResponse response}) {
+  FutureOr<BaseResponse> interceptResponse({
+    required BaseResponse response,
+  }) async {
+    if (response.statusCode == 401) {
+      await tokenRepository.deleteToken();
+    }
     return response;
   }
 }

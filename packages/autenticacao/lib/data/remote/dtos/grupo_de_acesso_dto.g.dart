@@ -11,7 +11,8 @@ GrupoDeAcessoDto _$GrupoDeAcessoDtoFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       nome: json['nome'] as String,
       permissoes: (json['itens'] as List<dynamic>)
-          .map((e) => PermissaoDto.fromJson(e as Map<String, dynamic>)),
+          .map((e) => PermissaoDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$GrupoDeAcessoDtoToJson(GrupoDeAcessoDto instance) =>

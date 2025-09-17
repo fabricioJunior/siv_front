@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:core/local_data_sourcers/i_local_data_source.dart';
 import 'package:isar/isar.dart';
 
@@ -60,10 +62,12 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
 
   @override
   Future<void> deleteAll() async {
+    log('iniciou');
     var isarInstace = await getIsar();
-    await isarInstace.writeTxn(() async {
-      await isarInstace.collection<Dto>().clear();
+    isarInstace.writeTxn(() async {
+      return isarInstace.collection<Dto>().clear();
     });
+    log('finalizou');
   }
 
   Dto toDto(E entity);

@@ -2,8 +2,8 @@
 import 'package:core/equals.dart';
 
 mixin Permissao implements Equatable {
-  String get id;
-  String get nome;
+  String? get id;
+  String? get nome;
   bool get descontinuado;
 
   static Permissao instance({
@@ -42,9 +42,9 @@ mixin Permissao implements Equatable {
 
 class _Permissao with Permissao {
   @override
-  final String id;
+  final String? id;
   @override
-  final String nome;
+  final String? nome;
   @override
   final bool descontinuado;
 

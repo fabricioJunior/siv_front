@@ -9,6 +9,7 @@ import '../doubles/doubles.dart';
 import '../doubles/use_cases.mocks.dart';
 
 final OnAutenticado onAutenticado = MockOnAutenticado();
+final OnDesautenticado onDesautenticado = MockOnDesautenticado();
 final EstaAutenticado estaAutenticado = MockEstaAutenticado();
 final Deslogar deslogar = MockDeslogar();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
@@ -20,6 +21,7 @@ var usuario = fakeUsuario();
 void main() {
   setUp(() {
     _setupRecuperarUsuarioDaSessao(usuario);
+    _setupOnDesautenticado();
   });
   blocTest(
     'emite estado com informações salvas de autenticacao',
@@ -35,6 +37,7 @@ void main() {
         onAutenticado,
         deslogar,
         recuperarUsuarioDaSessao,
+        onDesautenticado,
       );
     },
     act: (bloc) => bloc.add(AppIniciou()),
@@ -61,6 +64,7 @@ void main() {
         onAutenticado,
         deslogar,
         recuperarUsuarioDaSessao,
+        onDesautenticado,
       );
     },
     expect: () => [
@@ -80,7 +84,12 @@ void main() {
     },
     build: () {
       return AppBloc(
-          estaAutenticado, onAutenticado, deslogar, recuperarUsuarioDaSessao);
+        estaAutenticado,
+        onAutenticado,
+        deslogar,
+        recuperarUsuarioDaSessao,
+        onDesautenticado,
+      );
     },
     expect: () => [
       const AppState(statusAutenticacao: StatusAutenticacao.naoAutenticao),
@@ -94,6 +103,10 @@ void _setupOnTokenCriado(Token? token) {
   } else {
     when(onAutenticado.call()).thenAnswer((_) => Stream.value(token));
   }
+}
+
+void _setupOnDesautenticado() {
+  when(onDesautenticado.call()).thenAnswer((_) => Stream.fromIterable([]));
 }
 
 void _setupEstaAutenticado(bool autenticacao) {

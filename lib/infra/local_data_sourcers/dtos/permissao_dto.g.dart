@@ -63,8 +63,18 @@ int _permissaoDtoEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.id.length * 3;
-  bytesCount += 3 + object.nome.length * 3;
+  {
+    final value = object.id;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.nome;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -89,8 +99,8 @@ PermissaoDto _permissaoDtoDeserialize(
 ) {
   final object = PermissaoDto(
     descontinuado: reader.readBool(offsets[0]),
-    id: reader.readString(offsets[2]),
-    nome: reader.readString(offsets[3]),
+    id: reader.readStringOrNull(offsets[2]),
+    nome: reader.readStringOrNull(offsets[3]),
   );
   return object;
 }
@@ -107,9 +117,9 @@ P _permissaoDtoDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readBoolOrNull(offset)) as P;
     default:
@@ -331,8 +341,25 @@ extension PermissaoDtoQueryFilter
     });
   }
 
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'id',
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+      idIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'id',
+      ));
+    });
+  }
+
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -345,7 +372,7 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -360,7 +387,7 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -375,8 +402,8 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> idBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -462,8 +489,25 @@ extension PermissaoDtoQueryFilter
     });
   }
 
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> nomeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'nome',
+      ));
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+      nomeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'nome',
+      ));
+    });
+  }
+
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> nomeEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -477,7 +521,7 @@ extension PermissaoDtoQueryFilter
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
       nomeGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -492,7 +536,7 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> nomeLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -507,8 +551,8 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition> nomeBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -828,13 +872,13 @@ extension PermissaoDtoQueryProperty
     });
   }
 
-  QueryBuilder<PermissaoDto, String, QQueryOperations> idProperty() {
+  QueryBuilder<PermissaoDto, String?, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<PermissaoDto, String, QQueryOperations> nomeProperty() {
+  QueryBuilder<PermissaoDto, String?, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
     });

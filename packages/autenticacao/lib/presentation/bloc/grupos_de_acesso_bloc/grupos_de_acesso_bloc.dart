@@ -1,4 +1,4 @@
-import 'package:autenticacao/domain/usecases/recuperar_grupo_de_acessos.dart';
+import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:autenticacao/domain/models/grupo_de_acesso.dart';

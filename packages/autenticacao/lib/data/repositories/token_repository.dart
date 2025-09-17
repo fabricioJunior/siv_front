@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:autenticacao/data/local/dtos/token_dto.dart' as local;
 import 'package:autenticacao/domain/data/data_sourcers/local/i_token_local_data_source.dart';
@@ -48,10 +49,13 @@ class TokenRepository implements ITokenRepository {
   Stream<Token> get onTokenPut => _onTokenPut.stream;
 
   @override
-  Future<void> deleteToken() async {
+  Future<void> deleteToken({bool notificarTokenExcluido = true}) async {
     await localDataSource.deleteAll();
     // ignore: void_checks
-    _onDeleteToken.add(null);
+    log('chegou aqui');
+    if (notificarTokenExcluido) {
+      _onDeleteToken.add(null);
+    }
   }
 
   @override

@@ -11,4 +11,8 @@ abstract class IGruposDeAcessoRemoteDataSource {
     required String nome,
     required int idGrupoDeAcesso,
   });
+
+  Future<void> excluirGrupoDeAcesso({
+    required int idGrupoDeAcesso,
+  });
 }

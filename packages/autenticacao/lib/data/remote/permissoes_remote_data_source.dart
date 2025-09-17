@@ -18,6 +18,7 @@ class PermissoesRemoteDataSource extends RemoteDataSourceBase
     var jsonResponse = response.body as List;
 
     return jsonResponse
-        .map((json) => PermissaoDto.fromJson(json as Map<String, dynamic>));
+        .map((json) => PermissaoDto.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 }

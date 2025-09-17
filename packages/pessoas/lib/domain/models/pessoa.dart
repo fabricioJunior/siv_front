@@ -1,5 +1,5 @@
 mixin Pessoa {
-  int get id;
+  int? get id;
   String get nome;
   TipoPessoa get tipoPessoa;
   String get documento;

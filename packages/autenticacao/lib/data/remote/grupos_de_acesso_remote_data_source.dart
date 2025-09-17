@@ -42,7 +42,7 @@ class GruposDeAcessoRemoteDataSource extends RemoteDataSourceBase
       'id': idGrupoDeAcesso.toString(),
     };
 
-    var response = await post(body: body, pathParameters: pathParameters);
+    var response = await put(body: body, pathParameters: pathParameters);
 
     return GrupoDeAcessoDto.fromJson(response.body);
   }
@@ -56,5 +56,11 @@ class GruposDeAcessoRemoteDataSource extends RemoteDataSourceBase
       return null;
     }
     return GrupoDeAcessoDto.fromJson(response.body);
+  }
+
+  @override
+  Future<void> excluirGrupoDeAcesso({required int idGrupoDeAcesso}) async {
+    var pathParameters = {'id': idGrupoDeAcesso.toString()};
+    await delete(pathParameters: pathParameters);
   }
 }

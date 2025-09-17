@@ -5,7 +5,12 @@ abstract class IPermissoesDoGrupoAcessoRemoteDataSource {
     required int idGrupoDeAcesso,
   });
 
-  Future<void> atualizarPermissoesGrupoDeAcesso({
+  Future<void> vincularPermissoesGrupoDeAcesso({
+    required List<Permissao> permissoes,
+    required int idGrupoDeAcesso,
+  });
+
+  Future<void> removerPermissoesGrupoDeAcesso({
     required List<Permissao> permissoes,
     required int idGrupoDeAcesso,
   });

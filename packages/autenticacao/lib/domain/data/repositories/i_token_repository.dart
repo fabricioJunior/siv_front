@@ -10,7 +10,7 @@ abstract class ITokenRepository {
 
   Future<void> putToken(Token token);
 
-  Future<void> deleteToken();
+  Future<void> deleteToken({bool notificarTokenExcluido = true});
 
   Stream<Token> get onTokenPut;
 

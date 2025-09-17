@@ -196,7 +196,7 @@ class EmpresaPage extends StatelessWidget {
                   controller: TextEditingController.fromValue(
                     empresa?.cnpj == null
                         ? null
-                        : TextEditingValue(text: empresa!.telefone!),
+                        : TextEditingValue(text: empresa!.telefone ?? ''),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

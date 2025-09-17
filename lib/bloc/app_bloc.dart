@@ -10,20 +10,24 @@ part 'app_event.dart';
 
 class AppBloc extends Bloc<AppEvent, AppState> {
   final OnAutenticado _onAutenticado;
+  final OnDesautenticado _onDesautenticado;
   final EstaAutenticado _estaAutenticado;
   final Deslogar _deslogar;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
 
   late StreamSubscription<Token> _onAutenticacoSubscription;
+  late StreamSubscription<Null> _onDesautenticadoSubscription;
   AppBloc(
     this._estaAutenticado,
     this._onAutenticado,
     this._deslogar,
     this._recuperarUsuarioDaSessao,
+    this._onDesautenticado,
   ) : super(const AppState()) {
     _onAutenticacoSubscription =
         _onAutenticado.call().listen((token) => add(AppAutenticou()));
-
+    _onDesautenticadoSubscription =
+        _onDesautenticado.call().listen((_) => add(AppDesautenticou()));
     on<AppIniciou>(_onAppIniciou);
     on<AppAutenticou>(_onAppAutenticou);
     on<AppDesautenticou>(_onDesautenticou);
@@ -79,6 +83,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   @override
   Future<void> close() async {
     await _onAutenticacoSubscription.cancel();
+    await _onDesautenticadoSubscription.cancel();
     return super.close();
   }
 }

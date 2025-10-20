@@ -15,7 +15,6 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_dat
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
-import 'package:autenticacao/domain/usecases/grupos_de_acesso/excluir_grupo_de_acesso.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_permissoes_do_grupo_de_acesso.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
@@ -59,6 +58,8 @@ void _presentation() {
   );
   sl.registerFactory<UsuariosBloc>(() => UsuariosBloc(sl()));
   sl.registerFactory<UsuarioBloc>(() => UsuarioBloc(
+        sl(),
+        sl(),
         sl(),
         sl(),
       ));

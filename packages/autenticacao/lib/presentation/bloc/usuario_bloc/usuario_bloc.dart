@@ -12,10 +12,14 @@ part 'usuario_state.dart';
 class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
   final RecuperarUsuario _recuperarUsuario;
   final SalvarUsuario _salvarUsuario;
+  final RecuperarGrupoDeAcessoDoUsuario _recuperarGrupoDeAcessoDoUsuario;
+  final VincularUsuarioAoGrupoDeAcesso _vincularUsuarioAoGrupoDeAcesso;
 
   UsuarioBloc(
     this._recuperarUsuario,
     this._salvarUsuario,
+    this._recuperarGrupoDeAcessoDoUsuario,
+    this._vincularUsuarioAoGrupoDeAcesso,
   ) : super(UsuarioNaoInicializado()) {
     on<UsuarioIniciou>(_onUsuarioIniciou);
     on<UsuarioEditou>(_onUsuarioEditou);
@@ -33,11 +37,19 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
     try {
       emit(UsuarioCarregarEmProgresso());
       var usuario = await _recuperarUsuario(event.idUsuario);
+
       if (usuario == null) {
         emit(UsuarioCarregarFalha());
         return;
       }
-      emit(UsuarioCarregarSucesso(usuario: usuario));
+      GrupoDeAcesso? grupoDeAcesso =
+          await _recuperarGrupoDeAcessoDoUsuario(idUsuario: event.idUsuario!);
+      emit(
+        UsuarioCarregarSucesso(
+          usuario: usuario,
+          grupoDeAcesso: grupoDeAcesso,
+        ),
+      );
     } catch (e, s) {
       emit(UsuarioCarregarFalha());
       addError(e, s);
@@ -59,6 +71,7 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
           nome: event.nome,
           senha: event.senha,
           tipo: event.tipo,
+          grupoDeAcesso: event.grupoDeAcesso,
         ),
       );
     }
@@ -71,7 +84,12 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
     try {
       var informacoesDoUsuario = state as UsuarioEditarEmProgresso;
       emit(UsuarioSalvarEmProgresso());
-
+      if (informacoesDoUsuario.grupoDeAcesso != null) {
+        _vincularUsuarioAoGrupoDeAcesso.call(
+          idUsuario: informacoesDoUsuario.usuario!.id,
+          idGrupoDeAcesso: informacoesDoUsuario.grupoDeAcesso!.id,
+        );
+      }
       var usuario = await _salvarUsuario.call(
         usuario: informacoesDoUsuario.usuario,
         login: informacoesDoUsuario.login,

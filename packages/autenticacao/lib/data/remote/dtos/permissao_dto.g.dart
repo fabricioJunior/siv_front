@@ -9,7 +9,7 @@ part of 'permissao_dto.dart';
 PermissaoDto _$PermissaoDtoFromJson(Map<String, dynamic> json) => PermissaoDto(
       id: json['id'] as String?,
       nome: json['nome'] as String?,
-      descontinuado: (json['descontinuado'] as bool?) ?? true,
+      descontinuado: json['descontinuado'] as bool,
     );
 
 Map<String, dynamic> _$PermissaoDtoToJson(PermissaoDto instance) =>

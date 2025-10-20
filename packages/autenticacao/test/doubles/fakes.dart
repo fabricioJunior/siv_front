@@ -1,6 +1,4 @@
-import 'package:autenticacao/domain/models/permissao.dart';
-import 'package:autenticacao/domain/models/token.dart';
-import 'package:autenticacao/domain/models/usuario.dart';
+import 'package:autenticacao/models.dart';
 
 Token fakeToken({
   String jwtToken = 'jwtToken',
@@ -40,3 +38,14 @@ Permissao fakePermissao({
     descontinuado: descontinuado,
   );
 }
+
+GrupoDeAcesso fakeGrupoDeAcesso({
+  int id = 0,
+  String nome = 'nome',
+  List<Permissao> permissoes = const [],
+}) =>
+    GrupoDeAcesso.instance(
+      id: id,
+      nome: nome,
+      permissoes: permissoes,
+    );

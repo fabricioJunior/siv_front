@@ -16,14 +16,18 @@ final RecuperarGrupoDeAcessoDoUsuario recuperarGrupoDeAcessoDoUsuario =
 final VincularUsuarioAoGrupoDeAcesso vincularUsuarioAoGrupoDeAcesso =
     MockVincularUsuarioAoGrupoDeAcesso();
 late UsuarioBloc usuarioBloc;
+
 void main() {
   group('usuario bloc', () {
     var usuario = fakeUsuario();
+    var grupoDeAcesso = fakeGrupoDeAcesso();
 
     setUp(() {
       usuarioBloc = UsuarioBloc(
         recuperarUsuario,
         salvarUsuario,
+        recuperarGrupoDeAcessoDoUsuario,
+        vincularUsuarioAoGrupoDeAcesso,
       );
     });
     blocTest<UsuarioBloc, UsuarioState>(
@@ -33,6 +37,10 @@ void main() {
       },
       setUp: () {
         _setupRecuperarUsuario(usuario.id, usuario: usuario);
+        _setupRecuperaGrupoDeAcessoDoUsuario(
+          grupoDeAcesso: grupoDeAcesso,
+          idUsuario: usuario.id,
+        );
       },
       act: (bloc) => bloc.add(
         UsuarioIniciou(
@@ -41,7 +49,10 @@ void main() {
       ),
       expect: () => [
         UsuarioCarregarEmProgresso(),
-        UsuarioCarregarSucesso(usuario: usuario),
+        UsuarioCarregarSucesso(
+          usuario: usuario,
+          grupoDeAcesso: grupoDeAcesso,
+        ),
       ],
     );
 
@@ -51,10 +62,14 @@ void main() {
         return usuarioBloc;
       },
       setUp: () {},
-      seed: () => UsuarioCarregarSucesso(usuario: usuario),
+      seed: () => UsuarioCarregarSucesso(
+          usuario: usuario, grupoDeAcesso: grupoDeAcesso),
       act: (bloc) => bloc.add(UsuarioEditou()),
       expect: () => [
-        UsuarioEditarEmProgresso(usuario),
+        UsuarioEditarEmProgresso(
+          usuario,
+          grupoDeAcessoDoUsuario: grupoDeAcesso,
+        ),
       ],
     );
     blocTest<UsuarioBloc, UsuarioState>(
@@ -79,14 +94,19 @@ void main() {
       setUp: () {},
       seed: () => UsuarioEditarEmProgresso.empty(),
       act: (bloc) => bloc.add(UsuarioEditou(
-          nome: 'nome editado',
-          login: 'login editado',
-          senha: 'senha editada')),
+        nome: 'nome editado',
+        login: 'login editado',
+        senha: 'senha editada',
+        tipo: TipoUsuario.padrao,
+        grupoDeAcesso: grupoDeAcesso,
+      )),
       expect: () => [
         UsuarioEditarEmProgresso.empty(
           nome: 'nome editado',
           login: 'login editado',
           senha: 'senha editada',
+          tipo: TipoUsuario.padrao,
+          grupoDeAcesso: grupoDeAcesso,
         ),
       ],
     );
@@ -108,6 +128,10 @@ void main() {
             senha: 'senha editada',
           ),
         );
+        _setupVincularUsuarioAoGrupoDeAcesso(
+          idUsuario: usuario.id,
+          idGrupoDeAcesso: grupoDeAcesso.id,
+        );
       },
       seed: () => UsuarioEditarEmProgresso.empty(
         nome: 'nome editado',
@@ -127,6 +151,14 @@ void main() {
           ),
         ),
       ],
+      verify: (bloc) {
+        verify(
+          vincularUsuarioAoGrupoDeAcesso.call(
+            idUsuario: usuario.id,
+            idGrupoDeAcesso: grupoDeAcesso.id,
+          ),
+        );
+      },
     );
   });
 }

@@ -1,4 +1,5 @@
 import 'package:autenticacao/models.dart';
+import 'package:autenticacao/presentation/bloc/grupos_de_acesso_bloc/grupos_de_acesso_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,21 @@ class UsuarioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<UsuarioBloc>(
-      create: (context) => sl<UsuarioBloc>()
-        ..add(UsuarioIniciou(
-          idUsuario: idUsuario,
-        )),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<UsuarioBloc>(
+          create: (context) => sl<UsuarioBloc>()
+            ..add(UsuarioIniciou(
+              idUsuario: idUsuario,
+            )),
+        ),
+        BlocProvider(
+          create: (context) => sl<GruposDeAcessoBloc>()
+            ..add(
+              const GruposDeAcessoIniciouEvent(),
+            ),
+        ),
+      ],
       child: Scaffold(
         floatingActionButton: _floatActionButton(),
         appBar: AppBar(
@@ -217,7 +228,47 @@ class UsuarioPage extends StatelessWidget {
                     },
                   );
                 },
-              )
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              const Text('Grupo de acesso'),
+              BlocBuilder<UsuarioBloc, UsuarioState>(
+                buildWhen: (previous, current) =>
+                    previous is! UsuarioEditarEmProgresso ||
+                    current is! UsuarioEditarEmProgresso,
+                builder: (context, state) {
+                  return BlocBuilder<GruposDeAcessoBloc, GruposDeAcessoState>(
+                    builder: (context, gruposDeAcessoState) {
+                      if (gruposDeAcessoState
+                          is GruposDeAcessoCarregarSucesso) {
+                        return DropdownButton<GrupoDeAcesso>(
+                          items: gruposDeAcessoState.grupos
+                              .map(
+                                (tipo) => DropdownMenuItem<GrupoDeAcesso>(
+                                  value: tipo,
+                                  child: Text(
+                                    tipo.nome,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          value: state.grupoDeAcesso,
+                          onChanged: (value) {
+                            if (value != null) {
+                              context.read<UsuarioBloc>().add(
+                                    UsuarioEditou(grupoDeAcesso: value),
+                                  );
+                            }
+                          },
+                        );
+                      }
+
+                      return const CircularProgressIndicator.adaptive();
+                    },
+                  );
+                },
+              ),
             ],
           ),
         ),

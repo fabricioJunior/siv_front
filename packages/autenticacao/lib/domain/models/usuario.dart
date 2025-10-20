@@ -1,4 +1,5 @@
 import 'package:core/equals.dart';
+import 'package:flutter/foundation.dart';
 
 mixin Usuario implements EquatableMixin {
   int get id;
@@ -28,6 +29,7 @@ mixin Usuario implements EquatableMixin {
         tipo,
       ];
 
+  @visibleForTesting
   static Usuario instance({
     required int id,
     required String login,

@@ -104,7 +104,6 @@ class GrupoDeAcessoBloc extends Bloc<GrupoDeAcessoEvent, GrupoDeAcessoState> {
     var permissoesAtualizadas =
         List<Permissao>.from(currentState.permissoesDoGrupo ?? [])
           ..remove(event.permissao);
-
     emit(
       GrupoDeAcessoEdicaoEmProgresso.fromLastState(
         state,

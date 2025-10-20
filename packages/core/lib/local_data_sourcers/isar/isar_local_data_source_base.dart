@@ -1,7 +1,8 @@
 import 'dart:developer';
 
 import 'package:core/local_data_sourcers/i_local_data_source.dart';
-import 'package:isar/isar.dart';
+
+import 'package:isar_community/isar.dart';
 
 import 'isar_dto.dart';
 

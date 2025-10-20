@@ -65,7 +65,7 @@ const UsuarioDtoSchema = CollectionSchema(
   getId: _usuarioDtoGetId,
   getLinks: _usuarioDtoGetLinks,
   attach: _usuarioDtoAttach,
-  version: '3.1.8',
+  version: '3.3.0-dev.1',
 );
 
 int _usuarioDtoEstimateSize(

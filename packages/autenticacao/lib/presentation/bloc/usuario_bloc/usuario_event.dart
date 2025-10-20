@@ -13,12 +13,14 @@ class UsuarioEditou extends UsuarioEvent {
   final String? login;
   final String? senha;
   final TipoUsuario? tipo;
+  final GrupoDeAcesso? grupoDeAcesso;
 
   UsuarioEditou({
     this.nome,
     this.login,
     this.senha,
     this.tipo,
+    this.grupoDeAcesso,
   });
 }
 

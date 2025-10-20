@@ -2,7 +2,7 @@ name: core
 description: "Fornece padronização de métodos dos pacotes da aplicação"
 version: 0.0.1
 homepage:
-isar_version: &isar_version 3.1.8 # define the version to be used
+isar_version: &isar_version 3.3.0-dev.1 # define the version to be used
 
 
 environment:
@@ -13,12 +13,11 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.2
-  isar: 
+  isar_community: 
     version: *isar_version
-    hosted: https://pub.isar-community.dev/
-  isar_flutter_libs: # contains Isar Core
+  isar_community_flutter_libs: # contains Isar Core
     version: *isar_version
-    hosted: https://pub.isar-community.dev/
+
   path_provider: ^2.1.5
   equatable: ^2.0.7
   mockito: ^5.4.4

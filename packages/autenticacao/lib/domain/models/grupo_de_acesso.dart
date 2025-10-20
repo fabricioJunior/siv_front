@@ -1,5 +1,6 @@
 import 'package:autenticacao/models.dart';
 import 'package:core/equals.dart';
+import 'package:flutter/foundation.dart';
 
 mixin GrupoDeAcesso implements EquatableMixin {
   int get id;
@@ -26,6 +27,18 @@ mixin GrupoDeAcesso implements EquatableMixin {
       permissoes: permissoes ?? this.permissoes,
     );
   }
+
+  @visibleForTesting
+  static GrupoDeAcesso instance({
+    required int id,
+    required String nome,
+    required List<Permissao> permissoes,
+  }) =>
+      _GrupoDeAcesso(
+        id: id,
+        nome: nome,
+        permissoes: permissoes,
+      );
 }
 
 class _GrupoDeAcesso with GrupoDeAcesso {

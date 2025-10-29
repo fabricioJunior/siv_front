@@ -7,7 +7,7 @@ part 'grupo_de_acesso_dto.g.dart';
 @JsonSerializable()
 class GrupoDeAcessoDto with GrupoDeAcesso {
   @override
-  final int id;
+  final int? id;
 
   @override
   final String nome;
@@ -31,6 +31,4 @@ class _Item {
   final List<PermissaoDto> permissoes;
 
   _Item({required this.permissoes});
-
-  factory _Item.fromJson(Map<String, dynamic> json) => _$ItemFromJson(json);
 }

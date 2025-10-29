@@ -12,14 +12,10 @@ part 'usuario_state.dart';
 class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
   final RecuperarUsuario _recuperarUsuario;
   final SalvarUsuario _salvarUsuario;
-  final RecuperarGrupoDeAcessoDoUsuario _recuperarGrupoDeAcessoDoUsuario;
-  final VincularUsuarioAoGrupoDeAcesso _vincularUsuarioAoGrupoDeAcesso;
 
   UsuarioBloc(
     this._recuperarUsuario,
     this._salvarUsuario,
-    this._recuperarGrupoDeAcessoDoUsuario,
-    this._vincularUsuarioAoGrupoDeAcesso,
   ) : super(UsuarioNaoInicializado()) {
     on<UsuarioIniciou>(_onUsuarioIniciou);
     on<UsuarioEditou>(_onUsuarioEditou);
@@ -42,12 +38,10 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
         emit(UsuarioCarregarFalha());
         return;
       }
-      GrupoDeAcesso? grupoDeAcesso =
-          await _recuperarGrupoDeAcessoDoUsuario(idUsuario: event.idUsuario!);
+
       emit(
         UsuarioCarregarSucesso(
           usuario: usuario,
-          grupoDeAcesso: grupoDeAcesso,
         ),
       );
     } catch (e, s) {
@@ -84,12 +78,7 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
     try {
       var informacoesDoUsuario = state as UsuarioEditarEmProgresso;
       emit(UsuarioSalvarEmProgresso());
-      if (informacoesDoUsuario.grupoDeAcesso != null) {
-        _vincularUsuarioAoGrupoDeAcesso.call(
-          idUsuario: informacoesDoUsuario.usuario!.id,
-          idGrupoDeAcesso: informacoesDoUsuario.grupoDeAcesso!.id,
-        );
-      }
+
       var usuario = await _salvarUsuario.call(
         usuario: informacoesDoUsuario.usuario,
         login: informacoesDoUsuario.login,

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_permissoes_do_grupo_de_acesso.dart';
 import 'package:autenticacao/models.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
@@ -155,7 +154,7 @@ class GrupoDeAcessoBloc extends Bloc<GrupoDeAcessoEvent, GrupoDeAcessoState> {
     Emitter<GrupoDeAcessoState> emit,
   ) async {
     try {
-      await _excluirGrupoDeAcesso.call(state.id ?? state.grupoDeAcesso!.id);
+      await _excluirGrupoDeAcesso.call(state.id ?? state.grupoDeAcesso!.id!);
       emit(GrupoDeAcessoExcluirGrupoSucesso());
     } catch (e, s) {
       emit(GrupoDeAcessoExcluirGrupoSucesso());

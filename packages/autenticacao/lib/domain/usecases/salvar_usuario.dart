@@ -1,11 +1,12 @@
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
-
 import '../models/usuario.dart';
 
 class SalvarUsuario {
   final IUsuariosRepository usuariosRepository;
 
-  SalvarUsuario({required this.usuariosRepository});
+  SalvarUsuario({
+    required this.usuariosRepository,
+  });
 
   Future<Usuario> call({
     required Usuario? usuario,

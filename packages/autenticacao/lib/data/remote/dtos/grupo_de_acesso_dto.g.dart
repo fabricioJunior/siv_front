@@ -8,7 +8,7 @@ part of 'grupo_de_acesso_dto.dart';
 
 GrupoDeAcessoDto _$GrupoDeAcessoDtoFromJson(Map<String, dynamic> json) =>
     GrupoDeAcessoDto(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt(),
       nome: json['nome'] as String,
       permissoes: (json['itens'] as List<dynamic>)
           .map((e) => PermissaoDto.fromJson(e as Map<String, dynamic>))

@@ -11,7 +11,8 @@ import 'package:mockito/annotations.dart';
   RecuperarUsuarios,
   RecuperarUsuarioDaSessao,
   RecuperarPermissoes,
-  RecuperarGrupoDeAcessoDoUsuario,
+  RecuperarVinculosGrupoDeAcessoDoUsuario,
   VincularUsuarioAoGrupoDeAcesso,
+  RecuperarEmpresas,
 ])
 void main() {}

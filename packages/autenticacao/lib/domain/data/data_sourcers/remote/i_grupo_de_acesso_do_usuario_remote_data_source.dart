@@ -1,10 +1,14 @@
-import 'package:autenticacao/domain/models/grupo_de_acesso.dart';
+import 'package:autenticacao/domain/models/vinculo_grupo_de_acesso_e_usuario.dart';
 
-abstract class IGrupoDeAcessoDoUsuarioRemoteDataSource {
-  Future<void> vincularGrupoDeAcessoComUsuario(
+abstract class IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource {
+  Future<VinculoGrupoDeAcessoEUsuario> vincularGrupoDeAcessoComUsuario(
     int idUser,
     int idGrupoDeAcesso,
+    int idEmpresa,
   );
 
-  Future<GrupoDeAcesso> recuperarGrupoDeAcessoDoUsuario(int idUser);
+  Future<List<VinculoGrupoDeAcessoEUsuario>>
+      recuperarGrupoDeAcessoDoUsuarioEIdEmpresa(
+    int idUsuario,
+  );
 }

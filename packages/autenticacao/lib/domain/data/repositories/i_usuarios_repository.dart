@@ -1,3 +1,4 @@
+import 'package:autenticacao/domain/models/grupo_de_acesso.dart';
 import 'package:autenticacao/domain/models/usuario.dart';
 
 abstract class IUsuariosRepository {

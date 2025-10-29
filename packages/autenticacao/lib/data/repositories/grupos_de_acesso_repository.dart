@@ -3,31 +3,26 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/models/grupo_de_acesso.dart';
+import 'package:autenticacao/domain/models/vinculo_grupo_de_acesso_e_usuario.dart';
 
 import '../../domain/models/permissao.dart';
 
 class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
   final IGruposDeAcessoRemoteDataSource gruposDeAcessoRemoteDataSource;
-  final IGrupoDeAcessoDoUsuarioRemoteDataSource
-      grupoDeAcessoDoUsuarioRemoteDataSource;
+  final IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource
+      vinculosGrupoDeAcessoUsuarioRemoteDataSource;
   final IPermissoesDoGrupoAcessoRemoteDataSource
       permissoesDoGrupoAcessoRemoteDataSource;
 
   GruposDeAcessoRepository({
     required this.gruposDeAcessoRemoteDataSource,
     required this.permissoesDoGrupoAcessoRemoteDataSource,
-    required this.grupoDeAcessoDoUsuarioRemoteDataSource,
+    required this.vinculosGrupoDeAcessoUsuarioRemoteDataSource,
   });
 
   @override
   Future<Iterable<GrupoDeAcesso>> getGruposDeAcesso() {
     return gruposDeAcessoRemoteDataSource.getGruposDeAcesso();
-  }
-
-  @override
-  Future<GrupoDeAcesso> grupoDeAcessoDoUsuario(int idUsuario) {
-    return grupoDeAcessoDoUsuarioRemoteDataSource
-        .recuperarGrupoDeAcessoDoUsuario(idUsuario);
   }
 
   @override
@@ -44,18 +39,18 @@ class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
     await permissoesDoGrupoAcessoRemoteDataSource
         .vincularPermissoesGrupoDeAcesso(
       permissoes: permissoesAdicionadas,
-      idGrupoDeAcesso: grupoDeAcesso.id,
+      idGrupoDeAcesso: grupoDeAcesso.id!,
     );
     await permissoesDoGrupoAcessoRemoteDataSource
         .removerPermissoesGrupoDeAcesso(
       permissoes: permissoesRemovidas,
-      idGrupoDeAcesso: grupoDeAcesso.id,
+      idGrupoDeAcesso: grupoDeAcesso.id!,
     );
     await gruposDeAcessoRemoteDataSource.putGrupoDeAcesso(
       nome: grupoDeAcesso.nome,
-      idGrupoDeAcesso: grupoDeAcesso.id,
+      idGrupoDeAcesso: grupoDeAcesso.id!,
     );
-    var grupoDeAcessoAtualizado = await getGrupoDeAcesso(grupoDeAcesso.id);
+    var grupoDeAcessoAtualizado = await getGrupoDeAcesso(grupoDeAcesso.id!);
     return grupoDeAcessoAtualizado!;
   }
 
@@ -65,14 +60,16 @@ class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
   }
 
   @override
-  Future<void> vincularGrupoDeAcessoComUsuario(
+  Future<VinculoGrupoDeAcessoEUsuario> vincularGrupoDeAcessoComUsuario(
     int idUsuario,
     int idGrupoDeAcesso,
+    int idEmpresa,
   ) {
-    return grupoDeAcessoDoUsuarioRemoteDataSource
+    return vinculosGrupoDeAcessoUsuarioRemoteDataSource
         .vincularGrupoDeAcessoComUsuario(
       idUsuario,
       idGrupoDeAcesso,
+      idEmpresa,
     );
   }
 
@@ -80,5 +77,12 @@ class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
   Future<void> deleteGrupoDeAcesso(int idGrupoDeAcesso) {
     return gruposDeAcessoRemoteDataSource.excluirGrupoDeAcesso(
         idGrupoDeAcesso: idGrupoDeAcesso);
+  }
+
+  @override
+  Future<List<VinculoGrupoDeAcessoEUsuario>> grupoDeAcessoDoUsuarioEIdEmpresa(
+      int idUsuario) {
+    return vinculosGrupoDeAcessoUsuarioRemoteDataSource
+        .recuperarGrupoDeAcessoDoUsuarioEIdEmpresa(idUsuario);
   }
 }

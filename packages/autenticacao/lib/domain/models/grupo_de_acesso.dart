@@ -3,7 +3,7 @@ import 'package:core/equals.dart';
 import 'package:flutter/foundation.dart';
 
 mixin GrupoDeAcesso implements EquatableMixin {
-  int get id;
+  int? get id;
   String get nome;
   List<Permissao> get permissoes;
 
@@ -43,7 +43,7 @@ mixin GrupoDeAcesso implements EquatableMixin {
 
 class _GrupoDeAcesso with GrupoDeAcesso {
   @override
-  final int id;
+  final int? id;
 
   @override
   final String nome;

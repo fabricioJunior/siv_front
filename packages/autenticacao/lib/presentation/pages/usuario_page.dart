@@ -40,8 +40,17 @@ class UsuarioPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(
+                        '/vinculos_grupo_de_acesso_com_usuario',
+                        arguments: {'idUsuario': idUsuario},
+                      );
+                    },
+                    child: Text('Grupos de Acesso'),
+                  ),
                   BlocBuilder<UsuarioBloc, UsuarioState>(
                     buildWhen: (previous, current) =>
                         previous is! UsuarioEditarEmProgresso,
@@ -231,43 +240,6 @@ class UsuarioPage extends StatelessWidget {
               ),
               const SizedBox(
                 height: 16,
-              ),
-              const Text('Grupo de acesso'),
-              BlocBuilder<UsuarioBloc, UsuarioState>(
-                buildWhen: (previous, current) =>
-                    previous is! UsuarioEditarEmProgresso ||
-                    current is! UsuarioEditarEmProgresso,
-                builder: (context, state) {
-                  return BlocBuilder<GruposDeAcessoBloc, GruposDeAcessoState>(
-                    builder: (context, gruposDeAcessoState) {
-                      if (gruposDeAcessoState
-                          is GruposDeAcessoCarregarSucesso) {
-                        return DropdownButton<GrupoDeAcesso>(
-                          items: gruposDeAcessoState.grupos
-                              .map(
-                                (tipo) => DropdownMenuItem<GrupoDeAcesso>(
-                                  value: tipo,
-                                  child: Text(
-                                    tipo.nome,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          value: state.grupoDeAcesso,
-                          onChanged: (value) {
-                            if (value != null) {
-                              context.read<UsuarioBloc>().add(
-                                    UsuarioEditou(grupoDeAcesso: value),
-                                  );
-                            }
-                          },
-                        );
-                      }
-
-                      return const CircularProgressIndicator.adaptive();
-                    },
-                  );
-                },
               ),
             ],
           ),

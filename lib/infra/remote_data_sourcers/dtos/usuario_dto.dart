@@ -4,7 +4,9 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'usuario_dto.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(
+  createToJson: false,
+)
 class UsuarioDto with Usuario, EquatableMixin {
   @override
   final int id;

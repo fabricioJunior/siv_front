@@ -2,16 +2,18 @@ import 'dart:io';
 
 import 'package:autenticacao/data/local/dtos/token_dto.dart';
 import 'package:autenticacao/data/local_data_sources.dart';
-import 'package:autenticacao/data/remote/grupo_de_acesso_do_usuario_remote_data_source.dart';
+import 'package:autenticacao/data/remote/vinculo_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/data/remote/grupos_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/data/remote/permissoes_remote_data_source.dart';
 import 'package:autenticacao/data/remote_data_sourcers.dart';
+import 'package:autenticacao/data/repositories/empresas_repository.dart';
 import 'package:autenticacao/data/repositories/grupos_de_acesso_repository.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
+import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
@@ -23,6 +25,7 @@ import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:autenticacao/presentation/bloc/permissoes_bloc/permissoes_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuario_bloc/usuario_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuarios_bloc/usuarios_bloc.dart';
+import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
@@ -60,8 +63,6 @@ void _presentation() {
   sl.registerFactory<UsuarioBloc>(() => UsuarioBloc(
         sl(),
         sl(),
-        sl(),
-        sl(),
       ));
 
   sl.registerFactory<PermissoesBloc>(
@@ -79,6 +80,14 @@ void _presentation() {
     () => GrupoDeAcessoBloc(
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<VinculosGrupoDeAcessoUsuarioBloc>(
+    () => VinculosGrupoDeAcessoUsuarioBloc(
       sl(),
       sl(),
       sl(),
@@ -173,9 +182,10 @@ void _usesCases() {
       repository: sl(),
     ),
   );
-  sl.registerFactory<RecuperarGrupoDeAcessoDoUsuario>(
-    () => RecuperarGrupoDeAcessoDoUsuario(
+  sl.registerFactory<RecuperarVinculosGrupoDeAcessoDoUsuario>(
+    () => RecuperarVinculosGrupoDeAcessoDoUsuario(
       repository: sl(),
+      empresasRepository: sl(),
     ),
   );
 
@@ -184,6 +194,10 @@ void _usesCases() {
       repository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarEmpresas>(() => RecuperarEmpresas(
+        repository: sl(),
+      ));
 }
 
 void _repositories() {
@@ -215,7 +229,13 @@ void _repositories() {
     () => GruposDeAcessoRepository(
       gruposDeAcessoRemoteDataSource: sl(),
       permissoesDoGrupoAcessoRemoteDataSource: sl(),
-      grupoDeAcessoDoUsuarioRemoteDataSource: sl(),
+      vinculosGrupoDeAcessoUsuarioRemoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IEmpresasRepository>(
+    () => EmpresasRepository(
+      empresasRemoteDataSource: sl(),
     ),
   );
 }
@@ -263,8 +283,8 @@ void _remoteData() {
     ),
   );
 
-  sl.registerFactory<IGrupoDeAcessoDoUsuarioRemoteDataSource>(
-    () => GrupoDeAcessoDoUsuarioRemoteDataSource(
+  sl.registerFactory<IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource>(
+    () => VinculorGrupoDeAcessoDoUsuarioRemoteDataSource(
       informacoesParaRequest: sl(),
     ),
   );

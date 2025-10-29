@@ -3,7 +3,8 @@ part of 'usuario_bloc.dart';
 abstract class UsuarioState extends Equatable {
   Usuario? get usuario;
 
-  GrupoDeAcesso? get grupoDeAcesso => null;
+  int? get idEmpresa => null;
+
   @override
   List<Object?> get props => [];
 }
@@ -22,12 +23,8 @@ class UsuarioCarregarSucesso extends UsuarioState {
   @override
   final Usuario usuario;
 
-  @override
-  final GrupoDeAcesso? grupoDeAcesso;
-
   UsuarioCarregarSucesso({
     required this.usuario,
-    required this.grupoDeAcesso,
   });
 
   @override
@@ -45,8 +42,6 @@ class UsuarioEditarEmProgresso extends UsuarioState {
   final String? senha;
   final TipoUsuario? tipo;
   @override
-  final GrupoDeAcesso? grupoDeAcesso;
-  @override
   final Usuario? usuario;
 
   UsuarioEditarEmProgresso(
@@ -55,8 +50,7 @@ class UsuarioEditarEmProgresso extends UsuarioState {
   })  : nome = usuario?.nome,
         login = usuario?.login,
         senha = usuario?.senha,
-        tipo = usuario?.tipo,
-        grupoDeAcesso = grupoDeAcessoDoUsuario;
+        tipo = usuario?.tipo;
 
   UsuarioEditarEmProgresso.fromLastState(
     UsuarioEditarEmProgresso state, {
@@ -70,8 +64,7 @@ class UsuarioEditarEmProgresso extends UsuarioState {
         login = login ?? state.login,
         senha = senha ?? state.senha,
         tipo = tipo ?? state.tipo,
-        usuario = usuario ?? state.usuario,
-        grupoDeAcesso = grupoDeAcesso ?? state.grupoDeAcesso;
+        usuario = usuario ?? state.usuario;
 
   UsuarioEditarEmProgresso.empty({
     this.nome,
@@ -79,7 +72,6 @@ class UsuarioEditarEmProgresso extends UsuarioState {
     this.senha,
     this.tipo,
     this.usuario,
-    this.grupoDeAcesso,
   });
 
   @override
@@ -89,7 +81,6 @@ class UsuarioEditarEmProgresso extends UsuarioState {
         senha,
         tipo,
         usuario,
-        grupoDeAcesso,
       ];
 }
 

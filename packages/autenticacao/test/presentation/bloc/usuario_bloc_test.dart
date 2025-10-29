@@ -11,8 +11,7 @@ import '../../doubles/uses_cases.mocks.dart';
 
 final RecuperarUsuario recuperarUsuario = MockRecuperarUsuario();
 final SalvarUsuario salvarUsuario = MockSalvarUsuario();
-final RecuperarGrupoDeAcessoDoUsuario recuperarGrupoDeAcessoDoUsuario =
-    MockRecuperarGrupoDeAcessoDoUsuario();
+
 final VincularUsuarioAoGrupoDeAcesso vincularUsuarioAoGrupoDeAcesso =
     MockVincularUsuarioAoGrupoDeAcesso();
 late UsuarioBloc usuarioBloc;
@@ -26,8 +25,6 @@ void main() {
       usuarioBloc = UsuarioBloc(
         recuperarUsuario,
         salvarUsuario,
-        recuperarGrupoDeAcessoDoUsuario,
-        vincularUsuarioAoGrupoDeAcesso,
       );
     });
     blocTest<UsuarioBloc, UsuarioState>(
@@ -37,10 +34,6 @@ void main() {
       },
       setUp: () {
         _setupRecuperarUsuario(usuario.id, usuario: usuario);
-        _setupRecuperaGrupoDeAcessoDoUsuario(
-          grupoDeAcesso: grupoDeAcesso,
-          idUsuario: usuario.id,
-        );
       },
       act: (bloc) => bloc.add(
         UsuarioIniciou(
@@ -51,7 +44,6 @@ void main() {
         UsuarioCarregarEmProgresso(),
         UsuarioCarregarSucesso(
           usuario: usuario,
-          grupoDeAcesso: grupoDeAcesso,
         ),
       ],
     );
@@ -63,7 +55,8 @@ void main() {
       },
       setUp: () {},
       seed: () => UsuarioCarregarSucesso(
-          usuario: usuario, grupoDeAcesso: grupoDeAcesso),
+        usuario: usuario,
+      ),
       act: (bloc) => bloc.add(UsuarioEditou()),
       expect: () => [
         UsuarioEditarEmProgresso(
@@ -106,7 +99,6 @@ void main() {
           login: 'login editado',
           senha: 'senha editada',
           tipo: TipoUsuario.padrao,
-          grupoDeAcesso: grupoDeAcesso,
         ),
       ],
     );
@@ -128,10 +120,6 @@ void main() {
             senha: 'senha editada',
           ),
         );
-        _setupVincularUsuarioAoGrupoDeAcesso(
-          idUsuario: usuario.id,
-          idGrupoDeAcesso: grupoDeAcesso.id,
-        );
       },
       seed: () => UsuarioEditarEmProgresso.empty(
         nome: 'nome editado',
@@ -151,14 +139,6 @@ void main() {
           ),
         ),
       ],
-      verify: (bloc) {
-        verify(
-          vincularUsuarioAoGrupoDeAcesso.call(
-            idUsuario: usuario.id,
-            idGrupoDeAcesso: grupoDeAcesso.id,
-          ),
-        );
-      },
     );
   });
 }
@@ -182,23 +162,4 @@ void _setupSalvarUsuario({
     senha: senha,
     tipo: tipo,
   )).thenAnswer((_) async => response);
-}
-
-void _setupVincularUsuarioAoGrupoDeAcesso({
-  required int idUsuario,
-  required int idGrupoDeAcesso,
-}) {
-  when(vincularUsuarioAoGrupoDeAcesso.call(
-          idUsuario: idUsuario, idGrupoDeAcesso: idGrupoDeAcesso))
-      .thenAnswer(
-    (_) async {},
-  );
-}
-
-void _setupRecuperaGrupoDeAcessoDoUsuario({
-  required GrupoDeAcesso? grupoDeAcesso,
-  required int idUsuario,
-}) {
-  when(recuperarGrupoDeAcessoDoUsuario.call(idUsuario: idUsuario))
-      .thenAnswer((_) async => grupoDeAcesso);
 }

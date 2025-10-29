@@ -30,6 +30,11 @@ Map<String, Widget Function(BuildContext)> routes = {
       idGrupoDeAcesso: args(context)['idGrupoDeAcesso'],
     );
   },
+  '/vinculos_grupo_de_acesso_com_usuario': (context) {
+    return VinculosGrupoDeAcessoComUsuarioPage(
+      idUsuario: args(context)['idUsuario'],
+    );
+  },
 };
 
 Map<String, dynamic> args(BuildContext context) =>

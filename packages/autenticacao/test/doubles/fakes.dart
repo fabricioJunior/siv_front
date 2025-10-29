@@ -49,3 +49,23 @@ GrupoDeAcesso fakeGrupoDeAcesso({
       nome: nome,
       permissoes: permissoes,
     );
+
+VinculoGrupoDeAcessoEUsuario fakeVinculoGrupoDeAcessoEUsuario({
+  int idUsuario = 0,
+  GrupoDeAcesso? grupoDeAcesso,
+  Empresa? empresa,
+}) =>
+    VinculoGrupoDeAcessoEUsuario.instance(
+      idUsuario: idUsuario,
+      grupoDeAcesso: grupoDeAcesso,
+      empresa: empresa,
+    );
+
+Empresa fakeEmpresa({
+  int id = 0,
+  String nome = 'nome',
+}) =>
+    Empresa.instance(
+      id: id,
+      nome: nome,
+    );

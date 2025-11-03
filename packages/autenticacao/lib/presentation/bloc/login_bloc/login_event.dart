@@ -14,4 +14,8 @@ class LoginAdicionouSenha extends LoginEvent {
   LoginAdicionouSenha({required this.senha});
 }
 
-class LoginAutenticou extends LoginEvent {}
+class LoginAutenticou extends LoginEvent {
+  final Empresa? empresa;
+
+  LoginAutenticou({this.empresa});
+}

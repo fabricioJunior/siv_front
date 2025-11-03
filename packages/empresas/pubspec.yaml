@@ -16,7 +16,7 @@ dependencies:
   brasil_fields: ^1.17.0
   core:
     path: ../core
-
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

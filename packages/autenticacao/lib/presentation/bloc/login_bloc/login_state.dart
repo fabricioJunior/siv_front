@@ -3,18 +3,33 @@ part of 'login_bloc.dart';
 abstract class LoginState extends Equatable {
   final String? usuario;
   final String? senha;
+  final int? idEmpresa;
+  final List<Empresa>? empresas;
 
-  const LoginState({this.usuario, this.senha});
+  const LoginState({
+    this.usuario,
+    this.senha,
+    this.idEmpresa,
+    this.empresas,
+  });
 
   LoginState.fromLastState(
     LoginState lastState, {
     String? usuario,
     String? senha,
+    int? idEmpresa,
+    List<Empresa>? empresas,
   })  : usuario = usuario ?? lastState.usuario,
-        senha = senha ?? lastState.senha;
+        senha = senha ?? lastState.senha,
+        idEmpresa = idEmpresa ?? lastState.idEmpresa,
+        empresas = empresas ?? lastState.empresas;
 
   @override
-  List<Object?> get props => [usuario, senha];
+  List<Object?> get props => [
+        usuario,
+        senha,
+        idEmpresa,
+      ];
 }
 
 class LoginInicial extends LoginState {
@@ -32,11 +47,16 @@ class LoginAdicionarSenhaSucesso extends LoginState {
 }
 
 class LoginAutenticarEmProgresso extends LoginState {
-  LoginAutenticarEmProgresso(super.fromLastState) : super.fromLastState();
+  LoginAutenticarEmProgresso(
+    super.fromLastState,
+  ) : super.fromLastState();
 }
 
 class LoginAutenticarSucesso extends LoginState {
-  LoginAutenticarSucesso(super.lastState) : super.fromLastState();
+  LoginAutenticarSucesso(
+    super.lastState, {
+    required super.empresas,
+  }) : super.fromLastState();
 }
 
 class LoginAutenticarFalha extends LoginState {

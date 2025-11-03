@@ -13,16 +13,18 @@ final CriarTokenDeAutenticacao criarTokenDeAutenticacao =
     MockCriarTokenDeAutenticacao();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
-
+final RecuperarEmpresas recuperarEmpresas = MockRecuperarEmpresas();
 late LoginBloc loginBloc;
 void main() {
   setUp(() {
     loginBloc = LoginBloc(
       criarTokenDeAutenticacao,
       recuperarUsuarioDaSessao,
+      recuperarEmpresas,
     );
     var usuario = fakeUsuario();
     _setupRecuperarUsuarioDaSessao(usuario);
+    _setupRecuperarEmpresas();
   });
 
   group('login bloc', () {
@@ -35,8 +37,10 @@ void main() {
     );
     var estadoDeAutenticacaoEmProgresso =
         LoginAutenticarEmProgresso(estadoSucessoAdicionarSenha);
-    var estadoDeSucessoNaAutenticao =
-        LoginAutenticarSucesso(estadoDeAutenticacaoEmProgresso);
+    var estadoDeSucessoNaAutenticao = LoginAutenticarSucesso(
+      estadoDeAutenticacaoEmProgresso,
+      empresas: [],
+    );
 
     var estadoDeFalhaNaAutenticacao = LoginAutenticarFalha(
       estadoDeAutenticacaoEmProgresso,
@@ -130,4 +134,8 @@ void _setupFalhaCriarTokenDeAutenticacao(
 
 void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
   when(recuperarUsuarioDaSessao.call()).thenAnswer((_) async => usuario);
+}
+
+void _setupRecuperarEmpresas() {
+  when(recuperarEmpresas.call()).thenAnswer((_) async => []);
 }

@@ -19,6 +19,7 @@ import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_permissoes_do_grupo_de_acesso.dart';
+import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
@@ -53,8 +54,9 @@ void resolverDependenciasAutenticacao() {
 }
 
 void _presentation() {
-  sl.registerFactory<LoginBloc>(
-    () => LoginBloc(
+  sl.registerSingleton<LoginBloc>(
+    LoginBloc(
+      sl(),
       sl(),
       sl(),
     ),
@@ -99,6 +101,7 @@ void _usesCases() {
   sl.registerFactory<CriarTokenDeAutenticacao>(
     () => CriarTokenDeAutenticacao(
       repository: sl(),
+      empresasRepository: sl(),
     ),
   );
   sl.registerFactory<EstaAutenticado>(
@@ -198,6 +201,10 @@ void _usesCases() {
   sl.registerFactory<RecuperarEmpresas>(() => RecuperarEmpresas(
         repository: sl(),
       ));
+
+  sl.registerFactory<RecuperarEmpresaDaSessao>(
+    () => RecuperarEmpresaDaSessao(empresasRepository: sl()),
+  );
 }
 
 void _repositories() {
@@ -236,6 +243,7 @@ void _repositories() {
   sl.registerFactory<IEmpresasRepository>(
     () => EmpresasRepository(
       empresasRemoteDataSource: sl(),
+      empresaDaSessaoLocalDataSource: sl(),
     ),
   );
 }

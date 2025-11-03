@@ -8,4 +8,19 @@ abstract class IPessoasRepository {
   Future<Pessoa?> recuperarPessoaPeloDocumento(String documento);
 
   Future<Pessoa> salvarPessoa(Pessoa pessoa);
+
+  Future<Pessoa> novaPessoa({
+    required bool bloqueado,
+    required String contato,
+    required String documento,
+    required bool eCliente,
+    required bool eFornecedor,
+    required bool eFuncionario,
+    required String email,
+    String? inscricaoEstadual,
+    required String nome,
+    required TipoContato tipoContato,
+    required TipoPessoa tipoPessoa,
+    required String uf,
+  });
 }

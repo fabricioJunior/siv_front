@@ -26,5 +26,6 @@ class AppState extends Equatable {
 
 enum StatusAutenticacao {
   autenticado,
+  autenticando,
   naoAutenticao,
 }

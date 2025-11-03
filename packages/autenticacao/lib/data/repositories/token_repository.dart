@@ -37,11 +37,12 @@ class TokenRepository implements ITokenRepository {
   Future<Token?> recuperarTokenDoServidor(
     String usuario,
     String senha,
+    int? idEmpresa,
   ) {
     return remoteDataSource.getToken(
       usuario: usuario,
       senha: senha,
-      empresaId: null,
+      empresaId: idEmpresa,
     );
   }
 

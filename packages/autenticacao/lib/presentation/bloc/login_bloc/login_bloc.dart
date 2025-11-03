@@ -5,16 +5,20 @@ import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 
+import '../../../domain/models/empresa.dart';
+
 part 'login_state.dart';
 part 'login_event.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final CriarTokenDeAutenticacao _criarTokenDeAutenticacao;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
+  final RecuperarEmpresas _recuperarEmpresas;
 
   LoginBloc(
     this._criarTokenDeAutenticacao,
     this._recuperarUsuarioDaSessao,
+    this._recuperarEmpresas,
   ) : super(const LoginInicial()) {
     on<LoginAdicionouUsuario>(_onUsuarioAdicionoUsuario);
     on<LoginAdicionouSenha>(_onLoginAdicionouSenha);
@@ -44,6 +48,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       var token = await _criarTokenDeAutenticacao(
         usuario: state.usuario ?? '',
         senha: state.senha ?? '',
+        empresa: event.empresa,
       );
 
       await _recuperarUsuarioDaSessao.call();
@@ -51,7 +56,15 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         emit(LoginAutenticarFalha(state, erro: 'Usuário ou senha incorretos'));
         return;
       }
-      emit(LoginAutenticarSucesso(state));
+      List<Empresa> empresas =
+          state.empresas ?? await _recuperarEmpresas.call();
+
+      emit(
+        LoginAutenticarSucesso(
+          state,
+          empresas: empresas,
+        ),
+      );
     } catch (e, s) {
       emit(
         LoginAutenticarFalha(

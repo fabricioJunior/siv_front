@@ -631,6 +631,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  pessoas:
+    dependency: "direct main"
+    description:
+      path: "packages/pessoas"
+      relative: true
+    source: path
+    version: "0.0.1"
   platform:
     dependency: transitive
     description:

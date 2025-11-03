@@ -4,10 +4,10 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/usuario_dto.dart';
 
-class UsuarioDaSessaLocalDataSource
+class UsuarioDaSessaoLocalDataSource
     extends IsarLocalDataSourceBase<UsuarioDto, Usuario>
     implements IUsuarioDaSessaoLocalDataSource<UsuarioDto> {
-  UsuarioDaSessaLocalDataSource({required super.getIsar});
+  UsuarioDaSessaoLocalDataSource({required super.getIsar});
 
   @override
   UsuarioDto toDto(Usuario entity) {

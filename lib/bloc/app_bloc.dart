@@ -24,8 +24,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._recuperarUsuarioDaSessao,
     this._onDesautenticado,
   ) : super(const AppState()) {
-    _onAutenticacoSubscription =
-        _onAutenticado.call().listen((token) => add(AppAutenticou()));
+    _onAutenticacoSubscription = _onAutenticado
+        .call()
+        .listen((token) => add(AppAutenticou(token: token)));
     _onDesautenticadoSubscription =
         _onDesautenticado.call().listen((_) => add(AppDesautenticou()));
     on<AppIniciou>(_onAppIniciou);
@@ -39,8 +40,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       var usuarioDaSessao = await _recuperarUsuarioDaSessao();
+      if (event.token.idEmpresa == null) {}
       emit(state.copyWith(
-        statusAutenticacao: StatusAutenticacao.autenticado,
+        statusAutenticacao: event.token.idEmpresa == null
+            ? StatusAutenticacao.autenticando
+            : StatusAutenticacao.autenticado,
         usuarioDaSessao: usuarioDaSessao,
       ));
     } catch (e, s) {

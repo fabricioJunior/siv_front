@@ -32,13 +32,18 @@ const TokenDtoSchema = CollectionSchema(
       name: r'hashCode',
       type: IsarType.long,
     ),
-    r'jwtToken': PropertySchema(
+    r'idEmpresa': PropertySchema(
       id: 3,
+      name: r'idEmpresa',
+      type: IsarType.long,
+    ),
+    r'jwtToken': PropertySchema(
+      id: 4,
       name: r'jwtToken',
       type: IsarType.string,
     ),
     r'stringify': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'stringify',
       type: IsarType.bool,
     )
@@ -76,8 +81,9 @@ void _tokenDtoSerialize(
   writer.writeDateTime(offsets[0], object.dataDeCriacao);
   writer.writeDateTime(offsets[1], object.dataDeExpiracao);
   writer.writeLong(offsets[2], object.hashCode);
-  writer.writeString(offsets[3], object.jwtToken);
-  writer.writeBool(offsets[4], object.stringify);
+  writer.writeLong(offsets[3], object.idEmpresa);
+  writer.writeString(offsets[4], object.jwtToken);
+  writer.writeBool(offsets[5], object.stringify);
 }
 
 TokenDto _tokenDtoDeserialize(
@@ -89,7 +95,8 @@ TokenDto _tokenDtoDeserialize(
   final object = TokenDto(
     dataDeCriacao: reader.readDateTime(offsets[0]),
     dataDeExpiracao: reader.readDateTime(offsets[1]),
-    jwtToken: reader.readString(offsets[3]),
+    idEmpresa: reader.readLongOrNull(offsets[3]),
+    jwtToken: reader.readString(offsets[4]),
   );
   return object;
 }
@@ -108,8 +115,10 @@ P _tokenDtoDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
       return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -423,6 +432,75 @@ extension TokenDtoQueryFilter
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'idEmpresa',
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'idEmpresa',
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'idEmpresa',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'idEmpresa',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'idEmpresa',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> idEmpresaBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'idEmpresa',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> jwtTokenEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -623,6 +701,18 @@ extension TokenDtoQuerySortBy on QueryBuilder<TokenDto, TokenDto, QSortBy> {
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByIdEmpresa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idEmpresa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByIdEmpresaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idEmpresa', Sort.desc);
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByJwtToken() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'jwtToken', Sort.asc);
@@ -698,6 +788,18 @@ extension TokenDtoQuerySortThenBy
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByIdEmpresa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idEmpresa', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByIdEmpresaDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'idEmpresa', Sort.desc);
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByJwtToken() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'jwtToken', Sort.asc);
@@ -743,6 +845,12 @@ extension TokenDtoQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QDistinct> distinctByIdEmpresa() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'idEmpresa');
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QDistinct> distinctByJwtToken(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -780,6 +888,12 @@ extension TokenDtoQueryProperty
   QueryBuilder<TokenDto, int, QQueryOperations> hashCodeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hashCode');
+    });
+  }
+
+  QueryBuilder<TokenDto, int?, QQueryOperations> idEmpresaProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'idEmpresa');
     });
   }
 

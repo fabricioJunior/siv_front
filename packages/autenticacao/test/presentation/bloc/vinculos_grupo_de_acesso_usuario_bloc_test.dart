@@ -1,4 +1,3 @@
-import 'package:autenticacao/domain/usecases/recuperar_empresas.dart';
 import 'package:autenticacao/models.dart';
 import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';

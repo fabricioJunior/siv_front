@@ -18,7 +18,7 @@ void main() {
       remoteDataSource: tokenRemoteDataSource,
     );
   });
-
+  int idEmpresa = 123;
   group('token repository', () {
     test('putToken salva token localmente', () async {
       var token = fakeToken();
@@ -48,11 +48,12 @@ void main() {
         var usuario = 'user';
         var senha = 'senha123';
         var token = fakeToken();
-        _setupGetToken(usuario, senha, token: token);
+        _setupGetToken(usuario, senha, idEmpresa, token: token);
 
         var result = await tokenRepository.recuperarTokenDoServidor(
           usuario,
           senha,
+          idEmpresa,
         );
 
         expect(result, token);
@@ -63,14 +64,15 @@ void main() {
 
 void _setupGetToken(
   String usuario,
-  String senha, {
+  String senha,
+  int? idEmpresa, {
   required Token token,
 }) {
   when(
     tokenRemoteDataSource.getToken(
       usuario: usuario,
       senha: senha,
-      empresaId: null,
+      empresaId: idEmpresa,
     ),
   ).thenAnswer((_) async => token);
 }

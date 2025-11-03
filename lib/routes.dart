@@ -1,25 +1,19 @@
 import 'package:autenticacao/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:pessoas/pages.dart';
 import 'package:siv_front/pages/home_page.dart';
 import 'package:siv_front/pages/splash_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),
   '/home': (context) => const HomePage(),
+  ////AUTENTICACAO:
   '/login': (context) => const LoginPage(),
   '/usuarios': (context) => const UsuariosPage(),
   '/usuario': (context) {
     return UsuarioPage(
       idUsuario: args(context)['idUsuario'],
-    );
-  },
-  '/empresas': (context) {
-    return const EmpresasPage();
-  },
-  '/empresa': (context) {
-    return EmpresaPage(
-      idEmpresa: args(context)['idEmpresa'],
     );
   },
   '/grupos_de_acesso': (context) {
@@ -35,6 +29,24 @@ Map<String, Widget Function(BuildContext)> routes = {
       idUsuario: args(context)['idUsuario'],
     );
   },
+  '/selecionar_empresa': (context) {
+    return SelecionarEmpresaPage();
+  },
+
+  ///EMPRESAS:
+  '/empresas': (context) {
+    return const EmpresasPage();
+  },
+  '/empresa': (context) {
+    return EmpresaPage(
+      idEmpresa: args(context)['idEmpresa'],
+    );
+  },
+
+  ///PESSOAS:
+  '/pessoas': (context) {
+    return const PessoasPage();
+  }
 };
 
 Map<String, dynamic> args(BuildContext context) =>

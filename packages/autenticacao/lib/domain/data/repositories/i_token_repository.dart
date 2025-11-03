@@ -4,6 +4,7 @@ abstract class ITokenRepository {
   Future<Token?> recuperarTokenDoServidor(
     String usuario,
     String senha,
+    int? idEmpresa,
   );
 
   Future<Token?> recuperarToken();

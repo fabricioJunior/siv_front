@@ -55,6 +55,7 @@ class MyApp extends StatelessWidget {
                 Navigator.of(navigatorKey.currentContext!).pushNamed('/home');
               }
             }
+
             if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
               Navigator.of(navigatorKey.currentContext!).pushNamed('/login');
             }

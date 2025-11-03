@@ -15,12 +15,23 @@ class TokenRemoteDatasource extends RemoteDataSourceBase
     required String senha,
     required int? empresaId,
   }) async {
-    var body = {"usuario": usuario, "senha": senha};
+    var body = {
+      "usuario": usuario,
+      "senha": senha,
+    };
+    if (empresaId != null) {
+      body.addAll({
+        "empresaId": empresaId.toString(),
+      });
+    }
     var response = await post(body: body);
-    return tokenAPartirDaResponse(response);
+    return tokenAPartirDaResponse(response, empresaId);
   }
 
-  Token tokenAPartirDaResponse(IHttpResponse response) {
+  Token tokenAPartirDaResponse(
+    IHttpResponse response,
+    int? idEmpresa,
+  ) {
     var json = response.body as Map<String, dynamic>;
 
     return Token(
@@ -29,6 +40,7 @@ class TokenRemoteDatasource extends RemoteDataSourceBase
       dataDeExpiracao: DateTime.now().add(
         const Duration(hours: 1),
       ),
+      idEmpresa: idEmpresa,
     );
   }
 }
@@ -41,10 +53,13 @@ class TokenDto extends IRemoteDto implements Token {
   @override
   final DateTime dataDeExpiracao;
 
+  final int? idEmpresa;
+
   TokenDto({
     required this.jwtToken,
     required this.dataDeCriacao,
     required this.dataDeExpiracao,
+    this.idEmpresa,
   });
 
   @override

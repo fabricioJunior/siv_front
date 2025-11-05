@@ -7,10 +7,10 @@ mixin Pessoa implements Equatable {
   String get nome;
   TipoPessoa get tipoPessoa;
   String get documento;
-  String get uf;
+  String? get uf;
   String? get inscricaoEstadual;
   DateTime? dataDeNascimento;
-  String get email;
+  String? get email;
   TipoContato get tipoContato;
   String get contato;
   bool get eCliente;
@@ -86,7 +86,6 @@ mixin Pessoa implements Equatable {
 
   @override
   List<Object?> get props => [
-        id,
         nome,
         tipoPessoa,
         documento,
@@ -126,7 +125,7 @@ class _Pessoa with Pessoa {
   final bool eFuncionario;
 
   @override
-  final String email;
+  final String? email;
 
   @override
   final int id;
@@ -144,7 +143,7 @@ class _Pessoa with Pessoa {
   final TipoPessoa tipoPessoa;
 
   @override
-  final String uf;
+  final String? uf;
 
   @override
   final DateTime? dataDeNascimento;

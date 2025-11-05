@@ -207,6 +207,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
+  cpf_cnpj_validator:
+    dependency: transitive
+    description:
+      name: cpf_cnpj_validator
+      sha256: "2d52caefe720f7428d8fd12b5dc3a9603e137ae4eafe032b8f1bd104d3656bfb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   crypto:
     dependency: transitive
     description:
@@ -239,6 +247,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  date_format_field:
+    dependency: transitive
+    description:
+      name: date_format_field
+      sha256: d07a428bd253454ff3123f2e57511cf6ec101d1135af3b79cebb40e1bee8bab8
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   diff_match_patch:
     dependency: transitive
     description:
@@ -503,6 +519,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  mask_text_input_formatter:
+    dependency: transitive
+    description:
+      name: mask_text_input_formatter
+      sha256: "978c58ec721c25621ceb468e633f4eef64b64d45424ac4540e0565d4f7c800cd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.9.0"
   matcher:
     dependency: transitive
     description:

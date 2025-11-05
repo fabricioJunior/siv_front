@@ -13,22 +13,19 @@ PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
       eCliente: json['cliente'] as bool,
       eFornecedor: json['fornecedor'] as bool,
       eFuncionario: json['funcionario'] as bool,
-      email: json['email'] as String,
+      email: json['email'] as String?,
       id: (json['id'] as num?)?.toInt(),
       inscricaoEstadual: json['inscricaoEstadual'] as String?,
       nome: json['nome'] as String,
       tipoPessoa: tipoPessoaFromJson(json['tipo']),
       tipoContato: tipoContatoFromJson(json['tipoContato']),
-      uf: json['ufInscricaoEstadual'] as String,
-      nascimento: json['nascimento'] == null
-          ? null
-          : DateTime.parse(json['nascimento'] as String),
+      uf: json['ufInscricaoEstadual'] as String?,
+      nascimento: DateTime.parse(json['nascimento'] as String),
     )..dataDeNascimento = json['dataDeNascimento'] == null
         ? null
         : DateTime.parse(json['dataDeNascimento'] as String);
 
 Map<String, dynamic> _$PessoaDtoToJson(PessoaDto instance) => <String, dynamic>{
-      'dataDeNascimento': instance.dataDeNascimento?.toIso8601String(),
       'bloqueado': instance.bloqueado,
       'contato': instance.contato,
       'documento': instance.documento,
@@ -42,5 +39,6 @@ Map<String, dynamic> _$PessoaDtoToJson(PessoaDto instance) => <String, dynamic>{
       'tipo': tipoPessoaToJson(instance.tipoPessoa),
       'tipoContato': tipoContatoToJson(instance.tipoContato),
       'ufInscricaoEstadual': instance.uf,
+      'dataDeNascimento': instance.dataDeNascimento?.toIso8601String(),
       'nascimento': instance.nascimento?.toIso8601String(),
     };

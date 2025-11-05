@@ -8,9 +8,11 @@ import 'dart:async' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:pessoas/domain/models/pessoa.dart' as _i2;
 import 'package:pessoas/domain/usecases/criar_pessoa.dart' as _i3;
+import 'package:pessoas/domain/usecases/recuperar_pessoa.dart' as _i7;
 import 'package:pessoas/domain/usecases/recuperar_pessoa_pelo_documento.dart'
     as _i5;
 import 'package:pessoas/domain/usecases/recuperar_pessoas.dart' as _i6;
+import 'package:pessoas/domain/usecases/salvar_pessoa.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -58,6 +60,7 @@ class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
     required _i2.TipoContato? tipoContato,
     required _i2.TipoPessoa? tipoPessoa,
     required String? uf,
+    required DateTime? dataDeNascimento,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -76,6 +79,7 @@ class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
             #tipoContato: tipoContato,
             #tipoPessoa: tipoPessoa,
             #uf: uf,
+            #dataDeNascimento: dataDeNascimento,
           },
         ),
         returnValue: _i4.Future<_i2.Pessoa>.value(_FakePessoa_0(
@@ -96,6 +100,7 @@ class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
               #tipoContato: tipoContato,
               #tipoPessoa: tipoPessoa,
               #uf: uf,
+              #dataDeNascimento: dataDeNascimento,
             },
           ),
         )),
@@ -139,4 +144,95 @@ class MockRecuperarPessoas extends _i1.Mock implements _i6.RecuperarPessoas {
         ),
         returnValue: _i4.Future<Iterable<_i2.Pessoa>>.value(<_i2.Pessoa>[]),
       ) as _i4.Future<Iterable<_i2.Pessoa>>);
+}
+
+/// A class which mocks [RecuperarPessoa].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarPessoa extends _i1.Mock implements _i7.RecuperarPessoa {
+  MockRecuperarPessoa() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<_i2.Pessoa?> call({required int? idPessoa}) => (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {#idPessoa: idPessoa},
+        ),
+        returnValue: _i4.Future<_i2.Pessoa?>.value(),
+      ) as _i4.Future<_i2.Pessoa?>);
+}
+
+/// A class which mocks [SalvarPessoa].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSalvarPessoa extends _i1.Mock implements _i8.SalvarPessoa {
+  MockSalvarPessoa() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<_i2.Pessoa> call({
+    required _i2.Pessoa? pessoa,
+    String? nome,
+    _i2.TipoPessoa? tipoPessoa,
+    String? documento,
+    String? uf,
+    String? inscricaoEstadual,
+    DateTime? dataDeNascimento,
+    String? email,
+    _i2.TipoContato? tipoContato,
+    String? contato,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
+    bool? bloqueado,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #pessoa: pessoa,
+            #nome: nome,
+            #tipoPessoa: tipoPessoa,
+            #documento: documento,
+            #uf: uf,
+            #inscricaoEstadual: inscricaoEstadual,
+            #dataDeNascimento: dataDeNascimento,
+            #email: email,
+            #tipoContato: tipoContato,
+            #contato: contato,
+            #eCliente: eCliente,
+            #eFornecedor: eFornecedor,
+            #eFuncionario: eFuncionario,
+            #bloqueado: bloqueado,
+          },
+        ),
+        returnValue: _i4.Future<_i2.Pessoa>.value(_FakePessoa_0(
+          this,
+          Invocation.method(
+            #call,
+            [],
+            {
+              #pessoa: pessoa,
+              #nome: nome,
+              #tipoPessoa: tipoPessoa,
+              #documento: documento,
+              #uf: uf,
+              #inscricaoEstadual: inscricaoEstadual,
+              #dataDeNascimento: dataDeNascimento,
+              #email: email,
+              #tipoContato: tipoContato,
+              #contato: contato,
+              #eCliente: eCliente,
+              #eFornecedor: eFornecedor,
+              #eFuncionario: eFuncionario,
+              #bloqueado: bloqueado,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i2.Pessoa>);
 }

@@ -5,5 +5,7 @@ import 'package:pessoas/uses_cases.dart';
   CriarPessoa,
   RecuperarPessoaPeloDocumento,
   RecuperarPessoas,
+  RecuperarPessoa,
+  SalvarPessoa,
 ])
 void main() {}

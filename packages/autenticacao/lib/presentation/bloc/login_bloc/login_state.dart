@@ -56,6 +56,7 @@ class LoginAutenticarSucesso extends LoginState {
   LoginAutenticarSucesso(
     super.lastState, {
     required super.empresas,
+    required super.idEmpresa,
   }) : super.fromLastState();
 }
 

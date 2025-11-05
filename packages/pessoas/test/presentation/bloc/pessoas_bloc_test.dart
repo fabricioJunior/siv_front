@@ -34,7 +34,10 @@ void main() {
     act: (bloc) => bloc.add(PessoasIniciou()),
     expect: () => <PessoasState>[
       PessoasCarregarEmProgresso(),
-      PessoasCarregarSucesso(pessoas: pessoas)
+      PessoasCarregarSucesso(
+        pessoas: pessoas,
+        pagina: 0,
+      )
     ],
   );
 }

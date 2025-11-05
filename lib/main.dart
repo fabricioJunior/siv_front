@@ -49,8 +49,9 @@ class MyApp extends StatelessWidget {
           listener: (context, state) {
             if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
               if (routeToTest != null) {
-                Navigator.of(navigatorKey.currentContext!)
-                    .pushNamed(routeToTest!);
+                Navigator.of(navigatorKey.currentContext!).pushNamed(
+                  routeToTest!,
+                );
               } else {
                 Navigator.of(navigatorKey.currentContext!).pushNamed('/home');
               }

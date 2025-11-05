@@ -17,7 +17,9 @@ class PessoasRepository implements IPessoasRepository {
   }
 
   @override
-  Future<Iterable<Pessoa>> recuperarPessoas() {
+  Future<Iterable<Pessoa>> recuperarPessoas({
+    int pagina = 0,
+  }) {
     return remoteDataSource.getPessoas();
   }
 
@@ -27,19 +29,21 @@ class PessoasRepository implements IPessoasRepository {
   }
 
   @override
-  Future<Pessoa> novaPessoa(
-      {required bool bloqueado,
-      required String contato,
-      required String documento,
-      required bool eCliente,
-      required bool eFornecedor,
-      required bool eFuncionario,
-      required String email,
-      String? inscricaoEstadual,
-      required String nome,
-      required TipoContato tipoContato,
-      required TipoPessoa tipoPessoa,
-      required String uf}) {
+  Future<Pessoa> novaPessoa({
+    required bool bloqueado,
+    required String contato,
+    required String documento,
+    required bool eCliente,
+    required bool eFornecedor,
+    required bool eFuncionario,
+    required String? email,
+    String? inscricaoEstadual,
+    required String nome,
+    required TipoContato tipoContato,
+    required TipoPessoa tipoPessoa,
+    required String? uf,
+    required DateTime dataDeNascimento,
+  }) {
     return remoteDataSource.criarPessoa(
       bloqueado: bloqueado,
       contato: contato,
@@ -52,6 +56,7 @@ class PessoasRepository implements IPessoasRepository {
       tipoContato: tipoContato,
       tipoPessoa: tipoPessoa,
       uf: uf,
+      dataDeNascimento: dataDeNascimento,
     );
   }
 }

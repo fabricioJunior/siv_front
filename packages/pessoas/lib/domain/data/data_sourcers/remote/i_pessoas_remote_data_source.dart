@@ -1,7 +1,9 @@
 import 'package:pessoas/domain/models/pessoa.dart';
 
 abstract class IPessoasRemoteDataSource {
-  Future<List<Pessoa>> getPessoas();
+  Future<List<Pessoa>> getPessoas({
+    int pagina,
+  });
 
   Future<Pessoa?> getPessoa(int id);
 
@@ -16,11 +18,12 @@ abstract class IPessoasRemoteDataSource {
     required bool eCliente,
     required bool eFornecedor,
     required bool eFuncionario,
-    required String email,
+    required String? email,
     String? inscricaoEstadual,
     required String nome,
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
-    required String uf,
+    required String? uf,
+    required DateTime dataDeNascimento,
   });
 }

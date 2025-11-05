@@ -14,6 +14,7 @@ import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:pessoas/pessoas_injections.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
+import 'package:siv_front/infra/local_data_sourcers/dtos/empresa_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/permissoes_local_data_source.dart';
@@ -111,6 +112,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
   }
   List<CollectionSchema<dynamic>> schemas = [
     UsuarioDtoSchema,
+    EmpresaDtoSchema,
   ];
 
   Isar isar = Isar.getInstance(instanceName) ??

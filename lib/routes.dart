@@ -46,6 +46,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   ///PESSOAS:
   '/pessoas': (context) {
     return const PessoasPage();
+  },
+  '/pessoa': (context) {
+    return PessoaPage(
+      idPessoa: args(context)['idPessoa'],
+    );
   }
 };
 

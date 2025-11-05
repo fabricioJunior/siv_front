@@ -1,6 +1,6 @@
 // ...existing code...
-import 'package:core/equals.dart';
-import 'package:pessoas/models.dart';
+
+part of 'pessoa_bloc.dart';
 
 class PessoaState extends Equatable {
   final bool? bloqueado;
@@ -31,6 +31,10 @@ class PessoaState extends Equatable {
 
   final DateTime? dataDeNascimento;
 
+  final PessoaStep pessoaStep;
+
+  final Pessoa? pessoa;
+
   const PessoaState({
     this.bloqueado,
     this.contato,
@@ -46,10 +50,14 @@ class PessoaState extends Equatable {
     this.tipoPessoa,
     this.uf,
     this.dataDeNascimento,
+    this.pessoa,
+    required this.pessoaStep,
   });
 
-  PessoaState.fromModel(Pessoa pessoa)
-      : bloqueado = pessoa.bloqueado,
+  PessoaState.fromModel(
+    this.pessoa, {
+    PessoaStep? step,
+  })  : bloqueado = pessoa!.bloqueado,
         contato = pessoa.contato,
         eCliente = pessoa.eCliente,
         eFornecedor = pessoa.eFornecedor,
@@ -62,7 +70,8 @@ class PessoaState extends Equatable {
         tipoPessoa = pessoa.tipoPessoa,
         uf = pessoa.uf,
         dataDeNascimento = pessoa.dataDeNascimento,
-        documento = pessoa.documento;
+        documento = pessoa.documento,
+        pessoaStep = step ?? PessoaStep.carregado;
 
   PessoaState copyWith({
     bool? bloqueado,
@@ -79,6 +88,8 @@ class PessoaState extends Equatable {
     TipoPessoa? tipoPessoa,
     String? uf,
     DateTime? dataDeNascimento,
+    PessoaStep? pessoaStep,
+    Pessoa? pessoa,
   }) {
     return PessoaState(
       bloqueado: bloqueado ?? this.bloqueado,
@@ -95,6 +106,8 @@ class PessoaState extends Equatable {
       tipoPessoa: tipoPessoa ?? this.tipoPessoa,
       uf: uf ?? this.uf,
       dataDeNascimento: dataDeNascimento ?? this.dataDeNascimento,
+      pessoaStep: pessoaStep ?? this.pessoaStep,
+      pessoa: pessoa ?? this.pessoa,
     );
   }
 
@@ -104,16 +117,26 @@ class PessoaState extends Equatable {
         contato,
         documento,
         eCliente,
-        eFornecedor,
         eFuncionario,
+        eFornecedor,
         email,
-        id,
         inscricaoEstadual,
         nome,
         tipoContato,
         tipoPessoa,
         uf,
         dataDeNascimento,
+        pessoaStep,
       ];
 }
 // ...existing code...
+
+enum PessoaStep {
+  inicial,
+  carregando,
+  carregado,
+  editando,
+  salva,
+  criada,
+  falha,
+}

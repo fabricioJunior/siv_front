@@ -2,6 +2,8 @@ import 'package:autenticacao/models.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 
+part 'empresa_dto.g.dart';
+
 @Collection(ignore: {'props'})
 class EmpresaDto with Empresa implements IsarDto {
   @override

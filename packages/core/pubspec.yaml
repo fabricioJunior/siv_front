@@ -17,7 +17,9 @@ dependencies:
     version: *isar_version
   isar_community_flutter_libs: # contains Isar Core
     version: *isar_version
-
+  date_format_field: ^0.1.0
+  mask_text_input_formatter: ^2.9.0
+  cpf_cnpj_validator: ^2.0.0
   path_provider: ^2.1.5
   equatable: ^2.0.7
   mockito: ^5.4.4

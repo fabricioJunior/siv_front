@@ -30,5 +30,6 @@ Pessoa fakePessoa({
     tipoPessoa: tipoPessoa,
     inscricaoEstadual: inscricaoEstadual,
     uf: uf,
+    dataDeNascimento: dataDeNascimento,
   );
 }

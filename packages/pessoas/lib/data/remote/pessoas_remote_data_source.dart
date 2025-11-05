@@ -1,7 +1,10 @@
 import 'package:core/remote_data_sourcers.dart';
 import 'package:pessoas/data/remote/dtos/pessoa_dto.dart';
+import 'package:pessoas/data/remote/dtos/pessoas_dto.dart';
 import 'package:pessoas/domain/data/data_sourcers/remote/i_pessoas_remote_data_source.dart';
 import 'package:pessoas/domain/models/pessoa.dart';
+
+int _pageSize = 10;
 
 class PessoasRemoteDataSource extends RemoteDataSourceBase
     implements IPessoasRemoteDataSource {
@@ -11,9 +14,15 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
   String get path => 'v1/pessoas/{id}';
 
   @override
-  Future<Pessoa> atualizarPessoa(Pessoa pessoa) {
-    // TODO: implement atualizarPessoa
-    throw UnimplementedError();
+  Future<Pessoa> atualizarPessoa(Pessoa pessoa) async {
+    var pathParameters = {
+      'id': pessoa.id,
+    };
+    final response = await put(
+      body: pessoa.toDto(),
+      pathParameters: pathParameters,
+    );
+    return PessoaDto.fromJson(response.body);
   }
 
   @override
@@ -25,12 +34,19 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<Pessoa>> getPessoas() async {
-    final response = await get();
-    var lista = (response.body as List)
-        .map((e) => PessoaDto.fromJson(e as Map<String, dynamic>))
-        .toList();
-    return lista;
+  Future<List<Pessoa>> getPessoas({
+    int pagina = 1,
+  }) async {
+    var query = {
+      'pagina': pagina.toString(),
+      'itemsPorPagina': _pageSize.toString(),
+    };
+    final response = await get(
+      queryParameters: query,
+    );
+    var lista =
+        PessoasDto.fromJson(response.body as Map<String, dynamic>).items;
+    return lista.toList();
   }
 
   @override
@@ -49,12 +65,13 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     required bool eCliente,
     required bool eFornecedor,
     required bool eFuncionario,
-    required String email,
+    required String? email,
     String? inscricaoEstadual,
     required String nome,
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
-    required String uf,
+    required String? uf,
+    required DateTime dataDeNascimento,
   }) async {
     var pessoa = PessoaDto(
       bloqueado: bloqueado,
@@ -68,6 +85,7 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
       tipoContato: tipoContato,
       tipoPessoa: tipoPessoa,
       uf: uf,
+      nascimento: dataDeNascimento,
     );
 
     var response = await post(body: pessoa.toJson());

@@ -40,6 +40,7 @@ void main() {
     var estadoDeSucessoNaAutenticao = LoginAutenticarSucesso(
       estadoDeAutenticacaoEmProgresso,
       empresas: [],
+      idEmpresa: null,
     );
 
     var estadoDeFalhaNaAutenticacao = LoginAutenticarFalha(

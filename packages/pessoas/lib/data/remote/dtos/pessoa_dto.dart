@@ -26,7 +26,7 @@ class PessoaDto with Pessoa {
   final bool eFuncionario;
 
   @override
-  final String email;
+  final String? email;
 
   @override
   final int? id;
@@ -49,7 +49,10 @@ class PessoaDto with Pessoa {
 
   @override
   @JsonKey(name: 'ufInscricaoEstadual')
-  final String uf;
+  final String? uf;
+
+  @override
+  DateTime? get dataDeNascimento => nascimento;
 
   @JsonKey(name: 'nascimento')
   final DateTime? nascimento;
@@ -68,13 +71,29 @@ class PessoaDto with Pessoa {
     required this.tipoPessoa,
     required this.tipoContato,
     required this.uf,
-    this.nascimento,
+    required this.nascimento,
   });
 
   factory PessoaDto.fromJson(Map<String, dynamic> json) =>
       _$PessoaDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$PessoaDtoToJson(this);
+}
+
+extension ToDto on Pessoa {
+  PessoaDto toDto() => PessoaDto(
+      bloqueado: bloqueado,
+      contato: contato,
+      documento: documento,
+      eCliente: eCliente,
+      eFornecedor: eFornecedor,
+      eFuncionario: eFuncionario,
+      email: email,
+      nome: nome,
+      tipoPessoa: tipoPessoa,
+      tipoContato: tipoContato,
+      uf: uf,
+      nascimento: dataDeNascimento);
 }
 
 /// Converte a string do JSON para TipoPessoa.

@@ -1,7 +1,7 @@
 import 'package:pessoas/domain/models/pessoa.dart';
 
 abstract class IPessoasRepository {
-  Future<Iterable<Pessoa>> recuperarPessoas();
+  Future<Iterable<Pessoa>> recuperarPessoas({int pagina});
 
   Future<Pessoa?> recuperarPessoa(int id);
 
@@ -16,11 +16,12 @@ abstract class IPessoasRepository {
     required bool eCliente,
     required bool eFornecedor,
     required bool eFuncionario,
-    required String email,
+    required String? email,
     String? inscricaoEstadual,
     required String nome,
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
-    required String uf,
+    required String? uf,
+    required DateTime dataDeNascimento,
   });
 }

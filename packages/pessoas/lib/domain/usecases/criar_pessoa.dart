@@ -14,12 +14,13 @@ class CriarPessoa {
     required bool eCliente,
     required bool eFornecedor,
     required bool eFuncionario,
-    required String email,
+    required String? email,
     String? inscricaoEstadual,
     required String nome,
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
-    required String uf,
+    required String? uf,
+    required DateTime dataDeNascimento,
   }) async {
     return await _pessoasRepository.novaPessoa(
       bloqueado: bloqueado,
@@ -33,6 +34,7 @@ class CriarPessoa {
       tipoContato: tipoContato,
       tipoPessoa: tipoPessoa,
       uf: uf,
+      dataDeNascimento: dataDeNascimento,
     );
   }
 }

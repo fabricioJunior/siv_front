@@ -60,10 +60,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           state.empresas ?? await _recuperarEmpresas.call();
 
       emit(
-        LoginAutenticarSucesso(
-          state,
-          empresas: empresas,
-        ),
+        LoginAutenticarSucesso(state,
+            empresas: empresas, idEmpresa: event.empresa?.id),
       );
     } catch (e, s) {
       emit(

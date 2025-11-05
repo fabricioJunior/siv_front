@@ -25,6 +25,7 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
       emit(
         PessoasCarregarSucesso(
           pessoas: pessoas.toList(),
+          pagina: state.pagina + 1,
         ),
       );
     } catch (e, s) {

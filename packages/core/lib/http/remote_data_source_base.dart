@@ -20,7 +20,9 @@ abstract class RemoteDataSourceBase {
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
   }) async {
-    var uri = _wrapUri();
+    var uri = _wrapUri(
+      queryParameters: queryParameters,
+    );
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.get(uri: uri);
     _validateResponse(libResponse);
@@ -32,7 +34,7 @@ abstract class RemoteDataSourceBase {
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
   }) async {
-    var uri = _wrapUri();
+    var uri = _wrapUri(queryParameters: queryParameters);
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.post(uri: uri, body: jsonEncode(body));
     _validateResponse(libResponse);
@@ -44,7 +46,9 @@ abstract class RemoteDataSourceBase {
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
   }) async {
-    var uri = _wrapUri();
+    var uri = _wrapUri(
+      queryParameters: queryParameters,
+    );
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.put(uri: uri, body: body);
     _validateResponse(libResponse);
@@ -55,7 +59,9 @@ abstract class RemoteDataSourceBase {
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
   }) async {
-    var uri = _wrapUri();
+    var uri = _wrapUri(
+      queryParameters: queryParameters,
+    );
     uri = _insertPath(uri, pathParameters);
     var libResponse = await httpClient.delete(uri: uri);
     _validateResponse(libResponse);

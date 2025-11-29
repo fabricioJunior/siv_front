@@ -64,6 +64,20 @@ class PessoaPage extends StatelessWidget {
                           'Informações principais',
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
+                        if (idPessoa != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed(
+                                      '/pontos_page',
+                                      arguments: {'idPessoa': idPessoa});
+                                },
+                                child: Text('Pontos'),
+                              )
+                            ],
+                          ),
                         BlocBuilder<PessoaBloc, PessoaState>(
                             // buildWhen: (previous, current) =>
                             //     (previous.pessoaStep != PessoaStep.editando ||

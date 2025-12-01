@@ -18,6 +18,10 @@ final CriarPontos criarPontos = MockCriarPontos();
 
 final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 
+final CancelarPonto cancelarPonto = MockCancelarPonto();
+
+final ResgatarPontos resgatarPontos = MockResgatarPontos();
+
 void main() {
   final pessoa = fakePessoa();
   final ponto1 = fakePonto(valor: 1, id: 1);
@@ -42,12 +46,22 @@ void main() {
     criarPontoEmProgresso,
     pontos: pontos2,
   );
+
+  var pontosCancelarEmProgresso = PontosExcluirPontoEmProgresso.fromLastState(
+    criarPontosSucesso,
+  );
+  var pontosCancelarSucesso = PontosExcluirPontoSucesso.fromLastState(
+    pontosCancelarEmProgresso,
+    pontos: pontos,
+  );
   setUp(() {
     _setupRecuperarPessoa();
     pontosBloc = PontosBloc(
       recuperarPontosDaPessoa,
       criarPontos,
       recuperarPessoa,
+      cancelarPonto,
+      resgatarPontos,
     );
   });
 
@@ -98,6 +112,31 @@ void main() {
         criarPontoEmProgresso,
         criarPontosSucesso,
       ];
+    },
+  );
+  blocTest<PontosBloc, PontosState>(
+    'emite estado de sucesso quando cancelar ponto',
+    build: () => pontosBloc,
+    seed: () => criarPontosSucesso,
+    act: (bloc) {
+      bloc.add(
+        PontosCancelouPonto(
+          idPonto: ponto3.id,
+        ),
+      );
+    },
+    setUp: () {},
+    expect: () {
+      return [
+        pontosCancelarEmProgresso,
+        pontosCancelarSucesso,
+      ];
+    },
+    verify: (bloc) {
+      verify(cancelarPonto.call(
+        idPonto: ponto3.id,
+        idPessoa: pessoa.id!,
+      )).called(1);
     },
   );
 }

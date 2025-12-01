@@ -5,3 +5,5 @@ export 'domain/usecases/salvar_pessoa.dart';
 export 'domain/usecases/recuperar_pessoa.dart';
 export 'domain/usecases/criar_pontos.dart';
 export 'domain/usecases/recuperar_pontos_da_pessoa.dart';
+export 'domain/usecases/cancelar_ponto.dart';
+export 'domain/usecases/resgatar_pontos.dart';

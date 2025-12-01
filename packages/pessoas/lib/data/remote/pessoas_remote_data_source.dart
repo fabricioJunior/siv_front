@@ -36,11 +36,15 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<List<Pessoa>> getPessoas({
     int pagina = 1,
+    String? busca,
   }) async {
     var query = {
       'pagina': pagina.toString(),
       'itemsPorPagina': _pageSize.toString(),
     };
+    if (busca != null && busca.isNotEmpty) {
+      query['searchTerm'] = busca;
+    }
     final response = await get(
       queryParameters: query,
     );

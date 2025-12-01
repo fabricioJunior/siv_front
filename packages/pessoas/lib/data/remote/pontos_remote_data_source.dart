@@ -41,14 +41,14 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Ponto> regatarPontos({
+  Future<Ponto> resgatarPontos({
     required int idPessoa,
     required int quantidade,
     required String descricao,
   }) async {
     var pathParameters = {
       'pessoaId': idPessoa,
-      'id': 'regastar',
+      'id': 'resgatar',
     };
     var body = {
       'quantidade': quantidade,
@@ -61,5 +61,22 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
     );
 
     return PontoDto.fromJson(response.body);
+  }
+
+  @override
+  Future<void> excluirPonto({
+    required int idPessoa,
+    required int idPonto,
+  }) async {
+    var pathParameters = {
+      'pessoaId': idPessoa,
+      'id': idPonto,
+    };
+    final response = await delete(
+      pathParameters: pathParameters,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao excluir ponto');
+    }
   }
 }

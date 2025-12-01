@@ -9,5 +9,7 @@ import 'package:pessoas/uses_cases.dart';
   SalvarPessoa,
   RecuperarPontosDaPessoa,
   CriarPontos,
+  CancelarPonto,
+  ResgatarPontos,
 ])
 void main() {}

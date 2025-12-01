@@ -21,7 +21,9 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
   ) async {
     try {
       emit(PessoasCarregarEmProgresso());
-      var pessoas = await _recuperarPessoas.call();
+      var pessoas = await _recuperarPessoas.call(
+        busca: event.busca,
+      );
       emit(
         PessoasCarregarSucesso(
           pessoas: pessoas.toList(),

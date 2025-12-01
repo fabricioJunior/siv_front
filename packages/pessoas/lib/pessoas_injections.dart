@@ -39,6 +39,13 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<ResgatarPontos>(
+    () => ResgatarPontos(
+      pontosRepository: sl(),
     ),
   );
 }
@@ -81,6 +88,12 @@ void _usesCases() {
 
   sl.registerFactory<RecuperarPontosDaPessoa>(
     () => RecuperarPontosDaPessoa(
+      pontosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<CancelarPonto>(
+    () => CancelarPonto(
       pontosRepository: sl(),
     ),
   );

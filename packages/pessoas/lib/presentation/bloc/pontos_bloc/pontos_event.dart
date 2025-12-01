@@ -17,3 +17,18 @@ class PontosCriouNovoPonto extends PontosEvent {
     required this.descricao,
   });
 }
+
+class PontosCancelouPonto extends PontosEvent {
+  final int idPonto;
+
+  PontosCancelouPonto({
+    required this.idPonto,
+  });
+}
+
+class PontosResgatou extends PontosEvent {
+  final int valor;
+  final String descricao;
+
+  PontosResgatou({required this.valor, required this.descricao});
+}

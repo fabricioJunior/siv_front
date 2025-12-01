@@ -10,8 +10,10 @@ class PontosRepository implements IPontosRepository {
 
   @override
   Future<void> cancelarPonto({required int idPessoa, required int idPonto}) {
-    // TODO: implement cancelarPonto
-    throw UnimplementedError();
+    return _pontosRemoteDataSource.excluirPonto(
+      idPessoa: idPessoa,
+      idPonto: idPonto,
+    );
   }
 
   @override
@@ -40,7 +42,7 @@ class PontosRepository implements IPontosRepository {
     required int quantidade,
     required String descricao,
   }) {
-    return _pontosRemoteDataSource.regatarPontos(
+    return _pontosRemoteDataSource.resgatarPontos(
       idPessoa: idPessoa,
       quantidade: quantidade,
       descricao: descricao,

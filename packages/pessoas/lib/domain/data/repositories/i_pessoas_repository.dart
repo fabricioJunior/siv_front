@@ -1,7 +1,10 @@
 import 'package:pessoas/domain/models/pessoa.dart';
 
 abstract class IPessoasRepository {
-  Future<Iterable<Pessoa>> recuperarPessoas({int pagina});
+  Future<Iterable<Pessoa>> recuperarPessoas({
+    int pagina,
+    String? busca,
+  });
 
   Future<Pessoa?> recuperarPessoa(int id);
 

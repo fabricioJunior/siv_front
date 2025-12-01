@@ -33,3 +33,28 @@ Pessoa fakePessoa({
     dataDeNascimento: dataDeNascimento,
   );
 }
+
+Ponto fakePonto({
+  int valor = 10,
+  DateTime? validade,
+  String descricao = 'Ponto de teste',
+  DateTime? dtCriacao,
+  bool cancelado = false,
+  String? motivoCancelamento,
+  DateTime? dtCancelamento,
+  int id = 1,
+}) {
+  final validadeNonNull =
+      validade ?? DateTime.now().add(const Duration(days: 30));
+  final dtCriacaoNonNull = dtCriacao ?? DateTime.now();
+  return Ponto.instance(
+    id: id,
+    valor: valor,
+    validade: validadeNonNull,
+    descricao: descricao,
+    dtCriacao: dtCriacaoNonNull,
+    cancelado: cancelado,
+    motivoCancelamento: motivoCancelamento,
+    dtCancelamento: dtCancelamento,
+  );
+}

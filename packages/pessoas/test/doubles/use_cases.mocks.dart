@@ -3,16 +3,20 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:pessoas/domain/models/pessoa.dart' as _i2;
-import 'package:pessoas/domain/usecases/criar_pessoa.dart' as _i3;
-import 'package:pessoas/domain/usecases/recuperar_pessoa.dart' as _i7;
+import 'package:pessoas/domain/usecases/criar_pessoa.dart' as _i4;
+import 'package:pessoas/domain/usecases/criar_pontos.dart' as _i11;
+import 'package:pessoas/domain/usecases/recuperar_pessoa.dart' as _i8;
 import 'package:pessoas/domain/usecases/recuperar_pessoa_pelo_documento.dart'
-    as _i5;
-import 'package:pessoas/domain/usecases/recuperar_pessoas.dart' as _i6;
-import 'package:pessoas/domain/usecases/salvar_pessoa.dart' as _i8;
+    as _i6;
+import 'package:pessoas/domain/usecases/recuperar_pessoas.dart' as _i7;
+import 'package:pessoas/domain/usecases/recuperar_pontos_da_pessoa.dart'
+    as _i10;
+import 'package:pessoas/domain/usecases/salvar_pessoa.dart' as _i9;
+import 'package:pessoas/models.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -38,16 +42,26 @@ class _FakePessoa_0 extends _i1.SmartFake implements _i2.Pessoa {
         );
 }
 
+class _FakePonto_1 extends _i1.SmartFake implements _i3.Ponto {
+  _FakePonto_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [CriarPessoa].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
+class MockCriarPessoa extends _i1.Mock implements _i4.CriarPessoa {
   MockCriarPessoa() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i2.Pessoa> call({
+  _i5.Future<_i2.Pessoa> call({
     required bool? bloqueado,
     required String? contato,
     required String? documento,
@@ -82,7 +96,7 @@ class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
             #dataDeNascimento: dataDeNascimento,
           },
         ),
-        returnValue: _i4.Future<_i2.Pessoa>.value(_FakePessoa_0(
+        returnValue: _i5.Future<_i2.Pessoa>.value(_FakePessoa_0(
           this,
           Invocation.method(
             #call,
@@ -104,77 +118,77 @@ class MockCriarPessoa extends _i1.Mock implements _i3.CriarPessoa {
             },
           ),
         )),
-      ) as _i4.Future<_i2.Pessoa>);
+      ) as _i5.Future<_i2.Pessoa>);
 }
 
 /// A class which mocks [RecuperarPessoaPeloDocumento].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarPessoaPeloDocumento extends _i1.Mock
-    implements _i5.RecuperarPessoaPeloDocumento {
+    implements _i6.RecuperarPessoaPeloDocumento {
   MockRecuperarPessoaPeloDocumento() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i2.Pessoa?> call({required String? documento}) =>
+  _i5.Future<_i2.Pessoa?> call({required String? documento}) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
           {#documento: documento},
         ),
-        returnValue: _i4.Future<_i2.Pessoa?>.value(),
-      ) as _i4.Future<_i2.Pessoa?>);
+        returnValue: _i5.Future<_i2.Pessoa?>.value(),
+      ) as _i5.Future<_i2.Pessoa?>);
 }
 
 /// A class which mocks [RecuperarPessoas].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockRecuperarPessoas extends _i1.Mock implements _i6.RecuperarPessoas {
+class MockRecuperarPessoas extends _i1.Mock implements _i7.RecuperarPessoas {
   MockRecuperarPessoas() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<Iterable<_i2.Pessoa>> call() => (super.noSuchMethod(
+  _i5.Future<Iterable<_i2.Pessoa>> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i4.Future<Iterable<_i2.Pessoa>>.value(<_i2.Pessoa>[]),
-      ) as _i4.Future<Iterable<_i2.Pessoa>>);
+        returnValue: _i5.Future<Iterable<_i2.Pessoa>>.value(<_i2.Pessoa>[]),
+      ) as _i5.Future<Iterable<_i2.Pessoa>>);
 }
 
 /// A class which mocks [RecuperarPessoa].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockRecuperarPessoa extends _i1.Mock implements _i7.RecuperarPessoa {
+class MockRecuperarPessoa extends _i1.Mock implements _i8.RecuperarPessoa {
   MockRecuperarPessoa() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i2.Pessoa?> call({required int? idPessoa}) => (super.noSuchMethod(
+  _i5.Future<_i2.Pessoa?> call({required int? idPessoa}) => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
           {#idPessoa: idPessoa},
         ),
-        returnValue: _i4.Future<_i2.Pessoa?>.value(),
-      ) as _i4.Future<_i2.Pessoa?>);
+        returnValue: _i5.Future<_i2.Pessoa?>.value(),
+      ) as _i5.Future<_i2.Pessoa?>);
 }
 
 /// A class which mocks [SalvarPessoa].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSalvarPessoa extends _i1.Mock implements _i8.SalvarPessoa {
+class MockSalvarPessoa extends _i1.Mock implements _i9.SalvarPessoa {
   MockSalvarPessoa() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i2.Pessoa> call({
+  _i5.Future<_i2.Pessoa> call({
     required _i2.Pessoa? pessoa,
     String? nome,
     _i2.TipoPessoa? tipoPessoa,
@@ -211,7 +225,7 @@ class MockSalvarPessoa extends _i1.Mock implements _i8.SalvarPessoa {
             #bloqueado: bloqueado,
           },
         ),
-        returnValue: _i4.Future<_i2.Pessoa>.value(_FakePessoa_0(
+        returnValue: _i5.Future<_i2.Pessoa>.value(_FakePessoa_0(
           this,
           Invocation.method(
             #call,
@@ -234,5 +248,65 @@ class MockSalvarPessoa extends _i1.Mock implements _i8.SalvarPessoa {
             },
           ),
         )),
-      ) as _i4.Future<_i2.Pessoa>);
+      ) as _i5.Future<_i2.Pessoa>);
+}
+
+/// A class which mocks [RecuperarPontosDaPessoa].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarPontosDaPessoa extends _i1.Mock
+    implements _i10.RecuperarPontosDaPessoa {
+  MockRecuperarPontosDaPessoa() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<List<_i3.Ponto>> call({required int? idPessoa}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {#idPessoa: idPessoa},
+        ),
+        returnValue: _i5.Future<List<_i3.Ponto>>.value(<_i3.Ponto>[]),
+      ) as _i5.Future<List<_i3.Ponto>>);
+}
+
+/// A class which mocks [CriarPontos].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockCriarPontos extends _i1.Mock implements _i11.CriarPontos {
+  MockCriarPontos() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<_i3.Ponto> call({
+    required int? idPessoa,
+    required int? valor,
+    required String? descricao,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #idPessoa: idPessoa,
+            #valor: valor,
+            #descricao: descricao,
+          },
+        ),
+        returnValue: _i5.Future<_i3.Ponto>.value(_FakePonto_1(
+          this,
+          Invocation.method(
+            #call,
+            [],
+            {
+              #idPessoa: idPessoa,
+              #valor: valor,
+              #descricao: descricao,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i3.Ponto>);
 }

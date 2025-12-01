@@ -20,7 +20,9 @@ PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
       tipoPessoa: tipoPessoaFromJson(json['tipo']),
       tipoContato: tipoContatoFromJson(json['tipoContato']),
       uf: json['ufInscricaoEstadual'] as String?,
-      nascimento: DateTime.parse(json['nascimento'] as String),
+      nascimento: json['nascimento'] == null
+          ? null
+          : DateTime.parse(json['nascimento'] as String),
     )..dataDeNascimento = json['dataDeNascimento'] == null
         ? null
         : DateTime.parse(json['dataDeNascimento'] as String);

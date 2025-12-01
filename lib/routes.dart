@@ -2,6 +2,7 @@ import 'package:autenticacao/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
+import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:siv_front/pages/home_page.dart';
 import 'package:siv_front/pages/splash_page.dart';
 
@@ -49,6 +50,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/pessoa': (context) {
     return PessoaPage(
+      idPessoa: args(context)['idPessoa'],
+    );
+  },
+  '/pontos_page': (context) {
+    return PontosPage(
       idPessoa: args(context)['idPessoa'],
     );
   }

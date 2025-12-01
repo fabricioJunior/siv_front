@@ -3,3 +3,5 @@ export 'domain/usecases/recuperar_pessoa_pelo_documento.dart';
 export 'domain/usecases/recuperar_pessoas.dart';
 export 'domain/usecases/salvar_pessoa.dart';
 export 'domain/usecases/recuperar_pessoa.dart';
+export 'domain/usecases/criar_pontos.dart';
+export 'domain/usecases/recuperar_pontos_da_pessoa.dart';

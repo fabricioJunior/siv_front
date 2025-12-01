@@ -13,16 +13,19 @@ class PontosBloc extends Bloc<PontosEvent, PontosState> {
   final CriarPontos _criarPontos;
   final RecuperarPessoa _recuperarPessoa;
   final CancelarPonto _cancelarPonto;
+  final ResgatarPontos _resgatarPontos;
 
   PontosBloc(
     this._recuperarPontosDaPessoa,
     this._criarPontos,
     this._recuperarPessoa,
     this._cancelarPonto,
+    this._resgatarPontos,
   ) : super(PontosInicial()) {
     on<PontosIniciou>(_onPontosIniciou);
     on<PontosCriouNovoPonto>(_onPontosCriouNovoPonto);
     on<PontosCancelouPonto>(_onPontosCancelouPonto);
+    on<PontosResgatou>(_onPontosResgatou);
   }
 
   FutureOr<void> _onPontosIniciou(
@@ -91,6 +94,31 @@ class PontosBloc extends Bloc<PontosEvent, PontosState> {
       );
     } catch (e, s) {
       emit(PontosExcluirPontoFalha.fromLastState(state));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onPontosResgatou(
+    PontosResgatou event,
+    Emitter<PontosState> emit,
+  ) async {
+    try {
+      emit(PontosResgatarEmProgresso.fromLastState(state));
+      await _resgatarPontos.call(
+        idPessoa: state.idPessoa!,
+        valor: event.valor,
+        descricao: event.descricao,
+      );
+      var pontos = await _recuperarPontosDaPessoa.call(
+        idPessoa: state.idPessoa!,
+      );
+      emit(
+        PontosResgatarSucesso.fromLastState(
+          state,
+          pontos: pontos,
+        ),
+      );
+    } catch (e, s) {
       addError(e, s);
     }
   }

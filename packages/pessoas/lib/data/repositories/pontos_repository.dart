@@ -42,7 +42,7 @@ class PontosRepository implements IPontosRepository {
     required int quantidade,
     required String descricao,
   }) {
-    return _pontosRemoteDataSource.regatarPontos(
+    return _pontosRemoteDataSource.resgatarPontos(
       idPessoa: idPessoa,
       quantidade: quantidade,
       descricao: descricao,

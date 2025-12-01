@@ -53,8 +53,40 @@ class PontosPage extends StatelessWidget {
           ),
         ),
         body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Histórico de pontos'),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Histórico de pontos',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  BlocBuilder<PontosBloc, PontosState>(
+                    builder: (context, state) {
+                      return TextButton(
+                        onPressed: () async {
+                          var resgatePonto =
+                              await _ResgatarPontoModal.show(context: context);
+                          if (resgatePonto != null) {
+                            // ignore: use_build_context_synchronously
+                            context.read<PontosBloc>().add(
+                                  PontosResgatou(
+                                    valor: resgatePonto.valor,
+                                    descricao: resgatePonto.descricao,
+                                  ),
+                                );
+                          }
+                        },
+                        child: Text('Resgatar Pontos'),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: BlocBuilder<PontosBloc, PontosState>(
                 builder: (context, state) {
@@ -67,29 +99,40 @@ class PontosPage extends StatelessWidget {
                         children: [CircularProgressIndicator.adaptive()],
                       );
                     default:
-                      return ListView.builder(
-                        itemCount: state.pontos?.length ?? 0,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          var ponto = state.pontos![index];
-                          return ListTile(
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('${ponto.valor} ${ponto.descricao}'),
-                                Text(ponto.dtCriacao?.toString() ?? '')
-                              ],
-                            ),
-                            trailing: IconButton(
-                              onPressed: () {
-                                context.read<PontosBloc>().add(
-                                      PontosCancelouPonto(idPonto: ponto.id),
-                                    );
-                              },
-                              icon: Icon(Icons.delete),
-                            ),
-                          );
-                        },
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Total de pontos: ${state.totalDePontos}'),
+                          ListView.builder(
+                            itemCount: state.pontos?.length ?? 0,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              var ponto = state.pontos![index];
+                              return Card(
+                                child: ListTile(
+                                  leading: Text('${ponto.valor}'),
+                                  title: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(ponto.descricao),
+                                      Text(ponto.dtCriacao?.toString() ?? '')
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    onPressed: () {
+                                      context.read<PontosBloc>().add(
+                                            PontosCancelouPonto(
+                                                idPonto: ponto.id),
+                                          );
+                                    },
+                                    icon: Icon(Icons.delete),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       );
                   }
                 },
@@ -201,4 +244,105 @@ class _NovoPonto {
   final String descricao;
 
   _NovoPonto({required this.valor, required this.descricao});
+}
+
+// ignore: must_be_immutable
+class _ResgatarPontoModal extends StatelessWidget {
+  static Future<_ResgateDePontos?> show({
+    required BuildContext context,
+  }) async {
+    return showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return _ResgatarPontoModal();
+      },
+    );
+  }
+
+  var formKey = GlobalKey<FormState>();
+  var valorController = TextEditingController();
+  var descricaoController = TextEditingController();
+
+  _ResgatarPontoModal({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(
+          Icons.check,
+        ),
+        onPressed: () {
+          if (formKey.currentState?.validate() ?? false) {
+            Navigator.of(context).pop(
+              _ResgateDePontos(
+                valor: int.parse(valorController.text),
+                descricao: descricaoController.text,
+              ),
+            );
+          }
+        },
+      ),
+      body: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          ),
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Resgatar pontos',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              SizedBox(
+                height: 16,
+              ),
+              Text('Quantidade'),
+              TextFormField(
+                maxLength: 2,
+                controller: valorController,
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Informe a quantidade de pontos';
+                  }
+                  return null;
+                },
+              ),
+              Text('Descrição'),
+              TextFormField(
+                maxLength: 100,
+                controller: descricaoController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Informe o motivo do resgate';
+                  }
+                  return null;
+                },
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResgateDePontos {
+  final int valor;
+  final String descricao;
+
+  _ResgateDePontos({required this.valor, required this.descricao});
 }

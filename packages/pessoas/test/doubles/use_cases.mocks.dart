@@ -16,6 +16,7 @@ import 'package:pessoas/domain/usecases/recuperar_pessoa_pelo_documento.dart'
 import 'package:pessoas/domain/usecases/recuperar_pessoas.dart' as _i7;
 import 'package:pessoas/domain/usecases/recuperar_pontos_da_pessoa.dart'
     as _i10;
+import 'package:pessoas/domain/usecases/resgatar_pontos.dart' as _i13;
 import 'package:pessoas/domain/usecases/salvar_pessoa.dart' as _i9;
 import 'package:pessoas/models.dart' as _i3;
 
@@ -152,10 +153,11 @@ class MockRecuperarPessoas extends _i1.Mock implements _i7.RecuperarPessoas {
   }
 
   @override
-  _i5.Future<Iterable<_i2.Pessoa>> call() => (super.noSuchMethod(
+  _i5.Future<Iterable<_i2.Pessoa>> call({String? busca}) => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
+          {#busca: busca},
         ),
         returnValue: _i5.Future<Iterable<_i2.Pessoa>>.value(<_i2.Pessoa>[]),
       ) as _i5.Future<Iterable<_i2.Pessoa>>);
@@ -332,6 +334,35 @@ class MockCancelarPonto extends _i1.Mock implements _i12.CancelarPonto {
           {
             #idPessoa: idPessoa,
             #idPonto: idPonto,
+          },
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+}
+
+/// A class which mocks [ResgatarPontos].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockResgatarPontos extends _i1.Mock implements _i13.ResgatarPontos {
+  MockResgatarPontos() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<void> call({
+    required int? idPessoa,
+    required int? valor,
+    required String? descricao,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #idPessoa: idPessoa,
+            #valor: valor,
+            #descricao: descricao,
           },
         ),
         returnValue: _i5.Future<void>.value(),

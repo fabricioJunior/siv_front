@@ -1,16 +1,19 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoas_bloc/pessoas_bloc.dart';
 
 class PessoasPage extends StatelessWidget {
-  const PessoasPage({super.key});
+  var bloc = sl<PessoasBloc>();
+  var debouncer = Debouncer(milliseconds: 400);
+  PessoasPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PessoasBloc>(
-      create: (context) => sl<PessoasBloc>()..add(PessoasIniciou()),
+      create: (context) => bloc..add(PessoasIniciou()),
       child: Scaffold(
         floatingActionButton: BlocBuilder<PessoasBloc, PessoasState>(
           builder: (context, state) {
@@ -34,6 +37,22 @@ class PessoasPage extends StatelessWidget {
         ),
         body: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: SearchBar(
+                autoFocus: true,
+                hintText: 'Digite o nome ou documento',
+                onChanged: (value) {
+                  debouncer.run(() {
+                    bloc.add(PessoasIniciou(busca: value));
+                  });
+                },
+                onSubmitted: (value) {
+                  bloc.add(PessoasIniciou(busca: value));
+                },
+              ),
+            ),
+            SizedBox(height: 16),
             BlocBuilder<PessoasBloc, PessoasState>(builder: (context, state) {
               switch (state.runtimeType) {
                 case const (PessoasCarregarEmProgresso):
@@ -59,15 +78,19 @@ class PessoasPage extends StatelessWidget {
 
   Widget _pessoaCard(BuildContext context, Pessoa pessoa) => ListTile(
         onTap: () {
-          Navigator.of(context).pushNamed('/pessoa', arguments: {
-            'idPessoa': pessoa.id,
-          });
+          Navigator.of(context).pushNamed(
+            '/pessoa',
+            arguments: {
+              'idPessoa': pessoa.id,
+            },
+          );
         },
         title: Card(
-            child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text('${pessoa.nome} - ${pessoa.documento}'),
-        )),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('${pessoa.nome} - ${pessoa.documento}'),
+          ),
+        ),
       );
 
   Widget _load() => Column(

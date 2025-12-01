@@ -41,14 +41,14 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Ponto> regatarPontos({
+  Future<Ponto> resgatarPontos({
     required int idPessoa,
     required int quantidade,
     required String descricao,
   }) async {
     var pathParameters = {
       'pessoaId': idPessoa,
-      'id': 'regastar',
+      'id': 'resgatar',
     };
     var body = {
       'quantidade': quantidade,

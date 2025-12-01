@@ -12,7 +12,7 @@ abstract class IPontosRemoteDataSource {
     required int idPessoa,
   });
 
-  Future<Ponto> regatarPontos({
+  Future<Ponto> resgatarPontos({
     required int idPessoa,
     required int quantidade,
     required String descricao,

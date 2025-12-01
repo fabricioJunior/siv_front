@@ -20,6 +20,8 @@ final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 
 final CancelarPonto cancelarPonto = MockCancelarPonto();
 
+final ResgatarPontos resgatarPontos = MockResgatarPontos();
+
 void main() {
   final pessoa = fakePessoa();
   final ponto1 = fakePonto(valor: 1, id: 1);
@@ -59,6 +61,7 @@ void main() {
       criarPontos,
       recuperarPessoa,
       cancelarPonto,
+      resgatarPontos,
     );
   });
 

@@ -49,69 +49,71 @@ class PessoaPage extends StatelessWidget {
         appBar: AppBar(),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Form(
-                key: formKey,
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Informações principais',
-                          style: Theme.of(context).textTheme.displaySmall,
-                        ),
-                        if (idPessoa != null)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pushNamed(
-                                      '/pontos_page',
-                                      arguments: {'idPessoa': idPessoa});
-                                },
-                                child: Text('Pontos'),
-                              )
-                            ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Form(
+                  key: formKey,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Informações principais',
+                            style: Theme.of(context).textTheme.displaySmall,
                           ),
-                        BlocBuilder<PessoaBloc, PessoaState>(
-                            // buildWhen: (previous, current) =>
-                            //     (previous.pessoaStep != PessoaStep.editando ||
-                            //         previous.pessoa != null) ||
-                            //     previous.eCliente != current.eCliente ||
-                            //     previous.eFornecedor != current.eFornecedor ||
-                            //     previous.eFuncionario != current.eFuncionario,
-                            builder: (context, state) {
-                          if (state.pessoaStep == PessoaStep.carregando) {
-                            return CircularProgressIndicator();
-                          }
-                          if (state.pessoaStep == PessoaStep.editando ||
-                              state.pessoaStep == PessoaStep.carregado ||
-                              state.pessoaStep == PessoaStep.salva) {
-                            return Opacity(
-                              opacity: state.pessoaStep == PessoaStep.editando
-                                  ? 1.0
-                                  : 0.6,
-                              child: _informacoesBasicas(
-                                context,
-                                state,
-                                state.pessoaStep != PessoaStep.editando,
-                              ),
-                            );
-                          }
+                          if (idPessoa != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pushNamed(
+                                        '/pontos_page',
+                                        arguments: {'idPessoa': idPessoa});
+                                  },
+                                  child: Text('Pontos'),
+                                )
+                              ],
+                            ),
+                          BlocBuilder<PessoaBloc, PessoaState>(
+                              // buildWhen: (previous, current) =>
+                              //     (previous.pessoaStep != PessoaStep.editando ||
+                              //         previous.pessoa != null) ||
+                              //     previous.eCliente != current.eCliente ||
+                              //     previous.eFornecedor != current.eFornecedor ||
+                              //     previous.eFuncionario != current.eFuncionario,
+                              builder: (context, state) {
+                            if (state.pessoaStep == PessoaStep.carregando) {
+                              return CircularProgressIndicator();
+                            }
+                            if (state.pessoaStep == PessoaStep.editando ||
+                                state.pessoaStep == PessoaStep.carregado ||
+                                state.pessoaStep == PessoaStep.salva) {
+                              return Opacity(
+                                opacity: state.pessoaStep == PessoaStep.editando
+                                    ? 1.0
+                                    : 0.6,
+                                child: _informacoesBasicas(
+                                  context,
+                                  state,
+                                  state.pessoaStep != PessoaStep.editando,
+                                ),
+                              );
+                            }
 
-                          return SizedBox();
-                        })
-                      ],
+                            return SizedBox();
+                          })
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

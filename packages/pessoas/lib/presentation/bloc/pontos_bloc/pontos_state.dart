@@ -5,6 +5,9 @@ abstract class PontosState extends Equatable {
   final List<Ponto>? pontos;
   final Pessoa? pessoa;
 
+  int get totalDePontos =>
+      pontos?.fold(0, (total, ponto) => (total ?? 0) + ponto.valor) ?? 0;
+
   const PontosState({
     required this.idPessoa,
     required this.pontos,
@@ -78,6 +81,25 @@ class PontosExcluirPontoSucesso extends PontosState {
 
 class PontosExcluirPontoFalha extends PontosState {
   PontosExcluirPontoFalha.fromLastState(
+    super.state,
+  ) : super.fromLastState();
+}
+
+class PontosResgatarEmProgresso extends PontosState {
+  PontosResgatarEmProgresso.fromLastState(
+    super.state,
+  ) : super.fromLastState();
+}
+
+class PontosResgatarSucesso extends PontosState {
+  PontosResgatarSucesso.fromLastState(
+    super.state, {
+    required super.pontos,
+  }) : super.fromLastState();
+}
+
+class PontosRegatarFalha extends PontosState {
+  PontosRegatarFalha.fromLastState(
     super.state,
   ) : super.fromLastState();
 }

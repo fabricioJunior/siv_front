@@ -40,6 +40,13 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<ResgatarPontos>(
+    () => ResgatarPontos(
+      pontosRepository: sl(),
     ),
   );
 }

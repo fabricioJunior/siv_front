@@ -25,3 +25,10 @@ class PontosCancelouPonto extends PontosEvent {
     required this.idPonto,
   });
 }
+
+class PontosResgatou extends PontosEvent {
+  final int valor;
+  final String descricao;
+
+  PontosResgatou({required this.valor, required this.descricao});
+}

@@ -3,6 +3,7 @@ import 'package:pessoas/domain/models/pessoa.dart';
 abstract class IPessoasRemoteDataSource {
   Future<List<Pessoa>> getPessoas({
     int pagina,
+    String? busca,
   });
 
   Future<Pessoa?> getPessoa(int id);

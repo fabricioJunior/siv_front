@@ -8,7 +8,11 @@ class RecuperarPessoas {
   RecuperarPessoas({required IPessoasRepository pessoasRepository})
       : _pessoasRepository = pessoasRepository;
 
-  Future<Iterable<Pessoa>> call() async {
-    return await _pessoasRepository.recuperarPessoas();
+  Future<Iterable<Pessoa>> call({
+    String? busca,
+  }) async {
+    return await _pessoasRepository.recuperarPessoas(
+      busca: busca,
+    );
   }
 }

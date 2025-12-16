@@ -37,7 +37,7 @@ class PontosRepository implements IPontosRepository {
   }
 
   @override
-  Future<Ponto> resgatar({
+  Future<void> resgatar({
     required int idPessoa,
     required int quantidade,
     required String descricao,

@@ -41,7 +41,7 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Ponto> resgatarPontos({
+  Future<void> resgatarPontos({
     required int idPessoa,
     required int quantidade,
     required String descricao,
@@ -55,12 +55,10 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
       'observacao': descricao,
     };
 
-    final response = await post(
+    await post(
       body: body,
       pathParameters: pathParameters,
     );
-
-    return PontoDto.fromJson(response.body);
   }
 
   @override

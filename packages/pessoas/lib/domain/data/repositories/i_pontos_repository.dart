@@ -12,7 +12,7 @@ abstract class IPontosRepository {
     required int idPessoa,
   });
 
-  Future<Ponto> resgatar({
+  Future<void> resgatar({
     required int idPessoa,
     required int quantidade,
     required String descricao,

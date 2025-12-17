@@ -20,7 +20,13 @@ class SelecionarEmpresaPage extends StatelessWidget {
         bloc: bloc,
         builder: (context, state) {
           if (state is LoginAutenticarEmProgresso) {
-            return CircularProgressIndicator.adaptive();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator.adaptive(),
+              ],
+            );
           }
           return ListView.builder(
             itemCount: state.empresas?.length,

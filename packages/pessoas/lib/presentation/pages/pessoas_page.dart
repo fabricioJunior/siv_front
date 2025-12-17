@@ -53,23 +53,26 @@ class PessoasPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16),
-            BlocBuilder<PessoasBloc, PessoasState>(builder: (context, state) {
-              switch (state.runtimeType) {
-                case const (PessoasCarregarEmProgresso):
-                  return _load();
-                case const (PessoasCarregarSucesso):
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: state.pessoas.length,
-                    itemBuilder: (context, index) {
-                      var pessoa = state.pessoas[index];
-                      return _pessoaCard(context, pessoa);
-                    },
-                  );
-                default:
-                  return SizedBox();
-              }
-            })
+            Expanded(
+              child: BlocBuilder<PessoasBloc, PessoasState>(
+                  builder: (context, state) {
+                switch (state.runtimeType) {
+                  case const (PessoasCarregarEmProgresso):
+                    return _load();
+                  case const (PessoasCarregarSucesso):
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: state.pessoas.length,
+                      itemBuilder: (context, index) {
+                        var pessoa = state.pessoas[index];
+                        return _pessoaCard(context, pessoa);
+                      },
+                    );
+                  default:
+                    return SizedBox();
+                }
+              }),
+            )
           ],
         ),
       ),

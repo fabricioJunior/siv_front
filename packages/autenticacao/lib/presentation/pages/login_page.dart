@@ -23,53 +23,83 @@ class LoginPage extends StatelessWidget {
         child: SafeArea(
           child: Form(
             key: formKey,
-            child: Column(
-              children: [
-                const Text('SIV - Login'),
-                TextFormField(
-                  key: const Key('login_page_user_input'),
-                  decoration: const InputDecoration(labelText: 'Usuário'),
-                  onChanged: (value) {
-                    bloc.add(LoginAdicionouUsuario(usuario: value));
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Informe o usuário';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  key: const Key('login_page_user_senha'),
-                  decoration: const InputDecoration(labelText: 'Senha'),
-                  onChanged: (value) {
-                    bloc.add(LoginAdicionouSenha(senha: value));
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Informe a senha para continuar';
-                    }
-                    return null;
-                  },
-                ),
-                BlocBuilder<LoginBloc, LoginState>(
-                    bloc: bloc,
-                    builder: (context, state) {
-                      if (state is! LoginAutenticarFalha) {
-                        return const SizedBox();
-                      }
-                      return Text(state.erro);
-                    }),
-                ElevatedButton(
-                  key: const Key('login_page_entrar_button'),
-                  onPressed: () {
-                    if (formKey.currentState?.validate() ?? false) {
-                      bloc.add(LoginAutenticou());
-                    }
-                  },
-                  child: const Text('ENTRAR'),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  const Text('SIV - Login'),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 32,
+                      ),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            key: const Key('login_page_user_input'),
+                            decoration:
+                                const InputDecoration(labelText: 'Usuário'),
+                            onChanged: (value) {
+                              bloc.add(LoginAdicionouUsuario(usuario: value));
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Informe o usuário';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(
+                            height: 16,
+                          ),
+                          TextFormField(
+                            obscureText: true,
+                            key: const Key('login_page_user_senha'),
+                            decoration: const InputDecoration(
+                              labelText: 'Senha',
+                            ),
+                            onChanged: (value) {
+                              bloc.add(LoginAdicionouSenha(senha: value));
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Informe a senha para continuar';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  BlocBuilder<LoginBloc, LoginState>(
+                      bloc: bloc,
+                      builder: (context, state) {
+                        if (state is! LoginAutenticarFalha) {
+                          return const SizedBox();
+                        }
+                        return Text(state.erro);
+                      }),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        key: const Key('login_page_entrar_button'),
+                        onPressed: () {
+                          if (formKey.currentState?.validate() ?? false) {
+                            bloc.add(LoginAutenticou());
+                          }
+                        },
+                        child: const Text('ENTRAR'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -55,10 +55,13 @@ class PontosRemoteDataSource extends RemoteDataSourceBase
       'observacao': descricao,
     };
 
-    await post(
+    var response = await post(
       body: body,
       pathParameters: pathParameters,
     );
+    if (response.statusCode != 201) {
+      throw Exception(response.body);
+    }
   }
 
   @override

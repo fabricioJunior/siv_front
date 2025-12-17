@@ -51,6 +51,7 @@ class PontoDto with Ponto {
     this.cancelado = false,
     this.motivoCancelamento,
     this.dtCancelamento,
+    this.tipo,
   }) : _id = id;
 
   factory PontoDto.fromJson(Map<String, dynamic> json) =>
@@ -64,6 +65,33 @@ class PontoDto with Ponto {
   @override
   @JsonKey(includeToJson: false)
   int get id => _id ?? 0;
+
+  @override
+  @JsonKey(
+      name: 'tipo', fromJson: _tipoDePontoFromJson, toJson: _tipoDePontoToJson)
+  final TipoDePonto? tipo;
+}
+
+TipoDePonto? _tipoDePontoFromJson(dynamic value) {
+  if (value == null) return null;
+  if (value is String) {
+    switch (value.toLowerCase()) {
+      case 'débito':
+      case 'debito':
+        return TipoDePonto.debito;
+      case 'crédito':
+      case 'credito':
+        return TipoDePonto.credito;
+      default:
+        throw ArgumentError('Tipo de ponto inválido: $value');
+    }
+  }
+  throw ArgumentError('Unexpected tipo type: ${value.runtimeType}');
+}
+
+String? _tipoDePontoToJson(TipoDePonto? tipo) {
+  if (tipo == null) return null;
+  return tipo == TipoDePonto.debito ? 'Débito' : 'Crédito';
 }
 
 int _quantidadeFromJson(dynamic value) {

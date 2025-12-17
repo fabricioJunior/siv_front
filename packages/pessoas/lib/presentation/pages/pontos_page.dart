@@ -2,6 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pessoas/models.dart';
 
 import '../bloc/pontos_bloc/pontos_bloc.dart';
 
@@ -109,6 +110,9 @@ class PontosPage extends StatelessWidget {
                             itemBuilder: (context, index) {
                               var ponto = state.pontos![index];
                               return Card(
+                                color: ponto.tipo == TipoDePonto.debito
+                                    ? Colors.redAccent
+                                    : null,
                                 child: ListTile(
                                   leading: Text('${ponto.valor}'),
                                   title: Row(

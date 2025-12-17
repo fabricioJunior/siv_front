@@ -9,12 +9,14 @@ mixin Ponto implements Equatable {
   bool get cancelado;
   String? get motivoCancelamento;
   DateTime? get dtCancelamento;
+  TipoDePonto? get tipo;
 
   static Ponto instance({
     required int id,
     required int valor,
     required DateTime validade,
     required String descricao,
+    required TipoDePonto tipo,
     DateTime? dtCriacao,
     bool? cancelado,
     String? motivoCancelamento,
@@ -25,6 +27,7 @@ mixin Ponto implements Equatable {
         valor: valor,
         validade: validade,
         descricao: descricao,
+        tipo: tipo,
       );
 
   Ponto copyWith({
@@ -35,17 +38,18 @@ mixin Ponto implements Equatable {
     bool? cancelado,
     String? motivoCancelamento,
     DateTime? dtCancelamento,
+    TipoDePonto? tipo,
   }) {
     return _Ponto(
-      id: id,
-      valor: valor ?? this.valor,
-      validade: validade ?? this.validade,
-      descricao: descricao ?? this.descricao,
-      dtCriacao: dtCriacao ?? this.dtCriacao,
-      cancelado: cancelado ?? this.cancelado,
-      motivoCancelamento: motivoCancelamento ?? this.motivoCancelamento,
-      dtCancelamento: dtCancelamento ?? this.dtCancelamento,
-    );
+        id: id,
+        valor: valor ?? this.valor,
+        validade: validade ?? this.validade,
+        descricao: descricao ?? this.descricao,
+        dtCriacao: dtCriacao ?? this.dtCriacao,
+        cancelado: cancelado ?? this.cancelado,
+        motivoCancelamento: motivoCancelamento ?? this.motivoCancelamento,
+        dtCancelamento: dtCancelamento ?? this.dtCancelamento,
+        tipo: tipo ?? this.tipo);
   }
 
   @override
@@ -87,11 +91,15 @@ class _Ponto with Ponto {
   @override
   final DateTime? dtCancelamento;
 
+  @override
+  final TipoDePonto? tipo;
+
   const _Ponto({
     required this.id,
     required this.valor,
     required this.validade,
     required this.descricao,
+    required this.tipo,
     this.dtCriacao,
     this.cancelado = false,
     this.motivoCancelamento,
@@ -100,4 +108,9 @@ class _Ponto with Ponto {
 
   @override
   final int id;
+}
+
+enum TipoDePonto {
+  debito,
+  credito,
 }

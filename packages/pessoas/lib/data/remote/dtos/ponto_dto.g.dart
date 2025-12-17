@@ -15,6 +15,7 @@ PontoDto _$PontoDtoFromJson(Map<String, dynamic> json) => PontoDto(
       cancelado: json['cancelado'] as bool? ?? false,
       motivoCancelamento: json['motivoCancelamento'] as String?,
       dtCancelamento: _nullableDateTimeFromJson(json['dtCancelamento']),
+      tipo: _tipoDePontoFromJson(json['tipo']),
     );
 
 Map<String, dynamic> _$PontoDtoToJson(PontoDto instance) => <String, dynamic>{
@@ -25,4 +26,5 @@ Map<String, dynamic> _$PontoDtoToJson(PontoDto instance) => <String, dynamic>{
       'cancelado': instance.cancelado,
       'motivoCancelamento': instance.motivoCancelamento,
       'dtCancelamento': _dateTimeToJson(instance.dtCancelamento),
+      'tipo': _tipoDePontoToJson(instance.tipo),
     };

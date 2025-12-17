@@ -56,5 +56,6 @@ Ponto fakePonto({
     cancelado: cancelado,
     motivoCancelamento: motivoCancelamento,
     dtCancelamento: dtCancelamento,
+    tipo: TipoDePonto.credito,
   );
 }

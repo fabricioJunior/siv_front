@@ -1,10 +1,9 @@
 import '../../../models.dart';
 
 abstract class ITamanhosRemoteDataSource {
-  Future<List<Tamanho>> fetchTamanhos({
-    String? nome,
-    bool? inativo,
-  });
+  Future<List<Tamanho>> fetchTamanhos({String? nome, bool? inativo});
+
+  Future<Tamanho> atualizarTamanho(int id, String nome);
 
   Future<Tamanho> fetchTamanho(int id);
 

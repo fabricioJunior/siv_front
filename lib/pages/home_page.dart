@@ -66,6 +66,15 @@ class HomePage extends StatelessWidget {
                         Navigator.pushNamed(context, '/pessoas');
                       },
                       child: const Text('Pessoas'),
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/menu_produtos');
+                      },
+                      child: const Text('Produtos'),
                     )
                   ],
                 ),

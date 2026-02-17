@@ -111,8 +111,8 @@ class PontosPage extends StatelessWidget {
                               var ponto = state.pontos![index];
                               return Card(
                                 color: ponto.tipo == TipoDePonto.debito
-                                    ? Colors.redAccent
-                                    : null,
+                                    ? const Color.fromRGBO(255, 82, 82, 1)
+                                    : Colors.greenAccent.shade100,
                                 child: ListTile(
                                   leading: Text('${ponto.valor}'),
                                   title: Row(

@@ -5,4 +5,6 @@ abstract class ITamanhosRepository {
   Future<List<Tamanho>> obterTamanhos({String? nome, bool? inativo});
   Future<Tamanho?> obterTamanho(int id);
   Future<void> desativarTamanho(int id);
+
+  Future<Tamanho> atualizarTamanho(int id, String nome);
 }

@@ -25,7 +25,7 @@ class DateInput extends StatelessWidget {
     this.bloqueado,
   }) : controller = TextEditingController(
           text: dataInicial != null
-              ? '${dataInicial!.day}/${dataInicial.month}/${dataInicial.year}'
+              ? '${dataInicial.day}/${dataInicial.month}/${dataInicial.year}'
               : null,
         );
 
@@ -83,6 +83,7 @@ class CPFInput extends StatelessWidget {
   }
 }
 
+// ignore: must_be_immutable
 class CelularInput extends StatelessWidget {
   final String? valorInicial;
   final void Function(String)? onChanged;

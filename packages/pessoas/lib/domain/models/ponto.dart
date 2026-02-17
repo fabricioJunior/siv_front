@@ -3,7 +3,7 @@ import 'package:core/equals.dart';
 mixin Ponto implements Equatable {
   int get id;
   int get valor;
-  DateTime get validade;
+  DateTime? get validade;
   String get descricao;
   DateTime? get dtCriacao;
   bool get cancelado;
@@ -74,7 +74,7 @@ class _Ponto with Ponto {
   final int valor;
 
   @override
-  final DateTime validade;
+  final DateTime? validade;
 
   @override
   final String descricao;

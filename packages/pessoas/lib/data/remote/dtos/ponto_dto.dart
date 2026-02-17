@@ -16,7 +16,7 @@ class PontoDto with Ponto {
   @override
   @JsonKey(
       name: 'validaAte', fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
-  final DateTime validade;
+  final DateTime? validade;
 
   @override
   @JsonKey(name: 'observacao')
@@ -104,8 +104,8 @@ int _quantidadeFromJson(dynamic value) {
   throw ArgumentError('Unexpected quantidade type: ${value.runtimeType}');
 }
 
-DateTime _dateTimeFromJson(dynamic value) {
-  if (value == null) throw ArgumentError('Date value is null');
+DateTime? _dateTimeFromJson(dynamic value) {
+  if (value == null) return null;
   if (value is int) {
     // assume epoch milliseconds
     return DateTime.fromMillisecondsSinceEpoch(value);

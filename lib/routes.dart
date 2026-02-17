@@ -3,6 +3,7 @@ import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
+import 'package:produtos/presentation.dart';
 import 'package:siv_front/pages/home_page.dart';
 import 'package:siv_front/pages/splash_page.dart';
 
@@ -57,7 +58,21 @@ Map<String, Widget Function(BuildContext)> routes = {
     return PontosPage(
       idPessoa: args(context)['idPessoa'],
     );
-  }
+  },
+
+  ///PRODUTOS:
+  '/menu_produtos': (context) {
+    return const MenuProdutosPage();
+  },
+  '/tamanhos': (context) {
+    return TamanhosPage();
+  },
+  '/cores': (context) {
+    return CoresPage();
+  },
+  '/categorias': (context) {
+    return CategoriasPage();
+  },
 };
 
 Map<String, dynamic> args(BuildContext context) =>

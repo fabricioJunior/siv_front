@@ -30,7 +30,7 @@ class CategoriasPage extends StatelessWidget {
               onPressed: () async {
                 final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (context) => const CategoriaFormPage(),
+                    builder: (context) => const CategoriaPage(),
                   ),
                 );
 
@@ -132,8 +132,7 @@ class CategoriasPage extends StatelessWidget {
         onTap: () async {
           final result = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
-              builder: (context) =>
-                  CategoriaFormPage(idCategoria: categoria.id),
+              builder: (context) => CategoriaPage(idCategoria: categoria.id),
             ),
           );
 

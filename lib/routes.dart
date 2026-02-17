@@ -70,8 +70,19 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/cores': (context) {
     return CoresPage();
   },
+  '/marcas': (context) {
+    return MarcasPage();
+  },
   '/categorias': (context) {
     return CategoriasPage();
+  },
+  '/produtos/categoria': (context) {
+    return CategoriaPage(
+      idCategoria: args(context)['idCategoria'],
+    );
+  },
+  '/referencias': (context) {
+    return ReferenciasPage();
   },
 };
 

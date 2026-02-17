@@ -21,3 +21,11 @@ export 'domain/use_cases/recuperar_sub_categorias.dart';
 export 'domain/use_cases/recuperar_sub_categoria.dart';
 export 'domain/use_cases/desativar_sub_categoria.dart';
 export 'domain/use_cases/atualizar_sub_categoria.dart';
+
+export 'domain/use_cases/criar_marca.dart';
+export 'domain/use_cases/recuperar_marcas.dart';
+export 'domain/use_cases/recuperar_marca.dart';
+export 'domain/use_cases/desativar_marca.dart';
+export 'domain/use_cases/atualizar_marca.dart';
+
+export 'domain/use_cases/recuperar_referencias.dart';

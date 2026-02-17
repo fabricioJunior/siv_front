@@ -43,6 +43,15 @@ class MenuProdutosPage extends StatelessWidget {
             ),
             _buildMenuCard(
               context: context,
+              title: 'Marcas',
+              icon: Icons.branding_watermark,
+              color: Colors.red,
+              onTap: () {
+                Navigator.of(context).pushNamed('/marcas');
+              },
+            ),
+            _buildMenuCard(
+              context: context,
               title: 'Preços',
               icon: Icons.attach_money,
               color: Colors.green,
@@ -52,11 +61,11 @@ class MenuProdutosPage extends StatelessWidget {
             ),
             _buildMenuCard(
               context: context,
-              title: 'Novo Produto',
-              icon: Icons.add_box,
+              title: 'Produtos',
+              icon: Icons.inventory,
               color: Colors.orange,
               onTap: () {
-                _showComingSoon(context, 'Cadastro de Produto');
+                Navigator.of(context).pushNamed('/referencias');
               },
             ),
           ],

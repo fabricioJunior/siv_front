@@ -1,1 +1,1 @@
-mixin Endereco {}
+abstract class Endereco {}

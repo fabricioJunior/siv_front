@@ -5,7 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'grupo_de_acesso_dto.g.dart';
 
 @JsonSerializable()
-class GrupoDeAcessoDto with GrupoDeAcesso {
+class GrupoDeAcessoDto implements GrupoDeAcesso {
   @override
   final int? id;
 
@@ -23,6 +23,24 @@ class GrupoDeAcessoDto with GrupoDeAcesso {
       _$GrupoDeAcessoDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$GrupoDeAcessoDtoToJson(this);
+
+  GrupoDeAcessoDto copyWith({
+    int? id,
+    String? nome,
+    List<PermissaoDto>? permissoes,
+  }) {
+    return GrupoDeAcessoDto(
+      id: id ?? this.id,
+      nome: nome ?? this.nome,
+      permissoes: permissoes ?? this.permissoes,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, nome, permissoes];
+
+  @override
+  bool? get stringify => true;
 }
 
 @JsonSerializable(createToJson: false)

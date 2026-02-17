@@ -12,5 +12,9 @@ export 'package:produtos/presentantion/blocs/categorias_bloc/categorias_bloc.dar
 export 'package:produtos/presentantion/blocs/categoria_bloc/categoria_bloc.dart';
 export 'package:produtos/presentantion/modals/categoria_modal.dart';
 export 'package:produtos/presentantion/pages/categorias_page.dart';
+export 'package:produtos/presentantion/pages/categoria_form_page.dart';
+
+export 'package:produtos/presentantion/blocs/sub_categorias_bloc/sub_categorias_bloc.dart';
+export 'package:produtos/presentantion/blocs/sub_categoria_bloc/sub_categoria_bloc.dart';
 
 export 'package:produtos/presentantion/pages/menu_produtos.dart';

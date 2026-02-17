@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'pessoa_dto.g.dart';
 
 @JsonSerializable()
-class PessoaDto with Pessoa {
+class PessoaDto implements Pessoa {
   @override
   final bool bloqueado;
 
@@ -78,6 +78,60 @@ class PessoaDto with Pessoa {
       _$PessoaDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$PessoaDtoToJson(this);
+
+  PessoaDto copyWith({
+    int? id,
+    String? nome,
+    TipoPessoa? tipoPessoa,
+    String? documento,
+    String? uf,
+    String? inscricaoEstadual,
+    DateTime? dataDeNascimento,
+    String? email,
+    TipoContato? tipoContato,
+    String? contato,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
+    bool? bloqueado,
+  }) {
+    return PessoaDto(
+      id: id ?? this.id,
+      bloqueado: bloqueado ?? this.bloqueado,
+      contato: contato ?? this.contato,
+      documento: documento ?? this.documento,
+      eCliente: eCliente ?? this.eCliente,
+      eFornecedor: eFornecedor ?? this.eFornecedor,
+      eFuncionario: eFuncionario ?? this.eFuncionario,
+      email: email ?? this.email,
+      nome: nome ?? this.nome,
+      tipoContato: tipoContato ?? this.tipoContato,
+      tipoPessoa: tipoPessoa ?? this.tipoPessoa,
+      inscricaoEstadual: inscricaoEstadual ?? this.inscricaoEstadual,
+      uf: uf ?? this.uf,
+      nascimento: dataDeNascimento ?? this.nascimento,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        nome,
+        tipoPessoa,
+        documento,
+        uf,
+        inscricaoEstadual,
+        nascimento,
+        email,
+        tipoContato,
+        contato,
+        eCliente,
+        eFornecedor,
+        eFuncionario,
+        bloqueado,
+      ];
+
+  @override
+  bool? get stringify => true;
 }
 
 extension ToDto on Pessoa {

@@ -28,7 +28,11 @@ class CategoriasPage extends StatelessWidget {
             return FloatingActionButton(
               child: const Icon(Icons.add),
               onPressed: () async {
-                final result = await CategoriaModal.show(context: context);
+                final result = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (context) => const CategoriaFormPage(),
+                  ),
+                );
 
                 if (result == true) {
                   // ignore: use_build_context_synchronously
@@ -126,9 +130,11 @@ class CategoriasPage extends StatelessWidget {
           child: Icon(iconData, color: iconColor),
         ),
         onTap: () async {
-          final result = await CategoriaModal.show(
-            context: context,
-            idCategoria: categoria.id,
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (context) =>
+                  CategoriaFormPage(idCategoria: categoria.id),
+            ),
           );
 
           if (result == true) {

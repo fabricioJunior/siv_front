@@ -1,54 +1,34 @@
+import 'package:autenticacao/data/remote/dtos/grupo_de_acesso_dto.dart';
+import 'package:autenticacao/data/remote/dtos/vinculo_grupo_de_acesso_com_usuario.dart';
 import 'package:autenticacao/domain/models/empresa.dart';
 import 'package:autenticacao/domain/models/grupo_de_acesso.dart';
 
-mixin VinculoGrupoDeAcessoEUsuario {
+abstract class VinculoGrupoDeAcessoEUsuario {
   int? get idUsuario;
   int? get idEmpresa;
   Empresa? get empresa;
   GrupoDeAcesso? get grupoDeAcesso;
+}
 
+extension VinculoGrupoDeAcessoEUsuarioCopyWith on VinculoGrupoDeAcessoEUsuario {
   VinculoGrupoDeAcessoEUsuario copyWith({
     int? idUsuario,
     int? idEmpresa,
     Empresa? empresa,
     GrupoDeAcesso? grupoDeAcesso,
   }) {
-    return _VinculoGrupoDeAcessoEUsuarioImpl(
-      idUsuario: idUsuario ?? this.idUsuario,
-      empresa: empresa ?? this.empresa,
-      grupoDeAcesso: grupoDeAcesso ?? this.grupoDeAcesso,
+    // Import the DTO to create a new instance
+    final grupoFinal =
+        (grupoDeAcesso ?? this.grupoDeAcesso) as GrupoDeAcessoDto?;
+    if (grupoFinal == null) {
+      throw ArgumentError('grupoDeAcesso cannot be null');
+    }
+
+    return VinculoGrupoDeAcessoComUsuarioDto(
+      grupoId: grupoFinal.id ?? 0,
+      empresaId: (idEmpresa ?? this.idEmpresa) ?? 0,
+      usuarioId: (idUsuario ?? this.idUsuario) ?? 0,
+      grupo: grupoFinal,
     );
   }
-
-  static VinculoGrupoDeAcessoEUsuario instance({
-    int? idUsuario,
-    int? idEmpresa,
-    Empresa? empresa,
-    GrupoDeAcesso? grupoDeAcesso,
-  }) =>
-      _VinculoGrupoDeAcessoEUsuarioImpl(
-        idUsuario: idUsuario,
-        empresa: empresa,
-        grupoDeAcesso: grupoDeAcesso,
-      );
-}
-
-class _VinculoGrupoDeAcessoEUsuarioImpl with VinculoGrupoDeAcessoEUsuario {
-  @override
-  final Empresa? empresa;
-
-  @override
-  final GrupoDeAcesso? grupoDeAcesso;
-
-  _VinculoGrupoDeAcessoEUsuarioImpl({
-    required this.idUsuario,
-    required this.empresa,
-    required this.grupoDeAcesso,
-  });
-
-  @override
-  int? get idEmpresa => empresa?.id;
-
-  @override
-  final int? idUsuario;
 }

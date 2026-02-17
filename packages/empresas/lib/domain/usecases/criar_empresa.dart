@@ -23,7 +23,7 @@ class CriarEmpresa {
     required String? telefone,
     required String? uf,
   }) async {
-    var novaEmpresa = Empresa.instance(
+    var novaEmpresa = Empresa.create(
       cnpj: cnpj,
       codigoDeAtividade: codigoDeAtividade,
       codigoDeNaturezaJuridica: codigoDeNaturezaJuridica,

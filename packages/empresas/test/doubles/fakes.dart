@@ -16,7 +16,7 @@ Empresa fakeEmpresa({
   String telefone = 'telefone',
   String uf = 'uf',
 }) =>
-    Empresa.instance(
+    Empresa.create(
       cnpj: cnpj,
       codigoDeAtividade: codigoDeAtividade,
       codigoDeNaturezaJuridica: codigoDeNaturezaJuridica,

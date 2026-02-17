@@ -5,7 +5,7 @@ import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 part 'permissao_dto.g.dart';
 
 @Collection(ignore: {'props'})
-class PermissaoDto with Permissao implements IsarDto {
+class PermissaoDto implements Permissao, IsarDto {
   @override
   final String? id;
 
@@ -23,6 +23,12 @@ class PermissaoDto with Permissao implements IsarDto {
 
   @override
   Id get dataBaseId => fastHash(id ?? 'null');
+
+  @override
+  List<Object?> get props => [id, nome, descontinuado];
+
+  @override
+  bool? get stringify => true;
 }
 
 extension PermissaoToDtoExtension on Permissao {

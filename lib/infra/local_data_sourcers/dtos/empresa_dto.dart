@@ -5,7 +5,7 @@ import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 part 'empresa_dto.g.dart';
 
 @Collection(ignore: {'props'})
-class EmpresaDto with Empresa implements IsarDto {
+class EmpresaDto implements Empresa, IsarDto {
   @override
   Id get dataBaseId => id;
 

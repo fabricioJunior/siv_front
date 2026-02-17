@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'cor_dto.g.dart';
 
 @JsonSerializable()
-class CorDto with Cor {
+class CorDto implements Cor {
   @override
   final int? id;
 

@@ -1,4 +1,6 @@
 import 'package:autenticacao/models.dart';
+import 'package:autenticacao/data/remote/dtos/permissao_dto.dart';
+import 'package:autenticacao/data/remote/dtos/grupo_de_acesso_dto.dart';
 
 Token fakeToken({
   String jwtToken = 'jwtToken',
@@ -19,20 +21,14 @@ Usuario fakeUsuario(
         String nome = 'nome',
         TipoUsuario tipo = TipoUsuario.sysadmin,
         String senha = 'senha'}) =>
-    Usuario.instance(
-      id: id,
-      login: login,
-      nome: nome,
-      tipo: tipo,
-      senha: senha,
-    );
+    throw UnimplementedError('Use UsuarioDto directly or mock');
 
 Permissao fakePermissao({
   String id = '1',
   String nome = "Teste",
   bool descontinuado = false,
 }) {
-  return Permissao.instance(
+  return PermissaoDto(
     id: id,
     nome: nome,
     descontinuado: descontinuado,
@@ -44,10 +40,10 @@ GrupoDeAcesso fakeGrupoDeAcesso({
   String nome = 'nome',
   List<Permissao> permissoes = const [],
 }) =>
-    GrupoDeAcesso.instance(
+    GrupoDeAcessoDto(
       id: id,
       nome: nome,
-      permissoes: permissoes,
+      permissoes: permissoes.map((p) => p as PermissaoDto).toList(),
     );
 
 VinculoGrupoDeAcessoEUsuario fakeVinculoGrupoDeAcessoEUsuario({
@@ -55,17 +51,10 @@ VinculoGrupoDeAcessoEUsuario fakeVinculoGrupoDeAcessoEUsuario({
   GrupoDeAcesso? grupoDeAcesso,
   Empresa? empresa,
 }) =>
-    VinculoGrupoDeAcessoEUsuario.instance(
-      idUsuario: idUsuario,
-      grupoDeAcesso: grupoDeAcesso,
-      empresa: empresa,
-    );
+    throw UnimplementedError('Use VinculoGrupoDeAcessoComUsuarioDto or mock');
 
 Empresa fakeEmpresa({
   int id = 0,
   String nome = 'nome',
 }) =>
-    Empresa.instance(
-      id: id,
-      nome: nome,
-    );
+    throw UnimplementedError('Use EmpresaDto or mock');

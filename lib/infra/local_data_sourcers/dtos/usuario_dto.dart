@@ -5,7 +5,7 @@ import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 part 'usuario_dto.g.dart';
 
 @Collection(ignore: {'props'})
-class UsuarioDto with Usuario implements IsarDto {
+class UsuarioDto implements Usuario, IsarDto {
   @override
   final int id;
 

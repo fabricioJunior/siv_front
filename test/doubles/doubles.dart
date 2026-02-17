@@ -8,7 +8,7 @@ Usuario fakeUsuario({
   String nome = 'nome do usuario',
   TipoUsuario tipo = TipoUsuario.padrao,
 }) =>
-    Usuario.instance(
+    Usuario.create(
       id: id,
       login: login,
       nome: nome,

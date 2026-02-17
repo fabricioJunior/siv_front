@@ -2,12 +2,15 @@ import 'package:core/injecoes.dart';
 import 'package:produtos/data/remote/tamanhos_remote_datasource.dart';
 import 'package:produtos/data/remote/cores_remote_datasource.dart';
 import 'package:produtos/data/remote/categorias_remote_datasource.dart';
+import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
+import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
+import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/repositorios.dart';
 import 'package:produtos/use_cases.dart';
@@ -31,6 +34,10 @@ void _data() {
   sl.registerFactory<ICategoriasRemoteDataSource>(
     () => CategoriasRemoteDatasource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<ISubCategoriasRemoteDataSource>(
+    () => SubCategoriasRemoteDatasource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -40,6 +47,10 @@ void _repositores() {
 
   sl.registerFactory<ICoresRepository>(
     () => CoresRepository(coresRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<ISubCategoriasRepository>(
+    () => SubCategoriasRepository(subCategoriasRemoteDataSource: sl()),
   );
 
   sl.registerFactory<ICategoriasRepository>(
@@ -101,6 +112,27 @@ void _usesCases() {
   sl.registerFactory<AtualizarCategoria>(
     () => AtualizarCategoria(categoriasRepository: sl()),
   );
+
+  // Sub-Categorias Use Cases
+  sl.registerFactory<RecuperarSubCategorias>(
+    () => RecuperarSubCategorias(subCategoriasRepository: sl()),
+  );
+
+  sl.registerFactory<CriarSubCategoria>(
+    () => CriarSubCategoria(subCategoriasRepository: sl()),
+  );
+
+  sl.registerFactory<DesativarSubCategoria>(
+    () => DesativarSubCategoria(subCategoriasRepository: sl()),
+  );
+
+  sl.registerFactory<RecuperarSubCategoria>(
+    () => RecuperarSubCategoria(subCategoriasRepository: sl()),
+  );
+
+  sl.registerFactory<AtualizarSubCategoria>(
+    () => AtualizarSubCategoria(subCategoriasRepository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -115,4 +147,10 @@ void _presentantion() {
   sl.registerFactory<CategoriasBloc>(() => CategoriasBloc(sl(), sl()));
 
   sl.registerFactory<CategoriaBloc>(() => CategoriaBloc(sl(), sl(), sl()));
+
+  sl.registerFactory<SubCategoriasBloc>(() => SubCategoriasBloc(sl(), sl()));
+
+  sl.registerFactory<SubCategoriaBloc>(
+    () => SubCategoriaBloc(sl(), sl(), sl()),
+  );
 }

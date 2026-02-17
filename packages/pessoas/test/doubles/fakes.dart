@@ -16,7 +16,7 @@ Pessoa fakePessoa({
   bool eFuncionario = false,
   bool bloqueado = false,
 }) {
-  return Pessoa.instance(
+  return Pessoa.create(
     id: id,
     bloqueado: bloqueado,
     contato: contato,
@@ -47,7 +47,7 @@ Ponto fakePonto({
   final validadeNonNull =
       validade ?? DateTime.now().add(const Duration(days: 30));
   final dtCriacaoNonNull = dtCriacao ?? DateTime.now();
-  return Ponto.instance(
+  return Ponto.create(
     id: id,
     valor: valor,
     validade: validadeNonNull,

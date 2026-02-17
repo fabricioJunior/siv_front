@@ -5,7 +5,7 @@ import 'package:pessoas/models.dart';
 part 'ponto_dto.g.dart';
 
 @JsonSerializable()
-class PontoDto with Ponto {
+class PontoDto implements Ponto {
   @override
   @JsonKey(
     name: 'quantidade',
@@ -58,6 +58,22 @@ class PontoDto with Ponto {
       _$PontoDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$PontoDtoToJson(this);
+
+  @override
+  List<Object?> get props => [
+        id,
+        valor,
+        validade,
+        descricao,
+        dtCriacao,
+        dtCancelamento,
+        cancelado,
+        motivoCancelamento,
+        dtCancelamento,
+      ];
+
+  @override
+  bool? get stringify => true;
 
   @JsonKey(name: 'id')
   final int? _id;

@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'tamanho_dto.g.dart';
 
 @JsonSerializable()
-class TamanhoDto with Tamanho {
+class TamanhoDto implements Tamanho {
   @override
   final int? id;
 

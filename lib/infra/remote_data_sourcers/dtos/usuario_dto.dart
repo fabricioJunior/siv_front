@@ -7,7 +7,7 @@ part 'usuario_dto.g.dart';
 @JsonSerializable(
   createToJson: false,
 )
-class UsuarioDto with Usuario, EquatableMixin {
+class UsuarioDto implements Usuario {
   @override
   final int id;
 

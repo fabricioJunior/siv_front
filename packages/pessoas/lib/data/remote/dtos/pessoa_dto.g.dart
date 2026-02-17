@@ -23,9 +23,7 @@ PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
       nascimento: json['nascimento'] == null
           ? null
           : DateTime.parse(json['nascimento'] as String),
-    )..dataDeNascimento = json['dataDeNascimento'] == null
-        ? null
-        : DateTime.parse(json['dataDeNascimento'] as String);
+    );
 
 Map<String, dynamic> _$PessoaDtoToJson(PessoaDto instance) => <String, dynamic>{
       'bloqueado': instance.bloqueado,
@@ -41,6 +39,5 @@ Map<String, dynamic> _$PessoaDtoToJson(PessoaDto instance) => <String, dynamic>{
       'tipo': tipoPessoaToJson(instance.tipoPessoa),
       'tipoContato': tipoContatoToJson(instance.tipoContato),
       'ufInscricaoEstadual': instance.uf,
-      'dataDeNascimento': instance.dataDeNascimento?.toIso8601String(),
       'nascimento': instance.nascimento?.toIso8601String(),
     };

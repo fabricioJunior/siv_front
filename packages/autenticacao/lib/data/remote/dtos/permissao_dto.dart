@@ -1,11 +1,10 @@
 import 'package:autenticacao/domain/models/permissao.dart';
-import 'package:core/equals.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'permissao_dto.g.dart';
 
 @JsonSerializable()
-class PermissaoDto with Permissao, EquatableMixin {
+class PermissaoDto implements Permissao {
   @override
   final String? id;
 
@@ -25,6 +24,12 @@ class PermissaoDto with Permissao, EquatableMixin {
       _$PermissaoDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$PermissaoDtoToJson(this);
+
+  @override
+  List<Object?> get props => [id, nome, descontinuado];
+
+  @override
+  bool? get stringify => true;
 }
 
 extension PermissaoExtension on Permissao {

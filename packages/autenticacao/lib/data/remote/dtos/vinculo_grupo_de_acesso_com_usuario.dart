@@ -8,7 +8,8 @@ import '../../../domain/models/vinculo_grupo_de_acesso_e_usuario.dart';
 part 'vinculo_grupo_de_acesso_com_usuario.g.dart';
 
 @JsonSerializable()
-class VinculoGrupoDeAcessoComUsuarioDto with VinculoGrupoDeAcessoEUsuario {
+class VinculoGrupoDeAcessoComUsuarioDto
+    implements VinculoGrupoDeAcessoEUsuario {
   final int grupoId;
   final int empresaId;
   final int usuarioId;
@@ -36,4 +37,19 @@ class VinculoGrupoDeAcessoComUsuarioDto with VinculoGrupoDeAcessoEUsuario {
 
   @override
   int? get idUsuario => usuarioId;
+
+  VinculoGrupoDeAcessoComUsuarioDto copyWith({
+    int? grupoId,
+    int? empresaId,
+    int? usuarioId,
+    GrupoDeAcessoDto? grupo,
+    Empresa? empresa,
+  }) {
+    return VinculoGrupoDeAcessoComUsuarioDto(
+      grupoId: grupoId ?? this.grupoId,
+      empresaId: empresaId ?? this.empresaId,
+      usuarioId: usuarioId ?? this.usuarioId,
+      grupo: grupo ?? this.grupo,
+    );
+  }
 }

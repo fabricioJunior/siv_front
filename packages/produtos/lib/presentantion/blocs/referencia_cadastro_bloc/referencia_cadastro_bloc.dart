@@ -13,10 +13,12 @@ class ReferenciaCadastroBloc
     extends Bloc<ReferenciaCadastroEvent, ReferenciaCadastroState> {
   final RecuperarCategorias _recuperarCategorias;
   final RecuperarSubCategorias _recuperarSubCategorias;
+  final CriarReferencia _criarReferencia;
 
   ReferenciaCadastroBloc(
     this._recuperarCategorias,
     this._recuperarSubCategorias,
+    this._criarReferencia,
   ) : super(const ReferenciaCadastroState()) {
     on<ReferenciaCadastroIniciou>(_onIniciou);
     on<ReferenciaCadastroCategoriaSelecionada>(_onCategoriaSelecionada);
@@ -159,10 +161,11 @@ class ReferenciaCadastroBloc
           emit(state.copyWith(mensagem: 'Selecione uma categoria'));
           return;
         }
-        if (state.subCategorias.isEmpty) {
-          emit(state.copyWith(step: ReferenciaCadastroStep.id));
-        } else {
+        if (state.subCategorias.isNotEmpty) {
           emit(state.copyWith(step: ReferenciaCadastroStep.subCategoria));
+          return;
+        } else {
+          emit(state.copyWith(step: ReferenciaCadastroStep.id));
         }
         return;
       case ReferenciaCadastroStep.subCategoria:
@@ -184,6 +187,12 @@ class ReferenciaCadastroBloc
           emit(state.copyWith(mensagem: 'Informe o nome da referencia'));
           return;
         }
+        await _criarReferencia.call(
+          categoriaId: state.categoria!.id!,
+          subCategoriaId: state.subCategoria?.id,
+          id: state.referenciaId!,
+          nome: state.nome!.trim(),
+        );
         emit(state.copyWith(step: ReferenciaCadastroStep.resumo));
         return;
       case ReferenciaCadastroStep.resumo:

@@ -9,90 +9,260 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    BlocBuilder<AppBloc, AppState>(
-                        bloc: sl<AppBloc>(),
-                        builder: (context, state) {
-                          if (state.usuarioDaSessao != null) {
-                            return Text(state.usuarioDaSessao!.nome);
-                          }
-                          return const SizedBox();
-                        }),
-                    const SizedBox(
-                      height: 32,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.deepPurple.shade50,
+              Colors.blue.shade50,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Seção de Usuário
+              BlocBuilder<AppBloc, AppState>(
+                bloc: sl<AppBloc>(),
+                builder: (context, state) {
+                  final userName = state.usuarioDaSessao?.nome ?? 'Usuário';
+                  final userInitial = userName.isNotEmpty ? userName[0] : 'U';
+
+                  return Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Colors.deepPurple,
+                          child: Text(
+                            userInitial.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Bem-vindo',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                userName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const Text('Home page'),
-                    const SizedBox(
-                      height: 16,
+                  );
+                },
+              ),
+
+              // Grid de Módulos
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Módulos',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          children: [
+                            _ModuleCard(
+                              icon: Icons.person,
+                              title: 'Usuários',
+                              color: Colors.blue,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/usuarios');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.lock,
+                              title: 'Grupos de Acesso',
+                              color: Colors.orange,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, '/grupos_de_acesso');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.business,
+                              title: 'Empresas',
+                              color: Colors.green,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/empresas');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.people,
+                              title: 'Pessoas',
+                              color: Colors.pink,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/pessoas');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.shopping_bag,
+                              title: 'Produtos',
+                              color: Colors.purple,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/menu_produtos');
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/usuarios');
-                      },
-                      child: const Text('Usuários'),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/grupos_de_acesso');
-                      },
-                      child: const Text('Grupos de Acesso'),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/empresas');
-                      },
-                      child: const Text('Empresas'),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/pessoas');
-                      },
-                      child: const Text('Pessoas'),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/menu_produtos');
-                      },
-                      child: const Text('Produtos'),
-                    )
-                  ],
-                ),
-              ],
-            ),
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  key: const Key('sair_button'),
-                  onPressed: () {
-                    sl<AppBloc>().add(AppDesautenticou());
-                  },
-                  child: const Text('Sair'),
+                  ),
                 ),
               ),
-            )
-          ],
+
+              // Botão Sair
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    key: const Key('sair_button'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade400,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      sl<AppBloc>().add(AppDesautenticou());
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Sair',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final VoidCallback onPressed;
+
+  const _ModuleCard({
+    required this.icon,
+    required this.title,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  State<_ModuleCard> createState() => _ModuleCardState();
+}
+
+class _ModuleCardState extends State<_ModuleCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onPressed,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedScale(
+          scale: _isHovered ? 1.05 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: Card(
+            elevation: _isHovered ? 8 : 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    widget.color.withOpacity(0.8),
+                    widget.color.withOpacity(0.6),
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.icon,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

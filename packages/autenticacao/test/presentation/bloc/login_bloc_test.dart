@@ -3,6 +3,7 @@ import 'package:autenticacao/models.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc_test.dart';
+import 'package:core/injecoes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
@@ -14,13 +15,31 @@ final CriarTokenDeAutenticacao criarTokenDeAutenticacao =
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
 final RecuperarEmpresas recuperarEmpresas = MockRecuperarEmpresas();
+final RecuperarLicenciados recuperarLicenciados = MockRecuperarLicenciados();
+final SalvarLicenciadoDaSessao salvarLicenciadoDaSessao =
+    MockSalvarLicenciadoDaSessao();
+final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
 late LoginBloc loginBloc;
+
+class MockRecuperarLicenciados extends Mock implements RecuperarLicenciados {}
+
+class MockSalvarLicenciadoDaSessao extends Mock
+    implements SalvarLicenciadoDaSessao {
+  @override
+  Future<void> call(Licenciado licenciado) async {}
+}
+
+class MockApiBaseUrlConfig extends Mock implements ApiBaseUrlConfig {}
+
 void main() {
   setUp(() {
     loginBloc = LoginBloc(
       criarTokenDeAutenticacao,
       recuperarUsuarioDaSessao,
       recuperarEmpresas,
+      recuperarLicenciados,
+      salvarLicenciadoDaSessao,
+      apiBaseUrlConfig,
     );
     var usuario = fakeUsuario();
     _setupRecuperarUsuarioDaSessao(usuario);
@@ -35,8 +54,16 @@ void main() {
       estadoSucessoAdicioanarUsuario,
       senha: 'senha',
     );
+    var estadoComLicenciadoSelecionado = LoginSelecionarLicenciadoSucesso(
+      estadoSucessoAdicionarSenha,
+      licenciadoSelecionado: const Licenciado(
+        id: '1',
+        nome: 'Licenciado Teste',
+        urlApi: 'https://api.licenciado.com',
+      ),
+    );
     var estadoDeAutenticacaoEmProgresso =
-        LoginAutenticarEmProgresso(estadoSucessoAdicionarSenha);
+        LoginAutenticarEmProgresso(estadoComLicenciadoSelecionado);
     var estadoDeSucessoNaAutenticao = LoginAutenticarSucesso(
       estadoDeAutenticacaoEmProgresso,
       empresas: [],
@@ -70,7 +97,7 @@ void main() {
     blocTest<LoginBloc, LoginState>(
       'emite estado de sucesso após criar token de autenticacao para aplicação',
       build: () => loginBloc,
-      seed: () => estadoSucessoAdicionarSenha,
+      seed: () => estadoComLicenciadoSelecionado,
       setUp: () {
         var token = fakeToken();
         _setupCriarTokenDeAutenticacao('usuario', 'senha', token);
@@ -86,7 +113,7 @@ void main() {
     blocTest<LoginBloc, LoginState>(
       'emite estado de falha após criação de token retorna nulo',
       build: () => loginBloc,
-      seed: () => estadoSucessoAdicionarSenha,
+      seed: () => estadoComLicenciadoSelecionado,
       setUp: () {
         _setupCriarTokenDeAutenticacao('usuario', 'senha', null);
       },
@@ -101,7 +128,7 @@ void main() {
     blocTest<LoginBloc, LoginState>(
       'emite estado de falha após erro desconhecido na criação do token',
       build: () => loginBloc,
-      seed: () => estadoSucessoAdicionarSenha,
+      seed: () => estadoComLicenciadoSelecionado,
       setUp: () {
         _setupFalhaCriarTokenDeAutenticacao('usuario', 'senha');
       },
@@ -111,6 +138,21 @@ void main() {
       expect: () => [
         estadoDeAutenticacaoEmProgresso,
         estadoDeFalhaNaAutenticacao,
+      ],
+    );
+
+    blocTest<LoginBloc, LoginState>(
+      'emite estado de falha quando tenta autenticar sem licenciado selecionado',
+      build: () => loginBloc,
+      seed: () => estadoSucessoAdicionarSenha,
+      act: (bloc) {
+        bloc.add(LoginAutenticou());
+      },
+      expect: () => [
+        LoginAutenticarFalha(
+          estadoSucessoAdicionarSenha,
+          erro: 'Selecione o licenciado para continuar',
+        ),
       ],
     );
   });
@@ -140,3 +182,4 @@ void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
 void _setupRecuperarEmpresas() {
   when(recuperarEmpresas.call()).thenAnswer((_) async => []);
 }
+

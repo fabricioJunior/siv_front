@@ -8,13 +8,16 @@ import 'package:autenticacao/data/remote/permissoes_remote_data_source.dart';
 import 'package:autenticacao/data/remote_data_sourcers.dart';
 import 'package:autenticacao/data/repositories/empresas_repository.dart';
 import 'package:autenticacao/data/repositories/grupos_de_acesso_repository.dart';
+import 'package:autenticacao/data/repositories/licenciados_repository.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
+import 'package:autenticacao/domain/data/data_sourcers/remote/i_licenciados_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
+import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
@@ -35,6 +38,7 @@ import 'package:http/http.dart';
 
 import 'data/remote/permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'data/remote/permissoes_do_usuario_remote_data_source.dart';
+import 'data/remote/licenciados_remote_data_source.dart';
 import 'data/repositories/permissoes_repository.dart';
 import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
@@ -56,6 +60,9 @@ void resolverDependenciasAutenticacao() {
 void _presentation() {
   sl.registerSingleton<LoginBloc>(
     LoginBloc(
+      sl(),
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -113,6 +120,7 @@ void _usesCases() {
     () => Deslogar(
       tokenRepository: sl(),
       usuariosRepository: sl(),
+      licenciadosRepository: sl(),
     ),
   );
 
@@ -136,6 +144,24 @@ void _usesCases() {
   sl.registerFactory<RecuperarUsuarioDaSessao>(
     () => RecuperarUsuarioDaSessao(
       usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarLicenciados>(
+    () => RecuperarLicenciados(
+      repository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarLicenciadoDaSessao>(
+    () => RecuperarLicenciadoDaSessao(
+      repository: sl(),
+    ),
+  );
+
+  sl.registerFactory<SalvarLicenciadoDaSessao>(
+    () => SalvarLicenciadoDaSessao(
+      repository: sl(),
     ),
   );
 
@@ -246,6 +272,13 @@ void _repositories() {
       empresaDaSessaoLocalDataSource: sl(),
     ),
   );
+
+  sl.registerFactory<ILicenciadosRepository>(
+    () => LicenciadosRepository(
+      remoteDataSource: sl(),
+      licenciadoDaSessaoLocalDataSource: sl(),
+    ),
+  );
 }
 
 void _localData() {
@@ -261,9 +294,7 @@ void _remoteData() {
         httpClient: HttpSource(
           client: Client(),
         ),
-        uriBase: Uri.parse(
-          'https://apollo-api-stg.coralcloud.app',
-        ),
+        apiBaseUrlConfig: sl(),
       ),
     ),
   );
@@ -291,6 +322,12 @@ void _remoteData() {
     ),
   );
 
+  sl.registerFactory<ILicenciadosRemoteDataSource>(
+    () => LicenciadosRemoteDataSource(
+      firestore: sl(),
+    ),
+  );
+
   sl.registerFactory<IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource>(
     () => VinculorGrupoDeAcessoDoUsuarioRemoteDataSource(
       informacoesParaRequest: sl(),
@@ -298,11 +335,22 @@ void _remoteData() {
   );
 }
 
-class _InformacoesParaPrimeiraRequest extends IInformacoesParaRequests {
+class _InformacoesParaPrimeiraRequest implements IInformacoesParaRequests {
+  final IHttpSource _httpClient;
+  final ApiBaseUrlConfig apiBaseUrlConfig;
+
   _InformacoesParaPrimeiraRequest({
-    required super.httpClient,
-    required super.uriBase,
-  });
+    required IHttpSource httpClient,
+    required this.apiBaseUrlConfig,
+  }) : _httpClient = httpClient;
+
+  @override
+  IHttpSource get httpClient => _httpClient;
+
+  @override
+  Uri get uriBase => Uri.parse(
+        apiBaseUrlConfig.urlBase,
+      );
 }
 
 // Future<String> getToken() async {

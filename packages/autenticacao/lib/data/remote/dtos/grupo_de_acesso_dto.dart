@@ -42,11 +42,3 @@ class GrupoDeAcessoDto implements GrupoDeAcesso {
   @override
   bool? get stringify => true;
 }
-
-@JsonSerializable(createToJson: false)
-class _Item {
-  @JsonKey(includeToJson: false, includeFromJson: true, defaultValue: [])
-  final List<PermissaoDto> permissoes;
-
-  _Item({required this.permissoes});
-}

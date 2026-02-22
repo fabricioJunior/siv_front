@@ -25,7 +25,12 @@ export 'package:produtos/presentantion/pages/marcas_page.dart';
 
 export 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.dart';
 export 'package:produtos/presentantion/pages/referencias_page.dart';
+export 'package:produtos/presentantion/pages/referencia_page.dart';
 export 'package:produtos/presentantion/blocs/referencia_cadastro_bloc/referencia_cadastro_bloc.dart';
 export 'package:produtos/presentantion/modals/referencia_cadastro_modal.dart';
+export 'package:produtos/presentantion/blocs/categoria_sub_categoria_selecao_bloc/categoria_sub_categoria_selecao_bloc.dart';
+export 'package:produtos/presentantion/modals/categoria_sub_categoria_selecao_modal.dart';
+export 'package:produtos/presentantion/blocs/texto_longo_edicao_bloc/texto_longo_edicao_bloc.dart';
+export 'package:produtos/presentantion/modals/texto_longo_edicao_modal.dart';
 
 export 'package:produtos/presentantion/pages/menu_produtos.dart';

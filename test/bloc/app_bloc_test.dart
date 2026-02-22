@@ -1,6 +1,7 @@
 import 'package:autenticacao/uses_cases.dart';
 import 'package:autenticacao/models.dart';
 import 'package:core/bloc_test.dart';
+import 'package:core/injecoes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
@@ -14,6 +15,14 @@ final EstaAutenticado estaAutenticado = MockEstaAutenticado();
 final Deslogar deslogar = MockDeslogar();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
+final RecuperarLicenciadoDaSessao recuperarLicenciadoDaSessao =
+  MockRecuperarLicenciadoDaSessao();
+final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
+
+class MockRecuperarLicenciadoDaSessao extends Mock
+  implements RecuperarLicenciadoDaSessao {}
+
+class MockApiBaseUrlConfig extends Mock implements ApiBaseUrlConfig {}
 
 late AppBloc appBloc;
 
@@ -22,6 +31,7 @@ void main() {
   setUp(() {
     _setupRecuperarUsuarioDaSessao(usuario);
     _setupOnDesautenticado();
+    _setupRecuperarLicenciadoDaSessao();
   });
   blocTest(
     'emite estado com informações salvas de autenticacao',
@@ -38,6 +48,8 @@ void main() {
         deslogar,
         recuperarUsuarioDaSessao,
         onDesautenticado,
+        recuperarLicenciadoDaSessao,
+        apiBaseUrlConfig,
       );
     },
     act: (bloc) => bloc.add(AppIniciou()),
@@ -65,6 +77,8 @@ void main() {
         deslogar,
         recuperarUsuarioDaSessao,
         onDesautenticado,
+        recuperarLicenciadoDaSessao,
+        apiBaseUrlConfig,
       );
     },
     expect: () => [
@@ -89,6 +103,8 @@ void main() {
         deslogar,
         recuperarUsuarioDaSessao,
         onDesautenticado,
+        recuperarLicenciadoDaSessao,
+        apiBaseUrlConfig,
       );
     },
     expect: () => [
@@ -115,4 +131,8 @@ void _setupEstaAutenticado(bool autenticacao) {
 
 void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
   when(recuperarUsuarioDaSessao.call()).thenAnswer((_) async => usuario);
+}
+
+void _setupRecuperarLicenciadoDaSessao() {
+  when(recuperarLicenciadoDaSessao.call()).thenAnswer((_) async => null);
 }

@@ -20,10 +20,3 @@ Map<String, dynamic> _$GrupoDeAcessoDtoToJson(GrupoDeAcessoDto instance) =>
       'id': instance.id,
       'nome': instance.nome,
     };
-
-_Item _$ItemFromJson(Map<String, dynamic> json) => _Item(
-      permissoes: (json['permissoes'] as List<dynamic>?)
-              ?.map((e) => PermissaoDto.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );

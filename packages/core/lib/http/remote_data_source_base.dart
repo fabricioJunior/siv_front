@@ -7,14 +7,16 @@ import 'package:flutter/foundation.dart';
 
 abstract class RemoteDataSourceBase {
   final IHttpSource httpClient;
-  final Uri uriBase;
+  final IInformacoesParaRequests informacoesParaRequest;
+
+  Uri get uriBase => informacoesParaRequest.uriBase;
 
   String get path;
 
   RemoteDataSourceBase({
     required IInformacoesParaRequests informacoesParaRequest,
   })  : httpClient = informacoesParaRequest.httpClient,
-        uriBase = informacoesParaRequest.uriBase;
+        informacoesParaRequest = informacoesParaRequest;
 
   Future<IHttpResponse> get({
     Map<String, String>? queryParameters,

@@ -97,6 +97,18 @@ class ReferenciasPage extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        onTap: () async {
+          final result = await Navigator.of(context).push<Referencia>(
+            MaterialPageRoute(
+              builder: (_) => ReferenciaPage(referencia: referencia),
+            ),
+          );
+
+          if (result != null) {
+            // ignore: use_build_context_synchronously
+            context.read<ReferenciasBloc>().add(ReferenciasIniciou());
+          }
+        },
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primary,
           child: Text(

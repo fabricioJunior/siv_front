@@ -5,12 +5,16 @@ abstract class LoginState extends Equatable {
   final String? senha;
   final int? idEmpresa;
   final List<Empresa>? empresas;
+  final List<Licenciado>? licenciados;
+  final Licenciado? licenciadoSelecionado;
 
   const LoginState({
     this.usuario,
     this.senha,
     this.idEmpresa,
     this.empresas,
+    this.licenciados,
+    this.licenciadoSelecionado,
   });
 
   LoginState.fromLastState(
@@ -19,16 +23,24 @@ abstract class LoginState extends Equatable {
     String? senha,
     int? idEmpresa,
     List<Empresa>? empresas,
+    List<Licenciado>? licenciados,
+    Licenciado? licenciadoSelecionado,
   })  : usuario = usuario ?? lastState.usuario,
         senha = senha ?? lastState.senha,
         idEmpresa = idEmpresa ?? lastState.idEmpresa,
-        empresas = empresas ?? lastState.empresas;
+        empresas = empresas ?? lastState.empresas,
+        licenciados = licenciados ?? lastState.licenciados,
+        licenciadoSelecionado =
+            licenciadoSelecionado ?? lastState.licenciadoSelecionado;
 
   @override
   List<Object?> get props => [
         usuario,
         senha,
         idEmpresa,
+        empresas,
+        licenciados,
+        licenciadoSelecionado,
       ];
 }
 
@@ -65,4 +77,22 @@ class LoginAutenticarFalha extends LoginState {
 
   LoginAutenticarFalha(super.lastState, {required this.erro})
       : super.fromLastState();
+}
+
+class LoginCarregarLicenciadosEmProgresso extends LoginState {
+  LoginCarregarLicenciadosEmProgresso(super.lastState) : super.fromLastState();
+}
+
+class LoginCarregarLicenciadosSucesso extends LoginState {
+  LoginCarregarLicenciadosSucesso(
+    super.lastState, {
+    required super.licenciados,
+  }) : super.fromLastState();
+}
+
+class LoginSelecionarLicenciadoSucesso extends LoginState {
+  LoginSelecionarLicenciadoSucesso(
+    super.lastState, {
+    required super.licenciadoSelecionado,
+  }) : super.fromLastState();
 }

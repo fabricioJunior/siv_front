@@ -176,6 +176,10 @@ void _usesCases() {
   );
 
   // Referencias Use Cases
+  sl.registerFactory<AtualizarReferencia>(
+    () => AtualizarReferencia(referenciasRepository: sl()),
+  );
+
   sl.registerFactory<CriarReferencia>(
     () => CriarReferencia(referenciasRepository: sl()),
   );
@@ -213,4 +217,10 @@ void _presentantion() {
   sl.registerFactory<ReferenciaCadastroBloc>(
     () => ReferenciaCadastroBloc(sl(), sl(), sl()),
   );
+
+  sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(
+    () => CategoriaSubCategoriaSelecaoBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());
 }

@@ -8,6 +8,33 @@ class ReferenciasRepository implements IReferenciasRepository {
   ReferenciasRepository({required this.referenciasRemoteDataSource});
 
   @override
+  Future<Referencia> atualizarReferencia({
+    required int id,
+    required String nome,
+    required int categoriaId,
+    int? subCategoriaId,
+    String? idExterno,
+    String? unidadeMedida,
+    int? marcaId,
+    String? descricao,
+    String? composicao,
+    String? cuidados,
+  }) {
+    return referenciasRemoteDataSource.atualizarReferencia(
+      id: id,
+      nome: nome,
+      categoriaId: categoriaId,
+      subCategoriaId: subCategoriaId,
+      idExterno: idExterno,
+      unidadeMedida: unidadeMedida,
+      marcaId: marcaId,
+      descricao: descricao,
+      composicao: composicao,
+      cuidados: cuidados,
+    );
+  }
+
+  @override
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,

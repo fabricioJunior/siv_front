@@ -21,7 +21,13 @@ Usuario fakeUsuario(
         String nome = 'nome',
         TipoUsuario tipo = TipoUsuario.sysadmin,
         String senha = 'senha'}) =>
-    throw UnimplementedError('Use UsuarioDto directly or mock');
+    Usuario.create(
+      id: id,
+      login: login,
+      nome: nome,
+      tipo: tipo,
+      senha: senha,
+    );
 
 Permissao fakePermissao({
   String id = '1',

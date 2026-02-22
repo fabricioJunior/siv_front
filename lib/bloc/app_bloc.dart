@@ -4,6 +4,7 @@ import 'package:autenticacao/models.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/injecoes.dart';
 
 part 'app_state.dart';
 part 'app_event.dart';
@@ -14,6 +15,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final EstaAutenticado _estaAutenticado;
   final Deslogar _deslogar;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
+  final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
+  final ApiBaseUrlConfig _apiBaseUrlConfig;
 
   late StreamSubscription<Token> _onAutenticacoSubscription;
   late StreamSubscription<Null> _onDesautenticadoSubscription;
@@ -23,6 +26,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._deslogar,
     this._recuperarUsuarioDaSessao,
     this._onDesautenticado,
+    this._recuperarLicenciadoDaSessao,
+    this._apiBaseUrlConfig,
   ) : super(const AppState()) {
     _onAutenticacoSubscription = _onAutenticado
         .call()
@@ -68,6 +73,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   FutureOr<void> _onAppIniciou(AppIniciou event, Emitter<AppState> emit) async {
     try {
+      final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
+      if (licenciadoDaSessao != null) {
+        _apiBaseUrlConfig.atualizar(licenciadoDaSessao.urlApi);
+      }
+
       var estaAutenticado = await _estaAutenticado.call();
       var usuarioDaSessao =
           estaAutenticado ? await _recuperarUsuarioDaSessao() : null;

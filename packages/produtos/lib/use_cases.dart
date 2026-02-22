@@ -28,5 +28,6 @@ export 'domain/use_cases/recuperar_marca.dart';
 export 'domain/use_cases/desativar_marca.dart';
 export 'domain/use_cases/atualizar_marca.dart';
 
+export 'domain/use_cases/atualizar_referencia.dart';
 export 'domain/use_cases/criar_referencia.dart';
 export 'domain/use_cases/recuperar_referencias.dart';

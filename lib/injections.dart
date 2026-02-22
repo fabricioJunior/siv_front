@@ -9,6 +9,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:firebase/firebase_injecoes.dart' as firebase;
 
 import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
@@ -16,8 +17,10 @@ import 'package:pessoas/pessoas_injections.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/empresa_dto.dart';
+import 'package:siv_front/infra/local_data_sourcers/dtos/licenciado_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
+import 'package:siv_front/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/permissoes_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
 import 'package:siv_front/infra/remote_data_sourcers/empresas_remote_data_source.dart';
@@ -26,6 +29,8 @@ import 'package:siv_front/infra/remote_data_sourcers/usuario_da_sessao_remote_da
 import 'infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
 void resolverDependenciasApp() {
+  firebase.resolverDependenciasFirebase();
+
   sl.registerLazySingleton<IHttpSource>(
     () => HttpSource(
       client: InterceptedClient.build(
@@ -52,6 +57,7 @@ void _remoteDataSources() {
     () => UsuarioDaSessaoRemoteDataSource(
       informacoesParaRequest: InformacoesParaRequest(
         httpSource: sl(),
+        apiBaseUrlConfig: sl(),
       ),
     ),
   );
@@ -78,10 +84,17 @@ void _localDataSource() {
       getIsar: _getIsar,
     ),
   );
+  sl.registerFactory<ILicenciadoDaSessaoLocalDataSource>(
+    () => LicenciadoDaSessaoLocalDataSource(
+      getIsar: _getIsar,
+    ),
+  );
 }
 
 void _presentation() {
   sl.registerLazySingleton(() => AppBloc(
+        sl(),
+        sl(),
         sl(),
         sl(),
         sl(),
@@ -92,15 +105,19 @@ void _presentation() {
 
 class InformacoesParaRequest implements IInformacoesParaRequests {
   final IHttpSource httpSource;
+  final ApiBaseUrlConfig apiBaseUrlConfig;
 
-  InformacoesParaRequest({required this.httpSource});
+  InformacoesParaRequest({
+    required this.httpSource,
+    required this.apiBaseUrlConfig,
+  });
 
   @override
   IHttpSource get httpClient => httpSource;
 
   @override
   Uri get uriBase => Uri.parse(
-        'https://apollo-api-stg.coralcloud.app',
+        apiBaseUrlConfig.urlBase,
       );
 }
 
@@ -115,6 +132,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
   List<CollectionSchema<dynamic>> schemas = [
     UsuarioDtoSchema,
     EmpresaDtoSchema,
+    LicenciadoDtoSchema,
   ];
 
   Isar isar = Isar.getInstance(instanceName) ??

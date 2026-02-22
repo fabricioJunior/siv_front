@@ -1,0 +1,18 @@
+name: firebase
+description: "Abstrações e gateways para integração com Firebase"
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../core
+  firebase_core: ^3.15.0
+  cloud_firestore: ^5.6.0
+
+flutter:

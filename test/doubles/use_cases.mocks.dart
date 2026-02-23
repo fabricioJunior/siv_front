@@ -3,22 +3,27 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i8;
+import 'dart:async' as _i9;
 
+import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart'
+    as _i6;
 import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart'
     as _i4;
 import 'package:autenticacao/domain/data/repositories/i_token_repository.dart'
     as _i2;
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart'
     as _i3;
-import 'package:autenticacao/domain/models/token.dart' as _i7;
+import 'package:autenticacao/domain/models/token.dart' as _i8;
 import 'package:autenticacao/domain/models/usuario.dart' as _i5;
-import 'package:autenticacao/domain/usecases/deslogar.dart' as _i11;
-import 'package:autenticacao/domain/usecases/esta_autenticado.dart' as _i10;
-import 'package:autenticacao/domain/usecases/on_autenticado.dart' as _i6;
-import 'package:autenticacao/domain/usecases/on_desautenticado.dart' as _i9;
+import 'package:autenticacao/domain/usecases/deslogar.dart' as _i12;
+import 'package:autenticacao/domain/usecases/esta_autenticado.dart' as _i11;
+import 'package:autenticacao/domain/usecases/on_autenticado.dart' as _i7;
+import 'package:autenticacao/domain/usecases/on_desautenticado.dart' as _i10;
+import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart'
+    as _i14;
 import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
-    as _i12;
+    as _i13;
+import 'package:autenticacao/models.dart' as _i15;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -78,10 +83,21 @@ class _FakeUsuario_3 extends _i1.SmartFake implements _i5.Usuario {
         );
 }
 
+class _FakeIEmpresasRepository_4 extends _i1.SmartFake
+    implements _i6.IEmpresasRepository {
+  _FakeIEmpresasRepository_4(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [OnAutenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOnAutenticado extends _i1.Mock implements _i6.OnAutenticado {
+class MockOnAutenticado extends _i1.Mock implements _i7.OnAutenticado {
   MockOnAutenticado() {
     _i1.throwOnMissingStub(this);
   }
@@ -96,7 +112,7 @@ class MockOnAutenticado extends _i1.Mock implements _i6.OnAutenticado {
       ) as _i2.ITokenRepository);
 
   @override
-  set lastToken(_i7.Token? _lastToken) => super.noSuchMethod(
+  set lastToken(_i8.Token? _lastToken) => super.noSuchMethod(
         Invocation.setter(
           #lastToken,
           _lastToken,
@@ -105,18 +121,18 @@ class MockOnAutenticado extends _i1.Mock implements _i6.OnAutenticado {
       );
 
   @override
-  _i8.Stream<_i7.Token> call() => (super.noSuchMethod(
+  _i9.Stream<_i8.Token> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i8.Stream<_i7.Token>.empty(),
-      ) as _i8.Stream<_i7.Token>);
+        returnValue: _i9.Stream<_i8.Token>.empty(),
+      ) as _i9.Stream<_i8.Token>);
 
   @override
   void onTokenPut(
-    _i7.Token? token,
-    _i8.EventSink<dynamic>? sink,
+    _i8.Token? token,
+    _i9.EventSink<dynamic>? sink,
   ) =>
       super.noSuchMethod(
         Invocation.method(
@@ -133,25 +149,25 @@ class MockOnAutenticado extends _i1.Mock implements _i6.OnAutenticado {
 /// A class which mocks [OnDesautenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOnDesautenticado extends _i1.Mock implements _i9.OnDesautenticado {
+class MockOnDesautenticado extends _i1.Mock implements _i10.OnDesautenticado {
   MockOnDesautenticado() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i8.Stream<Null> call() => (super.noSuchMethod(
+  _i9.Stream<Null> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i8.Stream<Null>.empty(),
-      ) as _i8.Stream<Null>);
+        returnValue: _i9.Stream<Null>.empty(),
+      ) as _i9.Stream<Null>);
 }
 
 /// A class which mocks [EstaAutenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockEstaAutenticado extends _i1.Mock implements _i10.EstaAutenticado {
+class MockEstaAutenticado extends _i1.Mock implements _i11.EstaAutenticado {
   MockEstaAutenticado() {
     _i1.throwOnMissingStub(this);
   }
@@ -166,19 +182,19 @@ class MockEstaAutenticado extends _i1.Mock implements _i10.EstaAutenticado {
       ) as _i2.ITokenRepository);
 
   @override
-  _i8.Future<bool> call() => (super.noSuchMethod(
+  _i9.Future<bool> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i8.Future<bool>.value(false),
-      ) as _i8.Future<bool>);
+        returnValue: _i9.Future<bool>.value(false),
+      ) as _i9.Future<bool>);
 }
 
 /// A class which mocks [Deslogar].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDeslogar extends _i1.Mock implements _i11.Deslogar {
+class MockDeslogar extends _i1.Mock implements _i12.Deslogar {
   MockDeslogar() {
     _i1.throwOnMissingStub(this);
   }
@@ -211,21 +227,21 @@ class MockDeslogar extends _i1.Mock implements _i11.Deslogar {
       ) as _i4.ILicenciadosRepository);
 
   @override
-  _i8.Future<void> call() => (super.noSuchMethod(
+  _i9.Future<void> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 }
 
 /// A class which mocks [RecuperarUsuarioDaSessao].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarUsuarioDaSessao extends _i1.Mock
-    implements _i12.RecuperarUsuarioDaSessao {
+    implements _i13.RecuperarUsuarioDaSessao {
   MockRecuperarUsuarioDaSessao() {
     _i1.throwOnMissingStub(this);
   }
@@ -240,17 +256,45 @@ class MockRecuperarUsuarioDaSessao extends _i1.Mock
       ) as _i3.IUsuariosRepository);
 
   @override
-  _i8.Future<_i5.Usuario> call() => (super.noSuchMethod(
+  _i9.Future<_i5.Usuario> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i8.Future<_i5.Usuario>.value(_FakeUsuario_3(
+        returnValue: _i9.Future<_i5.Usuario>.value(_FakeUsuario_3(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i8.Future<_i5.Usuario>);
+      ) as _i9.Future<_i5.Usuario>);
+}
+
+/// A class which mocks [RecuperarEmpresaDaSessao].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRecuperarEmpresaDaSessao extends _i1.Mock
+    implements _i14.RecuperarEmpresaDaSessao {
+  MockRecuperarEmpresaDaSessao() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.IEmpresasRepository get empresasRepository => (super.noSuchMethod(
+        Invocation.getter(#empresasRepository),
+        returnValue: _FakeIEmpresasRepository_4(
+          this,
+          Invocation.getter(#empresasRepository),
+        ),
+      ) as _i6.IEmpresasRepository);
+
+  @override
+  _i9.Future<_i15.Empresa?> call() => (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+        ),
+        returnValue: _i9.Future<_i15.Empresa?>.value(),
+      ) as _i9.Future<_i15.Empresa?>);
 }

@@ -16,11 +16,13 @@ final Deslogar deslogar = MockDeslogar();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
 final RecuperarLicenciadoDaSessao recuperarLicenciadoDaSessao =
-  MockRecuperarLicenciadoDaSessao();
+    MockRecuperarLicenciadoDaSessao();
 final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
+final RecuperarEmpresaDaSessao recuperarEmpresaDaSessao =
+    MockRecuperarEmpresaDaSessao();
 
 class MockRecuperarLicenciadoDaSessao extends Mock
-  implements RecuperarLicenciadoDaSessao {}
+    implements RecuperarLicenciadoDaSessao {}
 
 class MockApiBaseUrlConfig extends Mock implements ApiBaseUrlConfig {}
 
@@ -49,6 +51,7 @@ void main() {
         recuperarUsuarioDaSessao,
         onDesautenticado,
         recuperarLicenciadoDaSessao,
+        recuperarEmpresaDaSessao,
         apiBaseUrlConfig,
       );
     },
@@ -78,6 +81,7 @@ void main() {
         recuperarUsuarioDaSessao,
         onDesautenticado,
         recuperarLicenciadoDaSessao,
+        recuperarEmpresaDaSessao,
         apiBaseUrlConfig,
       );
     },
@@ -104,6 +108,7 @@ void main() {
         recuperarUsuarioDaSessao,
         onDesautenticado,
         recuperarLicenciadoDaSessao,
+        recuperarEmpresaDaSessao,
         apiBaseUrlConfig,
       );
     },

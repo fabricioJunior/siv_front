@@ -1,4 +1,6 @@
 import 'package:autenticacao/models.dart';
+import 'package:autenticacao/data/remote/dtos/grupo_de_acesso_dto.dart';
+import 'package:autenticacao/data/remote/dtos/vinculo_grupo_de_acesso_com_usuario.dart';
 import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc_test.dart';
@@ -22,20 +24,22 @@ int idUsuario = 1;
 var grupoDeAcesso = fakeGrupoDeAcesso(id: 1);
 var grupoDeAcesso2 = fakeGrupoDeAcesso(id: 2);
 
-var vinculo1 = fakeVinculoGrupoDeAcessoEUsuario(
-  idUsuario: 1,
-  grupoDeAcesso: grupoDeAcesso,
+var vinculo1 = VinculoGrupoDeAcessoComUsuarioDto(
+  grupoId: grupoDeAcesso.id!,
+  grupo: grupoDeAcesso as GrupoDeAcessoDto,
+  empresaId: 1,
+  usuarioId: 1,
 );
-var vinculo2 = fakeVinculoGrupoDeAcessoEUsuario(
-  idUsuario: 2,
-  grupoDeAcesso: grupoDeAcesso2,
+var vinculo2 = VinculoGrupoDeAcessoComUsuarioDto(
+  grupoId: grupoDeAcesso2.id!,
+  grupo: grupoDeAcesso2 as GrupoDeAcessoDto,
+  empresaId: 2,
+  usuarioId: 2,
 );
 
 var vinculos = [vinculo1, vinculo2];
-var empresa1 = fakeEmpresa(id: 1);
-var empresa2 = fakeEmpresa(
-  id: 2,
-);
+var empresa1 = _EmpresaTest(id: 1, nome: 'Empresa 1');
+var empresa2 = _EmpresaTest(id: 2, nome: 'Empresa 2');
 var empresas = [empresa1, empresa2];
 void main() {
   setUp(() {
@@ -102,6 +106,7 @@ void main() {
       VinculosGrupoDeAcessoUsuarioVincularSucesso(
         vinculos: vinculos,
         idUsuario: idUsuario,
+        empresas: empresas,
       ),
     ],
   );
@@ -131,4 +136,14 @@ void _setupVincularUsuarioAoGrupoDeAcessoSucesso({
 
 void _setupEmpresas() {
   when(recuperarEmpresas.call()).thenAnswer((_) async => empresas);
+}
+
+class _EmpresaTest implements Empresa {
+  @override
+  final int id;
+
+  @override
+  final String nome;
+
+  _EmpresaTest({required this.id, required this.nome});
 }

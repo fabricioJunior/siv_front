@@ -28,8 +28,8 @@ import 'package:siv_front/infra/remote_data_sourcers/usuario_da_sessao_remote_da
 
 import 'infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
-void resolverDependenciasApp() {
-  firebase.resolverDependenciasFirebase();
+Future<void> resolverDependenciasApp() async {
+  await firebase.resolverDependenciasFirebase();
 
   sl.registerLazySingleton<IHttpSource>(
     () => HttpSource(
@@ -93,6 +93,7 @@ void _localDataSource() {
 
 void _presentation() {
   sl.registerLazySingleton(() => AppBloc(
+        sl(),
         sl(),
         sl(),
         sl(),

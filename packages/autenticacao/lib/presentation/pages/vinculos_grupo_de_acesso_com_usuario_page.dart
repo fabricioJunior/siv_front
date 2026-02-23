@@ -16,67 +16,136 @@ class VinculosGrupoDeAcessoComUsuarioPage extends StatelessWidget {
       create: (context) => sl<VinculosGrupoDeAcessoUsuarioBloc>()
         ..add(VinculosGrupoDeAcessoIniciou(idUsuario: idUsuario)),
       child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Grupos de Acesso do Usuário'),
+        ),
         floatingActionButton: BlocBuilder<VinculosGrupoDeAcessoUsuarioBloc,
             VinculosGrupoDeAcessoUsuarioState>(
           builder: (context, state) {
             if (state is VinculosGrupoDeAcessoUsuarioCarregarSucesso ||
-                state is VinculosGrupoDeAcessoUsuarioVincularSucesso)
+                state is VinculosGrupoDeAcessoUsuarioVincularSucesso) {
               return FloatingActionButton(
-                  child: Icon(Icons.add),
-                  onPressed: () {
-                    _onAdionouNovoVinculo(context, state.empresas);
-                  });
+                child: const Icon(Icons.add),
+                onPressed: () {
+                  _onAdionouNovoVinculo(context, state.empresas);
+                },
+              );
+            }
 
-            return CircularProgressIndicator.adaptive();
+            return const SizedBox.shrink();
           },
         ),
-        appBar: AppBar(
-          title: Text('Grupos de Acesso do Usuário'),
-        ),
         body: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 16,
-              ),
-              Expanded(
-                child: BlocBuilder<VinculosGrupoDeAcessoUsuarioBloc,
-                    VinculosGrupoDeAcessoUsuarioState>(
-                  builder: (context, state) {
-                    switch (state.runtimeType) {
-                      case VinculosGrupoDeAcessoUsuarioCarregarEmProgresso:
-                      case VinculosGrupoDeAcessoUsuarioVincularEmProgresso:
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      case VinculosGrupoDeAcessoUsuarioCarregarFalha:
-                        return Center(
-                          child: Text('Falha ao carregar vínculos.'),
-                        );
-                    }
-                    return ListView.builder(
-                      itemCount: state.vinculos.length,
-                      itemBuilder: (context, index) {
-                        var vinculo = state.vinculos[index];
-                        return ListTile(
-                          title: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                '${vinculo.grupoDeAcesso?.nome} - '
-                                '${vinculo.empresa?.nome}',
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+          child: BlocBuilder<VinculosGrupoDeAcessoUsuarioBloc,
+              VinculosGrupoDeAcessoUsuarioState>(
+            builder: (context, state) {
+              final theme = Theme.of(context);
+
+              if (state is VinculosGrupoDeAcessoUsuarioCarregarEmProgresso ||
+                  state is VinculosGrupoDeAcessoUsuarioVincularEmProgresso) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (state is VinculosGrupoDeAcessoUsuarioCarregarFalha) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Falha ao carregar vínculos.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              if (state.vinculos.isEmpty) {
+                return _emptyState(context);
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                itemCount: state.vinculos.length + 1,
+                separatorBuilder: (_, index) {
+                  if (index == 0) {
+                    return const SizedBox(height: 12);
+                  }
+                  return const SizedBox(height: 8);
+                },
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Text(
+                      'Vínculos cadastrados',
+                      style: theme.textTheme.titleMedium,
                     );
-                  },
-                ),
-              ),
-            ],
+                  }
+
+                  final vinculo = state.vinculos[index - 1];
+                  return _vinculoCard(context, vinculo);
+                },
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.link_off,
+              size: 56,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Nenhum vínculo cadastrado.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Toque no botão + para vincular um grupo de acesso ao usuário.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _vinculoCard(
+    BuildContext context,
+    VinculoGrupoDeAcessoEUsuario vinculo,
+  ) {
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: theme.colorScheme.primaryContainer,
+          child: Icon(
+            Icons.admin_panel_settings_outlined,
+            color: theme.colorScheme.onPrimaryContainer,
+          ),
+        ),
+        title: Text(vinculo.grupoDeAcesso?.nome ?? 'Grupo não informado'),
+        subtitle: Text(vinculo.empresa?.nome ?? 'Empresa não informada'),
       ),
     );
   }
@@ -158,48 +227,112 @@ class _GruposDeAcessoModal extends StatelessWidget {
   const _GruposDeAcessoModal();
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider<GruposDeAcessoBloc>(
       create: (context) =>
           sl<GruposDeAcessoBloc>()..add(GruposDeAcessoIniciouEvent()),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Selecione o grupo de acesso:'),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Selecione o grupo de acesso',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Fechar',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Expanded(
-                child: BlocBuilder<GruposDeAcessoBloc, GruposDeAcessoState>(
-              builder: (context, state) {
-                switch (state.runtimeType) {
-                  case GruposDeAcessoCarregarEmProgresso:
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  case GruposDeAcessoCarregarError:
-                    return Center(
-                      child: Text('Falha ao carregar grupos de acesso.'),
-                    );
-                }
-                if (state is GruposDeAcessoCarregarSucesso) {
-                  return ListView.builder(
-                    itemCount: state.grupos.length,
-                    itemBuilder: (context, index) {
-                      var grupo = state.grupos[index];
-                      return ListTile(
-                        title: Card(
-                            child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(grupo.nome),
-                        )),
-                        onTap: () {
-                          Navigator.of(context).pop(grupo);
-                        },
+              child: BlocBuilder<GruposDeAcessoBloc, GruposDeAcessoState>(
+                builder: (context, state) {
+                  switch (state.runtimeType) {
+                    case GruposDeAcessoCarregarEmProgresso:
+                      return const Center(
+                        child: CircularProgressIndicator.adaptive(),
                       );
-                    },
-                  );
-                }
-                return SizedBox();
-              },
-            )),
+                    case GruposDeAcessoCarregarError:
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'Falha ao carregar grupos de acesso.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      );
+                  }
+                  if (state is GruposDeAcessoCarregarSucesso) {
+                    if (state.grupos.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'Nenhum grupo de acesso cadastrado.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: state.grupos.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        var grupo = state.grupos[index];
+                        return Card(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  theme.colorScheme.primaryContainer,
+                              child: Icon(
+                                Icons.group_work_outlined,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            title: Text(grupo.nome),
+                            subtitle: Text('ID: ${grupo.id}'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.of(context).pop(grupo);
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
           ],
         ),
       ),

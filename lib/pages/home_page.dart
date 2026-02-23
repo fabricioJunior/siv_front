@@ -29,6 +29,7 @@ class HomePage extends StatelessWidget {
                 builder: (context, state) {
                   final userName = state.usuarioDaSessao?.nome ?? 'Usuário';
                   final userInitial = userName.isNotEmpty ? userName[0] : 'U';
+                  final empresaNome = state.empresaDaSessao?.nome;
 
                   return Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -68,6 +69,18 @@ class HomePage extends StatelessWidget {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              if (empresaNome != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Empresa: $empresaNome',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ],
                           ),
                         ),

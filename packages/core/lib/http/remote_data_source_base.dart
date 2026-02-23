@@ -14,9 +14,8 @@ abstract class RemoteDataSourceBase {
   String get path;
 
   RemoteDataSourceBase({
-    required IInformacoesParaRequests informacoesParaRequest,
-  })  : httpClient = informacoesParaRequest.httpClient,
-        informacoesParaRequest = informacoesParaRequest;
+    required this.informacoesParaRequest,
+  }) : httpClient = informacoesParaRequest.httpClient;
 
   Future<IHttpResponse> get({
     Map<String, String>? queryParameters,

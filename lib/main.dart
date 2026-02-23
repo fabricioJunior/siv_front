@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
-import 'package:firebase/firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
@@ -21,9 +20,8 @@ void main() async {
 Future<void> configs() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initIsarDatabase();
-  resolverDependenciasApp();
 
-  await sl<IFirebaseCore>().initialize();
+  await resolverDependenciasApp();
 
   Bloc.observer = GlobalBlocObserver();
 }

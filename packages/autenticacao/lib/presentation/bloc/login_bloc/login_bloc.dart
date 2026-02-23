@@ -29,10 +29,30 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     this._apiBaseUrlConfig,
   ) : super(const LoginInicial()) {
     on<LoginCarregouLicenciados>(_onLoginCarregouLicenciados);
+    on<LoginCarregouEmpresas>(_onLoginCarregouEmpresas);
     on<LoginSelecionouLicenciado>(_onLoginSelecionouLicenciado);
     on<LoginAdicionouUsuario>(_onUsuarioAdicionoUsuario);
     on<LoginAdicionouSenha>(_onLoginAdicionouSenha);
     on<LoginAutenticou>(_onLoginAutenticou);
+  }
+
+  FutureOr<void> _onLoginCarregouEmpresas(
+    LoginCarregouEmpresas event,
+    Emitter<LoginState> emit,
+  ) async {
+    try {
+      emit(LoginCarregarEmpresasEmProgresso(state));
+      final empresas = await _recuperarEmpresas.call();
+      emit(LoginCarregarEmpresasSucesso(state, empresas: empresas));
+    } catch (e, s) {
+      emit(
+        LoginAutenticarFalha(
+          state,
+          erro: 'Não foi possível atualizar a lista de empresas.',
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onLoginCarregouLicenciados(

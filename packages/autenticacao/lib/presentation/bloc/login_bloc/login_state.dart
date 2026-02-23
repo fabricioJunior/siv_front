@@ -90,6 +90,17 @@ class LoginCarregarLicenciadosSucesso extends LoginState {
   }) : super.fromLastState();
 }
 
+class LoginCarregarEmpresasEmProgresso extends LoginState {
+  LoginCarregarEmpresasEmProgresso(super.lastState) : super.fromLastState();
+}
+
+class LoginCarregarEmpresasSucesso extends LoginState {
+  LoginCarregarEmpresasSucesso(
+    super.lastState, {
+    required super.empresas,
+  }) : super.fromLastState();
+}
+
 class LoginSelecionarLicenciadoSucesso extends LoginState {
   LoginSelecionarLicenciadoSucesso(
     super.lastState, {

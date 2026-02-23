@@ -46,7 +46,10 @@ class UsuarioPage extends StatelessWidget {
                     onPressed: () {
                       Navigator.of(context).pushNamed(
                         '/vinculos_grupo_de_acesso_com_usuario',
-                        arguments: {'idUsuario': idUsuario},
+                        arguments: {
+                          'idUsuario': idUsuario ??
+                              context.read<UsuarioBloc>().state.usuario?.id
+                        },
                       );
                     },
                     child: Text('Grupos de Acesso'),

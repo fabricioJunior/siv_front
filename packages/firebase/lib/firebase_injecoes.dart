@@ -2,11 +2,11 @@ import 'package:core/injecoes.dart';
 
 import 'firebase.dart';
 
-void resolverDependenciasFirebase() {
+Future<void> resolverDependenciasFirebase() async {
   sl.registerLazySingleton<IFirebaseCore>(
     () => FirebaseCoreGateway(),
   );
-
+  await sl<IFirebaseCore>().initialize();
   sl.registerLazySingleton<IFirebaseFirestore>(
     () => FirebaseFirestoreGateway(),
   );

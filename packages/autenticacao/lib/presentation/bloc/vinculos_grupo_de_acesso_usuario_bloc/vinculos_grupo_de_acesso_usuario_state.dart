@@ -60,9 +60,13 @@ class VinculosGrupoDeAcessoUsuarioVincularSucesso
   @override
   final int? idUsuario;
 
+  @override
+  final List<Empresa> empresas;
+
   VinculosGrupoDeAcessoUsuarioVincularSucesso({
     required this.vinculos,
     required this.idUsuario,
+    required this.empresas,
   });
 }
 

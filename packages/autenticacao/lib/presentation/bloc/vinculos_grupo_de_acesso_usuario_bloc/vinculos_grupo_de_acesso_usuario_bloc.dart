@@ -81,6 +81,7 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
         VinculosGrupoDeAcessoUsuarioVincularSucesso(
           vinculos: vinculosDoUsuario,
           idUsuario: state.idUsuario!,
+          empresas: state.empresas,
         ),
       );
     } catch (e, s) {

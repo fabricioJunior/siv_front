@@ -16,6 +16,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final Deslogar _deslogar;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
   final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
+  final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
   final ApiBaseUrlConfig _apiBaseUrlConfig;
 
   late StreamSubscription<Token> _onAutenticacoSubscription;
@@ -27,6 +28,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._recuperarUsuarioDaSessao,
     this._onDesautenticado,
     this._recuperarLicenciadoDaSessao,
+    this._recuperarEmpresaDaSessao,
     this._apiBaseUrlConfig,
   ) : super(const AppState()) {
     _onAutenticacoSubscription = _onAutenticado
@@ -45,12 +47,16 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       var usuarioDaSessao = await _recuperarUsuarioDaSessao();
+      final empresaDaSessao = event.token.idEmpresa == null
+          ? null
+          : await _recuperarEmpresaDaSessao.call();
       if (event.token.idEmpresa == null) {}
       emit(state.copyWith(
         statusAutenticacao: event.token.idEmpresa == null
             ? StatusAutenticacao.autenticando
             : StatusAutenticacao.autenticado,
         usuarioDaSessao: usuarioDaSessao,
+        empresaDaSessao: empresaDaSessao,
       ));
     } catch (e, s) {
       addError(e, s);
@@ -76,14 +82,25 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
       if (licenciadoDaSessao != null) {
         _apiBaseUrlConfig.atualizar(licenciadoDaSessao.urlApi);
+      } else {
+        emit(
+          state.copyWith(
+            usuarioDaSessao: null,
+            statusAutenticacao: StatusAutenticacao.naoAutenticao,
+          ),
+        );
+        return;
       }
 
       var estaAutenticado = await _estaAutenticado.call();
       var usuarioDaSessao =
           estaAutenticado ? await _recuperarUsuarioDaSessao() : null;
+      final empresaDaSessao =
+          estaAutenticado ? await _recuperarEmpresaDaSessao.call() : null;
       emit(
         state.copyWith(
           usuarioDaSessao: usuarioDaSessao,
+          empresaDaSessao: empresaDaSessao,
           statusAutenticacao: estaAutenticado
               ? StatusAutenticacao.autenticado
               : StatusAutenticacao.naoAutenticao,

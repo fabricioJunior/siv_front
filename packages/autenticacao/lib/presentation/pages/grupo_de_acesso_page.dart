@@ -235,18 +235,21 @@ class GrupoDeAcessoPage extends StatelessWidget {
                                       state.permissoesNaoUtilizadasNoGrupo ??
                                           [];
 
-                                  var permissao =
+                                  var permissoesSelecionadas =
                                       await SelecionarPermissaoModal.show(
                                     blocContext,
                                     permissoesNaoAdicionadas,
                                   );
-                                  if (permissao != null) {
+                                  if (permissoesSelecionadas != null) {
                                     // ignore: use_build_context_synchronously
-                                    context.read<GrupoDeAcessoBloc>().add(
-                                          GrupoDeAcessoAdionouPermissao(
-                                            permissao: permissao,
-                                          ),
-                                        );
+                                    for (final permissao
+                                        in permissoesSelecionadas) {
+                                      context.read<GrupoDeAcessoBloc>().add(
+                                            GrupoDeAcessoAdionouPermissao(
+                                              permissao: permissao,
+                                            ),
+                                          );
+                                    }
                                   }
                                 },
                                 icon: const Icon(Icons.add))

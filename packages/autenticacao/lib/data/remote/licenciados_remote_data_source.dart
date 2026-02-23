@@ -14,7 +14,7 @@ class LicenciadosRemoteDataSource implements ILicenciadosRemoteDataSource {
     return documentos.map((doc) {
       var json = doc.dados;
       var nome = (json['nome'] ?? '').toString();
-      var urlApi = (json['urlApi'] ?? json['url_api'] ?? '').toString();
+      var urlApi = (json['url'] ?? json['url_api'] ?? '').toString();
 
       return Licenciado(
         id: doc.id,

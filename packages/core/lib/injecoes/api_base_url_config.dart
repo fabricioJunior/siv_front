@@ -1,5 +1,5 @@
 class ApiBaseUrlConfig {
-  String _urlBase = 'https://apollo-api-stg.coralcloud.app';
+  String _urlBase = '';
 
   String get urlBase => _urlBase;
 

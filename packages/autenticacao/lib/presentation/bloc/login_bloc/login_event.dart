@@ -4,6 +4,8 @@ abstract class LoginEvent {}
 
 class LoginCarregouLicenciados extends LoginEvent {}
 
+class LoginCarregouEmpresas extends LoginEvent {}
+
 class LoginAdicionouUsuario extends LoginEvent {
   final String usuario;
 

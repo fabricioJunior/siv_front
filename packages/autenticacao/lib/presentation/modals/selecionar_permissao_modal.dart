@@ -2,7 +2,7 @@ import 'package:autenticacao/models.dart';
 import 'package:flutter/material.dart';
 
 class SelecionarPermissaoModal extends StatelessWidget {
-  static Future<Permissao?> show(
+  static Future<List<Permissao>?> show(
     BuildContext context,
     List<Permissao> permissoes,
   ) async {
@@ -34,8 +34,25 @@ class SelecionarPermissaoModal extends StatelessWidget {
           'Selecione a permissão',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const Key('selecionar_todas_permissoes_button'),
+              onPressed: permissoes.isEmpty
+                  ? null
+                  : () {
+                      Navigator.of(context).pop(permissoes);
+                    },
+              icon: const Icon(Icons.select_all),
+              label: const Text('Selecionar todos'),
+            ),
+          ),
+        ),
         const SizedBox(
-          height: 40,
+          height: 20,
         ),
         Flexible(
           child: ListView.builder(
@@ -57,7 +74,7 @@ class SelecionarPermissaoModal extends StatelessWidget {
           permissao.descontinuado ? Colors.red.shade100 : Colors.green.shade100,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).pop(permissao);
+          Navigator.of(context).pop([permissao]);
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),

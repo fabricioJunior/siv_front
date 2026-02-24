@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:produtos/presentation.dart';
+import 'package:sistema/pages.dart';
 import 'package:siv_front/pages/home_page.dart';
 import 'package:siv_front/pages/splash_page.dart';
 
@@ -83,6 +84,10 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/referencias': (context) {
     return ReferenciasPage();
+  },
+  //CONFIGURACOES:
+  '/configuracao_smtp': (context) {
+    return ConfiguracaoSTMPPage();
   },
 };
 

@@ -156,6 +156,15 @@ class HomePage extends StatelessWidget {
                                 Navigator.pushNamed(context, '/menu_produtos');
                               },
                             ),
+                            _ModuleCard(
+                              icon: Icons.settings,
+                              title: 'Configurações',
+                              color: Colors.teal,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, '/configuracao_smtp');
+                              },
+                            ),
                           ],
                         ),
                       ],

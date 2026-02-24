@@ -15,6 +15,7 @@ import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:pessoas/pessoas_injections.dart';
 import 'package:produtos/produtos_injection.dart';
+import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/empresa_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/licenciado_dto.dart';
@@ -49,6 +50,7 @@ Future<void> resolverDependenciasApp() async {
   resolverDependenciasEmpresas();
   resolverPessoasInjections();
   resolverProdutosInjection();
+  resolverSistemaInjections();
   _presentation();
 }
 

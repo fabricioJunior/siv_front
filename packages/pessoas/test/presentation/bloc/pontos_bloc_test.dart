@@ -152,7 +152,7 @@ void _setupRecuperarPontosDaPessoa({
 
 void _setupCriarPontos({
   required int idPessoa,
-  required int valor,
+  required double valor,
   required String descricao,
   required Ponto response,
 }) {

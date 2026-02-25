@@ -10,6 +10,21 @@ class RecuperarPontosDaPessoa {
   Future<List<Ponto>> call({
     required int idPessoa,
   }) async {
-    return _pontosRepository.getPontos(idPessoa: idPessoa);
+    final pontos = await _pontosRepository.getPontos(idPessoa: idPessoa);
+
+    final pontosFiltrados = pontos.where((ponto) => !ponto.cancelado).toList();
+
+    pontosFiltrados.sort((a, b) {
+      final dataA = a.dtCriacao;
+      final dataB = b.dtCriacao;
+
+      if (dataA == null && dataB == null) return 0;
+      if (dataA == null) return 1;
+      if (dataB == null) return -1;
+
+      return dataB.compareTo(dataA);
+    });
+
+    return pontosFiltrados;
   }
 }

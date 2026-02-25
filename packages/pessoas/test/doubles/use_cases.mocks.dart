@@ -286,7 +286,7 @@ class MockCriarPontos extends _i1.Mock implements _i11.CriarPontos {
   @override
   _i5.Future<_i3.Ponto> call({
     required int? idPessoa,
-    required int? valor,
+    required double? valor,
     required String? descricao,
   }) =>
       (super.noSuchMethod(

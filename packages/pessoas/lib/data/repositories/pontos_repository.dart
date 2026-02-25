@@ -24,7 +24,7 @@ class PontosRepository implements IPontosRepository {
   @override
   Future<Ponto> novoPonto({
     required int idPessoa,
-    required int valor,
+    required double valor,
     required String descricao,
     required DateTime validade,
   }) {

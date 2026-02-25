@@ -35,7 +35,7 @@ Pessoa fakePessoa({
 }
 
 Ponto fakePonto({
-  int valor = 10,
+  double valor = 10,
   DateTime? validade,
   String descricao = 'Ponto de teste',
   DateTime? dtCriacao,

@@ -12,7 +12,7 @@ abstract class Pessoa implements Equatable {
   DateTime? get dataDeNascimento;
   String? get email;
   TipoContato get tipoContato;
-  String get contato;
+  String? get contato;
   bool get eCliente;
   bool get eFornecedor;
   bool get eFuncionario;
@@ -28,7 +28,7 @@ abstract class Pessoa implements Equatable {
     DateTime? dataDeNascimento,
     String? email,
     required TipoContato tipoContato,
-    required String contato,
+    required String? contato,
     required bool eCliente,
     required bool eFornecedor,
     required bool eFuncionario,
@@ -76,7 +76,7 @@ class _PessoaImpl implements Pessoa {
   @override
   final TipoContato tipoContato;
   @override
-  final String contato;
+  final String? contato;
   @override
   final bool eCliente;
   @override

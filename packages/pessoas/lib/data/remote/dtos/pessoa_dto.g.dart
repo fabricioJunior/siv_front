@@ -8,7 +8,7 @@ part of 'pessoa_dto.dart';
 
 PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
       bloqueado: json['bloqueado'] as bool,
-      contato: json['contato'] as String,
+      contato: json['contato'] as String?,
       documento: json['documento'] as String,
       eCliente: json['cliente'] as bool,
       eFornecedor: json['fornecedor'] as bool,

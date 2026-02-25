@@ -5,8 +5,21 @@ abstract class PontosState extends Equatable {
   final List<Ponto>? pontos;
   final Pessoa? pessoa;
 
-  int get totalDePontos =>
-      pontos?.fold(0, (total, ponto) => (total ?? 0) + ponto.valor) ?? 0;
+  double get totalDePontos =>
+      pontos?.fold<double>(0, (total, ponto) {
+        final valorAbsoluto = ponto.valor.abs();
+
+        if (ponto.tipo == TipoDePonto.debito) {
+          return total - valorAbsoluto;
+        }
+
+        if (ponto.tipo == TipoDePonto.credito) {
+          return total + valorAbsoluto;
+        }
+
+        return total + ponto.valor;
+      }) ??
+      0;
 
   const PontosState({
     required this.idPessoa,

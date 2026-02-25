@@ -9,7 +9,7 @@ class CriarPontos {
 
   Future<Ponto> call({
     required int idPessoa,
-    required int valor,
+    required double valor,
     required String descricao,
   }) {
     var validade = DateTime.now().add(

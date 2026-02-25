@@ -2,7 +2,7 @@ import 'package:pessoas/models.dart';
 
 abstract class IPontosRemoteDataSource {
   Future<Ponto> postPonto({
-    required int valor,
+    required double valor,
     required DateTime validade,
     required String descricao,
     required int idPessoa,

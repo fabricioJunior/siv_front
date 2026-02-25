@@ -32,7 +32,7 @@ class PessoasRepository implements IPessoasRepository {
   @override
   Future<Pessoa> novaPessoa({
     required bool bloqueado,
-    required String contato,
+    required String? contato,
     required String documento,
     required bool eCliente,
     required bool eFornecedor,

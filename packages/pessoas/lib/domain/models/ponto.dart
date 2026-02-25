@@ -2,7 +2,7 @@ import 'package:core/equals.dart';
 
 abstract class Ponto implements Equatable {
   int get id;
-  int get valor;
+  double get valor;
   DateTime? get validade;
   String get descricao;
   DateTime? get dtCriacao;
@@ -13,7 +13,7 @@ abstract class Ponto implements Equatable {
 
   factory Ponto.create({
     required int id,
-    required int valor,
+    required double valor,
     DateTime? validade,
     required String descricao,
     DateTime? dtCriacao,
@@ -44,7 +44,7 @@ class _PontoImpl implements Ponto {
   @override
   final int id;
   @override
-  final int valor;
+  final double valor;
   @override
   final DateTime? validade;
   @override
@@ -74,7 +74,7 @@ class _PontoImpl implements Ponto {
 
   _PontoImpl copyWith({
     int? id,
-    int? valor,
+    double? valor,
     DateTime? validade,
     String? descricao,
     DateTime? dtCriacao,
@@ -116,7 +116,7 @@ class _PontoImpl implements Ponto {
 extension PontoCopyWith on Ponto {
   Ponto copyWith({
     int? id,
-    int? valor,
+    double? valor,
     DateTime? validade,
     String? descricao,
     DateTime? dtCriacao,

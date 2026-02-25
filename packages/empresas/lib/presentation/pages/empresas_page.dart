@@ -89,7 +89,7 @@ class EmpresasPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(empresa.nome),
+                      Text('${empresa.id} - ${empresa.nome}'),
                       Text(empresa.cnpj),
                     ],
                   ),

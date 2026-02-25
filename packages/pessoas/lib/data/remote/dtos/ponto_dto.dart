@@ -11,7 +11,7 @@ class PontoDto implements Ponto {
     name: 'quantidade',
     fromJson: _quantidadeFromJson,
   )
-  final int valor;
+  final double valor;
 
   @override
   @JsonKey(
@@ -30,6 +30,7 @@ class PontoDto implements Ponto {
   final DateTime? dtCriacao;
 
   @override
+  @JsonKey(name: 'cancelada')
   final bool cancelado;
 
   @override
@@ -110,12 +111,12 @@ String? _tipoDePontoToJson(TipoDePonto? tipo) {
   return tipo == TipoDePonto.debito ? 'Débito' : 'Crédito';
 }
 
-int _quantidadeFromJson(dynamic value) {
+double _quantidadeFromJson(dynamic value) {
   if (value is String) {
-    return double.parse(value).toInt();
+    return double.parse(value);
   }
   if (value is num) {
-    return value.toInt();
+    return value.toDouble();
   }
   throw ArgumentError('Unexpected quantidade type: ${value.runtimeType}');
 }

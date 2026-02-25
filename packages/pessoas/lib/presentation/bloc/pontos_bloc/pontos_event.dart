@@ -9,7 +9,7 @@ class PontosIniciou extends PontosEvent {
 }
 
 class PontosCriouNovoPonto extends PontosEvent {
-  final int valor;
+  final double valor;
   final String descricao;
 
   PontosCriouNovoPonto({

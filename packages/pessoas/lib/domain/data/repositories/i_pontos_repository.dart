@@ -3,7 +3,7 @@ import '../../models/ponto.dart';
 abstract class IPontosRepository {
   Future<Ponto> novoPonto({
     required int idPessoa,
-    required int valor,
+    required double valor,
     required String descricao,
     required DateTime validade,
   });

@@ -8,7 +8,7 @@ class PessoaDto implements Pessoa {
   final bool bloqueado;
 
   @override
-  final String contato;
+  final String? contato;
 
   @override
   final String documento;

@@ -7,3 +7,7 @@ export 'domain/usecases/criar_pontos.dart';
 export 'domain/usecases/recuperar_pontos_da_pessoa.dart';
 export 'domain/usecases/cancelar_ponto.dart';
 export 'domain/usecases/resgatar_pontos.dart';
+export 'domain/usecases/recuperar_enderecos_da_pessoa.dart';
+export 'domain/usecases/criar_endereco.dart';
+export 'domain/usecases/salvar_endereco.dart';
+export 'domain/usecases/excluir_endereco.dart';

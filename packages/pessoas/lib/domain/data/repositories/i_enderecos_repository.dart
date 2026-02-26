@@ -1,16 +1,16 @@
 import 'package:pessoas/models.dart';
 
-abstract class IEnderecosRemoteDataSource {
-  Future<List<Endereco>> getEnderecos({
+abstract class IEnderecosRepository {
+  Future<List<Endereco>> recuperarEnderecos({
     required int idPessoa,
   });
 
-  Future<Endereco> criarEndereco({
+  Future<Endereco> novoEndereco({
     required int idPessoa,
     required Endereco endereco,
   });
 
-  Future<Endereco> atualizarEndereco({
+  Future<Endereco> salvarEndereco({
     required int idPessoa,
     required Endereco endereco,
   });

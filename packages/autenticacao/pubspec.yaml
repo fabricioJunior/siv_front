@@ -33,4 +33,5 @@ dev_dependencies:
   isar_community_generator: 
     version: *isar_version
   mockito: ^5.4.6
+  flutter_lints: ^5.0.0  
 flutter:

@@ -1,10 +1,16 @@
 import 'package:core/injecoes.dart';
 import 'package:pessoas/data.dart';
+import 'package:pessoas/data/remote/enderecos_remote_data_source.dart';
 import 'package:pessoas/data/remote/pontos_remote_data_source.dart';
+import 'package:pessoas/data/repositories/enderecos_repository.dart';
 import 'package:pessoas/data/repositories/pontos_repository.dart';
+import 'package:pessoas/domain/data/data_sourcers/remote/i_enderecos_remote_data_source.dart';
 import 'package:pessoas/domain/data/data_sourcers/remote/i_pontos_remote_data_source.dart';
+import 'package:pessoas/domain/data/repositories/i_enderecos_repository.dart';
 import 'package:pessoas/domain/data/repositories/i_pessoas_repository.dart';
 import 'package:pessoas/domain/data/repositories/i_pontos_repository.dart';
+import 'package:pessoas/presentation/bloc/endereco_cadastro_bloc/endereco_cadastro_bloc.dart';
+import 'package:pessoas/presentation/bloc/enderecos_bloc/enderecos_bloc.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
 import 'package:pessoas/presentation/bloc/pessoas_bloc/pessoas_bloc.dart';
 import 'package:pessoas/presentation/bloc/pontos_bloc/pontos_bloc.dart';
@@ -41,6 +47,21 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+    ),
+  );
+
+  sl.registerFactory<EnderecosBloc>(
+    () => EnderecosBloc(
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<EnderecoCadastroBloc>(
+    () => EnderecoCadastroBloc(
+      cepService: sl(),
     ),
   );
 
@@ -98,6 +119,22 @@ void _usesCases() {
       pontosRepository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarEnderecosDaPessoa>(
+    () => RecuperarEnderecosDaPessoa(enderecosRepository: sl()),
+  );
+
+  sl.registerFactory<CriarEndereco>(
+    () => CriarEndereco(enderecosRepository: sl()),
+  );
+
+  sl.registerFactory<SalvarEndereco>(
+    () => SalvarEndereco(enderecosRepository: sl()),
+  );
+
+  sl.registerFactory<ExcluirEndereco>(
+    () => ExcluirEndereco(enderecosRepository: sl()),
+  );
 }
 
 void _repositories() {
@@ -111,6 +148,10 @@ void _repositories() {
       pontosRemoteDataSource: sl(),
     ),
   );
+
+  sl.registerFactory<IEnderecosRepository>(
+    () => EnderecosRepository(enderecosRemoteDataSource: sl()),
+  );
 }
 
 void _remoteDataSourcers() {
@@ -121,6 +162,12 @@ void _remoteDataSourcers() {
   );
   sl.registerFactory<IPontosRemoteDataSource>(
     () => PontosRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IEnderecosRemoteDataSource>(
+    () => EnderecosRemoteDataSource(
       informacoesParaRequest: sl(),
     ),
   );

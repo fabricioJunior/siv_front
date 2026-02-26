@@ -60,6 +60,11 @@ Map<String, Widget Function(BuildContext)> routes = {
       idPessoa: args(context)['idPessoa'],
     );
   },
+  '/enderecos_page': (context) {
+    return EnderecosPage(
+      idPessoa: args(context)['idPessoa'],
+    );
+  },
 
   ///PRODUTOS:
   '/menu_produtos': (context) {

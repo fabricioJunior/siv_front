@@ -1,5 +1,6 @@
 import 'package:core/injecoes/api_base_url_config.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/cep.dart';
 import 'package:get_it/get_it.dart';
 
 GetIt sl = GetIt.instance;
@@ -13,6 +14,8 @@ void coreInjections() {
   );
 
   sl.registerLazySingleton<ApiBaseUrlConfig>(() => ApiBaseUrlConfig());
+
+  sl.registerLazySingleton<CepService>(() => CepService());
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {

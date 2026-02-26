@@ -1,18 +1,21 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/domain/models/pessoa.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
-import 'package:core/presentation.dart';
 
-// ignore: must_be_immutable
 class PessoaPage extends StatelessWidget {
   final int? idPessoa;
-  var formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
+  final Debouncer _debouncer = Debouncer(milliseconds: 500);
+
   PessoaPage({this.idPessoa, super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider<PessoaBloc>(
       create: (_) => sl<PessoaBloc>()
         ..add(
@@ -22,22 +25,24 @@ class PessoaPage extends StatelessWidget {
           ),
         ),
       child: Scaffold(
+        appBar: AppBar(
+          title: Text(idPessoa == null ? 'Nova pessoa' : 'Pessoa #$idPessoa'),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: BlocBuilder<PessoaBloc, PessoaState>(
           builder: (context, state) {
-            if (state.dataDeNascimento == null) {
-              return SizedBox();
+            if (state.dataDeNascimento == null ||
+                state.pessoaStep == PessoaStep.carregando) {
+              return const SizedBox.shrink();
             }
-            if (state.pessoaStep == PessoaStep.carregando) {
-              return CircularProgressIndicator();
-            }
-            return FloatingActionButton(
-              child: Icon(
-                state.pessoaStep == PessoaStep.editando
-                    ? Icons.check
-                    : Icons.edit,
-              ),
+
+            final editando = state.pessoaStep == PessoaStep.editando;
+
+            return FloatingActionButton.extended(
+              icon: Icon(editando ? Icons.check : Icons.edit),
+              label: Text(editando ? 'Salvar' : 'Editar'),
               onPressed: () {
-                if (state.pessoaStep != PessoaStep.editando) {
+                if (!editando) {
                   context.read<PessoaBloc>().add(PessoaEditou());
                 } else if (formKey.currentState?.validate() ?? false) {
                   context.read<PessoaBloc>().add(PessoaSalvou());
@@ -46,75 +51,116 @@ class PessoaPage extends StatelessWidget {
             );
           },
         ),
-        appBar: AppBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Form(
-                  key: formKey,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Informações principais',
-                            style: Theme.of(context).textTheme.displaySmall,
+        body: BlocBuilder<PessoaBloc, PessoaState>(
+          builder: (context, state) {
+            if (state.pessoaStep == PessoaStep.carregando) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontalPadding =
+                    constraints.maxWidth > 900 ? 24.0 : 12.0;
+
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        12,
+                        horizontalPadding,
+                        96,
+                      ),
+                      child: Form(
+                        key: formKey,
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                                color: theme.colorScheme.outlineVariant),
                           ),
-                          if (idPessoa != null)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pushNamed(
-                                        '/pontos_page',
-                                        arguments: {'idPessoa': idPessoa});
-                                  },
-                                  child: Text('Pontos'),
-                                )
+                                Text(
+                                  'Informações principais',
+                                  style:
+                                      theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Dados pessoais e vínculo da pessoa.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (idPessoa != null) ...[
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Wrap(
+                                      spacing: 8,
+                                      children: [
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            Navigator.of(context).pushNamed(
+                                              '/enderecos_page',
+                                              arguments: {'idPessoa': idPessoa},
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            Icons.location_on_outlined,
+                                          ),
+                                          label: const Text('Endereços'),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            Navigator.of(context).pushNamed(
+                                              '/pontos_page',
+                                              arguments: {'idPessoa': idPessoa},
+                                            );
+                                          },
+                                          icon:
+                                              const Icon(Icons.stars_outlined),
+                                          label: const Text('Pontos'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
+                                if (state.pessoaStep == PessoaStep.editando ||
+                                    state.pessoaStep == PessoaStep.carregado ||
+                                    state.pessoaStep == PessoaStep.salva)
+                                  AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 180),
+                                    opacity:
+                                        state.pessoaStep == PessoaStep.editando
+                                            ? 1
+                                            : 0.7,
+                                    child: _informacoesBasicas(
+                                      context,
+                                      state,
+                                      state.pessoaStep != PessoaStep.editando,
+                                    ),
+                                  ),
                               ],
                             ),
-                          BlocBuilder<PessoaBloc, PessoaState>(
-                              // buildWhen: (previous, current) =>
-                              //     (previous.pessoaStep != PessoaStep.editando ||
-                              //         previous.pessoa != null) ||
-                              //     previous.eCliente != current.eCliente ||
-                              //     previous.eFornecedor != current.eFornecedor ||
-                              //     previous.eFuncionario != current.eFuncionario,
-                              builder: (context, state) {
-                            if (state.pessoaStep == PessoaStep.carregando) {
-                              return CircularProgressIndicator();
-                            }
-                            if (state.pessoaStep == PessoaStep.editando ||
-                                state.pessoaStep == PessoaStep.carregado ||
-                                state.pessoaStep == PessoaStep.salva) {
-                              return Opacity(
-                                opacity: state.pessoaStep == PessoaStep.editando
-                                    ? 1.0
-                                    : 0.6,
-                                child: _informacoesBasicas(
-                                  context,
-                                  state,
-                                  state.pessoaStep != PessoaStep.editando,
-                                ),
-                              );
-                            }
-
-                            return SizedBox();
-                          })
-                        ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                )
-              ],
-            ),
-          ),
+                );
+              },
+            );
+          },
         ),
       ),
     );
@@ -125,11 +171,16 @@ class PessoaPage extends StatelessWidget {
     PessoaState pessoaState,
     bool bloqueado,
   ) {
-    Debouncer debouncer = Debouncer(milliseconds: 500);
+    final fieldSpacing = const SizedBox(height: 14);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Nome'),
+        Text(
+          'Nome',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 6),
         TextFormField(
           readOnly: bloqueado,
           key: const Key('nome_pessoa_text_field'),
@@ -138,6 +189,10 @@ class PessoaPage extends StatelessWidget {
                 ? null
                 : TextEditingValue(text: pessoaState.nome!),
           ),
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Digite o nome completo',
+          ),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Informe um nome de usuário';
@@ -145,52 +200,64 @@ class PessoaPage extends StatelessWidget {
             return null;
           },
           onChanged: (value) {
-            debouncer.run(() {
+            _debouncer.run(() {
               context.read<PessoaBloc>().add(PessoaEditou(nome: value));
             });
           },
         ),
-        Text('CPF'),
+        fieldSpacing,
+        Text(
+          'CPF',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 6),
         CPFInput(
           bloqueado: bloqueado,
           valorInicial: pessoaState.documento,
           onChanged: (value) {
-            debouncer.run(
-              () {
-                context.read<PessoaBloc>().add(PessoaEditou(documento: value));
-              },
-            );
+            _debouncer.run(() {
+              context.read<PessoaBloc>().add(PessoaEditou(documento: value));
+            });
           },
         ),
-        SizedBox(
-          height: 16,
+        fieldSpacing,
+        Text(
+          'Data de nascimento',
+          style: Theme.of(context).textTheme.titleSmall,
         ),
-        Text('Data de nascimento'),
+        const SizedBox(height: 6),
         DateInput(
           bloqueado: bloqueado,
           dataInicial: pessoaState.dataDeNascimento,
           onComplete: (value) {
-            debouncer.run(
-              () {
-                context
-                    .read<PessoaBloc>()
-                    .add(PessoaEditou(dataDeNascimento: value));
-              },
-            );
+            _debouncer.run(() {
+              context
+                  .read<PessoaBloc>()
+                  .add(PessoaEditou(dataDeNascimento: value));
+            });
           },
         ),
-        Text('Telefone para contato'),
+        fieldSpacing,
+        Text(
+          'Telefone para contato',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 6),
         CelularInput(
           bloqueado: bloqueado,
           valorInicial: pessoaState.contato,
           onChanged: (value) {
-            debouncer.run(
-              () {
-                context.read<PessoaBloc>().add(PessoaEditou(contato: value));
-              },
-            );
+            _debouncer.run(() {
+              context.read<PessoaBloc>().add(PessoaEditou(contato: value));
+            });
           },
         ),
+        const SizedBox(height: 18),
+        Text(
+          'Tipo de vínculo',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
         IgnorePointer(
           ignoring: bloqueado,
           child: RadioGroup<TipoPessoaSeletor>(
@@ -207,25 +274,27 @@ class PessoaPage extends StatelessWidget {
             child: const Column(
               children: <Widget>[
                 ListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text('Cliente'),
                   leading: Radio<TipoPessoaSeletor>(
                       value: TipoPessoaSeletor.cliente),
                 ),
                 ListTile(
-                  title: Text('Funcionario'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Funcionário'),
                   leading: Radio<TipoPessoaSeletor>(
                       value: TipoPessoaSeletor.funcionario),
                 ),
                 ListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text('Fornecedor'),
                   leading: Radio<TipoPessoaSeletor>(
-                    value: TipoPessoaSeletor.fornecedor,
-                  ),
+                      value: TipoPessoaSeletor.fornecedor),
                 ),
               ],
             ),
           ),
-        )
+        ),
       ],
     );
   }

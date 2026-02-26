@@ -1,4 +1,4 @@
-import 'package:autenticacao/pages.dart';
+import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
@@ -6,6 +6,7 @@ import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/pages/home_page.dart';
+import 'package:siv_front/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/pages/splash_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
@@ -33,7 +34,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/selecionar_empresa': (context) {
-    return SelecionarEmpresaPage();
+    return const SelecionarEmpresaPage();
   },
 
   ///EMPRESAS:

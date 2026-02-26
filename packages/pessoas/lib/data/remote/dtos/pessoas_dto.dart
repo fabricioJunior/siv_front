@@ -4,7 +4,7 @@ import 'package:pessoas/data/remote/dtos/pessoa_dto.dart';
 
 part 'pessoas_dto.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class PessoasDto {
   final MetaDto meta;
 

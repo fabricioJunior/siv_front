@@ -5,11 +5,37 @@ import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoas_bloc/pessoas_bloc.dart';
 
-// ignore: must_be_immutable
-class PessoasPage extends StatelessWidget {
-  var bloc = sl<PessoasBloc>();
-  var debouncer = Debouncer(milliseconds: 400);
-  PessoasPage({super.key});
+class PessoasPage extends StatefulWidget {
+  const PessoasPage({super.key});
+
+  @override
+  State<PessoasPage> createState() => _PessoasPageState();
+}
+
+class _PessoasPageState extends State<PessoasPage>
+    with SingleTickerProviderStateMixin {
+  late final PessoasBloc bloc;
+  late final Debouncer debouncer;
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    bloc = sl<PessoasBloc>();
+    debouncer = Debouncer(milliseconds: 400);
+    _tabController = TabController(length: 4, vsync: this)
+      ..addListener(() {
+        if (!_tabController.indexIsChanging) {
+          setState(() {});
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +95,19 @@ class PessoasPage extends StatelessWidget {
                 },
               ),
             ),
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabs: const [
+                  Tab(text: 'Todos'),
+                  Tab(text: 'Clientes'),
+                  Tab(text: 'Fornecedores'),
+                  Tab(text: 'Funcionários'),
+                ],
+              ),
+            ),
             Expanded(
               child: BlocBuilder<PessoasBloc, PessoasState>(
                   builder: (context, state) {
@@ -76,10 +115,11 @@ class PessoasPage extends StatelessWidget {
                   case const (PessoasCarregarEmProgresso):
                     return _buildLoading();
                   case const (PessoasCarregarSucesso):
-                    if (state.pessoas.isEmpty) {
+                    final pessoas = _filtrarPessoasPorTipo(state.pessoas);
+                    if (pessoas.isEmpty) {
                       return _buildEmptyState();
                     }
-                    return _buildPessoasList(context, state.pessoas);
+                    return _buildPessoasList(context, pessoas);
                   default:
                     return const SizedBox();
                 }
@@ -89,6 +129,20 @@ class PessoasPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<Pessoa> _filtrarPessoasPorTipo(List<Pessoa> pessoas) {
+    final filtro = TipoPessoaTab.values[_tabController.index];
+    switch (filtro) {
+      case TipoPessoaTab.todos:
+        return pessoas;
+      case TipoPessoaTab.clientes:
+        return pessoas.where((pessoa) => pessoa.eCliente).toList();
+      case TipoPessoaTab.fornecedores:
+        return pessoas.where((pessoa) => pessoa.eFornecedor).toList();
+      case TipoPessoaTab.funcionarios:
+        return pessoas.where((pessoa) => pessoa.eFuncionario).toList();
+    }
   }
 
   Widget _buildPessoasList(BuildContext context, List<Pessoa> pessoas) {
@@ -258,6 +312,16 @@ class PessoasPage extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
+    final filtro = TipoPessoaTab.values[_tabController.index];
+    final descricao = switch (filtro) {
+      TipoPessoaTab.todos => 'Tente ajustar os filtros de busca',
+      TipoPessoaTab.clientes => 'Nenhum cliente encontrado para os filtros',
+      TipoPessoaTab.fornecedores =>
+        'Nenhum fornecedor encontrado para os filtros',
+      TipoPessoaTab.funcionarios =>
+        'Nenhum funcionário encontrado para os filtros',
+    };
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -278,7 +342,7 @@ class PessoasPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tente ajustar os filtros de busca',
+            descricao,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
@@ -294,4 +358,11 @@ class PessoasPage extends StatelessWidget {
       child: CircularProgressIndicator.adaptive(),
     );
   }
+}
+
+enum TipoPessoaTab {
+  todos,
+  clientes,
+  fornecedores,
+  funcionarios,
 }

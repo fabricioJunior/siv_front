@@ -1,6 +1,6 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:core/cep.dart';
 import 'package:pessoas/models.dart';
+import 'package:core/bloc.dart';
 
 part 'endereco_cadastro_event.dart';
 part 'endereco_cadastro_state.dart';

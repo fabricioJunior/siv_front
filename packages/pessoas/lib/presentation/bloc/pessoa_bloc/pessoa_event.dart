@@ -39,6 +39,14 @@ class PessoaEditou extends PessoaEvent {
 
   final DateTime? dataDeNascimento;
 
+  final TipoFuncionario? tipoFuncionario;
+
+  final int? funcionarioEmpresaId;
+
+  final String? funcionarioEmpresaNome;
+
+  final bool? funcionarioInativo;
+
   PessoaEditou({
     this.bloqueado,
     this.contato,
@@ -53,6 +61,10 @@ class PessoaEditou extends PessoaEvent {
     this.tipoPessoa,
     this.uf,
     this.dataDeNascimento,
+    this.tipoFuncionario,
+    this.funcionarioEmpresaId,
+    this.funcionarioEmpresaNome,
+    this.funcionarioInativo,
   });
 }
 

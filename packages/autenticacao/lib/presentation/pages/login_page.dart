@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
         bloc: bloc,
         listener: (context, state) {
           if (state is LoginAutenticarSucesso && state.idEmpresa == null) {
-            Navigator.of(context).pushNamed('/selecionar_empresa');
+            _selecionarEmpresa(context);
           }
         },
         child: SafeArea(
@@ -182,6 +182,30 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Future<void> _selecionarEmpresa(BuildContext context) async {
+    final resultado =
+        await Navigator.of(context).pushNamed('/selecionar_empresa');
+
+    if (!context.mounted) return;
+
+    if (resultado is! Map) return;
+
+    final idEmpresa = resultado['idEmpresa'];
+    final nomeEmpresa = resultado['nomeEmpresa'];
+
+    if (idEmpresa is! int) return;
+    if (nomeEmpresa is! String || nomeEmpresa.trim().isEmpty) return;
+
+    bloc.add(
+      LoginAutenticou(
+        empresa: _EmpresaSelecionada(
+          id: idEmpresa,
+          nome: nomeEmpresa,
+        ),
+      ),
+    );
+  }
+
   BlocBuilder<LoginBloc, LoginState> _licenciadoAutoComplete() {
     return BlocBuilder<LoginBloc, LoginState>(
       bloc: bloc,
@@ -271,4 +295,17 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
   }
+}
+
+class _EmpresaSelecionada implements Empresa {
+  @override
+  final int id;
+
+  @override
+  final String nome;
+
+  _EmpresaSelecionada({
+    required this.id,
+    required this.nome,
+  });
 }

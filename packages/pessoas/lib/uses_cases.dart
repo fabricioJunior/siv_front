@@ -11,3 +11,8 @@ export 'domain/usecases/recuperar_enderecos_da_pessoa.dart';
 export 'domain/usecases/criar_endereco.dart';
 export 'domain/usecases/salvar_endereco.dart';
 export 'domain/usecases/excluir_endereco.dart';
+export 'domain/usecases/criar_funcionario.dart';
+export 'domain/usecases/salvar_funcionario.dart';
+export 'domain/usecases/excluir_funcionario.dart';
+export 'domain/usecases/recuperar_funcionario.dart';
+export 'domain/usecases/recuperar_funcionarios.dart';

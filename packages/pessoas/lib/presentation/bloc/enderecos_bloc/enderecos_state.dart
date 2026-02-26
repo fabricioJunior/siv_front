@@ -23,10 +23,10 @@ class EnderecosInicial extends EnderecosState {
 
 class EnderecosCarregarEmProgresso extends EnderecosState {
   EnderecosCarregarEmProgresso.fromLastState(
-    EnderecosState state, {
-    int? idPessoa,
-    List<Endereco>? enderecos,
-  }) : super.fromLastState(state, idPessoa: idPessoa, enderecos: enderecos);
+    super.state, {
+    super.idPessoa,
+    super.enderecos,
+  }) : super.fromLastState();
 }
 
 class EnderecosCarregarSucesso extends EnderecosState {

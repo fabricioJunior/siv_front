@@ -35,6 +35,14 @@ class PessoaState extends Equatable {
 
   final Pessoa? pessoa;
 
+  final TipoFuncionario? tipoFuncionario;
+
+  final int? funcionarioEmpresaId;
+
+  final String? funcionarioEmpresaNome;
+
+  final bool funcionarioInativo;
+
   const PessoaState({
     this.bloqueado,
     this.contato,
@@ -51,6 +59,10 @@ class PessoaState extends Equatable {
     this.uf,
     this.dataDeNascimento,
     this.pessoa,
+    this.tipoFuncionario,
+    this.funcionarioEmpresaId,
+    this.funcionarioEmpresaNome,
+    this.funcionarioInativo = false,
     required this.pessoaStep,
   });
 
@@ -71,6 +83,10 @@ class PessoaState extends Equatable {
         uf = pessoa.uf,
         dataDeNascimento = pessoa.dataDeNascimento,
         documento = pessoa.documento,
+        tipoFuncionario = null,
+        funcionarioEmpresaId = null,
+        funcionarioEmpresaNome = null,
+        funcionarioInativo = false,
         pessoaStep = step ?? PessoaStep.carregado;
 
   PessoaState copyWith({
@@ -90,6 +106,10 @@ class PessoaState extends Equatable {
     DateTime? dataDeNascimento,
     PessoaStep? pessoaStep,
     Pessoa? pessoa,
+    TipoFuncionario? tipoFuncionario,
+    int? funcionarioEmpresaId,
+    String? funcionarioEmpresaNome,
+    bool? funcionarioInativo,
   }) {
     return PessoaState(
       bloqueado: bloqueado ?? this.bloqueado,
@@ -108,6 +128,11 @@ class PessoaState extends Equatable {
       dataDeNascimento: dataDeNascimento ?? this.dataDeNascimento,
       pessoaStep: pessoaStep ?? this.pessoaStep,
       pessoa: pessoa ?? this.pessoa,
+      tipoFuncionario: tipoFuncionario ?? this.tipoFuncionario,
+      funcionarioEmpresaId: funcionarioEmpresaId ?? this.funcionarioEmpresaId,
+      funcionarioEmpresaNome:
+          funcionarioEmpresaNome ?? this.funcionarioEmpresaNome,
+      funcionarioInativo: funcionarioInativo ?? this.funcionarioInativo,
     );
   }
 
@@ -126,6 +151,10 @@ class PessoaState extends Equatable {
         tipoPessoa,
         uf,
         dataDeNascimento,
+        tipoFuncionario,
+        funcionarioEmpresaId,
+        funcionarioEmpresaNome,
+        funcionarioInativo,
         pessoaStep,
       ];
 }

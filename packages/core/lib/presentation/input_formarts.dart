@@ -18,12 +18,16 @@ class DateInput extends StatelessWidget {
   final DateTime? dataInicial;
   final bool? bloqueado;
   final TextEditingController controller;
+  final String? labelText;
+  final TextEditingController? externalController;
   // ignore: use_key_in_widget_constructors
-  DateInput({
-    required this.onComplete,
-    this.dataInicial,
-    this.bloqueado,
-  }) : controller = TextEditingController(
+  DateInput(
+      {required this.onComplete,
+      this.dataInicial,
+      this.bloqueado,
+      this.labelText,
+      this.externalController})
+      : controller = TextEditingController(
           text: dataInicial != null
               ? '${dataInicial.day}/${dataInicial.month}/${dataInicial.year}'
               : null,
@@ -34,10 +38,13 @@ class DateInput extends StatelessWidget {
     return IgnorePointer(
       ignoring: bloqueado ?? false,
       child: DateFormatField(
-        controller: controller,
+        controller: externalController ?? controller,
         onComplete: onComplete,
         type: DateFormatType.type2,
         initialDate: dataInicial,
+        decoration: InputDecoration(
+          labelText: labelText,
+        ),
       ),
     );
   }
@@ -48,6 +55,7 @@ class CPFInput extends StatelessWidget {
   final String? valorInicial;
   final bool? bloqueado;
   final void Function(String)? onChanged;
+  final TextEditingController? controller;
   var maskFormatter = MaskTextInputFormatter(
     mask: '###.###.###-##',
     filter: {"#": RegExp(r'[0-9]')},
@@ -59,12 +67,17 @@ class CPFInput extends StatelessWidget {
     this.onChanged,
     super.key,
     this.bloqueado,
+    this.controller,
   });
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: valorInicial,
+      controller: controller,
+      initialValue: controller == null ? valorInicial : null,
       readOnly: bloqueado ?? false,
+      decoration: const InputDecoration(
+        labelText: 'CPF',
+      ),
       onChanged: onChanged,
       inputFormatters: [
         maskFormatter,
@@ -88,6 +101,8 @@ class CelularInput extends StatelessWidget {
   final String? valorInicial;
   final void Function(String)? onChanged;
   final bool? bloqueado;
+  final String? labelText;
+  final TextEditingController? controller;
   var maskFormatter = MaskTextInputFormatter(
     mask: '(##) # ####-####',
     filter: {"#": RegExp(r'[0-9]')},
@@ -99,13 +114,19 @@ class CelularInput extends StatelessWidget {
     this.onChanged,
     super.key,
     this.bloqueado,
+    this.labelText,
+    this.controller,
   });
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       readOnly: bloqueado ?? false,
-      initialValue: valorInicial,
+      controller: controller,
+      initialValue: controller == null ? valorInicial : null,
       onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: labelText,
+      ),
       inputFormatters: [
         maskFormatter,
       ],

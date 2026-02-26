@@ -12,11 +12,13 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
   final RecuperarPessoa recuperarPessoa;
   final SalvarPessoa salvarPessoa;
   final CriarPessoa criarPessoa;
+  final CriarFuncionario criarFuncionario;
 
   PessoaBloc(
     this.recuperarPessoa,
     this.salvarPessoa,
     this.criarPessoa,
+    this.criarFuncionario,
   ) : super(PessoaState(pessoaStep: PessoaStep.inicial)) {
     on<PessoaIniciou>(_onPessoaInicou);
     on<PessoaEditou>(_onPessoaEditou);
@@ -74,6 +76,9 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         uf: event.uf,
         dataDeNascimento: event.dataDeNascimento,
         eFuncionario: event.eFuncionario,
+        tipoFuncionario: event.tipoFuncionario,
+        funcionarioEmpresaId: event.funcionarioEmpresaId,
+        funcionarioInativo: event.funcionarioInativo,
       ),
     );
   }
@@ -107,6 +112,22 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
           uf: state.uf,
           dataDeNascimento: state.dataDeNascimento!,
         );
+
+        if ((state.eFuncionario ?? false) && pessoa.id != null) {
+          await criarFuncionario.call(
+            funcionario: Funcionario(
+              criadoEm: null,
+              atualizadoEm: null,
+              empresaId: state.funcionarioEmpresaId ?? 0,
+              id: 0,
+              nome: state.nome ?? '',
+              pessoaId: pessoa.id!,
+              tipo: state.tipoFuncionario ?? TipoFuncionario.comprador,
+              inativo: state.funcionarioInativo,
+            ),
+          );
+        }
+
         emit(PessoaState.fromModel(
           pessoa,
           step: PessoaStep.criada,

@@ -104,9 +104,7 @@ class ConfiguracaoSTMPPage extends StatelessWidget {
                             const SizedBox(height: 8),
                             const Text('Porta'),
                             TextFormField(
-                              initialValue: state.porta != null
-                                  ? state.porta.toString()
-                                  : null,
+                              initialValue: state.porta?.toString(),
                               keyboardType: TextInputType.number,
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(

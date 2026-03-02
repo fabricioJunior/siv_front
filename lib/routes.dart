@@ -91,6 +91,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencias': (context) {
     return ReferenciasPage();
   },
+  '/produtos': (context) {
+    return ProdutosPage();
+  },
   //CONFIGURACOES:
   '/configuracao_smtp': (context) {
     return ConfiguracaoSTMPPage();

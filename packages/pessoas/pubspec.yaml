@@ -15,6 +15,8 @@ dependencies:
     path: ../core
   json_annotation: ^4.9.0
   mockito: ^5.0.0
+  horizontal_stepper_flutter: ^1.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

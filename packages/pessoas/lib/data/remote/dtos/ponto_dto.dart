@@ -9,7 +9,7 @@ class PontoDto implements Ponto {
   @override
   @JsonKey(
     name: 'quantidade',
-    fromJson: _quantidadeFromJson,
+    fromJson: _stringFromJson,
   )
   final double valor;
 
@@ -53,6 +53,8 @@ class PontoDto implements Ponto {
     this.motivoCancelamento,
     this.dtCancelamento,
     this.tipo,
+    this.transacaoId,
+    this.resgatado,
   }) : _id = id;
 
   factory PontoDto.fromJson(Map<String, dynamic> json) =>
@@ -71,6 +73,8 @@ class PontoDto implements Ponto {
         cancelado,
         motivoCancelamento,
         dtCancelamento,
+        transacaoId,
+        resgatado,
       ];
 
   @override
@@ -87,6 +91,14 @@ class PontoDto implements Ponto {
   @JsonKey(
       name: 'tipo', fromJson: _tipoDePontoFromJson, toJson: _tipoDePontoToJson)
   final TipoDePonto? tipo;
+
+  @override
+  @JsonKey(name: 'resgatado', fromJson: _stringFromJson)
+  final int? resgatado;
+
+  @override
+  @JsonKey(name: 'transacaoId')
+  final int? transacaoId;
 }
 
 TipoDePonto? _tipoDePontoFromJson(dynamic value) {
@@ -111,7 +123,7 @@ String? _tipoDePontoToJson(TipoDePonto? tipo) {
   return tipo == TipoDePonto.debito ? 'Débito' : 'Crédito';
 }
 
-double _quantidadeFromJson(dynamic value) {
+double _stringFromJson(dynamic value) {
   if (value is String) {
     return double.parse(value);
   }

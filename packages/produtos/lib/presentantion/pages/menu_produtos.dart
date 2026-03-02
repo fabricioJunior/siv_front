@@ -65,7 +65,7 @@ class MenuProdutosPage extends StatelessWidget {
               icon: Icons.inventory,
               color: Colors.orange,
               onTap: () {
-                Navigator.of(context).pushNamed('/referencias');
+                Navigator.of(context).pushNamed('/produtos');
               },
             ),
           ],

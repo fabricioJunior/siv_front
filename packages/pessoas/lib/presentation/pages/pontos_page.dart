@@ -111,6 +111,10 @@ class PontosPage extends StatelessWidget {
                   child: BlocBuilder<PontosBloc, PontosState>(
                     builder: (context, state) {
                       switch (state.runtimeType) {
+                        case const (PontosCarregarFalha):
+                          return const Center(
+                            child: Text('Falha ao carregar pontos.'),
+                          );
                         case const (PontosCarregarEmProgresso):
                         case const (PontosCriarPontoEmProgresso):
                           return const Center(
@@ -129,43 +133,7 @@ class PontosPage extends StatelessWidget {
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
-                              var ponto = state.pontos![index];
-                              final isDebito = ponto.tipo == TipoDePonto.debito;
-                              final dataCriacao = ponto.dtCriacao;
-                              final dataTexto = dataCriacao == null
-                                  ? 'Sem data'
-                                  : '${dataCriacao.day.toString().padLeft(2, '0')}/${dataCriacao.month.toString().padLeft(2, '0')}/${dataCriacao.year}';
-
-                              return Card(
-                                color: isDebito
-                                    ? const Color.fromRGBO(255, 82, 82, 1)
-                                    : Colors.greenAccent.shade100,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  leading: CircleAvatar(
-                                    child: Text(ponto.valor.toInt().toString()),
-                                  ),
-                                  title: Text(
-                                    ponto.descricao,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Text(dataTexto),
-                                  trailing: IconButton(
-                                    onPressed: () {
-                                      context.read<PontosBloc>().add(
-                                            PontosCancelouPonto(
-                                              idPonto: ponto.id,
-                                            ),
-                                          );
-                                    },
-                                    icon: const Icon(Icons.delete),
-                                  ),
-                                ),
-                              );
+                              return _PontoCard(ponto: state.pontos![index]);
                             },
                           );
                       }
@@ -175,6 +143,150 @@ class PontosPage extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PontoCard extends StatelessWidget {
+  final Ponto ponto;
+  const _PontoCard({
+    required this.ponto,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDebito = ponto.tipo == TipoDePonto.debito;
+    final dataCriacao = ponto.dtCriacao;
+    final dataTexto = dataCriacao == null
+        ? 'Sem data'
+        : '${dataCriacao.day.toString().padLeft(2, '0')}/${dataCriacao.month.toString().padLeft(2, '0')}/${dataCriacao.year}';
+    final corTipo = isDebito ? Colors.red.shade700 : Colors.green.shade700;
+    final corFundo = isDebito ? Colors.red.shade50 : Colors.green.shade50;
+    final tipoTexto = isDebito ? 'Débito' : 'Crédito';
+    final quantidadeTexto = '${isDebito ? '-' : '+'}${ponto.valor.toInt()} pts';
+    final transacaoTexto = ponto.transacaoId?.toString() ?? '-';
+    final resgatadoTexto = ponto.resgatado?.toString() ?? '0';
+
+    return Card(
+      color: corFundo,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: corTipo.withOpacity(0.25)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: corTipo,
+              foregroundColor: Colors.white,
+              child: Icon(
+                isDebito ? Icons.south_west_rounded : Icons.north_east_rounded,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: corTipo.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      tipoTexto,
+                      style: TextStyle(
+                        color: corTipo,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    ponto.descricao,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dataTexto,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'ID ponto: ${ponto.id} • ID transação: $transacaoTexto',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  if (!isDebito)
+                    Text(
+                      'Quantidade resgatada: $resgatadoTexto',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  quantidadeTexto,
+                  style: TextStyle(
+                    color: corTipo,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Movimentado',
+                  style: TextStyle(fontSize: 11),
+                ),
+                const SizedBox(height: 4),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    context.read<PontosBloc>().add(
+                          PontosCancelouPonto(
+                            idPonto: ponto.id,
+                          ),
+                        );
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

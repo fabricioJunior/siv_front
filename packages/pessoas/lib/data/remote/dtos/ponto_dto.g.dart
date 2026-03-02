@@ -7,7 +7,7 @@ part of 'ponto_dto.dart';
 // **************************************************************************
 
 PontoDto _$PontoDtoFromJson(Map<String, dynamic> json) => PontoDto(
-      valor: _quantidadeFromJson(json['quantidade']),
+      valor: _stringFromJson(json['quantidade']),
       validade: _dateTimeFromJson(json['validaAte']),
       descricao: json['observacao'] as String,
       id: (json['id'] as num?)?.toInt(),

@@ -31,63 +31,57 @@ class EnderecosCarregarEmProgresso extends EnderecosState {
 
 class EnderecosCarregarSucesso extends EnderecosState {
   EnderecosCarregarSucesso.fromLastState(
-    EnderecosState state, {
-    required List<Endereco> enderecos,
-  }) : super.fromLastState(state, enderecos: enderecos);
+    super.state, {
+    required List<Endereco> super.enderecos,
+  }) : super.fromLastState();
 }
 
 class EnderecosCarregarFalha extends EnderecosState {
-  EnderecosCarregarFalha.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosCarregarFalha.fromLastState(super.state) : super.fromLastState();
 }
 
 class EnderecosCriarEmProgresso extends EnderecosState {
-  EnderecosCriarEmProgresso.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosCriarEmProgresso.fromLastState(super.state) : super.fromLastState();
 }
 
 class EnderecosCriarSucesso extends EnderecosState {
   EnderecosCriarSucesso.fromLastState(
-    EnderecosState state, {
-    required List<Endereco> enderecos,
-  }) : super.fromLastState(state, enderecos: enderecos);
+    super.state, {
+    required List<Endereco> super.enderecos,
+  }) : super.fromLastState();
 }
 
 class EnderecosCriarFalha extends EnderecosState {
-  EnderecosCriarFalha.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosCriarFalha.fromLastState(super.state) : super.fromLastState();
 }
 
 class EnderecosSalvarEmProgresso extends EnderecosState {
-  EnderecosSalvarEmProgresso.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosSalvarEmProgresso.fromLastState(super.state) : super.fromLastState();
 }
 
 class EnderecosSalvarSucesso extends EnderecosState {
   EnderecosSalvarSucesso.fromLastState(
-    EnderecosState state, {
-    required List<Endereco> enderecos,
-  }) : super.fromLastState(state, enderecos: enderecos);
+    super.state, {
+    required List<Endereco> super.enderecos,
+  }) : super.fromLastState();
 }
 
 class EnderecosSalvarFalha extends EnderecosState {
-  EnderecosSalvarFalha.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosSalvarFalha.fromLastState(super.state) : super.fromLastState();
 }
 
 class EnderecosExcluirEmProgresso extends EnderecosState {
-  EnderecosExcluirEmProgresso.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosExcluirEmProgresso.fromLastState(super.state)
+      : super.fromLastState();
 }
 
 class EnderecosExcluirSucesso extends EnderecosState {
   EnderecosExcluirSucesso.fromLastState(
-    EnderecosState state, {
-    required List<Endereco> enderecos,
-  }) : super.fromLastState(state, enderecos: enderecos);
+    super.state, {
+    required List<Endereco> super.enderecos,
+  }) : super.fromLastState();
 }
 
 class EnderecosExcluirFalha extends EnderecosState {
-  EnderecosExcluirFalha.fromLastState(EnderecosState state)
-      : super.fromLastState(state);
+  EnderecosExcluirFalha.fromLastState(super.state) : super.fromLastState();
 }

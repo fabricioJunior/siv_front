@@ -125,16 +125,15 @@ class CategoriaPage extends StatelessWidget {
                                 onPressed: () {
                                   showDialog(
                                     context: context,
-                                    builder: (dialogContext) => SubCategoriaPage(
-                                      categoriaId: state.id!,
-                                    ),
+                                    builder: (dialogContext) =>
+                                        SubCategoriaPage(
+                                          categoriaId: state.id!,
+                                        ),
                                   ).then((_) {
                                     // Recarrega as sub-categorias após fechar o modal
                                     context.read<CategoriaBloc>().add(
-                                          CategoriaIniciou(
-                                            idCategoria: state.id,
-                                          ),
-                                        );
+                                      CategoriaIniciou(idCategoria: state.id),
+                                    );
                                   });
                                 },
                                 icon: const Icon(Icons.add),
@@ -247,11 +246,10 @@ class _SubCategoriasSection extends StatelessWidget {
                               idSubCategoria: subCategoria.id,
                             ),
                           ).then((_) {
+                            // ignore: use_build_context_synchronously
                             context.read<SubCategoriasBloc>().add(
-                                  SubCategoriasIniciou(
-                                    categoriaId: categoriaId,
-                                  ),
-                                );
+                              SubCategoriasIniciou(categoriaId: categoriaId),
+                            );
                           });
                         },
                       ),

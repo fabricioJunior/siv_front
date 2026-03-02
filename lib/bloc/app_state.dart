@@ -4,22 +4,25 @@ class AppState extends Equatable {
   final StatusAutenticacao statusAutenticacao;
   final Usuario? usuarioDaSessao;
   final Empresa? empresaDaSessao;
-
+  final Licenciado? licenciadoDaSessao;
   const AppState({
     this.statusAutenticacao = StatusAutenticacao.naoAutenticao,
     this.usuarioDaSessao,
     this.empresaDaSessao,
+    this.licenciadoDaSessao,
   });
 
   AppState copyWith({
     StatusAutenticacao? statusAutenticacao,
     Usuario? usuarioDaSessao,
     Empresa? empresaDaSessao,
+    Licenciado? licenciadoDaSessao,
   }) =>
       AppState(
         statusAutenticacao: statusAutenticacao ?? this.statusAutenticacao,
         usuarioDaSessao: usuarioDaSessao ?? this.usuarioDaSessao,
         empresaDaSessao: empresaDaSessao ?? this.empresaDaSessao,
+        licenciadoDaSessao: licenciadoDaSessao ?? this.licenciadoDaSessao,
       );
 
   @override

@@ -237,7 +237,7 @@ class _EnderecoModalState extends State<_EnderecoModal> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<TipoEndereco>(
-                    value: _tipoEndereco,
+                    initialValue: _tipoEndereco,
                     items: const [
                       DropdownMenuItem(
                         value: TipoEndereco.residencial,

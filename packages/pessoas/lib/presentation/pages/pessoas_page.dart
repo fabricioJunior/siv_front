@@ -250,6 +250,41 @@ class _PessoasPageState extends State<PessoasPage>
                           _buildBadge('Bloqueado', Colors.red),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: pessoa.id == null
+                              ? null
+                              : () {
+                                  Navigator.of(context).pushNamed(
+                                    '/pontos_page',
+                                    arguments: {
+                                      'idPessoa': pessoa.id,
+                                    },
+                                  );
+                                },
+                          icon: const Icon(Icons.stars_outlined, size: 16),
+                          label: const Text('Pontos'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: pessoa.id == null
+                              ? null
+                              : () {
+                                  Navigator.of(context).pushNamed(
+                                    '/vinculos_grupo_de_acesso_com_usuario',
+                                    arguments: {
+                                      'idUsuario': pessoa.id,
+                                    },
+                                  );
+                                },
+                          icon: const Icon(Icons.groups_outlined, size: 16),
+                          label: const Text('Grupo de acesso'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

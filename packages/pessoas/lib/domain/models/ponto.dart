@@ -10,6 +10,8 @@ abstract class Ponto implements Equatable {
   String? get motivoCancelamento;
   DateTime? get dtCancelamento;
   TipoDePonto? get tipo;
+  int? get transacaoId;
+  int? get resgatado;
 
   factory Ponto.create({
     required int id,
@@ -21,6 +23,8 @@ abstract class Ponto implements Equatable {
     String? motivoCancelamento,
     DateTime? dtCancelamento,
     TipoDePonto? tipo,
+    int? transacaoId,
+    int? resgatado,
   }) = _PontoImpl;
 
   @override
@@ -59,6 +63,10 @@ class _PontoImpl implements Ponto {
   final DateTime? dtCancelamento;
   @override
   final TipoDePonto? tipo;
+  @override
+  final int? transacaoId;
+  @override
+  final int? resgatado;
 
   _PontoImpl({
     required this.id,
@@ -70,6 +78,8 @@ class _PontoImpl implements Ponto {
     this.motivoCancelamento,
     this.dtCancelamento,
     this.tipo,
+    this.transacaoId,
+    this.resgatado,
   });
 
   _PontoImpl copyWith({

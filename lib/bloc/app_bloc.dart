@@ -17,6 +17,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
   final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
   final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
+
   final ApiBaseUrlConfig _apiBaseUrlConfig;
 
   late StreamSubscription<Token> _onAutenticacoSubscription;
@@ -50,6 +51,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final empresaDaSessao = event.token.idEmpresa == null
           ? null
           : await _recuperarEmpresaDaSessao.call();
+
+      var licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
       if (event.token.idEmpresa == null) {}
       emit(state.copyWith(
         statusAutenticacao: event.token.idEmpresa == null
@@ -57,6 +60,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
             : StatusAutenticacao.autenticado,
         usuarioDaSessao: usuarioDaSessao,
         empresaDaSessao: empresaDaSessao,
+        licenciadoDaSessao: licenciadoDaSessao,
       ));
     } catch (e, s) {
       addError(e, s);
@@ -70,7 +74,12 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     try {
       await _deslogar.call();
       emit(
-        state.copyWith(statusAutenticacao: StatusAutenticacao.naoAutenticao),
+        state.copyWith(
+          statusAutenticacao: StatusAutenticacao.naoAutenticao,
+          usuarioDaSessao: null,
+          empresaDaSessao: null,
+          licenciadoDaSessao: null,
+        ),
       );
     } catch (e, s) {
       addError(e, s);

@@ -5,18 +5,21 @@ import 'package:produtos/data/remote/categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
+import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
 import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
 import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
+import 'package:produtos/data/repositorios/produtos_repository.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_marcas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_remote_data_source.dart';
+import 'package:produtos/domain/data/remote/i_produtos_remote_data_source.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/repositorios.dart';
 import 'package:produtos/use_cases.dart';
@@ -52,6 +55,10 @@ void _data() {
   sl.registerFactory<IReferenciasRemoteDataSource>(
     () => ReferenciasRemoteDatasource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IProdutosRemoteDataSource>(
+    () => ProdutosRemoteDatasource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -77,6 +84,10 @@ void _repositores() {
 
   sl.registerFactory<IReferenciasRepository>(
     () => ReferenciasRepository(referenciasRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IProdutosRepository>(
+    () => ProdutosRepository(produtosRemoteDataSource: sl()),
   );
 }
 
@@ -187,6 +198,23 @@ void _usesCases() {
   sl.registerFactory<RecuperarReferencias>(
     () => RecuperarReferencias(referenciasRepository: sl()),
   );
+
+  // Produtos Use Cases
+  sl.registerFactory<RecuperarProdutos>(
+    () => RecuperarProdutos(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<CriarProduto>(
+    () => CriarProduto(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<AtualizarProduto>(
+    () => AtualizarProduto(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<ExcluirProduto>(
+    () => ExcluirProduto(produtosRepository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -213,6 +241,10 @@ void _presentantion() {
   sl.registerFactory<MarcaBloc>(() => MarcaBloc(sl(), sl(), sl()));
 
   sl.registerFactory<ReferenciasBloc>(() => ReferenciasBloc(sl()));
+
+  sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
+
+  sl.registerFactory<ProdutoBloc>(() => ProdutoBloc(sl(), sl(), sl(), sl()));
 
   sl.registerFactory<ReferenciaCadastroBloc>(
     () => ReferenciaCadastroBloc(sl(), sl(), sl()),

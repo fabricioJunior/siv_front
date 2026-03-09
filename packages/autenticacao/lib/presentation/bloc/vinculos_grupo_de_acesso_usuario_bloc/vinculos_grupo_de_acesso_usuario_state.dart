@@ -77,3 +77,36 @@ class VinculosGrupoDeAcessoUsuarioVincularFalha
 
   VinculosGrupoDeAcessoUsuarioVincularFalha({required this.idUsuario});
 }
+
+class VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso
+    extends VinculosGrupoDeAcessoUsuarioState {
+  @override
+  final int? idUsuario;
+
+  VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso({required this.idUsuario});
+}
+
+class VinculosGrupoDeAcessoUsuarioDesvincularSucesso
+    extends VinculosGrupoDeAcessoUsuarioState {
+  @override
+  final List<VinculoGrupoDeAcessoEUsuario> vinculos;
+  @override
+  final int? idUsuario;
+
+  @override
+  final List<Empresa> empresas;
+
+  VinculosGrupoDeAcessoUsuarioDesvincularSucesso({
+    required this.vinculos,
+    required this.idUsuario,
+    required this.empresas,
+  });
+}
+
+class VinculosGrupoDeAcessoUsuarioDesvincularFalha
+    extends VinculosGrupoDeAcessoUsuarioState {
+  @override
+  final int? idUsuario;
+
+  VinculosGrupoDeAcessoUsuarioDesvincularFalha({required this.idUsuario});
+}

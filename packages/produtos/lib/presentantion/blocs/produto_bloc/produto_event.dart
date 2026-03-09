@@ -32,3 +32,29 @@ class ProdutoEditou extends ProdutoEvent {
 }
 
 class ProdutoSalvou extends ProdutoEvent {}
+
+class ProdutoCombinacaoSelecao extends Equatable {
+  final int corId;
+  final int tamanhoId;
+
+  const ProdutoCombinacaoSelecao({
+    required this.corId,
+    required this.tamanhoId,
+  });
+
+  @override
+  List<Object?> get props => [corId, tamanhoId];
+}
+
+class ProdutoSalvouCombinacoes extends ProdutoEvent {
+  final int referenciaId;
+  final List<ProdutoCombinacaoSelecao> combinacoes;
+
+  ProdutoSalvouCombinacoes({
+    required this.referenciaId,
+    required this.combinacoes,
+  });
+
+  @override
+  List<Object?> get props => [referenciaId, combinacoes];
+}

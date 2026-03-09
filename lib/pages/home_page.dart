@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
 
@@ -115,56 +116,66 @@ class HomePage extends StatelessWidget {
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                           children: [
-                            _ModuleCard(
-                              icon: Icons.person,
-                              title: 'Usuários',
-                              color: Colors.blue,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/usuarios');
-                              },
-                            ),
-                            _ModuleCard(
-                              icon: Icons.lock,
-                              title: 'Grupos de Acesso',
-                              color: Colors.orange,
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                    context, '/grupos_de_acesso');
-                              },
-                            ),
-                            _ModuleCard(
-                              icon: Icons.business,
-                              title: 'Empresas',
-                              color: Colors.green,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/empresas');
-                              },
-                            ),
-                            _ModuleCard(
-                              icon: Icons.people,
-                              title: 'Pessoas',
-                              color: Colors.pink,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/pessoas');
-                              },
-                            ),
-                            _ModuleCard(
-                              icon: Icons.shopping_bag,
-                              title: 'Produtos',
-                              color: Colors.purple,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/menu_produtos');
-                              },
-                            ),
-                            _ModuleCard(
-                              icon: Icons.settings,
-                              title: 'Configurações',
-                              color: Colors.teal,
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                    context, '/configuracao_smtp');
-                              },
-                            ),
+                            if (PermissaoPorNome.acessoPermitido('ADMFM001'))
+                              PermissaoPorNome(
+                                idComponente: 'ADMFM001',
+                                child: _ModuleCard(
+                                  icon: Icons.person,
+                                  title: 'Usuários',
+                                  color: Colors.blue,
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/usuarios');
+                                  },
+                                ),
+                              ),
+                            if (PermissaoPorNome.acessoPermitido('ADMFM001'))
+                              _ModuleCard(
+                                icon: Icons.lock,
+                                title: 'Grupos de Acesso',
+                                color: Colors.orange,
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, '/grupos_de_acesso');
+                                },
+                              ),
+                            if (PermissaoPorNome.acessoPermitido('ADMFM004'))
+                              _ModuleCard(
+                                icon: Icons.business,
+                                title: 'Empresas',
+                                color: Colors.green,
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/empresas');
+                                },
+                              ),
+                            if (PermissaoPorNome.acessoPermitido('PESFM001'))
+                              _ModuleCard(
+                                icon: Icons.people,
+                                title: 'Pessoas',
+                                color: Colors.pink,
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/pessoas');
+                                },
+                              ),
+                            if (PermissaoPorNome.acessoPermitido('PRODFM001'))
+                              _ModuleCard(
+                                icon: Icons.shopping_bag,
+                                title: 'Produtos',
+                                color: Colors.purple,
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, '/menu_produtos');
+                                },
+                              ),
+                            if (PermissaoPorNome.acessoPermitido('SYSFM001'))
+                              _ModuleCard(
+                                icon: Icons.settings,
+                                title: 'Configurações',
+                                color: Colors.teal,
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, '/configuracao_smtp');
+                                },
+                              ),
                           ],
                         ),
                       ],

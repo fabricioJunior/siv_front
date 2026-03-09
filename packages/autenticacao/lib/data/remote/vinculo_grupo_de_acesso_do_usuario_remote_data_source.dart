@@ -11,7 +11,7 @@ class VinculorGrupoDeAcessoDoUsuarioRemoteDataSource
   });
 
   @override
-  String get path => 'v1/usuario/{id}/grupo-acesso';
+  String get path => 'v1/usuario/{id}/grupo-acesso/{empresaId/grupoId}';
 
   @override
   Future<List<VinculoGrupoDeAcessoComUsuarioDto>>
@@ -50,5 +50,20 @@ class VinculorGrupoDeAcessoDoUsuarioRemoteDataSource
 
     return VinculoGrupoDeAcessoComUsuarioDto.fromJson(
         result.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> desvincularGrupoDeAcessoComUsuario(
+    int idUser,
+    int idGrupoDeAcesso,
+    int idEmpresa,
+  ) {
+    var pathParamenters = {
+      'id': idUser,
+      'empresaId/grupoId': '$idEmpresa/$idGrupoDeAcesso',
+    };
+    return delete(
+      pathParameters: pathParamenters,
+    );
   }
 }

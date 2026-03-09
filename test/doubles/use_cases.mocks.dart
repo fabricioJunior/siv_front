@@ -23,6 +23,8 @@ import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart'
     as _i14;
 import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
     as _i13;
+import 'package:autenticacao/domain/usecases/sincronizar_permissoes_do_usuario.dart'
+    as _i16;
 import 'package:autenticacao/models.dart' as _i15;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -297,4 +299,25 @@ class MockRecuperarEmpresaDaSessao extends _i1.Mock
         ),
         returnValue: _i9.Future<_i15.Empresa?>.value(),
       ) as _i9.Future<_i15.Empresa?>);
+}
+
+/// A class which mocks [SincronizarPermissoesDoUsuario].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSincronizarPermissoesDoUsuario extends _i1.Mock
+    implements _i16.SincronizarPermissoesDoUsuario {
+  MockSincronizarPermissoesDoUsuario() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i9.Future<void> call({required int? idUsuario}) => (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {#idUsuario: idUsuario},
+        ),
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 }

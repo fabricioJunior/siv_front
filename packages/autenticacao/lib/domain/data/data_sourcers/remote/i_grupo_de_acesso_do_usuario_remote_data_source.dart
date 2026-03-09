@@ -11,4 +11,10 @@ abstract class IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource {
       recuperarGrupoDeAcessoDoUsuarioEIdEmpresa(
     int idUsuario,
   );
+
+  Future<void> desvincularGrupoDeAcessoComUsuario(
+    int idUser,
+    int idGrupoDeAcesso,
+    int idEmpresa,
+  );
 }

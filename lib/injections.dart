@@ -8,6 +8,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
@@ -22,10 +23,10 @@ import 'package:siv_front/infra/local_data_sourcers/dtos/licenciado_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
 import 'package:siv_front/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
-import 'package:siv_front/infra/local_data_sourcers/permissoes_local_data_source.dart';
 import 'package:siv_front/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
 import 'package:siv_front/infra/remote_data_sourcers/empresas_remote_data_source.dart';
 import 'package:siv_front/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
+import 'package:siv_front/permissoes/permissoes_controller.dart';
 
 import 'infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
@@ -43,6 +44,7 @@ Future<void> resolverDependenciasApp() async {
       ),
     ),
   );
+
   _localDataSource();
   _remoteDataSources();
   coreInjections();
@@ -52,6 +54,7 @@ Future<void> resolverDependenciasApp() async {
   resolverProdutosInjection();
   resolverSistemaInjections();
   _presentation();
+  sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }
 
 void _remoteDataSources() {
@@ -78,9 +81,7 @@ void _remoteDataSources() {
 void _localDataSource() {
   sl.registerFactory<IUsuarioDaSessaoLocalDataSource>(
       () => UsuarioDaSessaoLocalDataSource(getIsar: _getIsar));
-  sl.registerFactory<IPermissoesLocalDataSource>(
-    () => PermissoesLocalDataSource(getIsar: _getIsar),
-  );
+
   sl.registerFactory<IEmpresaDaSessaoLocalDataSource>(
     () => EmpresaDaSessaoLocalDataSource(
       getIsar: _getIsar,
@@ -95,6 +96,7 @@ void _localDataSource() {
 
 void _presentation() {
   sl.registerLazySingleton(() => AppBloc(
+        sl(),
         sl(),
         sl(),
         sl(),

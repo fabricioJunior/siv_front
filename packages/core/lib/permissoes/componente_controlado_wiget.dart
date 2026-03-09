@@ -2,17 +2,73 @@ import 'package:core/injecoes.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:flutter/material.dart';
 
+class PermissaoPorNome extends StatefulWidget {
+  final String idComponente;
+  final Widget child;
+  final Widget? fallback;
+
+  const PermissaoPorNome({
+    super.key,
+    required this.idComponente,
+    required this.child,
+    this.fallback,
+  });
+
+  @override
+  State<PermissaoPorNome> createState() => _PermissaoPorNomeState();
+
+  static bool acessoPermitido(String idComponente) {
+    return sl<IPermissoesController>().temAcesso(idComponente: idComponente);
+  }
+}
+
+class _PermissaoPorNomeState extends State<PermissaoPorNome> {
+  bool temAcesso = false;
+  bool carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final permitido = await sl<IPermissoesController>().acessoPermitido(
+        idComponente: widget.idComponente,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        carregando = false;
+        temAcesso = permitido;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (carregando) {
+      return const SizedBox.shrink();
+    }
+
+    if (temAcesso) {
+      return widget.child;
+    }
+
+    return widget.fallback ?? const SizedBox.shrink();
+  }
+}
+
 class ComponenteControladoWiget extends StatefulWidget {
-  final String? nome;
-  final int? id;
-  final String? grupo;
+  final String? idComponente;
+  final int? grupoId;
   final Widget child;
 
   const ComponenteControladoWiget({
     super.key,
-    this.grupo,
-    this.id,
-    this.nome,
+    this.idComponente,
+    this.grupoId,
     required this.child,
   });
 
@@ -31,9 +87,8 @@ class _ComponenteControladoWigetState extends State<ComponenteControladoWiget> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sl<IPermissoesController>()
           .acessoPermitido(
-        nomeDoComponente: widget.nome,
-        idComponente: widget.id,
-        grupo: widget.grupo,
+        idComponente: widget.idComponente,
+        grupoId: widget.grupoId,
       )
           .then(
         (value) {
@@ -51,7 +106,7 @@ class _ComponenteControladoWigetState extends State<ComponenteControladoWiget> {
   @override
   Widget build(BuildContext context) {
     if (carregando) {
-      return const CircularProgressIndicator.adaptive();
+      return const SizedBox.shrink();
     }
     if (temAcesso) {
       return widget.child;

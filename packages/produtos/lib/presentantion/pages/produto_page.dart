@@ -1,8 +1,8 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
+import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentation.dart';
 
 class ProdutoPage extends StatefulWidget {
@@ -15,13 +15,13 @@ class ProdutoPage extends StatefulWidget {
 }
 
 class _ProdutoPageState extends State<ProdutoPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _referenciaIdController = TextEditingController();
-  final _idExternoController = TextEditingController();
-  final _corController = TextEditingController();
-  final _tamanhoController = TextEditingController();
   late final ProdutoBloc _bloc;
-  bool _camposHidratados = false;
+
+  int _etapaAtual = 0;
+  Referencia? _referenciaSelecionada;
+  List<Cor> _coresSelecionadas = const [];
+  List<Tamanho> _tamanhosSelecionados = const [];
+  List<_CombinacaoCadastro> _combinacoes = const [];
 
   @override
   void initState() {
@@ -31,10 +31,6 @@ class _ProdutoPageState extends State<ProdutoPage> {
 
   @override
   void dispose() {
-    _referenciaIdController.dispose();
-    _idExternoController.dispose();
-    _corController.dispose();
-    _tamanhoController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -49,13 +45,6 @@ class _ProdutoPageState extends State<ProdutoPage> {
         listenWhen: (previous, current) =>
             previous.produtoStep != current.produtoStep,
         listener: (context, state) {
-          if (!_camposHidratados &&
-              (state.produtoStep == ProdutoStep.carregado ||
-                  state.produtoStep == ProdutoStep.editando)) {
-            _hidratatCamposComState(state);
-            _camposHidratados = true;
-          }
-
           if (state.produtoStep == ProdutoStep.criado ||
               state.produtoStep == ProdutoStep.salvo) {
             Navigator.of(context).pop(true);
@@ -77,92 +66,58 @@ class _ProdutoPageState extends State<ProdutoPage> {
               appBar: AppBar(
                 title: Text(editando ? 'Editar Produto' : 'Novo Produto'),
               ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: carregando ? null : () => _salvar(context, state),
-                icon: carregando
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check),
-                label: Text(carregando ? 'Salvando...' : 'Salvar'),
-              ),
               body: SafeArea(
-                child: carregando && !_camposHidratados
+                child: carregando && _etapaAtual == 2
                     ? const Center(child: CircularProgressIndicator.adaptive())
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (state.id != null) ...[
-                                TextFormField(
-                                  initialValue: state.id!.toString(),
-                                  enabled: false,
-                                  decoration: const InputDecoration(
-                                    labelText: 'ID',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              TextFormField(
-                                controller: _referenciaIdController,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: const InputDecoration(
-                                  labelText: 'Referência ID',
-                                  border: OutlineInputBorder(),
-                                ),
-                                onChanged: (value) {
-                                  context.read<ProdutoBloc>().add(
-                                    ProdutoEditou(
-                                      referenciaId: int.tryParse(value.trim()),
-                                    ),
-                                  );
-                                },
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Informe referência ID';
-                                  }
-                                  if (int.tryParse(value.trim()) == null) {
-                                    return 'Referência ID inválido';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _idExternoController,
-                                decoration: const InputDecoration(
-                                  labelText: 'ID Externo',
-                                  border: OutlineInputBorder(),
-                                ),
-                                onChanged: (value) {
-                                  context.read<ProdutoBloc>().add(
-                                    ProdutoEditou(idExterno: value),
-                                  );
-                                },
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Informe ID externo';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              _buildCorAutocomplete(context, state),
-                              const SizedBox(height: 12),
-                              _buildTamanhoAutocomplete(context, state),
-                            ],
+                    : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: _buildStepper(context),
                           ),
-                        ),
+                          const Divider(height: 1),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(16),
+                              child: _buildConteudoEtapa(context),
+                            ),
+                          ),
+                        ],
                       ),
+              ),
+              bottomNavigationBar: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Row(
+                    children: [
+                      if (_etapaAtual > 0)
+                        OutlinedButton.icon(
+                          onPressed: carregando
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _etapaAtual = _etapaAtual - 1;
+                                  });
+                                },
+                          icon: const Icon(Icons.arrow_back),
+                          label: const Text('Voltar'),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      const Spacer(),
+                      FilledButton.icon(
+                        onPressed: carregando
+                            ? null
+                            : () => _avancarFluxo(context),
+                        icon: Icon(
+                          _etapaAtual == 2 ? Icons.check : Icons.arrow_forward,
+                        ),
+                        label: Text(_labelAcaoPrincipal()),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             );
           },
@@ -171,148 +126,321 @@ class _ProdutoPageState extends State<ProdutoPage> {
     );
   }
 
-  Widget _buildCorAutocomplete(BuildContext context, ProdutoState state) {
-    return Autocomplete<Cor>(
-      initialValue: TextEditingValue(text: _corController.text),
-      optionsBuilder: (textEditingValue) {
-        final query = textEditingValue.text.trim().toLowerCase();
-        if (query.isEmpty) {
-          return state.cores;
-        }
-        return state.cores.where(
-          (cor) => cor.nome.toLowerCase().contains(query),
-        );
-      },
-      displayStringForOption: (cor) => cor.nome,
-      onSelected: (cor) {
-        _corController.text = cor.nome;
-        context.read<ProdutoBloc>().add(ProdutoEditou(corId: cor.id));
-      },
-      fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
-        if (textController.text != _corController.text) {
-          textController.text = _corController.text;
-          textController.selection = TextSelection.collapsed(
-            offset: textController.text.length,
-          );
-        }
+  Widget _buildStepper(BuildContext context) {
+    final theme = Theme.of(context);
+    const titulos = ['1. Seleção', '2. Combinações', '3. Confirmação'];
 
-        return TextFormField(
-          controller: textController,
-          focusNode: focusNode,
-          decoration: const InputDecoration(
-            labelText: 'Cor (Autocomplete)',
-            border: OutlineInputBorder(),
+    return Row(
+      children: List.generate(titulos.length, (index) {
+        final ativo = _etapaAtual == index;
+        final concluido = _etapaAtual > index;
+        final cor = ativo
+            ? theme.colorScheme.primary
+            : concluido
+            ? theme.colorScheme.tertiary
+            : theme.colorScheme.outline;
+
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index < titulos.length - 1 ? 8 : 0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: cor),
+              ),
+              child: Text(
+                titulos[index],
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelLarge?.copyWith(color: cor),
+              ),
+            ),
           ),
-          onChanged: (value) {
-            _corController.text = value;
-            final match = _findCorByNome(state.cores, value);
-            context.read<ProdutoBloc>().add(ProdutoEditou(corId: match?.id));
-          },
-          validator: (_) {
-            if (state.corId == null) {
-              return 'Selecione uma cor';
-            }
-            return null;
-          },
         );
-      },
+      }),
     );
   }
 
-  Widget _buildTamanhoAutocomplete(BuildContext context, ProdutoState state) {
-    return Autocomplete<Tamanho>(
-      initialValue: TextEditingValue(text: _tamanhoController.text),
-      optionsBuilder: (textEditingValue) {
-        final query = textEditingValue.text.trim().toLowerCase();
-        if (query.isEmpty) {
-          return state.tamanhos;
-        }
-        return state.tamanhos.where(
-          (tamanho) => tamanho.nome.toLowerCase().contains(query),
-        );
-      },
-      displayStringForOption: (tamanho) => tamanho.nome,
-      onSelected: (tamanho) {
-        _tamanhoController.text = tamanho.nome;
-        context.read<ProdutoBloc>().add(ProdutoEditou(tamanhoId: tamanho.id));
-      },
-      fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
-        if (textController.text != _tamanhoController.text) {
-          textController.text = _tamanhoController.text;
-          textController.selection = TextSelection.collapsed(
-            offset: textController.text.length,
-          );
-        }
+  Widget _buildConteudoEtapa(BuildContext context) {
+    switch (_etapaAtual) {
+      case 0:
+        return _buildEtapaSelecao();
+      case 1:
+        return _buildEtapaCombinacoes(context);
+      case 2:
+        return _buildEtapaConfirmacao(context);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
-        return TextFormField(
-          controller: textController,
-          focusNode: focusNode,
-          decoration: const InputDecoration(
-            labelText: 'Tamanho (Autocomplete)',
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            _tamanhoController.text = value;
-            final match = _findTamanhoByNome(state.tamanhos, value);
-            context.read<ProdutoBloc>().add(
-              ProdutoEditou(tamanhoId: match?.id),
-            );
+  Widget _buildEtapaSelecao() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Selecione a referência, cores e tamanhos para gerar as combinações.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.unica,
+          referenciasSelecionadasIniciais: _referenciaSelecionada == null
+              ? const []
+              : [_referenciaSelecionada!],
+          onChanged: (selecionadas) {
+            setState(() {
+              _referenciaSelecionada = selecionadas.isEmpty
+                  ? null
+                  : selecionadas.first;
+            });
           },
-          validator: (_) {
-            if (state.tamanhoId == null) {
-              return 'Selecione um tamanho';
-            }
-            return null;
+        ),
+        const SizedBox(height: 12),
+        CorSeletor(
+          modo: CorSeletorModo.multipla,
+          coresSelecionadasIniciais: _coresSelecionadas,
+          onChanged: (selecionadas) {
+            setState(() {
+              _coresSelecionadas = selecionadas;
+              _sincronizarCombinacoes();
+            });
           },
-        );
-      },
+        ),
+        const SizedBox(height: 12),
+        TamanhoSeletor(
+          modo: TamanhoSeletorModo.multipla,
+          tamanhosSelecionadosIniciais: _tamanhosSelecionados,
+          onChanged: (selecionados) {
+            setState(() {
+              _tamanhosSelecionados = selecionados;
+              _sincronizarCombinacoes();
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Prévia: ${_coresSelecionadas.length} cor(es) x ${_tamanhosSelecionados.length} tamanho(s) = ${_coresSelecionadas.length * _tamanhosSelecionados.length} combinação(ões)',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
     );
   }
 
-  Future<void> _salvar(BuildContext context, ProdutoState state) async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    context.read<ProdutoBloc>().add(ProdutoSalvou());
-  }
-
-  void _hidratatCamposComState(ProdutoState state) {
-    _referenciaIdController.text = state.referenciaId?.toString() ?? '';
-    _idExternoController.text = state.idExterno;
-
-    final cor = _findCorById(state.cores, state.corId);
-    final tamanho = _findTamanhoById(state.tamanhos, state.tamanhoId);
-
-    _corController.text = cor?.nome ?? '';
-    _tamanhoController.text = tamanho?.nome ?? '';
-  }
-
-  Cor? _findCorById(List<Cor> cores, int? id) {
-    if (id == null) return null;
-    for (final cor in cores) {
-      if (cor.id == id) return cor;
+  Widget _buildEtapaCombinacoes(BuildContext context) {
+    if (_combinacoes.isEmpty) {
+      return const Text(
+        'Nenhuma combinação gerada. Volte e selecione cores e tamanhos.',
+      );
     }
-    return null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Marque as combinações que deseja cadastrar.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: const [
+              DataColumn(label: Text('Inserir')),
+              DataColumn(label: Text('Cor')),
+              DataColumn(label: Text('Tamanho')),
+            ],
+            rows: _combinacoes.map((item) {
+              return DataRow(
+                selected: item.selecionada,
+                cells: [
+                  DataCell(
+                    Checkbox(
+                      value: item.selecionada,
+                      onChanged: (value) {
+                        setState(() {
+                          item.selecionada = value ?? false;
+                        });
+                      },
+                    ),
+                  ),
+                  DataCell(Text(item.cor.nome)),
+                  DataCell(Text(item.tamanho.nome)),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Selecionadas: ${_combinacoes.where((item) => item.selecionada).length} de ${_combinacoes.length}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
   }
 
-  Tamanho? _findTamanhoById(List<Tamanho> tamanhos, int? id) {
-    if (id == null) return null;
-    for (final tamanho in tamanhos) {
-      if (tamanho.id == id) return tamanho;
-    }
-    return null;
+  Widget _buildEtapaConfirmacao(BuildContext context) {
+    final selecionadas = _combinacoes
+        .where((item) => item.selecionada)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Confirme os dados do cadastro',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Referência'),
+          subtitle: Text(_referenciaSelecionada?.nome ?? '-'),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Total de combinações selecionadas'),
+          subtitle: Text('${selecionadas.length}'),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Combinações que serão cadastradas:',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        ...selecionadas.map(
+          (item) => ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.check_circle_outline, size: 18),
+            title: Text('${item.cor.nome} / ${item.tamanho.nome}'),
+          ),
+        ),
+      ],
+    );
   }
 
-  Cor? _findCorByNome(List<Cor> cores, String nome) {
-    for (final cor in cores) {
-      if (cor.nome == nome) return cor;
+  String _labelAcaoPrincipal() {
+    if (_etapaAtual == 2) {
+      return 'Confirmar cadastro';
     }
-    return null;
+    return 'Próximo';
   }
 
-  Tamanho? _findTamanhoByNome(List<Tamanho> tamanhos, String nome) {
-    for (final tamanho in tamanhos) {
-      if (tamanho.nome == nome) return tamanho;
+  void _avancarFluxo(BuildContext context) {
+    if (_etapaAtual == 0) {
+      if (_referenciaSelecionada == null) {
+        _mostrarMensagem('Selecione uma referência para continuar.');
+        return;
+      }
+      if (_coresSelecionadas.isEmpty) {
+        _mostrarMensagem('Selecione ao menos uma cor.');
+        return;
+      }
+      if (_tamanhosSelecionados.isEmpty) {
+        _mostrarMensagem('Selecione ao menos um tamanho.');
+        return;
+      }
+
+      setState(() {
+        _sincronizarCombinacoes();
+        _etapaAtual = 1;
+      });
+      return;
     }
-    return null;
+
+    if (_etapaAtual == 1) {
+      final temSelecionadas = _combinacoes.any((item) => item.selecionada);
+      if (!temSelecionadas) {
+        _mostrarMensagem('Selecione ao menos uma combinação para continuar.');
+        return;
+      }
+
+      setState(() {
+        _etapaAtual = 2;
+      });
+      return;
+    }
+
+    final referenciaId = _referenciaSelecionada?.id;
+    if (referenciaId == null) {
+      _mostrarMensagem('Referência inválida para cadastro.');
+      return;
+    }
+
+    final selecionadas = _combinacoes
+        .where((item) => item.selecionada)
+        .where((item) => item.cor.id != null && item.tamanho.id != null)
+        .map(
+          (item) => ProdutoCombinacaoSelecao(
+            corId: item.cor.id!,
+            tamanhoId: item.tamanho.id!,
+          ),
+        )
+        .toList();
+
+    if (selecionadas.isEmpty) {
+      _mostrarMensagem(
+        'As combinações selecionadas precisam ter cor e tamanho válidos.',
+      );
+      return;
+    }
+
+    context.read<ProdutoBloc>().add(
+      ProdutoSalvouCombinacoes(
+        referenciaId: referenciaId,
+        combinacoes: selecionadas,
+      ),
+    );
+  }
+
+  void _sincronizarCombinacoes() {
+    final statusAnterior = {
+      for (final item in _combinacoes) item.chave: item.selecionada,
+    };
+
+    final novas = <_CombinacaoCadastro>[];
+
+    for (final cor in _coresSelecionadas) {
+      for (final tamanho in _tamanhosSelecionados) {
+        final chave = _CombinacaoCadastro.gerarChave(cor, tamanho);
+        novas.add(
+          _CombinacaoCadastro(
+            cor: cor,
+            tamanho: tamanho,
+            selecionada: statusAnterior[chave] ?? true,
+          ),
+        );
+      }
+    }
+
+    _combinacoes = novas;
+  }
+
+  void _mostrarMensagem(String mensagem) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensagem)));
+  }
+}
+
+class _CombinacaoCadastro {
+  final Cor cor;
+  final Tamanho tamanho;
+  bool selecionada;
+
+  _CombinacaoCadastro({
+    required this.cor,
+    required this.tamanho,
+    this.selecionada = true,
+  });
+
+  String get chave => gerarChave(cor, tamanho);
+
+  static String gerarChave(Cor cor, Tamanho tamanho) {
+    final corKey = cor.id?.toString() ?? cor.nome;
+    final tamanhoKey = tamanho.id?.toString() ?? tamanho.nome;
+    return '$corKey|$tamanhoKey';
   }
 }

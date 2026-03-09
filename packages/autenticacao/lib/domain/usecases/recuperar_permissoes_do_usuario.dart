@@ -8,7 +8,7 @@ class RecuperarPermissoesDoUsuario {
     required IPermissoesRepository permissoesRepository,
   }) : _permissoesRepository = permissoesRepository;
 
-  Future<Iterable<Permissao>> call(int idUsuario) async {
+  Future<Iterable<PermissaoDoUsuario>> call(int idUsuario) async {
     return _permissoesRepository.recuperarPermissoesDoUsuario(idUsuario);
   }
 }

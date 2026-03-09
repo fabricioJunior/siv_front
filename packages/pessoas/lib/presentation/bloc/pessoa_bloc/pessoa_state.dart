@@ -37,6 +37,8 @@ class PessoaState extends Equatable {
 
   final TipoFuncionario? tipoFuncionario;
 
+  final String? funcionarioNome;
+
   final int? funcionarioEmpresaId;
 
   final String? funcionarioEmpresaNome;
@@ -60,6 +62,7 @@ class PessoaState extends Equatable {
     this.dataDeNascimento,
     this.pessoa,
     this.tipoFuncionario,
+    this.funcionarioNome,
     this.funcionarioEmpresaId,
     this.funcionarioEmpresaNome,
     this.funcionarioInativo = false,
@@ -84,6 +87,7 @@ class PessoaState extends Equatable {
         dataDeNascimento = pessoa.dataDeNascimento,
         documento = pessoa.documento,
         tipoFuncionario = null,
+        funcionarioNome = null,
         funcionarioEmpresaId = null,
         funcionarioEmpresaNome = null,
         funcionarioInativo = false,
@@ -107,6 +111,7 @@ class PessoaState extends Equatable {
     PessoaStep? pessoaStep,
     Pessoa? pessoa,
     TipoFuncionario? tipoFuncionario,
+    String? funcionarioNome,
     int? funcionarioEmpresaId,
     String? funcionarioEmpresaNome,
     bool? funcionarioInativo,
@@ -129,6 +134,7 @@ class PessoaState extends Equatable {
       pessoaStep: pessoaStep ?? this.pessoaStep,
       pessoa: pessoa ?? this.pessoa,
       tipoFuncionario: tipoFuncionario ?? this.tipoFuncionario,
+      funcionarioNome: funcionarioNome ?? this.funcionarioNome,
       funcionarioEmpresaId: funcionarioEmpresaId ?? this.funcionarioEmpresaId,
       funcionarioEmpresaNome:
           funcionarioEmpresaNome ?? this.funcionarioEmpresaNome,
@@ -152,6 +158,7 @@ class PessoaState extends Equatable {
         uf,
         dataDeNascimento,
         tipoFuncionario,
+        funcionarioNome,
         funcionarioEmpresaId,
         funcionarioEmpresaNome,
         funcionarioInativo,

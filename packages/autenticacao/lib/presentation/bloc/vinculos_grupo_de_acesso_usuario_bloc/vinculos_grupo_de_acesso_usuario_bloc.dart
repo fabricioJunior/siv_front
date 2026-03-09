@@ -12,16 +12,19 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
   final RecuperarVinculosGrupoDeAcessoDoUsuario
       _recuperarVinculosGrupoDeAcessoDoUsuario;
   final VincularUsuarioAoGrupoDeAcesso _vincularGrupoDeAcessoAoUsuario;
+  final DesvincularUsuarioDoGrupoDeAcesso _desvincularGrupoDeAcessoDoUsuario;
 
   final RecuperarEmpresas _recuperarEmpresas;
 
   VinculosGrupoDeAcessoUsuarioBloc(
       this._recuperarVinculosGrupoDeAcessoDoUsuario,
       this._recuperarEmpresas,
-      this._vincularGrupoDeAcessoAoUsuario)
+      this._vincularGrupoDeAcessoAoUsuario,
+      this._desvincularGrupoDeAcessoDoUsuario)
       : super(VinculosGrupoDeAcessoUsuarioInitial()) {
     on<VinculosGrupoDeAcessoIniciou>(_onVinculosGrupoDeAcessoIniciou);
     on<VinculosGrupoDeAcessoVinculou>(_onVinculosGrupoDeAcessoVinculou);
+    on<VinculosGrupoDeAcessoDesvinculou>(_onVinculosGrupoDeAcessoDesvinculou);
   }
 
   FutureOr<void> _onVinculosGrupoDeAcessoIniciou(
@@ -88,6 +91,45 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
       emit(VinculosGrupoDeAcessoUsuarioVincularFalha(
         idUsuario: state.idUsuario,
       ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onVinculosGrupoDeAcessoDesvinculou(
+    VinculosGrupoDeAcessoDesvinculou event,
+    Emitter<VinculosGrupoDeAcessoUsuarioState> emit,
+  ) async {
+    try {
+      emit(
+        VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso(
+          idUsuario: state.idUsuario,
+        ),
+      );
+
+      await _desvincularGrupoDeAcessoDoUsuario.call(
+        idUsuario: state.idUsuario!,
+        idGrupoDeAcesso: event.idGrupoDeAcesso,
+        idEmpresa: event.idEmpresa,
+      );
+
+      var vinculosDoUsuario =
+          await _recuperarVinculosGrupoDeAcessoDoUsuario.call(
+        idUsuario: state.idUsuario!,
+      );
+
+      emit(
+        VinculosGrupoDeAcessoUsuarioDesvincularSucesso(
+          vinculos: vinculosDoUsuario,
+          idUsuario: state.idUsuario!,
+          empresas: state.empresas,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        VinculosGrupoDeAcessoUsuarioDesvincularFalha(
+          idUsuario: state.idUsuario,
+        ),
+      );
       addError(e, s);
     }
   }

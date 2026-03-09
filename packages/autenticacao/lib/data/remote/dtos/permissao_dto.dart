@@ -6,7 +6,7 @@ part 'permissao_dto.g.dart';
 @JsonSerializable()
 class PermissaoDto implements Permissao {
   @override
-  final String? id;
+  final String id;
 
   @override
   final String? nome;

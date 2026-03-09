@@ -6,6 +6,7 @@ import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
+import 'package:produtos/data/remote/codigo_de_barras_remote_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
@@ -13,6 +14,7 @@ import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
 import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
 import 'package:produtos/data/repositorios/produtos_repository.dart';
+import 'package:produtos/data/repositorios/codigo_de_barras_repository.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
@@ -20,6 +22,7 @@ import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.
 import 'package:produtos/domain/data/remote/i_marcas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_produtos_remote_data_source.dart';
+import 'package:produtos/domain/data/remote/i_codigo_de_barras_remotedatasource.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/repositorios.dart';
 import 'package:produtos/use_cases.dart';
@@ -59,6 +62,10 @@ void _data() {
   sl.registerFactory<IProdutosRemoteDataSource>(
     () => ProdutosRemoteDatasource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<ICodigoDeBarrasRemoteDatasource>(
+    () => CodigoDeBarrasRemoteDatasource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -88,6 +95,10 @@ void _repositores() {
 
   sl.registerFactory<IProdutosRepository>(
     () => ProdutosRepository(produtosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<ICodigoDeBarrasRepository>(
+    () => CodigoDeBarrasRepository(codigoDeBarrasRemoteDatasource: sl()),
   );
 }
 
@@ -214,6 +225,14 @@ void _usesCases() {
 
   sl.registerFactory<ExcluirProduto>(
     () => ExcluirProduto(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<CriarCodigoDeBarras>(
+    () => CriarCodigoDeBarras(codigoDeBarrasRepository: sl()),
+  );
+
+  sl.registerFactory<DeletarCodigoDeBarras>(
+    () => DeletarCodigoDeBarras(codigoDeBarrasRepository: sl()),
   );
 }
 

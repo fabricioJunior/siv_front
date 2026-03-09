@@ -23,6 +23,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
     on<ProdutoIniciou>(_onProdutoIniciou);
     on<ProdutoEditou>(_onProdutoEditou);
     on<ProdutoSalvou>(_onProdutoSalvou);
+    on<ProdutoSalvouCombinacoes>(_onProdutoSalvouCombinacoes);
   }
 
   FutureOr<void> _onProdutoIniciou(
@@ -153,6 +154,66 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         state.copyWith(
           produtoStep: ProdutoStep.falha,
           erroMensagem: 'Falha ao salvar produto.',
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onProdutoSalvouCombinacoes(
+    ProdutoSalvouCombinacoes event,
+    Emitter<ProdutoState> emit,
+  ) async {
+    try {
+      if (event.combinacoes.isEmpty) {
+        emit(
+          state.copyWith(
+            produtoStep: ProdutoStep.falha,
+            erroMensagem: 'Selecione ao menos uma combinação para cadastrar.',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(produtoStep: ProdutoStep.carregando, erroMensagem: null),
+      );
+
+      Produto? ultimoCriado;
+
+      for (final combinacao in event.combinacoes) {
+        ultimoCriado = await _criarProduto.call(
+          referenciaId: event.referenciaId,
+          idExterno:
+              '${event.referenciaId}-${combinacao.corId}-${combinacao.tamanhoId}',
+          corId: combinacao.corId,
+          tamanhoId: combinacao.tamanhoId,
+        );
+      }
+
+      if (ultimoCriado == null) {
+        emit(
+          state.copyWith(
+            produtoStep: ProdutoStep.falha,
+            erroMensagem: 'Nenhuma combinação foi cadastrada.',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        ProdutoState.fromModel(
+          ultimoCriado,
+          step: ProdutoStep.criado,
+          cores: state.cores,
+          tamanhos: state.tamanhos,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          produtoStep: ProdutoStep.falha,
+          erroMensagem: 'Falha ao salvar combinações de produto.',
         ),
       );
       addError(e, s);

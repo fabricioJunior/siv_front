@@ -94,8 +94,28 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
                       final empresasFiltradas = _filtrarEmpresas(empresas);
 
                       if (empresasFiltradas.isEmpty) {
-                        return const Center(
-                          child: Text('Nenhuma empresa encontrada.'),
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Nenhuma empresa disponível para seleção.',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                key: const Key(
+                                    'selecionar_empresa_cadastrar_button'),
+                                onPressed: () async {
+                                  await Navigator.of(context)
+                                      .pushNamed('/empresa');
+                                  _bloc.add(EmpresasIniciou());
+                                },
+                                icon: const Icon(Icons.add_business_outlined),
+                                label: const Text('Cadastrar empresa'),
+                              ),
+                            ],
+                          ),
                         );
                       }
 

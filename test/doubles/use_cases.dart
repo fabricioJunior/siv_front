@@ -8,5 +8,6 @@ import 'package:mockito/annotations.dart';
   Deslogar,
   RecuperarUsuarioDaSessao,
   RecuperarEmpresaDaSessao,
+  SincronizarPermissoesDoUsuario,
 ])
 void main() {}

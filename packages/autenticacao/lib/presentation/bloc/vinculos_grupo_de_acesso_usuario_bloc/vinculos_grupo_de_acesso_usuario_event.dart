@@ -17,3 +17,14 @@ class VinculosGrupoDeAcessoVinculou extends VinculosGrupoDeAcessoUsuarioEvent {
     required this.idEmpresa,
   });
 }
+
+class VinculosGrupoDeAcessoDesvinculou
+    extends VinculosGrupoDeAcessoUsuarioEvent {
+  final int idGrupoDeAcesso;
+  final int idEmpresa;
+
+  VinculosGrupoDeAcessoDesvinculou({
+    required this.idGrupoDeAcesso,
+    required this.idEmpresa,
+  });
+}

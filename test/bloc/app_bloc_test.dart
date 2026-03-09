@@ -21,6 +21,9 @@ final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
 final RecuperarEmpresaDaSessao recuperarEmpresaDaSessao =
     MockRecuperarEmpresaDaSessao();
 
+final SincronizarPermissoesDoUsuario sincronizarPermissoesDoUsuario =
+    MockSincronizarPermissoesDoUsuario();
+
 class MockRecuperarLicenciadoDaSessao extends Mock
     implements RecuperarLicenciadoDaSessao {}
 
@@ -52,6 +55,7 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
     },
@@ -82,6 +86,7 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
     },
@@ -109,6 +114,7 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
     },

@@ -23,7 +23,8 @@ class VinculosGrupoDeAcessoComUsuarioPage extends StatelessWidget {
             VinculosGrupoDeAcessoUsuarioState>(
           builder: (context, state) {
             if (state is VinculosGrupoDeAcessoUsuarioCarregarSucesso ||
-                state is VinculosGrupoDeAcessoUsuarioVincularSucesso) {
+                state is VinculosGrupoDeAcessoUsuarioVincularSucesso ||
+                state is VinculosGrupoDeAcessoUsuarioDesvincularSucesso) {
               return FloatingActionButton(
                 child: const Icon(Icons.add),
                 onPressed: () {
@@ -42,7 +43,8 @@ class VinculosGrupoDeAcessoComUsuarioPage extends StatelessWidget {
               final theme = Theme.of(context);
 
               if (state is VinculosGrupoDeAcessoUsuarioCarregarEmProgresso ||
-                  state is VinculosGrupoDeAcessoUsuarioVincularEmProgresso) {
+                  state is VinculosGrupoDeAcessoUsuarioVincularEmProgresso ||
+                  state is VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
@@ -146,6 +148,18 @@ class VinculosGrupoDeAcessoComUsuarioPage extends StatelessWidget {
         ),
         title: Text(vinculo.grupoDeAcesso?.nome ?? 'Grupo não informado'),
         subtitle: Text(vinculo.empresa?.nome ?? 'Empresa não informada'),
+        trailing: IconButton(
+          tooltip: 'Excluir vínculo',
+          onPressed: () {
+            context.read<VinculosGrupoDeAcessoUsuarioBloc>().add(
+                  VinculosGrupoDeAcessoDesvinculou(
+                    idGrupoDeAcesso: vinculo.grupoDeAcesso!.id!,
+                    idEmpresa: vinculo.idEmpresa!,
+                  ),
+                );
+          },
+          icon: const Icon(Icons.delete_outline),
+        ),
       ),
     );
   }

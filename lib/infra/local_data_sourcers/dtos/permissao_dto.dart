@@ -7,7 +7,7 @@ part 'permissao_dto.g.dart';
 @Collection(ignore: {'props'})
 class PermissaoDto implements Permissao, IsarDto {
   @override
-  final String? id;
+  final String id;
 
   @override
   final String? nome;
@@ -22,7 +22,7 @@ class PermissaoDto implements Permissao, IsarDto {
   });
 
   @override
-  Id get dataBaseId => fastHash(id ?? 'null');
+  Id get dataBaseId => fastHash(id);
 
   @override
   List<Object?> get props => [id, nome, descontinuado];

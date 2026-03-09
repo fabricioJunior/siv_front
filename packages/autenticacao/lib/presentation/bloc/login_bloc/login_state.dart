@@ -60,8 +60,9 @@ class LoginAdicionarSenhaSucesso extends LoginState {
 
 class LoginAutenticarEmProgresso extends LoginState {
   LoginAutenticarEmProgresso(
-    super.fromLastState,
-  ) : super.fromLastState();
+    super.fromLastState, {
+    super.idEmpresa,
+  }) : super.fromLastState();
 }
 
 class LoginAutenticarSucesso extends LoginState {

@@ -1,13 +1,14 @@
-import 'package:autenticacao/domain/data/data_sourcers/local/i_permissoes_local_data_source.dart';
+import 'package:autenticacao/domain/data/data_sourcers/local/i_permissoes_do_usuario_local_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_permissoes_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_permissoes_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_permissoes_repository.dart';
 import 'package:autenticacao/domain/models/permissao.dart';
+import 'package:autenticacao/domain/models/permissao_do_usuario.dart';
 
 class PermissoesRepository implements IPermissoesRepository {
   final IPermissoesRemoteDataSource _permissoesRemoteDataSource;
-  final IPermissoesLocalDataSource _permissoesLocalDataSource;
+  final IPermissoesDoUsuarioLocalDataSource _permissoesLocalDataSource;
   final IPermissoesDoUsuarioRemoteDataSource
       _permissoesDoUsuarioRemoteDataSource;
   final IPermissoesDoGrupoAcessoRemoteDataSource
@@ -26,7 +27,7 @@ class PermissoesRepository implements IPermissoesRepository {
   }
 
   @override
-  Future<Iterable<Permissao>> recuperarPermissoesDoUsuario(
+  Future<Iterable<PermissaoDoUsuario>> recuperarPermissoesDoUsuario(
       int idUsuario) async {
     return _permissoesLocalDataSource.fetchAll();
   }

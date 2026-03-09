@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:autenticacao/data/local/dtos/token_dto.dart';
+import 'package:autenticacao/data/local/dtos/permissao_do_usuario_dto.dart';
+import 'package:autenticacao/data/local/permissoes_do_usuario_local_data_source.dart';
 import 'package:autenticacao/data/local_data_sources.dart';
 import 'package:autenticacao/data/remote/vinculo_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/data/remote/grupos_de_acesso_remote_data_source.dart';
@@ -9,8 +11,10 @@ import 'package:autenticacao/data/remote_data_sourcers.dart';
 import 'package:autenticacao/data/repositories/empresas_repository.dart';
 import 'package:autenticacao/data/repositories/grupos_de_acesso_repository.dart';
 import 'package:autenticacao/data/repositories/licenciados_repository.dart';
+import 'package:autenticacao/data/repositories/permissoes_do_usuario_repository.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
+import 'package:autenticacao/domain/data/data_sourcers/local/i_permissoes_do_usuario_local_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_licenciados_remote_data_source.dart';
@@ -18,11 +22,11 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_dat
 import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart';
+import 'package:autenticacao/domain/data/repositories/i_permissoes_do_usuario_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_permissoes_do_grupo_de_acesso.dart';
-import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
@@ -38,7 +42,6 @@ import 'package:http/http.dart';
 
 import 'data/remote/permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'data/remote/permissoes_do_usuario_remote_data_source.dart';
-import 'data/remote/licenciados_remote_data_source.dart';
 import 'data/repositories/permissoes_repository.dart';
 import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
@@ -58,8 +61,8 @@ void resolverDependenciasAutenticacao() {
 }
 
 void _presentation() {
-  sl.registerSingleton<LoginBloc>(
-    LoginBloc(
+  sl.registerFactory<LoginBloc>(
+    () => LoginBloc(
       sl(),
       sl(),
       sl(),
@@ -97,6 +100,7 @@ void _presentation() {
 
   sl.registerFactory<VinculosGrupoDeAcessoUsuarioBloc>(
     () => VinculosGrupoDeAcessoUsuarioBloc(
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -211,6 +215,13 @@ void _usesCases() {
       repository: sl(),
     ),
   );
+
+  sl.registerFactory<DesvincularUsuarioDoGrupoDeAcesso>(
+    () => DesvincularUsuarioDoGrupoDeAcesso(
+      repository: sl(),
+    ),
+  );
+
   sl.registerFactory<RecuperarVinculosGrupoDeAcessoDoUsuario>(
     () => RecuperarVinculosGrupoDeAcessoDoUsuario(
       repository: sl(),
@@ -231,6 +242,11 @@ void _usesCases() {
   sl.registerFactory<RecuperarEmpresaDaSessao>(
     () => RecuperarEmpresaDaSessao(empresasRepository: sl()),
   );
+
+  sl.registerFactory<SincronizarPermissoesDoUsuario>(
+      () => SincronizarPermissoesDoUsuario(
+            repository: sl(),
+          ));
 }
 
 void _repositories() {
@@ -255,6 +271,13 @@ void _repositories() {
       sl(),
       sl(),
       permissoesRemoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IPermissoesDoUsuarioRepository>(
+    () => PermissoesDoUsuarioRepository(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
     ),
   );
 
@@ -284,6 +307,10 @@ void _repositories() {
 void _localData() {
   sl.registerFactory<ITokenLocalDataSource>(
     () => TokenLocalDataSource(getIsar: _getIsar),
+  );
+
+  sl.registerFactory<IPermissoesDoUsuarioLocalDataSource>(
+    () => PermissoesDoUsuarioLocalDataSource(getIsar: _getIsar),
   );
 }
 
@@ -375,6 +402,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
   }
   List<CollectionSchema<dynamic>> schemas = [
     TokenDtoSchema,
+    PermissaoDoUsuarioDtoSchema,
   ];
 
   Isar isar = Isar.getInstance(instanceName) ??

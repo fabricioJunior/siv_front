@@ -17,6 +17,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
   final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
   final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
+  final SincronizarPermissoesDoUsuario _sincronizarPermissoesDoUsuario;
 
   final ApiBaseUrlConfig _apiBaseUrlConfig;
 
@@ -30,6 +31,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._onDesautenticado,
     this._recuperarLicenciadoDaSessao,
     this._recuperarEmpresaDaSessao,
+    this._sincronizarPermissoesDoUsuario,
     this._apiBaseUrlConfig,
   ) : super(const AppState()) {
     _onAutenticacoSubscription = _onAutenticado
@@ -51,17 +53,20 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final empresaDaSessao = event.token.idEmpresa == null
           ? null
           : await _recuperarEmpresaDaSessao.call();
-
       var licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
+      await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao.id);
+      var permissoes =
+          await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao!.id);
+      var permissoesMap = _mapPermissoes(permissoes);
       if (event.token.idEmpresa == null) {}
       emit(state.copyWith(
-        statusAutenticacao: event.token.idEmpresa == null
-            ? StatusAutenticacao.autenticando
-            : StatusAutenticacao.autenticado,
-        usuarioDaSessao: usuarioDaSessao,
-        empresaDaSessao: empresaDaSessao,
-        licenciadoDaSessao: licenciadoDaSessao,
-      ));
+          statusAutenticacao: event.token.idEmpresa == null
+              ? StatusAutenticacao.autenticando
+              : StatusAutenticacao.autenticado,
+          usuarioDaSessao: () => usuarioDaSessao,
+          empresaDaSessao: () => empresaDaSessao,
+          licenciadoDaSessao: () => licenciadoDaSessao,
+          permissoesDoUsuario: permissoesMap));
     } catch (e, s) {
       addError(e, s);
     }
@@ -76,9 +81,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       emit(
         state.copyWith(
           statusAutenticacao: StatusAutenticacao.naoAutenticao,
-          usuarioDaSessao: null,
-          empresaDaSessao: null,
-          licenciadoDaSessao: null,
+          usuarioDaSessao: () => null,
+          empresaDaSessao: () => null,
+          licenciadoDaSessao: () => null,
         ),
       );
     } catch (e, s) {
@@ -106,18 +111,32 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           estaAutenticado ? await _recuperarUsuarioDaSessao() : null;
       final empresaDaSessao =
           estaAutenticado ? await _recuperarEmpresaDaSessao.call() : null;
+      Map<String, PermissaoDoUsuario>? permissoesMap;
+      if (estaAutenticado) {
+        var permissoes = await _sincronizarPermissoesDoUsuario(
+            idUsuario: usuarioDaSessao!.id);
+        permissoesMap = _mapPermissoes(permissoes);
+      }
       emit(
         state.copyWith(
-          usuarioDaSessao: usuarioDaSessao,
-          empresaDaSessao: empresaDaSessao,
+          usuarioDaSessao: () => usuarioDaSessao,
+          empresaDaSessao: () => empresaDaSessao,
           statusAutenticacao: estaAutenticado
               ? StatusAutenticacao.autenticado
               : StatusAutenticacao.naoAutenticao,
+          permissoesDoUsuario: estaAutenticado ? permissoesMap : null,
         ),
       );
     } catch (e, s) {
       addError(e, s);
     }
+  }
+
+  Map<String, PermissaoDoUsuario> _mapPermissoes(
+    Iterable<PermissaoDoUsuario> permissoes,
+  ) {
+    return Map.fromEntries(permissoes
+        .map((permissao) => MapEntry(permissao.componenteId, permissao)));
   }
 
   @override

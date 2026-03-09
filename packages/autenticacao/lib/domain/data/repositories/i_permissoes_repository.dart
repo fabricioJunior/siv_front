@@ -1,4 +1,4 @@
-import 'package:autenticacao/domain/models/permissao.dart';
+import 'package:autenticacao/models.dart';
 
 abstract class IPermissoesRepository {
   Future<void> syncPermissoesDoUsuario(int idUsuario);
@@ -10,7 +10,8 @@ abstract class IPermissoesRepository {
     String? nomeGrupo,
   });
 
-  Future<Iterable<Permissao>> recuperarPermissoesDoUsuario(int idUsuario);
+  Future<Iterable<PermissaoDoUsuario>> recuperarPermissoesDoUsuario(
+      int idUsuario);
 
   Future<Iterable<Permissao>> recuperarPermissoes();
 

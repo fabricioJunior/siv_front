@@ -17,6 +17,12 @@ abstract class IGruposDeAcessoRepository {
     int idEmpresa,
   );
 
+  Future<void> desvincularGrupoDeAcessoComUsuario(
+    int idUsuario,
+    int idGrupoDeAcesso,
+    int idEmpresa,
+  );
+
   Future<GrupoDeAcesso> novoGrupoDeAcesso(String nome);
 
   Future<GrupoDeAcesso> salvarGrupoDeAcesso(

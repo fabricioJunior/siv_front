@@ -74,6 +74,20 @@ class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
   }
 
   @override
+  Future<void> desvincularGrupoDeAcessoComUsuario(
+    int idUsuario,
+    int idGrupoDeAcesso,
+    int idEmpresa,
+  ) {
+    return vinculosGrupoDeAcessoUsuarioRemoteDataSource
+        .desvincularGrupoDeAcessoComUsuario(
+      idUsuario,
+      idGrupoDeAcesso,
+      idEmpresa,
+    );
+  }
+
+  @override
   Future<void> deleteGrupoDeAcesso(int idGrupoDeAcesso) {
     return gruposDeAcessoRemoteDataSource.excluirGrupoDeAcesso(
         idGrupoDeAcesso: idGrupoDeAcesso);

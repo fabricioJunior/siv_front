@@ -54,15 +54,29 @@ class MyApp extends StatelessWidget {
                   routeToTest!,
                 );
               } else {
-                Navigator.of(navigatorKey.currentContext!).pushNamed('/home');
+                Navigator.of(navigatorKey.currentContext!)
+                    .pushNamedAndRemoveUntil('/home', (route) => false);
               }
             }
 
             if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
-              Navigator.of(navigatorKey.currentContext!).pushNamed('/login');
+              Navigator.of(navigatorKey.currentContext!)
+                  .pushNamedAndRemoveUntil('/login', (route) => false);
             }
           },
-          child: child,
+          child: BlocBuilder<AppBloc, AppState>(
+            bloc: sl<AppBloc>(),
+            builder: (context, state) {
+              // if (state.statusAutenticacao == StatusAutenticacao.autenticando) {
+              //   return const Scaffold(
+              //     body: Center(
+              //       child: CircularProgressIndicator.adaptive(),
+              //     ),
+              //   );
+              // }
+              return child ?? const SizedBox.shrink();
+            },
+          ),
         );
       },
       theme: ThemeData(

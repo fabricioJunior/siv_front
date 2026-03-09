@@ -1,5 +1,5 @@
-import 'package:autenticacao/domain/models/permissao.dart';
+import 'package:autenticacao/models.dart';
 
 abstract class IPermissoesDoUsuarioRemoteDataSource {
-  Future<List<Permissao>> getPermissoes(int idUsuario);
+  Future<List<PermissaoDoUsuario>> getPermissoes(int idUsuario);
 }

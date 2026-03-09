@@ -1,7 +1,9 @@
+import 'dart:collection';
+
 import 'package:autenticacao/models.dart';
 import 'package:flutter/material.dart';
 
-class SelecionarPermissaoModal extends StatelessWidget {
+class SelecionarPermissaoModal extends StatefulWidget {
   static Future<List<Permissao>?> show(
     BuildContext context,
     List<Permissao> permissoes,
@@ -19,7 +21,68 @@ class SelecionarPermissaoModal extends StatelessWidget {
   const SelecionarPermissaoModal({required this.permissoes, super.key});
 
   @override
+  State<SelecionarPermissaoModal> createState() =>
+      _SelecionarPermissaoModalState();
+}
+
+class _SelecionarPermissaoModalState extends State<SelecionarPermissaoModal> {
+  final Set<String> _categoriasExpandidas = <String>{};
+
+  Map<String, List<Permissao>> _classificarPermissoes(List<Permissao> itens) {
+    final grupos = SplayTreeMap<String, List<Permissao>>();
+
+    for (final permissao in itens) {
+      final categoria = _extrairCategoria(permissao.id);
+      grupos.putIfAbsent(categoria, () => <Permissao>[]).add(permissao);
+    }
+
+    for (final lista in grupos.values) {
+      lista.sort((a, b) => a.id.compareTo(b.id));
+    }
+
+    return grupos;
+  }
+
+  String _extrairCategoria(String id) {
+    if (id.length < 3) return 'OUT';
+    return id.substring(0, 3).toUpperCase();
+  }
+
+  String _tituloCategoria(String categoria) {
+    const titulos = <String, String>{
+      'ADM': 'Administração',
+      'BAL': 'Balanços',
+      'CON': 'Consignações',
+      'FCR': 'Faturas a Receber',
+      'FCX': 'Caixa',
+      'FUN': 'Funcionários',
+      'GER': 'Geral',
+      'IMP': 'Importações',
+      'PED': 'Pedidos',
+      'PES': 'Pessoas',
+      'PRD': 'Produtos',
+      'ROM': 'Romaneios',
+      'SYS': 'Sistema',
+      'OUT': 'Outros',
+    };
+
+    return '${titulos[categoria] ?? 'Outros'} ($categoria)';
+  }
+
+  void _toggleCategoria(String categoria) {
+    setState(() {
+      if (_categoriasExpandidas.contains(categoria)) {
+        _categoriasExpandidas.remove(categoria);
+      } else {
+        _categoriasExpandidas.add(categoria);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final permissoesClassificadas = _classificarPermissoes(widget.permissoes);
+
     return Column(
       children: [
         const Padding(
@@ -41,27 +104,54 @@ class SelecionarPermissaoModal extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               key: const Key('selecionar_todas_permissoes_button'),
-              onPressed: permissoes.isEmpty
+              onPressed: widget.permissoes.isEmpty
                   ? null
                   : () {
-                      Navigator.of(context).pop(permissoes);
+                      Navigator.of(context).pop(widget.permissoes);
                     },
               icon: const Icon(Icons.select_all),
               label: const Text('Selecionar todos'),
             ),
           ),
         ),
-        const SizedBox(
-          height: 20,
-        ),
+        const SizedBox(height: 20),
         Flexible(
-          child: ListView.builder(
-            itemCount: permissoes.length,
-            itemBuilder: (context, index) {
-              var permissao = permissoes[index];
-              return _permissaoCard(context, permissao);
-            },
+          child: ListView(
             shrinkWrap: true,
+            children: [
+              for (final entry in permissoesClassificadas.entries) ...[
+                InkWell(
+                  onTap: () => _toggleCategoria(entry.key),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _tituloCategoria(entry.key),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                        Icon(
+                          _categoriasExpandidas.contains(entry.key)
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_categoriasExpandidas.contains(entry.key))
+                  ...entry.value
+                      .map((permissao) => _permissaoCard(context, permissao)),
+                const SizedBox(height: 8),
+              ],
+            ],
           ),
         ),
       ],

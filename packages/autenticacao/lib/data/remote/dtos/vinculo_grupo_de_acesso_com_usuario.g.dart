@@ -14,3 +14,12 @@ VinculoGrupoDeAcessoComUsuarioDto _$VinculoGrupoDeAcessoComUsuarioDtoFromJson(
       empresaId: (json['empresaId'] as num).toInt(),
       usuarioId: (json['usuarioId'] as num).toInt(),
     );
+
+Map<String, dynamic> _$VinculoGrupoDeAcessoComUsuarioDtoToJson(
+        VinculoGrupoDeAcessoComUsuarioDto instance) =>
+    <String, dynamic>{
+      'grupoId': instance.grupoId,
+      'empresaId': instance.empresaId,
+      'usuarioId': instance.usuarioId,
+      'grupo': instance.grupo,
+    };

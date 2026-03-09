@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/uses_cases.dart';
@@ -125,7 +126,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         state.licenciadoSelecionado!.urlApi,
       );
 
-      emit(LoginAutenticarEmProgresso(state));
+      emit(LoginAutenticarEmProgresso(state, idEmpresa: event.empresa?.id));
       var token = await _criarTokenDeAutenticacao(
         usuario: state.usuario ?? '',
         senha: state.senha ?? '',

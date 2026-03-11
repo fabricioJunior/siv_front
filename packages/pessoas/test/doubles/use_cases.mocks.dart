@@ -8,6 +8,7 @@ import 'dart:async' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:pessoas/domain/models/pessoa.dart' as _i2;
 import 'package:pessoas/domain/usecases/cancelar_ponto.dart' as _i12;
+import 'package:pessoas/domain/usecases/criar_funcionario.dart' as _i14;
 import 'package:pessoas/domain/usecases/criar_pessoa.dart' as _i4;
 import 'package:pessoas/domain/usecases/criar_pontos.dart' as _i11;
 import 'package:pessoas/domain/usecases/recuperar_pessoa.dart' as _i8;
@@ -46,6 +47,16 @@ class _FakePessoa_0 extends _i1.SmartFake implements _i2.Pessoa {
 
 class _FakePonto_1 extends _i1.SmartFake implements _i3.Ponto {
   _FakePonto_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeFuncionario_2 extends _i1.SmartFake implements _i3.Funcionario {
+  _FakeFuncionario_2(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -368,4 +379,31 @@ class MockResgatarPontos extends _i1.Mock implements _i13.ResgatarPontos {
         returnValue: _i5.Future<void>.value(),
         returnValueForMissingStub: _i5.Future<void>.value(),
       ) as _i5.Future<void>);
+}
+
+/// A class which mocks [CriarFuncionario].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockCriarFuncionario extends _i1.Mock implements _i14.CriarFuncionario {
+  MockCriarFuncionario() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<_i3.Funcionario> call({required _i3.Funcionario? funcionario}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {#funcionario: funcionario},
+        ),
+        returnValue: _i5.Future<_i3.Funcionario>.value(_FakeFuncionario_2(
+          this,
+          Invocation.method(
+            #call,
+            [],
+            {#funcionario: funcionario},
+          ),
+        )),
+      ) as _i5.Future<_i3.Funcionario>);
 }

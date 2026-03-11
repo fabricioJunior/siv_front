@@ -98,6 +98,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/configuracao_smtp': (context) {
     return ConfiguracaoSTMPPage();
   },
+  '/parametros_empresa': (context) {
+    return EmpresaParametrosPage(
+      idEmpresa: args(context)['empresaId'],
+    );
+  },
 };
 
 Map<String, dynamic> args(BuildContext context) =>

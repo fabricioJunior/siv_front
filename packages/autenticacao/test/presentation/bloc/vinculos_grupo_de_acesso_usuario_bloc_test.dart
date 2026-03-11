@@ -18,6 +18,9 @@ final RecuperarVinculosGrupoDeAcessoDoUsuario
     MockRecuperarVinculosGrupoDeAcessoDoUsuario();
 
 final RecuperarEmpresas recuperarEmpresas = MockRecuperarEmpresas();
+
+final DesvincularUsuarioDoGrupoDeAcesso desvincularUsuarioDoGrupoDeAcesso =
+    MockDesvincularUsuarioDoGrupoDeAcesso();
 late VinculosGrupoDeAcessoUsuarioBloc bloc;
 
 int idUsuario = 1;
@@ -48,6 +51,7 @@ void main() {
       recuperarVinculosGrupoDeAcessoDoUsuario,
       recuperarEmpresas,
       vincularUsuarioAoGrupoDeAcesso,
+      desvincularUsuarioDoGrupoDeAcesso,
     );
   });
 

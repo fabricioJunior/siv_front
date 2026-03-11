@@ -11,5 +11,6 @@ import 'package:pessoas/uses_cases.dart';
   CriarPontos,
   CancelarPonto,
   ResgatarPontos,
+  CriarFuncionario,
 ])
 void main() {}

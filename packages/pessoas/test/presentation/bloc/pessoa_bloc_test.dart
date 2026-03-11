@@ -13,6 +13,7 @@ late PessoaBloc pessoaBloc;
 final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 final SalvarPessoa salvarPessoa = MockSalvarPessoa();
 final CriarPessoa criarPessoa = MockCriarPessoa();
+final CriarFuncionario criarFuncionario = MockCriarFuncionario();
 
 void main() {
   setUp(() {
@@ -20,6 +21,7 @@ void main() {
       recuperarPessoa,
       salvarPessoa,
       criarPessoa,
+      criarFuncionario,
     );
   });
 

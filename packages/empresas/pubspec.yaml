@@ -29,6 +29,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/logo_infinityPay.jpeg
 
   # To add assets to your package, add an assets section, like this:
   # assets:

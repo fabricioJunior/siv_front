@@ -11,6 +11,8 @@ import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart
     as _i2;
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart'
     as _i5;
+import 'package:autenticacao/domain/usecases/grupos_de_acesso/desvincular_usuario_do_grupo_de_acesso.dart'
+    as _i15;
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_vinculos_grupo_de_acesso_do_usuario.dart'
     as _i12;
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/vincular_usuario_ao_grupo_de_acesso.dart'
@@ -356,4 +358,34 @@ class MockRecuperarEmpresas extends _i1.Mock implements _i14.RecuperarEmpresas {
         ),
         returnValue: _i6.Future<List<_i3.Empresa>>.value(<_i3.Empresa>[]),
       ) as _i6.Future<List<_i3.Empresa>>);
+}
+
+/// A class which mocks [DesvincularUsuarioDoGrupoDeAcesso].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockDesvincularUsuarioDoGrupoDeAcesso extends _i1.Mock
+    implements _i15.DesvincularUsuarioDoGrupoDeAcesso {
+  MockDesvincularUsuarioDoGrupoDeAcesso() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<void> call({
+    required int? idUsuario,
+    required int? idGrupoDeAcesso,
+    required int? idEmpresa,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [],
+          {
+            #idUsuario: idUsuario,
+            #idGrupoDeAcesso: idGrupoDeAcesso,
+            #idEmpresa: idEmpresa,
+          },
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 }

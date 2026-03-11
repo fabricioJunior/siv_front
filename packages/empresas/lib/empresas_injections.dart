@@ -1,8 +1,13 @@
 import 'package:core/injecoes.dart';
 import 'package:empresas/data/remote_data_sourcers/empresas_remote_data_source.dart';
+import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
+import 'package:empresas/data/repositories/empresa_parametro_repository.dart';
 import 'package:empresas/data/repositories/empresas_repository.dart';
+import 'package:empresas/domain/data/remote_data_sourcers/i_empresa_parametro_remote_data_source.dart';
 import 'package:empresas/domain/data/remote_data_sourcers/i_empresas_remote_data_source.dart';
+import 'package:empresas/domain/data/repositories/i_empresa_parametro_repository.dart';
 import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
+import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_parametros_bloc.dart';
 import 'package:empresas/presentation/blocs/empresa_bloc/empresa_bloc.dart';
 import 'package:empresas/presentation/blocs/empresas_bloc/empresas_bloc.dart';
 import 'package:empresas/use_cases.dart';
@@ -20,12 +25,24 @@ void _remoteDataSourcers() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<IEmpresaParametroRemoteDataSource>(
+    () => EmpresaParametroRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositories() {
   sl.registerFactory<IEmpresasRepository>(
     () => EmpresasRepository(
       empresasRemoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IEmpresaParametroRepository>(
+    () => EmpresaParametroRepository(
+      remoteDataSource: sl(),
     ),
   );
 }
@@ -54,6 +71,18 @@ void _useCases() {
       empresasRepository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarParametrosEmpresa>(
+    () => RecuperarParametrosEmpresa(
+      repository: sl(),
+    ),
+  );
+
+  sl.registerFactory<AtualizarParametrosEmpresa>(
+    () => AtualizarParametrosEmpresa(
+      repository: sl(),
+    ),
+  );
 }
 
 void _presentantion() {
@@ -64,6 +93,13 @@ void _presentantion() {
   sl.registerFactory<EmpresaBloc>(
     () => EmpresaBloc(
       sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<EmpresaParametrosBloc>(
+    () => EmpresaParametrosBloc(
       sl(),
       sl(),
     ),

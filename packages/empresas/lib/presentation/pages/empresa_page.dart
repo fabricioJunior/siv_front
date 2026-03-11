@@ -43,10 +43,16 @@ class EmpresaPage extends StatelessWidget {
                       case const (EmpresaEditarEmProgresso):
                       case const (EmpresaSalvarSucesso):
                       case const (EmpresaCarregarSucesso):
-                        return _empresaInfos(
-                          context,
-                          state.empresa,
-                          state is! EmpresaEditarEmProgresso,
+                        return Column(
+                          children: [
+                            _configuracoesButton(
+                                context, state.empresa?.id ?? 0),
+                            _empresaInfos(
+                              context,
+                              state.empresa,
+                              state is! EmpresaEditarEmProgresso,
+                            ),
+                          ],
                         );
                       default:
                     }
@@ -60,6 +66,31 @@ class EmpresaPage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _configuracoesButton(
+    BuildContext context,
+    int empresaId,
+  ) =>
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed('/parametros_empresa',
+                  arguments: {'empresaId': empresaId});
+            },
+            child: Row(
+              children: [
+                Icon(Icons.settings),
+                SizedBox(
+                  width: 8,
+                ),
+                Text('Configurações'),
+              ],
+            ),
+          )
+        ],
+      );
 
   Widget _empresaInfos(
     BuildContext context,

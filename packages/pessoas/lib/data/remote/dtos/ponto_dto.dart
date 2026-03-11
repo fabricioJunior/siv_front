@@ -93,7 +93,9 @@ class PontoDto implements Ponto {
   final TipoDePonto? tipo;
 
   @override
-  @JsonKey(name: 'resgatado', fromJson: _stringFromJson)
+  @JsonKey(
+    name: 'resgatado',
+  )
   final int? resgatado;
 
   @override

@@ -95,8 +95,9 @@ class PontoDto implements Ponto {
   @override
   @JsonKey(
     name: 'resgatado',
+    fromJson: _stringFromJson,
   )
-  final int? resgatado;
+  final double? resgatado;
 
   @override
   @JsonKey(name: 'transacaoId')

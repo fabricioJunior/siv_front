@@ -176,6 +176,15 @@ class HomePage extends StatelessWidget {
                                       context, '/configuracao_smtp');
                                 },
                               ),
+                            _ModuleCard(
+                              icon: Icons.payment,
+                              title: 'Pagamentos',
+                              color: Colors.teal,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, '/pagamentos_avulsos');
+                              },
+                            ),
                           ],
                         ),
                       ],

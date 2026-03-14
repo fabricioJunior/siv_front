@@ -11,7 +11,7 @@ abstract class Ponto implements Equatable {
   DateTime? get dtCancelamento;
   TipoDePonto? get tipo;
   int? get transacaoId;
-  int? get resgatado;
+  double? get resgatado;
 
   factory Ponto.create({
     required int id,
@@ -24,7 +24,7 @@ abstract class Ponto implements Equatable {
     DateTime? dtCancelamento,
     TipoDePonto? tipo,
     int? transacaoId,
-    int? resgatado,
+    double? resgatado,
   }) = _PontoImpl;
 
   @override
@@ -66,7 +66,7 @@ class _PontoImpl implements Ponto {
   @override
   final int? transacaoId;
   @override
-  final int? resgatado;
+  final double? resgatado;
 
   _PontoImpl({
     required this.id,

@@ -3,6 +3,7 @@ import 'package:empresas/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
+import 'package:pagamentos/pages.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/pages/home_page.dart';
@@ -56,6 +57,11 @@ Map<String, Widget Function(BuildContext)> routes = {
       idPessoa: args(context)['idPessoa'],
     );
   },
+  '/pessoa_visualizacao': (context) {
+    return PessoaVisualizacaoPage(
+      idPessoa: args(context)['idPessoa'],
+    );
+  },
   '/pontos_page': (context) {
     return PontosPage(
       idPessoa: args(context)['idPessoa'],
@@ -65,6 +71,21 @@ Map<String, Widget Function(BuildContext)> routes = {
     return EnderecosPage(
       idPessoa: args(context)['idPessoa'],
     );
+  },
+  '/selecionar_pessoa': (context) {
+    final retorno = args(context)['retornarSomenteId'];
+    final retornarSomenteId = retorno == true || retorno == 'true';
+    return SelecionarPessoaPage(
+      retornarSomenteId: retornarSomenteId,
+    );
+  },
+
+  ///PAGAMENTOS:
+  '/pagamentos_avulsos': (context) {
+    return const PagamentosAvulsosPage();
+  },
+  '/pagamento_avulso': (context) {
+    return PagamentoAvulsoPage();
   },
 
   ///PRODUTOS:

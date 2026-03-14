@@ -92,7 +92,20 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         pessoaStep: PessoaStep.carregando,
       ));
       if (state.pessoa != null) {
-        var pessoa = await salvarPessoa.call(pessoa: state.pessoa!);
+        var pessoa = await salvarPessoa.call(
+            pessoa: state.pessoa!.copyWith(
+          bloqueado: state.bloqueado,
+          contato: state.contato,
+          documento: state.documento,
+          eCliente: state.eCliente,
+          eFornecedor: state.eFornecedor,
+          email: state.email,
+          nome: state.nome,
+          tipoContato: state.tipoContato,
+          tipoPessoa: state.tipoPessoa,
+          uf: state.uf,
+          dataDeNascimento: state.dataDeNascimento,
+        ));
         emit(PessoaState.fromModel(
           pessoa,
           step: PessoaStep.salva,

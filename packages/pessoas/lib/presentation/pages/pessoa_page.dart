@@ -19,6 +19,7 @@ class PessoaPage extends StatefulWidget {
 class _PessoaPageState extends State<PessoaPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cpfController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contatoController = TextEditingController();
   final TextEditingController _dataNascimentoController =
       TextEditingController();
@@ -44,6 +45,7 @@ class _PessoaPageState extends State<PessoaPage> {
   void dispose() {
     _nomeController.dispose();
     _cpfController.dispose();
+    _emailController.dispose();
     _contatoController.dispose();
     _dataNascimentoController.dispose();
     _bloc.close();
@@ -156,6 +158,15 @@ class _PessoaPageState extends State<PessoaPage> {
           CPFInput(
             controller: _cpfController,
             valorInicial: state.documento,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'E-mail',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 12),
           DateInput(
@@ -313,6 +324,13 @@ class _PessoaPageState extends State<PessoaPage> {
             subtitle: Text(_contatoController.text.trim().isEmpty
                 ? '-'
                 : _contatoController.text.trim()),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('E-mail'),
+            subtitle: Text(_emailController.text.trim().isEmpty
+                ? '-'
+                : _emailController.text.trim()),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -512,6 +530,7 @@ class _PessoaPageState extends State<PessoaPage> {
   void _hidratatCamposComState(PessoaState state) {
     _nomeController.text = state.nome ?? '';
     _cpfController.text = state.documento ?? '';
+    _emailController.text = state.email ?? '';
     _contatoController.text = state.contato ?? '';
     _dataNascimentoController.text = _formatarData(state.dataDeNascimento);
     _dataNascimentoSelecionada = state.dataDeNascimento;
@@ -522,6 +541,7 @@ class _PessoaPageState extends State<PessoaPage> {
           PessoaEditou(
             nome: _nomeController.text.trim(),
             documento: _cpfController.text.trim(),
+            email: _emailController.text.trim(),
             contato: _contatoController.text.trim(),
             dataDeNascimento: _obterDataNascimentoAtual(state),
           ),

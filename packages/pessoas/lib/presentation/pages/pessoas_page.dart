@@ -167,7 +167,7 @@ class _PessoasPageState extends State<PessoasPage>
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.of(context).pushNamed(
-            '/pessoa',
+            '/pessoa_visualizacao',
             arguments: {
               'idPessoa': pessoa.id,
             },

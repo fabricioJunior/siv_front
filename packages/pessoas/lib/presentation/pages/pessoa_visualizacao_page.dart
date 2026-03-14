@@ -60,6 +60,8 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildAcoesRapidas(context, state),
+                const SizedBox(height: 8),
                 _buildLinha('ID', state.id?.toString() ?? '-'),
                 _buildLinha('Nome', _valorOuTraco(state.nome)),
                 _buildLinha('Documento', _valorOuTraco(state.documento)),
@@ -67,6 +69,8 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
                     _formatarData(state.dataDeNascimento)),
                 _buildLinha('Contato', _valorOuTraco(state.contato)),
                 _buildLinha('E-mail', _valorOuTraco(state.email)),
+                _buildLinha('Inscrição estadual',
+                    _valorOuTraco(state.inscricaoEstadual)),
                 _buildLinha('UF', _valorOuTraco(state.uf)),
                 _buildLinha('Tipo', _descricaoTipoPessoa(state.tipoPessoa)),
                 _buildLinha('Vínculo', _descricaoVinculo(state)),
@@ -76,6 +80,14 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
                   _buildLinha(
                     'Tipo de funcionário',
                     _descricaoTipoFuncionario(state.tipoFuncionario),
+                  ),
+                  _buildLinha(
+                    'Empresa ID',
+                    state.funcionarioEmpresaId?.toString() ?? '-',
+                  ),
+                  _buildLinha(
+                    'Empresa',
+                    _valorOuTraco(state.funcionarioEmpresaNome),
                   ),
                   _buildLinha(
                     'Ativo',
@@ -100,6 +112,51 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
       child: ListTile(
         title: Text(label),
         subtitle: Text(valor),
+      ),
+    );
+  }
+
+  Widget _buildAcoesRapidas(BuildContext context, PessoaState state) {
+    final idPessoa = state.id;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: idPessoa == null
+                  ? null
+                  : () {
+                      Navigator.of(context).pushNamed(
+                        '/pontos_page',
+                        arguments: {'idPessoa': idPessoa},
+                      );
+                    },
+              icon: const Icon(Icons.stars_outlined),
+              label: const Text('Pontos'),
+            ),
+            OutlinedButton.icon(
+              onPressed: idPessoa == null
+                  ? null
+                  : () {
+                      Navigator.of(context).pushNamed(
+                        '/enderecos_page',
+                        arguments: {'idPessoa': idPessoa},
+                      );
+                    },
+              icon: const Icon(Icons.location_on_outlined),
+              label: const Text('Endereços'),
+            ),
+            OutlinedButton.icon(
+              onPressed: _editarPessoa,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -17,7 +17,7 @@ PontoDto _$PontoDtoFromJson(Map<String, dynamic> json) => PontoDto(
       dtCancelamento: _nullableDateTimeFromJson(json['dtCancelamento']),
       tipo: _tipoDePontoFromJson(json['tipo']),
       transacaoId: (json['transacaoId'] as num?)?.toInt(),
-      resgatado: (json['resgatado'] as num?)?.toInt(),
+      resgatado: _stringFromJson(json['resgatado']),
     );
 
 Map<String, dynamic> _$PontoDtoToJson(PontoDto instance) => <String, dynamic>{

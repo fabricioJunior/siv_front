@@ -56,7 +56,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       var licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
       await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao.id);
       var permissoes =
-          await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao!.id);
+          await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao.id);
       var permissoesMap = _mapPermissoes(permissoes);
       if (event.token.idEmpresa == null) {}
       emit(state.copyWith(

@@ -15,6 +15,7 @@ import 'package:firebase/firebase_injecoes.dart' as firebase;
 import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:pessoas/pessoas_injections.dart';
+import 'package:pagamentos/pagamentos_injections.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
@@ -53,6 +54,7 @@ Future<void> resolverDependenciasApp() async {
   resolverPessoasInjections();
   resolverProdutosInjection();
   resolverSistemaInjections();
+  resolverPagamentosInjections();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }

@@ -14,7 +14,7 @@ CodigoDeBarrasDto _$CodigoDeBarrasDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$CodigoDeBarrasDtoToJson(CodigoDeBarrasDto instance) =>
     <String, dynamic>{
-      'tipo': _$TipoCodigoDeBarrasEnumMap[instance.tipo]!,
+      'tipo': CodigoDeBarrasDto._tipoCodigoToJSON(instance.tipo),
       'codigo': instance.codigo,
     };
 

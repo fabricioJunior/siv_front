@@ -8,13 +8,13 @@ class RecuperarLicenciados {
       : _repository = repository;
 
   Future<List<Licenciado>> call() async {
-    // return <Licenciado>[
-    //   Licenciado(
-    //     nome: 'Licenciado 1',
-    //     urlApi: 'http://localhost:5001',
-    //     id: '1',
-    //   ),
-    // ];
+    return <Licenciado>[
+      Licenciado(
+        nome: 'Licenciado 1',
+        urlApi: 'http://localhost:5001',
+        id: '1',
+      ),
+    ];
     return _repository.recuperarLicenciados();
   }
 }

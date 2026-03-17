@@ -13,12 +13,16 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
   final RecuperarTamanhos _recuperarTamanhos;
   final CriarProduto _criarProduto;
   final AtualizarProduto _atualizarProduto;
+  final CriarCodigoDeBarras _criarCodigoDeBarras;
+  final SalvarCodigoDeBarras _salvarCodigoDeBarras;
 
   ProdutoBloc(
     this._recuperarCores,
     this._recuperarTamanhos,
     this._criarProduto,
     this._atualizarProduto,
+    this._criarCodigoDeBarras,
+    this._salvarCodigoDeBarras,
   ) : super(const ProdutoState(produtoStep: ProdutoStep.inicial)) {
     on<ProdutoIniciou>(_onProdutoIniciou);
     on<ProdutoEditou>(_onProdutoEditou);
@@ -98,10 +102,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
       final corId = state.corId;
       final tamanhoId = state.tamanhoId;
 
-      if (referenciaId == null ||
-          idExterno.isEmpty ||
-          corId == null ||
-          tamanhoId == null) {
+      if (referenciaId == null || corId == null || tamanhoId == null) {
         emit(
           state.copyWith(
             produtoStep: ProdutoStep.falha,
@@ -118,7 +119,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
       if (state.id == null) {
         final criado = await _criarProduto.call(
           referenciaId: referenciaId,
-          idExterno: idExterno,
+          idExterno: idExterno.isEmpty ? null : idExterno,
           corId: corId,
           tamanhoId: tamanhoId,
         );
@@ -182,13 +183,25 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
       Produto? ultimoCriado;
 
       for (final combinacao in event.combinacoes) {
+        final codigoInformado = combinacao.codigoDeBarras?.trim();
+        final codigoDeBarras = event.criarCodigoDeBarrasAutomaticamente
+            ? await _criarCodigoDeBarras.call()
+            : codigoInformado;
+
         ultimoCriado = await _criarProduto.call(
           referenciaId: event.referenciaId,
-          idExterno:
-              '${event.referenciaId}-${combinacao.corId}-${combinacao.tamanhoId}',
           corId: combinacao.corId,
           tamanhoId: combinacao.tamanhoId,
         );
+
+        if (codigoDeBarras != null &&
+            codigoDeBarras.isNotEmpty &&
+            ultimoCriado.id != null) {
+          await _salvarCodigoDeBarras.call(
+            produtoId: ultimoCriado.id!,
+            codigoDeBarras: codigoDeBarras,
+          );
+        }
       }
 
       if (ultimoCriado == null) {

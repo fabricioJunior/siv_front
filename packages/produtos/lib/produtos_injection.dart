@@ -210,6 +210,10 @@ void _usesCases() {
     () => RecuperarReferencias(referenciasRepository: sl()),
   );
 
+  sl.registerFactory<RecuperarReferencia>(
+    () => RecuperarReferencia(referenciasRepository: sl()),
+  );
+
   // Produtos Use Cases
   sl.registerFactory<RecuperarProdutos>(
     () => RecuperarProdutos(produtosRepository: sl()),
@@ -219,6 +223,8 @@ void _usesCases() {
     () => CriarProduto(produtosRepository: sl()),
   );
 
+  sl.registerFactory<CriarCodigoDeBarras>(() => CriarCodigoDeBarras());
+
   sl.registerFactory<AtualizarProduto>(
     () => AtualizarProduto(produtosRepository: sl()),
   );
@@ -227,8 +233,8 @@ void _usesCases() {
     () => ExcluirProduto(produtosRepository: sl()),
   );
 
-  sl.registerFactory<CriarCodigoDeBarras>(
-    () => CriarCodigoDeBarras(codigoDeBarrasRepository: sl()),
+  sl.registerFactory<SalvarCodigoDeBarras>(
+    () => SalvarCodigoDeBarras(codigoDeBarrasRepository: sl()),
   );
 
   sl.registerFactory<DeletarCodigoDeBarras>(
@@ -261,9 +267,13 @@ void _presentantion() {
 
   sl.registerFactory<ReferenciasBloc>(() => ReferenciasBloc(sl()));
 
+  sl.registerFactory<ReferenciaBloc>(() => ReferenciaBloc(sl()));
+
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 
-  sl.registerFactory<ProdutoBloc>(() => ProdutoBloc(sl(), sl(), sl(), sl()));
+  sl.registerFactory<ProdutoBloc>(
+    () => ProdutoBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+  );
 
   sl.registerFactory<ReferenciaCadastroBloc>(
     () => ReferenciaCadastroBloc(sl(), sl(), sl()),

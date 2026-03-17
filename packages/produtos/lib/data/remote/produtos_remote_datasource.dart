@@ -14,14 +14,14 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
   @override
   Future<Produto> createProduto({
     required int referenciaId,
-    required String idExterno,
+    String? idExterno,
     required int corId,
     required int tamanhoId,
   }) async {
     final response = await post(
       body: {
         'referenciaId': referenciaId,
-        'idExterno': idExterno,
+        if (idExterno != null && idExterno.isNotEmpty) 'idExterno': idExterno,
         'corId': corId,
         'tamanhoId': tamanhoId,
       },

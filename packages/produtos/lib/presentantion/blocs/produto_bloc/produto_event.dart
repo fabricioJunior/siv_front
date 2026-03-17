@@ -36,25 +36,33 @@ class ProdutoSalvou extends ProdutoEvent {}
 class ProdutoCombinacaoSelecao extends Equatable {
   final int corId;
   final int tamanhoId;
+  final String? codigoDeBarras;
 
   const ProdutoCombinacaoSelecao({
     required this.corId,
     required this.tamanhoId,
+    this.codigoDeBarras,
   });
 
   @override
-  List<Object?> get props => [corId, tamanhoId];
+  List<Object?> get props => [corId, tamanhoId, codigoDeBarras];
 }
 
 class ProdutoSalvouCombinacoes extends ProdutoEvent {
   final int referenciaId;
   final List<ProdutoCombinacaoSelecao> combinacoes;
+  final bool criarCodigoDeBarrasAutomaticamente;
 
   ProdutoSalvouCombinacoes({
     required this.referenciaId,
     required this.combinacoes,
+    this.criarCodigoDeBarrasAutomaticamente = false,
   });
 
   @override
-  List<Object?> get props => [referenciaId, combinacoes];
+  List<Object?> get props => [
+    referenciaId,
+    combinacoes,
+    criarCodigoDeBarrasAutomaticamente,
+  ];
 }

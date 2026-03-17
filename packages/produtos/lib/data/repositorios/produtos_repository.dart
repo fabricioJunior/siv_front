@@ -10,7 +10,7 @@ class ProdutosRepository implements IProdutosRepository {
   @override
   Future<Produto> criarProduto({
     required int referenciaId,
-    required String idExterno,
+    String? idExterno,
     required int corId,
     required int tamanhoId,
   }) {

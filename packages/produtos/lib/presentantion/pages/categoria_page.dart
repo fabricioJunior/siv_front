@@ -85,6 +85,7 @@ class CategoriaPage extends StatelessWidget {
                           controller: nomeController,
                           maxLength: 50,
                           autofocus: true,
+                          textInputAction: TextInputAction.done,
                           decoration: const InputDecoration(
                             hintText: 'Ex: Roupas, Calcados, Acessorios',
                             border: OutlineInputBorder(),
@@ -99,6 +100,13 @@ class CategoriaPage extends StatelessWidget {
                             context.read<CategoriaBloc>().add(
                               CategoriaEditou(nome: value),
                             );
+                          },
+                          onFieldSubmitted: (_) {
+                            if (formKey.currentState?.validate() ?? false) {
+                              context.read<CategoriaBloc>().add(
+                                CategoriaSalvou(),
+                              );
+                            }
                           },
                         ),
                         const SizedBox(height: 16),

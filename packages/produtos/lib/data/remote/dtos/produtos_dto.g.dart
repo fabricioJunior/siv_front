@@ -8,6 +8,6 @@ part of 'produtos_dto.dart';
 
 ProdutosDto _$ProdutosDtoFromJson(Map<String, dynamic> json) => ProdutosDto(
   items: (json['items'] as List<dynamic>)
-      .map((e) => ProdutosDto.fromJson(e as Map<String, dynamic>))
+      .map((e) => ProdutoDto.fromJson(e as Map<String, dynamic>))
       .toList(),
 );

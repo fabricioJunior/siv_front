@@ -3,7 +3,7 @@ import 'package:produtos/models.dart';
 abstract class IProdutosRepository {
   Future<Produto> criarProduto({
     required int referenciaId,
-    required String idExterno,
+    String? idExterno,
     required int corId,
     required int tamanhoId,
   });

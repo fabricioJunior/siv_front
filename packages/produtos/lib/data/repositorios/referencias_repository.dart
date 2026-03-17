@@ -8,6 +8,11 @@ class ReferenciasRepository implements IReferenciasRepository {
   ReferenciasRepository({required this.referenciasRemoteDataSource});
 
   @override
+  Future<Referencia> obterReferencia({required int id}) {
+    return referenciasRemoteDataSource.fetchReferencia(id: id);
+  }
+
+  @override
   Future<Referencia> atualizarReferencia({
     required int id,
     required String nome,

@@ -113,6 +113,7 @@ class MarcaModal extends StatelessWidget {
                         controller: nomeController,
                         maxLength: 50,
                         autofocus: true,
+                        textInputAction: TextInputAction.done,
                         decoration: const InputDecoration(
                           hintText: 'Ex: Nike, Adidas, Puma',
                         ),
@@ -126,6 +127,11 @@ class MarcaModal extends StatelessWidget {
                           context.read<MarcaBloc>().add(
                             MarcaEditou(nome: value),
                           );
+                        },
+                        onFieldSubmitted: (_) {
+                          if (formKey.currentState?.validate() ?? false) {
+                            context.read<MarcaBloc>().add(MarcaSalvou());
+                          }
                         },
                       ),
                       const SizedBox(height: 8),

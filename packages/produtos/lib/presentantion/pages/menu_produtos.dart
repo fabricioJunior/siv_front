@@ -16,6 +16,24 @@ class MenuProdutosPage extends StatelessWidget {
           children: [
             _buildMenuCard(
               context: context,
+              title: 'Produtos',
+              icon: Icons.inventory,
+              color: Colors.orange,
+              onTap: () {
+                Navigator.of(context).pushNamed('/produtos');
+              },
+            ),
+            _buildMenuCard(
+              context: context,
+              title: 'Modelos/Referências',
+              icon: Icons.model_training,
+              color: Colors.indigo,
+              onTap: () {
+                Navigator.of(context).pushNamed('/referencias');
+              },
+            ),
+            _buildMenuCard(
+              context: context,
               title: 'Tamanhos',
               icon: Icons.straighten,
               color: Colors.blue,
@@ -57,15 +75,6 @@ class MenuProdutosPage extends StatelessWidget {
               color: Colors.green,
               onTap: () {
                 _showComingSoon(context, 'Gerenciamento de Preços');
-              },
-            ),
-            _buildMenuCard(
-              context: context,
-              title: 'Produtos',
-              icon: Icons.inventory,
-              color: Colors.orange,
-              onTap: () {
-                Navigator.of(context).pushNamed('/produtos');
               },
             ),
           ],

@@ -18,6 +18,7 @@ class _ProdutoPageState extends State<ProdutoPage> {
   late final ProdutoBloc _bloc;
 
   int _etapaAtual = 0;
+  bool _criarCodigoBarrasAutomaticamente = false;
   Referencia? _referenciaSelecionada;
   List<Cor> _coresSelecionadas = const [];
   List<Tamanho> _tamanhosSelecionados = const [];
@@ -219,6 +220,17 @@ class _ProdutoPageState extends State<ProdutoPage> {
           },
         ),
         const SizedBox(height: 12),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Criar código de barras automaticamente'),
+          value: _criarCodigoBarrasAutomaticamente,
+          onChanged: (value) {
+            setState(() {
+              _criarCodigoBarrasAutomaticamente = value ?? false;
+            });
+          },
+        ),
+        const SizedBox(height: 4),
         Text(
           'Prévia: ${_coresSelecionadas.length} cor(es) x ${_tamanhosSelecionados.length} tamanho(s) = ${_coresSelecionadas.length * _tamanhosSelecionados.length} combinação(ões)',
           style: Theme.of(context).textTheme.bodySmall,
@@ -245,10 +257,12 @@ class _ProdutoPageState extends State<ProdutoPage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
-            columns: const [
+            columns: [
               DataColumn(label: Text('Inserir')),
-              DataColumn(label: Text('Cor')),
-              DataColumn(label: Text('Tamanho')),
+              const DataColumn(label: Text('Cor')),
+              const DataColumn(label: Text('Tamanho')),
+              if (!_criarCodigoBarrasAutomaticamente)
+                const DataColumn(label: Text('Código de barras')),
             ],
             rows: _combinacoes.map((item) {
               return DataRow(
@@ -266,11 +280,43 @@ class _ProdutoPageState extends State<ProdutoPage> {
                   ),
                   DataCell(Text(item.cor.nome)),
                   DataCell(Text(item.tamanho.nome)),
+                  if (!_criarCodigoBarrasAutomaticamente)
+                    DataCell(
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              item.codigoDeBarras.isEmpty
+                                  ? '-'
+                                  : item.codigoDeBarras,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: () => _editarCodigoDeBarras(item),
+                            child: Text(
+                              item.codigoDeBarras.isEmpty
+                                  ? 'Informar'
+                                  : 'Editar',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               );
             }).toList(),
           ),
         ),
+        if (_criarCodigoBarrasAutomaticamente) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Os códigos de barras serão gerados automaticamente ao confirmar o cadastro.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
         const SizedBox(height: 8),
         Text(
           'Selecionadas: ${_combinacoes.where((item) => item.selecionada).length} de ${_combinacoes.length}',
@@ -351,10 +397,32 @@ class _ProdutoPageState extends State<ProdutoPage> {
     }
 
     if (_etapaAtual == 1) {
-      final temSelecionadas = _combinacoes.any((item) => item.selecionada);
-      if (!temSelecionadas) {
+      final selecionadas = _combinacoes
+          .where((item) => item.selecionada)
+          .toList();
+      if (selecionadas.isEmpty) {
         _mostrarMensagem('Selecione ao menos uma combinação para continuar.');
         return;
+      }
+
+      if (!_criarCodigoBarrasAutomaticamente) {
+        final temSemCodigo = selecionadas.any(
+          (item) => item.codigoDeBarras.trim().isEmpty,
+        );
+        if (temSemCodigo) {
+          _mostrarMensagem(
+            'Informe o código de barras para todas as combinações selecionadas.',
+          );
+          return;
+        }
+
+        final codigosDuplicados = _obterCodigosDuplicados(selecionadas);
+        if (codigosDuplicados.isNotEmpty) {
+          _mostrarMensagem(
+            'Existem códigos de barras duplicados: ${codigosDuplicados.join(', ')}.',
+          );
+          return;
+        }
       }
 
       setState(() {
@@ -376,6 +444,11 @@ class _ProdutoPageState extends State<ProdutoPage> {
           (item) => ProdutoCombinacaoSelecao(
             corId: item.cor.id!,
             tamanhoId: item.tamanho.id!,
+            codigoDeBarras: _criarCodigoBarrasAutomaticamente
+                ? null
+                : (item.codigoDeBarras.trim().isEmpty
+                      ? null
+                      : item.codigoDeBarras.trim()),
           ),
         )
         .toList();
@@ -391,13 +464,14 @@ class _ProdutoPageState extends State<ProdutoPage> {
       ProdutoSalvouCombinacoes(
         referenciaId: referenciaId,
         combinacoes: selecionadas,
+        criarCodigoDeBarrasAutomaticamente: _criarCodigoBarrasAutomaticamente,
       ),
     );
   }
 
   void _sincronizarCombinacoes() {
-    final statusAnterior = {
-      for (final item in _combinacoes) item.chave: item.selecionada,
+    final statusAnterior = <String, _CombinacaoCadastro>{
+      for (final item in _combinacoes) item.chave: item,
     };
 
     final novas = <_CombinacaoCadastro>[];
@@ -405,11 +479,13 @@ class _ProdutoPageState extends State<ProdutoPage> {
     for (final cor in _coresSelecionadas) {
       for (final tamanho in _tamanhosSelecionados) {
         final chave = _CombinacaoCadastro.gerarChave(cor, tamanho);
+        final anterior = statusAnterior[chave];
         novas.add(
           _CombinacaoCadastro(
             cor: cor,
             tamanho: tamanho,
-            selecionada: statusAnterior[chave] ?? true,
+            selecionada: anterior?.selecionada ?? true,
+            codigoDeBarras: anterior?.codigoDeBarras ?? '',
           ),
         );
       }
@@ -423,17 +499,95 @@ class _ProdutoPageState extends State<ProdutoPage> {
       context,
     ).showSnackBar(SnackBar(content: Text(mensagem)));
   }
+
+  Future<void> _editarCodigoDeBarras(_CombinacaoCadastro item) async {
+    final controller = TextEditingController(text: item.codigoDeBarras);
+
+    final codigo = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Código de barras da combinação: ${item.cor.nome} / ${item.tamanho.nome}',
+          ),
+          content: TextField(
+            controller: controller,
+            maxLength: 13,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Informe o código da combinação',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(''),
+              child: const Text('Limpar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (codigo == null) {
+      return;
+    }
+
+    final codigoNormalizado = codigo.trim();
+    final codigoDuplicado =
+        codigoNormalizado.isNotEmpty &&
+        _combinacoes.any(
+          (combinacao) =>
+              !identical(combinacao, item) &&
+              combinacao.codigoDeBarras.trim() == codigoNormalizado,
+        );
+
+    if (codigoDuplicado) {
+      _mostrarMensagem('Código de barras já informado em outra combinação.');
+      return;
+    }
+
+    setState(() {
+      item.codigoDeBarras = codigoNormalizado;
+    });
+  }
+
+  List<String> _obterCodigosDuplicados(List<_CombinacaoCadastro> combinacoes) {
+    final frequencia = <String, int>{};
+
+    for (final combinacao in combinacoes) {
+      final codigo = combinacao.codigoDeBarras.trim();
+      if (codigo.isEmpty) {
+        continue;
+      }
+      frequencia[codigo] = (frequencia[codigo] ?? 0) + 1;
+    }
+
+    return frequencia.entries
+        .where((entry) => entry.value > 1)
+        .map((entry) => entry.key)
+        .toList();
+  }
 }
 
 class _CombinacaoCadastro {
   final Cor cor;
   final Tamanho tamanho;
   bool selecionada;
+  String codigoDeBarras;
 
   _CombinacaoCadastro({
     required this.cor,
     required this.tamanho,
     this.selecionada = true,
+    this.codigoDeBarras = '',
   });
 
   String get chave => gerarChave(cor, tamanho);

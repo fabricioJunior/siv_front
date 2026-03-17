@@ -27,6 +27,10 @@ class ReferenciaCadastroBloc
     on<ReferenciaCadastroGerarId>(_onGerarId);
     on<ReferenciaCadastroGerarNome>(_onGerarNome);
     on<ReferenciaCadastroNomeAlterado>(_onNomeAlterado);
+    on<ReferenciaCadastroUnidadeMedidaAlterada>(_onUnidadeMedidaAlterada);
+    on<ReferenciaCadastroDescricaoAlterada>(_onDescricaoAlterada);
+    on<ReferenciaCadastroComposicaoAlterada>(_onComposicaoAlterada);
+    on<ReferenciaCadastroCuidadosAlterados>(_onCuidadosAlterados);
     on<ReferenciaCadastroProximo>(_onProximo);
     on<ReferenciaCadastroVoltar>(_onVoltar);
     on<ReferenciaCadastroReiniciar>(_onReiniciar);
@@ -115,7 +119,7 @@ class ReferenciaCadastroBloc
     ReferenciaCadastroIdAlterado event,
     Emitter<ReferenciaCadastroState> emit,
   ) async {
-    emit(state.copyWith(referenciaId: event.id, mensagem: null));
+    emit(state.copyWith(referenciaId: () => event.id, mensagem: null));
   }
 
   FutureOr<void> _onGerarId(
@@ -125,7 +129,7 @@ class ReferenciaCadastroBloc
     final categoriaId = state.categoria?.id;
     final subCategoriaId = state.subCategoria?.id;
     final idGerado = _generateId(categoriaId, subCategoriaId);
-    emit(state.copyWith(referenciaId: idGerado, mensagem: null));
+    emit(state.copyWith(referenciaId: () => idGerado, mensagem: null));
   }
 
   FutureOr<void> _onGerarNome(
@@ -141,14 +145,42 @@ class ReferenciaCadastroBloc
     }
 
     final nomeGerado = _generateNome(categoria, subCategoria);
-    emit(state.copyWith(nome: nomeGerado, mensagem: null));
+    emit(state.copyWith(nome: () => nomeGerado, mensagem: null));
   }
 
   FutureOr<void> _onNomeAlterado(
     ReferenciaCadastroNomeAlterado event,
     Emitter<ReferenciaCadastroState> emit,
   ) async {
-    emit(state.copyWith(nome: event.nome, mensagem: null));
+    emit(state.copyWith(nome: () => event.nome, mensagem: null));
+  }
+
+  FutureOr<void> _onUnidadeMedidaAlterada(
+    ReferenciaCadastroUnidadeMedidaAlterada event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) async {
+    emit(state.copyWith(unidadeMedida: event.unidadeMedida, mensagem: null));
+  }
+
+  FutureOr<void> _onDescricaoAlterada(
+    ReferenciaCadastroDescricaoAlterada event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) async {
+    emit(state.copyWith(descricao: () => event.descricao, mensagem: null));
+  }
+
+  FutureOr<void> _onComposicaoAlterada(
+    ReferenciaCadastroComposicaoAlterada event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) async {
+    emit(state.copyWith(composicao: event.composicao, mensagem: null));
+  }
+
+  FutureOr<void> _onCuidadosAlterados(
+    ReferenciaCadastroCuidadosAlterados event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) async {
+    emit(state.copyWith(cuidados: event.cuidados, mensagem: null));
   }
 
   FutureOr<void> _onProximo(
@@ -192,6 +224,10 @@ class ReferenciaCadastroBloc
           subCategoriaId: state.subCategoria?.id,
           id: state.referenciaId!,
           nome: state.nome!.trim(),
+          unidadeMedida: _sanitizeOptional(state.unidadeMedida),
+          descricao: _sanitizeOptional(state.descricao),
+          composicao: _sanitizeOptional(state.composicao),
+          cuidados: _sanitizeOptional(state.cuidados),
         );
         emit(state.copyWith(step: ReferenciaCadastroStep.resumo));
         return;
@@ -235,14 +271,21 @@ class ReferenciaCadastroBloc
     emit(
       state.copyWith(
         step: ReferenciaCadastroStep.categoria,
-        categoria: null,
-        subCategoria: null,
         subCategorias: const [],
-        referenciaId: null,
-        nome: null,
+        referenciaId: () => null,
+        nome: () => null,
+        descricao: () => '',
         mensagem: null,
       ),
     );
+  }
+
+  String? _sanitizeOptional(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
   }
 
   int _generateId(int? categoriaId, int? subCategoriaId) {

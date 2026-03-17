@@ -17,7 +17,11 @@ class ReferenciasPage extends StatelessWidget {
       create: (context) => bloc..add(ReferenciasIniciou()),
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _showCadastroOpcoes(context),
+          onPressed: () {
+            ReferenciaCadastroModal.show(context: context).then((_) {
+              bloc.add(ReferenciasIniciou());
+            });
+          },
           child: const Icon(Icons.add),
         ),
         appBar: AppBar(title: const Text('Referencias')),
@@ -98,9 +102,17 @@ class ReferenciasPage extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onTap: () async {
+          final referenciaId = referencia.id;
+          if (referenciaId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Referência sem ID válido.')),
+            );
+            return;
+          }
+
           final result = await Navigator.of(context).push<Referencia>(
             MaterialPageRoute(
-              builder: (_) => ReferenciaPage(referencia: referencia),
+              builder: (_) => ReferenciaPage(idReferencia: referenciaId),
             ),
           );
 
@@ -177,67 +189,6 @@ class ReferenciasPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showCadastroOpcoes(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Escolha o tipo de cadastro',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  leading: const Icon(Icons.inventory_2_outlined),
-                  title: const Text('Cadastrar Modelo - Referencia'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    ReferenciaCadastroModal.show(context: context).then((ok) {
-                      if (ok == true) {
-                        bloc.add(ReferenciasIniciou());
-                      }
-                    });
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.straighten),
-                  title: const Text('Cadastrar tamanhos e cores do produto'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Fluxo em desenvolvimento: Tamanhos e cores',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

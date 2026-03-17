@@ -112,6 +112,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencias': (context) {
     return ReferenciasPage();
   },
+  '/referencia': (context) {
+    return ReferenciaPage(
+      idReferencia: args(context)['idReferencia'],
+    );
+  },
   '/produtos': (context) {
     return ProdutosPage();
   },

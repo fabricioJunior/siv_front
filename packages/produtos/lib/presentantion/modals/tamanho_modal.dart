@@ -114,6 +114,7 @@ class TamanhoModal extends StatelessWidget {
                         controller: nomeController,
                         maxLength: 50,
                         autofocus: true,
+                        textInputAction: TextInputAction.done,
                         decoration: const InputDecoration(
                           hintText: 'Ex: P, M, G, XG',
                         ),
@@ -127,6 +128,11 @@ class TamanhoModal extends StatelessWidget {
                           context.read<TamanhoBloc>().add(
                             TamanhoEditou(nome: value),
                           );
+                        },
+                        onFieldSubmitted: (_) {
+                          if (formKey.currentState?.validate() ?? false) {
+                            context.read<TamanhoBloc>().add(TamanhoSalvou());
+                          }
                         },
                       ),
                       const SizedBox(height: 8),

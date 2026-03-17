@@ -25,6 +25,10 @@ class ReferenciaCadastroModal extends StatefulWidget {
 class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
   final _idController = TextEditingController();
   final _nomeController = TextEditingController();
+  final _unidadeMedidaController = TextEditingController();
+  final _descricaoController = TextEditingController();
+  final _composicaoController = TextEditingController();
+  final _cuidadosController = TextEditingController();
   final _categoriaSearchController = TextEditingController();
   final _subCategoriaSearchController = TextEditingController();
 
@@ -35,6 +39,10 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
   void dispose() {
     _idController.dispose();
     _nomeController.dispose();
+    _unidadeMedidaController.dispose();
+    _descricaoController.dispose();
+    _composicaoController.dispose();
+    _cuidadosController.dispose();
     _categoriaSearchController.dispose();
     _subCategoriaSearchController.dispose();
     super.dispose();
@@ -106,6 +114,19 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     final nomeText = state.nome ?? '';
     if (_nomeController.text != nomeText) {
       _nomeController.text = nomeText;
+    }
+
+    if (_unidadeMedidaController.text != state.unidadeMedida) {
+      _unidadeMedidaController.text = state.unidadeMedida;
+    }
+    if (_descricaoController.text != state.descricao) {
+      _descricaoController.text = state.descricao;
+    }
+    if (_composicaoController.text != state.composicao) {
+      _composicaoController.text = state.composicao;
+    }
+    if (_cuidadosController.text != state.cuidados) {
+      _cuidadosController.text = state.cuidados;
     }
   }
 
@@ -326,6 +347,70 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
           icon: const Icon(Icons.auto_awesome),
           label: const Text('Sugerir nome'),
         ),
+        const SizedBox(height: 16),
+        Text(
+          'Informacoes opcionais',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _unidadeMedidaController,
+          decoration: const InputDecoration(
+            labelText: 'Unidade de medida',
+            border: OutlineInputBorder(),
+            hintText: 'Ex: unidade, metro, kg',
+          ),
+          onChanged: (value) {
+            context.read<ReferenciaCadastroBloc>().add(
+              ReferenciaCadastroUnidadeMedidaAlterada(unidadeMedida: value),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _descricaoController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Descricao',
+            border: OutlineInputBorder(),
+          ),
+          onChanged: (value) {
+            context.read<ReferenciaCadastroBloc>().add(
+              ReferenciaCadastroDescricaoAlterada(descricao: value),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _composicaoController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Composicao',
+            border: OutlineInputBorder(),
+          ),
+          onChanged: (value) {
+            context.read<ReferenciaCadastroBloc>().add(
+              ReferenciaCadastroComposicaoAlterada(composicao: value),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _cuidadosController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Cuidados',
+            border: OutlineInputBorder(),
+          ),
+          onChanged: (value) {
+            context.read<ReferenciaCadastroBloc>().add(
+              ReferenciaCadastroCuidadosAlterados(cuidados: value),
+            );
+          },
+        ),
       ],
     );
   }
@@ -341,6 +426,30 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
         ),
         _ResumoItem(label: 'ID', value: state.referenciaId?.toString() ?? '-'),
         _ResumoItem(label: 'Nome', value: state.nome ?? '-'),
+        _ResumoItem(
+          label: 'Unidade de medida',
+          value: state.unidadeMedida.trim().isEmpty
+              ? 'Nao informada'
+              : state.unidadeMedida,
+        ),
+        _ResumoItem(
+          label: 'Descricao',
+          value: state.descricao.trim().isEmpty
+              ? 'Nao informada'
+              : state.descricao,
+        ),
+        _ResumoItem(
+          label: 'Composicao',
+          value: state.composicao.trim().isEmpty
+              ? 'Nao informada'
+              : state.composicao,
+        ),
+        _ResumoItem(
+          label: 'Cuidados',
+          value: state.cuidados.trim().isEmpty
+              ? 'Nao informados'
+              : state.cuidados,
+        ),
       ],
     );
   }
@@ -368,7 +477,13 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+                Navigator.of(context).pushNamed(
+                  '/referencia',
+                  arguments: {'idReferencia': state.referenciaId},
+                );
+              },
               child: const Text('Ir para pagina da referencia'),
             ),
           ),

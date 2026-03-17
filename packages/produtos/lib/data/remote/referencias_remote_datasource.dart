@@ -12,6 +12,12 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
   String get path => '/v1/referencias/{id}';
 
   @override
+  Future<Referencia> fetchReferencia({required int id}) async {
+    final response = await get(pathParameters: {'id': id.toString()});
+    return ReferenciaDto.fromJson(response.body);
+  }
+
+  @override
   Future<Referencia> createReferencia({
     required int id,
     required String nome,

@@ -9,7 +9,7 @@ class CriarProduto {
 
   Future<Produto> call({
     required int referenciaId,
-    required String idExterno,
+    String? idExterno,
     required int corId,
     required int tamanhoId,
   }) {

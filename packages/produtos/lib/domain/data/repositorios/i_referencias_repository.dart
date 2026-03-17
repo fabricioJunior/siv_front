@@ -1,6 +1,8 @@
 import 'package:produtos/models.dart';
 
 abstract class IReferenciasRepository {
+  Future<Referencia> obterReferencia({required int id});
+
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,

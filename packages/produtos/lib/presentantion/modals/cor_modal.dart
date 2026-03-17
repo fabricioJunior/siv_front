@@ -110,6 +110,7 @@ class CorModal extends StatelessWidget {
                         controller: nomeController,
                         maxLength: 50,
                         autofocus: true,
+                        textInputAction: TextInputAction.done,
                         decoration: const InputDecoration(
                           hintText: 'Ex: Vermelho, Azul, Verde',
                         ),
@@ -121,6 +122,11 @@ class CorModal extends StatelessWidget {
                         },
                         onChanged: (value) {
                           context.read<CorBloc>().add(CorEditou(nome: value));
+                        },
+                        onFieldSubmitted: (_) {
+                          if (formKey.currentState?.validate() ?? false) {
+                            context.read<CorBloc>().add(CorSalvou());
+                          }
                         },
                       ),
                       const SizedBox(height: 8),

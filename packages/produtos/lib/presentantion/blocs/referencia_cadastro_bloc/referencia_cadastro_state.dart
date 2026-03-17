@@ -10,6 +10,10 @@ class ReferenciaCadastroState extends Equatable {
   final SubCategoria? subCategoria;
   final int? referenciaId;
   final String? nome;
+  final String unidadeMedida;
+  final String descricao;
+  final String composicao;
+  final String cuidados;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
   final String? mensagem;
@@ -22,6 +26,10 @@ class ReferenciaCadastroState extends Equatable {
     this.subCategoria,
     this.referenciaId,
     this.nome,
+    this.unidadeMedida = '',
+    this.descricao = '',
+    this.composicao = '',
+    this.cuidados = '',
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
     this.mensagem,
@@ -33,8 +41,12 @@ class ReferenciaCadastroState extends Equatable {
     List<SubCategoria>? subCategorias,
     Categoria? categoria,
     SubCategoria? subCategoria,
-    int? referenciaId,
-    String? nome,
+    int? Function()? referenciaId,
+    String? Function()? nome,
+    String? unidadeMedida,
+    String Function()? descricao,
+    String? composicao,
+    String? cuidados,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
     String? mensagem,
@@ -45,8 +57,12 @@ class ReferenciaCadastroState extends Equatable {
       subCategorias: subCategorias ?? this.subCategorias,
       categoria: categoria ?? this.categoria,
       subCategoria: subCategoria ?? this.subCategoria,
-      referenciaId: referenciaId ?? this.referenciaId,
-      nome: nome ?? this.nome,
+      referenciaId: referenciaId == null ? this.referenciaId : referenciaId(),
+      nome: nome == null ? this.nome : nome(),
+      unidadeMedida: unidadeMedida ?? this.unidadeMedida,
+      descricao: descricao == null ? this.descricao : descricao(),
+      composicao: composicao ?? this.composicao,
+      cuidados: cuidados ?? this.cuidados,
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
           carregandoSubCategorias ?? this.carregandoSubCategorias,
@@ -63,6 +79,10 @@ class ReferenciaCadastroState extends Equatable {
     subCategoria,
     referenciaId,
     nome,
+    unidadeMedida,
+    descricao,
+    composicao,
+    cuidados,
     carregandoCategorias,
     carregandoSubCategorias,
     mensagem,

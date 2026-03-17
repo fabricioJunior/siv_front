@@ -48,6 +48,42 @@ class ReferenciaCadastroNomeAlterado extends ReferenciaCadastroEvent {
   List<Object?> get props => [nome];
 }
 
+class ReferenciaCadastroUnidadeMedidaAlterada extends ReferenciaCadastroEvent {
+  final String unidadeMedida;
+
+  ReferenciaCadastroUnidadeMedidaAlterada({required this.unidadeMedida});
+
+  @override
+  List<Object?> get props => [unidadeMedida];
+}
+
+class ReferenciaCadastroDescricaoAlterada extends ReferenciaCadastroEvent {
+  final String descricao;
+
+  ReferenciaCadastroDescricaoAlterada({required this.descricao});
+
+  @override
+  List<Object?> get props => [descricao];
+}
+
+class ReferenciaCadastroComposicaoAlterada extends ReferenciaCadastroEvent {
+  final String composicao;
+
+  ReferenciaCadastroComposicaoAlterada({required this.composicao});
+
+  @override
+  List<Object?> get props => [composicao];
+}
+
+class ReferenciaCadastroCuidadosAlterados extends ReferenciaCadastroEvent {
+  final String cuidados;
+
+  ReferenciaCadastroCuidadosAlterados({required this.cuidados});
+
+  @override
+  List<Object?> get props => [cuidados];
+}
+
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroVoltar extends ReferenciaCadastroEvent {}

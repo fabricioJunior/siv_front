@@ -1,0 +1,144 @@
+trigger: none
+pr: none
+
+variables:
+  BuildConfiguration: Release
+  FlutterChannel: stable
+  SubmitToStore: 'false'
+
+  # Store values already provided
+  StoreId: '9NVMVB4DZFR2'
+  IdentityName: 'ValedoCear.SivFront'
+  Publisher: 'CN=B25EE2CC-9891-4248-BD5B-370EA12848D0'
+  PublisherDisplayName: 'Vale do Ceara'
+
+  # Non-sensitive and optional
+  StoreFlightName: ''
+
+  # Configure these as pipeline variables in Azure DevOps (do not commit values):
+  # PfxSecureFileName (name of Secure File)
+  # PfxPassword (secret)
+  # WindowsStoreServiceConnection
+
+stages:
+- stage: build_msix
+  displayName: Build MSIX package
+  jobs:
+  - job: windows_build
+    displayName: Build on Windows
+    pool:
+      vmImage: windows-latest
+    steps:
+    - checkout: self
+      clean: true
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $flutterRoot = "$(Agent.ToolsDirectory)\\flutter"
+
+        if (!(Test-Path $flutterRoot)) {
+          git clone https://github.com/flutter/flutter.git --depth 1 --branch $(FlutterChannel) $flutterRoot
+        }
+
+        Write-Host "##vso[task.prependpath]$flutterRoot\\bin"
+        flutter --version
+
+        dart pub global activate fvm
+        $pubCacheBin = "$env:USERPROFILE\\AppData\\Local\\Pub\\Cache\\bin"
+        Write-Host "##vso[task.prependpath]$pubCacheBin"
+
+        fvm install
+        fvm use --force
+        fvm flutter --version
+      displayName: Install Flutter and FVM
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $pfxName = "$(PfxSecureFileName)"
+        $pfxPassword = "$(PfxPassword)"
+
+        if ([string]::IsNullOrWhiteSpace($pfxName) -or $pfxName -eq '$(PfxSecureFileName)') {
+          throw 'Pipeline variable PfxSecureFileName is not configured.'
+        }
+
+        if ([string]::IsNullOrWhiteSpace($pfxPassword) -or $pfxPassword -eq '$(PfxPassword)') {
+          throw 'Pipeline secret variable PfxPassword is not configured.'
+        }
+
+        fvm flutter clean
+        fvm flutter pub get
+        fvm flutter config --enable-windows-desktop
+        fvm flutter build windows --release
+      displayName: Flutter Windows build
+
+    - task: DownloadSecureFile@1
+      name: signingCert
+      displayName: Download signing certificate
+      inputs:
+        secureFile: '$(PfxSecureFileName)'
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        fvm dart run msix:create `
+          --certificate-path "$(signingCert.secureFilePath)" `
+          --certificate-password "$(PfxPassword)"
+      displayName: Generate signed MSIX
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $outDir = "$(Build.ArtifactStagingDirectory)\\windows-store-package"
+        New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+
+        $files = Get-ChildItem "$(Build.SourcesDirectory)\\build" -Recurse -File |
+          Where-Object { $_.Extension -in '.msix', '.msixupload', '.appxsym' }
+
+        if ($files.Count -eq 0) {
+          throw "No MSIX artifact found in build output."
+        }
+
+        foreach ($file in $files) {
+          Copy-Item $file.FullName $outDir -Force
+        }
+
+        Write-Host "Generated package files:"
+        Get-ChildItem $outDir | ForEach-Object { Write-Host $_.Name }
+      displayName: Collect package artifacts
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish package artifact
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/windows-store-package'
+        ArtifactName: 'windows-store-package'
+        publishLocation: Container
+
+- stage: submit_store
+  displayName: Submit to Microsoft Store
+  dependsOn: build_msix
+  condition: and(succeeded(), eq(variables['SubmitToStore'], 'true'))
+  jobs:
+  - job: submit
+    displayName: Submit package
+    pool:
+      vmImage: windows-latest
+    steps:
+    - download: current
+      artifact: windows-store-package
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $serviceConnection = "$(WindowsStoreServiceConnection)"
+
+        if ([string]::IsNullOrWhiteSpace($serviceConnection) -or $serviceConnection -eq '$(WindowsStoreServiceConnection)') {
+          throw 'Pipeline variable WindowsStoreServiceConnection is not configured.'
+        }
+      displayName: Validate Store submission variables
+
+    # Requires extension: Windows Store Publisher
+    - task: MS-RDX-MRO.windows-store-publish.windows-store-publish@3
+      displayName: Submit package to Store
+      inputs:
+        serviceEndpoint: '$(WindowsStoreServiceConnection)'
+        appId: '$(StoreId)'
+        packagePath: '$(Pipeline.Workspace)/windows-store-package/*.msixupload'
+        flightName: '$(StoreFlightName)'
+        skipPolling: false

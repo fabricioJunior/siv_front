@@ -61,6 +61,7 @@ dev_dependencies:
 
   build_runner: any
   json_serializable: ^6.8.0
+  msix: ^3.16.8
   
   flutter_lints: ^4.0.0
 
@@ -72,5 +73,14 @@ flutter:
 
 
   uses-material-design: true
+
+msix_config:
+  display_name: SIV Front
+  publisher_display_name: Vale do Ceara
+  identity_name: ValedoCear.SivFront
+  publisher: CN=B25EE2CC-9891-4248-BD5B-370EA12848D0
+  msix_version: 1.0.0.0
+  store: true
+  architecture: x64
 
  

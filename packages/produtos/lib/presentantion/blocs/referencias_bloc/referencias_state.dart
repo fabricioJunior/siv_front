@@ -3,6 +3,7 @@ part of 'referencias_bloc.dart';
 abstract class ReferenciasState extends Equatable {
   List<Referencia> get referencias => [];
 
+  List<Referencia> get referenciasSelecionadas => [];
   const ReferenciasState();
 
   @override
@@ -20,8 +21,13 @@ class ReferenciasCarregarEmProgresso extends ReferenciasState {
 class ReferenciasCarregarSucesso extends ReferenciasState {
   @override
   final List<Referencia> referencias;
+  @override
+  final List<Referencia> referenciasSelecionadas;
 
-  const ReferenciasCarregarSucesso({required this.referencias});
+  const ReferenciasCarregarSucesso({
+    required this.referencias,
+    this.referenciasSelecionadas = const [],
+  });
 }
 
 class ReferenciasCarregarFalha extends ReferenciasState {

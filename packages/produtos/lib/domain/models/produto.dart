@@ -1,4 +1,5 @@
 import 'package:core/equals.dart';
+import 'package:produtos/models.dart';
 
 abstract class Produto implements Equatable {
   int? get id;
@@ -6,6 +7,9 @@ abstract class Produto implements Equatable {
   String get idExterno;
   int get corId;
   int get tamanhoId;
+  Referencia? get referencia;
+  Cor? get cor;
+  Tamanho? get tamanho;
 
   factory Produto.create({
     int? id,
@@ -13,6 +17,9 @@ abstract class Produto implements Equatable {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    Referencia? referencia,
+    Cor? cor,
+    Tamanho? tamanho,
   }) = _ProdutoImpl;
 
   @override
@@ -44,6 +51,9 @@ class _ProdutoImpl implements Produto {
     required this.idExterno,
     required this.corId,
     required this.tamanhoId,
+    this.referencia,
+    this.cor,
+    this.tamanho,
   });
 
   _ProdutoImpl copyWith({
@@ -52,6 +62,9 @@ class _ProdutoImpl implements Produto {
     String? idExterno,
     int? corId,
     int? tamanhoId,
+    Referencia? referencia,
+    Cor? cor,
+    Tamanho? tamanho,
   }) {
     return _ProdutoImpl(
       id: id ?? this.id,
@@ -67,6 +80,15 @@ class _ProdutoImpl implements Produto {
 
   @override
   bool? get stringify => true;
+
+  @override
+  final Cor? cor;
+
+  @override
+  final Referencia? referencia;
+
+  @override
+  final Tamanho? tamanho;
 }
 
 extension ProdutoCopyWith on Produto {

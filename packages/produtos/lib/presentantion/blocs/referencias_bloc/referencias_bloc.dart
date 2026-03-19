@@ -26,7 +26,25 @@ class ReferenciasBloc extends Bloc<ReferenciasEvent, ReferenciasState> {
         nome: event.busca,
         inativo: event.inativo,
       );
-      emit(ReferenciasCarregarSucesso(referencias: referencias.toList()));
+      List<Referencia> referenciasSelecionadas = [];
+      if (event.referenciasSelecionadasIniciais.isNotEmpty) {
+        referenciasSelecionadas = event.referenciasSelecionadasIniciais;
+      } else if (event.idsReferenciasSelecionadasIniciais.isNotEmpty) {
+        referenciasSelecionadas = referencias
+            .where(
+              (referencia) => event.idsReferenciasSelecionadasIniciais.contains(
+                referencia.id,
+              ),
+            )
+            .toList();
+      }
+
+      emit(
+        ReferenciasCarregarSucesso(
+          referencias: referencias.toList(),
+          referenciasSelecionadas: referenciasSelecionadas,
+        ),
+      );
     } catch (e, s) {
       emit(const ReferenciasCarregarFalha());
       addError(e, s);

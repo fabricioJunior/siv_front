@@ -1,3 +1,4 @@
+import 'package:core/equals.dart';
 import 'package:produtos/models.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -17,4 +18,10 @@ class CorDto implements Cor {
   CorDto({required this.id, required this.inativo, required this.nome});
 
   factory CorDto.fromJson(Map<String, dynamic> json) => _$CorDtoFromJson(json);
+
+  @override
+  List<Object?> get props => [id, inativo, nome];
+
+  @override
+  bool? get stringify => true;
 }

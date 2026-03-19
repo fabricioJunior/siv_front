@@ -18,5 +18,10 @@ abstract class IProdutosRepository {
 
   Future<void> excluirProduto(int id);
 
-  Future<List<Produto>> obterProdutos({String? idExterno, int? referenciaId});
+  Future<List<Produto>> obterProdutos({
+    String? idExterno,
+    int? referenciaId,
+    int idCor,
+    int idTamanho,
+  });
 }

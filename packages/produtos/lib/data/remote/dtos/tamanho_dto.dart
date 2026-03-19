@@ -18,4 +18,10 @@ class TamanhoDto implements Tamanho {
 
   factory TamanhoDto.fromJson(Map<String, dynamic> json) =>
       _$TamanhoDtoFromJson(json);
+
+  @override
+  List<Object?> get props => [id, inativo, nome];
+
+  @override
+  bool? get stringify => true;
 }

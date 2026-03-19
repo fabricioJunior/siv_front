@@ -18,5 +18,10 @@ abstract class IProdutosRemoteDataSource {
 
   Future<void> excluirProduto(int id);
 
-  Future<List<Produto>> fetchProdutos({String? idExterno, int? referenciaId});
+  Future<List<Produto>> fetchProdutos({
+    String? idExterno,
+    int? referenciaId,
+    int? corId,
+    int? tamanhoId,
+  });
 }

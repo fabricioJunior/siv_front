@@ -10,6 +10,7 @@ enum ReferenciaSeletorModo { unica, multipla }
 class ReferenciaSeletor extends StatefulWidget {
   final ReferenciaSeletorModo modo;
   final List<Referencia> referenciasSelecionadasIniciais;
+  final List<int> idReferenciasSelecionadasIniciais;
   final ValueChanged<List<Referencia>>? onChanged;
   final String titulo;
 
@@ -17,6 +18,7 @@ class ReferenciaSeletor extends StatefulWidget {
     super.key,
     this.modo = ReferenciaSeletorModo.unica,
     this.referenciasSelecionadasIniciais = const [],
+    this.idReferenciasSelecionadasIniciais = const [],
     this.onChanged,
     this.titulo = 'Referências',
   });
@@ -32,7 +34,13 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
   void initState() {
     super.initState();
     _referenciasBloc = sl<ReferenciasBloc>()
-      ..add(ReferenciasIniciou(inativo: false));
+      ..add(
+        ReferenciasIniciou(
+          inativo: false,
+          idsReferenciasSelecionadasIniciais:
+              widget.idReferenciasSelecionadasIniciais,
+        ),
+      );
   }
 
   @override
@@ -77,7 +85,7 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
             modo: widget.modo == ReferenciaSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: widget.referenciasSelecionadasIniciais
+            selecionadosIniciais: state.referenciasSelecionadas
                 .where(
                   (referenciaInicial) => state.referencias.any(
                     (referencia) =>

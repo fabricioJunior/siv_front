@@ -5,43 +5,34 @@ import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentation.dart';
 
-class ProdutoPage extends StatefulWidget {
+class ProdutoPage extends StatelessWidget {
   final Produto? produto;
+  final int? referenciaId;
+  final int? corId;
+  final int? tamanhoId;
 
-  const ProdutoPage({super.key, this.produto});
-
-  @override
-  State<ProdutoPage> createState() => _ProdutoPageState();
-}
-
-class _ProdutoPageState extends State<ProdutoPage> {
-  late final ProdutoBloc _bloc;
-
-  int _etapaAtual = 0;
-  bool _criarCodigoBarrasAutomaticamente = false;
-  Referencia? _referenciaSelecionada;
-  List<Cor> _coresSelecionadas = const [];
-  List<Tamanho> _tamanhosSelecionados = const [];
-  List<_CombinacaoCadastro> _combinacoes = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    _bloc = sl<ProdutoBloc>()..add(ProdutoIniciou(produto: widget.produto));
-  }
-
-  @override
-  void dispose() {
-    _bloc.close();
-    super.dispose();
-  }
+  const ProdutoPage({
+    super.key,
+    this.produto,
+    this.referenciaId,
+    this.corId,
+    this.tamanhoId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final editando = widget.produto?.id != null;
+    final editando = produto?.id != null;
 
-    return BlocProvider<ProdutoBloc>.value(
-      value: _bloc,
+    return BlocProvider<ProdutoBloc>(
+      create: (_) => sl<ProdutoBloc>()
+        ..add(
+          ProdutoIniciou(
+            produto: produto,
+            referenciaId: referenciaId,
+            corId: corId,
+            tamanhoId: tamanhoId,
+          ),
+        ),
       child: BlocListener<ProdutoBloc, ProdutoState>(
         listenWhen: (previous, current) =>
             previous.produtoStep != current.produtoStep,
@@ -68,19 +59,19 @@ class _ProdutoPageState extends State<ProdutoPage> {
                 title: Text(editando ? 'Editar Produto' : 'Novo Produto'),
               ),
               body: SafeArea(
-                child: carregando && _etapaAtual == 2
+                child: carregando && state.etapaAtual == 2
                     ? const Center(child: CircularProgressIndicator.adaptive())
                     : Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                            child: _buildStepper(context),
+                            child: _buildStepper(context, state),
                           ),
                           const Divider(height: 1),
                           Expanded(
                             child: SingleChildScrollView(
                               padding: const EdgeInsets.all(16),
-                              child: _buildConteudoEtapa(context),
+                              child: _buildConteudoEtapa(context, state),
                             ),
                           ),
                         ],
@@ -92,15 +83,15 @@ class _ProdutoPageState extends State<ProdutoPage> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Row(
                     children: [
-                      if (_etapaAtual > 0)
+                      if (state.etapaAtual > 0)
                         OutlinedButton.icon(
                           onPressed: carregando
                               ? null
-                              : () {
-                                  setState(() {
-                                    _etapaAtual = _etapaAtual - 1;
-                                  });
-                                },
+                              : () => context.read<ProdutoBloc>().add(
+                                  ProdutoEtapaAtualizou(
+                                    etapaAtual: state.etapaAtual - 1,
+                                  ),
+                                ),
                           icon: const Icon(Icons.arrow_back),
                           label: const Text('Voltar'),
                         )
@@ -110,11 +101,13 @@ class _ProdutoPageState extends State<ProdutoPage> {
                       FilledButton.icon(
                         onPressed: carregando
                             ? null
-                            : () => _avancarFluxo(context),
+                            : () => _avancarFluxo(context, state),
                         icon: Icon(
-                          _etapaAtual == 2 ? Icons.check : Icons.arrow_forward,
+                          state.etapaAtual == 2
+                              ? Icons.check
+                              : Icons.arrow_forward,
                         ),
-                        label: Text(_labelAcaoPrincipal()),
+                        label: Text(_labelAcaoPrincipal(state.etapaAtual)),
                       ),
                     ],
                   ),
@@ -127,14 +120,14 @@ class _ProdutoPageState extends State<ProdutoPage> {
     );
   }
 
-  Widget _buildStepper(BuildContext context) {
+  Widget _buildStepper(BuildContext context, ProdutoState state) {
     final theme = Theme.of(context);
     const titulos = ['1. Seleção', '2. Combinações', '3. Confirmação'];
 
     return Row(
       children: List.generate(titulos.length, (index) {
-        final ativo = _etapaAtual == index;
-        final concluido = _etapaAtual > index;
+        final ativo = state.etapaAtual == index;
+        final concluido = state.etapaAtual > index;
         final cor = ativo
             ? theme.colorScheme.primary
             : concluido
@@ -162,20 +155,20 @@ class _ProdutoPageState extends State<ProdutoPage> {
     );
   }
 
-  Widget _buildConteudoEtapa(BuildContext context) {
-    switch (_etapaAtual) {
+  Widget _buildConteudoEtapa(BuildContext context, ProdutoState state) {
+    switch (state.etapaAtual) {
       case 0:
-        return _buildEtapaSelecao();
+        return _buildEtapaSelecao(context, state);
       case 1:
-        return _buildEtapaCombinacoes(context);
+        return _buildEtapaCombinacoes(context, state);
       case 2:
-        return _buildEtapaConfirmacao(context);
+        return _buildEtapaConfirmacao(context, state);
       default:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _buildEtapaSelecao() {
+  Widget _buildEtapaSelecao(BuildContext context, ProdutoState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -186,61 +179,64 @@ class _ProdutoPageState extends State<ProdutoPage> {
         const SizedBox(height: 12),
         ReferenciaSeletor(
           modo: ReferenciaSeletorModo.unica,
-          referenciasSelecionadasIniciais: _referenciaSelecionada == null
+          idReferenciasSelecionadasIniciais: referenciaId != null
+              ? [referenciaId!]
+              : [],
+          referenciasSelecionadasIniciais: state.referenciaSelecionada == null
               ? const []
-              : [_referenciaSelecionada!],
+              : [state.referenciaSelecionada!],
           onChanged: (selecionadas) {
-            setState(() {
-              _referenciaSelecionada = selecionadas.isEmpty
-                  ? null
-                  : selecionadas.first;
-            });
+            context.read<ProdutoBloc>().add(
+              ProdutoReferenciaSelecionou(
+                referencia: selecionadas.isEmpty ? null : selecionadas.first,
+              ),
+            );
           },
         ),
         const SizedBox(height: 12),
         CorSeletor(
           modo: CorSeletorModo.multipla,
-          coresSelecionadasIniciais: _coresSelecionadas,
+          coresSelecionadasIniciais: state.coresSelecionadas,
           onChanged: (selecionadas) {
-            setState(() {
-              _coresSelecionadas = selecionadas;
-              _sincronizarCombinacoes();
-            });
+            context.read<ProdutoBloc>().add(
+              ProdutoCoresSelecionou(cores: selecionadas),
+            );
           },
         ),
         const SizedBox(height: 12),
         TamanhoSeletor(
           modo: TamanhoSeletorModo.multipla,
-          tamanhosSelecionadosIniciais: _tamanhosSelecionados,
+          tamanhosSelecionadosIniciais: state.tamanhosSelecionados,
           onChanged: (selecionados) {
-            setState(() {
-              _tamanhosSelecionados = selecionados;
-              _sincronizarCombinacoes();
-            });
+            context.read<ProdutoBloc>().add(
+              ProdutoTamanhosSelecionou(tamanhos: selecionados),
+            );
           },
         ),
         const SizedBox(height: 12),
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Criar código de barras automaticamente'),
-          value: _criarCodigoBarrasAutomaticamente,
+          value: state.criarCodigoBarrasAutomaticamente,
           onChanged: (value) {
-            setState(() {
-              _criarCodigoBarrasAutomaticamente = value ?? false;
-            });
+            context.read<ProdutoBloc>().add(
+              ProdutoCriacaoCodigoBarrasAutomaticaAlternou(
+                criarCodigoBarrasAutomaticamente: value ?? false,
+              ),
+            );
           },
         ),
         const SizedBox(height: 4),
         Text(
-          'Prévia: ${_coresSelecionadas.length} cor(es) x ${_tamanhosSelecionados.length} tamanho(s) = ${_coresSelecionadas.length * _tamanhosSelecionados.length} combinação(ões)',
+          'Prévia: ${state.coresSelecionadas.length} cor(es) x ${state.tamanhosSelecionados.length} tamanho(s) = ${state.coresSelecionadas.length * state.tamanhosSelecionados.length} combinação(ões)',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
   }
 
-  Widget _buildEtapaCombinacoes(BuildContext context) {
-    if (_combinacoes.isEmpty) {
+  Widget _buildEtapaCombinacoes(BuildContext context, ProdutoState state) {
+    if (state.combinacoes.isEmpty) {
       return const Text(
         'Nenhuma combinação gerada. Volte e selecione cores e tamanhos.',
       );
@@ -261,10 +257,10 @@ class _ProdutoPageState extends State<ProdutoPage> {
               DataColumn(label: Text('Inserir')),
               const DataColumn(label: Text('Cor')),
               const DataColumn(label: Text('Tamanho')),
-              if (!_criarCodigoBarrasAutomaticamente)
+              if (!state.criarCodigoBarrasAutomaticamente)
                 const DataColumn(label: Text('Código de barras')),
             ],
-            rows: _combinacoes.map((item) {
+            rows: state.combinacoes.map((item) {
               return DataRow(
                 selected: item.selecionada,
                 cells: [
@@ -272,15 +268,18 @@ class _ProdutoPageState extends State<ProdutoPage> {
                     Checkbox(
                       value: item.selecionada,
                       onChanged: (value) {
-                        setState(() {
-                          item.selecionada = value ?? false;
-                        });
+                        context.read<ProdutoBloc>().add(
+                          ProdutoCombinacaoSelecionou(
+                            chave: item.chave,
+                            selecionada: value ?? false,
+                          ),
+                        );
                       },
                     ),
                   ),
                   DataCell(Text(item.cor.nome)),
                   DataCell(Text(item.tamanho.nome)),
-                  if (!_criarCodigoBarrasAutomaticamente)
+                  if (!state.criarCodigoBarrasAutomaticamente)
                     DataCell(
                       Row(
                         children: [
@@ -295,7 +294,8 @@ class _ProdutoPageState extends State<ProdutoPage> {
                           ),
                           const SizedBox(width: 8),
                           OutlinedButton(
-                            onPressed: () => _editarCodigoDeBarras(item),
+                            onPressed: () =>
+                                _editarCodigoDeBarras(context, state, item),
                             child: Text(
                               item.codigoDeBarras.isEmpty
                                   ? 'Informar'
@@ -310,7 +310,7 @@ class _ProdutoPageState extends State<ProdutoPage> {
             }).toList(),
           ),
         ),
-        if (_criarCodigoBarrasAutomaticamente) ...[
+        if (state.criarCodigoBarrasAutomaticamente) ...[
           const SizedBox(height: 8),
           Text(
             'Os códigos de barras serão gerados automaticamente ao confirmar o cadastro.',
@@ -319,15 +319,15 @@ class _ProdutoPageState extends State<ProdutoPage> {
         ],
         const SizedBox(height: 8),
         Text(
-          'Selecionadas: ${_combinacoes.where((item) => item.selecionada).length} de ${_combinacoes.length}',
+          'Selecionadas: ${state.combinacoes.where((item) => item.selecionada).length} de ${state.combinacoes.length}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
   }
 
-  Widget _buildEtapaConfirmacao(BuildContext context) {
-    final selecionadas = _combinacoes
+  Widget _buildEtapaConfirmacao(BuildContext context, ProdutoState state) {
+    final selecionadas = state.combinacoes
         .where((item) => item.selecionada)
         .toList();
 
@@ -342,7 +342,7 @@ class _ProdutoPageState extends State<ProdutoPage> {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Referência'),
-          subtitle: Text(_referenciaSelecionada?.nome ?? '-'),
+          subtitle: Text(state.referenciaSelecionada?.nome ?? '-'),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -367,50 +367,51 @@ class _ProdutoPageState extends State<ProdutoPage> {
     );
   }
 
-  String _labelAcaoPrincipal() {
-    if (_etapaAtual == 2) {
+  String _labelAcaoPrincipal(int etapaAtual) {
+    if (etapaAtual == 2) {
       return 'Confirmar cadastro';
     }
     return 'Próximo';
   }
 
-  void _avancarFluxo(BuildContext context) {
-    if (_etapaAtual == 0) {
-      if (_referenciaSelecionada == null) {
-        _mostrarMensagem('Selecione uma referência para continuar.');
+  void _avancarFluxo(BuildContext context, ProdutoState state) {
+    if (state.etapaAtual == 0) {
+      if (state.referenciaSelecionada == null && state.referenciaId == null) {
+        _mostrarMensagem(context, 'Selecione uma referência para continuar.');
         return;
       }
-      if (_coresSelecionadas.isEmpty) {
-        _mostrarMensagem('Selecione ao menos uma cor.');
+      if (state.coresSelecionadas.isEmpty) {
+        _mostrarMensagem(context, 'Selecione ao menos uma cor.');
         return;
       }
-      if (_tamanhosSelecionados.isEmpty) {
-        _mostrarMensagem('Selecione ao menos um tamanho.');
+      if (state.tamanhosSelecionados.isEmpty) {
+        _mostrarMensagem(context, 'Selecione ao menos um tamanho.');
         return;
       }
 
-      setState(() {
-        _sincronizarCombinacoes();
-        _etapaAtual = 1;
-      });
+      context.read<ProdutoBloc>().add(ProdutoEtapaAtualizou(etapaAtual: 1));
       return;
     }
 
-    if (_etapaAtual == 1) {
-      final selecionadas = _combinacoes
+    if (state.etapaAtual == 1) {
+      final selecionadas = state.combinacoes
           .where((item) => item.selecionada)
           .toList();
       if (selecionadas.isEmpty) {
-        _mostrarMensagem('Selecione ao menos uma combinação para continuar.');
+        _mostrarMensagem(
+          context,
+          'Selecione ao menos uma combinação para continuar.',
+        );
         return;
       }
 
-      if (!_criarCodigoBarrasAutomaticamente) {
+      if (!state.criarCodigoBarrasAutomaticamente) {
         final temSemCodigo = selecionadas.any(
           (item) => item.codigoDeBarras.trim().isEmpty,
         );
         if (temSemCodigo) {
           _mostrarMensagem(
+            context,
             'Informe o código de barras para todas as combinações selecionadas.',
           );
           return;
@@ -419,32 +420,31 @@ class _ProdutoPageState extends State<ProdutoPage> {
         final codigosDuplicados = _obterCodigosDuplicados(selecionadas);
         if (codigosDuplicados.isNotEmpty) {
           _mostrarMensagem(
+            context,
             'Existem códigos de barras duplicados: ${codigosDuplicados.join(', ')}.',
           );
           return;
         }
       }
 
-      setState(() {
-        _etapaAtual = 2;
-      });
+      context.read<ProdutoBloc>().add(ProdutoEtapaAtualizou(etapaAtual: 2));
       return;
     }
 
-    final referenciaId = _referenciaSelecionada?.id;
+    final referenciaId = state.referenciaSelecionada?.id ?? state.referenciaId;
     if (referenciaId == null) {
-      _mostrarMensagem('Referência inválida para cadastro.');
+      _mostrarMensagem(context, 'Referência inválida para cadastro.');
       return;
     }
 
-    final selecionadas = _combinacoes
+    final selecionadas = state.combinacoes
         .where((item) => item.selecionada)
         .where((item) => item.cor.id != null && item.tamanho.id != null)
         .map(
           (item) => ProdutoCombinacaoSelecao(
             corId: item.cor.id!,
             tamanhoId: item.tamanho.id!,
-            codigoDeBarras: _criarCodigoBarrasAutomaticamente
+            codigoDeBarras: state.criarCodigoBarrasAutomaticamente
                 ? null
                 : (item.codigoDeBarras.trim().isEmpty
                       ? null
@@ -455,6 +455,7 @@ class _ProdutoPageState extends State<ProdutoPage> {
 
     if (selecionadas.isEmpty) {
       _mostrarMensagem(
+        context,
         'As combinações selecionadas precisam ter cor e tamanho válidos.',
       );
       return;
@@ -464,43 +465,23 @@ class _ProdutoPageState extends State<ProdutoPage> {
       ProdutoSalvouCombinacoes(
         referenciaId: referenciaId,
         combinacoes: selecionadas,
-        criarCodigoDeBarrasAutomaticamente: _criarCodigoBarrasAutomaticamente,
+        criarCodigoDeBarrasAutomaticamente:
+            state.criarCodigoBarrasAutomaticamente,
       ),
     );
   }
 
-  void _sincronizarCombinacoes() {
-    final statusAnterior = <String, _CombinacaoCadastro>{
-      for (final item in _combinacoes) item.chave: item,
-    };
-
-    final novas = <_CombinacaoCadastro>[];
-
-    for (final cor in _coresSelecionadas) {
-      for (final tamanho in _tamanhosSelecionados) {
-        final chave = _CombinacaoCadastro.gerarChave(cor, tamanho);
-        final anterior = statusAnterior[chave];
-        novas.add(
-          _CombinacaoCadastro(
-            cor: cor,
-            tamanho: tamanho,
-            selecionada: anterior?.selecionada ?? true,
-            codigoDeBarras: anterior?.codigoDeBarras ?? '',
-          ),
-        );
-      }
-    }
-
-    _combinacoes = novas;
-  }
-
-  void _mostrarMensagem(String mensagem) {
+  void _mostrarMensagem(BuildContext context, String mensagem) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
-  Future<void> _editarCodigoDeBarras(_CombinacaoCadastro item) async {
+  Future<void> _editarCodigoDeBarras(
+    BuildContext context,
+    ProdutoState state,
+    ProdutoCombinacaoCadastro item,
+  ) async {
     final controller = TextEditingController(text: item.codigoDeBarras);
 
     final codigo = await showDialog<String>(
@@ -543,23 +524,33 @@ class _ProdutoPageState extends State<ProdutoPage> {
     final codigoNormalizado = codigo.trim();
     final codigoDuplicado =
         codigoNormalizado.isNotEmpty &&
-        _combinacoes.any(
+        state.combinacoes.any(
           (combinacao) =>
               !identical(combinacao, item) &&
               combinacao.codigoDeBarras.trim() == codigoNormalizado,
         );
 
     if (codigoDuplicado) {
-      _mostrarMensagem('Código de barras já informado em outra combinação.');
+      // ignore: use_build_context_synchronously
+      _mostrarMensagem(
+        context,
+        'Código de barras já informado em outra combinação.',
+      );
       return;
     }
 
-    setState(() {
-      item.codigoDeBarras = codigoNormalizado;
-    });
+    // ignore: use_build_context_synchronously
+    context.read<ProdutoBloc>().add(
+      ProdutoCombinacaoCodigoBarrasEditou(
+        chave: item.chave,
+        codigoDeBarras: codigoNormalizado,
+      ),
+    );
   }
 
-  List<String> _obterCodigosDuplicados(List<_CombinacaoCadastro> combinacoes) {
+  List<String> _obterCodigosDuplicados(
+    List<ProdutoCombinacaoCadastro> combinacoes,
+  ) {
     final frequencia = <String, int>{};
 
     for (final combinacao in combinacoes) {
@@ -574,27 +565,5 @@ class _ProdutoPageState extends State<ProdutoPage> {
         .where((entry) => entry.value > 1)
         .map((entry) => entry.key)
         .toList();
-  }
-}
-
-class _CombinacaoCadastro {
-  final Cor cor;
-  final Tamanho tamanho;
-  bool selecionada;
-  String codigoDeBarras;
-
-  _CombinacaoCadastro({
-    required this.cor,
-    required this.tamanho,
-    this.selecionada = true,
-    this.codigoDeBarras = '',
-  });
-
-  String get chave => gerarChave(cor, tamanho);
-
-  static String gerarChave(Cor cor, Tamanho tamanho) {
-    final corKey = cor.id?.toString() ?? cor.nome;
-    final tamanhoKey = tamanho.id?.toString() ?? tamanho.nome;
-    return '$corKey|$tamanhoKey';
   }
 }

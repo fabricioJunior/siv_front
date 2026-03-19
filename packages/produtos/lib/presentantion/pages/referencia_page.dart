@@ -425,6 +425,67 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                 ],
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Produtos da referência',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pushNamed(
+                                          '/produto',
+                                          arguments: {
+                                            'referenciaId':
+                                                state.referencia?.id,
+                                          },
+                                        )
+                                        .then((_) {
+                                          // ignore: use_build_context_synchronously
+                                          context.read<ReferenciaBloc>().add(
+                                            ReferenciaIniciou(
+                                              idReferencia: widget.idReferencia,
+                                            ),
+                                          );
+                                        });
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.add),
+                                      const SizedBox(width: 4),
+                                      Text('Cadastrar novo produto'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child:
+                                  (_referencia?.id ?? widget.idReferencia) > 0
+                                  ? ProdutosDaReferenciaTabelaidget(
+                                      permitirCriacaoDeNovoProduto: true,
+                                      referenciaId:
+                                          _referencia?.id ??
+                                          widget.idReferencia,
+                                    )
+                                  : const Text(
+                                      'ID da referência indisponível para carregar produtos.',
+                                    ),
+                            ),
                             const SizedBox(height: 96),
                           ],
                         ),

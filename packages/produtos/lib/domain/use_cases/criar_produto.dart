@@ -12,7 +12,15 @@ class CriarProduto {
     String? idExterno,
     required int corId,
     required int tamanhoId,
-  }) {
+  }) async {
+    var busca = await _produtosRepository.obterProdutos(
+      referenciaId: referenciaId,
+      idCor: corId,
+      idTamanho: tamanhoId,
+    );
+    if (busca.isNotEmpty) {
+      return busca.first;
+    }
     return _produtosRepository.criarProduto(
       referenciaId: referenciaId,
       idExterno: idExterno,

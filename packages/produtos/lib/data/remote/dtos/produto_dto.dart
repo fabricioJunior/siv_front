@@ -1,3 +1,6 @@
+import 'package:produtos/data/remote/dtos/cor_dto.dart';
+import 'package:produtos/data/remote/dtos/referencia_dto.dart';
+import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/models.dart';
 
 class ProdutoDto implements Produto {
@@ -22,6 +25,9 @@ class ProdutoDto implements Produto {
     required this.idExterno,
     required this.corId,
     required this.tamanhoId,
+    this.cor,
+    this.referencia,
+    this.tamanho,
   });
 
   factory ProdutoDto.fromJson(Map<String, dynamic> json) {
@@ -31,6 +37,15 @@ class ProdutoDto implements Produto {
       idExterno: (json['idExterno'] ?? '').toString(),
       corId: (json['corId'] as num?)?.toInt() ?? 0,
       tamanhoId: (json['tamanhoId'] as num?)?.toInt() ?? 0,
+      tamanho: json['tamanho'] != null
+          ? TamanhoDto.fromJson(json['tamanho'] as Map<String, dynamic>)
+          : null,
+      cor: json['cor'] != null
+          ? CorDto.fromJson(json['cor'] as Map<String, dynamic>)
+          : null,
+      referencia: json['referencia'] != null
+          ? ReferenciaDto.fromJson(json['referencia'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -49,6 +64,15 @@ class ProdutoDto implements Produto {
 
   @override
   bool? get stringify => true;
+
+  @override
+  final CorDto? cor;
+
+  @override
+  final ReferenciaDto? referencia;
+
+  @override
+  final TamanhoDto? tamanho;
 }
 
 extension ProdutoToDto on Produto {

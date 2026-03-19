@@ -271,6 +271,10 @@ void _presentantion() {
 
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 
+  sl.registerFactory<ProdutosDaReferenciaBloc>(
+    () => ProdutosDaReferenciaBloc(sl()),
+  );
+
   sl.registerFactory<ProdutoBloc>(
     () => ProdutoBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );

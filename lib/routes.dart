@@ -120,6 +120,13 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/produtos': (context) {
     return ProdutosPage();
   },
+  '/produto': (context) {
+    return ProdutoPage(
+      referenciaId: args(context)['referenciaId'],
+      corId: args(context)['corId'],
+      tamanhoId: args(context)['tamanhoId'],
+    );
+  },
   //CONFIGURACOES:
   '/configuracao_smtp': (context) {
     return ConfiguracaoSTMPPage();

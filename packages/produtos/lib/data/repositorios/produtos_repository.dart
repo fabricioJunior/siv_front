@@ -45,10 +45,17 @@ class ProdutosRepository implements IProdutosRepository {
   }
 
   @override
-  Future<List<Produto>> obterProdutos({String? idExterno, int? referenciaId}) {
+  Future<List<Produto>> obterProdutos({
+    String? idExterno,
+    int? referenciaId,
+    int? idCor,
+    int? idTamanho,
+  }) {
     return produtosRemoteDataSource.fetchProdutos(
       idExterno: idExterno,
       referenciaId: referenciaId,
+      corId: idCor,
+      tamanhoId: idTamanho,
     );
   }
 }

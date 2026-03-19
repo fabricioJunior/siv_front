@@ -88,14 +88,17 @@ class ProdutosPage extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        title: Text('ID Externo: ${produto.idExterno}'),
+        title: Text(
+          'Referência:  ${produto.referencia?.id ?? '-'} - ${produto.referencia?.nome ?? '-'}',
+        ),
         subtitle: Text(
-          'ID: ${produto.id ?? '-'} · Referência: ${produto.referenciaId}\nCor: ${produto.corId} · Tamanho: ${produto.tamanhoId}',
+          'Cor: ${produto.cor?.nome ?? '-'} · Tamanho: ${produto.tamanho?.nome ?? '-'} · ID: ${produto.id ?? '-'} ',
         ),
         isThreeLine: true,
         onTap: () async {
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (_) => ProdutoPage(produto: produto)),
+          final result = await ProdutoVisualizacaoModal.show(
+            context: context,
+            produto: produto,
           );
 
           if (result == true) {
@@ -103,12 +106,6 @@ class ProdutosPage extends StatelessWidget {
             context.read<ProdutosBloc>().add(ProdutosIniciou());
           }
         },
-        trailing: produto.id == null
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => _confirmarExclusao(context, produto),
-              ),
       ),
     );
   }
@@ -135,34 +132,5 @@ class ProdutosPage extends StatelessWidget {
 
   Widget _buildEmpty() {
     return const Center(child: Text('Nenhum produto encontrado.'));
-  }
-
-  void _confirmarExclusao(BuildContext context, Produto produto) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Excluir produto'),
-          content: Text(
-            'Deseja realmente excluir o produto ${produto.idExterno}?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.read<ProdutosBloc>().add(
-                  ProdutosExcluiu(id: produto.id!),
-                );
-              },
-              child: const Text('Excluir'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

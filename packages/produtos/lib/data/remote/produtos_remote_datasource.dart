@@ -61,12 +61,16 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
   Future<List<Produto>> fetchProdutos({
     String? idExterno,
     int? referenciaId,
+    int? corId,
+    int? tamanhoId,
   }) async {
     final response = await get(
       queryParameters: {
         'incluir': 'tudo',
         if (idExterno != null && idExterno.isNotEmpty) 'idExterno': idExterno,
-        if (referenciaId != null) 'referenciaId': referenciaId.toString(),
+        if (referenciaId != null) 'referencia': referenciaId.toString(),
+        if (corId != null) 'corId': corId.toString(),
+        if (tamanhoId != null) 'tamanhoId': tamanhoId.toString(),
       },
     );
 

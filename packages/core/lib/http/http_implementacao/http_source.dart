@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:core/http/http_implementacao/http_response.dart';
 import 'package:core/http/i_http_response.dart';
@@ -49,6 +50,37 @@ class HttpSource implements IHttpSource {
     var response =
         await client.put(uri, body: jsonEncode(body), headers: _defaultHeaders);
 
+    return HttpResponse(response: response);
+  }
+
+  @override
+  Future<IHttpResponse> postMultipart({
+    required Uri uri,
+    required String field,
+    required File file,
+    Map<String, dynamic>? body,
+  }) async {
+    var request = lib.MultipartRequest('POST', uri);
+
+    if (body != null) {
+      request.fields.addAll(
+        body.map((key, value) {
+          if (value == null) {
+            return MapEntry(key, '');
+          }
+
+          if (value is String) {
+            return MapEntry(key, value);
+          }
+
+          return MapEntry(key, jsonEncode(value));
+        }),
+      );
+    }
+
+    request.files.add(await lib.MultipartFile.fromPath(field, file.path));
+    var streamedResponse = await request.send();
+    var response = await lib.Response.fromStream(streamedResponse);
     return HttpResponse(response: response);
   }
 }

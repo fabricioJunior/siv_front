@@ -285,57 +285,6 @@ class PagamentoAvulsoDetalhesPage extends StatelessWidget {
     }
   }
 
-  String? _obterReceiptUrl() {
-    final urlComprovante = pagamento.urlComprovante;
-    if (urlComprovante != null && urlComprovante.trim().isNotEmpty) {
-      return urlComprovante;
-    }
-
-    final urlDePagamento = pagamento.urlDePagamento;
-    if (urlDePagamento != null && urlDePagamento.trim().isNotEmpty) {
-      return urlDePagamento;
-    }
-
-    final dynamic receiptUrl = _buscarValorRecursivo(
-      pagamento.respostaGateway,
-      'receipt_url',
-    );
-
-    if (receiptUrl is String && receiptUrl.trim().isNotEmpty) {
-      return receiptUrl;
-    }
-
-    return null;
-  }
-
-  dynamic _buscarValorRecursivo(Map<String, dynamic> mapa, String chave) {
-    if (mapa.containsKey(chave)) {
-      return mapa[chave];
-    }
-
-    for (final dynamic value in mapa.values) {
-      if (value is Map<String, dynamic>) {
-        final dynamic encontrado = _buscarValorRecursivo(value, chave);
-        if (encontrado != null) {
-          return encontrado;
-        }
-      }
-
-      if (value is List) {
-        for (final dynamic item in value) {
-          if (item is Map<String, dynamic>) {
-            final dynamic encontrado = _buscarValorRecursivo(item, chave);
-            if (encontrado != null) {
-              return encontrado;
-            }
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
   Future<void> _abrirDadosTecnicos(BuildContext context) async {
     final metadata = _formatarMapa(pagamento.metadata);
     final requisicao = _formatarMapa(pagamento.requisicaoGateway);

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:core/http/i_http_source.dart';
 import 'package:core/http/i_http_response.dart';
@@ -51,7 +52,24 @@ abstract class RemoteDataSourceBase {
       queryParameters: queryParameters,
     );
     uri = _insertPath(uri, pathParameters);
-    var libResponse = await httpClient.put(uri: uri, body: body);
+    var libResponse = await httpClient.put(uri: uri, body: jsonEncode(body));
+    _validateResponse(libResponse);
+    return libResponse;
+  }
+
+  Future<IHttpResponse> postFile({
+    required String field,
+    required File file,
+    Map<String, String>? queryParameters,
+    Map<String, dynamic>? pathParameters,
+    Map<String, dynamic>? body,
+  }) async {
+    var uri = _wrapUri(
+      queryParameters: queryParameters,
+    );
+    uri = _insertPath(uri, pathParameters);
+    var libResponse =
+        await httpClient.postMultipart(uri: uri, field: field, file: file);
     _validateResponse(libResponse);
     return libResponse;
   }

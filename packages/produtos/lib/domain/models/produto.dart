@@ -45,6 +45,15 @@ class _ProdutoImpl implements Produto {
   @override
   final int tamanhoId;
 
+  @override
+  final Cor? cor;
+
+  @override
+  final Referencia? referencia;
+
+  @override
+  final Tamanho? tamanho;
+
   _ProdutoImpl({
     this.id,
     required this.referenciaId,
@@ -80,15 +89,6 @@ class _ProdutoImpl implements Produto {
 
   @override
   bool? get stringify => true;
-
-  @override
-  final Cor? cor;
-
-  @override
-  final Referencia? referencia;
-
-  @override
-  final Tamanho? tamanho;
 }
 
 extension ProdutoCopyWith on Produto {

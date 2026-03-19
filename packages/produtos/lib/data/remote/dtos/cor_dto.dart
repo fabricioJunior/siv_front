@@ -1,4 +1,3 @@
-import 'package:core/equals.dart';
 import 'package:produtos/models.dart';
 import 'package:json_annotation/json_annotation.dart';
 

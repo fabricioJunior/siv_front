@@ -5,3 +5,4 @@ export 'domain/models/sub_categoria.dart';
 export 'domain/models/marca.dart';
 export 'domain/models/referencia.dart';
 export 'domain/models/produto.dart';
+export 'domain/models/referencia_midia.dart';

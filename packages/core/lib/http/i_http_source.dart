@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:core/http/i_http_response.dart';
+import 'package:http/http.dart';
 
 abstract class IHttpSource {
   Future<IHttpResponse> post({
@@ -16,5 +19,12 @@ abstract class IHttpSource {
 
   Future<IHttpResponse> delete({
     required Uri uri,
+  });
+
+  Future<IHttpResponse> postMultipart({
+    required Uri uri,
+    required String field,
+    required File file,
+    Map<String, dynamic>? body,
   });
 }

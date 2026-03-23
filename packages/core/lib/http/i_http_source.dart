@@ -26,5 +26,6 @@ abstract class IHttpSource {
     required String field,
     required File file,
     Map<String, dynamic>? body,
+    bool compressImage = true,
   });
 }

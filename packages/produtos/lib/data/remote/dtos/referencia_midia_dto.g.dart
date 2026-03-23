@@ -13,6 +13,7 @@ ReferenciaMidiaDto _$ReferenciaMidiaDtoFromJson(Map<String, dynamic> json) =>
       isDefault: json['isDefault'] as bool,
       isPublic: json['isPublic'] as bool,
       referenciaId: (json['referenciaId'] as num).toInt(),
+      descricao: json['description'] as String?,
     );
 
 Map<String, dynamic> _$ReferenciaMidiaDtoToJson(ReferenciaMidiaDto instance) =>
@@ -22,4 +23,5 @@ Map<String, dynamic> _$ReferenciaMidiaDtoToJson(ReferenciaMidiaDto instance) =>
       'isDefault': instance.isDefault,
       'isPublic': instance.isPublic,
       'referenciaId': instance.referenciaId,
+      'description': instance.descricao,
     };

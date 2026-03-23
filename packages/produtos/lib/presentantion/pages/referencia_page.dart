@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart';
+import 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';
+import 'package:produtos/presentantion/bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 
 class ReferenciaPage extends StatefulWidget {
   final int idReferencia;
@@ -181,8 +183,11 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ReferenciaBloc>.value(
-      value: _bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ReferenciaBloc>.value(value: _bloc),
+        BlocProvider(create: (context) => sl<ReferenciaMidiasBloc>()),
+      ],
       child: BlocConsumer<ReferenciaBloc, ReferenciaState>(
         listener: (context, state) {
           if (state is ReferenciaCarregarSucesso) {
@@ -246,6 +251,15 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 16),
+                            // Widget de mídias da referência
+                            if ((_referencia?.id ?? widget.idReferencia) > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: ReferenciaMidiasWidget(
+                                  referenciaId:
+                                      _referencia?.id ?? widget.idReferencia,
+                                ),
+                              ),
                             TextFormField(
                               controller: _idController,
                               readOnly: true,

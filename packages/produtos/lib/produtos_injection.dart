@@ -1,5 +1,7 @@
 import 'package:core/injecoes.dart';
 import 'package:produtos/data/remote/tamanhos_remote_datasource.dart';
+import 'package:produtos/data/remote/referencia_midias_remote_data_source.dart';
+import 'package:produtos/data/repositorios/referencia_midias_repository.dart';
 import 'package:produtos/data/remote/cores_remote_datasource.dart';
 import 'package:produtos/data/remote/categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
@@ -15,7 +17,9 @@ import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
 import 'package:produtos/data/repositorios/produtos_repository.dart';
 import 'package:produtos/data/repositorios/codigo_de_barras_repository.dart';
+import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
+import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.dart';
@@ -23,6 +27,7 @@ import 'package:produtos/domain/data/remote/i_marcas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_produtos_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigo_de_barras_remotedatasource.dart';
+import 'package:produtos/presentantion/bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/repositorios.dart';
 import 'package:produtos/use_cases.dart';
@@ -66,6 +71,10 @@ void _data() {
   sl.registerFactory<ICodigoDeBarrasRemoteDatasource>(
     () => CodigoDeBarrasRemoteDatasource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IReferenciaMidiasRemoteDataSource>(
+    () => ReferenciaMidiasRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -99,6 +108,10 @@ void _repositores() {
 
   sl.registerFactory<ICodigoDeBarrasRepository>(
     () => CodigoDeBarrasRepository(codigoDeBarrasRemoteDatasource: sl()),
+  );
+
+  sl.registerFactory<IReferenciaMidiasRepository>(
+    () => ReferenciaMidiasRepository(referenciaMidiasRemoteDataSource: sl()),
   );
 }
 
@@ -240,6 +253,18 @@ void _usesCases() {
   sl.registerFactory<DeletarCodigoDeBarras>(
     () => DeletarCodigoDeBarras(codigoDeBarrasRepository: sl()),
   );
+
+  sl.registerFactory<RecuperarReferenciaMidias>(
+    () => RecuperarReferenciaMidias(referenciaMidiasRepository: sl()),
+  );
+
+  sl.registerFactory<CriarReferenciaMidia>(
+    () => CriarReferenciaMidia(referenciaMidiasRepository: sl()),
+  );
+
+  sl.registerFactory<ExcluirReferenciaMidia>(
+    () => ExcluirReferenciaMidia(referenciaMidiasRepository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -285,6 +310,10 @@ void _presentantion() {
 
   sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(
     () => CategoriaSubCategoriaSelecaoBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<ReferenciaMidiasBloc>(
+    () => ReferenciaMidiasBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());

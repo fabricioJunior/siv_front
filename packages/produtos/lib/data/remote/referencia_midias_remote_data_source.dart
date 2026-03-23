@@ -15,9 +15,10 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<ReferenciaMidia> atualizarReferenciaMidia(
     ReferenciaMidia referenciaMidia,
-  ) {
-    // TODO: implement atualizarReferenciaMidia
-    throw UnimplementedError();
+  ) async {
+    throw UnsupportedError(
+      'A documentação da API de Referências - Mídias não expõe endpoint PUT para atualização.',
+    );
   }
 
   @override
@@ -28,15 +29,17 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     required bool ePublica,
     required TipoReferenciaMidia tipo,
     required String field,
+    required String? descricao,
   }) async {
     var pathParameters = {'referenciaId': referenciaId.toString()};
     var body = {
       'isDefault': ePrincipal,
       'isPublic': ePublica,
       'type': tipo.apiValue,
+      'description': descricao,
     };
     var response = await postFile(
-      field: field,
+      field: 'midia',
       file: File(filePath),
       pathParameters: pathParameters,
       body: body,
@@ -46,15 +49,28 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<void> excluirReferenciaMidia(int id) {
-    // TODO: implement excluirReferenciaMidia
-    throw UnimplementedError();
+  Future<void> excluirReferenciaMidia({
+    required int referenciaId,
+    required int id,
+  }) async {
+    final uri = uriBase.replace(
+      path: '/v1/referencias/$referenciaId/midias/$id',
+    );
+    final response = await httpClient.delete(uri: uri);
+    if (response.statusCode != 204) {
+      throw Exception('Erro ao excluir mídia: ${response.statusCode}');
+    }
   }
 
   @override
   Future<List<ReferenciaMidia>> recuperarReferenciasMidias(int referenciaId) {
-    // TODO: implement recuperarReferenciasMidias
-    throw UnimplementedError();
+    var pathParameters = {'referenciaId': referenciaId.toString()};
+    return get(pathParameters: pathParameters).then((response) {
+      var lista = response.body as List;
+      return lista
+          .map((item) => ReferenciaMidiaDto.fromJson(item))
+          .toList(growable: false);
+    });
   }
 }
 

@@ -34,5 +34,23 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
     required this.isDefault,
     required this.isPublic,
     required this.referenciaId,
+    required this.descricao,
   });
+
+  @override
+  @JsonKey(name: 'description')
+  final String? descricao;
+}
+
+extension ToDto on ReferenciaMidia {
+  ReferenciaMidiaDto toDto() {
+    return ReferenciaMidiaDto(
+      id: id,
+      url: url,
+      isDefault: ePrincipal,
+      isPublic: ePublica,
+      referenciaId: referenciaId,
+      descricao: descricao,
+    );
+  }
 }

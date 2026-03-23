@@ -68,8 +68,12 @@ abstract class RemoteDataSourceBase {
       queryParameters: queryParameters,
     );
     uri = _insertPath(uri, pathParameters);
-    var libResponse =
-        await httpClient.postMultipart(uri: uri, field: field, file: file);
+    var libResponse = await httpClient.postMultipart(
+      uri: uri,
+      field: field,
+      file: file,
+      body: body,
+    );
     _validateResponse(libResponse);
     return libResponse;
   }

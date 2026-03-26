@@ -52,17 +52,19 @@ abstract class RemoteDataSourceBase {
       queryParameters: queryParameters,
     );
     uri = _insertPath(uri, pathParameters);
-    var libResponse = await httpClient.put(uri: uri, body: jsonEncode(body));
+    var libResponse = await httpClient.put(uri: uri, body: body);
     _validateResponse(libResponse);
     return libResponse;
   }
 
   Future<IHttpResponse> postFile({
-    required String field,
+    String field = 'file',
     required File file,
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
     Map<String, dynamic>? body,
+    Map<String, String>? headers,
+    FileType fileType = FileType.other,
   }) async {
     var uri = _wrapUri(
       queryParameters: queryParameters,
@@ -73,6 +75,8 @@ abstract class RemoteDataSourceBase {
       field: field,
       file: file,
       body: body,
+      headers: headers,
+      fileType: fileType,
     );
     _validateResponse(libResponse);
     return libResponse;

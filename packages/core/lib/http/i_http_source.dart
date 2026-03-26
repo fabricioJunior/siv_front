@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:core/http/i_http_response.dart';
-import 'package:http/http.dart';
 
 abstract class IHttpSource {
   Future<IHttpResponse> post({
@@ -25,7 +24,11 @@ abstract class IHttpSource {
     required Uri uri,
     required String field,
     required File file,
+    required FileType fileType,
     Map<String, dynamic>? body,
+    Map<String, String>? headers,
     bool compressImage = true,
   });
 }
+
+enum FileType { image, video, other }

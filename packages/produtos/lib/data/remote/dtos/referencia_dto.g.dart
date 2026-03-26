@@ -10,6 +10,14 @@ ReferenciaDto _$ReferenciaDtoFromJson(Map<String, dynamic> json) =>
     ReferenciaDto(
       id: (json['id'] as num?)?.toInt(),
       nome: json['nome'] as String,
+      criadoEm: json['criadoEm'] == null
+          ? null
+          : DateTime.parse(json['criadoEm'] as String),
+      atualizadoEm: (json['atualizadoEm'] ?? json['atualizadorEm']) == null
+          ? null
+          : DateTime.parse(
+              (json['atualizadoEm'] ?? json['atualizadorEm']) as String,
+            ),
       idExterno: json['idExterno'] as String?,
       unidadeMedida: json['unidadeMedida'] as String?,
       categoriaId: (json['categoriaId'] as num?)?.toInt(),
@@ -32,6 +40,8 @@ Map<String, dynamic> _$ReferenciaDtoToJson(ReferenciaDto instance) =>
     <String, dynamic>{
       'id': instance.id,
       'nome': instance.nome,
+      'criadoEm': instance.criadoEm?.toIso8601String(),
+      'atualizadoEm': instance.atualizadoEm?.toIso8601String(),
       'idExterno': instance.idExterno,
       'unidadeMedida': instance.unidadeMedida,
       'categoriaId': instance.categoriaId,

@@ -5,6 +5,8 @@ abstract class ReferenciaMidia {
   bool get ePrincipal;
   bool get ePublica;
   String? get descricao;
+  String? get tamanho;
+  String? get cor;
 
   factory ReferenciaMidia.create({
     required int id,
@@ -13,6 +15,8 @@ abstract class ReferenciaMidia {
     required bool ePrincipal,
     required bool ePublica,
     String? descricao,
+    String? tamanho,
+    String? cor,
   }) = _ReferenciaMidiaImpl;
 }
 
@@ -30,6 +34,10 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
 
   @override
   final String? descricao;
+  @override
+  final String? tamanho;
+  @override
+  final String? cor;
 
   _ReferenciaMidiaImpl({
     required this.id,
@@ -38,6 +46,8 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
     required this.ePrincipal,
     required this.ePublica,
     this.descricao,
+    this.tamanho,
+    this.cor,
   });
 }
 

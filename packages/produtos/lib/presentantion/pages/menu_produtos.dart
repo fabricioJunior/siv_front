@@ -16,15 +16,6 @@ class MenuProdutosPage extends StatelessWidget {
           children: [
             _buildMenuCard(
               context: context,
-              title: 'Produtos',
-              icon: Icons.inventory,
-              color: Colors.orange,
-              onTap: () {
-                Navigator.of(context).pushNamed('/produtos');
-              },
-            ),
-            _buildMenuCard(
-              context: context,
               title: 'Modelos/Referências',
               icon: Icons.model_training,
               color: Colors.indigo,
@@ -74,7 +65,7 @@ class MenuProdutosPage extends StatelessWidget {
               icon: Icons.attach_money,
               color: Colors.green,
               onTap: () {
-                _showComingSoon(context, 'Gerenciamento de Preços');
+                Navigator.of(context).pushNamed('/menu_precos');
               },
             ),
           ],
@@ -121,15 +112,6 @@ class MenuProdutosPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature - Em desenvolvimento'),
-        duration: const Duration(seconds: 2),
       ),
     );
   }

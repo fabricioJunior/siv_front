@@ -2,19 +2,40 @@ part of 'referencia_midias_bloc.dart';
 
 abstract class ReferenciaMidiasEvent {}
 
-class CarregarMidiasReferencia extends ReferenciaMidiasEvent {
+class ReferenciasIniciou extends ReferenciaMidiasEvent {
   final int referenciaId;
-  CarregarMidiasReferencia(this.referenciaId);
+  ReferenciasIniciou(this.referenciaId);
 }
 
-class AdicionarMidiaReferencia extends ReferenciaMidiasEvent {
+class ReferenciasMidiaAdicinou extends ReferenciaMidiasEvent {
   final int referenciaId;
+  final String? cor;
+  final String? tamanho;
   final List<Imagem> midias;
-  AdicionarMidiaReferencia(this.referenciaId, this.midias);
+  ReferenciasMidiaAdicinou(
+    this.referenciaId,
+    this.midias, {
+    this.cor,
+    this.tamanho,
+  });
 }
 
-class RemoverMidiaReferencia extends ReferenciaMidiasEvent {
+class ReferenciaMidiasRemoveu extends ReferenciaMidiasEvent {
   final int referenciaId;
   final int midiaId;
-  RemoverMidiaReferencia(this.referenciaId, this.midiaId);
+  ReferenciaMidiasRemoveu(this.referenciaId, this.midiaId);
+}
+
+class ReferenciaMidiasAtualizou extends ReferenciaMidiasEvent {
+  final int referenciaId;
+  final ReferenciaMidia midia;
+  final bool ePrincipal;
+  final bool ePublica;
+
+  ReferenciaMidiasAtualizou({
+    required this.referenciaId,
+    required this.midia,
+    required this.ePrincipal,
+    required this.ePublica,
+  });
 }

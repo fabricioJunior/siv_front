@@ -6,6 +6,7 @@ part 'referencia_midia_dto.g.dart';
 @JsonSerializable()
 class ReferenciaMidiaDto implements ReferenciaMidia {
   @override
+  @JsonKey(includeToJson: false)
   final int id;
 
   @override
@@ -35,11 +36,19 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
     required this.isPublic,
     required this.referenciaId,
     required this.descricao,
+    required this.tamanho,
+    required this.cor,
   });
 
   @override
   @JsonKey(name: 'description')
   final String? descricao;
+
+  @override
+  final String? cor;
+
+  @override
+  final String? tamanho;
 }
 
 extension ToDto on ReferenciaMidia {
@@ -51,6 +60,8 @@ extension ToDto on ReferenciaMidia {
       isPublic: ePublica,
       referenciaId: referenciaId,
       descricao: descricao,
+      tamanho: tamanho,
+      cor: cor,
     );
   }
 }

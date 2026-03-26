@@ -3,10 +3,13 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:path/path.dart' as p;
 
 import 'package:core/http/http_implementacao/http_response.dart';
 import 'package:core/http/i_http_response.dart';
 import 'package:http/http.dart' as lib;
+import 'package:http_parser/http_parser.dart';
+
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -63,11 +66,15 @@ class HttpSource implements IHttpSource {
     required Uri uri,
     required String field,
     required File file,
+    required FileType fileType,
     Map<String, dynamic>? body,
+    Map<String, String>? headers,
     bool compressImage = true,
   }) async {
-    var request = lib.MultipartRequest('POST', uri);
-
+    var request = lib.MultipartRequest(
+      'POST',
+      uri,
+    );
     if (body != null) {
       request.fields.addAll(
         body.map((key, value) {
@@ -83,33 +90,20 @@ class HttpSource implements IHttpSource {
         }),
       );
     }
-    String? filePath;
-    if (compressImage) {
-      try {
-        filePath = (await getCompressedFileForUpload(file.path))?.path;
-      } catch (e) {
-        log('Erro ao comprimir imagem: $e');
-        filePath = file.path;
-      }
-    } else {
-      filePath = file.path;
-    }
+    var comprressedFile = await getCompressedFileForUpload(file.path);
+    request.files.add(
+      await lib.MultipartFile.fromPath(
+          'file', comprressedFile?.path ?? file.path,
+          contentType:
+              MediaType('image', p.extension(file.path).replaceFirst('.', ''))),
+    );
 
-    if (filePath == null) {
-      throw Exception('Não foi possível processar o arquivo para upload.');
-    }
+    lib.StreamedResponse response = await client.send(request);
 
-    var compressedFile = File(filePath);
-    if (!compressedFile.existsSync()) {
-      throw Exception('Arquivo para upload não encontrado.');
-    }
-
-    request.files
-        .add(await lib.MultipartFile.fromPath(field, compressedFile.path));
-
-    var streamedResponse = await client.send(request);
-    var response = await lib.Response.fromStream(streamedResponse);
-    return HttpResponse(response: response);
+    var responseFinal = await lib.Response.fromStream(response);
+    log('${responseFinal.body} - ${responseFinal.statusCode}',
+        name: 'Resposta do upload');
+    return HttpResponse(response: responseFinal);
   }
 }
 

@@ -1,0 +1,7 @@
+export 'presentation/blocs/tabelas_de_preco_bloc/tabelas_de_preco_bloc.dart';
+export 'presentation/blocs/tabela_de_preco_bloc/tabela_de_preco_bloc.dart';
+export 'presentation/blocs/precos_da_tabela_bloc/precos_da_tabela_bloc.dart';
+export 'presentation/pages/precos_menu.dart';
+export 'presentation/pages/tabelas_de_preco_page.dart';
+export 'presentation/pages/tabela_de_preco_detalhe_page.dart';
+export 'presentation/modals/tabela_de_preco_modal.dart';

@@ -15,6 +15,12 @@ class ReferenciaDto implements Referencia {
   final String nome;
 
   @override
+  final DateTime? criadoEm;
+
+  @override
+  final DateTime? atualizadoEm;
+
+  @override
   final String? idExterno;
 
   @override
@@ -49,6 +55,8 @@ class ReferenciaDto implements Referencia {
   ReferenciaDto({
     required this.id,
     required this.nome,
+    this.criadoEm,
+    this.atualizadoEm,
     this.idExterno,
     this.unidadeMedida,
     this.categoriaId,
@@ -70,6 +78,8 @@ class ReferenciaDto implements Referencia {
   List<Object?> get props => [
     id,
     nome,
+    criadoEm,
+    atualizadoEm,
     idExterno,
     unidadeMedida,
     categoriaId,

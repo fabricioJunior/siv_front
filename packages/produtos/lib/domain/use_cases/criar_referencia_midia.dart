@@ -14,6 +14,8 @@ class CriarReferenciaMidia {
     required TipoReferenciaMidia tipo,
     required String field,
     required String? descricao,
+    required String? cor,
+    required String? tamanho,
   }) {
     return referenciaMidiasRepository.criarReferenciaMidia(
       filePath: filePath,
@@ -23,6 +25,8 @@ class CriarReferenciaMidia {
       tipo: tipo,
       field: field,
       descricao: descricao,
+      cor: cor,
+      tamanho: tamanho,
     );
   }
 }

@@ -1,5 +1,7 @@
-import 'package:bloc/bloc.dart';
+import 'package:core/bloc.dart';
 import 'package:core/imagens.dart';
+import 'package:core/imagens/cache_imagem_service.dart';
+import 'package:produtos/domain/use_cases/atualizar_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/criar_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/excluir_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/recuperar_referencia_midias.dart';
@@ -12,19 +14,25 @@ class ReferenciaMidiasBloc
   final RecuperarReferenciaMidias _recuperarMidias;
   final CriarReferenciaMidia _criarReferenciaMidia;
   final ExcluirReferenciaMidia _excluirReferenciaMidia;
+  final AtualizarReferenciaMidia _atualizarReferenciaMidia;
+
+  final ICacheImagemService _cacheImagemService;
 
   ReferenciaMidiasBloc(
     this._recuperarMidias,
     this._criarReferenciaMidia,
     this._excluirReferenciaMidia,
+    this._atualizarReferenciaMidia,
+    this._cacheImagemService,
   ) : super(ReferenciaMidiasInicial()) {
-    on<CarregarMidiasReferencia>(_onCarregarMidias);
-    on<AdicionarMidiaReferencia>(_onAdicionarMidia);
-    on<RemoverMidiaReferencia>(_onRemoverMidia);
+    on<ReferenciasIniciou>(_onReferenciasIniciou);
+    on<ReferenciasMidiaAdicinou>(_onReferenciaMidiaAdicinou);
+    on<ReferenciaMidiasRemoveu>(_onReferenciaMidiasRemoveu);
+    on<ReferenciaMidiasAtualizou>(_onReferenciaMidiasAtualizou);
   }
 
-  Future<void> _onCarregarMidias(
-    CarregarMidiasReferencia event,
+  Future<void> _onReferenciasIniciou(
+    ReferenciasIniciou event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
     emit(ReferenciaMidiasCarregando());
@@ -37,8 +45,8 @@ class ReferenciaMidiasBloc
     }
   }
 
-  Future<void> _onAdicionarMidia(
-    AdicionarMidiaReferencia event,
+  Future<void> _onReferenciaMidiaAdicinou(
+    ReferenciasMidiaAdicinou event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
     final midiasList = state is ReferenciaMidiasCarregado
@@ -56,17 +64,19 @@ class ReferenciaMidiasBloc
           tipo: TipoReferenciaMidia.imagem,
           field: imagem.field ?? 'midia',
           descricao: imagem.descricao,
+          cor: event.cor,
+          tamanho: event.tamanho,
         );
       }
-      add(CarregarMidiasReferencia(event.referenciaId));
+      add(ReferenciasIniciou(event.referenciaId));
     } catch (e, s) {
       emit(ReferenciaMidiasErro('Erro ao adicionar mídia'));
       addError(e, s);
     }
   }
 
-  Future<void> _onRemoverMidia(
-    RemoverMidiaReferencia event,
+  Future<void> _onReferenciaMidiasRemoveu(
+    ReferenciaMidiasRemoveu event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
     emit(ReferenciaMidiasCarregando());
@@ -75,9 +85,39 @@ class ReferenciaMidiasBloc
         referenciaId: event.referenciaId,
         id: event.midiaId,
       );
-      add(CarregarMidiasReferencia(event.referenciaId));
+      add(ReferenciasIniciou(event.referenciaId));
     } catch (e, s) {
       emit(ReferenciaMidiasErro('Erro ao remover mídia'));
+      addError(e, s);
+    }
+  }
+
+  Future<void> _onReferenciaMidiasAtualizou(
+    ReferenciaMidiasAtualizou event,
+    Emitter<ReferenciaMidiasState> emit,
+  ) async {
+    emit(ReferenciaMidiasCarregando());
+    try {
+      await _atualizarReferenciaMidia.call(
+        ReferenciaMidia.create(
+          id: event.midia.id,
+          url: event.midia.url,
+          referenciaId: event.referenciaId,
+          ePrincipal: event.ePrincipal,
+          ePublica: event.ePublica,
+          descricao: event.midia.descricao,
+        ),
+      );
+      if (event.ePrincipal) {
+        await _cacheImagemService.updateImageInCache(
+          event.referenciaId.toString(),
+          event.midia.url,
+        );
+      }
+
+      add(ReferenciasIniciou(event.referenciaId));
+    } catch (e, s) {
+      emit(ReferenciaMidiasErro('Erro ao atualizar mídia'));
       addError(e, s);
     }
   }

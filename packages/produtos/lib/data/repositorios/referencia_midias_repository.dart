@@ -24,6 +24,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
     required TipoReferenciaMidia tipo,
     required String field,
     required String? descricao,
+    required String? cor,
+    required String? tamanho,
   }) {
     return referenciaMidiasRemoteDataSource.criarReferenciaMidia(
       filePath: filePath,
@@ -33,6 +35,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
       tipo: tipo,
       field: field,
       descricao: descricao,
+      cor: cor,
+      tamanho: tamanho,
     );
   }
 

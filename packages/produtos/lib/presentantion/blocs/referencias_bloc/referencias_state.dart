@@ -4,10 +4,11 @@ abstract class ReferenciasState extends Equatable {
   List<Referencia> get referencias => [];
 
   List<Referencia> get referenciasSelecionadas => [];
+  ReferenciasOrdenacao get ordenacao => ReferenciasOrdenacao.nomeAsc;
   const ReferenciasState();
 
   @override
-  List<Object?> get props => [referencias];
+  List<Object?> get props => [referencias, ordenacao];
 }
 
 class ReferenciasInitial extends ReferenciasState {
@@ -15,7 +16,10 @@ class ReferenciasInitial extends ReferenciasState {
 }
 
 class ReferenciasCarregarEmProgresso extends ReferenciasState {
-  const ReferenciasCarregarEmProgresso();
+  @override
+  final ReferenciasOrdenacao ordenacao;
+
+  const ReferenciasCarregarEmProgresso({required this.ordenacao});
 }
 
 class ReferenciasCarregarSucesso extends ReferenciasState {
@@ -23,13 +27,19 @@ class ReferenciasCarregarSucesso extends ReferenciasState {
   final List<Referencia> referencias;
   @override
   final List<Referencia> referenciasSelecionadas;
+  @override
+  final ReferenciasOrdenacao ordenacao;
 
   const ReferenciasCarregarSucesso({
     required this.referencias,
     this.referenciasSelecionadas = const [],
+    required this.ordenacao,
   });
 }
 
 class ReferenciasCarregarFalha extends ReferenciasState {
-  const ReferenciasCarregarFalha();
+  @override
+  final ReferenciasOrdenacao ordenacao;
+
+  const ReferenciasCarregarFalha({required this.ordenacao});
 }

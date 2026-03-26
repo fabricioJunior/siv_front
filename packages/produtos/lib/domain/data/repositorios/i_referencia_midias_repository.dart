@@ -11,6 +11,8 @@ abstract class IReferenciaMidiasRepository {
     required TipoReferenciaMidia tipo,
     required String field,
     required String? descricao,
+    required String? cor,
+    required String? tamanho,
   });
 
   Future<ReferenciaMidia> atualizarReferenciaMidia(

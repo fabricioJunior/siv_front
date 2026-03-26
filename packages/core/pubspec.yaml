@@ -30,7 +30,9 @@ dependencies:
   cep_sdk: ^0.0.1
   image_picker: ^1.2.1
   flutter_image_compress: ^2.4.0
-
+  http_parser: ^4.1.2
+  cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:

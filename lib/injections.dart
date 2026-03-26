@@ -16,6 +16,7 @@ import 'package:empresas/empresas_injections.dart';
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:pessoas/pessoas_injections.dart';
 import 'package:pagamentos/pagamentos_injections.dart';
+import 'package:precos/precos_injection.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/bloc/app_bloc.dart';
@@ -55,6 +56,7 @@ Future<void> resolverDependenciasApp() async {
   resolverProdutosInjection();
   resolverSistemaInjections();
   resolverPagamentosInjections();
+  resolverPrecosInjection();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }

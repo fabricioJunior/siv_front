@@ -5,7 +5,6 @@ import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart';
 import 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';
-import 'package:produtos/presentantion/bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 
 class ReferenciaPage extends StatefulWidget {
   final int idReferencia;
@@ -28,6 +27,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   late final TextEditingController _cuidadosController;
 
   bool _salvando = false;
+  bool _detalhesExpandidos = false;
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
   SubCategoria? _subCategoriaSelecionada;
@@ -184,10 +184,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider<ReferenciaBloc>.value(value: _bloc),
-        BlocProvider(create: (context) => sl<ReferenciaMidiasBloc>()),
-      ],
+      providers: [BlocProvider<ReferenciaBloc>.value(value: _bloc)],
       child: BlocConsumer<ReferenciaBloc, ReferenciaState>(
         listener: (context, state) {
           if (state is ReferenciaCarregarSucesso) {
@@ -283,23 +280,19 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                 return null;
                               },
                             ),
+
                             const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _idExternoController,
-                              decoration: const InputDecoration(
-                                labelText: 'ID Externo',
-                                border: OutlineInputBorder(),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: _editarCategoriaSubCategoria,
+                                icon: const Icon(Icons.swap_horiz),
+                                label: const Text(
+                                  'Alterar categoria/sub-categoria',
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _unidadeMedidaController,
-                              decoration: const InputDecoration(
-                                labelText: 'Unidade de Medida',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             InputDecorator(
                               decoration: const InputDecoration(
                                 labelText: 'Categoria',
@@ -318,167 +311,45 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: _editarCategoriaSubCategoria,
-                                icon: const Icon(Icons.swap_horiz),
-                                label: const Text(
-                                  'Alterar categoria/sub-categoria',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Descrição',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _descricaoController.text.trim().isEmpty
-                                        ? 'Sem descrição cadastrada'
-                                        : _descricaoController.text,
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: () {
-                                        _editarCampoLongo(
-                                          controller: _descricaoController,
-                                          titulo: 'Editar descrição',
-                                          hintText:
-                                              'Informe a descrição completa da referência',
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.edit_note_outlined,
-                                      ),
-                                      label: const Text('Editar descrição'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Composição',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _composicaoController.text.trim().isEmpty
-                                        ? 'Sem composição cadastrada'
-                                        : _composicaoController.text,
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: () {
-                                        _editarCampoLongo(
-                                          controller: _composicaoController,
-                                          titulo: 'Editar composição',
-                                          hintText:
-                                              'Informe a composição completa da referência',
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.edit_note_outlined,
-                                      ),
-                                      label: const Text('Editar composição'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Cuidados',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _cuidadosController.text.trim().isEmpty
-                                        ? 'Sem cuidados cadastrados'
-                                        : _cuidadosController.text,
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: () {
-                                        _editarCampoLongo(
-                                          controller: _cuidadosController,
-                                          titulo: 'Editar cuidados',
-                                          hintText:
-                                              'Informe os cuidados completos da referência',
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.edit_note_outlined,
-                                      ),
-                                      label: const Text('Editar cuidados'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              alignment: WrapAlignment.spaceBetween,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Produtos da referência',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                                  style: Theme.of(context).textTheme.titleLarge,
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context)
-                                        .pushNamed(
-                                          '/produto',
-                                          arguments: {
-                                            'referenciaId':
-                                                state.referencia?.id,
-                                          },
-                                        )
-                                        .then((_) {
-                                          // ignore: use_build_context_synchronously
-                                          context.read<ReferenciaBloc>().add(
-                                            ReferenciaIniciou(
-                                              idReferencia: widget.idReferencia,
-                                            ),
-                                          );
-                                        });
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.add),
-                                      const SizedBox(width: 4),
-                                      Text('Cadastrar novo produto'),
-                                    ],
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pushNamed(
+                                            '/produto',
+                                            arguments: {
+                                              'referenciaId':
+                                                  state.referencia?.id,
+                                            },
+                                          )
+                                          .then((_) {
+                                            // ignore: use_build_context_synchronously
+                                            context.read<ReferenciaBloc>().add(
+                                              ReferenciaIniciou(
+                                                idReferencia:
+                                                    widget.idReferencia,
+                                              ),
+                                            );
+                                          });
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Cadastrar novo produto'),
                                   ),
                                 ),
                               ],
                             ),
+
                             const SizedBox(height: 8),
+
+                            const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
@@ -500,6 +371,87 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                       'ID da referência indisponível para carregar produtos.',
                                     ),
                             ),
+                            const SizedBox(height: 12),
+
+                            ExpansionTile(
+                              onExpansionChanged: (expandiu) {
+                                setState(() {
+                                  _detalhesExpandidos = expandiu;
+                                });
+                              },
+                              collapsedBackgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.06),
+
+                              collapsedShape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.30),
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                              iconColor: Theme.of(context).colorScheme.primary,
+                              collapsedIconColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              textColor: Theme.of(context).colorScheme.primary,
+                              collapsedTextColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              tilePadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              childrenPadding: const EdgeInsets.only(top: 12),
+                              leading: Icon(
+                                _detalhesExpandidos
+                                    ? Icons.expand_less
+                                    : Icons.touch_app,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              title: Text(
+                                'Detalhes',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              subtitle: Text(
+                                _detalhesExpandidos
+                                    ? 'Toque para recolher'
+                                    : 'Toque para expandir e editar os detalhes',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildDescricaoInput(),
+                                ),
+                                const SizedBox(height: 12),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildComposicaoInput(),
+                                ),
+                                const SizedBox(height: 12),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildCuidadosInput(),
+                                ),
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildUnidadeDeMedidaInput(),
+                                ),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildIDExternoInput(),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 96),
                           ],
                         ),
@@ -508,6 +460,133 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  InputDecorator _buildDescricaoInput() {
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Descrição',
+        border: OutlineInputBorder(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _descricaoController.text.trim().isEmpty
+                ? 'Sem descrição cadastrada'
+                : _descricaoController.text,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () {
+                _editarCampoLongo(
+                  controller: _descricaoController,
+                  titulo: 'Editar descrição',
+                  hintText: 'Informe a descrição completa da referência',
+                );
+              },
+              icon: const Icon(Icons.edit_note_outlined),
+              label: const Text('Editar descrição'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  TextFormField _buildIDExternoInput() {
+    return TextFormField(
+      controller: _idExternoController,
+      decoration: const InputDecoration(
+        labelText: 'ID Externo',
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  TextFormField _buildUnidadeDeMedidaInput() {
+    return TextFormField(
+      controller: _unidadeMedidaController,
+      decoration: const InputDecoration(
+        labelText: 'Unidade de Medida',
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  InputDecorator _buildCuidadosInput() {
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Cuidados',
+        border: OutlineInputBorder(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _cuidadosController.text.trim().isEmpty
+                ? 'Sem cuidados cadastrados'
+                : _cuidadosController.text,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () {
+                _editarCampoLongo(
+                  controller: _cuidadosController,
+                  titulo: 'Editar cuidados',
+                  hintText: 'Informe os cuidados completos da referência',
+                );
+              },
+              icon: const Icon(Icons.edit_note_outlined),
+              label: const Text('Editar cuidados'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecorator _buildComposicaoInput() {
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Composição',
+        border: OutlineInputBorder(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _composicaoController.text.trim().isEmpty
+                ? 'Sem composição cadastrada'
+                : _composicaoController.text,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () {
+                _editarCampoLongo(
+                  controller: _composicaoController,
+                  titulo: 'Editar composição',
+                  hintText: 'Informe a composição completa da referência',
+                );
+              },
+              icon: const Icon(Icons.edit_note_outlined),
+              label: const Text('Editar composição'),
+            ),
+          ),
+        ],
       ),
     );
   }

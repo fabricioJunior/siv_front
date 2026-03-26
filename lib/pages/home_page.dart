@@ -156,6 +156,14 @@ class HomePage extends StatelessWidget {
                                   Navigator.pushNamed(context, '/pessoas');
                                 },
                               ),
+                            _ModuleCard(
+                              icon: Icons.attach_money,
+                              title: 'Preços',
+                              color: Colors.purple,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/menu_precos');
+                              },
+                            ),
                             if (PermissaoPorNome.acessoPermitido('PRODFM001'))
                               _ModuleCard(
                                 icon: Icons.shopping_bag,

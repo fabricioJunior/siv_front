@@ -1,3 +1,4 @@
+import 'package:core/imagens/cache_imagem_service.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/cep.dart';
@@ -16,6 +17,8 @@ void coreInjections() {
   sl.registerLazySingleton<ApiBaseUrlConfig>(() => ApiBaseUrlConfig());
 
   sl.registerLazySingleton<CepService>(() => CepService());
+
+  sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {

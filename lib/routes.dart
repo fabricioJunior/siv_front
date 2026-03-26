@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:pagamentos/pages.dart';
+import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/pages/home_page.dart';
@@ -127,6 +128,14 @@ Map<String, Widget Function(BuildContext)> routes = {
       tamanhoId: args(context)['tamanhoId'],
     );
   },
+  //Preços:
+  '/menu_precos': (context) {
+    return const PrecosMenuPage();
+  },
+  '/tabelas_de_preco': (context) {
+    return TabelasDePrecoPage();
+  },
+
   //CONFIGURACOES:
   '/configuracao_smtp': (context) {
     return ConfiguracaoSTMPPage();

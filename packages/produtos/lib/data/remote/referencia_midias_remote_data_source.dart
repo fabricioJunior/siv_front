@@ -10,15 +10,24 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
   ReferenciaMidiasRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/v1/referencias/{referenciaId}/midias';
+  String get path => '/v1/referencias/{referenciaId}/midias/{id}';
 
   @override
   Future<ReferenciaMidia> atualizarReferenciaMidia(
     ReferenciaMidia referenciaMidia,
   ) async {
-    throw UnsupportedError(
-      'A documentação da API de Referências - Mídias não expõe endpoint PUT para atualização.',
-    );
+    var pathParameters = {
+      'referenciaId': referenciaMidia.referenciaId.toString(),
+      'id': referenciaMidia.id.toString(),
+    };
+    var body = {
+      'isDefault': referenciaMidia.ePrincipal,
+      'isPublic': referenciaMidia.ePublica,
+      'description': referenciaMidia.descricao,
+    };
+    var response = await put(pathParameters: pathParameters, body: body);
+
+    return ReferenciaMidiaDto.fromJson(response.body);
   }
 
   @override
@@ -30,6 +39,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     required TipoReferenciaMidia tipo,
     required String field,
     required String? descricao,
+    required String? cor,
+    required String? tamanho,
   }) async {
     var pathParameters = {'referenciaId': referenciaId.toString()};
     var body = {
@@ -37,9 +48,11 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'isPublic': ePublica,
       'type': tipo.apiValue,
       'description': descricao,
+      'cor': cor,
+      'tamanho': tamanho,
     };
     var response = await postFile(
-      field: 'midia',
+      field: 'Imagem',
       file: File(filePath),
       pathParameters: pathParameters,
       body: body,

@@ -6,6 +6,8 @@ import 'sub_categoria.dart';
 abstract class Referencia implements Equatable {
   int? get id;
   String get nome;
+  DateTime? get criadoEm;
+  DateTime? get atualizadoEm;
   String? get idExterno;
   String? get unidadeMedida;
   int? get categoriaId;
@@ -20,6 +22,8 @@ abstract class Referencia implements Equatable {
   factory Referencia.create({
     int? id,
     required String nome,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
     String? idExterno,
     String? unidadeMedida,
     int? categoriaId,
@@ -36,6 +40,8 @@ abstract class Referencia implements Equatable {
   List<Object?> get props => [
     id,
     nome,
+    criadoEm,
+    atualizadoEm,
     idExterno,
     unidadeMedida,
     categoriaId,
@@ -57,6 +63,10 @@ class _ReferenciaImpl implements Referencia {
   final int? id;
   @override
   final String nome;
+  @override
+  final DateTime? criadoEm;
+  @override
+  final DateTime? atualizadoEm;
   @override
   final String? idExterno;
   @override
@@ -81,6 +91,8 @@ class _ReferenciaImpl implements Referencia {
   _ReferenciaImpl({
     this.id,
     required this.nome,
+    this.criadoEm,
+    this.atualizadoEm,
     this.idExterno,
     this.unidadeMedida,
     this.categoriaId,
@@ -96,6 +108,8 @@ class _ReferenciaImpl implements Referencia {
   _ReferenciaImpl copyWith({
     int? id,
     String? nome,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
     String? idExterno,
     String? unidadeMedida,
     int? categoriaId,
@@ -110,6 +124,8 @@ class _ReferenciaImpl implements Referencia {
     return _ReferenciaImpl(
       id: id ?? this.id,
       nome: nome ?? this.nome,
+      criadoEm: criadoEm ?? this.criadoEm,
+      atualizadoEm: atualizadoEm ?? this.atualizadoEm,
       idExterno: idExterno ?? this.idExterno,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       categoriaId: categoriaId ?? this.categoriaId,
@@ -127,6 +143,8 @@ class _ReferenciaImpl implements Referencia {
   List<Object?> get props => [
     id,
     nome,
+    criadoEm,
+    atualizadoEm,
     idExterno,
     unidadeMedida,
     categoriaId,
@@ -147,6 +165,8 @@ extension ReferenciaCopyWith on Referencia {
   Referencia copyWith({
     int? id,
     String? nome,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
     String? idExterno,
     String? unidadeMedida,
     int? categoriaId,
@@ -162,6 +182,8 @@ extension ReferenciaCopyWith on Referencia {
       return (this as _ReferenciaImpl).copyWith(
         id: id,
         nome: nome,
+        criadoEm: criadoEm,
+        atualizadoEm: atualizadoEm,
         idExterno: idExterno,
         unidadeMedida: unidadeMedida,
         categoriaId: categoriaId,
@@ -178,6 +200,8 @@ extension ReferenciaCopyWith on Referencia {
     return Referencia.create(
       id: id ?? this.id,
       nome: nome ?? this.nome,
+      criadoEm: criadoEm ?? this.criadoEm,
+      atualizadoEm: atualizadoEm ?? this.atualizadoEm,
       idExterno: idExterno ?? this.idExterno,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       categoriaId: categoriaId ?? this.categoriaId,

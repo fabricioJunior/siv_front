@@ -1,19 +1,22 @@
+import 'dart:async';
+
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/cores_bloc/cores_bloc.dart';
-import 'package:produtos/presentantion/widgets/generic_seletor.dart';
 
 enum CorSeletorModo { unica, multipla }
 
-class CorSeletor extends StatefulWidget {
+// ignore: must_be_immutable
+class CorSeletor extends StatefulWidget with SeletorMixin implements ISeletor {
   final CorSeletorModo modo;
   final List<Cor> coresSelecionadasIniciais;
   final ValueChanged<List<Cor>>? onChanged;
   final String titulo;
 
-  const CorSeletor({
+  CorSeletor({
     super.key,
     this.modo = CorSeletorModo.unica,
     this.coresSelecionadasIniciais = const [],
@@ -23,19 +26,45 @@ class CorSeletor extends StatefulWidget {
 
   @override
   State<CorSeletor> createState() => _CorSeletorState();
+
+  @override
+  List<SelectData> get itemsSelecionadosInicial => coresSelecionadasIniciais
+      .map(
+        (cor) => SelectData(
+          id: cor.id ?? 0,
+          nome: cor.nome,
+          data: {'cor': cor.toString()},
+        ),
+      )
+      .toList();
+
+  @override
+  StreamController<List<SelectData>>? controller = StreamController.broadcast();
+
+  @override
+  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _CorSeletorState extends State<CorSeletor> {
   late final CoresBloc _coresBloc;
+  StreamSubscription<List<SelectData>>? _setDataSubscription;
+  Set<int>? _idsExternosSelecionados;
 
   @override
   void initState() {
     super.initState();
     _coresBloc = sl<CoresBloc>()..add(CoresIniciou());
+
+    _setDataSubscription = widget.setDataController.stream.listen((dados) {
+      setState(() {
+        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
+      });
+    });
   }
 
   @override
   void dispose() {
+    _setDataSubscription?.cancel();
     _coresBloc.close();
     super.dispose();
   }
@@ -74,19 +103,30 @@ class _CorSeletorState extends State<CorSeletor> {
               .toList();
 
           return SeletorGenerico<Cor>(
+            toSelectData: (item) {
+              return SelectData(
+                id: item.id!,
+                nome: item.nome,
+                data: {'cor': item.toString()},
+              );
+            },
             itens: coresAtivas,
             itemLabel: (cor) => cor.nome,
             itemKey: (cor) => cor.id ?? cor.nome,
             modo: widget.modo == CorSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: widget.coresSelecionadasIniciais
-                .where(
-                  (corInicial) => coresAtivas.any(
-                    (corAtiva) => _mesmaCor(corAtiva, corInicial),
-                  ),
-                )
-                .toList(),
+            selecionadosIniciais: _idsExternosSelecionados != null
+                ? coresAtivas
+                      .where((c) => _idsExternosSelecionados!.contains(c.id))
+                      .toList()
+                : widget.coresSelecionadasIniciais
+                      .where(
+                        (corInicial) => coresAtivas.any(
+                          (corAtiva) => _mesmaCor(corAtiva, corInicial),
+                        ),
+                      )
+                      .toList(),
             onChanged: widget.onChanged,
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma cor',

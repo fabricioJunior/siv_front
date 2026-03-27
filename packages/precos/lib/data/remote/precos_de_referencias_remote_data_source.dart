@@ -1,5 +1,6 @@
 import 'package:core/remote_data_sourcers.dart';
 import 'package:precos/data/remote/dtos/preco_da_referencia_dto.dart';
+import 'package:precos/data/remote/dtos/precos_da_referencia_dto.dart';
 import 'package:precos/domain/data/remote/i_precos_de_referencias_remote_data_source.dart';
 import 'package:precos/models.dart';
 
@@ -56,9 +57,7 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
   }) async {
     final pathParameters = {'tabelaDePrecoId': tabelaDePrecoId};
     final response = await get(pathParameters: pathParameters);
-    return (response.body as List)
-        .map((json) => PrecoDaReferenciaDto.fromJson(json))
-        .toList();
+    return PrecosDaReferenciaDto.fromJson(response.body).items;
   }
 
   @override

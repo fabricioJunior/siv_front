@@ -4,6 +4,7 @@ import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:precos/models.dart';
 import 'package:precos/presentation.dart';
+import 'package:core/seletores.dart';
 
 class TabelasDePrecoPage extends StatelessWidget {
   final bloc = sl<TabelasDePrecoBloc>();
@@ -134,11 +135,9 @@ class TabelasDePrecoPage extends StatelessWidget {
           ),
         ),
         onTap: () async {
-          await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (_) =>
-                  TabelaDePrecoDetalhePage(idTabelaDePreco: tabela.id!),
-            ),
+          await Navigator.of(context).pushNamed(
+            '/tabela_de_preco_detalhe',
+            arguments: {'idTabelaDePreco': tabela.id},
           );
 
           // ignore: use_build_context_synchronously

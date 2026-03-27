@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'i_seletor.dart';
 
 /// Define o comportamento de seleção do [SeletorGenerico].
 enum SeletorGenericoModo { unica, multipla }
@@ -22,7 +26,9 @@ enum SeletorGenericoModo { unica, multipla }
 ///   confirmarEmSeparadores: const [',', ';'],
 /// )
 /// ```
-class SeletorGenerico<T> extends StatefulWidget {
+class SeletorGenerico<T> extends StatefulWidget
+    with SeletorMixin
+    implements ISeletor {
   /// Lista total de itens disponíveis para seleção.
   final List<T> itens;
 
@@ -66,10 +72,12 @@ class SeletorGenerico<T> extends StatefulWidget {
   /// Exemplo comum: [',', ';'].
   final List<String> confirmarEmSeparadores;
 
-  const SeletorGenerico({
+  final SelectData Function(T item) toSelectData;
+  SeletorGenerico({
     super.key,
     required this.itens,
     required this.itemLabel,
+    required this.toSelectData,
     this.itemKey,
     this.modo = SeletorGenericoModo.unica,
     this.selecionadosIniciais = const [],
@@ -85,12 +93,24 @@ class SeletorGenerico<T> extends StatefulWidget {
 
   @override
   State<SeletorGenerico<T>> createState() => _SeletorGenericoState<T>();
+
+  @override
+  final StreamController<List<SelectData>>? controller =
+      StreamController<List<SelectData>>.broadcast();
+
+  @override
+  List<SelectData> get itemsSelecionadosInicial =>
+      selecionadosIniciais.map(toSelectData).toList();
+
+  @override
+  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   late List<T> _selecionados;
   late final TextEditingController _buscaController;
   late final FocusNode _buscaFocusNode;
+  StreamSubscription<List<SelectData>>? _setDataSubscription;
 
   final LayerLink _fieldLayerLink = LayerLink();
   final GlobalKey _fieldKey = GlobalKey();
@@ -114,6 +134,9 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     _buscaFocusNode.addListener(() {
       setState(() {});
     });
+
+    _setDataSubscription =
+        widget.setDataController.stream.listen(_aplicarDadosSelecionados);
   }
 
   @override
@@ -131,10 +154,22 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
 
   @override
   void dispose() {
+    _setDataSubscription?.cancel();
     _removerOverlaySugestoes();
     _buscaController.dispose();
     _buscaFocusNode.dispose();
     super.dispose();
+  }
+
+  void _aplicarDadosSelecionados(List<SelectData> dados) {
+    final ids = dados.map((d) => d.id).toSet();
+    final novos = widget.itens
+        .where((item) => ids.contains(widget.toSelectData(item).id))
+        .toList();
+    setState(() {
+      _selecionados = novos;
+    });
+    widget.onChanged?.call(_selecionados);
   }
 
   @override
@@ -382,9 +417,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     setState(() {
       var texto = widget.itemLabel(_selecionados.last);
       _buscaController.text = texto.substring(0, texto.length - 1);
-      _selecionados = _selecionados
-          .sublist(0, _selecionados.length - 1)
-          .toList();
+      _selecionados =
+          _selecionados.sublist(0, _selecionados.length - 1).toList();
     });
 
     widget.onChanged?.call(_selecionados);

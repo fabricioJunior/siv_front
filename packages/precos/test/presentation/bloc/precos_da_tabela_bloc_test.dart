@@ -169,9 +169,9 @@ void main() {
       verify: (_) {
         verifyNever(
           criarPrecoDaReferencia.call(
-            tabelaDePrecoId: anyNamed('tabelaDePrecoId'),
-            referenciaId: anyNamed('referenciaId'),
-            valor: anyNamed('valor'),
+            tabelaDePrecoId: 99,
+            referenciaId: 1,
+            valor: 12,
           ),
         );
       },

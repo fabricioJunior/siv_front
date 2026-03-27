@@ -1,19 +1,24 @@
+import 'dart:async';
+
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/tamanhos_bloc/tamanhos_bloc.dart';
-import 'package:produtos/presentantion/widgets/generic_seletor.dart';
+import 'package:core/seletores.dart';
 
 enum TamanhoSeletorModo { unica, multipla }
 
-class TamanhoSeletor extends StatefulWidget {
+// ignore: must_be_immutable
+class TamanhoSeletor extends StatefulWidget
+    with SeletorMixin
+    implements ISeletor {
   final TamanhoSeletorModo modo;
   final List<Tamanho> tamanhosSelecionadosIniciais;
   final ValueChanged<List<Tamanho>>? onChanged;
   final String titulo;
 
-  const TamanhoSeletor({
+  TamanhoSeletor({
     super.key,
     this.modo = TamanhoSeletorModo.unica,
     this.tamanhosSelecionadosIniciais = const [],
@@ -23,19 +28,45 @@ class TamanhoSeletor extends StatefulWidget {
 
   @override
   State<TamanhoSeletor> createState() => _TamanhoSeletorState();
+
+  @override
+  List<SelectData> get itemsSelecionadosInicial => tamanhosSelecionadosIniciais
+      .map(
+        (tamanho) => SelectData(
+          id: tamanho.id ?? 0,
+          nome: tamanho.nome,
+          data: {'tamanho': tamanho.toString()},
+        ),
+      )
+      .toList();
+
+  @override
+  StreamController<List<SelectData>>? controller = StreamController.broadcast();
+
+  @override
+  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _TamanhoSeletorState extends State<TamanhoSeletor> {
   late final TamanhosBloc _tamanhosBloc;
+  StreamSubscription<List<SelectData>>? _setDataSubscription;
+  Set<int>? _idsExternosSelecionados;
 
   @override
   void initState() {
     super.initState();
     _tamanhosBloc = sl<TamanhosBloc>()..add(TamanhosIniciou(inativo: false));
+
+    _setDataSubscription = widget.setDataController.stream.listen((dados) {
+      setState(() {
+        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
+      });
+    });
   }
 
   @override
   void dispose() {
+    _setDataSubscription?.cancel();
     _tamanhosBloc.close();
     super.dispose();
   }
@@ -81,14 +112,18 @@ class _TamanhoSeletorState extends State<TamanhoSeletor> {
             modo: widget.modo == TamanhoSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: widget.tamanhosSelecionadosIniciais
-                .where(
-                  (tamanhoInicial) => tamanhosAtivos.any(
-                    (tamanhoAtivo) =>
-                        _mesmoTamanho(tamanhoAtivo, tamanhoInicial),
-                  ),
-                )
-                .toList(),
+            selecionadosIniciais: _idsExternosSelecionados != null
+                ? tamanhosAtivos
+                      .where((t) => _idsExternosSelecionados!.contains(t.id))
+                      .toList()
+                : widget.tamanhosSelecionadosIniciais
+                      .where(
+                        (tamanhoInicial) => tamanhosAtivos.any(
+                          (tamanhoAtivo) =>
+                              _mesmoTamanho(tamanhoAtivo, tamanhoInicial),
+                        ),
+                      )
+                      .toList(),
             onChanged: widget.onChanged,
             titulo: widget.titulo,
             hintText: 'Digite para buscar um tamanho',
@@ -108,6 +143,13 @@ class _TamanhoSeletorState extends State<TamanhoSeletor> {
               );
             },
             confirmarEmSeparadores: const [',', ';'],
+            toSelectData: (Tamanho item) {
+              return SelectData(
+                id: item.id!,
+                nome: item.nome,
+                data: {'tamanho': item.toString()},
+              );
+            },
           );
         },
       ),

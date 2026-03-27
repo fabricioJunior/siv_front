@@ -1,13 +1,18 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:precos/presentation.dart';
 
 class TabelaDePrecoDetalhePage extends StatefulWidget {
   final int idTabelaDePreco;
-
-  const TabelaDePrecoDetalhePage({super.key, required this.idTabelaDePreco});
+  final ISeletor referenciaSeletor;
+  const TabelaDePrecoDetalhePage({
+    super.key,
+    required this.idTabelaDePreco,
+    required this.referenciaSeletor,
+  });
 
   @override
   State<TabelaDePrecoDetalhePage> createState() =>
@@ -16,19 +21,14 @@ class TabelaDePrecoDetalhePage extends StatefulWidget {
 
 class _TabelaDePrecoDetalhePageState extends State<TabelaDePrecoDetalhePage> {
   final _formTabelaKey = GlobalKey<FormState>();
-  final _formNovoPrecoKey = GlobalKey<FormState>();
 
   final _nomeController = TextEditingController();
   final _terminadorController = TextEditingController();
-  final _referenciaIdController = TextEditingController();
-  final _valorController = TextEditingController();
 
   @override
   void dispose() {
     _nomeController.dispose();
     _terminadorController.dispose();
-    _referenciaIdController.dispose();
-    _valorController.dispose();
     super.dispose();
   }
 
@@ -79,6 +79,29 @@ class _TabelaDePrecoDetalhePageState extends State<TabelaDePrecoDetalhePage> {
         ],
         child: Scaffold(
           appBar: AppBar(title: const Text('Tabela de Preço')),
+          floatingActionButton: Builder(
+            builder: (context) => FloatingActionButton.extended(
+              onPressed: () async {
+                final adicionou = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => PrecoDaReferenciaPage(
+                      tabelaDePrecoId: widget.idTabelaDePreco,
+                      referenciaSeletor: widget.referenciaSeletor,
+                    ),
+                  ),
+                );
+                if (adicionou == true && context.mounted) {
+                  context.read<PrecosDaTabelaBloc>().add(
+                    PrecosDaTabelaIniciou(
+                      tabelaDePrecoId: widget.idTabelaDePreco,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar preço'),
+            ),
+          ),
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
@@ -92,11 +115,9 @@ class _TabelaDePrecoDetalhePageState extends State<TabelaDePrecoDetalhePage> {
                 );
               },
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                 children: [
                   _buildCardTabela(),
-                  const SizedBox(height: 12),
-                  _buildCardNovoPreco(),
                   const SizedBox(height: 12),
                   _buildListaPrecos(),
                 ],
@@ -190,125 +211,6 @@ class _TabelaDePrecoDetalhePageState extends State<TabelaDePrecoDetalhePage> {
                             },
                       icon: const Icon(Icons.save_outlined),
                       label: const Text('Salvar tabela'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCardNovoPreco() {
-    return BlocBuilder<PrecosDaTabelaBloc, PrecosDaTabelaState>(
-      builder: (context, state) {
-        final salvando = state.step == PrecosDaTabelaStep.salvando;
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formNovoPrecoKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Adicionar preço da referência',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _referenciaIdController,
-                    enabled: !salvando,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      labelText: 'ID da referência',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Informe o ID da referência';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'ID inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _valorController,
-                    enabled: !salvando,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
-                    decoration: const InputDecoration(labelText: 'Valor'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Informe o valor';
-                      }
-                      if (!_possuiAteDuasCasas(value)) {
-                        return 'Use no máximo 2 casas decimais';
-                      }
-                      if (_parseDouble(value) == null) {
-                        return 'Valor inválido';
-                      }
-
-                      final referenciaId = int.tryParse(
-                        _referenciaIdController.text,
-                      );
-                      if (referenciaId == null) {
-                        return null;
-                      }
-
-                      final duplicado = state.precos.any(
-                        (preco) => preco.referenciaId == referenciaId,
-                      );
-
-                      if (duplicado) {
-                        return 'Essa referência já possui preço nesta tabela';
-                      }
-
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: salvando
-                          ? null
-                          : () {
-                              if (!(_formNovoPrecoKey.currentState
-                                      ?.validate() ??
-                                  false)) {
-                                return;
-                              }
-
-                              final referenciaId = int.parse(
-                                _referenciaIdController.text,
-                              );
-                              final valor = _parseDouble(
-                                _valorController.text,
-                              )!;
-
-                              context.read<PrecosDaTabelaBloc>().add(
-                                PrecoDaTabelaCriarSolicitado(
-                                  referenciaId: referenciaId,
-                                  valor: valor,
-                                ),
-                              );
-
-                              _referenciaIdController.clear();
-                              _valorController.clear();
-                            },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Adicionar preço'),
                     ),
                   ),
                 ],

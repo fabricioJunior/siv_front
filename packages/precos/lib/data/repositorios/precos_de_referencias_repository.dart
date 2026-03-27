@@ -16,7 +16,7 @@ class PrecosDeReferenciasRepository implements IPrecosDeReferenciasRepository {
     required int referenciaId,
     required double valor,
   }) {
-    return precosDeReferenciasRemoteDataSource.atualizarPrecoDaReferencia(
+    return precosDeReferenciasRemoteDataSource.criarPrecoDaReferencia(
       tabelaDePrecoId: tabelaDePrecoId,
       referenciaId: referenciaId,
       valor: valor,

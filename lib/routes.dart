@@ -51,7 +51,7 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   ///PESSOAS:
   '/pessoas': (context) {
-    return PessoasPage();
+    return const PessoasPage();
   },
   '/pessoa': (context) {
     return PessoaPage(
@@ -111,7 +111,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/referencias': (context) {
-    return ReferenciasPage();
+    return const ReferenciasPage();
   },
   '/referencia': (context) {
     return ReferenciaPage(
@@ -134,6 +134,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/tabelas_de_preco': (context) {
     return TabelasDePrecoPage();
+  },
+  '/tabela_de_preco_detalhe': (context) {
+    return TabelaDePrecoDetalhePage(
+      idTabelaDePreco: args(context)['idTabelaDePreco'],
+      referenciaSeletor: ReferenciaSeletor(),
+    );
   },
 
   //CONFIGURACOES:

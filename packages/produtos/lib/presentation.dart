@@ -42,7 +42,7 @@ export 'package:produtos/presentantion/blocs/texto_longo_edicao_bloc/texto_longo
 export 'package:produtos/presentantion/modals/texto_longo_edicao_modal.dart';
 
 export 'package:produtos/presentantion/pages/menu_produtos.dart';
-export 'package:produtos/presentantion/widgets/generic_seletor.dart';
+
 export 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 export 'package:produtos/presentantion/widgets/produtos_da_referencia_tabela_widget.dart';

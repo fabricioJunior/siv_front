@@ -1,20 +1,25 @@
+import 'dart:async';
+
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.dart';
-import 'package:produtos/presentantion/widgets/generic_seletor.dart';
 
 enum ReferenciaSeletorModo { unica, multipla }
 
-class ReferenciaSeletor extends StatefulWidget {
+// ignore: must_be_immutable
+class ReferenciaSeletor extends StatefulWidget
+    with SeletorMixin
+    implements ISeletor {
   final ReferenciaSeletorModo modo;
   final List<Referencia> referenciasSelecionadasIniciais;
   final List<int> idReferenciasSelecionadasIniciais;
   final ValueChanged<List<Referencia>>? onChanged;
   final String titulo;
 
-  const ReferenciaSeletor({
+  ReferenciaSeletor({
     super.key,
     this.modo = ReferenciaSeletorModo.unica,
     this.referenciasSelecionadasIniciais = const [],
@@ -25,10 +30,30 @@ class ReferenciaSeletor extends StatefulWidget {
 
   @override
   State<ReferenciaSeletor> createState() => _ReferenciaSeletorState();
+
+  @override
+  List<SelectData> get itemsSelecionadosInicial =>
+      referenciasSelecionadasIniciais
+          .map(
+            (referencia) => DadoInicial(
+              id: referencia.id ?? 0,
+              nome: referencia.nome,
+              data: {'referencia': referencia.toString()},
+            ),
+          )
+          .toList();
+
+  @override
+  StreamController<List<SelectData>>? controller = StreamController.broadcast();
+
+  @override
+  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
   late final ReferenciasBloc _referenciasBloc;
+  StreamSubscription<List<SelectData>>? _setDataSubscription;
+  Set<int>? _idsExternosSelecionados;
 
   @override
   void initState() {
@@ -41,10 +66,18 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
               widget.idReferenciasSelecionadasIniciais,
         ),
       );
+
+    _setDataSubscription = widget.setDataController.stream.listen((dados) {
+      setState(() {
+        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
+      });
+      widget.controller?.add(dados);
+    });
   }
 
   @override
   void dispose() {
+    _setDataSubscription?.cancel();
     _referenciasBloc.close();
     super.dispose();
   }
@@ -85,20 +118,38 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
             modo: widget.modo == ReferenciaSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: state.referenciasSelecionadas
-                .where(
-                  (referenciaInicial) => state.referencias.any(
-                    (referencia) =>
-                        _mesmaReferencia(referencia, referenciaInicial),
-                  ),
-                )
-                .toList(),
-            onChanged: widget.onChanged,
+            selecionadosIniciais: _idsExternosSelecionados != null
+                ? state.referencias
+                      .where((r) => _idsExternosSelecionados!.contains(r.id))
+                      .toList()
+                : state.referenciasSelecionadas
+                      .where(
+                        (referenciaInicial) => state.referencias.any(
+                          (referencia) =>
+                              _mesmaReferencia(referencia, referenciaInicial),
+                        ),
+                      )
+                      .toList(),
+            onChanged: (selecionadas) {
+              final dados = selecionadas
+                  .where((item) => item.id != null)
+                  .map(
+                    (item) => SelectData(
+                      id: item.id!,
+                      nome: item.nome,
+                      data: {'referencia': item.toString()},
+                    ),
+                  )
+                  .toList();
+              widget.controller?.add(dados);
+              widget.onChanged?.call(selecionadas);
+            },
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma referência',
             maxSugestoes: 5,
             chipAvatarBuilder: (_, __) =>
                 const Icon(Icons.tag_outlined, size: 16),
+
             sugestaoLeadingBuilder: (context, __) {
               final colorScheme = Theme.of(context).colorScheme;
               return CircleAvatar(
@@ -112,6 +163,13 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
               );
             },
             confirmarEmSeparadores: const [',', ';'],
+            toSelectData: (Referencia item) {
+              return SelectData(
+                id: item.id!,
+                nome: item.nome,
+                data: {'referencia': item.toString()},
+              );
+            },
           );
         },
       ),

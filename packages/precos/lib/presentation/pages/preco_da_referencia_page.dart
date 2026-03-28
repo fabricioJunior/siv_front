@@ -1,22 +1,23 @@
-import 'dart:async';
-
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:precos/presentation.dart';
 
 class PrecoDaReferenciaPage extends StatefulWidget {
   final int tabelaDePrecoId;
-  final ISeletor referenciaSeletor;
-  final SelectData? referenciaPreSelecionada;
+  final int referenciaId;
+  final String referenciaNome;
+  final double valorInicial;
+  final Widget imagensDaReferencia;
 
   const PrecoDaReferenciaPage({
     super.key,
     required this.tabelaDePrecoId,
-    required this.referenciaSeletor,
-    this.referenciaPreSelecionada,
+    required this.referenciaId,
+    required this.referenciaNome,
+    required this.valorInicial,
+    required this.imagensDaReferencia,
   });
 
   @override
@@ -26,171 +27,230 @@ class PrecoDaReferenciaPage extends StatefulWidget {
 class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
   final _formKey = GlobalKey<FormState>();
   final _valorController = TextEditingController();
+  final _valorFocusNode = FocusNode();
+  final _tabelaNomeController = TextEditingController();
   final _referenciaIdController = TextEditingController();
-  StreamSubscription<List<SelectData>>? _seletorSubscription;
-  bool _mostrarErroReferencia = false;
+  final _referenciaNomeController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.referenciaPreSelecionada != null) {
-      _referenciaIdController.text = widget.referenciaPreSelecionada!.id
-          .toString();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.referenciaSeletor.setDadosSelecionados([
-          widget.referenciaPreSelecionada!,
-        ]);
-      });
-    }
+    _referenciaIdController.text = widget.referenciaId.toString();
+    _referenciaNomeController.text = widget.referenciaNome;
+    _valorController.text = widget.valorInicial.toStringAsFixed(2);
 
-    _seletorSubscription = widget.referenciaSeletor.onDataSelected?.listen((
-      dados,
-    ) {
-      if (dados.isEmpty) {
-        _referenciaIdController.clear();
-      } else {
-        setState(() => _mostrarErroReferencia = false);
-        _referenciaIdController.text = dados.first.id.toString();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _valorFocusNode.requestFocus();
+      _valorController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _valorController.text.length,
+      );
     });
   }
 
   @override
   void dispose() {
-    _seletorSubscription?.cancel();
     _valorController.dispose();
+    _valorFocusNode.dispose();
+    _tabelaNomeController.dispose();
     _referenciaIdController.dispose();
+    _referenciaNomeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PrecosDaTabelaBloc>(
-      create: (context) => sl<PrecosDaTabelaBloc>()
-        ..add(PrecosDaTabelaIniciou(tabelaDePrecoId: widget.tabelaDePrecoId)),
-      child: BlocConsumer<PrecosDaTabelaBloc, PrecosDaTabelaState>(
-        listenWhen: (previous, current) =>
-            previous.step == PrecosDaTabelaStep.salvando &&
-            current.step == PrecosDaTabelaStep.carregado,
-        listener: (context, state) {
-          widget.referenciaSeletor.setDadosSelecionados([]);
-          Navigator.of(context).pop(true);
-        },
-        builder: (context, state) {
-          final salvando = state.step == PrecosDaTabelaStep.salvando;
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<EditarPrecoDaReferenciaBloc>(
+          create: (context) => sl<EditarPrecoDaReferenciaBloc>(),
+        ),
+        BlocProvider<TabelaDePrecoBloc>(
+          create: (context) => sl<TabelaDePrecoBloc>()
+            ..add(
+              TabelaDePrecoIniciou(idTabelaDePreco: widget.tabelaDePrecoId),
+            ),
+        ),
+      ],
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<
+            EditarPrecoDaReferenciaBloc,
+            EditarPrecoDaReferenciaState
+          >(
+            listenWhen: (previous, current) =>
+                previous.step == EditarPrecoDaReferenciaStep.salvando &&
+                current.step == EditarPrecoDaReferenciaStep.sucesso,
+            listener: (context, state) => Navigator.of(context).pop(true),
+          ),
+          BlocListener<TabelaDePrecoBloc, TabelaDePrecoState>(
+            listener: (context, state) {
+              if (state.nome != null &&
+                  _tabelaNomeController.text != state.nome) {
+                _tabelaNomeController.text = state.nome!;
+              }
+            },
+          ),
+        ],
+        child:
+            BlocBuilder<
+              EditarPrecoDaReferenciaBloc,
+              EditarPrecoDaReferenciaState
+            >(
+              builder: (context, state) {
+                final salvando =
+                    state.step == EditarPrecoDaReferenciaStep.salvando;
 
-          return Scaffold(
-            appBar: AppBar(title: const Text('Preço da Referência')),
-            body: SafeArea(
-              child: Builder(
-                builder: (context) {
-                  if (state.step == PrecosDaTabelaStep.carregando) {
-                    return const Center(
-                      child: CircularProgressIndicator.adaptive(),
-                    );
-                  }
+                if (state.erro != null && state.erro!.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(state.erro!)));
+                  });
+                }
 
-                  if (state.erro != null && state.erro!.isNotEmpty) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.erro!)));
-                    });
-                  }
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Preço da Referência')),
+                  body: SafeArea(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            BlocBuilder<TabelaDePrecoBloc, TabelaDePrecoState>(
+                              builder: (context, tabelaState) {
+                                final carregandoTabela =
+                                    tabelaState.tabelaDePrecoStep ==
+                                    TabelaDePrecoStep.carregando;
 
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          widget.referenciaSeletor,
-                          if (_mostrarErroReferencia)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 12),
-                              child: Text(
-                                'Selecione uma referência',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                    ),
+                                return TextFormField(
+                                  controller: _tabelaNomeController,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    labelText: 'Tabela de preço',
+                                    suffixIcon: carregandoTabela
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _referenciaNomeController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Nome da referência',
                               ),
                             ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _valorController,
-                            enabled: !salvando,
-                            autofocus: widget.referenciaPreSelecionada != null,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.,]'),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _referenciaIdController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'ID da referência',
                               ),
-                            ],
-                            decoration: const InputDecoration(
-                              labelText: 'Valor',
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Informe o valor';
-                              }
-                              if (!_possuiAteDuasCasas(value)) {
-                                return 'Use no máximo 2 casas decimais';
-                              }
-                              if (_parseDouble(value) == null) {
-                                return 'Valor inválido';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: salvando ? null : _salvar,
-                              icon: salvando
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_outlined),
-                              label: const Text('Salvar preço'),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _valorController,
+                              focusNode: _valorFocusNode,
+                              enabled: !salvando,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.,]'),
+                                ),
+                                TextInputFormatter.withFunction((
+                                  oldValue,
+                                  newValue,
+                                ) {
+                                  final text = newValue.text;
+                                  if (text.isEmpty) return newValue;
+                                  if (!RegExp(
+                                    r'^\d+([.,]\d{0,2})?$',
+                                  ).hasMatch(text)) {
+                                    return oldValue;
+                                  }
+                                  return newValue;
+                                }),
+                              ],
+                              decoration: const InputDecoration(
+                                labelText: 'Valor',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o valor';
+                                }
+                                if (!_possuiAteDuasCasas(value)) {
+                                  return 'Use no máximo 2 casas decimais';
+                                }
+                                if (_parseDouble(value) == null) {
+                                  return 'Valor inválido';
+                                }
+                                return null;
+                              },
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: salvando
+                                    ? null
+                                    : () => _salvar(context),
+                                icon: salvando
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.save_outlined),
+                                label: const Text('Salvar preço'),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            widget.imagensDaReferencia,
+                          ],
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          );
-        },
       ),
     );
   }
 
-  void _salvar() {
-    final referenciaId = int.tryParse(_referenciaIdController.text);
-    if (referenciaId == null) {
-      setState(() => _mostrarErroReferencia = true);
-      return;
-    }
+  void _salvar(BuildContext context) {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final valor = _parseDouble(_valorController.text)!;
-    context.read<PrecosDaTabelaBloc>().add(
-      PrecoDaTabelaCriarSolicitado(referenciaId: referenciaId, valor: valor),
+    context.read<EditarPrecoDaReferenciaBloc>().add(
+      EditarPrecoDaReferenciaSalvou(
+        tabelaDePrecoId: widget.tabelaDePrecoId,
+        referenciaId: widget.referenciaId,
+        valor: valor,
+      ),
     );
   }
 

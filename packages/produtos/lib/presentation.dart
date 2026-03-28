@@ -46,3 +46,4 @@ export 'package:produtos/presentantion/pages/menu_produtos.dart';
 export 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 export 'package:produtos/presentantion/widgets/produtos_da_referencia_tabela_widget.dart';
+export 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';

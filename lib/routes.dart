@@ -129,16 +129,27 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   //Preços:
-  '/menu_precos': (context) {
-    return const PrecosMenuPage();
-  },
+
   '/tabelas_de_preco': (context) {
     return TabelasDePrecoPage();
+  },
+  '/selecionar_tabela_de_preco': (context) {
+    return SelecionarTabelaDePrecoPage();
   },
   '/tabela_de_preco_detalhe': (context) {
     return TabelaDePrecoDetalhePage(
       idTabelaDePreco: args(context)['idTabelaDePreco'],
-      referenciaSeletor: ReferenciaSeletor(),
+    );
+  },
+  '/preco_da_referencia_page': (context) {
+    return PrecoDaReferenciaPage(
+      tabelaDePrecoId: args(context)['tabelaDePrecoId'],
+      referenciaId: args(context)['referenciaId'],
+      referenciaNome: args(context)['referenciaNome'],
+      valorInicial: args(context)['valorInicial'],
+      imagensDaReferencia: ReferenciaMidiasWidget(
+        referenciaId: args(context)['referenciaId'],
+      ),
     );
   },
 

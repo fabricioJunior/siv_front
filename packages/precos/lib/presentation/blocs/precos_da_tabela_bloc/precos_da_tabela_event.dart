@@ -14,32 +14,6 @@ class PrecosDaTabelaIniciou extends PrecosDaTabelaEvent {
   List<Object?> get props => [tabelaDePrecoId];
 }
 
-class PrecoDaTabelaCriarSolicitado extends PrecosDaTabelaEvent {
-  final int referenciaId;
-  final double valor;
-
-  PrecoDaTabelaCriarSolicitado({
-    required this.referenciaId,
-    required this.valor,
-  });
-
-  @override
-  List<Object?> get props => [referenciaId, valor];
-}
-
-class PrecoDaTabelaAtualizarSolicitado extends PrecosDaTabelaEvent {
-  final int referenciaId;
-  final double valor;
-
-  PrecoDaTabelaAtualizarSolicitado({
-    required this.referenciaId,
-    required this.valor,
-  });
-
-  @override
-  List<Object?> get props => [referenciaId, valor];
-}
-
 class PrecoDaTabelaRemoverSolicitado extends PrecosDaTabelaEvent {
   final int referenciaId;
 

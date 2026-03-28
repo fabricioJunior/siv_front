@@ -2,9 +2,7 @@ import 'package:precos/models.dart';
 
 class PrecoDaReferenciaDto implements PrecoDaReferencia {
   @override
-  final DateTime criadoEm;
-  @override
-  final DateTime atualizadoEm;
+  final DateTime? atualizadoEm;
   @override
   final int tabelaDePrecoId;
   @override
@@ -19,7 +17,6 @@ class PrecoDaReferenciaDto implements PrecoDaReferencia {
   final int operadorId;
 
   const PrecoDaReferenciaDto({
-    required this.criadoEm,
     required this.atualizadoEm,
     required this.tabelaDePrecoId,
     required this.referenciaId,
@@ -31,7 +28,6 @@ class PrecoDaReferenciaDto implements PrecoDaReferencia {
 
   factory PrecoDaReferenciaDto.fromJson(Map<String, dynamic> json) {
     return PrecoDaReferenciaDto(
-      criadoEm: _parseDate(json['criadoEm']),
       atualizadoEm: _parseDate(json['atualizadoEm']),
       tabelaDePrecoId: _parseInt(json['tabelaDePrecoId']),
       referenciaId: _parseInt(json['referenciaId']),
@@ -44,8 +40,7 @@ class PrecoDaReferenciaDto implements PrecoDaReferencia {
 
   Map<String, dynamic> toJson() {
     return {
-      'criadoEm': criadoEm.toIso8601String(),
-      'atualizadoEm': atualizadoEm.toIso8601String(),
+      'atualizadoEm': atualizadoEm?.toIso8601String(),
       'tabelaDePrecoId': tabelaDePrecoId,
       'referenciaId': referenciaId,
       'referenciaIdExterno': referenciaIdExterno,
@@ -57,7 +52,6 @@ class PrecoDaReferenciaDto implements PrecoDaReferencia {
 
   @override
   List<Object?> get props => [
-    criadoEm,
     atualizadoEm,
     tabelaDePrecoId,
     referenciaId,
@@ -70,7 +64,10 @@ class PrecoDaReferenciaDto implements PrecoDaReferencia {
   @override
   bool? get stringify => true;
 
-  static DateTime _parseDate(dynamic value) {
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) {
+      return null;
+    }
     if (value is DateTime) {
       return value;
     }

@@ -11,19 +11,13 @@ part 'precos_da_tabela_state.dart';
 class PrecosDaTabelaBloc
     extends Bloc<PrecosDaTabelaEvent, PrecosDaTabelaState> {
   final RecuperarPrecosDasReferencias _recuperarPrecosDasReferencias;
-  final CriarPrecoDaReferencia _criarPrecoDaReferencia;
-  final AtualizarPrecoDaReferencia _atualizarPrecoDaReferencia;
   final RemoverPrecoDaReferencia _removerPrecoDaReferencia;
 
   PrecosDaTabelaBloc(
     this._recuperarPrecosDasReferencias,
-    this._criarPrecoDaReferencia,
-    this._atualizarPrecoDaReferencia,
     this._removerPrecoDaReferencia,
   ) : super(const PrecosDaTabelaState(step: PrecosDaTabelaStep.inicial)) {
     on<PrecosDaTabelaIniciou>(_onPrecosDaTabelaIniciou);
-    on<PrecoDaTabelaCriarSolicitado>(_onPrecoDaTabelaCriarSolicitado);
-    on<PrecoDaTabelaAtualizarSolicitado>(_onPrecoDaTabelaAtualizarSolicitado);
     on<PrecoDaTabelaRemoverSolicitado>(_onPrecoDaTabelaRemoverSolicitado);
   }
 
@@ -57,105 +51,6 @@ class PrecosDaTabelaBloc
         state.copyWith(
           step: PrecosDaTabelaStep.falha,
           erro: 'Erro ao carregar preços da tabela.',
-        ),
-      );
-      addError(e, s);
-    }
-  }
-
-  FutureOr<void> _onPrecoDaTabelaCriarSolicitado(
-    PrecoDaTabelaCriarSolicitado event,
-    Emitter<PrecosDaTabelaState> emit,
-  ) async {
-    final tabelaDePrecoId = state.tabelaDePrecoId;
-    if (tabelaDePrecoId == null) {
-      return;
-    }
-
-    final existeReferenciaNaTabela = state.precos.any(
-      (preco) => preco.referenciaId == event.referenciaId,
-    );
-
-    if (existeReferenciaNaTabela) {
-      emit(
-        state.copyWith(
-          step: PrecosDaTabelaStep.falha,
-          erro: 'Já existe preço para esta referência nesta tabela.',
-        ),
-      );
-      return;
-    }
-
-    try {
-      emit(state.copyWith(step: PrecosDaTabelaStep.salvando, clearErro: true));
-
-      final criado = await _criarPrecoDaReferencia.call(
-        tabelaDePrecoId: tabelaDePrecoId,
-        referenciaId: event.referenciaId,
-        valor: event.valor,
-      );
-
-      final lista = [...state.precos, criado]
-        ..sort((a, b) => a.referenciaNome.compareTo(b.referenciaNome));
-
-      emit(
-        state.copyWith(
-          step: PrecosDaTabelaStep.carregado,
-          precos: lista,
-          clearErro: true,
-        ),
-      );
-    } catch (e, s) {
-      emit(
-        state.copyWith(
-          step: PrecosDaTabelaStep.falha,
-          erro: 'Erro ao criar preço da referência.',
-        ),
-      );
-      addError(e, s);
-    }
-  }
-
-  FutureOr<void> _onPrecoDaTabelaAtualizarSolicitado(
-    PrecoDaTabelaAtualizarSolicitado event,
-    Emitter<PrecosDaTabelaState> emit,
-  ) async {
-    final tabelaDePrecoId = state.tabelaDePrecoId;
-    if (tabelaDePrecoId == null) {
-      return;
-    }
-
-    try {
-      emit(state.copyWith(step: PrecosDaTabelaStep.salvando, clearErro: true));
-
-      final atualizado = await _atualizarPrecoDaReferencia.call(
-        tabelaDePrecoId: tabelaDePrecoId,
-        referenciaId: event.referenciaId,
-        valor: event.valor,
-      );
-
-      final lista =
-          state.precos
-              .map(
-                (preco) => preco.referenciaId == event.referenciaId
-                    ? atualizado
-                    : preco,
-              )
-              .toList()
-            ..sort((a, b) => a.referenciaNome.compareTo(b.referenciaNome));
-
-      emit(
-        state.copyWith(
-          step: PrecosDaTabelaStep.carregado,
-          precos: lista,
-          clearErro: true,
-        ),
-      );
-    } catch (e, s) {
-      emit(
-        state.copyWith(
-          step: PrecosDaTabelaStep.falha,
-          erro: 'Erro ao atualizar preço da referência.',
         ),
       );
       addError(e, s);

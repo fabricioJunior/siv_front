@@ -11,8 +11,13 @@ const int _limiteMaximoMidias = 20;
 
 class ReferenciaMidiasWidget extends StatelessWidget {
   final int referenciaId;
+  final bool permiteEditar;
 
-  const ReferenciaMidiasWidget({super.key, required this.referenciaId});
+  const ReferenciaMidiasWidget({
+    super.key,
+    required this.referenciaId,
+    this.permiteEditar = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,7 @@ class ReferenciaMidiasWidget extends StatelessWidget {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  else
+                  else if (permiteEditar)
                     IconButton(
                       icon: const Icon(Icons.add_a_photo),
                       onPressed: limiteAtingido
@@ -70,11 +75,13 @@ class ReferenciaMidiasWidget extends StatelessWidget {
               if (midias.isEmpty && !carregando)
                 _MidiasEmptyState(
                   limiteAtingido: limiteAtingido,
+                  permiteEditar: permiteEditar,
                   onAdicionar: () => _adicionarMidia(context),
                 ),
               if (midias.isNotEmpty)
                 _MidiasCarousel(
                   midias: midias,
+                  permiteEditar: permiteEditar,
                   onRemover: (midiaId) => _removerMidia(context, midiaId),
                   onEditar: (midia, ePrincipal, ePublica) =>
                       _atualizarMidia(context, midia, ePrincipal, ePublica),
@@ -87,6 +94,8 @@ class ReferenciaMidiasWidget extends StatelessWidget {
   }
 
   Future<void> _adicionarMidia(BuildContext context) async {
+    if (!permiteEditar) return;
+
     final bloc = context.read<ReferenciaMidiasBloc>();
     final state = bloc.state;
     final total = state is ReferenciaMidiasCarregado ? state.midias.length : 0;
@@ -133,6 +142,8 @@ class ReferenciaMidiasWidget extends StatelessWidget {
   }
 
   void _removerMidia(BuildContext context, int midiaId) {
+    if (!permiteEditar) return;
+
     context.read<ReferenciaMidiasBloc>().add(
       ReferenciaMidiasRemoveu(referenciaId, midiaId),
     );
@@ -144,6 +155,8 @@ class ReferenciaMidiasWidget extends StatelessWidget {
     bool ePrincipal,
     bool ePublica,
   ) {
+    if (!permiteEditar) return;
+
     context.read<ReferenciaMidiasBloc>().add(
       ReferenciaMidiasAtualizou(
         referenciaId: referenciaId,
@@ -157,10 +170,12 @@ class ReferenciaMidiasWidget extends StatelessWidget {
 
 class _MidiasEmptyState extends StatelessWidget {
   final bool limiteAtingido;
+  final bool permiteEditar;
   final VoidCallback onAdicionar;
 
   const _MidiasEmptyState({
     required this.limiteAtingido,
+    required this.permiteEditar,
     required this.onAdicionar,
   });
 
@@ -188,18 +203,22 @@ class _MidiasEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Adicione imagens para facilitar a visualização da referência.',
+            permiteEditar
+                ? 'Adicione imagens para facilitar a visualização da referência.'
+                : 'Visualização apenas. A edição de mídias está desabilitada nesta página.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: limiteAtingido ? null : onAdicionar,
-            icon: const Icon(Icons.add_a_photo),
-            label: const Text('Adicionar mídia'),
-          ),
+          if (permiteEditar) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: limiteAtingido ? null : onAdicionar,
+              icon: const Icon(Icons.add_a_photo),
+              label: const Text('Adicionar mídia'),
+            ),
+          ],
         ],
       ),
     );
@@ -208,12 +227,14 @@ class _MidiasEmptyState extends StatelessWidget {
 
 class _MidiasCarousel extends StatefulWidget {
   final List<ReferenciaMidia> midias;
+  final bool permiteEditar;
   final void Function(int midiaId) onRemover;
   final void Function(ReferenciaMidia midia, bool ePrincipal, bool ePublica)
   onEditar;
 
   const _MidiasCarousel({
     required this.midias,
+    required this.permiteEditar,
     required this.onRemover,
     required this.onEditar,
   });
@@ -315,6 +336,7 @@ class _MidiasCarouselState extends State<_MidiasCarousel> {
                           child: _MidiaCarouselCard(
                             key: ValueKey(midia.id),
                             midia: midia,
+                            permiteEditar: widget.permiteEditar,
                             onRemover: () => widget.onRemover(midia.id),
                             onEditar: (ePrincipal, ePublica) =>
                                 widget.onEditar(midia, ePrincipal, ePublica),
@@ -354,12 +376,14 @@ class _MidiasCarouselState extends State<_MidiasCarousel> {
 
 class _MidiaCarouselCard extends StatelessWidget {
   final ReferenciaMidia midia;
+  final bool permiteEditar;
   final VoidCallback onRemover;
   final void Function(bool ePrincipal, bool ePublica) onEditar;
 
   const _MidiaCarouselCard({
     super.key,
     required this.midia,
+    required this.permiteEditar,
     required this.onRemover,
     required this.onEditar,
   });
@@ -511,36 +535,46 @@ class _MidiaCarouselCard extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              top: 4,
-              left: 4,
-              child: GestureDetector(
-                onTap: () => _abrirEdicaoMidia(context),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
+            if (permiteEditar)
+              Positioned(
+                top: 4,
+                left: 4,
+                child: GestureDetector(
+                  onTap: () => _abrirEdicaoMidia(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 20),
                 ),
               ),
-            ),
-            Positioned(
-              top: 4,
-              right: 4,
-              child: GestureDetector(
-                onTap: onRemover,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(12),
+            if (permiteEditar)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: onRemover,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
-                  padding: const EdgeInsets.all(2),
-                  child: const Icon(Icons.close, color: Colors.white, size: 16),
                 ),
               ),
-            ),
             if (midia.ePrincipal)
               Positioned(
                 bottom: 4,

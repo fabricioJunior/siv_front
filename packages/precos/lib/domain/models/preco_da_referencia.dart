@@ -1,8 +1,7 @@
 import 'package:core/equals.dart';
 
 abstract class PrecoDaReferencia implements Equatable {
-  DateTime get criadoEm;
-  DateTime get atualizadoEm;
+  DateTime? get atualizadoEm;
   int get tabelaDePrecoId;
   int get referenciaId;
   String get referenciaIdExterno;
@@ -11,8 +10,7 @@ abstract class PrecoDaReferencia implements Equatable {
   int get operadorId;
 
   factory PrecoDaReferencia.create({
-    required DateTime criadoEm,
-    required DateTime atualizadoEm,
+    required DateTime? atualizadoEm,
     required int tabelaDePrecoId,
     required int referenciaId,
     required String referenciaIdExterno,
@@ -23,7 +21,6 @@ abstract class PrecoDaReferencia implements Equatable {
 
   @override
   List<Object?> get props => [
-    criadoEm,
     atualizadoEm,
     tabelaDePrecoId,
     referenciaId,
@@ -39,9 +36,7 @@ abstract class PrecoDaReferencia implements Equatable {
 
 class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
   @override
-  final DateTime criadoEm;
-  @override
-  final DateTime atualizadoEm;
+  final DateTime? atualizadoEm;
   @override
   final int tabelaDePrecoId;
   @override
@@ -56,7 +51,6 @@ class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
   final int operadorId;
 
   _PrecoDaReferenciaImpl({
-    required this.criadoEm,
     required this.atualizadoEm,
     required this.tabelaDePrecoId,
     required this.referenciaId,
@@ -67,7 +61,6 @@ class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
   });
 
   _PrecoDaReferenciaImpl copyWith({
-    DateTime? criadoEm,
     DateTime? atualizadoEm,
     int? tabelaDePrecoId,
     int? referenciaId,
@@ -77,7 +70,6 @@ class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
     int? operadorId,
   }) {
     return _PrecoDaReferenciaImpl(
-      criadoEm: criadoEm ?? this.criadoEm,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
       tabelaDePrecoId: tabelaDePrecoId ?? this.tabelaDePrecoId,
       referenciaId: referenciaId ?? this.referenciaId,
@@ -90,7 +82,6 @@ class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
 
   @override
   List<Object?> get props => [
-    criadoEm,
     atualizadoEm,
     tabelaDePrecoId,
     referenciaId,
@@ -106,7 +97,6 @@ class _PrecoDaReferenciaImpl implements PrecoDaReferencia {
 
 extension PrecoDaReferenciaCopyWith on PrecoDaReferencia {
   PrecoDaReferencia copyWith({
-    DateTime? criadoEm,
     DateTime? atualizadoEm,
     int? tabelaDePrecoId,
     int? referenciaId,
@@ -117,7 +107,6 @@ extension PrecoDaReferenciaCopyWith on PrecoDaReferencia {
   }) {
     if (this is _PrecoDaReferenciaImpl) {
       return (this as _PrecoDaReferenciaImpl).copyWith(
-        criadoEm: criadoEm,
         atualizadoEm: atualizadoEm,
         tabelaDePrecoId: tabelaDePrecoId,
         referenciaId: referenciaId,
@@ -129,7 +118,6 @@ extension PrecoDaReferenciaCopyWith on PrecoDaReferencia {
     }
 
     return PrecoDaReferencia.create(
-      criadoEm: criadoEm ?? this.criadoEm,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
       tabelaDePrecoId: tabelaDePrecoId ?? this.tabelaDePrecoId,
       referenciaId: referenciaId ?? this.referenciaId,

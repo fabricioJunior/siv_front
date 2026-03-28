@@ -158,10 +158,11 @@ class HomePage extends StatelessWidget {
                               ),
                             _ModuleCard(
                               icon: Icons.attach_money,
-                              title: 'Preços',
+                              title: 'Tabela de preços',
                               color: Colors.purple,
                               onPressed: () {
-                                Navigator.pushNamed(context, '/menu_precos');
+                                Navigator.pushNamed(
+                                    context, '/tabelas_de_preco');
                               },
                             ),
                             if (PermissaoPorNome.acessoPermitido('PRODFM001'))

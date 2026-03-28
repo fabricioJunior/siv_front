@@ -59,15 +59,6 @@ class MenuProdutosPage extends StatelessWidget {
                 Navigator.of(context).pushNamed('/marcas');
               },
             ),
-            _buildMenuCard(
-              context: context,
-              title: 'Preços',
-              icon: Icons.attach_money,
-              color: Colors.green,
-              onTap: () {
-                Navigator.of(context).pushNamed('/menu_precos');
-              },
-            ),
           ],
         ),
       ),

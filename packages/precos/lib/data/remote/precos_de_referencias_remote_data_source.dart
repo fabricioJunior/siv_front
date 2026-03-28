@@ -29,11 +29,8 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
     required int referenciaId,
     required double valor,
   }) async {
-    final pathParameters = {
-      'tabelaDePrecoId': tabelaDePrecoId,
-      'referenciaId': referenciaId,
-    };
-    final body = {'valor': valor};
+    final pathParameters = {'tabelaDePrecoId': tabelaDePrecoId};
+    final body = {'valor': valor, 'referenciaId': referenciaId};
     final response = await post(pathParameters: pathParameters, body: body);
     return PrecoDaReferenciaDto.fromJson(response.body);
   }
@@ -73,6 +70,5 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  String get path =>
-      '/v1/tabelas-de-precos/{tabelaDePrecoId}/referencias/{referenciaId}';
+  String get path => '/v1/tabelas-de-precos/{tabelaDePrecoId}/referencias';
 }

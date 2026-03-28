@@ -27,6 +27,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   late final TextEditingController _cuidadosController;
 
   bool _salvando = false;
+  bool _abrindoPreco = false;
   bool _detalhesExpandidos = false;
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
@@ -181,6 +182,56 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     });
   }
 
+  Future<void> _abrirPrecoDaReferencia() async {
+    final referenciaId = _referencia?.id ?? widget.idReferencia;
+    if (referenciaId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Referência sem ID válido.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _abrindoPreco = true;
+    });
+
+    try {
+      var tabelaDePrecoId = await Navigator.of(
+        context,
+      ).pushNamed('/selecionar_tabela_de_preco');
+
+      if (!mounted || tabelaDePrecoId == null) {
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      await Navigator.of(context).pushNamed(
+        '/preco_da_referencia_page',
+        arguments: {
+          'tabelaDePrecoId': tabelaDePrecoId,
+          'referenciaId': referenciaId,
+          'referenciaNome': _referencia?.nome ?? _nomeController.text.trim(),
+          'valorInicial': 0.0,
+        },
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Falha ao abrir edição de preço da referência.'),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _abrindoPreco = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -243,9 +294,38 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Informações da Referência',
-                              style: Theme.of(context).textTheme.titleMedium,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Informações da Referência',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed:
+                                      carregando ||
+                                          falha ||
+                                          _abrindoPreco ||
+                                          _referencia == null
+                                      ? null
+                                      : _abrirPrecoDaReferencia,
+                                  icon: _abrindoPreco
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.price_change_outlined),
+                                  label: Text(
+                                    _abrindoPreco ? 'Abrindo...' : 'Preço',
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 16),
                             // Widget de mídias da referência
@@ -255,6 +335,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                 child: ReferenciaMidiasWidget(
                                   referenciaId:
                                       _referencia?.id ?? widget.idReferencia,
+                                  permiteEditar: true,
                                 ),
                               ),
                             TextFormField(

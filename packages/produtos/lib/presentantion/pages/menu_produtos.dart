@@ -59,6 +59,15 @@ class MenuProdutosPage extends StatelessWidget {
                 Navigator.of(context).pushNamed('/marcas');
               },
             ),
+            _buildMenuCard(
+              context: context,
+              title: 'Estoque',
+              icon: Icons.inventory_2,
+              color: Colors.green,
+              onTap: () {
+                Navigator.of(context).pushNamed('/estoque');
+              },
+            ),
           ],
         ),
       ),

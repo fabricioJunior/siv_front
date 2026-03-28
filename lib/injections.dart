@@ -10,6 +10,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:estoque/estoque_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
 import 'package:empresas/empresas_injections.dart';
@@ -57,6 +58,7 @@ Future<void> resolverDependenciasApp() async {
   resolverSistemaInjections();
   resolverPagamentosInjections();
   resolverPrecosInjection();
+  resolverEstoqueInjection();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }

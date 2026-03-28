@@ -43,6 +43,8 @@ dependencies:
     path: packages/pagamentos
   precos: 
     path: packages/precos
+  estoque:
+    path: packages/estoque
   core: 
     path: packages/core 
   # The following adds the Cupertino Icons font to your application.
@@ -52,6 +54,7 @@ dependencies:
   json_annotation: ^4.9.0
   http_interceptor: ^2.0.0
   image_picker: ^1.2.1
+  bloc_concurrency: ^0.3.0
 
 dev_dependencies:
   flutter_test:

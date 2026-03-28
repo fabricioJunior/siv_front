@@ -311,13 +311,15 @@ class MockSincronizarPermissoesDoUsuario extends _i1.Mock
   }
 
   @override
-  _i9.Future<void> call({required int? idUsuario}) => (super.noSuchMethod(
+  _i9.Future<Iterable<_i15.PermissaoDoUsuario>> call(
+          {required int? idUsuario}) =>
+      (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
           {#idUsuario: idUsuario},
         ),
-        returnValue: _i9.Future<void>.value(),
-        returnValueForMissingStub: _i9.Future<void>.value(),
-      ) as _i9.Future<void>);
+        returnValue: _i9.Future<Iterable<_i15.PermissaoDoUsuario>>.value(
+            <_i15.PermissaoDoUsuario>[]),
+      ) as _i9.Future<Iterable<_i15.PermissaoDoUsuario>>);
 }

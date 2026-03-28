@@ -165,6 +165,14 @@ class HomePage extends StatelessWidget {
                                     context, '/tabelas_de_preco');
                               },
                             ),
+                            _ModuleCard(
+                              icon: Icons.inventory,
+                              title: 'Estoque',
+                              color: Colors.indigo,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/estoque');
+                              },
+                            ),
                             if (PermissaoPorNome.acessoPermitido('PRODFM001'))
                               _ModuleCard(
                                 icon: Icons.shopping_bag,

@@ -1,5 +1,6 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:empresas/presentation.dart';
+import 'package:estoque/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
@@ -150,6 +151,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       imagensDaReferencia: ReferenciaMidiasWidget(
         referenciaId: args(context)['referenciaId'],
       ),
+    );
+  },
+  '/estoque': (context) {
+    return EstoqueSaldoPage(
+      seletorCores: CorSeletor(modo: CorSeletorModo.multipla),
+      seletorTamanhos: TamanhoSeletor(modo: TamanhoSeletorModo.multipla),
     );
   },
 

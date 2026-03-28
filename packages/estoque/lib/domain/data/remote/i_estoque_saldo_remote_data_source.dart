@@ -1,0 +1,6 @@
+import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
+import 'package:estoque/domain/models/saldo_do_estoque.dart';
+
+abstract class IEstoqueSaldoRemoteDataSource {
+  Future<SaldoDoEstoque> obterSaldo({required FiltroProdutoDoEstoque filtro});
+}

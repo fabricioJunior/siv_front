@@ -186,8 +186,6 @@ abstract class RemoteDataSourceBase {
       );
     }
   }
-  //https://apollo-api-stg.coralcloud.app/v1/pessoas/2/enderecos
-  //https://apollo-api-stg.coralcloud.app/v1/pessoas/2/enderecos
 }
 
 class HttpException implements Exception {

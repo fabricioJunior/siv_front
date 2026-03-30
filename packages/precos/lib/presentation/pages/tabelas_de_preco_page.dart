@@ -4,7 +4,6 @@ import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:precos/models.dart';
 import 'package:precos/presentation.dart';
-import 'package:core/seletores.dart';
 
 class TabelasDePrecoPage extends StatelessWidget {
   final bloc = sl<TabelasDePrecoBloc>();

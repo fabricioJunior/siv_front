@@ -17,6 +17,7 @@ class IsarDatabaseInstance implements IIsarDatabaseInstance {
     String? moduleName,
     bool isSyncData = false,
     bool isCommonData = false,
+    bool showInspection = false,
   }) async {
     final instanceName = moduleName ??
         '${isSyncData ? 'sync_' : ''}${isCommonData ? 'common_data' : ''}';
@@ -26,14 +27,12 @@ class IsarDatabaseInstance implements IIsarDatabaseInstance {
       _registerOpenedInstance(currentInstance);
       return currentInstance;
     }
-
-    final rootDirectory = isarDirectory;
-    if (rootDirectory == null) {
-      throw StateError(
-          'initIsarDatabase precisa ser executado antes de getIsar.');
+    if (isarDirectory == null) {
+      await initIsarDatabase();
     }
+    final rootDirectory = isarDirectory;
 
-    final directory = Directory('${rootDirectory.path}/$instanceName');
+    final directory = Directory('${rootDirectory!.path}/$instanceName');
     if (!directory.existsSync()) {
       directory.createSync(recursive: true);
     }
@@ -43,7 +42,7 @@ class IsarDatabaseInstance implements IIsarDatabaseInstance {
           schemas,
           name: instanceName,
           directory: directory.path,
-          inspector: false,
+          inspector: showInspection,
         );
 
     _registerOpenedInstance(instance);

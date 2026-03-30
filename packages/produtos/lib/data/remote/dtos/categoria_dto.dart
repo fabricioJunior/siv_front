@@ -3,7 +3,7 @@ import 'package:produtos/models.dart';
 
 part 'categoria_dto.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class CategoriaDto implements Categoria {
   @override
   final int? id;

@@ -6,6 +6,7 @@ abstract class IIsarDatabaseInstance {
     String? moduleName,
     bool isSyncData = false,
     bool isCommonData = false,
+    bool showInspection = false,
   });
 
   List<Isar> get openedInstances;

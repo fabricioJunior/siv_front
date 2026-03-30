@@ -37,6 +37,7 @@ import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:http/http.dart';
 
@@ -393,24 +394,13 @@ class _InformacoesParaPrimeiraRequest implements IInformacoesParaRequests {
 // }
 
 Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  var instanceName = '${isSyncData ?? false ? 'sync_' : ''} autenticacao';
-
-  var directory = Directory('${isarDirectory!.path}/$instanceName');
-
-  if (!directory.existsSync()) {
-    directory.createSync();
-  }
   List<CollectionSchema<dynamic>> schemas = [
     TokenDtoSchema,
     PermissaoDoUsuarioDtoSchema,
   ];
 
-  Isar isar = Isar.getInstance(instanceName) ??
-      Isar.openSync(
-        schemas,
-        directory: directory.path,
-        name: instanceName,
-        inspector: true,
-      );
-  return isar;
+  return sl<IIsarDatabaseInstance>().getIsar(
+    schemas: schemas,
+    moduleName: 'autenticacao',
+  );
 }

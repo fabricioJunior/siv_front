@@ -9,12 +9,16 @@ import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
+import 'package:siv_front/presentation/pages/entrada_de_produtos_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
+import 'package:siv_front/presentation/pages/sync_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),
   '/home': (context) => const HomePage(),
+  '/sincronizacao': (context) => const SyncPage(),
+  '/entrada_de_produtos': (context) => const EntradaDeProdutosPage(),
   ////AUTENTICACAO:
   '/login': (context) => const LoginPage(),
   '/usuarios': (context) => const UsuariosPage(),

@@ -20,6 +20,7 @@ import 'package:precos/precos_injection.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/licenciado_dto.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/usuario_dto.dart';
@@ -111,6 +112,14 @@ void _presentation() {
         sl(),
         sl(),
       )..add(AppIniciou()));
+
+  sl.registerLazySingleton<SyncDataBloc>(
+    () => SyncDataBloc(
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {

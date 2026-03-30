@@ -1,5 +1,4 @@
 import 'package:core/paginacao.dart';
-import 'package:core/paginacao/paginacao.dart';
 import 'package:estoque/domain/data/datasourcers/i_produtos_estoque_local_datasource.dart';
 import 'package:estoque/estoque.dart';
 
@@ -35,10 +34,12 @@ class EstoqueRepository implements IEstoqueRepository {
           paginaAtual: page,
           totalPaginas: saldo.meta.totalPages,
           itensPorPagina: saldo.meta.itemsPerPage,
+          itensProcessadosNaPagina: 0,
           totalItens: saldo.meta.totalItems,
           dataAtualizacao: DateTime.now(),
           ended: true,
         );
+        yield paginacao;
         await paginacaoDataSource.salvarPaginacao(paginacao);
         break;
       }
@@ -50,9 +51,11 @@ class EstoqueRepository implements IEstoqueRepository {
         paginaAtual: page,
         totalPaginas: saldo.meta.totalPages,
         itensPorPagina: saldo.meta.itemsPerPage,
+        itensProcessadosNaPagina: saldo.meta.itemCount,
         totalItens: saldo.meta.totalItems,
         dataAtualizacao: DateTime.now(),
       );
+      yield pagicao;
       await paginacaoDataSource.salvarPaginacao(pagicao);
       page++;
     }

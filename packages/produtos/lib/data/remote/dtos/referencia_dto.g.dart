@@ -13,11 +13,9 @@ ReferenciaDto _$ReferenciaDtoFromJson(Map<String, dynamic> json) =>
       criadoEm: json['criadoEm'] == null
           ? null
           : DateTime.parse(json['criadoEm'] as String),
-      atualizadoEm: (json['atualizadoEm'] ?? json['atualizadorEm']) == null
+      atualizadoEm: json['atualizadoEm'] == null
           ? null
-          : DateTime.parse(
-              (json['atualizadoEm'] ?? json['atualizadorEm']) as String,
-            ),
+          : DateTime.parse(json['atualizadoEm'] as String),
       idExterno: json['idExterno'] as String?,
       unidadeMedida: json['unidadeMedida'] as String?,
       categoriaId: (json['categoriaId'] as num?)?.toInt(),

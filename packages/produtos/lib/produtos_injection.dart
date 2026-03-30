@@ -1,4 +1,9 @@
 import 'package:core/injecoes.dart';
+import 'package:core/isar_anotacoes.dart';
+import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
+import 'package:produtos/data/local/codigos_local_data_source.dart';
+import 'package:produtos/data/local/dtos/codigo_dto.dart';
+import 'package:produtos/data/remote/codigos_remote_data_source.dart';
 import 'package:produtos/data/remote/tamanhos_remote_datasource.dart';
 import 'package:produtos/data/remote/referencia_midias_remote_data_source.dart';
 import 'package:produtos/data/repositorios/referencia_midias_repository.dart';
@@ -8,7 +13,7 @@ import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
-import 'package:produtos/data/remote/codigo_de_barras_remote_datasource.dart';
+import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
@@ -17,6 +22,8 @@ import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
 import 'package:produtos/data/repositorios/produtos_repository.dart';
 import 'package:produtos/data/repositorios/codigos_repository.dart';
+import 'package:produtos/domain/data/local/i_codigos_local_data_source.dart';
+import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
@@ -26,7 +33,7 @@ import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.
 import 'package:produtos/domain/data/remote/i_marcas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_produtos_remote_data_source.dart';
-import 'package:produtos/domain/data/remote/i_codigo_de_barras_remotedatasource.dart';
+import 'package:produtos/domain/data/remote/i_codigos_remote_data_source.dart';
 import 'package:produtos/presentantion/bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/repositorios.dart';
@@ -68,12 +75,19 @@ void _data() {
     () => ProdutosRemoteDatasource(informacoesParaRequest: sl()),
   );
 
-  sl.registerFactory<ICodigoDeBarrasRemoteDatasource>(
-    () => CodigoDeBarrasRemoteDatasource(informacoesParaRequest: sl()),
+  sl.registerFactory<ICodigosDoProdutoRemoteDatasource>(
+    () => CodigosDoProdutoRemoteDatasource(informacoesParaRequest: sl()),
+  );
+  sl.registerFactory<ICodigosRemoteDataSource>(
+    () => CodigosRemoteDataSource(informacoesParaRequest: sl()),
   );
 
   sl.registerFactory<IReferenciaMidiasRemoteDataSource>(
     () => ReferenciaMidiasRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
+  sl.registerFactory<ICodigosLocalDataSource>(
+    () => CodigosLocalDataSource(getIsar: _getIsar),
   );
 }
 
@@ -107,7 +121,12 @@ void _repositores() {
   );
 
   sl.registerFactory<ICodigosRepository>(
-    () => CodigoDeBarrasRepository(codigoDeBarrasRemoteDatasource: sl()),
+    () => CodigoDeBarrasRepository(
+      codigoDeBarrasRemoteDatasource: sl(),
+      codigosRemoteDataSource: sl(),
+      codigosLocalDataSource: sl(),
+      paginacaoDataSource: sl(),
+    ),
   );
 
   sl.registerFactory<IReferenciaMidiasRepository>(
@@ -139,6 +158,9 @@ void _usesCases() {
   // Cores Use Cases
   sl.registerFactory<RecuperarCores>(
     () => RecuperarCores(coresRepository: sl()),
+  );
+  sl.registerFactory<SincronizarCodigos>(
+    () => SincronizarCodigos(codigosRepository: sl()),
   );
 
   sl.registerFactory<CriarCor>(() => CriarCor(coresRepository: sl()));
@@ -321,4 +343,16 @@ void _presentantion() {
   );
 
   sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());
+}
+
+Future<Isar> _getIsar({bool? isSyncData = false}) async {
+  List<CollectionSchema<dynamic>> schemas = [CodigoDtoSchema];
+
+  return sl<IIsarDatabaseInstance>().getIsar(
+    schemas: schemas,
+    isCommonData: true,
+    isSyncData: isSyncData ?? false,
+    moduleName: 'produtos',
+    showInspection: true,
+  );
 }

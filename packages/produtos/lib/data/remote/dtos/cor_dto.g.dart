@@ -11,9 +11,3 @@ CorDto _$CorDtoFromJson(Map<String, dynamic> json) => CorDto(
   inativo: json['inativo'] as bool?,
   nome: json['nome'] as String,
 );
-
-Map<String, dynamic> _$CorDtoToJson(CorDto instance) => <String, dynamic>{
-  'id': instance.id,
-  'inativo': instance.inativo,
-  'nome': instance.nome,
-};

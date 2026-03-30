@@ -1,4 +1,4 @@
-abstract class ICodigoDeBarrasRemoteDatasource {
+abstract class ICodigosDoProdutoRemoteDatasource {
   Future<void> salvarCodigo({
     required int produtoId,
     required String codigoDeBarras,

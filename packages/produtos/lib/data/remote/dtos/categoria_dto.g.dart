@@ -11,10 +11,3 @@ CategoriaDto _$CategoriaDtoFromJson(Map<String, dynamic> json) => CategoriaDto(
   inativa: json['inativa'] as bool,
   nome: json['nome'] as String,
 );
-
-Map<String, dynamic> _$CategoriaDtoToJson(CategoriaDto instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'inativa': instance.inativa,
-      'nome': instance.nome,
-    };

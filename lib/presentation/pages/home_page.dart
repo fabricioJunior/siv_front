@@ -3,9 +3,25 @@ import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sl<SyncDataBloc>().add(
+        const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.home),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +216,14 @@ class HomePage extends StatelessWidget {
                               onPressed: () {
                                 Navigator.pushNamed(
                                     context, '/pagamentos_avulsos');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.sync,
+                              title: 'Sync page',
+                              color: Colors.redAccent,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/sincronizacao');
                               },
                             ),
                           ],

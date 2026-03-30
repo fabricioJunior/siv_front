@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:core/imagens/cache_imagem_service.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
+import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
+import 'package:core/local_data_sourcers/database_configs/isar_database_instance.dart';
 import 'package:core/local_data_sourcers/isar/isar_configuracoes.dart';
 import 'package:core/paginacao/i_paginacao_data_source.dart';
 import 'package:core/paginacao/paginacao.dart';
@@ -32,6 +34,8 @@ void coreInjections() {
       getIsar: _getIsar,
     ),
   );
+
+  sl.registerLazySingleton<IIsarDatabaseInstance>(() => IsarDatabaseInstance());
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {

@@ -42,6 +42,10 @@ void _useCases() {
   sl.registerFactory<RecuperarSaldoDoEstoque>(
     () => RecuperarSaldoDoEstoque(estoqueRepository: sl()),
   );
+
+  sl.registerFactory<SincronizarEstoque>(
+    () => SincronizarEstoque(estoqueRepository: sl()),
+  );
 }
 
 void _presentation() {
@@ -54,5 +58,7 @@ Future<Isar> _getIsar({bool? isSyncData}) async {
     schemas: schemas,
     isCommonData: true,
     isSyncData: isSyncData ?? false,
+    moduleName: 'estoque',
+    showInspection: true,
   );
 }

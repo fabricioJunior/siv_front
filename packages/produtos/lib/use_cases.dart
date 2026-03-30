@@ -45,3 +45,4 @@ export 'domain/use_cases/criar_referencia_midia.dart';
 export 'domain/use_cases/excluir_referencia_midia.dart';
 export 'domain/use_cases/recuperar_referencia_midias.dart';
 export 'domain/use_cases/atualizar_referencia_midia.dart';
+export 'domain/use_cases/sincronizar_codigos.dart';

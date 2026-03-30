@@ -3,7 +3,7 @@ import 'package:core/http/i_http_source.dart';
 import 'package:core/http/test/informaoces_para_requests_fake.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:siv_front/infra/remote_data_sourcers/usuarios_remote_datasource.dart';
+import 'package:siv_front/data/infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
 import '../../../packages/autenticacao/test/doubles/fakes.dart';
 import '../../../packages/autenticacao/test/doubles/http.mocks.dart';

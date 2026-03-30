@@ -2,7 +2,6 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
-import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentation.dart';
 
 class ProdutoPage extends StatelessWidget {

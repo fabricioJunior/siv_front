@@ -19,7 +19,7 @@ class PermissoesDoGrupoAcessoRemoteDataSource extends RemoteDataSourceBase
     var pathParameters = {
       'id': idGrupoDeAcesso.toString(),
     };
-    for (var permissao in permissoes.where((e) => e.id != null)) {
+    for (var permissao in permissoes) {
       await post(
         body: {'componenteId': permissao.id},
         pathParameters: pathParameters,

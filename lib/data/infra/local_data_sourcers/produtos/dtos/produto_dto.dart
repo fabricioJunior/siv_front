@@ -1,9 +1,9 @@
 import 'package:core/isar_anotacoes.dart';
-import 'package:siv_front/infra/local_data_sourcers/produtos/models/produto_para_leitor.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/produtos/models/produto_para_leitor.dart';
 
 part 'produto_dto.g.dart';
 
-@Collection()
+@Collection(ignore: {'dados', 'descricao', 'quantidade'})
 class ProdutoDto implements IsarDto, ProdutoParaLeitor {
   final int id;
   @override
@@ -39,6 +39,7 @@ class ProdutoDto implements IsarDto, ProdutoParaLeitor {
   Id get dataBaseId => fastHash(codigoDeBarras);
 
   @override
+  @ignore
   Map<String, dynamic> get dados => {
         'id': id,
         'codigoDeBarras': codigoDeBarras,
@@ -54,7 +55,9 @@ class ProdutoDto implements IsarDto, ProdutoParaLeitor {
       };
 
   @override
+  @ignore
   String get descricao => nomeReferencia;
   @override
+  @ignore
   int get quantidade => quantidadeEmEstoque;
 }

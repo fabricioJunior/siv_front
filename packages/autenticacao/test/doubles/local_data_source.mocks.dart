@@ -56,7 +56,7 @@ class MockITokenLocalDataSource extends _i1.Mock
       ) as _i3.Future<void>);
 
   @override
-  _i3.Future<_i4.TokenDto?> fetchById<Key>(Key? id) => (super.noSuchMethod(
+  _i3.Future<_i4.TokenDto?> fetchById(int? id) => (super.noSuchMethod(
         Invocation.method(
           #fetchById,
           [id],

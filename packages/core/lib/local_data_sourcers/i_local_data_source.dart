@@ -3,7 +3,7 @@ abstract interface class ILocalDataSource<E> {
 
   Future<void> putAll(Iterable<E> entities);
 
-  Future<E?> fetchById<Key>(Key id);
+  Future<E?> fetchById(int id);
 
   Future<Iterable<E>> fetchAll();
 

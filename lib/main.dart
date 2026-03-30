@@ -4,7 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:flutter/material.dart';
-import 'package:siv_front/bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/routes.dart';
 
@@ -74,6 +74,7 @@ class MyApp extends StatelessWidget {
               //     ),
               //   );
               // }
+
               return child ?? const SizedBox.shrink();
             },
           ),

@@ -1,8 +1,15 @@
+import 'dart:io';
+
 import 'package:core/imagens/cache_imagem_service.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
+import 'package:core/local_data_sourcers/isar/isar_configuracoes.dart';
+import 'package:core/paginacao/i_paginacao_data_source.dart';
+import 'package:core/paginacao/paginacao.dart';
+import 'package:core/paginacao/paginacao_data_source.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/cep.dart';
 import 'package:get_it/get_it.dart';
+import 'package:isar_community/isar.dart';
 
 GetIt sl = GetIt.instance;
 
@@ -19,6 +26,12 @@ void coreInjections() {
   sl.registerLazySingleton<CepService>(() => CepService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
+
+  sl.registerFactory<IPaginacaoDataSource>(
+    () => PaginacaoDataSource(
+      getIsar: _getIsar,
+    ),
+  );
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {
@@ -35,4 +48,26 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
   Uri get uriBase => Uri.parse(
         apiBaseUrlConfig.urlBase,
       );
+}
+
+Future<Isar> _getIsar({bool? isSyncData = false}) async {
+  var instanceName = '${isSyncData ?? false ? 'sync_' : ''} core';
+
+  var directory = Directory('${isarDirectory!.path}/$instanceName');
+
+  if (!directory.existsSync()) {
+    directory.createSync();
+  }
+  List<CollectionSchema<dynamic>> schemas = [
+    PaginacaoSchema,
+  ];
+
+  Isar isar = Isar.getInstance(instanceName) ??
+      Isar.openSync(
+        schemas,
+        directory: directory.path,
+        name: instanceName,
+        inspector: false,
+      );
+  return isar;
 }

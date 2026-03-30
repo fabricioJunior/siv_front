@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:autenticacao/autenticao_injecoes.dart' as auth;
 import 'package:autenticacao/data.dart';
 import 'package:autenticacao/data/remote/auth_http_interceptor.dart';
@@ -8,6 +6,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:estoque/estoque_injections.dart';
@@ -20,18 +19,18 @@ import 'package:pagamentos/pagamentos_injections.dart';
 import 'package:precos/precos_injection.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
-import 'package:siv_front/bloc/app_bloc.dart';
-import 'package:siv_front/infra/local_data_sourcers/dtos/empresa_dto.dart';
-import 'package:siv_front/infra/local_data_sourcers/dtos/licenciado_dto.dart';
-import 'package:siv_front/infra/local_data_sourcers/dtos/usuario_dto.dart';
-import 'package:siv_front/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
-import 'package:siv_front/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
-import 'package:siv_front/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
-import 'package:siv_front/infra/remote_data_sourcers/empresas_remote_data_source.dart';
-import 'package:siv_front/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
-import 'package:siv_front/permissoes/permissoes_controller.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/licenciado_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/usuario_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
+import 'package:siv_front/data/infra/remote_data_sourcers/empresas_remote_data_source.dart';
+import 'package:siv_front/data/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
+import 'package:siv_front/domain/controllers/permissoes_controller.dart';
 
-import 'infra/remote_data_sourcers/usuarios_remote_datasource.dart';
+import 'data/infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
 Future<void> resolverDependenciasApp() async {
   await firebase.resolverDependenciasFirebase();
@@ -133,25 +132,15 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
 }
 
 Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  var instanceName = '${isSyncData ?? false ? 'sync_' : ''} root';
-
-  var directory = Directory('${isarDirectory!.path}/$instanceName');
-
-  if (!directory.existsSync()) {
-    directory.createSync();
-  }
   List<CollectionSchema<dynamic>> schemas = [
     UsuarioDtoSchema,
     EmpresaDtoSchema,
     LicenciadoDtoSchema,
   ];
 
-  Isar isar = Isar.getInstance(instanceName) ??
-      Isar.openSync(
-        schemas,
-        directory: directory.path,
-        name: instanceName,
-        inspector: false,
-      );
-  return isar;
+  return sl<IIsarDatabaseInstance>().getIsar(
+    schemas: schemas,
+    isCommonData: true,
+    isSyncData: isSyncData ?? false,
+  );
 }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart';
-import 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';
 
 class ReferenciaPage extends StatefulWidget {
   final int idReferencia;
@@ -225,7 +224,6 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         ),
       );
     } finally {
-      if (!mounted) return;
       setState(() {
         _abrindoPreco = false;
       });

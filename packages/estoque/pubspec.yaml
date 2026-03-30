@@ -3,6 +3,7 @@ description: "A new Flutter package project."
 version: 0.0.1
 publish_to: none
 homepage:
+isar_version: &isar_version 3.3.0-dev.1
 
 environment:
   sdk: ^3.10.7
@@ -21,6 +22,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
+  isar_community_generator: 
+    version: *isar_version
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

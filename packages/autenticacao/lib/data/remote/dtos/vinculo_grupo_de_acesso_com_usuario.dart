@@ -7,7 +7,9 @@ import '../../../domain/models/vinculo_grupo_de_acesso_e_usuario.dart';
 
 part 'vinculo_grupo_de_acesso_com_usuario.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(
+  createToJson: false,
+)
 class VinculoGrupoDeAcessoComUsuarioDto
     implements VinculoGrupoDeAcessoEUsuario {
   final int grupoId;

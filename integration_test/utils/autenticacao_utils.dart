@@ -1,7 +1,7 @@
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/injecoes.dart';
-import 'package:siv_front/infra/local_data_sourcers/dtos/empresa_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
 
 abstract class AutenticacaoUtils {
   static Future<void> reiniciarAutenticacao() async {

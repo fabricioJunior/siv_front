@@ -1,6 +1,6 @@
 import 'package:autenticacao/models.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
-import 'package:siv_front/bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 
 class Permissoes implements IPermissoesController {
   final AppBloc _appBloc;

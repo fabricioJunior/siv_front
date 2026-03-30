@@ -8,9 +8,9 @@ import 'package:pagamentos/pages.dart';
 import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
-import 'package:siv_front/pages/home_page.dart';
-import 'package:siv_front/pages/selecionar_empresa_page.dart';
-import 'package:siv_front/pages/splash_page.dart';
+import 'package:siv_front/presentation/pages/home_page.dart';
+import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
+import 'package:siv_front/presentation/pages/splash_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),

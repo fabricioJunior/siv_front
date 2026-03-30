@@ -94,6 +94,7 @@ class PessoaDto implements Pessoa {
     bool? eFornecedor,
     bool? eFuncionario,
     bool? bloqueado,
+    DateTime? nascimento,
   }) {
     return PessoaDto(
       id: id ?? this.id,

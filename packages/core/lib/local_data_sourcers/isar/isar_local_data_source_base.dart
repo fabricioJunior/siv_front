@@ -24,11 +24,11 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
   }
 
   @override
-  Future<Dto?> fetchById<int>(int id) async {
+  Future<Dto?> fetchById(int id) async {
     var isarInstace = await getIsar();
 
     return isarInstace.txn(() {
-      return isarInstace.collection<Dto>().get(id as Id);
+      return isarInstace.collection<Dto>().get(id);
     });
   }
 
@@ -58,6 +58,13 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
         entities is! Iterable<Dto> ? entities.map((e) => toDto(e)) : entities;
     await isarInstace.writeTxn(() {
       return isarInstace.collection<Dto>().putAll(dtos.toList());
+    });
+  }
+
+  Future<void> deleteById(int id) async {
+    var isarInstace = await getIsar();
+    await isarInstace.writeTxn(() {
+      return isarInstace.collection<Dto>().delete(id);
     });
   }
 

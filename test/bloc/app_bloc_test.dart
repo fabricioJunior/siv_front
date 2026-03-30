@@ -4,7 +4,7 @@ import 'package:core/bloc_test.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:siv_front/bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 
 import '../doubles/doubles.dart';
 import '../doubles/use_cases.mocks.dart';

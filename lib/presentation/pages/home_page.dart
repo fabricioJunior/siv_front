@@ -2,7 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
-import 'package:siv_front/bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

@@ -1,7 +1,7 @@
 import 'package:autenticacao/domain/models/usuario.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:autenticacao/data.dart';
-import 'package:siv_front/infra/remote_data_sourcers/dtos/usuario_dto.dart';
+import 'package:siv_front/data/infra/remote_data_sourcers/dtos/usuario_dto.dart';
 
 class UsuarioDaSessaoRemoteDataSource extends RemoteDataSourceBase
     implements IUsuarioDaSessaoRemoteDataSource {

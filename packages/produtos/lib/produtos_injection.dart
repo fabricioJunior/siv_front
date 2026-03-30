@@ -16,7 +16,7 @@ import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
 import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
 import 'package:produtos/data/repositorios/produtos_repository.dart';
-import 'package:produtos/data/repositorios/codigo_de_barras_repository.dart';
+import 'package:produtos/data/repositorios/codigos_repository.dart';
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
@@ -106,7 +106,7 @@ void _repositores() {
     () => ProdutosRepository(produtosRemoteDataSource: sl()),
   );
 
-  sl.registerFactory<ICodigoDeBarrasRepository>(
+  sl.registerFactory<ICodigosRepository>(
     () => CodigoDeBarrasRepository(codigoDeBarrasRemoteDatasource: sl()),
   );
 

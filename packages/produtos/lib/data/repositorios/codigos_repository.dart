@@ -1,7 +1,7 @@
 import 'package:produtos/domain/data/remote/i_codigo_de_barras_remotedatasource.dart';
 import 'package:produtos/domain/data/repositorios/i_codigo_de_barras_repository.dart';
 
-class CodigoDeBarrasRepository implements ICodigoDeBarrasRepository {
+class CodigoDeBarrasRepository implements ICodigosRepository {
   final ICodigoDeBarrasRemoteDatasource _codigoDeBarrasRemoteDatasource;
 
   CodigoDeBarrasRepository({
@@ -9,24 +9,18 @@ class CodigoDeBarrasRepository implements ICodigoDeBarrasRepository {
   }) : _codigoDeBarrasRemoteDatasource = codigoDeBarrasRemoteDatasource;
 
   @override
-  Future<void> criarCodigoDeBarras({
-    required int produtoId,
-    required String codigoDeBarras,
-  }) {
-    return _codigoDeBarrasRemoteDatasource.salvarCodigoDeBarras(
+  Future<void> criarCodigo({required int produtoId, required String codigo}) {
+    return _codigoDeBarrasRemoteDatasource.salvarCodigo(
       produtoId: produtoId,
-      codigoDeBarras: codigoDeBarras,
+      codigoDeBarras: codigo,
     );
   }
 
   @override
-  Future<void> deletarCodigoDeBarras({
-    required int produtoId,
-    required String codigoDeBarras,
-  }) {
-    return _codigoDeBarrasRemoteDatasource.deletarCodigoDeBarras(
+  Future<void> deletarCodigo({required int produtoId, required String codigo}) {
+    return _codigoDeBarrasRemoteDatasource.deletarCodigo(
       produtoId: produtoId,
-      codigoDeBarras: codigoDeBarras,
+      codigoDeBarras: codigo,
     );
   }
 }

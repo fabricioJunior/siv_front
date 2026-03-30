@@ -1,10 +1,10 @@
 abstract class ICodigoDeBarrasRemoteDatasource {
-  Future<void> salvarCodigoDeBarras({
+  Future<void> salvarCodigo({
     required int produtoId,
     required String codigoDeBarras,
   });
 
-  Future<void> deletarCodigoDeBarras({
+  Future<void> deletarCodigo({
     required int produtoId,
     required String codigoDeBarras,
   });

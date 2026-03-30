@@ -1,16 +1,15 @@
 import 'package:produtos/repositorios.dart';
 
 class DeletarCodigoDeBarras {
-  final ICodigoDeBarrasRepository _codigoDeBarrasRepository;
+  final ICodigosRepository _codigoDeBarrasRepository;
 
-  DeletarCodigoDeBarras({
-    required ICodigoDeBarrasRepository codigoDeBarrasRepository,
-  }) : _codigoDeBarrasRepository = codigoDeBarrasRepository;
+  DeletarCodigoDeBarras({required ICodigosRepository codigoDeBarrasRepository})
+    : _codigoDeBarrasRepository = codigoDeBarrasRepository;
 
   Future<void> call({required int produtoId, required String codigoDeBarras}) {
-    return _codigoDeBarrasRepository.deletarCodigoDeBarras(
+    return _codigoDeBarrasRepository.deletarCodigo(
       produtoId: produtoId,
-      codigoDeBarras: codigoDeBarras,
+      codigo: codigoDeBarras,
     );
   }
 }

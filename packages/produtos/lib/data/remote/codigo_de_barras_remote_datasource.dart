@@ -10,7 +10,7 @@ class CodigoDeBarrasRemoteDatasource extends RemoteDataSourceBase
   String get path => '/v1/produtos/{id}/codigo-barras/{barcode}';
 
   @override
-  Future<void> salvarCodigoDeBarras({
+  Future<void> salvarCodigo({
     required int produtoId,
     required String codigoDeBarras,
   }) async {
@@ -30,7 +30,7 @@ class CodigoDeBarrasRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
-  Future<void> deletarCodigoDeBarras({
+  Future<void> deletarCodigo({
     required int produtoId,
     required String codigoDeBarras,
   }) {

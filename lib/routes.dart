@@ -1,6 +1,7 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:empresas/presentation.dart';
 import 'package:estoque/presentation.dart';
+import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
@@ -92,6 +93,14 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/pagamento_avulso': (context) {
     return PagamentoAvulsoPage();
+  },
+  '/formas_de_pagamento': (context) {
+    return FormasDePagamentoPage();
+  },
+  '/forma_de_pagamento': (context) {
+    return FormaDePagamentoPage(
+      idFormaDePagamento: args(context)['idFormaDePagamento'],
+    );
   },
 
   ///PRODUTOS:

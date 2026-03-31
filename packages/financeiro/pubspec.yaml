@@ -1,0 +1,22 @@
+name: financeiro
+description: "Pacote com regras de negocio relacionadas ao financeiro"
+version: 0.0.1
+homepage:
+publish_to: none
+
+environment:
+  sdk: ^3.6.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:

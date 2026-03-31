@@ -41,6 +41,8 @@ dependencies:
     path: packages/sistema
   pagamentos:
     path: packages/pagamentos
+  financeiro:
+    path: packages/financeiro
   precos: 
     path: packages/precos
   estoque:

@@ -219,6 +219,17 @@ class _HomePageState extends State<HomePage> {
                               },
                             ),
                             _ModuleCard(
+                              icon: Icons.account_balance_wallet,
+                              title: 'Financeiro',
+                              color: Colors.brown,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/formas_de_pagamento',
+                                );
+                              },
+                            ),
+                            _ModuleCard(
                               icon: Icons.sync,
                               title: 'Sync page',
                               color: Colors.redAccent,
@@ -319,8 +330,8 @@ class _ModuleCardState extends State<_ModuleCard> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    widget.color.withOpacity(0.8),
-                    widget.color.withOpacity(0.6),
+                    widget.color.withValues(alpha: 0.8),
+                    widget.color.withValues(alpha: 0.6),
                   ],
                 ),
               ),

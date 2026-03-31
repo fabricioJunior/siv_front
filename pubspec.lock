@@ -469,6 +469,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
+  financeiro:
+    dependency: "direct main"
+    description:
+      path: "packages/financeiro"
+      relative: true
+    source: path
+    version: "0.0.1"
   firebase:
     dependency: "direct main"
     description:

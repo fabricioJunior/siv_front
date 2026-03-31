@@ -1,5 +1,4 @@
 import '../models/referencia_midia.dart';
-import 'dart:io';
 
 abstract class IReferenciaMidiasRepository {
   Future<List<ReferenciaMidia>> carregarMidias(int referenciaId);

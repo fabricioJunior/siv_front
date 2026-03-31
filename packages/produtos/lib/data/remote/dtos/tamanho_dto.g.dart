@@ -11,10 +11,3 @@ TamanhoDto _$TamanhoDtoFromJson(Map<String, dynamic> json) => TamanhoDto(
   inativo: json['inativo'] as bool,
   nome: json['nome'] as String,
 );
-
-Map<String, dynamic> _$TamanhoDtoToJson(TamanhoDto instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'inativo': instance.inativo,
-      'nome': instance.nome,
-    };

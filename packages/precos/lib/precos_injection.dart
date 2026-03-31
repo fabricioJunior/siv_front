@@ -5,8 +5,6 @@ import 'package:precos/data/repositorios/precos_de_referencias_repository.dart';
 import 'package:precos/data/repositorios/tabelas_de_preco_repository.dart';
 import 'package:precos/domain/data/remote/i_precos_de_referencias_remote_data_source.dart';
 import 'package:precos/domain/data/remote/i_tabelas_de_preco_remote_data_source.dart';
-import 'package:precos/domain/data/repositorios/i_precos_de_referencias_repository.dart';
-import 'package:precos/domain/data/repositorios/i_tabelas_de_preco_repository.dart';
 import 'package:precos/presentation.dart';
 import 'package:precos/repositorios.dart';
 import 'package:precos/use_cases.dart';

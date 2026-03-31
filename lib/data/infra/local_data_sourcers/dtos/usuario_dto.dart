@@ -1,6 +1,5 @@
 import 'package:autenticacao/models.dart';
 import 'package:core/isar_anotacoes.dart';
-import 'package:core/local_data_sourcers/isar/isar_dto.dart';
 
 part 'usuario_dto.g.dart';
 

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:autenticacao/data/local/dtos/token_dto.dart';
 import 'package:autenticacao/data/local/dtos/permissao_do_usuario_dto.dart';
 import 'package:autenticacao/data/local/permissoes_do_usuario_local_data_source.dart';

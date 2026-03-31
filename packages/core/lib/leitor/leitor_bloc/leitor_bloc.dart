@@ -140,10 +140,23 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       itens.add(itemAtualizado);
     }
 
+    final historico = List<LeitorHistoricoRegistro>.from(state.historico)
+      ..add(
+        LeitorHistoricoRegistro(
+          dataHora: DateTime.now(),
+          tipo: LeitorHistoricoTipo.adicao,
+          codigoDeBarras: itemAtualizado.codigoDeBarras,
+          descricao: itemAtualizado.descricao,
+          quantidade: 1,
+          quantidadeAposOperacao: itemAtualizado.quantidadeLida,
+        ),
+      );
+
     emit(
       state.copyWith(
         processando: false,
         itens: itens,
+        historico: historico,
         ultimoProdutoLido: itemAtualizado,
         ultimoCodigoInformado: codigo,
         ultimoCodigoLidoValido: true,
@@ -179,16 +192,32 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
     }
 
     final item = itens[indice];
-    final novaQuantidade = item.quantidadeLida - event.quantidade;
+    final quantidadeRemovida = event.quantidade <= item.quantidadeLida
+        ? event.quantidade
+        : item.quantidadeLida;
+    final novaQuantidade = item.quantidadeLida - quantidadeRemovida;
     if (novaQuantidade > 0) {
       itens[indice] = item.copyWith(quantidadeLida: novaQuantidade);
     } else {
       itens.removeAt(indice);
     }
 
+    final historico = List<LeitorHistoricoRegistro>.from(state.historico)
+      ..add(
+        LeitorHistoricoRegistro(
+          dataHora: DateTime.now(),
+          tipo: LeitorHistoricoTipo.remocao,
+          codigoDeBarras: item.codigoDeBarras,
+          descricao: item.descricao,
+          quantidade: quantidadeRemovida,
+          quantidadeAposOperacao: novaQuantidade,
+        ),
+      );
+
     emit(
       state.copyWith(
         itens: itens,
+        historico: historico,
         erro: null,
         aviso: null,
         avisoTipo: null,
@@ -200,13 +229,34 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
     LeitorItemExcluido event,
     Emitter<LeitorState> emit,
   ) {
+    final indiceItemRemovido = state.itens.indexWhere(
+      (item) => item.codigoDeBarras == event.codigo,
+    );
+    final itemRemovido =
+        indiceItemRemovido >= 0 ? state.itens[indiceItemRemovido] : null;
+
     final itens = state.itens
         .where((item) => item.codigoDeBarras != event.codigo)
         .toList();
 
+    final historico = List<LeitorHistoricoRegistro>.from(state.historico);
+    if (itemRemovido != null) {
+      historico.add(
+        LeitorHistoricoRegistro(
+          dataHora: DateTime.now(),
+          tipo: LeitorHistoricoTipo.remocao,
+          codigoDeBarras: itemRemovido.codigoDeBarras,
+          descricao: itemRemovido.descricao,
+          quantidade: itemRemovido.quantidadeLida,
+          quantidadeAposOperacao: 0,
+        ),
+      );
+    }
+
     emit(
       state.copyWith(
         itens: itens,
+        historico: historico,
         erro: null,
         aviso: null,
         avisoTipo: null,

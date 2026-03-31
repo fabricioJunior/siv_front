@@ -10,6 +10,8 @@ class LeitorController extends ChangeNotifier {
 
   LeitorState get state => _state;
   List<LeitorItemContado> get itens => List.unmodifiable(_state.itens);
+  List<LeitorHistoricoRegistro> get historico =>
+      List.unmodifiable(_state.historico);
   LeitorItemContado? get ultimoProdutoLido => _state.ultimoProdutoLido;
   String? get ultimoErro => _state.erro;
   int get quantidadeTotalLida => _state.quantidadeTotalLida;
@@ -93,12 +95,16 @@ class LeitorWidget extends StatefulWidget {
   State<LeitorWidget> createState() => _LeitorWidgetState();
 }
 
+enum _LeitorVisualizacao { porProduto, historico }
+
 class _LeitorWidgetState extends State<LeitorWidget> {
   late LeitorBloc _bloc;
   late LeitorController _controller;
   late final TextEditingController _codigoController;
   late final FocusNode _codigoFocusNode;
   bool _controllerInterno = false;
+  bool _modoRemocao = false;
+  _LeitorVisualizacao _visualizacao = _LeitorVisualizacao.historico;
 
   @override
   void initState() {
@@ -156,8 +162,18 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
   void _submeterCodigo() {
     final codigo = _codigoController.text.trim();
+    if (codigo.isEmpty) {
+      _solicitarFoco();
+      return;
+    }
+
     _codigoController.clear();
-    _controller.lerCodigo(codigo);
+    if (_modoRemocao) {
+      _controller.removerQuantidade(codigo);
+    } else {
+      _controller.lerCodigo(codigo);
+    }
+
     _solicitarFoco();
   }
 
@@ -181,6 +197,37 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
+  Future<void> _exibirErro(String texto) async {
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: _modoRemocao
+              ? const Text('Erro ao remover item')
+              : const Text('Erro ao ler item'),
+          content: Text(texto),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatarDataHora(DateTime dataHora) {
+    final dia = dataHora.day.toString().padLeft(2, '0');
+    final mes = dataHora.month.toString().padLeft(2, '0');
+    final hora = dataHora.hour.toString().padLeft(2, '0');
+    final minuto = dataHora.minute.toString().padLeft(2, '0');
+    final segundo = dataHora.second.toString().padLeft(2, '0');
+    return '$dia/$mes $hora:$minuto:$segundo';
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -197,7 +244,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
           if (state.tokenErro != previousState.tokenErro &&
               state.erro != null) {
             widget.onErro?.call(state.erro!);
-            _mostrarMensagem(context, state.erro!, Colors.red.shade700);
+            _exibirErro(state.erro!);
             SystemSound.play(SystemSoundType.alert);
           }
 
@@ -233,8 +280,12 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                           focusNode: _codigoFocusNode,
                           autofocus: widget.autofocus,
                           decoration: InputDecoration(
-                            labelText: 'Código de barras',
-                            hintText: widget.campoCodigoHint,
+                            labelText: _modoRemocao
+                                ? 'Código para remover'
+                                : 'Código de barras',
+                            hintText: _modoRemocao
+                                ? 'Bipe para remover 1 unidade do item'
+                                : widget.campoCodigoHint,
                             suffixIcon: state.processando
                                 ? const Padding(
                                     padding: EdgeInsets.all(12),
@@ -255,8 +306,12 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       const SizedBox(width: 12),
                       FilledButton.icon(
                         onPressed: state.processando ? null : _submeterCodigo,
-                        icon: const Icon(Icons.qr_code_scanner_outlined),
-                        label: const Text('Ler'),
+                        icon: Icon(
+                          _modoRemocao
+                              ? Icons.remove_circle_outline
+                              : Icons.qr_code_scanner_outlined,
+                        ),
+                        label: Text(_modoRemocao ? 'Remover' : 'Ler'),
                       ),
                     ],
                   ),
@@ -291,6 +346,29 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                               : 'Controle por estoque inativo',
                         ),
                       ),
+                      FilterChip(
+                        avatar: Icon(
+                          _modoRemocao
+                              ? Icons.remove_circle_outline
+                              : Icons.add_circle_outline,
+                          size: 18,
+                        ),
+                        tooltip: _modoRemocao
+                            ? 'Toque para voltar ao modo leitura'
+                            : 'Toque para ativar remoção por leitura',
+                        label: Text(
+                          _modoRemocao
+                              ? 'Removendo por leitura (toque para desativar)'
+                              : 'Ativar remoção por leitura',
+                        ),
+                        selected: _modoRemocao,
+                        onSelected: (_) {
+                          setState(() {
+                            _modoRemocao = !_modoRemocao;
+                          });
+                          _solicitarFoco();
+                        },
+                      ),
                       ActionChip(
                         avatar: const Icon(Icons.refresh_outlined, size: 18),
                         label: const Text('Limpar leitura'),
@@ -299,6 +377,27 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             : () => _controller.limpar(),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<_LeitorVisualizacao>(
+                    segments: const [
+                      ButtonSegment<_LeitorVisualizacao>(
+                        value: _LeitorVisualizacao.historico,
+                        icon: Icon(Icons.history_outlined),
+                        label: Text('Histórico'),
+                      ),
+                      ButtonSegment<_LeitorVisualizacao>(
+                        value: _LeitorVisualizacao.porProduto,
+                        icon: Icon(Icons.inventory_2_outlined),
+                        label: Text('Por produto'),
+                      ),
+                    ],
+                    selected: {_visualizacao},
+                    onSelectionChanged: (selection) {
+                      setState(() {
+                        _visualizacao = selection.first;
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
                   if (state.ultimoProdutoLido != null)
@@ -330,52 +429,92 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: widget.alturaLista,
-                    child: state.itens.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Nenhum produto lido ainda.',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                    child: switch (_visualizacao) {
+                      _LeitorVisualizacao.porProduto => state.itens.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Nenhum produto lido ainda.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: state.itens.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final item = state.itens[index];
+                                return ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(item.descricao),
+                                  subtitle: Text(
+                                    '${item.codigoDeBarras}  •  Lidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}',
+                                  ),
+                                  trailing: Wrap(
+                                    spacing: 4,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        tooltip: 'Remover uma unidade',
+                                        onPressed: () =>
+                                            _controller.removerQuantidade(
+                                          item.codigoDeBarras,
+                                        ),
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        tooltip: 'Excluir item da contagem',
+                                        onPressed: () =>
+                                            _controller.removerItem(
+                                          item.codigoDeBarras,
+                                        ),
+                                        icon: const Icon(Icons.delete_outline),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                        : ListView.separated(
-                            itemCount: state.itens.length,
-                            separatorBuilder: (context, index) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final item = state.itens[index];
-                              return ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(item.descricao),
-                                subtitle: Text(
-                                  '${item.codigoDeBarras}  •  Lidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}',
-                                ),
-                                trailing: Wrap(
-                                  spacing: 4,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Remover uma unidade',
-                                      onPressed: () =>
-                                          _controller.removerQuantidade(
-                                        item.codigoDeBarras,
-                                      ),
-                                      icon: const Icon(
-                                        Icons.remove_circle_outline,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Excluir item da contagem',
-                                      onPressed: () => _controller.removerItem(
-                                        item.codigoDeBarras,
-                                      ),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                      _LeitorVisualizacao.historico => state.historico.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Nenhuma movimentação registrada ainda.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: state.historico.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final registro = state.historico[
+                                    state.historico.length - 1 - index];
+                                final foiAdicao =
+                                    registro.tipo == LeitorHistoricoTipo.adicao;
+                                return ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Icon(
+                                    foiAdicao
+                                        ? Icons.add_circle_outline
+                                        : Icons.remove_circle_outline,
+                                    color: foiAdicao
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700,
+                                  ),
+                                  title: Text(
+                                    '${foiAdicao ? 'Adicionado' : 'Removido'} ${registro.quantidade} un. - ${registro.descricao}',
+                                  ),
+                                  subtitle: Text(
+                                    '${registro.codigoDeBarras}  •  Saldo do item: ${registro.quantidadeAposOperacao}  •  ${_formatarDataHora(registro.dataHora)}',
+                                  ),
+                                );
+                              },
+                            ),
+                    },
                   ),
                 ],
               ),

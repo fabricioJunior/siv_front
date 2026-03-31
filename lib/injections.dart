@@ -6,11 +6,13 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:estoque/estoque_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
+import 'package:comercial/comercial_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
 import 'package:empresas/empresas_injections.dart';
@@ -32,6 +34,7 @@ import 'package:siv_front/data/infra/remote_data_sourcers/empresas_remote_data_s
 import 'package:siv_front/data/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
 import 'package:siv_front/domain/controllers/permissoes_controller.dart';
 
+import 'data/infra/local_data_sourcers/leitor/produto_do_leitor_local_data_source.dart';
 import 'data/infra/remote_data_sourcers/usuarios_remote_datasource.dart';
 
 Future<void> resolverDependenciasApp() async {
@@ -59,6 +62,7 @@ Future<void> resolverDependenciasApp() async {
   resolverSistemaInjections();
   resolverPagamentosInjections();
   resolverFinanceiroInjections();
+  resolverComercialInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();
   _presentation();
@@ -100,6 +104,12 @@ void _localDataSource() {
       getIsar: _getIsar,
     ),
   );
+
+  sl.registerFactory<ILeitorDataDatasource>(
+      () => ProdutoDoLeitorLocalDataSource(
+            codigosLocalDataSource: sl(),
+            produtoEstoqueLocalDataSource: sl(),
+          ));
 }
 
 void _presentation() {

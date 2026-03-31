@@ -4,6 +4,36 @@ const Object _campoNaoInformado = Object();
 
 enum LeitorAvisoTipo { codigoDuplicado }
 
+enum LeitorHistoricoTipo { adicao, remocao }
+
+class LeitorHistoricoRegistro extends Equatable {
+  final DateTime dataHora;
+  final LeitorHistoricoTipo tipo;
+  final String codigoDeBarras;
+  final String descricao;
+  final int quantidade;
+  final int quantidadeAposOperacao;
+
+  const LeitorHistoricoRegistro({
+    required this.dataHora,
+    required this.tipo,
+    required this.codigoDeBarras,
+    required this.descricao,
+    required this.quantidade,
+    required this.quantidadeAposOperacao,
+  });
+
+  @override
+  List<Object?> get props => [
+        dataHora,
+        tipo,
+        codigoDeBarras,
+        descricao,
+        quantidade,
+        quantidadeAposOperacao,
+      ];
+}
+
 class LeitorItemContado extends Equatable {
   final String codigoDeBarras;
   final String descricao;
@@ -59,6 +89,7 @@ class LeitorState extends Equatable {
   final bool controlarQuantidade;
   final bool processando;
   final List<LeitorItemContado> itens;
+  final List<LeitorHistoricoRegistro> historico;
   final LeitorItemContado? ultimoProdutoLido;
   final String? ultimoCodigoInformado;
   final bool ultimoCodigoLidoValido;
@@ -73,6 +104,7 @@ class LeitorState extends Equatable {
     required this.controlarQuantidade,
     required this.processando,
     required this.itens,
+    required this.historico,
     required this.ultimoProdutoLido,
     required this.ultimoCodigoInformado,
     required this.ultimoCodigoLidoValido,
@@ -89,6 +121,7 @@ class LeitorState extends Equatable {
       controlarQuantidade: controlarQuantidade,
       processando: false,
       itens: const [],
+      historico: const [],
       ultimoProdutoLido: null,
       ultimoCodigoInformado: null,
       ultimoCodigoLidoValido: false,
@@ -110,6 +143,7 @@ class LeitorState extends Equatable {
     bool? controlarQuantidade,
     bool? processando,
     List<LeitorItemContado>? itens,
+    List<LeitorHistoricoRegistro>? historico,
     Object? ultimoProdutoLido = _campoNaoInformado,
     Object? ultimoCodigoInformado = _campoNaoInformado,
     bool? ultimoCodigoLidoValido,
@@ -124,6 +158,7 @@ class LeitorState extends Equatable {
       controlarQuantidade: controlarQuantidade ?? this.controlarQuantidade,
       processando: processando ?? this.processando,
       itens: itens ?? this.itens,
+      historico: historico ?? this.historico,
       ultimoProdutoLido: identical(ultimoProdutoLido, _campoNaoInformado)
           ? this.ultimoProdutoLido
           : ultimoProdutoLido as LeitorItemContado?,
@@ -150,6 +185,7 @@ class LeitorState extends Equatable {
         controlarQuantidade,
         processando,
         itens,
+        historico,
         ultimoProdutoLido,
         ultimoCodigoInformado,
         ultimoCodigoLidoValido,

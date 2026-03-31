@@ -43,6 +43,8 @@ dependencies:
     path: packages/pagamentos
   financeiro:
     path: packages/financeiro
+  comercial:
+    path: packages/comercial
   precos: 
     path: packages/precos
   estoque:

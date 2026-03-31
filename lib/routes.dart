@@ -1,4 +1,5 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
+import 'package:comercial/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:estoque/presentation.dart';
 import 'package:financeiro/pages.dart';
@@ -103,6 +104,27 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
 
+  ///COMERCIAL:
+  '/comercial': (context) {
+    return const ComercialMenuPage();
+  },
+  '/pedidos': (context) {
+    return const PedidosPage();
+  },
+  '/pedido': (context) {
+    return PedidoPage(
+      idPedido: args(context)['idPedido'],
+    );
+  },
+  '/romaneios': (context) {
+    return const RomaneiosPage();
+  },
+  '/romaneio': (context) {
+    return RomaneioPage(
+      idRomaneio: args(context)['idRomaneio'],
+    );
+  },
+
   ///PRODUTOS:
   '/menu_produtos': (context) {
     return const MenuProdutosPage();
@@ -166,11 +188,15 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  //Estoque:
   '/estoque': (context) {
     return EstoqueSaldoPage(
       seletorCores: CorSeletor(modo: CorSeletorModo.multipla),
       seletorTamanhos: TamanhoSeletor(modo: TamanhoSeletorModo.multipla),
     );
+  },
+  '/entrada_manual_de_produtos': (context) {
+    return const EntradaManulDeProdutosPage();
   },
 
   //CONFIGURACOES:

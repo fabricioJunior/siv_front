@@ -296,6 +296,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  comercial:
+    dependency: "direct main"
+    description:
+      path: "packages/comercial"
+      relative: true
+    source: path
+    version: "0.0.1"
   console:
     dependency: transitive
     description:

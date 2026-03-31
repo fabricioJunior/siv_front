@@ -230,11 +230,31 @@ class _HomePageState extends State<HomePage> {
                               },
                             ),
                             _ModuleCard(
+                              icon: Icons.storefront,
+                              title: 'Comercial',
+                              color: Colors.deepOrange,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/comercial',
+                                );
+                              },
+                            ),
+                            _ModuleCard(
                               icon: Icons.sync,
                               title: 'Sync page',
                               color: Colors.redAccent,
                               onPressed: () {
                                 Navigator.pushNamed(context, '/sincronizacao');
+                              },
+                            ),
+                            _ModuleCard(
+                              icon: Icons.input,
+                              title: 'Entrada Manual de Produtos',
+                              color: Colors.redAccent,
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, '/entrada_manual_de_produtos');
                               },
                             ),
                           ],

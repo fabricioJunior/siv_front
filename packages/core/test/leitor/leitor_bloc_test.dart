@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element_parameter
+
 import 'package:core/bloc_test.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_data.dart';
@@ -12,6 +14,15 @@ class _FakeLeitorData with LeitorData {
   final String descricao;
 
   @override
+  final int idReferencia;
+
+  @override
+  final String tamanho;
+
+  @override
+  final String cor;
+
+  @override
   final int quantidade;
 
   @override
@@ -21,6 +32,9 @@ class _FakeLeitorData with LeitorData {
     required this.codigoDeBarras,
     required this.descricao,
     required this.quantidade,
+    this.idReferencia = 1,
+    this.tamanho = 'tam',
+    this.cor = 'cor',
     Map<String, dynamic>? dados,
   }) : dados = dados ?? const {};
 }
@@ -66,16 +80,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 5,
             dados: {'produtoId': 10},
+            tamanho: 'tam',
+            cor: 'cor',
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {'produtoId': 10},
         ),
         ultimoCodigoInformado: '123',
@@ -112,16 +132,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 5,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -133,16 +159,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 5,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -155,16 +187,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 2,
             estoqueDisponivel: 5,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 2,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -207,16 +245,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 1,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 1,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -228,6 +272,9 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
+            tamanho: 'tam',
+            cor: 'cor',
             quantidadeLida: 1,
             estoqueDisponivel: 1,
             dados: {},
@@ -236,9 +283,12 @@ void main() {
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 1,
           dados: {},
+          tamanho: 'tam',
+          cor: 'cor',
         ),
         ultimoCodigoInformado: '123',
         ultimoCodigoLidoValido: true,
@@ -250,16 +300,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 1,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 1,
           estoqueDisponivel: 1,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -298,16 +354,22 @@ void main() {
           const LeitorItemContado(
             codigoDeBarras: '123',
             descricao: 'Produto A',
+            idReferencia: 1,
             quantidadeLida: 1,
             estoqueDisponivel: 5,
+            tamanho: 'tam',
+            cor: 'cor',
             dados: {},
           ),
         ],
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 2,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',
@@ -320,8 +382,11 @@ void main() {
         ultimoProdutoLido: const LeitorItemContado(
           codigoDeBarras: '123',
           descricao: 'Produto A',
+          idReferencia: 1,
           quantidadeLida: 2,
           estoqueDisponivel: 5,
+          tamanho: 'tam',
+          cor: 'cor',
           dados: {},
         ),
         ultimoCodigoInformado: '123',

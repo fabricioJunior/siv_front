@@ -1,33 +1,20 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
+
+typedef SeletorWidget = Widget Function({
+  List<SelectData>? itemsSelecionadosInicial,
+  void Function(List<SelectData>)? onChanged,
+});
+
 abstract class ISeletor extends Widget {
-  final StreamController<List<SelectData>>? controller =
-      StreamController<List<SelectData>>.broadcast();
-
-  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
-
-  final List<SelectData> itemsSelecionadosInicial;
-
-  StreamController<List<SelectData>> get setDataController;
-
-  void setDadosSelecionados(List<SelectData> dados);
-
-  ISeletor({
+  final List<SelectData>? itemsSelecionadosInicial;
+  final Function(List<SelectData>)? onChanged;
+  const ISeletor({
     super.key,
     required this.itemsSelecionadosInicial,
+    this.onChanged,
   });
-}
-
-mixin SeletorMixin on Widget {
-  final StreamController<List<SelectData>> setDataController =
-      StreamController<List<SelectData>>.broadcast();
-
-  void setDadosSelecionados(List<SelectData> dados) {
-    setDataController.add(dados);
-  }
 }
 
 class SelectData {

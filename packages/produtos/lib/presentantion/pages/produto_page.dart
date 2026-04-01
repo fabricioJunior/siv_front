@@ -184,7 +184,7 @@ class ProdutoPage extends StatelessWidget {
           referenciasSelecionadasIniciais: state.referenciaSelecionada == null
               ? const []
               : [state.referenciaSelecionada!],
-          onChanged: (selecionadas) {
+          onReferenciaChanged: (selecionadas) {
             context.read<ProdutoBloc>().add(
               ProdutoReferenciaSelecionou(
                 referencia: selecionadas.isEmpty ? null : selecionadas.first,
@@ -196,7 +196,7 @@ class ProdutoPage extends StatelessWidget {
         CorSeletor(
           modo: CorSeletorModo.multipla,
           coresSelecionadasIniciais: state.coresSelecionadas,
-          onChanged: (selecionadas) {
+          onCorChanged: (selecionadas) {
             context.read<ProdutoBloc>().add(
               ProdutoCoresSelecionou(cores: selecionadas),
             );
@@ -206,7 +206,7 @@ class ProdutoPage extends StatelessWidget {
         TamanhoSeletor(
           modo: TamanhoSeletorModo.multipla,
           tamanhosSelecionadosIniciais: state.tamanhosSelecionados,
-          onChanged: (selecionados) {
+          onTamanhosChanged: (selecionados) {
             context.read<ProdutoBloc>().add(
               ProdutoTamanhosSelecionou(tamanhos: selecionados),
             );
@@ -532,6 +532,7 @@ class ProdutoPage extends StatelessWidget {
     if (codigoDuplicado) {
       // ignore: use_build_context_synchronously
       _mostrarMensagem(
+        // ignore: use_build_context_synchronously
         context,
         'Código de barras já informado em outra combinação.',
       );

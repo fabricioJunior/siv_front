@@ -45,4 +45,13 @@ class ProdutoDoLeitorData implements LeitorData {
 
   @override
   int get quantidade => produto.saldo.toInt();
+
+  @override
+  int get idReferencia => produto.referenciaId;
+
+  @override
+  String get cor => produto.corNome;
+
+  @override
+  String get tamanho => produto.tamanhoNome;
 }

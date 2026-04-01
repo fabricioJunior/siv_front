@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
@@ -10,18 +8,21 @@ import 'package:produtos/presentantion/blocs/cores_bloc/cores_bloc.dart';
 enum CorSeletorModo { unica, multipla }
 
 // ignore: must_be_immutable
-class CorSeletor extends StatefulWidget with SeletorMixin implements ISeletor {
+class CorSeletor extends StatefulWidget implements ISeletor {
   final CorSeletorModo modo;
   final List<Cor> coresSelecionadasIniciais;
-  final ValueChanged<List<Cor>>? onChanged;
+  final ValueChanged<List<Cor>>? onCorChanged;
+  @override
+  final Function(List<SelectData>)? onChanged;
   final String titulo;
 
   CorSeletor({
     super.key,
     this.modo = CorSeletorModo.unica,
     this.coresSelecionadasIniciais = const [],
-    this.onChanged,
+    this.onCorChanged,
     this.titulo = 'Cores',
+    this.onChanged,
   });
 
   @override
@@ -37,34 +38,20 @@ class CorSeletor extends StatefulWidget with SeletorMixin implements ISeletor {
         ),
       )
       .toList();
-
-  @override
-  StreamController<List<SelectData>>? controller = StreamController.broadcast();
-
-  @override
-  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _CorSeletorState extends State<CorSeletor> {
   late final CoresBloc _coresBloc;
-  StreamSubscription<List<SelectData>>? _setDataSubscription;
   Set<int>? _idsExternosSelecionados;
 
   @override
   void initState() {
     super.initState();
     _coresBloc = sl<CoresBloc>()..add(CoresIniciou());
-
-    _setDataSubscription = widget.setDataController.stream.listen((dados) {
-      setState(() {
-        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
-      });
-    });
   }
 
   @override
   void dispose() {
-    _setDataSubscription?.cancel();
     _coresBloc.close();
     super.dispose();
   }
@@ -127,7 +114,20 @@ class _CorSeletorState extends State<CorSeletor> {
                         ),
                       )
                       .toList(),
-            onChanged: widget.onChanged,
+            onChanged: (List<Cor> selecionados) {
+              widget.onCorChanged?.call(selecionados);
+              widget.onChanged?.call(
+                selecionados
+                    .map(
+                      (cor) => SelectData(
+                        id: cor.id ?? 0,
+                        nome: cor.nome,
+                        data: {'cor': cor.toString()},
+                      ),
+                    )
+                    .toList(),
+              );
+            },
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma cor',
             maxSugestoes: 3,

@@ -129,6 +129,9 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
     final itemAtualizado =
         (itemExistente ?? LeitorItemContado.fromData(leitorData)).copyWith(
       descricao: leitorData.descricao,
+      idReferencia: leitorData.idReferencia,
+      tamanho: leitorData.tamanho,
+      cor: leitorData.cor,
       estoqueDisponivel: estoqueDisponivel,
       dados: leitorData.dados,
       quantidadeLida: quantidadeAtual + 1,
@@ -147,6 +150,8 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           tipo: LeitorHistoricoTipo.adicao,
           codigoDeBarras: itemAtualizado.codigoDeBarras,
           descricao: itemAtualizado.descricao,
+          tamanho: itemAtualizado.tamanho,
+          cor: itemAtualizado.cor,
           quantidade: 1,
           quantidadeAposOperacao: itemAtualizado.quantidadeLida,
         ),
@@ -196,10 +201,14 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
         ? event.quantidade
         : item.quantidadeLida;
     final novaQuantidade = item.quantidadeLida - quantidadeRemovida;
+    final LeitorItemContado? ultimoProdutoAtualizado;
     if (novaQuantidade > 0) {
-      itens[indice] = item.copyWith(quantidadeLida: novaQuantidade);
+      final itemAtualizado = item.copyWith(quantidadeLida: novaQuantidade);
+      itens[indice] = itemAtualizado;
+      ultimoProdutoAtualizado = itemAtualizado;
     } else {
       itens.removeAt(indice);
+      ultimoProdutoAtualizado = itens.isEmpty ? null : itens.first;
     }
 
     final historico = List<LeitorHistoricoRegistro>.from(state.historico)
@@ -209,6 +218,8 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           tipo: LeitorHistoricoTipo.remocao,
           codigoDeBarras: item.codigoDeBarras,
           descricao: item.descricao,
+          tamanho: item.tamanho,
+          cor: item.cor,
           quantidade: quantidadeRemovida,
           quantidadeAposOperacao: novaQuantidade,
         ),
@@ -218,6 +229,8 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       state.copyWith(
         itens: itens,
         historico: historico,
+        ultimoProdutoLido: ultimoProdutoAtualizado,
+        tokenUltimoProduto: state.tokenUltimoProduto + 1,
         erro: null,
         aviso: null,
         avisoTipo: null,
@@ -247,6 +260,8 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           tipo: LeitorHistoricoTipo.remocao,
           codigoDeBarras: itemRemovido.codigoDeBarras,
           descricao: itemRemovido.descricao,
+          tamanho: itemRemovido.tamanho,
+          cor: itemRemovido.cor,
           quantidade: itemRemovido.quantidadeLida,
           quantidadeAposOperacao: 0,
         ),
@@ -257,6 +272,8 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       state.copyWith(
         itens: itens,
         historico: historico,
+        ultimoProdutoLido: itens.isEmpty ? null : itens.first,
+        tokenUltimoProduto: state.tokenUltimoProduto + 1,
         erro: null,
         aviso: null,
         avisoTipo: null,

@@ -1,2 +1,12 @@
-export 'domain/use_cases/pedidos_use_cases.dart';
-export 'domain/use_cases/romaneios_use_cases.dart';
+export 'domain/use_cases/atualizar_observacao_romaneio.dart';
+export 'domain/use_cases/atualizar_pedido.dart';
+export 'domain/use_cases/atualizar_romaneio.dart';
+export 'domain/use_cases/cancelar_pedido.dart';
+export 'domain/use_cases/conferir_pedido.dart';
+export 'domain/use_cases/criar_pedido.dart';
+export 'domain/use_cases/criar_romaneio.dart';
+export 'domain/use_cases/faturar_pedido.dart';
+export 'domain/use_cases/recuperar_pedido.dart';
+export 'domain/use_cases/recuperar_pedidos.dart';
+export 'domain/use_cases/recuperar_romaneio.dart';
+export 'domain/use_cases/recuperar_romaneios.dart';

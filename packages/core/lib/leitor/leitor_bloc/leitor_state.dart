@@ -11,6 +11,8 @@ class LeitorHistoricoRegistro extends Equatable {
   final LeitorHistoricoTipo tipo;
   final String codigoDeBarras;
   final String descricao;
+  final String tamanho;
+  final String cor;
   final int quantidade;
   final int quantidadeAposOperacao;
 
@@ -19,6 +21,8 @@ class LeitorHistoricoRegistro extends Equatable {
     required this.tipo,
     required this.codigoDeBarras,
     required this.descricao,
+    required this.tamanho,
+    required this.cor,
     required this.quantidade,
     required this.quantidadeAposOperacao,
   });
@@ -29,6 +33,8 @@ class LeitorHistoricoRegistro extends Equatable {
         tipo,
         codigoDeBarras,
         descricao,
+        tamanho,
+        cor,
         quantidade,
         quantidadeAposOperacao,
       ];
@@ -37,6 +43,9 @@ class LeitorHistoricoRegistro extends Equatable {
 class LeitorItemContado extends Equatable {
   final String codigoDeBarras;
   final String descricao;
+  final int idReferencia;
+  final String tamanho;
+  final String cor;
   final int quantidadeLida;
   final int estoqueDisponivel;
   final Map<String, dynamic> dados;
@@ -44,6 +53,9 @@ class LeitorItemContado extends Equatable {
   const LeitorItemContado({
     required this.codigoDeBarras,
     required this.descricao,
+    required this.idReferencia,
+    required this.tamanho,
+    required this.cor,
     required this.quantidadeLida,
     required this.estoqueDisponivel,
     required this.dados,
@@ -53,6 +65,9 @@ class LeitorItemContado extends Equatable {
     return LeitorItemContado(
       codigoDeBarras: data.codigoDeBarras,
       descricao: data.descricao,
+      idReferencia: data.idReferencia,
+      tamanho: data.tamanho,
+      cor: data.cor,
       quantidadeLida: 0,
       estoqueDisponivel: data.quantidade,
       dados: Map<String, dynamic>.from(data.dados),
@@ -62,6 +77,9 @@ class LeitorItemContado extends Equatable {
   LeitorItemContado copyWith({
     String? codigoDeBarras,
     String? descricao,
+    int? idReferencia,
+    String? tamanho,
+    String? cor,
     int? quantidadeLida,
     int? estoqueDisponivel,
     Map<String, dynamic>? dados,
@@ -69,6 +87,9 @@ class LeitorItemContado extends Equatable {
     return LeitorItemContado(
       codigoDeBarras: codigoDeBarras ?? this.codigoDeBarras,
       descricao: descricao ?? this.descricao,
+      idReferencia: idReferencia ?? this.idReferencia,
+      tamanho: tamanho ?? this.tamanho,
+      cor: cor ?? this.cor,
       quantidadeLida: quantidadeLida ?? this.quantidadeLida,
       estoqueDisponivel: estoqueDisponivel ?? this.estoqueDisponivel,
       dados: dados ?? this.dados,
@@ -79,6 +100,9 @@ class LeitorItemContado extends Equatable {
   List<Object?> get props => [
         codigoDeBarras,
         descricao,
+        idReferencia,
+        tamanho,
+        cor,
         quantidadeLida,
         estoqueDisponivel,
         dados,

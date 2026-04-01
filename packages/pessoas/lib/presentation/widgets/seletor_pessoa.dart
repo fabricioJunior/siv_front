@@ -1,11 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-class SeletorPessoa extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:core/seletores.dart';
+
+class SeletorPessoa extends StatelessWidget implements ISeletor {
   final bool retornarSomenteId;
   final Map<String, String>? valorAtual;
   final ValueChanged<Map<String, String>> onSelecionado;
   final String rotaSelecao;
   final String? titulo;
+
+  @override
+  final List<SelectData>? itemsSelecionadosInicial;
+
+  @override
+  final Function(List<SelectData>)? onChanged;
 
   const SeletorPessoa({
     super.key,
@@ -14,6 +23,8 @@ class SeletorPessoa extends StatelessWidget {
     this.valorAtual,
     this.rotaSelecao = '/selecionar_pessoa',
     this.titulo,
+    this.itemsSelecionadosInicial,
+    this.onChanged,
   });
 
   @override
@@ -43,6 +54,13 @@ class SeletorPessoa extends StatelessWidget {
 
             if (result is Map<String, String>) {
               onSelecionado(result);
+              onChanged?.call([
+                SelectData(
+                  id: int.tryParse(result['id'] ?? '') ?? 0,
+                  nome: result['nome'] ?? '',
+                  data: result,
+                ),
+              ]);
             }
           },
           borderRadius: BorderRadius.circular(8),

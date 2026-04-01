@@ -4,69 +4,6 @@ import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class LeitorController extends ChangeNotifier {
-  LeitorBloc? _bloc;
-  LeitorState _state = LeitorState.initial();
-
-  LeitorState get state => _state;
-  List<LeitorItemContado> get itens => List.unmodifiable(_state.itens);
-  List<LeitorHistoricoRegistro> get historico =>
-      List.unmodifiable(_state.historico);
-  LeitorItemContado? get ultimoProdutoLido => _state.ultimoProdutoLido;
-  String? get ultimoErro => _state.erro;
-  int get quantidadeTotalLida => _state.quantidadeTotalLida;
-  int get quantidadeItensDistintos => _state.itens.length;
-  bool get controlarQuantidade => _state.controlarQuantidade;
-
-  List<Map<String, dynamic>> get dadosAtuais {
-    return _state.itens
-        .map(
-          (item) => {
-            'codigoDeBarras': item.codigoDeBarras,
-            'descricao': item.descricao,
-            'quantidadeLida': item.quantidadeLida,
-            'estoqueDisponivel': item.estoqueDisponivel,
-            ...item.dados,
-          },
-        )
-        .toList(growable: false);
-  }
-
-  void bind(LeitorBloc bloc) {
-    _bloc = bloc;
-    syncState(bloc.state);
-  }
-
-  void unbind(LeitorBloc bloc) {
-    if (identical(_bloc, bloc)) {
-      _bloc = null;
-    }
-  }
-
-  void syncState(LeitorState state) {
-    _state = state;
-    notifyListeners();
-  }
-
-  void lerCodigo(String codigo) {
-    _bloc?.add(LeitorCodigoInformado(codigo));
-  }
-
-  void removerQuantidade(String codigo, {int quantidade = 1}) {
-    _bloc?.add(
-      LeitorQuantidadeRemovida(codigo: codigo, quantidade: quantidade),
-    );
-  }
-
-  void removerItem(String codigo) {
-    _bloc?.add(LeitorItemExcluido(codigo));
-  }
-
-  void limpar() {
-    _bloc?.add(const LeitorReiniciado());
-  }
-}
-
 class LeitorWidget extends StatefulWidget {
   final bool controlarQuantidade;
   final ILeitorDataDatasource dataSource;
@@ -95,7 +32,7 @@ class LeitorWidget extends StatefulWidget {
   State<LeitorWidget> createState() => _LeitorWidgetState();
 }
 
-enum _LeitorVisualizacao { porProduto, historico }
+enum _LeitorVisualizacao { porProduto, historico, grade }
 
 class _LeitorWidgetState extends State<LeitorWidget> {
   late LeitorBloc _bloc;
@@ -151,6 +88,19 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       _controller.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+
+    // During hot reload, keep controller and bloc wiring in sync so UI updates
+    // continue to flow from bloc emissions.
+    if (_bloc.isClosed) {
+      _bloc = _criarBloc();
+    }
+    _controller.bind(_bloc);
+    _controller.syncState(_bloc.state);
   }
 
   LeitorBloc _criarBloc() {
@@ -228,35 +178,209 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     return '$dia/$mes $hora:$minuto:$segundo';
   }
 
+  String _rotuloTamanhoCor({required String tamanho, required String cor}) {
+    final tamanhoNormalizado = tamanho.trim().isEmpty ? '-' : tamanho.trim();
+    final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
+    return 'Cor: $corNormalizada  •  Tam: $tamanhoNormalizado';
+  }
+
+  String _normalizarRotuloGrade(String valor, {String fallback = '-'}) {
+    final normalizado = valor.trim();
+    return normalizado.isEmpty ? fallback : normalizado;
+  }
+
+  String _nomeReferencia(List<LeitorItemContado> itensReferencia) {
+    for (final item in itensReferencia) {
+      final descricao = item.descricao.trim();
+      if (descricao.isNotEmpty) {
+        return descricao;
+      }
+    }
+    return 'Sem descricao';
+  }
+
+  Widget _gradePorReferencia(LeitorState state) {
+    if (state.itens.isEmpty) {
+      return Center(
+        child: Text(
+          'Nenhum produto lido ainda.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
+
+    final itensPorReferencia = <int, List<LeitorItemContado>>{};
+    for (final item in state.itens) {
+      itensPorReferencia.putIfAbsent(item.idReferencia, () => []).add(item);
+    }
+
+    final referenciasOrdenadas = itensPorReferencia.keys.toList()..sort();
+
+    return ListView.separated(
+      itemCount: referenciasOrdenadas.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final referencia = referenciasOrdenadas[index];
+        final itensReferencia = itensPorReferencia[referencia]!;
+        final nomeReferencia = _nomeReferencia(itensReferencia);
+
+        final cores = itensReferencia
+            .map((item) => _normalizarRotuloGrade(item.cor))
+            .toSet()
+            .toList()
+          ..sort();
+        final tamanhos = itensReferencia
+            .map((item) => _normalizarRotuloGrade(item.tamanho))
+            .toSet()
+            .toList()
+          ..sort();
+
+        final gradeQuantidade = <String, Map<String, int>>{};
+        for (final item in itensReferencia) {
+          final cor = _normalizarRotuloGrade(item.cor);
+          final tamanho = _normalizarRotuloGrade(item.tamanho);
+          final linha = gradeQuantidade.putIfAbsent(cor, () => {});
+          linha[tamanho] = (linha[tamanho] ?? 0) + item.quantidadeLida;
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Referência $referencia',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                nomeReferencia,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Table(
+                  defaultColumnWidth: const IntrinsicColumnWidth(),
+                  border: TableBorder.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.8,
+                  ),
+                  children: [
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                      ),
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Cor \\ Tam',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        ...tamanhos.map(
+                          (tamanho) => Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(
+                              tamanho,
+                              textAlign: TextAlign.center,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    ...cores.map(
+                      (cor) => TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(cor),
+                          ),
+                          ...tamanhos.map(
+                            (tamanho) => Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                '${gradeQuantidade[cor]?[tamanho] ?? 0}',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _resumoInfoCard({
+    required IconData icon,
+    required String titulo,
+    required String valor,
+    required ColorScheme colorScheme,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titulo,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  valor,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _bloc,
       child: BlocConsumer<LeitorBloc, LeitorState>(
+        bloc: _bloc,
         listener: (context, state) {
-          final previousState = _controller.state;
-
-          if (state.tokenUltimoProduto != previousState.tokenUltimoProduto &&
-              state.ultimoProdutoLido != null) {
-            widget.onUltimoProdutoLido?.call(state.ultimoProdutoLido!);
-          }
-
-          if (state.tokenErro != previousState.tokenErro &&
-              state.erro != null) {
-            widget.onErro?.call(state.erro!);
-            _exibirErro(state.erro!);
-            SystemSound.play(SystemSoundType.alert);
-          }
-
-          if (state.tokenAviso != previousState.tokenAviso &&
-              state.aviso != null) {
-            widget.onAviso?.call(state.aviso!);
-            _mostrarMensagem(context, state.aviso!, Colors.orange.shade700);
-            SystemSound.play(SystemSoundType.alert);
-          }
-
-          _controller.syncState(state);
-          _solicitarFoco();
+          _onBlocChangeState(state, context);
         },
         builder: (context, state) {
           return Card(
@@ -309,7 +433,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         icon: Icon(
                           _modoRemocao
                               ? Icons.remove_circle_outline
-                              : Icons.qr_code_scanner_outlined,
+                              : Icons.qr_code,
                         ),
                         label: Text(_modoRemocao ? 'Remover' : 'Ler'),
                       ),
@@ -320,32 +444,6 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      Chip(
-                        avatar:
-                            const Icon(Icons.inventory_2_outlined, size: 18),
-                        label: Text(
-                          'Itens distintos: ${state.itens.length}',
-                        ),
-                      ),
-                      Chip(
-                        avatar: const Icon(Icons.numbers_outlined, size: 18),
-                        label: Text(
-                          'Quantidade total: ${state.quantidadeTotalLida}',
-                        ),
-                      ),
-                      Chip(
-                        avatar: Icon(
-                          state.controlarQuantidade
-                              ? Icons.lock_outline
-                              : Icons.lock_open_outlined,
-                          size: 18,
-                        ),
-                        label: Text(
-                          state.controlarQuantidade
-                              ? 'Controle por estoque ativo'
-                              : 'Controle por estoque inativo',
-                        ),
-                      ),
                       FilterChip(
                         avatar: Icon(
                           _modoRemocao
@@ -379,6 +477,42 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _resumoInfoCard(
+                          icon: Icons.inventory_2_outlined,
+                          titulo: 'Itens distintos',
+                          valor: '${state.itens.length}',
+                          colorScheme: Theme.of(context).colorScheme,
+                        ),
+                        _resumoInfoCard(
+                          icon: Icons.numbers_outlined,
+                          titulo: 'Quantidade total',
+                          valor: '${state.quantidadeTotalLida}',
+                          colorScheme: Theme.of(context).colorScheme,
+                        ),
+                        _resumoInfoCard(
+                          icon: state.controlarQuantidade
+                              ? Icons.lock_outline
+                              : Icons.lock_open_outlined,
+                          titulo: 'Controle por estoque',
+                          valor:
+                              state.controlarQuantidade ? 'Ativo' : 'Inativo',
+                          colorScheme: Theme.of(context).colorScheme,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
                   SegmentedButton<_LeitorVisualizacao>(
                     segments: const [
                       ButtonSegment<_LeitorVisualizacao>(
@@ -391,6 +525,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         icon: Icon(Icons.inventory_2_outlined),
                         label: Text('Por produto'),
                       ),
+                      ButtonSegment<_LeitorVisualizacao>(
+                        value: _LeitorVisualizacao.grade,
+                        icon: Icon(Icons.grid_view_outlined),
+                        label: Text('Grade'),
+                      ),
                     ],
                     selected: {_visualizacao},
                     onSelectionChanged: (selection) {
@@ -399,7 +538,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const Divider(),
                   if (state.ultimoProdutoLido != null)
                     Container(
                       width: double.infinity,
@@ -423,12 +562,18 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             '${state.ultimoProdutoLido!.codigoDeBarras}  •  Quantidade: ${state.ultimoProdutoLido!.quantidadeLida}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                          Text(
+                            _rotuloTamanhoCor(
+                              tamanho: state.ultimoProdutoLido!.tamanho,
+                              cor: state.ultimoProdutoLido!.cor,
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                         ],
                       ),
                     ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: widget.alturaLista,
+                  Flexible(
                     child: switch (_visualizacao) {
                       _LeitorVisualizacao.porProduto => state.itens.isEmpty
                           ? Center(
@@ -448,7 +593,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(item.descricao),
                                   subtitle: Text(
-                                    '${item.codigoDeBarras}  •  Lidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}',
+                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}',
                                   ),
                                   trailing: Wrap(
                                     spacing: 4,
@@ -509,11 +654,12 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                     '${foiAdicao ? 'Adicionado' : 'Removido'} ${registro.quantidade} un. - ${registro.descricao}',
                                   ),
                                   subtitle: Text(
-                                    '${registro.codigoDeBarras}  •  Saldo do item: ${registro.quantidadeAposOperacao}  •  ${_formatarDataHora(registro.dataHora)}',
+                                    '${registro.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: registro.tamanho, cor: registro.cor)}\nSaldo do item: ${registro.quantidadeAposOperacao}  •  ${_formatarDataHora(registro.dataHora)}',
                                   ),
                                 );
                               },
                             ),
+                      _LeitorVisualizacao.grade => _gradePorReferencia(state),
                     },
                   ),
                 ],
@@ -523,5 +669,95 @@ class _LeitorWidgetState extends State<LeitorWidget> {
         },
       ),
     );
+  }
+
+  void _onBlocChangeState(LeitorState state, BuildContext context) {
+    final previousState = _controller.state;
+
+    if (state.tokenUltimoProduto != previousState.tokenUltimoProduto &&
+        state.ultimoProdutoLido != null) {
+      widget.onUltimoProdutoLido?.call(state.ultimoProdutoLido!);
+    }
+
+    if (state.tokenErro != previousState.tokenErro && state.erro != null) {
+      widget.onErro?.call(state.erro!);
+      _exibirErro(state.erro!);
+      SystemSound.play(SystemSoundType.alert);
+    }
+
+    if (state.tokenAviso != previousState.tokenAviso && state.aviso != null) {
+      widget.onAviso?.call(state.aviso!);
+      _mostrarMensagem(context, state.aviso!, Colors.orange.shade700);
+      SystemSound.play(SystemSoundType.alert);
+    }
+
+    _controller.syncState(state);
+    _solicitarFoco();
+  }
+}
+
+class LeitorController extends ChangeNotifier {
+  LeitorBloc? _bloc;
+  LeitorState _state = LeitorState.initial();
+
+  LeitorState get state => _state;
+  List<LeitorItemContado> get itens => List.unmodifiable(_state.itens);
+  List<LeitorHistoricoRegistro> get historico =>
+      List.unmodifiable(_state.historico);
+  LeitorItemContado? get ultimoProdutoLido => _state.ultimoProdutoLido;
+  String? get ultimoErro => _state.erro;
+  int get quantidadeTotalLida => _state.quantidadeTotalLida;
+  int get quantidadeItensDistintos => _state.itens.length;
+  bool get controlarQuantidade => _state.controlarQuantidade;
+
+  List<Map<String, dynamic>> get dadosAtuais {
+    return _state.itens
+        .map(
+          (item) => {
+            'codigoDeBarras': item.codigoDeBarras,
+            'descricao': item.descricao,
+            'idReferencia': item.idReferencia,
+            'tamanho': item.tamanho,
+            'cor': item.cor,
+            'quantidadeLida': item.quantidadeLida,
+            'estoqueDisponivel': item.estoqueDisponivel,
+            ...item.dados,
+          },
+        )
+        .toList(growable: false);
+  }
+
+  void bind(LeitorBloc bloc) {
+    _bloc = bloc;
+    syncState(bloc.state);
+  }
+
+  void unbind(LeitorBloc bloc) {
+    if (identical(_bloc, bloc)) {
+      _bloc = null;
+    }
+  }
+
+  void syncState(LeitorState state) {
+    _state = state;
+    notifyListeners();
+  }
+
+  void lerCodigo(String codigo) {
+    _bloc?.add(LeitorCodigoInformado(codigo));
+  }
+
+  void removerQuantidade(String codigo, {int quantidade = 1}) {
+    _bloc?.add(
+      LeitorQuantidadeRemovida(codigo: codigo, quantidade: quantidade),
+    );
+  }
+
+  void removerItem(String codigo) {
+    _bloc?.add(LeitorItemExcluido(codigo));
+  }
+
+  void limpar() {
+    _bloc?.add(const LeitorReiniciado());
   }
 }

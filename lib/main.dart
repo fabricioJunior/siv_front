@@ -6,6 +6,7 @@ import 'package:core/isar_anotacoes.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
+import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -28,6 +29,7 @@ Future<void> configs() async {
 
 class MyApp extends StatelessWidget {
   final String? routeToTest;
+  final NavigationObserver navigationObserver = NavigationObserver();
 
   MyApp({
     super.key,
@@ -37,6 +39,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [
+        navigationObserver,
+      ],
       initialRoute: sl<AppBloc>().state.statusAutenticacao ==
               StatusAutenticacao.autenticado
           ? '/home'
@@ -67,14 +72,6 @@ class MyApp extends StatelessWidget {
           child: BlocBuilder<AppBloc, AppState>(
             bloc: sl<AppBloc>(),
             builder: (context, state) {
-              // if (state.statusAutenticacao == StatusAutenticacao.autenticando) {
-              //   return const Scaffold(
-              //     body: Center(
-              //       child: CircularProgressIndicator.adaptive(),
-              //     ),
-              //   );
-              // }
-
               return child ?? const SizedBox.shrink();
             },
           ),
@@ -111,5 +108,29 @@ class GlobalBlocObserver extends BlocObserver {
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     log('${bloc.runtimeType} $error $stackTrace', name: 'Test log');
+  }
+}
+
+class NavigationObserver extends RouteObserver<ModalRoute<void>> {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    super.didPush(route, previousRoute);
+    if (route.settings.name == '/entrada_manual_de_produtos') {
+      sl<SyncDataBloc>().add(const SyncDataSolicitouSincronizacao(
+          origem: SyncDataOrigem.entradaDeProdutos));
+    }
+  }
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    super.didPop(route, previousRoute);
+    log('Popped route: ${route.settings.name}', name: 'Navigation');
+  }
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    log('Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
+        name: 'Navigation');
   }
 }

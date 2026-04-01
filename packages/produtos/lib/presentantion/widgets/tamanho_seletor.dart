@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -10,18 +8,20 @@ import 'package:core/seletores.dart';
 enum TamanhoSeletorModo { unica, multipla }
 
 // ignore: must_be_immutable
-class TamanhoSeletor extends StatefulWidget
-    with SeletorMixin
-    implements ISeletor {
+class TamanhoSeletor extends StatefulWidget implements ISeletor {
   final TamanhoSeletorModo modo;
   final List<Tamanho> tamanhosSelecionadosIniciais;
-  final ValueChanged<List<Tamanho>>? onChanged;
+  final ValueChanged<List<Tamanho>>? onTamanhosChanged;
+
+  @override
+  final Function(List<SelectData>)? onChanged;
   final String titulo;
 
   TamanhoSeletor({
     super.key,
     this.modo = TamanhoSeletorModo.unica,
     this.tamanhosSelecionadosIniciais = const [],
+    this.onTamanhosChanged,
     this.onChanged,
     this.titulo = 'Tamanhos',
   });
@@ -39,34 +39,20 @@ class TamanhoSeletor extends StatefulWidget
         ),
       )
       .toList();
-
-  @override
-  StreamController<List<SelectData>>? controller = StreamController.broadcast();
-
-  @override
-  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _TamanhoSeletorState extends State<TamanhoSeletor> {
   late final TamanhosBloc _tamanhosBloc;
-  StreamSubscription<List<SelectData>>? _setDataSubscription;
   Set<int>? _idsExternosSelecionados;
 
   @override
   void initState() {
     super.initState();
     _tamanhosBloc = sl<TamanhosBloc>()..add(TamanhosIniciou(inativo: false));
-
-    _setDataSubscription = widget.setDataController.stream.listen((dados) {
-      setState(() {
-        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
-      });
-    });
   }
 
   @override
   void dispose() {
-    _setDataSubscription?.cancel();
     _tamanhosBloc.close();
     super.dispose();
   }
@@ -124,7 +110,18 @@ class _TamanhoSeletorState extends State<TamanhoSeletor> {
                         ),
                       )
                       .toList(),
-            onChanged: widget.onChanged,
+            onChanged: (dados) {
+              widget.onTamanhosChanged?.call(dados);
+              widget.onChanged?.call(
+                dados.map((t) {
+                  return SelectData(
+                    id: t.id ?? 0,
+                    nome: t.nome,
+                    data: {'tamanho': t.toString()},
+                  );
+                }).toList(),
+              );
+            },
             titulo: widget.titulo,
             hintText: 'Digite para buscar um tamanho',
             maxSugestoes: 3,

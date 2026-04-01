@@ -8,10 +8,14 @@ import 'package:estoque/presentation.dart';
 import 'package:flutter/material.dart';
 
 class EstoqueSaldoPage extends StatefulWidget {
-  final ISeletor? seletorCores;
-  final ISeletor? seletorTamanhos;
+  final SeletorWidget seletorCores;
+  final SeletorWidget seletorTamanhos;
 
-  const EstoqueSaldoPage({super.key, this.seletorCores, this.seletorTamanhos});
+  const EstoqueSaldoPage({
+    super.key,
+    required this.seletorCores,
+    required this.seletorTamanhos,
+  });
 
   @override
   State<EstoqueSaldoPage> createState() => _EstoqueSaldoPageState();
@@ -32,16 +36,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   void initState() {
     super.initState();
     _bloc = sl<EstoqueSaldoBloc>()..add(const EstoqueSaldoIniciou());
-
-    _corSub = widget.seletorCores?.onDataSelected?.listen((dados) {
-      _corIds = dados.map((e) => e.id).toList();
-      _recarregar();
-    });
-
-    _tamanhoSub = widget.seletorTamanhos?.onDataSelected?.listen((dados) {
-      _tamanhoIds = dados.map((e) => e.id).toList();
-      _recarregar();
-    });
   }
 
   @override
@@ -83,12 +77,22 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                   onSubmitted: (_) => _recarregar(),
                 ),
                 const SizedBox(height: 12),
-                if (widget.seletorCores != null) ...[
-                  widget.seletorCores!,
+                ...[
+                  widget.seletorCores.call(
+                    onChanged: (dados) {
+                      _corIds = dados.map((e) => e.id).toList();
+                      _recarregar();
+                    },
+                  ),
                   const SizedBox(height: 12),
                 ],
-                if (widget.seletorTamanhos != null) ...[
-                  widget.seletorTamanhos!,
+                ...[
+                  widget.seletorTamanhos.call(
+                    onChanged: (dados) {
+                      _tamanhoIds = dados.map((e) => e.id).toList();
+                      _recarregar();
+                    },
+                  ),
                   const SizedBox(height: 12),
                 ],
                 Expanded(

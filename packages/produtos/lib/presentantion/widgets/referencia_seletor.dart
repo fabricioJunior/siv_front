@@ -10,13 +10,14 @@ import 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.d
 enum ReferenciaSeletorModo { unica, multipla }
 
 // ignore: must_be_immutable
-class ReferenciaSeletor extends StatefulWidget
-    with SeletorMixin
-    implements ISeletor {
+class ReferenciaSeletor extends StatefulWidget implements ISeletor {
   final ReferenciaSeletorModo modo;
   final List<Referencia> referenciasSelecionadasIniciais;
   final List<int> idReferenciasSelecionadasIniciais;
-  final ValueChanged<List<Referencia>>? onChanged;
+  final ValueChanged<List<Referencia>>? onReferenciaChanged;
+
+  @override
+  final Function(List<SelectData>)? onChanged;
   final String titulo;
 
   ReferenciaSeletor({
@@ -24,6 +25,7 @@ class ReferenciaSeletor extends StatefulWidget
     this.modo = ReferenciaSeletorModo.unica,
     this.referenciasSelecionadasIniciais = const [],
     this.idReferenciasSelecionadasIniciais = const [],
+    this.onReferenciaChanged,
     this.onChanged,
     this.titulo = 'Referências',
   });
@@ -42,17 +44,10 @@ class ReferenciaSeletor extends StatefulWidget
             ),
           )
           .toList();
-
-  @override
-  StreamController<List<SelectData>>? controller = StreamController.broadcast();
-
-  @override
-  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
   late final ReferenciasBloc _referenciasBloc;
-  StreamSubscription<List<SelectData>>? _setDataSubscription;
   Set<int>? _idsExternosSelecionados;
 
   @override
@@ -66,18 +61,10 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
               widget.idReferenciasSelecionadasIniciais,
         ),
       );
-
-    _setDataSubscription = widget.setDataController.stream.listen((dados) {
-      setState(() {
-        _idsExternosSelecionados = dados.map((d) => d.id).toSet();
-      });
-      widget.controller?.add(dados);
-    });
   }
 
   @override
   void dispose() {
-    _setDataSubscription?.cancel();
     _referenciasBloc.close();
     super.dispose();
   }
@@ -141,8 +128,8 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
                     ),
                   )
                   .toList();
-              widget.controller?.add(dados);
-              widget.onChanged?.call(selecionadas);
+              widget.onReferenciaChanged?.call(selecionadas);
+              widget.onChanged?.call(dados);
             },
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma referência',

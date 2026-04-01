@@ -105,7 +105,7 @@ class _ReferenciaMidiaMetadadosModalState
               coresSelecionadasIniciais: _corSelecionada != null
                   ? [_corSelecionada!]
                   : [],
-              onChanged: (cores) {
+              onCorChanged: (cores) {
                 setState(() {
                   _corSelecionada = cores.firstOrNull;
                 });
@@ -118,7 +118,7 @@ class _ReferenciaMidiaMetadadosModalState
               tamanhosSelecionadosIniciais: _tamanhoSelecionado != null
                   ? [_tamanhoSelecionado!]
                   : [],
-              onChanged: (tamanhos) {
+              onTamanhosChanged: (tamanhos) {
                 setState(() {
                   _tamanhoSelecionado = tamanhos.firstOrNull;
                 });

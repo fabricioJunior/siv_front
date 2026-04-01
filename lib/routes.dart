@@ -191,8 +191,15 @@ Map<String, Widget Function(BuildContext)> routes = {
   //Estoque:
   '/estoque': (context) {
     return EstoqueSaldoPage(
-      seletorCores: CorSeletor(modo: CorSeletorModo.multipla),
-      seletorTamanhos: TamanhoSeletor(modo: TamanhoSeletorModo.multipla),
+      seletorCores: ({itemsSelecionadosInicial, onChanged}) => CorSeletor(
+        modo: CorSeletorModo.multipla,
+        onChanged: onChanged,
+      ),
+      seletorTamanhos: ({itemsSelecionadosInicial, onChanged}) =>
+          TamanhoSeletor(
+        modo: TamanhoSeletorModo.multipla,
+        onChanged: onChanged,
+      ),
     );
   },
   '/entrada_manual_de_produtos': (context) {

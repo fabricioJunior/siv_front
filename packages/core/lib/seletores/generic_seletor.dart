@@ -26,9 +26,7 @@ enum SeletorGenericoModo { unica, multipla }
 ///   confirmarEmSeparadores: const [',', ';'],
 /// )
 /// ```
-class SeletorGenerico<T> extends StatefulWidget
-    with SeletorMixin
-    implements ISeletor {
+class SeletorGenerico<T> extends StatefulWidget {
   /// Lista total de itens disponíveis para seleção.
   final List<T> itens;
 
@@ -73,7 +71,7 @@ class SeletorGenerico<T> extends StatefulWidget
   final List<String> confirmarEmSeparadores;
 
   final SelectData Function(T item) toSelectData;
-  SeletorGenerico({
+  const SeletorGenerico({
     super.key,
     required this.itens,
     required this.itemLabel,
@@ -93,17 +91,6 @@ class SeletorGenerico<T> extends StatefulWidget
 
   @override
   State<SeletorGenerico<T>> createState() => _SeletorGenericoState<T>();
-
-  @override
-  final StreamController<List<SelectData>>? controller =
-      StreamController<List<SelectData>>.broadcast();
-
-  @override
-  List<SelectData> get itemsSelecionadosInicial =>
-      selecionadosIniciais.map(toSelectData).toList();
-
-  @override
-  Stream<List<SelectData>>? get onDataSelected => controller?.stream;
 }
 
 class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
@@ -134,9 +121,6 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     _buscaFocusNode.addListener(() {
       setState(() {});
     });
-
-    _setDataSubscription =
-        widget.setDataController.stream.listen(_aplicarDadosSelecionados);
   }
 
   @override
@@ -159,17 +143,6 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     _buscaController.dispose();
     _buscaFocusNode.dispose();
     super.dispose();
-  }
-
-  void _aplicarDadosSelecionados(List<SelectData> dados) {
-    final ids = dados.map((d) => d.id).toSet();
-    final novos = widget.itens
-        .where((item) => ids.contains(widget.toSelectData(item).id))
-        .toList();
-    setState(() {
-      _selecionados = novos;
-    });
-    widget.onChanged?.call(_selecionados);
   }
 
   @override

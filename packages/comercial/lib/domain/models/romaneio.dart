@@ -1,4 +1,39 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:core/equals.dart';
+
+enum TipoOperacao {
+  compra,
+  compra_devolucao,
+  venda,
+  venda_devolucao,
+  consignacao_saida,
+  consignacao_devolucao,
+  consignacao_acerto,
+  transferencia_saida,
+  transferencia_entrada,
+  transferencia_devolucao,
+  outros;
+
+  String toJsonValue() => name;
+
+  String get descricao => toJsonValue();
+
+  static TipoOperacao? fromJson(dynamic value) {
+    if (value == null) return null;
+
+    final normalized =
+        value.toString().trim().replaceFirst('TipoOperacao.', '');
+
+    for (final operacao in TipoOperacao.values) {
+      if (operacao.name == normalized) {
+        return operacao;
+      }
+    }
+
+    return null;
+  }
+}
 
 abstract class Romaneio implements Equatable {
   int? get id;
@@ -8,7 +43,7 @@ abstract class Romaneio implements Equatable {
   String? get funcionarioNome;
   int? get tabelaPrecoId;
   String? get modalidade;
-  String? get operacao;
+  TipoOperacao? get operacao;
   String? get situacao;
   double? get quantidade;
   double? get valorBruto;
@@ -27,7 +62,7 @@ abstract class Romaneio implements Equatable {
     String? funcionarioNome,
     int? tabelaPrecoId,
     String? modalidade,
-    String? operacao,
+    TipoOperacao? operacao,
     String? situacao,
     double? quantidade,
     double? valorBruto,
@@ -80,7 +115,7 @@ class _RomaneioImpl implements Romaneio {
   @override
   final String? modalidade;
   @override
-  final String? operacao;
+  final TipoOperacao? operacao;
   @override
   final String? situacao;
   @override

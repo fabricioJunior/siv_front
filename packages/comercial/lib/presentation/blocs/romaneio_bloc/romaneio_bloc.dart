@@ -10,12 +10,14 @@ part 'romaneio_state.dart';
 
 class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   final RecuperarRomaneio _recuperarRomaneio;
+  final RecuperarItensRomaneio _recuperarItensRomaneio;
   final CriarRomaneio _criarRomaneio;
   final AtualizarRomaneio _atualizarRomaneio;
   final AtualizarObservacaoRomaneio _atualizarObservacaoRomaneio;
 
   RomaneioBloc(
     this._recuperarRomaneio,
+    this._recuperarItensRomaneio,
     this._criarRomaneio,
     this._atualizarRomaneio,
     this._atualizarObservacaoRomaneio,
@@ -35,7 +37,8 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
 
       if (event.idRomaneio != null) {
         final romaneio = await _recuperarRomaneio.call(event.idRomaneio!);
-        emit(RomaneioState.fromModel(romaneio));
+        final itens = await _recuperarItensRomaneio.call(event.idRomaneio!);
+        emit(RomaneioState.fromModel(romaneio, itensDoRomaneio: itens));
         return;
       }
 
@@ -85,6 +88,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       emit(
         RomaneioState.fromModel(
           salvo,
+          itensDoRomaneio: state.itens,
           step: state.id == null ? RomaneioStep.criado : RomaneioStep.salvo,
         ),
       );
@@ -118,8 +122,13 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
         state.id!,
         observacao,
       );
-      emit(RomaneioState.fromModel(romaneio,
-          step: RomaneioStep.observacaoAtualizada));
+      emit(
+        RomaneioState.fromModel(
+          romaneio,
+          itensDoRomaneio: state.itens,
+          step: RomaneioStep.observacaoAtualizada,
+        ),
+      );
     } catch (e, s) {
       emit(state.copyWith(
           step: RomaneioStep.falha, erro: 'Falha ao atualizar observacao.'));

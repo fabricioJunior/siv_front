@@ -70,7 +70,7 @@ class RomaneiosPage extends StatelessWidget {
                             child: ListTile(
                               title: Text('Romaneio #${romaneio.id ?? '-'}'),
                               subtitle: Text(
-                                'Pessoa: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}\nOperacao: ${romaneio.operacao ?? '-'} | Situacao: ${romaneio.situacao ?? '-'}',
+                                'Pessoa: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}\nOperacao: ${romaneio.operacao?.descricao ?? '-'} | Situacao: ${romaneio.situacao ?? '-'}',
                               ),
                               onTap: () async {
                                 final result = await Navigator.pushNamed(

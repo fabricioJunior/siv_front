@@ -16,7 +16,7 @@ class CorSeletor extends StatefulWidget implements ISeletor {
   final Function(List<SelectData>)? onChanged;
   final String titulo;
 
-  CorSeletor({
+  const CorSeletor({
     super.key,
     this.modo = CorSeletorModo.unica,
     this.coresSelecionadasIniciais = const [],

@@ -7,3 +7,4 @@ export 'presentation/pages/selecionar_tabela_de_preco_page.dart';
 export 'presentation/pages/tabela_de_preco_detalhe_page.dart';
 export 'presentation/pages/preco_da_referencia_page.dart';
 export 'presentation/modals/tabela_de_preco_modal.dart';
+export 'presentation/widgets/tabelas_de_preco_seletor.dart';

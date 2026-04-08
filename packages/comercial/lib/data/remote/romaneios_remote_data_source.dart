@@ -1,4 +1,5 @@
 import 'package:comercial/data/remote/dtos/romaneio_dto.dart';
+import 'package:comercial/data/remote/dtos/romaneio_item_dto.dart';
 import 'package:comercial/domain/data/remote/i_romaneios_remote_data_source.dart';
 import 'package:comercial/models.dart';
 import 'package:core/remote_data_sourcers.dart';
@@ -9,6 +10,14 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
 
   @override
   String get path => '/v1/romaneios/{id}';
+
+  @override
+  Future<void> adicionarItemRomaneio(int romaneioId, RomaneioItem item) async {
+    await post(
+      pathParameters: {'id': '$romaneioId/itens'},
+      body: RomaneioItemDto.fromModel(item).toAddRemoveJson(),
+    );
+  }
 
   @override
   Future<Romaneio> atualizarObservacao(int id, String observacao) async {
@@ -42,6 +51,15 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId) async {
+    final response = await get(pathParameters: {'id': '$romaneioId/itens'});
+    final body = response.body as List<dynamic>? ?? const [];
+    return body
+        .map((json) => RomaneioItemDto.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
   Future<List<Romaneio>> recuperarRomaneios(
       {int page = 1, int limit = 50}) async {
     final response = await get(
@@ -56,5 +74,13 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
     return itens
         .map((json) => RomaneioDto.fromJson(json as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<void> removerItemRomaneio(int romaneioId, RomaneioItem item) async {
+    await delete(
+      pathParameters: {'id': '$romaneioId/itens'},
+      body: RomaneioItemDto.fromModel(item).toAddRemoveJson(),
+    );
   }
 }

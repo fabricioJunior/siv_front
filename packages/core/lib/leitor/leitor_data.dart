@@ -5,6 +5,8 @@ mixin LeitorData {
   int get idReferencia;
   String get tamanho;
   String get cor;
+  double? get valor;
+  int get id;
 
   Map<String, dynamic> get dados;
 }

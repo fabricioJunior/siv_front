@@ -48,6 +48,8 @@ class LeitorItemContado extends Equatable {
   final String cor;
   final int quantidadeLida;
   final int estoqueDisponivel;
+  final double? valorUnitario;
+  final int id;
   final Map<String, dynamic> dados;
 
   const LeitorItemContado({
@@ -58,7 +60,9 @@ class LeitorItemContado extends Equatable {
     required this.cor,
     required this.quantidadeLida,
     required this.estoqueDisponivel,
+    this.valorUnitario,
     required this.dados,
+    required this.id,
   });
 
   factory LeitorItemContado.fromData(LeitorData data) {
@@ -70,7 +74,9 @@ class LeitorItemContado extends Equatable {
       cor: data.cor,
       quantidadeLida: 0,
       estoqueDisponivel: data.quantidade,
+      valorUnitario: data.valor,
       dados: Map<String, dynamic>.from(data.dados),
+      id: data.id,
     );
   }
 
@@ -82,6 +88,7 @@ class LeitorItemContado extends Equatable {
     String? cor,
     int? quantidadeLida,
     int? estoqueDisponivel,
+    double? valorUnitario,
     Map<String, dynamic>? dados,
   }) {
     return LeitorItemContado(
@@ -92,9 +99,13 @@ class LeitorItemContado extends Equatable {
       cor: cor ?? this.cor,
       quantidadeLida: quantidadeLida ?? this.quantidadeLida,
       estoqueDisponivel: estoqueDisponivel ?? this.estoqueDisponivel,
+      valorUnitario: valorUnitario ?? this.valorUnitario,
       dados: dados ?? this.dados,
+      id: id,
     );
   }
+
+  double get valorTotal => (valorUnitario ?? 0) * quantidadeLida.toDouble();
 
   @override
   List<Object?> get props => [
@@ -105,6 +116,7 @@ class LeitorItemContado extends Equatable {
         cor,
         quantidadeLida,
         estoqueDisponivel,
+        valorUnitario,
         dados,
       ];
 }
@@ -161,6 +173,11 @@ class LeitorState extends Equatable {
   int get quantidadeTotalLida => itens.fold<int>(
         0,
         (total, item) => total + item.quantidadeLida,
+      );
+
+  double get valorTotalLido => itens.fold<double>(
+        0,
+        (total, item) => total + item.valorTotal,
       );
 
   LeitorState copyWith({

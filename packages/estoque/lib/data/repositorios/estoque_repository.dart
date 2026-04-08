@@ -14,8 +14,19 @@ class EstoqueRepository implements IEstoqueRepository {
   });
 
   @override
-  Future<SaldoDoEstoque> obterSaldo({required FiltroProdutoDoEstoque filtro}) {
-    return estoqueSaldoRemoteDataSource.obterSaldo(filtro: filtro);
+  Future<SaldoDoEstoque> obterSaldo({
+    required FiltroProdutoDoEstoque filtro,
+  }) async {
+    return produtosEstoqueLocalDataSource.obterSaldo(filtro: filtro);
+  }
+
+  @override
+  Future<SaldoDoEstoque> sincronizarSaldo({
+    required FiltroProdutoDoEstoque filtro,
+  }) async {
+    final saldo = await estoqueSaldoRemoteDataSource.obterSaldo(filtro: filtro);
+    await produtosEstoqueLocalDataSource.salvarProdutos(saldo.items);
+    return saldo;
   }
 
   @override

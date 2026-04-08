@@ -11,6 +11,7 @@ import 'package:pessoas/domain/data/repositories/i_pessoas_repository.dart';
 import 'package:pessoas/domain/data/repositories/i_pontos_repository.dart';
 import 'package:pessoas/presentation/bloc/endereco_cadastro_bloc/endereco_cadastro_bloc.dart';
 import 'package:pessoas/presentation/bloc/enderecos_bloc/enderecos_bloc.dart';
+import 'package:pessoas/presentation/bloc/funcionarios_bloc/funcionarios_bloc.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
 import 'package:pessoas/presentation/bloc/pessoas_bloc/pessoas_bloc.dart';
 import 'package:pessoas/presentation/bloc/pontos_bloc/pontos_bloc.dart';
@@ -63,6 +64,12 @@ void _presentation() {
   sl.registerFactory<EnderecoCadastroBloc>(
     () => EnderecoCadastroBloc(
       cepService: sl(),
+    ),
+  );
+
+  sl.registerFactory<FuncionariosBloc>(
+    () => FuncionariosBloc(
+      sl(),
     ),
   );
 

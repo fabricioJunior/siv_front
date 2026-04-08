@@ -25,6 +25,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   late final EstoqueSaldoBloc _bloc;
   final Debouncer _debouncer = Debouncer(milliseconds: 400);
   final TextEditingController _buscaController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   late final StreamSubscription<List<SelectData>>? _corSub;
   late final StreamSubscription<List<SelectData>>? _tamanhoSub;
@@ -35,6 +36,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _bloc = sl<EstoqueSaldoBloc>()..add(const EstoqueSaldoIniciou());
   }
 
@@ -43,6 +45,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     _corSub?.cancel();
     _tamanhoSub?.cancel();
     _buscaController.dispose();
+    _scrollController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -55,6 +58,23 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         tamanhoIds: _tamanhoIds,
       ),
     );
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final state = _bloc.state;
+    if (state.step == EstoqueSaldoStep.carregando ||
+        state.step == EstoqueSaldoStep.carregandoMais ||
+        state.sincronizando ||
+        !state.temMaisPaginas) {
+      return;
+    }
+
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      _bloc.add(const EstoqueSaldoCarregarMaisSolicitado());
+    }
   }
 
   @override
@@ -98,7 +118,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                 Expanded(
                   child: BlocBuilder<EstoqueSaldoBloc, EstoqueSaldoState>(
                     builder: (context, state) {
-                      if (state.step == EstoqueSaldoStep.carregando) {
+                      if (state.step == EstoqueSaldoStep.carregando &&
+                          state.itens.isEmpty) {
                         return const Center(
                           child: CircularProgressIndicator.adaptive(),
                         );
@@ -114,6 +135,10 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       }
 
                       if (state.itens.isEmpty) {
+                        if (state.sincronizando) {
+                          return Center(child: _buildSincronizando(context));
+                        }
+
                         return const Center(
                           child: Text(
                             'Nenhum item encontrado para os filtros informados.',
@@ -121,20 +146,45 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                         );
                       }
 
+                      final exibirLoaderFinal =
+                          state.step == EstoqueSaldoStep.carregandoMais;
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Total encontrado: ${state.totalItems}',
-                            style: Theme.of(context).textTheme.labelLarge,
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
+                            children: [
+                              Text(
+                                'Total encontrado: ${state.totalItems}',
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              if (state.sincronizando)
+                                _buildSincronizando(context),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Expanded(
                             child: ListView.separated(
-                              itemCount: state.itens.length,
+                              controller: _scrollController,
+                              itemCount:
+                                  state.itens.length +
+                                  (exibirLoaderFinal ? 1 : 0),
                               separatorBuilder: (context, index) =>
                                   const SizedBox(height: 8),
                               itemBuilder: (context, index) {
+                                if (index >= state.itens.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    child: Center(
+                                      child:
+                                          CircularProgressIndicator.adaptive(),
+                                    ),
+                                  );
+                                }
+
                                 final item = state.itens[index];
                                 final referenciaIdExterno =
                                     item.referenciaIdExterno
@@ -182,32 +232,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.center,
-                            child: FilledButton.icon(
-                              onPressed: state.temMaisPaginas
-                                  ? () => _bloc.add(
-                                      const EstoqueSaldoCarregarMaisSolicitado(),
-                                    )
-                                  : null,
-                              icon:
-                                  state.step == EstoqueSaldoStep.carregandoMais
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.expand_more),
-                              label: Text(
-                                state.temMaisPaginas
-                                    ? 'Carregar mais (página ${state.page + 1}/${state.totalPages})'
-                                    : 'Fim da lista',
-                              ),
-                            ),
-                          ),
                         ],
                       );
                     },
@@ -218,6 +242,21 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSincronizando(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          width: 14,
+          height: 14,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        const SizedBox(width: 8),
+        Text('Sincronizando...', style: Theme.of(context).textTheme.bodySmall),
+      ],
     );
   }
 

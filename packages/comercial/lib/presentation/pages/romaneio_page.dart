@@ -1,3 +1,4 @@
+import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -14,19 +15,7 @@ class RomaneioPage extends StatefulWidget {
 }
 
 class _RomaneioPageState extends State<RomaneioPage> {
-  static const _operacoes = [
-    'compra',
-    'compra_devolucao',
-    'venda',
-    'venda_devolucao',
-    'consignacao_saida',
-    'consignacao_devolucao',
-    'consignacao_acerto',
-    'transferencia_saida',
-    'transferencia_entrada',
-    'transferencia_devolucao',
-    'outros',
-  ];
+  static const _operacoes = TipoOperacao.values;
 
   final _formKey = GlobalKey<FormState>();
   final _pessoaIdController = TextEditingController();
@@ -162,17 +151,16 @@ class _RomaneioPageState extends State<RomaneioPage> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            DropdownButtonFormField<String>(
-                              initialValue: _operacoes.contains(state.operacao)
-                                  ? state.operacao
-                                  : _operacoes[2],
+                            DropdownButtonFormField<TipoOperacao>(
+                              initialValue:
+                                  state.operacao ?? TipoOperacao.venda,
                               decoration:
                                   const InputDecoration(labelText: 'Operacao'),
                               items: _operacoes
                                   .map(
-                                    (op) => DropdownMenuItem(
+                                    (op) => DropdownMenuItem<TipoOperacao>(
                                       value: op,
-                                      child: Text(op),
+                                      child: Text(op.descricao),
                                     ),
                                   )
                                   .toList(),
@@ -215,6 +203,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                   label: const Text('Atualizar observacao'),
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              _buildItensRomaneioCard(context, state),
                             ],
                           ],
                         ),
@@ -225,6 +215,67 @@ class _RomaneioPageState extends State<RomaneioPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildItensRomaneioCard(BuildContext context, RomaneioState state) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Itens do romaneio',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Total de itens: ${state.itens.length}',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            if (state.itens.isEmpty)
+              const Text('Nenhum item cadastrado neste romaneio.')
+            else
+              ListView.separated(
+                itemCount: state.itens.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = state.itens[index];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      child: Text('${index + 1}'),
+                    ),
+                    title: Text(
+                      item.referenciaNome?.trim().isNotEmpty == true
+                          ? item.referenciaNome!
+                          : 'Produto #${item.produtoId ?? '-'}',
+                    ),
+                    subtitle: Text(
+                      'Ref.: ${item.referenciaId ?? '-'}  •  Produto: ${item.produtoId ?? '-'}\n'
+                      'Cor: ${item.corNome ?? '-'}  •  Tamanho: ${item.tamanhoNome ?? '-'}\n'
+                      'Quantidade: ${_formatarQuantidade(item.quantidade)}',
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatarQuantidade(double? quantidade) {
+    if (quantidade == null) return '-';
+    if (quantidade == quantidade.truncateToDouble()) {
+      return quantidade.toInt().toString();
+    }
+    return quantidade.toStringAsFixed(2).replaceAll('.', ',');
   }
 
   String? _required(String? value) {
@@ -255,7 +306,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
     String? pessoaId,
     String? funcionarioId,
     String? tabelaPrecoId,
-    String? operacao,
+    TipoOperacao? operacao,
     String? observacao,
   }) {
     context.read<RomaneioBloc>().add(

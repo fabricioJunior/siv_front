@@ -11,4 +11,10 @@ class RecuperarSaldoDoEstoque {
   Future<SaldoDoEstoque> call({required FiltroProdutoDoEstoque filtro}) {
     return _estoqueRepository.obterSaldo(filtro: filtro);
   }
+
+  Future<SaldoDoEstoque> sincronizarPagina({
+    required FiltroProdutoDoEstoque filtro,
+  }) {
+    return _estoqueRepository.sincronizarSaldo(filtro: filtro);
+  }
 }

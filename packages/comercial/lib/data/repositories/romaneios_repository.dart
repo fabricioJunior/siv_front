@@ -7,6 +7,11 @@ class RomaneiosRepository implements IRomaneiosRepository {
   RomaneiosRepository({required this.remoteDataSource});
 
   @override
+  Future<void> adicionarItemRomaneio(int romaneioId, RomaneioItem item) {
+    return remoteDataSource.adicionarItemRomaneio(romaneioId, item);
+  }
+
+  @override
   Future<Romaneio> atualizarObservacao(int id, String observacao) {
     return remoteDataSource.atualizarObservacao(id, observacao);
   }
@@ -27,7 +32,17 @@ class RomaneiosRepository implements IRomaneiosRepository {
   }
 
   @override
+  Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId) {
+    return remoteDataSource.recuperarItensRomaneio(romaneioId);
+  }
+
+  @override
   Future<List<Romaneio>> recuperarRomaneios({int page = 1, int limit = 50}) {
     return remoteDataSource.recuperarRomaneios(page: page, limit: limit);
+  }
+
+  @override
+  Future<void> removerItemRomaneio(int romaneioId, RomaneioItem item) {
+    return remoteDataSource.removerItemRomaneio(romaneioId, item);
   }
 }

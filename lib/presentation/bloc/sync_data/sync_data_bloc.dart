@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/paginacao/paginacao.dart';
 import 'package:estoque/estoque.dart';
+import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 
@@ -13,14 +14,20 @@ part 'sync_data_state.dart';
 class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   final SincronizarCodigos _sincronizarCodigos;
   final SincronizarEstoque _sincronizarEstoque;
+  final SincronziarTabelasDePreco _sincronizarTabelasDePreco;
+  final SincronizarPrecos _sincronizarPrecos;
   final AppBloc _appBloc;
 
   StreamSubscription<Paginacao>? _codigosSubscription;
   StreamSubscription<Paginacao>? _estoqueSubscription;
+  StreamSubscription<Paginacao>? _tabelasDePrecoSubscription;
+  StreamSubscription<Paginacao>? _precosDaReferenciaSubscription;
 
   SyncDataBloc(
     this._sincronizarCodigos,
     this._sincronizarEstoque,
+    this._sincronizarTabelasDePreco,
+    this._sincronizarPrecos,
     this._appBloc,
   ) : super(const SyncDataState()) {
     on<SyncDataSolicitouSincronizacao>(_onSolicitouSincronizacao);
@@ -29,7 +36,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     on<SyncDataModuloFalhou>(_onModuloFalhou);
   }
 
-  FutureOr<void> _onSolicitouSincronizacao(
+  Future<void> _onSolicitouSincronizacao(
     SyncDataSolicitouSincronizacao event,
     Emitter<SyncDataState> emit,
   ) async {
@@ -50,7 +57,9 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     final modulosEmSincronizacao = <SyncModulo, SyncModuloState>{
       for (final modulo in state.modulos.entries)
         modulo.key: modulo.value.copyWith(
-          status: SyncModuloStatus.sincronizando,
+          status: modulo.key == SyncModulo.precosDaReferencia
+              ? SyncModuloStatus.aguardando
+              : SyncModuloStatus.sincronizando,
           erro: null,
           paginaAtual: 0,
           totalPaginas: 0,
@@ -75,9 +84,10 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
 
     _iniciarSincronizacaoCodigos();
     _iniciarSincronizacaoEstoque();
+    _iniciarSincronizacaoTabelasDePreco();
   }
 
-  FutureOr<void> _onAtualizacaoRecebida(
+  void _onAtualizacaoRecebida(
     SyncDataAtualizacaoRecebida event,
     Emitter<SyncDataState> emit,
   ) {
@@ -111,34 +121,54 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
   }
 
-  FutureOr<void> _onModuloConcluido(
+  void _onModuloConcluido(
     SyncDataModuloConcluido event,
     Emitter<SyncDataState> emit,
   ) {
     final modulo = state.modulos[event.modulo]!;
 
-    // Preserve failure on UI if this module has already failed.
-    if (modulo.status != SyncModuloStatus.falha) {
-      final modulosAtualizados = {
-        ...state.modulos,
-        event.modulo: modulo.copyWith(
-          status: SyncModuloStatus.concluido,
-          atualizadoEm: DateTime.now(),
-        ),
-      };
+    if (modulo.status == SyncModuloStatus.falha) {
+      return;
+    }
 
-      emit(
-        state.copyWith(
-          modulos: modulosAtualizados,
-          finalizadoEm: _todosModulosFinalizados(modulosAtualizados)
-              ? DateTime.now()
-              : null,
-        ),
-      );
+    final modulosAtualizados = {
+      ...state.modulos,
+      event.modulo: modulo.copyWith(
+        status: SyncModuloStatus.concluido,
+        atualizadoEm: DateTime.now(),
+      ),
+    };
+
+    emit(
+      state.copyWith(
+        modulos: modulosAtualizados,
+        finalizadoEm: _todosModulosFinalizados(modulosAtualizados)
+            ? DateTime.now()
+            : null,
+      ),
+    );
+
+    if (event.modulo == SyncModulo.tabelasDePreco) {
+      final moduloPrecos = state.modulos[SyncModulo.precosDaReferencia]!;
+      if (moduloPrecos.status == SyncModuloStatus.aguardando) {
+        emit(
+          state.copyWith(
+            modulos: {
+              ...state.modulos,
+              SyncModulo.precosDaReferencia: moduloPrecos.copyWith(
+                status: SyncModuloStatus.sincronizando,
+                erro: null,
+                atualizadoEm: DateTime.now(),
+              ),
+            },
+          ),
+        );
+        _iniciarSincronizacaoPrecosDaReferencia();
+      }
     }
   }
 
-  FutureOr<void> _onModuloFalhou(
+  void _onModuloFalhou(
     SyncDataModuloFalhou event,
     Emitter<SyncDataState> emit,
   ) {
@@ -151,6 +181,19 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
         atualizadoEm: DateTime.now(),
       ),
     };
+
+    if (event.modulo == SyncModulo.tabelasDePreco) {
+      final moduloPrecos = modulosAtualizados[SyncModulo.precosDaReferencia]!;
+      if (moduloPrecos.status != SyncModuloStatus.concluido &&
+          moduloPrecos.status != SyncModuloStatus.falha) {
+        modulosAtualizados[SyncModulo.precosDaReferencia] =
+            moduloPrecos.copyWith(
+          status: SyncModuloStatus.falha,
+          erro: 'A sincronização depende da conclusão das tabelas de preço.',
+          atualizadoEm: DateTime.now(),
+        );
+      }
+    }
 
     emit(
       state.copyWith(
@@ -214,6 +257,62 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
   }
 
+  void _iniciarSincronizacaoTabelasDePreco() {
+    _tabelasDePrecoSubscription = _sincronizarTabelasDePreco().listen(
+      (paginacao) {
+        add(
+          SyncDataAtualizacaoRecebida(
+            modulo: SyncModulo.tabelasDePreco,
+            paginacao: paginacao,
+          ),
+        );
+      },
+      onError: (error, stackTrace) {
+        addError(error, stackTrace);
+        add(
+          SyncDataModuloFalhou(
+            modulo: SyncModulo.tabelasDePreco,
+            erro: error.toString(),
+          ),
+        );
+      },
+      onDone: () {
+        add(const SyncDataModuloConcluido(modulo: SyncModulo.tabelasDePreco));
+      },
+      cancelOnError: true,
+    );
+  }
+
+  void _iniciarSincronizacaoPrecosDaReferencia() {
+    _precosDaReferenciaSubscription = _sincronizarPrecos().listen(
+      (paginacao) {
+        add(
+          SyncDataAtualizacaoRecebida(
+            modulo: SyncModulo.precosDaReferencia,
+            paginacao: paginacao,
+          ),
+        );
+      },
+      onError: (error, stackTrace) {
+        addError(error, stackTrace);
+        add(
+          SyncDataModuloFalhou(
+            modulo: SyncModulo.precosDaReferencia,
+            erro: error.toString(),
+          ),
+        );
+      },
+      onDone: () {
+        add(
+          const SyncDataModuloConcluido(
+            modulo: SyncModulo.precosDaReferencia,
+          ),
+        );
+      },
+      cancelOnError: true,
+    );
+  }
+
   bool _todosModulosFinalizados(Map<SyncModulo, SyncModuloState> modulos) {
     return modulos.values.every(
       (modulo) =>
@@ -237,8 +336,12 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   Future<void> _cancelarSincronizacoesAtivas() async {
     await _codigosSubscription?.cancel();
     await _estoqueSubscription?.cancel();
+    await _tabelasDePrecoSubscription?.cancel();
+    await _precosDaReferenciaSubscription?.cancel();
     _codigosSubscription = null;
     _estoqueSubscription = null;
+    _tabelasDePrecoSubscription = null;
+    _precosDaReferenciaSubscription = null;
   }
 
   @override

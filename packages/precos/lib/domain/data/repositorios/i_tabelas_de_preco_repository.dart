@@ -1,3 +1,4 @@
+import 'package:core/paginacao.dart';
 import 'package:precos/models.dart';
 
 abstract class ITabelasDePrecoRepository {
@@ -16,4 +17,6 @@ abstract class ITabelasDePrecoRepository {
     required String nome,
     double? terminador,
   });
+
+  Stream<Paginacao<TabelaDePreco>> syncTabelas();
 }

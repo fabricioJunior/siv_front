@@ -11,7 +11,6 @@ import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
-import 'package:siv_front/presentation/pages/entrada_de_produtos_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
@@ -20,7 +19,6 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),
   '/home': (context) => const HomePage(),
   '/sincronizacao': (context) => const SyncPage(),
-  '/entrada_de_produtos': (context) => const EntradaDeProdutosPage(),
   ////AUTENTICACAO:
   '/login': (context) => const LoginPage(),
   '/usuarios': (context) => const UsuariosPage(),
@@ -124,6 +122,24 @@ Map<String, Widget Function(BuildContext)> routes = {
       idRomaneio: args(context)['idRomaneio'],
     );
   },
+  //Navigator.pushNamed(
+//   context,
+//   '/criar_romaneio_por_parametros',
+//   arguments: {
+//     'funcionarioId': 1,
+//     'tabelaPrecoId': 2,
+//     'operacao': 'compra',
+//     'itens': [
+//       {'produtoId': 10, 'quantidade': 3},
+//       {'produtoId': 11, 'quantidade': 1},
+//     ],
+//   },
+// );
+  '/criar_romaneio_por_parametros': (context) {
+    return CriarRomaneioPorParametrosPage(
+      parametros: args(context),
+    );
+  },
 
   ///PRODUTOS:
   '/menu_produtos': (context) {
@@ -203,7 +219,18 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/entrada_manual_de_produtos': (context) {
-    return const EntradaManulDeProdutosPage();
+    return EntradaManulDeProdutosPage(
+      funcionariosSeletor: ({itemsSelecionadosInicial, onChanged}) =>
+          FuncionarioSeletor(
+        modo: FuncionarioSeletorModo.unica,
+        onChanged: onChanged,
+      ),
+      tabelasDePrecoSeletor: ({itemsSelecionadosInicial, onChanged}) =>
+          TabelasDePrecoSeletor(
+        modo: TabelasDePrecoSeletorModo.unica,
+        onChanged: onChanged,
+      ),
+    );
   },
 
   //CONFIGURACOES:

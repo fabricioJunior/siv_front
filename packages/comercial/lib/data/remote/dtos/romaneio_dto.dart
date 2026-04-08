@@ -16,7 +16,7 @@ class RomaneioDto implements Romaneio {
   @override
   final String? modalidade;
   @override
-  final String? operacao;
+  final TipoOperacao? operacao;
   @override
   final String? situacao;
   @override
@@ -65,7 +65,7 @@ class RomaneioDto implements Romaneio {
       funcionarioNome: json['funcionarioNome']?.toString(),
       tabelaPrecoId: _toInt(json['tabelaPrecoId']),
       modalidade: json['modalidade']?.toString(),
-      operacao: json['operacao']?.toString(),
+      operacao: TipoOperacao.fromJson(json['operacao']),
       situacao: json['situacao']?.toString(),
       quantidade: _toDouble(json['quantidade']),
       valorBruto: _toDouble(json['valorBruto']),
@@ -105,7 +105,7 @@ class RomaneioDto implements Romaneio {
       'pessoaId': pessoaId,
       'funcionarioId': funcionarioId,
       'tabelaPrecoId': tabelaPrecoId,
-      'operacao': operacao,
+      'operacao': operacao?.toJsonValue(),
     };
   }
 

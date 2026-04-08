@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque.dart';
+import 'package:estoque/domain/models/saldo_do_estoque.dart';
 import 'package:estoque/use_cases.dart';
 
 part 'estoque_saldo_event.dart';
@@ -24,47 +25,77 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     EstoqueSaldoIniciou event,
     Emitter<EstoqueSaldoState> emit,
   ) async {
-    final filtro = FiltroProdutoDoEstoque(
+    final termoBusca = event.termoBusca.trim();
+    final filtro = _criarFiltro(
       page: 1,
       limit: event.limit,
+      termoBusca: termoBusca,
       corIds: event.corIds,
       tamanhoIds: event.tamanhoIds,
-      produtoIdExternos: event.termoBusca.isEmpty
-          ? const []
-          : [event.termoBusca],
-      referenciaIdExternos: event.termoBusca.isEmpty
-          ? const []
-          : [event.termoBusca],
     );
 
     emit(
       state.copyWith(
         step: EstoqueSaldoStep.carregando,
+        itens: const [],
         erro: null,
-        termoBusca: event.termoBusca,
+        sincronizando: false,
+        termoBusca: termoBusca,
         corIdsSelecionadas: event.corIds,
         tamanhoIdsSelecionados: event.tamanhoIds,
         page: 1,
         limit: event.limit,
+        totalPages: 0,
+        totalItems: 0,
       ),
     );
 
     try {
-      final saldo = await _recuperarSaldoDoEstoque(filtro: filtro);
+      final saldoLocal = await _carregarSaldoLocalAcumulado(
+        filtroBase: filtro,
+        paginaAtual: 1,
+      );
       emit(
         state.copyWith(
           step: EstoqueSaldoStep.carregado,
-          itens: saldo.items,
-          page: saldo.meta.currentPage,
-          totalPages: saldo.meta.totalPages,
-          totalItems: saldo.meta.totalItems,
+          itens: saldoLocal.items,
+          page: 1,
+          totalPages: saldoLocal.meta.totalPages,
+          totalItems: saldoLocal.meta.totalItems,
+          sincronizando: true,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      addError(e, s);
+    }
+
+    try {
+      final saldoSincronizado = await _recuperarSaldoDoEstoque
+          .sincronizarPagina(filtro: filtro);
+      final saldoLocalAtualizado = await _carregarSaldoLocalAcumulado(
+        filtroBase: filtro,
+        paginaAtual: 1,
+      );
+      emit(
+        state.copyWith(
+          step: EstoqueSaldoStep.carregado,
+          itens: saldoLocalAtualizado.items,
+          page: saldoSincronizado.meta.currentPage,
+          totalPages: saldoSincronizado.meta.totalPages,
+          totalItems: saldoSincronizado.meta.totalItems,
+          sincronizando: false,
+          erro: null,
         ),
       );
     } catch (e, s) {
       emit(
         state.copyWith(
-          step: EstoqueSaldoStep.falha,
-          erro: 'Erro ao carregar saldo de estoque.',
+          step: state.itens.isEmpty
+              ? EstoqueSaldoStep.falha
+              : EstoqueSaldoStep.carregado,
+          sincronizando: false,
+          erro: 'Erro ao sincronizar saldo de estoque.',
         ),
       );
       addError(e, s);
@@ -75,44 +106,111 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     EstoqueSaldoCarregarMaisSolicitado event,
     Emitter<EstoqueSaldoState> emit,
   ) async {
-    if (state.step == EstoqueSaldoStep.carregandoMais) return;
+    if (state.step == EstoqueSaldoStep.carregandoMais || state.sincronizando) {
+      return;
+    }
     if (!state.temMaisPaginas) return;
 
     final proximaPagina = state.page + 1;
-    final filtro = FiltroProdutoDoEstoque(
+    final filtro = _criarFiltro(
       page: proximaPagina,
       limit: state.limit,
+      termoBusca: state.termoBusca,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
-      produtoIdExternos: state.termoBusca.isEmpty
-          ? const []
-          : [state.termoBusca],
-      referenciaIdExternos: state.termoBusca.isEmpty
-          ? const []
-          : [state.termoBusca],
     );
 
-    emit(state.copyWith(step: EstoqueSaldoStep.carregandoMais, erro: null));
+    emit(
+      state.copyWith(
+        step: EstoqueSaldoStep.carregandoMais,
+        sincronizando: false,
+        erro: null,
+      ),
+    );
 
     try {
-      final saldo = await _recuperarSaldoDoEstoque(filtro: filtro);
+      final saldoLocal = await _carregarSaldoLocalAcumulado(
+        filtroBase: filtro,
+        paginaAtual: proximaPagina,
+      );
+      final avancouPagina = saldoLocal.items.length > state.itens.length;
+      emit(
+        state.copyWith(
+          step: EstoqueSaldoStep.carregandoMais,
+          itens: saldoLocal.items,
+          page: avancouPagina ? proximaPagina : state.page,
+          totalPages: _maiorValor(state.totalPages, saldoLocal.meta.totalPages),
+          totalItems: _maiorValor(state.totalItems, saldoLocal.meta.totalItems),
+          sincronizando: false,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      addError(e, s);
+    }
+
+    try {
+      final saldoSincronizado = await _recuperarSaldoDoEstoque
+          .sincronizarPagina(filtro: filtro);
+      final saldoLocalAtualizado = await _carregarSaldoLocalAcumulado(
+        filtroBase: filtro,
+        paginaAtual: proximaPagina,
+      );
       emit(
         state.copyWith(
           step: EstoqueSaldoStep.carregado,
-          itens: [...state.itens, ...saldo.items],
-          page: saldo.meta.currentPage,
-          totalPages: saldo.meta.totalPages,
-          totalItems: saldo.meta.totalItems,
+          itens: saldoLocalAtualizado.items,
+          page: proximaPagina,
+          totalPages: saldoSincronizado.meta.totalPages,
+          totalItems: saldoSincronizado.meta.totalItems,
+          sincronizando: false,
+          erro: null,
         ),
       );
     } catch (e, s) {
       emit(
         state.copyWith(
-          step: EstoqueSaldoStep.falha,
+          step: state.itens.isEmpty
+              ? EstoqueSaldoStep.falha
+              : EstoqueSaldoStep.carregado,
+          sincronizando: false,
           erro: 'Erro ao carregar próxima página do estoque.',
         ),
       );
       addError(e, s);
     }
+  }
+
+  Future<SaldoDoEstoque> _carregarSaldoLocalAcumulado({
+    required FiltroProdutoDoEstoque filtroBase,
+    required int paginaAtual,
+  }) {
+    return _recuperarSaldoDoEstoque(
+      filtro: filtroBase.copyWith(
+        page: 1,
+        limit: filtroBase.limit * paginaAtual,
+      ),
+    );
+  }
+
+  FiltroProdutoDoEstoque _criarFiltro({
+    required int page,
+    required int limit,
+    required String termoBusca,
+    required List<int> corIds,
+    required List<int> tamanhoIds,
+  }) {
+    return FiltroProdutoDoEstoque(
+      page: page,
+      limit: limit,
+      corIds: corIds,
+      tamanhoIds: tamanhoIds,
+      produtoIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
+      referenciaIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
+    );
+  }
+
+  int _maiorValor(int atual, int novo) {
+    return atual > novo ? atual : novo;
   }
 }

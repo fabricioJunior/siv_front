@@ -26,8 +26,12 @@ class HttpSource implements IHttpSource {
   HttpSource({required this.client});
 
   @override
-  Future<IHttpResponse> delete({required Uri uri}) async {
-    var response = await client.delete(uri);
+  Future<IHttpResponse> delete({required Uri uri, dynamic body}) async {
+    var response = await client.delete(
+      uri,
+      body: body,
+      headers: body == null ? null : _defaultHeaders,
+    );
 
     return HttpResponse(response: response);
   }

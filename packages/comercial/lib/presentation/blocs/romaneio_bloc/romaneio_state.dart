@@ -5,8 +5,9 @@ class RomaneioState extends Equatable {
   final String? pessoaId;
   final String? funcionarioId;
   final String? tabelaPrecoId;
-  final String? operacao;
+  final TipoOperacao? operacao;
   final String? observacao;
+  final List<RomaneioItem> itens;
   final Romaneio? romaneio;
   final String? erro;
   final RomaneioStep step;
@@ -18,6 +19,7 @@ class RomaneioState extends Equatable {
     this.tabelaPrecoId,
     this.operacao,
     this.observacao,
+    this.itens = const [],
     this.romaneio,
     this.erro,
     required this.step,
@@ -28,21 +30,24 @@ class RomaneioState extends Equatable {
         pessoaId = '',
         funcionarioId = '',
         tabelaPrecoId = '',
-        operacao = 'venda',
+        operacao = TipoOperacao.venda,
         observacao = '',
+        itens = const [],
         romaneio = null,
         erro = null,
         step = RomaneioStep.inicial;
 
   RomaneioState.fromModel(
     Romaneio model, {
+    List<RomaneioItem> itensDoRomaneio = const [],
     RomaneioStep? step,
   })  : id = model.id,
         pessoaId = (model.pessoaId ?? '').toString(),
         funcionarioId = (model.funcionarioId ?? '').toString(),
         tabelaPrecoId = (model.tabelaPrecoId ?? '').toString(),
-        operacao = model.operacao ?? 'venda',
+        operacao = model.operacao ?? TipoOperacao.venda,
         observacao = model.observacao ?? '',
+        itens = itensDoRomaneio,
         romaneio = model,
         erro = null,
         step = step ?? RomaneioStep.editando;
@@ -52,8 +57,9 @@ class RomaneioState extends Equatable {
     String? pessoaId,
     String? funcionarioId,
     String? tabelaPrecoId,
-    String? operacao,
+    TipoOperacao? operacao,
     String? observacao,
+    List<RomaneioItem>? itens,
     Romaneio? romaneio,
     String? erro,
     RomaneioStep? step,
@@ -65,6 +71,7 @@ class RomaneioState extends Equatable {
       tabelaPrecoId: tabelaPrecoId ?? this.tabelaPrecoId,
       operacao: operacao ?? this.operacao,
       observacao: observacao ?? this.observacao,
+      itens: itens ?? this.itens,
       romaneio: romaneio ?? this.romaneio,
       erro: erro,
       step: step ?? this.step,
@@ -79,6 +86,7 @@ class RomaneioState extends Equatable {
         tabelaPrecoId,
         operacao,
         observacao,
+        itens,
         romaneio,
         erro,
         step,

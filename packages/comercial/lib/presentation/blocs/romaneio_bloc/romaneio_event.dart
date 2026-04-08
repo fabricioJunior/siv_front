@@ -12,7 +12,7 @@ class RomaneioCampoAlterado extends RomaneioEvent {
   final String? pessoaId;
   final String? funcionarioId;
   final String? tabelaPrecoId;
-  final String? operacao;
+  final TipoOperacao? operacao;
   final String? observacao;
 
   RomaneioCampoAlterado({

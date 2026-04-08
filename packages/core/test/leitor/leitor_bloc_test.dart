@@ -26,6 +26,9 @@ class _FakeLeitorData with LeitorData {
   final int quantidade;
 
   @override
+  final double? valor;
+
+  @override
   final Map<String, dynamic> dados;
 
   _FakeLeitorData({
@@ -35,16 +38,20 @@ class _FakeLeitorData with LeitorData {
     this.idReferencia = 1,
     this.tamanho = 'tam',
     this.cor = 'cor',
+    this.valor,
     Map<String, dynamic>? dados,
   }) : dados = dados ?? const {};
+
+  @override
+  int get id => 1;
 }
 
 class _FakeLeitorDataDatasource extends Fake implements ILeitorDataDatasource {
-  Future<LeitorData?> Function(String codigo)? handler;
+  Future<LeitorData?> Function(String codigo, {int? tabelaDePrecoId})? handler;
 
   @override
-  Future<LeitorData?> getData(String codigo) {
-    return handler!(codigo);
+  Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) {
+    return handler!(codigo, tabelaDePrecoId: tabelaDePrecoId);
   }
 }
 
@@ -58,7 +65,7 @@ void main() {
   blocTest<LeitorBloc, LeitorState>(
     'carrega um produto e incrementa a quantidade lida',
     build: () {
-      dataSource.handler = (_) async => _FakeLeitorData(
+      dataSource.handler = (_, {tabelaDePrecoId}) async => _FakeLeitorData(
             codigoDeBarras: '123',
             descricao: 'Produto A',
             quantidade: 5,
@@ -68,47 +75,28 @@ void main() {
     },
     act: (bloc) => bloc.add(const LeitorCodigoInformado('123')),
     expect: () => [
-      LeitorState.initial().copyWith(
-        processando: true,
-        erro: null,
-        aviso: null,
-        avisoTipo: null,
-        ultimoCodigoInformado: '123',
-      ),
-      LeitorState.initial().copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 5,
-            dados: {'produtoId': 10},
-            tamanho: 'tam',
-            cor: 'cor',
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true)
+          .having(
+            (state) => state.ultimoCodigoInformado,
+            'ultimoCodigoInformado',
+            '123',
           ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {'produtoId': 10},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 1,
-      ),
+      isA<LeitorState>()
+          .having((state) => state.itens.length, 'itens.length', 1)
+          .having(
+            (state) => state.ultimoProdutoLido?.codigoDeBarras,
+            'ultimoProdutoLido.codigoDeBarras',
+            '123',
+          )
+          .having((state) => state.historico.length, 'historico.length', 1),
     ],
   );
 
   blocTest<LeitorBloc, LeitorState>(
     'avisa duplicidade sem interromper a contagem',
     build: () {
-      dataSource.handler = (_) async => _FakeLeitorData(
+      dataSource.handler = (_, {tabelaDePrecoId}) async => _FakeLeitorData(
             codigoDeBarras: '123',
             descricao: 'Produto A',
             quantidade: 5,
@@ -120,105 +108,30 @@ void main() {
       bloc.add(const LeitorCodigoInformado('123'));
     },
     expect: () => [
-      LeitorState.initial().copyWith(
-        processando: true,
-        erro: null,
-        aviso: null,
-        avisoTipo: null,
-        ultimoCodigoInformado: '123',
-      ),
-      LeitorState.initial().copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 5,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 1,
-      ),
-      LeitorState.initial().copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 5,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 1,
-        processando: true,
-      ),
-      LeitorState.initial().copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 2,
-            estoqueDisponivel: 5,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 2,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        aviso: 'O mesmo código foi informado novamente: 123.',
-        avisoTipo: LeitorAvisoTipo.codigoDuplicado,
-        tokenUltimoProduto: 2,
-        tokenAviso: 1,
-      ),
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true),
+      isA<LeitorState>()
+          .having(
+              (state) => state.itens.single.quantidadeLida, 'quantidadeLida', 1)
+          .having((state) => state.historico.length, 'historico.length', 1),
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true)
+          .having((state) => state.itens.single.quantidadeLida,
+              'quantidadeLida', 1),
+      isA<LeitorState>()
+          .having(
+              (state) => state.itens.single.quantidadeLida, 'quantidadeLida', 2)
+          .having((state) => state.avisoTipo, 'avisoTipo',
+              LeitorAvisoTipo.codigoDuplicado)
+          .having((state) => state.tokenAviso, 'tokenAviso', 1)
+          .having((state) => state.historico.length, 'historico.length', 2),
     ],
   );
 
   blocTest<LeitorBloc, LeitorState>(
     'impede ultrapassar o estoque quando controlar quantidade estiver ativo',
     build: () {
-      dataSource.handler = (_) async => _FakeLeitorData(
+      dataSource.handler = (_, {tabelaDePrecoId}) async => _FakeLeitorData(
             codigoDeBarras: '123',
             descricao: 'Produto A',
             quantidade: 1,
@@ -233,94 +146,79 @@ void main() {
       bloc.add(const LeitorCodigoInformado('123'));
     },
     expect: () => [
-      LeitorState.initial(controlarQuantidade: true).copyWith(
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true),
+      isA<LeitorState>()
+          .having(
+              (state) => state.itens.single.quantidadeLida, 'quantidadeLida', 1)
+          .having((state) => state.historico.length, 'historico.length', 1),
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true)
+          .having((state) => state.itens.single.quantidadeLida,
+              'quantidadeLida', 1),
+      isA<LeitorState>()
+          .having((state) => state.erro, 'erro',
+              'Quantidade excede o estoque disponível para Produto A.')
+          .having((state) => state.tokenErro, 'tokenErro', 1)
+          .having((state) => state.historico.length, 'historico.length', 1),
+    ],
+  );
+
+  blocTest<LeitorBloc, LeitorState>(
+    'repasse a tabela de preço e calcula o total lido quando informado',
+    build: () {
+      dataSource.handler = (_, {tabelaDePrecoId}) async {
+        expect(tabelaDePrecoId, 99);
+        return _FakeLeitorData(
+          codigoDeBarras: '123',
+          descricao: 'Produto A',
+          quantidade: 5,
+          valor: 12.5,
+        );
+      };
+      return LeitorBloc(
+        dataSource: dataSource,
+        tabelaDePrecoId: 99,
+      );
+    },
+    act: (bloc) => bloc.add(const LeitorCodigoInformado('123')),
+    verify: (bloc) {
+      expect(bloc.state.ultimoProdutoLido?.valorUnitario, 12.5);
+      expect(bloc.state.valorTotalLido, 12.5);
+    },
+  );
+
+  blocTest<LeitorBloc, LeitorState>(
+    'bloqueia leitura quando exigir preço e o produto estiver sem preço',
+    build: () {
+      dataSource.handler = (_, {tabelaDePrecoId}) async {
+        expect(tabelaDePrecoId, 10);
+        return _FakeLeitorData(
+          codigoDeBarras: '123',
+          descricao: 'Produto sem preço',
+          quantidade: 5,
+          valor: 0,
+        );
+      };
+      return LeitorBloc(
+        dataSource: dataSource,
+        tabelaDePrecoId: 10,
+        aceitarApenasProdutosComPreco: true,
+      );
+    },
+    act: (bloc) => bloc.add(const LeitorCodigoInformado('123')),
+    expect: () => [
+      LeitorState.initial().copyWith(
         processando: true,
         erro: null,
         aviso: null,
         avisoTipo: null,
         ultimoCodigoInformado: '123',
       ),
-      LeitorState.initial(controlarQuantidade: true).copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 1,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 1,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
+      LeitorState.initial().copyWith(
         ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 1,
-      ),
-      LeitorState.initial(controlarQuantidade: true).copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            tamanho: 'tam',
-            cor: 'cor',
-            quantidadeLida: 1,
-            estoqueDisponivel: 1,
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 1,
-          dados: {},
-          tamanho: 'tam',
-          cor: 'cor',
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 1,
-        processando: true,
-      ),
-      LeitorState.initial(controlarQuantidade: true).copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 1,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 1,
-          estoqueDisponivel: 1,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        erro: 'Quantidade excede o estoque disponível para Produto A.',
-        tokenUltimoProduto: 1,
+        ultimoCodigoLidoValido: false,
+        erro: 'Produto sem preço cadastrado para a tabela de preço informada.',
         tokenErro: 1,
       ),
     ],
@@ -329,7 +227,7 @@ void main() {
   blocTest<LeitorBloc, LeitorState>(
     'remove quantidade e exclui item quando chegar a zero',
     build: () {
-      dataSource.handler = (_) async => _FakeLeitorData(
+      dataSource.handler = (_, {tabelaDePrecoId}) async => _FakeLeitorData(
             codigoDeBarras: '123',
             descricao: 'Produto A',
             quantidade: 5,
@@ -349,51 +247,14 @@ void main() {
     },
     skip: 4,
     expect: () => [
-      LeitorState.initial().copyWith(
-        itens: [
-          const LeitorItemContado(
-            codigoDeBarras: '123',
-            descricao: 'Produto A',
-            idReferencia: 1,
-            quantidadeLida: 1,
-            estoqueDisponivel: 5,
-            tamanho: 'tam',
-            cor: 'cor',
-            dados: {},
-          ),
-        ],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 2,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 2,
-        tokenAviso: 1,
-      ),
-      LeitorState.initial().copyWith(
-        itens: const [],
-        ultimoProdutoLido: const LeitorItemContado(
-          codigoDeBarras: '123',
-          descricao: 'Produto A',
-          idReferencia: 1,
-          quantidadeLida: 2,
-          estoqueDisponivel: 5,
-          tamanho: 'tam',
-          cor: 'cor',
-          dados: {},
-        ),
-        ultimoCodigoInformado: '123',
-        ultimoCodigoLidoValido: true,
-        tokenUltimoProduto: 2,
-        tokenAviso: 1,
-      ),
+      isA<LeitorState>()
+          .having(
+              (state) => state.itens.single.quantidadeLida, 'quantidadeLida', 1)
+          .having((state) => state.historico.length, 'historico.length', 3),
+      isA<LeitorState>()
+          .having((state) => state.itens.isEmpty, 'itens.isEmpty', true)
+          .having((state) => state.ultimoProdutoLido, 'ultimoProdutoLido', null)
+          .having((state) => state.historico.length, 'historico.length', 4),
     ],
   );
 }

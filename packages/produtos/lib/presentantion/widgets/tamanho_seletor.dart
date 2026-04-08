@@ -17,7 +17,7 @@ class TamanhoSeletor extends StatefulWidget implements ISeletor {
   final Function(List<SelectData>)? onChanged;
   final String titulo;
 
-  TamanhoSeletor({
+  const TamanhoSeletor({
     super.key,
     this.modo = TamanhoSeletorModo.unica,
     this.tamanhosSelecionadosIniciais = const [],

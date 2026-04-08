@@ -11,12 +11,31 @@ part 'leitor_state.dart';
 
 class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
   final ILeitorDataDatasource _dataSource;
+  final int? _tabelaDePrecoId;
+  final bool _aceitarApenasProdutosComPreco;
 
   LeitorBloc({
     required ILeitorDataDatasource dataSource,
     bool controlarQuantidade = false,
+    int? tabelaDePrecoId,
+    bool aceitarApenasProdutosComPreco = false,
+    LeitorState? estadoInicial,
   })  : _dataSource = dataSource,
-        super(LeitorState.initial(controlarQuantidade: controlarQuantidade)) {
+        _tabelaDePrecoId = tabelaDePrecoId,
+        _aceitarApenasProdutosComPreco = aceitarApenasProdutosComPreco,
+        super(
+          (estadoInicial ??
+                  LeitorState.initial(
+                    controlarQuantidade: controlarQuantidade,
+                  ))
+              .copyWith(
+            controlarQuantidade: controlarQuantidade,
+            processando: false,
+            erro: null,
+            aviso: null,
+            avisoTipo: null,
+          ),
+        ) {
     on<LeitorCodigoInformado>(
       _onLeitorCodigoInformado,
       transformer: sequential(),
@@ -67,7 +86,10 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
 
     final LeitorData? data;
     try {
-      data = await _dataSource.getData(codigo);
+      data = await _dataSource.getData(
+        codigo,
+        tabelaDePrecoId: _tabelaDePrecoId,
+      );
     } catch (_) {
       emit(
         state.copyWith(
@@ -107,6 +129,24 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
     final itemExistente = indiceExistente >= 0 ? itens[indiceExistente] : null;
     final quantidadeAtual = itemExistente?.quantidadeLida ?? 0;
     final estoqueDisponivel = leitorData.quantidade;
+    final valorProduto = leitorData.valor;
+    final exigirPreco = _aceitarApenasProdutosComPreco;
+
+    if (exigirPreco && (valorProduto == null || valorProduto <= 0)) {
+      emit(
+        state.copyWith(
+          processando: false,
+          ultimoCodigoInformado: codigo,
+          ultimoCodigoLidoValido: false,
+          erro:
+              'Produto sem preço cadastrado para a tabela de preço informada.',
+          aviso: null,
+          avisoTipo: null,
+          tokenErro: state.tokenErro + 1,
+        ),
+      );
+      return;
+    }
 
     if (state.controlarQuantidade &&
         estoqueDisponivel >= 0 &&
@@ -133,6 +173,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       tamanho: leitorData.tamanho,
       cor: leitorData.cor,
       estoqueDisponivel: estoqueDisponivel,
+      valorUnitario: valorProduto ?? itemExistente?.valorUnitario,
       dados: leitorData.dados,
       quantidadeLida: quantidadeAtual + 1,
     );

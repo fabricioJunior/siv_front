@@ -45,9 +45,18 @@ void _useCases() {
   );
   sl.registerFactory<RecuperarRomaneio>(
       () => RecuperarRomaneio(repository: sl()));
+  sl.registerFactory<RecuperarItensRomaneio>(
+    () => RecuperarItensRomaneio(repository: sl()),
+  );
   sl.registerFactory<CriarRomaneio>(() => CriarRomaneio(repository: sl()));
   sl.registerFactory<AtualizarRomaneio>(
     () => AtualizarRomaneio(repository: sl()),
+  );
+  sl.registerFactory<AdicionarItemRomaneio>(
+    () => AdicionarItemRomaneio(repository: sl()),
+  );
+  sl.registerFactory<RemoverItemRomaneio>(
+    () => RemoverItemRomaneio(repository: sl()),
   );
   sl.registerFactory<AtualizarObservacaoRomaneio>(
     () => AtualizarObservacaoRomaneio(repository: sl()),
@@ -81,6 +90,15 @@ void _presentation() {
   sl.registerFactory<RomaneioBloc>(
     () => RomaneioBloc(
       sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<RomaneioCriacaoBloc>(
+    () => RomaneioCriacaoBloc(
       sl(),
       sl(),
       sl(),

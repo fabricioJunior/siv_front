@@ -1,3 +1,4 @@
+import 'package:core/paginacao.dart';
 import 'package:precos/models.dart';
 
 abstract class IPrecosDeReferenciasRepository {
@@ -26,4 +27,6 @@ abstract class IPrecosDeReferenciasRepository {
     required int tabelaDePrecoId,
     required int referenciaId,
   });
+
+  Stream<Paginacao<PrecoDaReferencia>> syncPrecosDasReferencias();
 }

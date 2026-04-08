@@ -12,6 +12,7 @@ class EstoqueSaldoState extends Equatable {
   final String termoBusca;
   final List<int> corIdsSelecionadas;
   final List<int> tamanhoIdsSelecionados;
+  final bool sincronizando;
   final String? erro;
 
   const EstoqueSaldoState({
@@ -24,6 +25,7 @@ class EstoqueSaldoState extends Equatable {
     this.termoBusca = '',
     this.corIdsSelecionadas = const [],
     this.tamanhoIdsSelecionados = const [],
+    this.sincronizando = false,
     this.erro,
   });
 
@@ -39,6 +41,7 @@ class EstoqueSaldoState extends Equatable {
     String? termoBusca,
     List<int>? corIdsSelecionadas,
     List<int>? tamanhoIdsSelecionados,
+    bool? sincronizando,
     Object? erro = _sentinelaErro,
   }) {
     return EstoqueSaldoState(
@@ -52,6 +55,7 @@ class EstoqueSaldoState extends Equatable {
       corIdsSelecionadas: corIdsSelecionadas ?? this.corIdsSelecionadas,
       tamanhoIdsSelecionados:
           tamanhoIdsSelecionados ?? this.tamanhoIdsSelecionados,
+      sincronizando: sincronizando ?? this.sincronizando,
       erro: identical(erro, _sentinelaErro) ? this.erro : erro as String?,
     );
   }
@@ -67,6 +71,7 @@ class EstoqueSaldoState extends Equatable {
     termoBusca,
     corIdsSelecionadas,
     tamanhoIdsSelecionados,
+    sincronizando,
     erro,
   ];
 }

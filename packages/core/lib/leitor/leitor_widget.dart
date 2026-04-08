@@ -14,6 +14,8 @@ class LeitorWidget extends StatefulWidget {
   final String campoCodigoHint;
   final double alturaLista;
   final bool autofocus;
+  final int? tabelaDePrecoId;
+  final bool aceitarApenasProdutosComPreco;
 
   const LeitorWidget({
     super.key,
@@ -26,6 +28,8 @@ class LeitorWidget extends StatefulWidget {
     this.campoCodigoHint = 'Bipe ou informe o código de barras',
     this.alturaLista = 320,
     this.autofocus = true,
+    this.tabelaDePrecoId,
+    this.aceitarApenasProdutosComPreco = false,
   });
 
   @override
@@ -58,11 +62,19 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   void didUpdateWidget(covariant LeitorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.dataSource != widget.dataSource ||
-        oldWidget.controlarQuantidade != widget.controlarQuantidade) {
+    final mudouDataSource =
+        oldWidget.dataSource.runtimeType != widget.dataSource.runtimeType;
+    final mudouConfiguracao =
+        oldWidget.controlarQuantidade != widget.controlarQuantidade ||
+            oldWidget.tabelaDePrecoId != widget.tabelaDePrecoId ||
+            oldWidget.aceitarApenasProdutosComPreco !=
+                widget.aceitarApenasProdutosComPreco;
+
+    if (mudouDataSource || mudouConfiguracao) {
+      final estadoAtual = _bloc.state;
       _controller.unbind(_bloc);
       _bloc.close();
-      _bloc = _criarBloc();
+      _bloc = _criarBloc(estadoInicial: estadoAtual);
       _controller.bind(_bloc);
     }
 
@@ -94,19 +106,21 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   void reassemble() {
     super.reassemble();
 
-    // During hot reload, keep controller and bloc wiring in sync so UI updates
-    // continue to flow from bloc emissions.
+    // Durante o hot reload, mantenha o estado atual do leitor ao religar o bloc.
     if (_bloc.isClosed) {
-      _bloc = _criarBloc();
+      _bloc = _criarBloc(estadoInicial: _controller.state);
     }
     _controller.bind(_bloc);
     _controller.syncState(_bloc.state);
   }
 
-  LeitorBloc _criarBloc() {
+  LeitorBloc _criarBloc({LeitorState? estadoInicial}) {
     return LeitorBloc(
       dataSource: widget.dataSource,
       controlarQuantidade: widget.controlarQuantidade,
+      tabelaDePrecoId: widget.tabelaDePrecoId,
+      aceitarApenasProdutosComPreco: widget.aceitarApenasProdutosComPreco,
+      estadoInicial: estadoInicial,
     );
   }
 
@@ -187,6 +201,19 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   String _normalizarRotuloGrade(String valor, {String fallback = '-'}) {
     final normalizado = valor.trim();
     return normalizado.isEmpty ? fallback : normalizado;
+  }
+
+  String _formatarMoeda(double valor) {
+    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
+  String _descricaoPreco(LeitorItemContado item) {
+    final valorUnitario = item.valorUnitario;
+    if (valorUnitario == null || valorUnitario <= 0) {
+      return 'Preço não cadastrado';
+    }
+
+    return 'Preço: ${_formatarMoeda(valorUnitario)}  •  Total: ${_formatarMoeda(item.valorTotal)}';
   }
 
   String _nomeReferencia(List<LeitorItemContado> itensReferencia) {
@@ -477,7 +504,6 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -500,6 +526,13 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                           valor: '${state.quantidadeTotalLida}',
                           colorScheme: Theme.of(context).colorScheme,
                         ),
+                        if (widget.tabelaDePrecoId != null)
+                          _resumoInfoCard(
+                            icon: Icons.attach_money_outlined,
+                            titulo: 'Valor total',
+                            valor: _formatarMoeda(state.valorTotalLido),
+                            colorScheme: Theme.of(context).colorScheme,
+                          ),
                         _resumoInfoCard(
                           icon: state.controlarQuantidade
                               ? Icons.lock_outline
@@ -569,11 +602,17 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                          if (widget.tabelaDePrecoId != null)
+                            Text(
+                              _descricaoPreco(state.ultimoProdutoLido!),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                         ],
                       ),
                     ),
                   const SizedBox(height: 12),
-                  Flexible(
+                  SizedBox(
+                    height: widget.alturaLista,
                     child: switch (_visualizacao) {
                       _LeitorVisualizacao.porProduto => state.itens.isEmpty
                           ? Center(
@@ -593,7 +632,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(item.descricao),
                                   subtitle: Text(
-                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}',
+                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',
                                   ),
                                   trailing: Wrap(
                                     spacing: 4,
@@ -674,25 +713,31 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   void _onBlocChangeState(LeitorState state, BuildContext context) {
     final previousState = _controller.state;
 
-    if (state.tokenUltimoProduto != previousState.tokenUltimoProduto &&
-        state.ultimoProdutoLido != null) {
-      widget.onUltimoProdutoLido?.call(state.ultimoProdutoLido!);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
 
-    if (state.tokenErro != previousState.tokenErro && state.erro != null) {
-      widget.onErro?.call(state.erro!);
-      _exibirErro(state.erro!);
-      SystemSound.play(SystemSoundType.alert);
-    }
+      if (state.tokenUltimoProduto != previousState.tokenUltimoProduto &&
+          state.ultimoProdutoLido != null) {
+        widget.onUltimoProdutoLido?.call(state.ultimoProdutoLido!);
+      }
 
-    if (state.tokenAviso != previousState.tokenAviso && state.aviso != null) {
-      widget.onAviso?.call(state.aviso!);
-      _mostrarMensagem(context, state.aviso!, Colors.orange.shade700);
-      SystemSound.play(SystemSoundType.alert);
-    }
+      if (state.tokenErro != previousState.tokenErro && state.erro != null) {
+        widget.onErro?.call(state.erro!);
+        _exibirErro(state.erro!);
+        SystemSound.play(SystemSoundType.alert);
+      }
 
-    _controller.syncState(state);
-    _solicitarFoco();
+      if (state.tokenAviso != previousState.tokenAviso && state.aviso != null) {
+        widget.onAviso?.call(state.aviso!);
+        _mostrarMensagem(context, state.aviso!, Colors.orange.shade700);
+        SystemSound.play(SystemSoundType.alert);
+      }
+
+      _controller.syncState(state);
+      _solicitarFoco();
+    });
   }
 }
 
@@ -707,6 +752,7 @@ class LeitorController extends ChangeNotifier {
   LeitorItemContado? get ultimoProdutoLido => _state.ultimoProdutoLido;
   String? get ultimoErro => _state.erro;
   int get quantidadeTotalLida => _state.quantidadeTotalLida;
+  double get valorTotalLido => _state.valorTotalLido;
   int get quantidadeItensDistintos => _state.itens.length;
   bool get controlarQuantidade => _state.controlarQuantidade;
 
@@ -721,6 +767,8 @@ class LeitorController extends ChangeNotifier {
             'cor': item.cor,
             'quantidadeLida': item.quantidadeLida,
             'estoqueDisponivel': item.estoqueDisponivel,
+            'valorUnitario': item.valorUnitario,
+            'valorTotal': item.valorTotal,
             ...item.dados,
           },
         )

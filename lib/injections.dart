@@ -109,6 +109,7 @@ void _localDataSource() {
       () => ProdutoDoLeitorLocalDataSource(
             codigosLocalDataSource: sl(),
             produtoEstoqueLocalDataSource: sl(),
+            precosDeReferenciasLocalDataSource: sl(),
           ));
 }
 
@@ -127,6 +128,8 @@ void _presentation() {
 
   sl.registerLazySingleton<SyncDataBloc>(
     () => SyncDataBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

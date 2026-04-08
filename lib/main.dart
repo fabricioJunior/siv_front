@@ -95,13 +95,19 @@ class GlobalBlocObserver extends BlocObserver {
   @override
   void onChange(BlocBase bloc, Change change) {
     super.onChange(bloc, change);
-    log('${bloc.runtimeType} $change', name: 'Test log');
+    if (bloc is SyncDataBloc) {
+    } else {
+      log('${bloc.runtimeType} $change', name: 'Test log');
+    }
   }
 
   @override
   void onTransition(Bloc bloc, Transition transition) {
     super.onTransition(bloc, transition);
-    log('${bloc.runtimeType} $transition', name: 'Test log');
+    if (bloc is SyncDataBloc) {
+    } else {
+      log('${bloc.runtimeType} $transition', name: 'Test log');
+    }
   }
 
   @override

@@ -1,6 +1,6 @@
 part of 'sync_data_bloc.dart';
 
-enum SyncModulo { codigos, estoque }
+enum SyncModulo { codigos, estoque, tabelasDePreco, precosDaReferencia }
 
 enum SyncDataOrigem { home, entradaDeProdutos, manual }
 
@@ -58,6 +58,10 @@ class SyncModuloState extends Equatable {
         return 'Codigos';
       case SyncModulo.estoque:
         return 'Estoque';
+      case SyncModulo.tabelasDePreco:
+        return 'Tabelas de preço';
+      case SyncModulo.precosDaReferencia:
+        return 'Preços da referência';
     }
   }
 
@@ -99,6 +103,12 @@ class SyncDataState extends Equatable {
     this.modulos = const {
       SyncModulo.codigos: SyncModuloState(modulo: SyncModulo.codigos),
       SyncModulo.estoque: SyncModuloState(modulo: SyncModulo.estoque),
+      SyncModulo.tabelasDePreco: SyncModuloState(
+        modulo: SyncModulo.tabelasDePreco,
+      ),
+      SyncModulo.precosDaReferencia: SyncModuloState(
+        modulo: SyncModulo.precosDaReferencia,
+      ),
     },
     this.homeJaSincronizada = false,
     this.iniciadoEm,

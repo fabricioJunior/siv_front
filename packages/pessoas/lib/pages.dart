@@ -5,3 +5,4 @@ export 'presentation/pages/enderecos_page.dart';
 export 'presentation/pages/endereco_cadastro_page.dart';
 export 'presentation/pages/selecionar_pessoa_page.dart';
 export 'presentation/widgets/seletor_pessoa.dart';
+export 'presentation/widgets/funcionario_seletor.dart';

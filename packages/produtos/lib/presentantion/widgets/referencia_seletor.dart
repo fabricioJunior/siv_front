@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
@@ -20,7 +18,7 @@ class ReferenciaSeletor extends StatefulWidget implements ISeletor {
   final Function(List<SelectData>)? onChanged;
   final String titulo;
 
-  ReferenciaSeletor({
+  const ReferenciaSeletor({
     super.key,
     this.modo = ReferenciaSeletorModo.unica,
     this.referenciasSelecionadasIniciais = const [],

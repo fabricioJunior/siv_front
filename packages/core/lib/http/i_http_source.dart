@@ -18,6 +18,7 @@ abstract class IHttpSource {
 
   Future<IHttpResponse> delete({
     required Uri uri,
+    dynamic body,
   });
 
   Future<IHttpResponse> postMultipart({

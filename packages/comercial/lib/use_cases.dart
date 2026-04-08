@@ -1,3 +1,4 @@
+export 'domain/use_cases/adicionar_item_romaneio.dart';
 export 'domain/use_cases/atualizar_observacao_romaneio.dart';
 export 'domain/use_cases/atualizar_pedido.dart';
 export 'domain/use_cases/atualizar_romaneio.dart';
@@ -6,7 +7,9 @@ export 'domain/use_cases/conferir_pedido.dart';
 export 'domain/use_cases/criar_pedido.dart';
 export 'domain/use_cases/criar_romaneio.dart';
 export 'domain/use_cases/faturar_pedido.dart';
+export 'domain/use_cases/recuperar_itens_romaneio.dart';
 export 'domain/use_cases/recuperar_pedido.dart';
 export 'domain/use_cases/recuperar_pedidos.dart';
 export 'domain/use_cases/recuperar_romaneio.dart';
 export 'domain/use_cases/recuperar_romaneios.dart';
+export 'domain/use_cases/remover_item_romaneio.dart';

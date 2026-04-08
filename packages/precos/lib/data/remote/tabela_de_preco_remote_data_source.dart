@@ -24,7 +24,10 @@ class TabelaDePrecoRemoteDataSource extends RemoteDataSourceBase
     required String nome,
     double? terminador,
   }) {
-    var body = {'nome': nome, if (terminador != null) 'terminador': terminador};
+    final body = <String, dynamic>{'nome': nome};
+    if (terminador != null) {
+      body['terminador'] = terminador;
+    }
     var response = post(body: body);
     return response.then((res) => TabelaDePrecoDto.fromJson(res.body));
   }

@@ -2,6 +2,7 @@ import 'package:core/leitor/leitor_data.dart';
 
 abstract class ILeitorDataDatasource {
   Future<LeitorData?> getData(
-    String codigo,
-  );
+    String codigo, {
+    int? tabelaDePrecoId,
+  });
 }

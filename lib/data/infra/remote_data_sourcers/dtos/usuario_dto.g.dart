@@ -7,8 +7,13 @@ part of 'usuario_dto.dart';
 // **************************************************************************
 
 UsuarioDto _$UsuarioDtoFromJson(Map<String, dynamic> json) => UsuarioDto(
-      id: (json['id'] as num).toInt(),
-      login: json['usuario'] as String,
-      nome: json['nome'] as String,
-      tipo: UsuarioDto._tipoUsuarioFromJson(json['tipo'] as String),
-    );
+  id: (json['id'] as num).toInt(),
+  login: json['usuario'] as String,
+  nome: json['nome'] as String,
+  tipo: UsuarioDto._tipoUsuarioFromJson(json['tipo'] as String),
+  terminaisDoUsuario:
+      (json['terminaisDoUsuario'] as List<dynamic>?)
+          ?.map((e) => TerminalDoUsuarioDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
+);

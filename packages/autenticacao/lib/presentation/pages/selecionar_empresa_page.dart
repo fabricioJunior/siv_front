@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 class SelecionarEmpresaPage extends StatelessWidget {
   final bloc = sl<LoginBloc>();
 
+  SelecionarEmpresaPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -36,20 +38,47 @@ class SelecionarEmpresaPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 40,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(height: 12),
                       Text(
-                        'Nenhuma empresa disponível para seleção.',
+                        'Login realizado, mas nenhuma empresa está disponível para este acesso.',
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Você pode cadastrar uma empresa agora ou pedir a vinculação ao administrador do sistema.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        key: const Key('selecionar_empresa_cadastrar_button'),
-                        onPressed: () async {
-                          await Navigator.of(context).pushNamed('/empresa');
-                          bloc.add(LoginCarregouEmpresas());
-                        },
-                        icon: const Icon(Icons.add_business_outlined),
-                        label: const Text('Cadastrar empresa'),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              bloc.add(LoginCarregouEmpresas());
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Atualizar lista'),
+                          ),
+                          ElevatedButton.icon(
+                            key: const Key(
+                                'selecionar_empresa_cadastrar_button'),
+                            onPressed: () async {
+                              await Navigator.of(context).pushNamed('/empresa');
+                              bloc.add(LoginCarregouEmpresas());
+                            },
+                            icon: const Icon(Icons.add_business_outlined),
+                            label: const Text('Cadastrar empresa'),
+                          ),
+                        ],
                       ),
                     ],
                   ),

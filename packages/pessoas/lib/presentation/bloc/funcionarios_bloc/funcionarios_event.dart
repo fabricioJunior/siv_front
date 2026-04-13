@@ -5,4 +5,8 @@ abstract class FuncionariosEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class FuncionariosIniciou extends FuncionariosEvent {}
+class FuncionariosIniciou extends FuncionariosEvent {
+  final int? idFuncionarioSelecionado;
+
+  FuncionariosIniciou({required this.idFuncionarioSelecionado});
+}

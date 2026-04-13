@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
+import 'dart:io' as _i5;
 
 import 'package:core/http/i_http_response.dart' as _i2;
 import 'package:core/http/i_http_source.dart' as _i3;
@@ -113,19 +114,70 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
       ) as _i4.Future<_i2.IHttpResponse>);
 
   @override
-  _i4.Future<_i2.IHttpResponse> delete({required Uri? uri}) =>
+  _i4.Future<_i2.IHttpResponse> delete({
+    required Uri? uri,
+    dynamic body,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #delete,
           [],
-          {#uri: uri},
+          {
+            #uri: uri,
+            #body: body,
+          },
         ),
         returnValue: _i4.Future<_i2.IHttpResponse>.value(_FakeIHttpResponse_0(
           this,
           Invocation.method(
             #delete,
             [],
-            {#uri: uri},
+            {
+              #uri: uri,
+              #body: body,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i2.IHttpResponse>);
+
+  @override
+  _i4.Future<_i2.IHttpResponse> postMultipart({
+    required Uri? uri,
+    required String? field,
+    required _i5.File? file,
+    required _i3.FileType? fileType,
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+    bool? compressImage = true,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #postMultipart,
+          [],
+          {
+            #uri: uri,
+            #field: field,
+            #file: file,
+            #fileType: fileType,
+            #body: body,
+            #headers: headers,
+            #compressImage: compressImage,
+          },
+        ),
+        returnValue: _i4.Future<_i2.IHttpResponse>.value(_FakeIHttpResponse_0(
+          this,
+          Invocation.method(
+            #postMultipart,
+            [],
+            {
+              #uri: uri,
+              #field: field,
+              #file: file,
+              #fileType: fileType,
+              #body: body,
+              #headers: headers,
+              #compressImage: compressImage,
+            },
           ),
         )),
       ) as _i4.Future<_i2.IHttpResponse>);

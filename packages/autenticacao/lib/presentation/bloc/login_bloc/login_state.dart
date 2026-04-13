@@ -75,9 +75,16 @@ class LoginAutenticarSucesso extends LoginState {
 
 class LoginAutenticarFalha extends LoginState {
   final String erro;
+  final LoginErroTipo tipo;
 
-  LoginAutenticarFalha(super.lastState, {required this.erro})
-      : super.fromLastState();
+  LoginAutenticarFalha(
+    super.lastState, {
+    required this.erro,
+    this.tipo = LoginErroTipo.desconhecido,
+  }) : super.fromLastState();
+
+  @override
+  List<Object?> get props => [...super.props, erro, tipo];
 }
 
 class LoginCarregarLicenciadosEmProgresso extends LoginState {
@@ -107,4 +114,17 @@ class LoginSelecionarLicenciadoSucesso extends LoginState {
     super.lastState, {
     required super.licenciadoSelecionado,
   }) : super.fromLastState();
+}
+
+enum LoginErroTipo {
+  validacao,
+  credenciaisInvalidas,
+  acessoNegado,
+  semConexao,
+  tempoEsgotado,
+  servidorIndisponivel,
+  carregamentoLicenciados,
+  carregamentoEmpresas,
+  configuracaoInvalida,
+  desconhecido,
 }

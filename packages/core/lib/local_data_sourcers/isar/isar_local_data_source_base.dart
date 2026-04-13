@@ -68,6 +68,15 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
     });
   }
 
+  Future<void> deleteWhere(
+    Test<Iterable<Dto>, IsarCollection<Dto>> test,
+  ) async {
+    var toDelete = await fetchWhere(test);
+    for (var item in toDelete) {
+      await deleteById(item.dataBaseId);
+    }
+  }
+
   @override
   Future<void> deleteAll() async {
     log('iniciou');
@@ -80,3 +89,6 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
 
   Dto toDto(E entity);
 }
+
+abstract class IsarFind<Dto>
+    implements Test<Iterable<Dto>, IsarCollection<Dto>> {}

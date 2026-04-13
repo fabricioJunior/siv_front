@@ -137,9 +137,9 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   }
 
   String? _validarCadastro(RomaneioState state) {
-    if ((state.pessoaId ?? '').trim().isEmpty ||
-        (state.funcionarioId ?? '').trim().isEmpty ||
-        (state.tabelaPrecoId ?? '').trim().isEmpty) {
+    if (state.pessoaId == null ||
+        state.funcionarioId == null ||
+        state.tabelaPrecoId == null) {
       return 'Preencha os campos obrigatorios.';
     }
 
@@ -149,9 +149,9 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   Romaneio _toModel(RomaneioState state) {
     return Romaneio.create(
       id: state.id,
-      pessoaId: int.tryParse(state.pessoaId ?? ''),
-      funcionarioId: int.tryParse(state.funcionarioId ?? ''),
-      tabelaPrecoId: int.tryParse(state.tabelaPrecoId ?? ''),
+      pessoaId: state.pessoaId,
+      funcionarioId: state.funcionarioId,
+      tabelaPrecoId: state.tabelaPrecoId,
       operacao: state.operacao,
       observacao: state.observacao?.trim(),
       pessoaNome: state.romaneio?.pessoaNome,

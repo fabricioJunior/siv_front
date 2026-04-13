@@ -1,0 +1,8 @@
+export 'produtos_compartilhados/use_cases/recuperar_lista_de_produtos_compartilhada.dart';
+export 'produtos_compartilhados/use_cases/salvar_lista_de_produtos_compartilhada.dart';
+export 'produtos_compartilhados/use_cases/remover_lista_de_produtos_compartilhada.dart';
+export 'produtos_compartilhados/models/lista_de_produtos_compartilhada.dart';
+export 'produtos_compartilhados/models/produto_compartilhado.dart';
+export 'produtos_compartilhados/use_cases/remover_produto_compartilhado.dart';
+export 'produtos_compartilhados/use_cases/salvar_produto_compartilhado.dart';
+export 'produtos_compartilhados/use_cases/atualizar_lista_compartilhada.dart';

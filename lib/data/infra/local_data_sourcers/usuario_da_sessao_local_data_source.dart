@@ -1,6 +1,7 @@
 import 'package:autenticacao/data.dart';
 import 'package:autenticacao/models.dart';
 import 'package:core/data_sourcers.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/terminal_do_usuario_dto.dart';
 
 import 'dtos/usuario_dto.dart';
 
@@ -17,10 +18,11 @@ class UsuarioDaSessaoLocalDataSource
 
 extension _ToDto on Usuario {
   UsuarioDto toDto() => UsuarioDto(
-        id: id,
-        login: login,
-        nome: nome,
-        tipo: tipo,
-        senha: senha,
-      );
+    id: id,
+    login: login,
+    nome: nome,
+    tipo: tipo,
+    senha: senha,
+    terminaisDoUsuario: terminaisDoUsuario.map((e) => e.toDto()).toList(),
+  );
 }

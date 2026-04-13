@@ -51,7 +51,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl()));
   sl.registerFactory<EntradaManualDeProdutosBloc>(
-    () => EntradaManualDeProdutosBloc(),
+    () => EntradaManualDeProdutosBloc(sl()),
   );
 }
 

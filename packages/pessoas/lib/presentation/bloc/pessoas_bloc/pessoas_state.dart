@@ -3,6 +3,8 @@ part of 'pessoas_bloc.dart';
 abstract class PessoasState extends Equatable {
   List<Pessoa> get pessoas => [];
 
+  Pessoa? get pessoaSelecionada => null;
+
   final int pagina;
 
   const PessoasState({this.pagina = 0});
@@ -21,7 +23,10 @@ class PessoasCarregarSucesso extends PessoasState {
   @override
   final List<Pessoa> pessoas;
 
-  const PessoasCarregarSucesso({required this.pessoas, required super.pagina});
+  final Pessoa? pessoaSelecionada;
+
+  const PessoasCarregarSucesso(
+      {required this.pessoas, this.pessoaSelecionada, required super.pagina});
 }
 
 class PessoasCarregarFalha extends PessoasState {}

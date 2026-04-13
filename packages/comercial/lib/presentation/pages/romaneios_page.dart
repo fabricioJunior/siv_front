@@ -76,7 +76,10 @@ class RomaneiosPage extends StatelessWidget {
                                 final result = await Navigator.pushNamed(
                                   context,
                                   '/romaneio',
-                                  arguments: {'idRomaneio': romaneio.id},
+                                  arguments: {
+                                    'idRomaneio': romaneio.id,
+                                    'permitirEdicao': false,
+                                  },
                                 );
                                 if (result == true && context.mounted) {
                                   context.read<RomaneiosBloc>().add(

@@ -46,17 +46,44 @@ class _EntradaManulDeProdutosPageState
             EntradaManualDeProdutosState
           >(
             listenWhen: (previous, current) =>
-                previous.erro != current.erro && current.erro != null,
-            listener: (context, state) {
+                (previous.erro != current.erro && current.erro != null) ||
+                (previous.listaCompartilhadaHash !=
+                        current.listaCompartilhadaHash &&
+                    current.listaCompartilhadaHash != null),
+            listener: (context, state) async {
               final erro = state.erro;
-              if (erro == null) return;
+              if (erro != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(erro),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(erro),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              final listaCompartilhadaHash = state.listaCompartilhadaHash;
+              if (listaCompartilhadaHash == null) return;
+
+              final result = await Navigator.of(context).pushNamed(
+                '/criar_romaneio_por_parametros',
+                arguments: {
+                  'funcionarioId': state.funcionarioSelecionado?.id,
+                  'tabelaPrecoId': state.tabelaDePrecoSelecionada?.id,
+                  'operacao': 'transferencia_entrada',
+                  'listaCompartilhadaHash': listaCompartilhadaHash,
+                },
               );
+
+              if (!context.mounted) return;
+
+              if (result == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Romaneio criado com sucesso.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             builder: (context, state) {
               return Scaffold(
@@ -70,46 +97,43 @@ class _EntradaManulDeProdutosPageState
                           }
 
                           return FloatingActionButton.extended(
-                            onPressed: () async {
-                              final itens = _leitorController.itens
-                                  .map(
-                                    (e) => {
-                                      'produtoId': e.id,
-                                      'quantidade': e.quantidadeLida,
-                                      'valorUnitario': e.valorUnitario,
-                                    },
-                                  )
-                                  .toList();
-                              if (itens.isEmpty) {
-                                return;
-                              }
+                            onPressed: state.salvando
+                                ? null
+                                : () {
+                                    final itens = _leitorController.itens
+                                        .map(
+                                          (e) => {
+                                            'produtoId': e.id,
+                                            'quantidade': e.quantidadeLida,
+                                            'valorUnitario': e.valorUnitario,
+                                            'corNome': e.cor,
+                                            'tamanhoNome': e.tamanho,
+                                          },
+                                        )
+                                        .toList();
 
-                              final result = await Navigator.of(context)
-                                  .pushNamed(
-                                    '/criar_romaneio_por_parametros',
-                                    arguments: {
-                                      'funcionarioId':
-                                          state.funcionarioSelecionado?.id,
-                                      'tabelaPrecoId':
-                                          state.tabelaDePrecoSelecionada?.id,
-                                      'operacao': 'transferencia_entrada',
-                                      'itens': itens,
-                                    },
-                                  );
-
-                              if (result == true && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Romaneio criado com sucesso.',
+                                    context
+                                        .read<EntradaManualDeProdutosBloc>()
+                                        .add(
+                                          EntradaManualSalvarSolicitado(
+                                            itens: itens,
+                                          ),
+                                        );
+                                  },
+                            icon: state.salvando
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.save_outlined),
-                            label: const Text('Criar romaneio'),
+                                  )
+                                : const Icon(Icons.save_outlined),
+                            label: Text(
+                              state.salvando
+                                  ? 'Salvando lista...'
+                                  : 'Criar romaneio',
+                            ),
                           );
                         },
                       )

@@ -20,30 +20,32 @@ class AppState extends Equatable {
     Empresa? Function()? empresaDaSessao,
     Licenciado? Function()? licenciadoDaSessao,
     Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
-  }) =>
-      AppState(
-        statusAutenticacao: statusAutenticacao ?? this.statusAutenticacao,
-        usuarioDaSessao:
-            usuarioDaSessao != null ? usuarioDaSessao() : this.usuarioDaSessao,
-        empresaDaSessao:
-            empresaDaSessao != null ? empresaDaSessao() : this.empresaDaSessao,
-        licenciadoDaSessao: licenciadoDaSessao != null
-            ? licenciadoDaSessao()
-            : this.licenciadoDaSessao,
-        permissoesDoUsuario: permissoesDoUsuario ?? this.permissoesDoUsuario,
-      );
+  }) => AppState(
+    statusAutenticacao: statusAutenticacao ?? this.statusAutenticacao,
+    usuarioDaSessao: usuarioDaSessao != null
+        ? usuarioDaSessao()
+        : this.usuarioDaSessao,
+    empresaDaSessao: empresaDaSessao != null
+        ? empresaDaSessao()
+        : this.empresaDaSessao,
+    licenciadoDaSessao: licenciadoDaSessao != null
+        ? licenciadoDaSessao()
+        : this.licenciadoDaSessao,
+    permissoesDoUsuario: permissoesDoUsuario ?? this.permissoesDoUsuario,
+  );
 
   @override
   List<Object?> get props => [
-        statusAutenticacao,
-        usuarioDaSessao,
-        empresaDaSessao,
-        permissoesDoUsuario,
-      ];
+    statusAutenticacao,
+    usuarioDaSessao,
+    empresaDaSessao,
+    permissoesDoUsuario,
+  ];
 }
 
 enum StatusAutenticacao {
   autenticado,
   autenticando,
   naoAutenticao,
+  carregandoDados,
 }

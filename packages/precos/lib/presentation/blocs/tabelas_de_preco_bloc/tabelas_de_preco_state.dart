@@ -3,6 +3,8 @@ part of 'tabelas_de_preco_bloc.dart';
 abstract class TabelasDePrecoState extends Equatable {
   List<TabelaDePreco> get tabelas => [];
 
+  TabelaDePreco? get tabelaDePreco => null;
+
   const TabelasDePrecoState();
 
   @override
@@ -21,7 +23,13 @@ class TabelasDePrecoCarregarSucesso extends TabelasDePrecoState {
   @override
   final List<TabelaDePreco> tabelas;
 
-  const TabelasDePrecoCarregarSucesso({required this.tabelas});
+  @override
+  final TabelaDePreco? tabelaDePreco;
+
+  const TabelasDePrecoCarregarSucesso({
+    required this.tabelas,
+    required this.tabelaDePreco,
+  });
 }
 
 class TabelasDePrecoCarregarFalha extends TabelasDePrecoState {

@@ -3,6 +3,8 @@ part of 'funcionarios_bloc.dart';
 abstract class FuncionariosState extends Equatable {
   List<Funcionario> get funcionarios => [];
 
+  Funcionario? get funcionarioSelecionado => null;
+
   const FuncionariosState();
 
   @override
@@ -21,7 +23,10 @@ class FuncionariosCarregarSucesso extends FuncionariosState {
   @override
   final List<Funcionario> funcionarios;
 
-  const FuncionariosCarregarSucesso({required this.funcionarios});
+  final Funcionario? funcionarioSelecionado;
+
+  const FuncionariosCarregarSucesso(
+      {required this.funcionarios, required this.funcionarioSelecionado});
 }
 
 class FuncionariosCarregarFalha extends FuncionariosState {

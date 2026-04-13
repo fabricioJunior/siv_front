@@ -1,3 +1,4 @@
+import 'package:autenticacao/domain/models/terminal_do_usuario.dart';
 import 'package:core/equals.dart';
 
 abstract class Usuario implements Equatable {
@@ -7,12 +8,15 @@ abstract class Usuario implements Equatable {
   TipoUsuario get tipo;
   String? get senha;
 
+  List<TerminalDoUsuario> get terminaisDoUsuario;
+
   factory Usuario.create({
     required int id,
     required String login,
     required String nome,
     required TipoUsuario tipo,
     String? senha,
+    required List<TerminalDoUsuario> terminaisDoUsuario,
   }) = _UsuarioImpl;
 
   @override
@@ -39,11 +43,15 @@ class _UsuarioImpl implements Usuario {
   @override
   final String? senha;
 
+  @override
+  final List<TerminalDoUsuario> terminaisDoUsuario;
+
   _UsuarioImpl({
     required this.id,
     required this.login,
     required this.nome,
     required this.tipo,
+    required this.terminaisDoUsuario,
     this.senha,
   });
 
@@ -53,6 +61,7 @@ class _UsuarioImpl implements Usuario {
     String? nome,
     TipoUsuario? tipo,
     String? senha,
+    List<TerminalDoUsuario>? terminaisDoUsuario,
   }) {
     return _UsuarioImpl(
       id: id ?? this.id,
@@ -60,6 +69,7 @@ class _UsuarioImpl implements Usuario {
       nome: nome ?? this.nome,
       tipo: tipo ?? this.tipo,
       senha: senha ?? this.senha,
+      terminaisDoUsuario: terminaisDoUsuario ?? this.terminaisDoUsuario,
     );
   }
 
@@ -82,6 +92,7 @@ extension UsuarioCopyWith on Usuario {
     String? nome,
     TipoUsuario? tipo,
     String? senha,
+    List<TerminalDoUsuario>? terminaisDoUsuario,
   }) {
     if (this is _UsuarioImpl) {
       return (this as _UsuarioImpl).copyWith(
@@ -90,6 +101,7 @@ extension UsuarioCopyWith on Usuario {
         nome: nome,
         tipo: tipo,
         senha: senha,
+        terminaisDoUsuario: terminaisDoUsuario,
       );
     }
     return Usuario.create(
@@ -98,6 +110,7 @@ extension UsuarioCopyWith on Usuario {
       nome: nome ?? this.nome,
       tipo: tipo ?? this.tipo,
       senha: senha ?? this.senha,
+      terminaisDoUsuario: terminaisDoUsuario ?? this.terminaisDoUsuario,
     );
   }
 }

@@ -4,3 +4,8 @@ export 'domain/usecases/recuperar_empresa.dart';
 export 'domain/usecases/salvar_empresa.dart';
 export 'domain/usecases/recuperar_parametros_empresa.dart';
 export 'domain/usecases/atualizar_parametros_empresa.dart';
+export 'domain/usecases/criar_terminal.dart';
+export 'domain/usecases/recuperar_terminais.dart';
+export 'domain/usecases/recuperar_terminal.dart';
+export 'domain/usecases/atualizar_terminal.dart';
+export 'domain/usecases/desativar_terminal.dart';

@@ -1,17 +1,22 @@
 import 'package:autenticacao/data.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
+import 'package:autenticacao/domain/models/terminal_do_usuario.dart';
 import 'package:autenticacao/domain/models/usuario.dart';
 
 class UsuariosRepository implements IUsuariosRepository {
   final IUsuariosRemoteDataSource usuariosRemoteDataSource;
   final IUsuarioDaSessaoRemoteDataSource usuarioDaSessaoRemoteDataSource;
   final IUsuarioDaSessaoLocalDataSource usuarioDaSessaoLocalDataSource;
+  final ITerminaisDoUsuarioRemoteDataSource terminaisDoUsuarioRemoteDataSource;
+  final ITerminaisDaEmpresaRemoteDataSource terminaisDaEmpresaRemoteDataSource;
 
   UsuariosRepository({
     required this.usuariosRemoteDataSource,
     required this.usuarioDaSessaoRemoteDataSource,
     required this.usuarioDaSessaoLocalDataSource,
+    required this.terminaisDoUsuarioRemoteDataSource,
+    required this.terminaisDaEmpresaRemoteDataSource,
   });
 
   @override
@@ -37,6 +42,37 @@ class UsuariosRepository implements IUsuariosRepository {
   }
 
   @override
+  Future<List<TerminalDoUsuario>> buscarTerminaisDaEmpresa({
+    required int idEmpresa,
+  }) {
+    return terminaisDaEmpresaRemoteDataSource.buscarTerminaisDaEmpresa(
+      idEmpresa,
+    );
+  }
+
+  @override
+  Future<List<TerminalDoUsuario>> buscarTerminaisDoUsuario({
+    required int usuarioId,
+    required int idEmpresa,
+  }) {
+    return terminaisDoUsuarioRemoteDataSource.buscarTerminaisDoUsuario(
+      usuarioId,
+      idEmpresa,
+    );
+  }
+
+  @override
+  Future<void> desvincularTerminalDoUsuario({
+    required int usuarioId,
+    required int terminalId,
+  }) {
+    return terminaisDoUsuarioRemoteDataSource.desvincularTerminalDoUsuario(
+      usuarioId: usuarioId,
+      terminalId: terminalId,
+    );
+  }
+
+  @override
   Future<Usuario?> getUsuarioDaSessaoSalvo() async {
     var all = await usuarioDaSessaoLocalDataSource.fetchAll();
     return all.isEmpty ? null : all.first;
@@ -45,6 +81,19 @@ class UsuariosRepository implements IUsuariosRepository {
   @override
   Future<void> salvarUsuarioDaSessao(Usuario usuario) {
     return usuarioDaSessaoLocalDataSource.put(usuario);
+  }
+
+  @override
+  Future<void> vincularTerminalAoUsuario({
+    required int usuarioId,
+    required int terminalId,
+    required int idEmpresa,
+  }) {
+    return terminaisDoUsuarioRemoteDataSource.vincularTerminalAoUsuario(
+      usuarioId: usuarioId,
+      terminalId: terminalId,
+      idEmpresa: idEmpresa,
+    );
   }
 
   @override

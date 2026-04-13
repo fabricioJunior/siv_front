@@ -8,10 +8,10 @@ abstract class RomaneioCriacaoEvent extends Equatable {
 }
 
 class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
-  final Map<String, dynamic> parametros;
+  final String hashLista;
 
-  const RomaneioCriacaoSolicitada({required this.parametros});
+  const RomaneioCriacaoSolicitada({required this.hashLista});
 
   @override
-  List<Object?> get props => [parametros];
+  List<Object?> get props => [hashLista];
 }

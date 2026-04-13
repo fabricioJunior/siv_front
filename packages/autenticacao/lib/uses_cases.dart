@@ -1,5 +1,3 @@
-library uses_cases;
-
 export 'domain/usecases/on_autenticado.dart';
 export 'domain/usecases/on_desautenticado.dart';
 export 'domain/usecases/esta_autenticado.dart';
@@ -9,6 +7,10 @@ export 'domain/usecases/recuperar_licenciados.dart';
 export 'domain/usecases/recuperar_usuario_da_sessao.dart';
 export 'domain/usecases/salvar_licenciado_da_sessao.dart';
 export 'domain/usecases/salvar_usuario.dart';
+export 'domain/usecases/terminais_do_usuario/desvincular_terminal_do_usuario.dart';
+export 'domain/usecases/terminais_do_usuario/recuperar_terminais_da_empresa.dart';
+export 'domain/usecases/terminais_do_usuario/recuperar_terminais_do_usuario.dart';
+export 'domain/usecases/terminais_do_usuario/vincular_terminal_ao_usuario.dart';
 export 'domain/usecases/recuperar_permissoes.dart';
 export 'domain/usecases/grupos_de_acesso/atualizar_grupo_de_acesso.dart';
 export 'domain/usecases/criar_grupo_de_acesso.dart';

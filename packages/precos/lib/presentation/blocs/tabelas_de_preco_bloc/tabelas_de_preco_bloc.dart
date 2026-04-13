@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:flutter/material.dart';
 import 'package:precos/models.dart';
 import 'package:precos/use_cases.dart';
 
@@ -31,7 +32,15 @@ class TabelasDePrecoBloc
         nome: event.busca,
         inativa: event.inativa,
       );
-      emit(TabelasDePrecoCarregarSucesso(tabelas: tabelas.toList()));
+      var tabela = tabelas
+          .where((t) => t.id == event.tabelaInicialId)
+          .firstOrNull;
+      emit(
+        TabelasDePrecoCarregarSucesso(
+          tabelas: tabelas.toList(),
+          tabelaDePreco: tabela,
+        ),
+      );
     } catch (e, s) {
       emit(const TabelasDePrecoCarregarFalha());
       addError(e, s);

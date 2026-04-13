@@ -71,6 +71,9 @@ class SeletorGenerico<T> extends StatefulWidget {
   final List<String> confirmarEmSeparadores;
 
   final SelectData Function(T item) toSelectData;
+
+  final bool onlyView;
+
   const SeletorGenerico({
     super.key,
     required this.itens,
@@ -87,6 +90,7 @@ class SeletorGenerico<T> extends StatefulWidget {
     this.sugestaoLeadingBuilder,
     this.sugestaoTrailingBuilder,
     this.confirmarEmSeparadores = const [],
+    this.onlyView = false,
   });
 
   @override
@@ -169,15 +173,16 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             Expanded(
               child: Text(widget.titulo, style: theme.textTheme.titleMedium),
             ),
-            Chip(
-              label: Text(
-                widget.modo == SeletorGenericoModo.unica
-                    ? 'Seleção única'
-                    : 'Seleção múltipla',
+            if (!widget.onlyView)
+              Chip(
+                label: Text(
+                  widget.modo == SeletorGenericoModo.unica
+                      ? 'Seleção única'
+                      : 'Seleção múltipla',
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -302,12 +307,16 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   }
 
   String _hintText() {
+    if (widget.onlyView) {
+      return '';
+    }
     if (_selecionados.isEmpty) {
       return widget.hintText;
     }
     if (widget.modo == SeletorGenericoModo.unica) {
       return 'Substituir seleção';
     }
+
     return 'Adicionar item';
   }
 

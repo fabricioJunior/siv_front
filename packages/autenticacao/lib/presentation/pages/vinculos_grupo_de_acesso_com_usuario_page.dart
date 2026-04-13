@@ -280,11 +280,11 @@ class _GruposDeAcessoModal extends StatelessWidget {
               child: BlocBuilder<GruposDeAcessoBloc, GruposDeAcessoState>(
                 builder: (context, state) {
                   switch (state.runtimeType) {
-                    case GruposDeAcessoCarregarEmProgresso:
+                    case const (GruposDeAcessoCarregarEmProgresso):
                       return const Center(
                         child: CircularProgressIndicator.adaptive(),
                       );
-                    case GruposDeAcessoCarregarError:
+                    case const (GruposDeAcessoCarregarError):
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16),

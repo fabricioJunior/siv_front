@@ -31,12 +31,12 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider<EmpresasBloc>.value(
       value: _bloc,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Selecionar empresa'),
-        ),
+        appBar: AppBar(title: const Text('Selecionar empresa')),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -71,19 +71,38 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
 
                       if (state is EmpresasCarregarFalha) {
                         return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text('Falha ao carregar empresas.'),
-                              const SizedBox(height: 8),
-                              OutlinedButton.icon(
-                                onPressed: () {
-                                  _bloc.add(EmpresasIniciou());
-                                },
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Tentar novamente'),
-                              ),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.wifi_off_rounded,
+                                  size: 40,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Não foi possível carregar as empresas disponíveis.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Verifique sua conexão ou tente novamente em alguns instantes.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  onPressed: () {
+                                    _bloc.add(EmpresasIniciou());
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Tentar novamente'),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }
@@ -95,26 +114,60 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
 
                       if (empresasFiltradas.isEmpty) {
                         return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Nenhuma empresa disponível para seleção.',
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                key: const Key(
-                                    'selecionar_empresa_cadastrar_button'),
-                                onPressed: () async {
-                                  await Navigator.of(context)
-                                      .pushNamed('/empresa');
-                                  _bloc.add(EmpresasIniciou());
-                                },
-                                icon: const Icon(Icons.add_business_outlined),
-                                label: const Text('Cadastrar empresa'),
-                              ),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 40,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Seu login foi validado, mas não há empresas disponíveis para seleção.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Você pode cadastrar uma empresa agora ou pedir a vinculação ao administrador.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 16),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  alignment: WrapAlignment.center,
+                                  children: [
+                                    OutlinedButton.icon(
+                                      onPressed: () {
+                                        _bloc.add(EmpresasIniciou());
+                                      },
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Atualizar lista'),
+                                    ),
+                                    ElevatedButton.icon(
+                                      key: const Key(
+                                        'selecionar_empresa_cadastrar_button',
+                                      ),
+                                      onPressed: () async {
+                                        await Navigator.of(
+                                          context,
+                                        ).pushNamed('/empresa');
+                                        _bloc.add(EmpresasIniciou());
+                                      },
+                                      icon: const Icon(
+                                        Icons.add_business_outlined,
+                                      ),
+                                      label: const Text('Cadastrar empresa'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }

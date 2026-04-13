@@ -15,41 +15,69 @@ class UsuariosPage extends StatelessWidget {
       child: Scaffold(
         floatingActionButton: _newUserButton(context),
         appBar: AppBar(
-          title: const Text('Usuarios'),
+          title: const Text('Usuários'),
+          actions: [
+            IconButton(
+              tooltip: 'Atualizar',
+              onPressed: () {
+                context.read<UsuariosBloc>().add(UsuariosIniciou());
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              BlocBuilder<UsuariosBloc, UsuariosState>(
-                builder: (context, state) {
-                  if (state is UsuariosCarregarEmProgresso) {
-                    return const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator.adaptive(),
-                      ],
-                    );
-                  }
-                  if (state is UsuariosCarregarFalha) {
-                    return const Text('Falha ao carregar usuários');
-                  }
-                  return Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: state.usuarios.length,
-                      itemBuilder: (context, index) {
-                        var usuario = state.usuarios[index];
-                        return _usuarioCard(context, usuario);
-                      },
-                    ),
-                  );
-                },
-              )
-            ],
-          ),
+        body: BlocBuilder<UsuariosBloc, UsuariosState>(
+          builder: (context, state) {
+            if (state is UsuariosCarregarEmProgresso) {
+              return const Center(child: CircularProgressIndicator.adaptive());
+            }
+
+            if (state is UsuariosCarregarFalha) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 42),
+                      const SizedBox(height: 12),
+                      const Text('Falha ao carregar usuários'),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () {
+                          context.read<UsuariosBloc>().add(UsuariosIniciou());
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            if (state.usuarios.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'Nenhum usuário cadastrado. Toque em + para criar o primeiro usuário.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+              itemCount: state.usuarios.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final usuario = state.usuarios[index];
+                return _usuarioCard(context, usuario);
+              },
+            );
+          },
         ),
       ),
     );
@@ -81,29 +109,25 @@ class UsuariosPage extends StatelessWidget {
             context.read<UsuariosBloc>().add(UsuariosIniciou());
           },
           child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          usuario.nome,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ),
-                      Text(usuario.tipo.nome)
-                    ],
-                  ),
-                  Row(
-                    children: [Text(usuario.login)],
-                  ),
-                ],
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
               ),
+              leading: CircleAvatar(
+                child: Text(
+                  usuario.nome.isEmpty
+                      ? '?'
+                      : usuario.nome.substring(0, 1).toUpperCase(),
+                ),
+              ),
+              title: Text(
+                usuario.nome,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text('${usuario.login} • ${usuario.tipo.nome}'),
+              trailing: const Icon(Icons.chevron_right),
             ),
           ),
         ),

@@ -16,6 +16,8 @@ import 'package:autenticacao/domain/data/data_sourcers/local/i_permissoes_do_usu
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_licenciados_remote_data_source.dart';
+import 'package:autenticacao/domain/data/data_sourcers/remote/i_terminais_da_empresa_remote_data_source.dart';
+import 'package:autenticacao/domain/data/data_sourcers/remote/i_terminais_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
@@ -29,6 +31,7 @@ import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:autenticacao/presentation/bloc/permissoes_bloc/permissoes_bloc.dart';
+import 'package:autenticacao/presentation/bloc/terminais_do_usuario_bloc/terminais_do_usuario_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuario_bloc/usuario_bloc.dart';
 import 'package:autenticacao/presentation/bloc/usuarios_bloc/usuarios_bloc.dart';
 import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
@@ -105,6 +108,15 @@ void _presentation() {
       sl(),
     ),
   );
+
+  sl.registerFactory<TerminaisDoUsuarioBloc>(
+    () => TerminaisDoUsuarioBloc(
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
 }
 
 void _usesCases() {
@@ -170,6 +182,31 @@ void _usesCases() {
 
   sl.registerFactory<SalvarUsuario>(
     () => SalvarUsuario(
+      usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarTerminaisDoUsuario>(
+    () => RecuperarTerminaisDoUsuario(
+      usuariosRepository: sl(),
+      empresasRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarTerminaisDaEmpresa>(
+    () => RecuperarTerminaisDaEmpresa(
+      usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<VincularTerminalAoUsuario>(
+    () => VincularTerminalAoUsuario(
+      usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<DesvincularTerminalDoUsuario>(
+    () => DesvincularTerminalDoUsuario(
       usuariosRepository: sl(),
     ),
   );
@@ -261,6 +298,8 @@ void _repositories() {
       usuariosRemoteDataSource: sl(),
       usuarioDaSessaoRemoteDataSource: sl(),
       usuarioDaSessaoLocalDataSource: sl(),
+      terminaisDoUsuarioRemoteDataSource: sl(),
+      terminaisDaEmpresaRemoteDataSource: sl(),
     ),
   );
 
@@ -356,6 +395,18 @@ void _remoteData() {
 
   sl.registerFactory<IVinculoGrupoDeAcessoDoUsuarioRemoteDataSource>(
     () => VinculorGrupoDeAcessoDoUsuarioRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<ITerminaisDoUsuarioRemoteDataSource>(
+    () => TerminaisDoUsuarioRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<ITerminaisDaEmpresaRemoteDataSource>(
+    () => TerminaisDaEmpresaRemoteDataSource(
       informacoesParaRequest: sl(),
     ),
   );

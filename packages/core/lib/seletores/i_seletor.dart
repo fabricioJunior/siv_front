@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 typedef SeletorWidget = Widget Function({
   List<SelectData>? itemsSelecionadosInicial,
   void Function(List<SelectData>)? onChanged,
+  bool? onlyView,
 });
 
 abstract class ISeletor extends Widget {

@@ -4,14 +4,18 @@ enum RomaneioCriacaoStep { inicial, processando, sucesso, falha }
 
 class RomaneioCriacaoState extends Equatable {
   final RomaneioCriacaoStep step;
-  final Map<String, dynamic>? parametros;
+  final String? hashLista;
+  final ListaDeProdutosCompartilhada? listaCompartilhada;
+  final List<ProdutoCompartilhado> produtosCompartilhados;
   final Romaneio? romaneio;
   final String? erro;
   final int totalItensProcessados;
 
   const RomaneioCriacaoState({
     required this.step,
-    this.parametros,
+    this.hashLista,
+    this.listaCompartilhada,
+    this.produtosCompartilhados = const [],
     this.romaneio,
     this.erro,
     this.totalItensProcessados = 0,
@@ -19,29 +23,30 @@ class RomaneioCriacaoState extends Equatable {
 
   const RomaneioCriacaoState.initial()
       : step = RomaneioCriacaoStep.inicial,
-        parametros = null,
+        hashLista = null,
+        listaCompartilhada = null,
+        produtosCompartilhados = const [],
         romaneio = null,
         erro = null,
         totalItensProcessados = 0;
 
   RomaneioCriacaoState copyWith({
     RomaneioCriacaoStep? step,
-    Object? parametros = _sentinelaRomaneioCriacao,
-    Object? romaneio = _sentinelaRomaneioCriacao,
-    Object? erro = _sentinelaRomaneioCriacao,
+    String? hashLista,
+    ListaDeProdutosCompartilhada? listaCompartilhada,
+    List<ProdutoCompartilhado>? produtosCompartilhados,
+    Romaneio? romaneio,
+    String? erro,
     int? totalItensProcessados,
   }) {
     return RomaneioCriacaoState(
       step: step ?? this.step,
-      parametros: identical(parametros, _sentinelaRomaneioCriacao)
-          ? this.parametros
-          : parametros as Map<String, dynamic>?,
-      romaneio: identical(romaneio, _sentinelaRomaneioCriacao)
-          ? this.romaneio
-          : romaneio as Romaneio?,
-      erro: identical(erro, _sentinelaRomaneioCriacao)
-          ? this.erro
-          : erro as String?,
+      hashLista: hashLista ?? this.hashLista,
+      listaCompartilhada: listaCompartilhada ?? this.listaCompartilhada,
+      produtosCompartilhados:
+          produtosCompartilhados ?? this.produtosCompartilhados,
+      romaneio: romaneio ?? this.romaneio,
+      erro: erro ?? this.erro,
       totalItensProcessados:
           totalItensProcessados ?? this.totalItensProcessados,
     );
@@ -50,11 +55,11 @@ class RomaneioCriacaoState extends Equatable {
   @override
   List<Object?> get props => [
         step,
-        parametros,
+        hashLista,
+        listaCompartilhada,
+        produtosCompartilhados,
         romaneio,
         erro,
         totalItensProcessados,
       ];
 }
-
-const Object _sentinelaRomaneioCriacao = Object();

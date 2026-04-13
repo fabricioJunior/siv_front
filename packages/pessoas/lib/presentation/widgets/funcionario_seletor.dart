@@ -18,29 +18,24 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
 
   final String titulo;
 
-  FuncionarioSeletor({
+  final bool onlyView;
+
+  const FuncionarioSeletor({
     super.key,
     this.modo = FuncionarioSeletorModo.unica,
     this.funcionariosSelecionadosIniciais = const [],
+    required this.itemsSelecionadosInicial,
     this.onFuncionarioChanged,
     this.titulo = 'Funcionários',
     this.onChanged,
+    this.onlyView = false,
   });
 
   @override
   State<FuncionarioSeletor> createState() => _FuncionarioSeletorState();
 
   @override
-  List<SelectData> get itemsSelecionadosInicial =>
-      funcionariosSelecionadosIniciais
-          .map(
-            (f) => SelectData(
-              id: f.id,
-              nome: f.nome,
-              data: f.toJson(),
-            ),
-          )
-          .toList();
+  final List<SelectData>? itemsSelecionadosInicial;
 }
 
 class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
@@ -49,7 +44,10 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
   @override
   void initState() {
     super.initState();
-    _funcionariosBloc = sl<FuncionariosBloc>()..add(FuncionariosIniciou());
+    _funcionariosBloc = sl<FuncionariosBloc>()
+      ..add(FuncionariosIniciou(
+          idFuncionarioSelecionado:
+              widget.itemsSelecionadosInicial?.firstOrNull?.id));
   }
 
   @override
@@ -78,7 +76,30 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
             );
           }
 
-          if (state.funcionarios.isEmpty) {
+          final funcionariosAtivos =
+              state.funcionarios.where((f) => !f.inativo).toList();
+          final idsSelecionadosIniciais = widget
+              .funcionariosSelecionadosIniciais
+              .map((funcionario) => funcionario.id)
+              .toSet();
+          final funcionariosSelecionados =
+              widget.funcionariosSelecionadosIniciais
+                  .map(
+                    (funcionarioInicial) => state.funcionarios.firstWhere(
+                      (funcionario) => funcionario.id == funcionarioInicial.id,
+                      orElse: () => funcionarioInicial,
+                    ),
+                  )
+                  .toList();
+          final funcionariosDisponiveis = [
+            ...funcionariosSelecionados,
+            ...funcionariosAtivos.where(
+              (funcionario) =>
+                  !idsSelecionadosIniciais.contains(funcionario.id),
+            ),
+          ];
+
+          if (funcionariosDisponiveis.isEmpty) {
             return _mensagem(
               context,
               'Nenhum funcionário disponível para seleção.',
@@ -86,27 +107,22 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
             );
           }
 
-          final funcionariosAtivos =
-              state.funcionarios.where((f) => !f.inativo).toList();
-
           return SeletorGenerico<Funcionario>(
             toSelectData: (item) => SelectData(
               id: item.id,
               nome: item.nome,
               data: item.toJson(),
             ),
-            itens: funcionariosAtivos,
+            itens: funcionariosDisponiveis,
             itemLabel: (f) => f.nome,
             itemKey: (f) => f.id,
+            onlyView: widget.onlyView,
             modo: widget.modo == FuncionarioSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: widget.funcionariosSelecionadosIniciais
-                .where(
-                  (inicial) =>
-                      funcionariosAtivos.any((a) => a.id == inicial.id),
-                )
-                .toList(),
+            selecionadosIniciais: state.funcionarioSelecionado != null
+                ? [state.funcionarioSelecionado!]
+                : widget.funcionariosSelecionadosIniciais,
             onChanged: (List<Funcionario> selecionados) {
               widget.onFuncionarioChanged?.call(selecionados);
               widget.onChanged?.call(

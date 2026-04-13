@@ -30,6 +30,7 @@ void _presentation() {
   sl.registerFactory<PessoasBloc>(
     () => PessoasBloc(
       sl(),
+      sl(),
     ),
   );
 
@@ -69,6 +70,7 @@ void _presentation() {
 
   sl.registerFactory<FuncionariosBloc>(
     () => FuncionariosBloc(
+      sl(),
       sl(),
     ),
   );

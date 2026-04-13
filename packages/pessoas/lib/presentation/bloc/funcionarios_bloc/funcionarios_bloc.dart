@@ -10,8 +10,9 @@ part 'funcionarios_state.dart';
 
 class FuncionariosBloc extends Bloc<FuncionariosEvent, FuncionariosState> {
   final RecuperarFuncionarios _recuperarFuncionarios;
+  final RecuperarFuncionario _recuperarFuncionario;
 
-  FuncionariosBloc(this._recuperarFuncionarios)
+  FuncionariosBloc(this._recuperarFuncionarios, this._recuperarFuncionario)
       : super(const FuncionariosInitial()) {
     on<FuncionariosIniciou>(_onFuncionariosIniciou);
   }
@@ -23,7 +24,13 @@ class FuncionariosBloc extends Bloc<FuncionariosEvent, FuncionariosState> {
     try {
       emit(const FuncionariosCarregarEmProgresso());
       final funcionarios = await _recuperarFuncionarios.call();
-      emit(FuncionariosCarregarSucesso(funcionarios: funcionarios.toList()));
+      final funcionario = event.idFuncionarioSelecionado != null
+          ? await _recuperarFuncionario(
+              idFuncionario: event.idFuncionarioSelecionado!)
+          : null;
+      emit(FuncionariosCarregarSucesso(
+          funcionarios: funcionarios.toList(),
+          funcionarioSelecionado: funcionario));
     } catch (e, s) {
       emit(const FuncionariosCarregarFalha());
       addError(e, s);

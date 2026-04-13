@@ -2,9 +2,9 @@ part of 'romaneio_bloc.dart';
 
 class RomaneioState extends Equatable {
   final int? id;
-  final String? pessoaId;
-  final String? funcionarioId;
-  final String? tabelaPrecoId;
+  final int? pessoaId;
+  final int? funcionarioId;
+  final int? tabelaPrecoId;
   final TipoOperacao? operacao;
   final String? observacao;
   final List<RomaneioItem> itens;
@@ -27,9 +27,9 @@ class RomaneioState extends Equatable {
 
   const RomaneioState.initial()
       : id = null,
-        pessoaId = '',
-        funcionarioId = '',
-        tabelaPrecoId = '',
+        pessoaId = null,
+        funcionarioId = null,
+        tabelaPrecoId = null,
         operacao = TipoOperacao.venda,
         observacao = '',
         itens = const [],
@@ -42,9 +42,9 @@ class RomaneioState extends Equatable {
     List<RomaneioItem> itensDoRomaneio = const [],
     RomaneioStep? step,
   })  : id = model.id,
-        pessoaId = (model.pessoaId ?? '').toString(),
-        funcionarioId = (model.funcionarioId ?? '').toString(),
-        tabelaPrecoId = (model.tabelaPrecoId ?? '').toString(),
+        pessoaId = model.pessoaId,
+        funcionarioId = model.funcionarioId,
+        tabelaPrecoId = model.tabelaPrecoId,
         operacao = model.operacao ?? TipoOperacao.venda,
         observacao = model.observacao ?? '',
         itens = itensDoRomaneio,
@@ -54,9 +54,9 @@ class RomaneioState extends Equatable {
 
   RomaneioState copyWith({
     int? id,
-    String? pessoaId,
-    String? funcionarioId,
-    String? tabelaPrecoId,
+    int? pessoaId,
+    int? funcionarioId,
+    int? tabelaPrecoId,
     TipoOperacao? operacao,
     String? observacao,
     List<RomaneioItem>? itens,

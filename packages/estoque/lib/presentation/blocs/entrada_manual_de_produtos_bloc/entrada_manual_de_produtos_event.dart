@@ -35,5 +35,14 @@ class EntradaManualEdicaoSolicitada extends EntradaManualDeProdutosEvent {
 }
 
 class EntradaManualSalvarSolicitado extends EntradaManualDeProdutosEvent {
-  const EntradaManualSalvarSolicitado();
+  final List<Map<String, dynamic>> itens;
+  final String operacao;
+
+  const EntradaManualSalvarSolicitado({
+    required this.itens,
+    this.operacao = 'transferencia_entrada',
+  });
+
+  @override
+  List<Object?> get props => [itens, operacao];
 }

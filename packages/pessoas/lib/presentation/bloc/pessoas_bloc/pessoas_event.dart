@@ -4,5 +4,6 @@ abstract class PessoasEvent {}
 
 class PessoasIniciou extends PessoasEvent {
   final String? busca;
-  PessoasIniciou({this.busca});
+  final int? idPessoaSelecionada;
+  PessoasIniciou({this.busca, this.idPessoaSelecionada});
 }

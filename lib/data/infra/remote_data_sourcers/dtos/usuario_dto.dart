@@ -1,11 +1,12 @@
+import 'package:autenticacao/domain/models/terminal_do_usuario.dart';
 import 'package:autenticacao/models.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../local_data_sourcers/dtos/terminal_do_usuario_dto.dart';
+
 part 'usuario_dto.g.dart';
 
-@JsonSerializable(
-  createToJson: false,
-)
+@JsonSerializable(createToJson: false)
 class UsuarioDto implements Usuario {
   @override
   final int id;
@@ -22,11 +23,16 @@ class UsuarioDto implements Usuario {
   @override
   final TipoUsuario tipo;
 
+  @override
+  @JsonKey(defaultValue: [])
+  final List<TerminalDoUsuarioDto> terminaisDoUsuario;
+
   UsuarioDto({
     required this.id,
     required this.login,
     required this.nome,
     required this.tipo,
+    required this.terminaisDoUsuario,
     this.senha,
   });
 
@@ -36,11 +42,7 @@ class UsuarioDto implements Usuario {
   @override
   @override
   @JsonKey(includeFromJson: true)
-  List<Object?> get props => [
-        id,
-        login,
-        nome,
-      ];
+  List<Object?> get props => [id, login, nome, terminaisDoUsuario];
 
   @override
   @JsonKey(includeFromJson: true)

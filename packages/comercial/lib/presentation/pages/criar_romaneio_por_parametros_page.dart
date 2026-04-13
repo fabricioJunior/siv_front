@@ -5,18 +5,20 @@ import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 
 class CriarRomaneioPorParametrosPage extends StatelessWidget {
-  final Map<String, dynamic> parametros;
+  final String hashLista;
 
   const CriarRomaneioPorParametrosPage({
     super.key,
-    required this.parametros,
+    required this.hashLista,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RomaneioCriacaoBloc>(
       create: (_) => sl<RomaneioCriacaoBloc>()
-        ..add(RomaneioCriacaoSolicitada(parametros: parametros)),
+        ..add(
+          RomaneioCriacaoSolicitada(hashLista: hashLista),
+        ),
       child: BlocConsumer<RomaneioCriacaoBloc, RomaneioCriacaoState>(
         listenWhen: (previous, current) => previous.erro != current.erro,
         listener: (context, state) {
@@ -37,14 +39,13 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                 RomaneioCriacaoStep.inicial ||
                 RomaneioCriacaoStep.processando =>
                   _ProcessandoRomaneioView(
-                    quantidadeItens:
-                        _contarItensInformados(state.parametros ?? parametros),
+                    quantidadeItens: state.produtosCompartilhados.length,
                   ),
                 RomaneioCriacaoStep.falha => _FalhaRomaneioView(
                     erro: state.erro ?? 'Falha ao criar romaneio.',
                     onTentarNovamente: () {
                       context.read<RomaneioCriacaoBloc>().add(
-                            RomaneioCriacaoSolicitada(parametros: parametros),
+                            RomaneioCriacaoSolicitada(hashLista: hashLista),
                           );
                     },
                   ),
@@ -58,11 +59,6 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
         },
       ),
     );
-  }
-
-  int _contarItensInformados(Map<String, dynamic> parametros) {
-    final itens = parametros['itens'];
-    return itens is List ? itens.length : 0;
   }
 }
 
@@ -80,7 +76,9 @@ class _ProcessandoRomaneioView extends StatelessWidget {
           const CircularProgressIndicator.adaptive(),
           const SizedBox(height: 16),
           Text(
-            'Criando romaneio e enviando $quantidadeItens item(ns)...',
+            quantidadeItens > 0
+                ? 'Criando romaneio e enviando $quantidadeItens item(ns)...'
+                : 'Criando romaneio a partir da lista compartilhada...',
             textAlign: TextAlign.center,
           ),
         ],
@@ -180,7 +178,10 @@ class _SucessoRomaneioView extends StatelessWidget {
               : () {
                   Navigator.of(context).pushReplacementNamed(
                     '/romaneio',
-                    arguments: {'idRomaneio': romaneio!.id},
+                    arguments: {
+                      'idRomaneio': romaneio!.id,
+                      'permitirEdicao': false,
+                    },
                   );
                 },
           icon: const Icon(Icons.open_in_new),

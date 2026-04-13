@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io' show SocketException;
 
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/remote_data_sourcers.dart' show HttpException;
 
 import '../../../domain/models/empresa.dart';
 import '../../../domain/models/licenciado.dart';
@@ -46,9 +48,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(LoginCarregarEmpresasSucesso(state, empresas: empresas));
     } catch (e, s) {
       emit(
-        LoginAutenticarFalha(
-          state,
-          erro: 'Não foi possível atualizar a lista de empresas.',
+        _criarEstadoDeFalha(
+          e,
+          currentState: state,
+          fallbackType: LoginErroTipo.carregamentoEmpresas,
         ),
       );
       addError(e, s);
@@ -70,10 +73,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(LoginCarregarLicenciadosSucesso(state, licenciados: licenciados));
     } catch (e, s) {
       emit(
-        LoginAutenticarFalha(
-          state,
-          erro:
-              'Não foi possível carregar os licenciados. Verifique sua conexão e configuração do Firebase.',
+        _criarEstadoDeFalha(
+          e,
+          currentState: state,
+          fallbackType: LoginErroTipo.carregamentoLicenciados,
         ),
       );
       addError(e, s);
@@ -110,54 +113,184 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     LoginAutenticou event,
     Emitter<LoginState> emit,
   ) async {
+    final usuario = state.usuario?.trim() ?? '';
+    final senha = state.senha ?? '';
+
     if (state.licenciadoSelecionado == null) {
       emit(
         LoginAutenticarFalha(
           state,
-          erro: 'Selecione o licenciado para continuar',
+          tipo: LoginErroTipo.validacao,
+          erro: 'Selecione o licenciado para continuar.',
+        ),
+      );
+      return;
+    }
+
+    if (usuario.isEmpty) {
+      emit(
+        LoginAutenticarFalha(
+          state,
+          tipo: LoginErroTipo.validacao,
+          erro: 'Informe o usuário para continuar.',
+        ),
+      );
+      return;
+    }
+
+    if (senha.isEmpty) {
+      emit(
+        LoginAutenticarFalha(
+          state,
+          tipo: LoginErroTipo.validacao,
+          erro: 'Informe a senha para continuar.',
         ),
       );
       return;
     }
 
     try {
-      _apiBaseUrlConfig.atualizar(
-        state.licenciadoSelecionado!.urlApi,
-      );
+      _apiBaseUrlConfig.atualizar(state.licenciadoSelecionado!.urlApi);
 
       emit(LoginAutenticarEmProgresso(state, idEmpresa: event.empresa?.id));
-      var token = await _criarTokenDeAutenticacao(
-        usuario: state.usuario ?? '',
-        senha: state.senha ?? '',
+      final token = await _criarTokenDeAutenticacao(
+        usuario: usuario,
+        senha: senha,
         empresa: event.empresa,
       );
 
       await _recuperarUsuarioDaSessao.call();
       if (token == null) {
-        emit(LoginAutenticarFalha(state, erro: 'Usuário ou senha incorretos'));
+        emit(
+          LoginAutenticarFalha(
+            state,
+            tipo: LoginErroTipo.credenciaisInvalidas,
+            erro:
+                'Usuário ou senha incorretos. Revise os dados e tente novamente.',
+          ),
+        );
         return;
       }
 
-      await _salvarLicenciadoDaSessao.call(
-        state.licenciadoSelecionado!,
-      );
+      await _salvarLicenciadoDaSessao.call(state.licenciadoSelecionado!);
 
-      List<Empresa> empresas =
-          state.empresas ?? await _recuperarEmpresas.call();
+      List<Empresa> empresas;
+      try {
+        empresas = state.empresas ?? await _recuperarEmpresas.call();
+      } catch (e, s) {
+        emit(
+          _criarEstadoDeFalha(
+            e,
+            currentState: state,
+            fallbackType: LoginErroTipo.carregamentoEmpresas,
+          ),
+        );
+        addError(e, s);
+        return;
+      }
 
       emit(
-        LoginAutenticarSucesso(state,
-            empresas: empresas, idEmpresa: event.empresa?.id),
+        LoginAutenticarSucesso(
+          state,
+          empresas: empresas,
+          idEmpresa: event.empresa?.id,
+        ),
       );
     } catch (e, s) {
       emit(
-        LoginAutenticarFalha(
-          state,
-          erro:
-              'Falha na autenticação, verifique sua conexão, caso o problema continue entre em contato com o suporte',
+        _criarEstadoDeFalha(
+          e,
+          currentState: state,
+          fallbackType: LoginErroTipo.desconhecido,
+          empresaSelecionada: event.empresa != null,
         ),
       );
       addError(e, s);
     }
+  }
+
+  LoginAutenticarFalha _criarEstadoDeFalha(
+    Object error, {
+    required LoginState currentState,
+    required LoginErroTipo fallbackType,
+    bool empresaSelecionada = false,
+  }) {
+    if (error is SocketException) {
+      return LoginAutenticarFalha(
+        currentState,
+        tipo: LoginErroTipo.semConexao,
+        erro:
+            'Não foi possível conectar com o servidor. Verifique sua internet e tente novamente.',
+      );
+    }
+
+    if (error is TimeoutException) {
+      return LoginAutenticarFalha(
+        currentState,
+        tipo: LoginErroTipo.tempoEsgotado,
+        erro:
+            'O servidor demorou para responder. Aguarde alguns instantes e tente novamente.',
+      );
+    }
+
+    if (error is HttpException) {
+      switch (error.statusCode) {
+        case 400:
+          return LoginAutenticarFalha(
+            currentState,
+            tipo: fallbackType == LoginErroTipo.carregamentoLicenciados
+                ? LoginErroTipo.configuracaoInvalida
+                : fallbackType,
+            erro: fallbackType == LoginErroTipo.carregamentoLicenciados
+                ? 'Não foi possível carregar os licenciados. Verifique a configuração do ambiente.'
+                : 'Os dados enviados são inválidos. Revise as informações e tente novamente.',
+          );
+        case 401:
+          return LoginAutenticarFalha(
+            currentState,
+            tipo: LoginErroTipo.credenciaisInvalidas,
+            erro: empresaSelecionada
+                ? 'Seu usuário não possui acesso à empresa selecionada. Escolha outra empresa ou fale com o suporte.'
+                : 'Usuário ou senha incorretos. Revise as credenciais e tente novamente.',
+          );
+        case 403:
+          return LoginAutenticarFalha(
+            currentState,
+            tipo: LoginErroTipo.acessoNegado,
+            erro: empresaSelecionada
+                ? 'A empresa selecionada não liberou acesso para este usuário.'
+                : 'Seu acesso foi negado. Verifique as permissões com o administrador.',
+          );
+        case 404:
+          return LoginAutenticarFalha(
+            currentState,
+            tipo: LoginErroTipo.configuracaoInvalida,
+            erro: fallbackType == LoginErroTipo.carregamentoLicenciados
+                ? 'Não foi possível localizar os dados do licenciado. Verifique a configuração informada.'
+                : 'O serviço de autenticação não foi encontrado para este licenciado.',
+          );
+        case 500:
+        case 503:
+          return LoginAutenticarFalha(
+            currentState,
+            tipo: LoginErroTipo.servidorIndisponivel,
+            erro:
+                'O serviço de autenticação está indisponível no momento. Tente novamente mais tarde.',
+          );
+      }
+    }
+
+    return LoginAutenticarFalha(
+      currentState,
+      tipo: fallbackType,
+      erro: switch (fallbackType) {
+        LoginErroTipo.carregamentoLicenciados =>
+          'Falha ao carregar os licenciados. Tente novamente em instantes.',
+        LoginErroTipo.carregamentoEmpresas =>
+          'Login realizado, mas não foi possível atualizar a lista de empresas agora.',
+        _ =>
+          'Falha na autenticação. Se o problema persistir, entre em contato com o suporte.',
+      },
+    );
   }
 }

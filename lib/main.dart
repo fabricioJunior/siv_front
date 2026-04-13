@@ -31,18 +31,15 @@ class MyApp extends StatelessWidget {
   final String? routeToTest;
   final NavigationObserver navigationObserver = NavigationObserver();
 
-  MyApp({
-    super.key,
-    this.routeToTest,
-  });
+  MyApp({super.key, this.routeToTest});
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorObservers: [
-        navigationObserver,
-      ],
-      initialRoute: sl<AppBloc>().state.statusAutenticacao ==
+      navigatorObservers: [navigationObserver],
+      initialRoute:
+          sl<AppBloc>().state.statusAutenticacao ==
               StatusAutenticacao.autenticado
           ? '/home'
           : '/login',
@@ -55,23 +52,47 @@ class MyApp extends StatelessWidget {
           listener: (context, state) {
             if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
               if (routeToTest != null) {
-                Navigator.of(navigatorKey.currentContext!).pushNamed(
-                  routeToTest!,
+                _navigateWhenReady(
+                  (navigator) => navigator.pushNamed(routeToTest!),
                 );
               } else {
-                Navigator.of(navigatorKey.currentContext!)
-                    .pushNamedAndRemoveUntil('/home', (route) => false);
+                _navigateWhenReady(
+                  (navigator) => navigator.pushNamedAndRemoveUntil(
+                    '/home',
+                    (route) => false,
+                  ),
+                );
               }
             }
 
             if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
-              Navigator.of(navigatorKey.currentContext!)
-                  .pushNamedAndRemoveUntil('/login', (route) => false);
+              _navigateWhenReady(
+                (navigator) => navigator.pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                ),
+              );
             }
           },
           child: BlocBuilder<AppBloc, AppState>(
             bloc: sl<AppBloc>(),
             builder: (context, state) {
+              if (state.statusAutenticacao ==
+                  StatusAutenticacao.carregandoDados) {
+                return const Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('Carregando dados do usuário...'),
+                        SizedBox(height: 16),
+                        CircularProgressIndicator(),
+                      ],
+                    ),
+                  ),
+                );
+              }
               return child ?? const SizedBox.shrink();
             },
           ),
@@ -82,6 +103,21 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
     );
+  }
+
+  void _navigateWhenReady(void Function(NavigatorState navigator) action) {
+    final navigator = navigatorKey.currentState;
+    if (navigator != null) {
+      action(navigator);
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final delayedNavigator = navigatorKey.currentState;
+      if (delayedNavigator != null) {
+        action(delayedNavigator);
+      }
+    });
   }
 }
 
@@ -122,8 +158,11 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
     if (route.settings.name == '/entrada_manual_de_produtos') {
-      sl<SyncDataBloc>().add(const SyncDataSolicitouSincronizacao(
-          origem: SyncDataOrigem.entradaDeProdutos));
+      sl<SyncDataBloc>().add(
+        const SyncDataSolicitouSincronizacao(
+          origem: SyncDataOrigem.entradaDeProdutos,
+        ),
+      );
     }
   }
 
@@ -136,7 +175,9 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didReplace({Route? newRoute, Route? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-    log('Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
-        name: 'Navigation');
+    log(
+      'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
+      name: 'Navigation',
+    );
   }
 }

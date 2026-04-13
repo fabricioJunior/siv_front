@@ -10,6 +10,7 @@ import 'package:pagamentos/pages.dart';
 import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
+import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
@@ -23,22 +24,21 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/login': (context) => const LoginPage(),
   '/usuarios': (context) => const UsuariosPage(),
   '/usuario': (context) {
-    return UsuarioPage(
-      idUsuario: args(context)['idUsuario'],
-    );
+    return UsuarioPage(idUsuario: args(context)['idUsuario']);
   },
   '/grupos_de_acesso': (context) {
     return const GruposDeAcessoPage();
   },
   '/grupo_de_acesso': (context) {
-    return GrupoDeAcessoPage(
-      idGrupoDeAcesso: args(context)['idGrupoDeAcesso'],
-    );
+    return GrupoDeAcessoPage(idGrupoDeAcesso: args(context)['idGrupoDeAcesso']);
   },
   '/vinculos_grupo_de_acesso_com_usuario': (context) {
     return VinculosGrupoDeAcessoComUsuarioPage(
       idUsuario: args(context)['idUsuario'],
     );
+  },
+  '/vinculos_terminais_com_usuario': (context) {
+    return TerminaisDoUsuarioPage(idUsuario: args(context)['idUsuario']);
   },
   '/selecionar_empresa': (context) {
     return const SelecionarEmpresaPage();
@@ -49,9 +49,14 @@ Map<String, Widget Function(BuildContext)> routes = {
     return const EmpresasPage();
   },
   '/empresa': (context) {
-    return EmpresaPage(
-      idEmpresa: args(context)['idEmpresa'],
-    );
+    return EmpresaPage(idEmpresa: args(context)['idEmpresa']);
+  },
+  '/terminais': (context) {
+    final empresaIdArg = args(context)['empresaId'];
+    final empresaId = empresaIdArg is int
+        ? empresaIdArg
+        : int.tryParse(empresaIdArg?.toString() ?? '') ?? 0;
+    return TerminaisPage(empresaId: empresaId);
   },
 
   ///PESSOAS:
@@ -59,31 +64,21 @@ Map<String, Widget Function(BuildContext)> routes = {
     return const PessoasPage();
   },
   '/pessoa': (context) {
-    return PessoaPage(
-      idPessoa: args(context)['idPessoa'],
-    );
+    return PessoaPage(idPessoa: args(context)['idPessoa']);
   },
   '/pessoa_visualizacao': (context) {
-    return PessoaVisualizacaoPage(
-      idPessoa: args(context)['idPessoa'],
-    );
+    return PessoaVisualizacaoPage(idPessoa: args(context)['idPessoa']);
   },
   '/pontos_page': (context) {
-    return PontosPage(
-      idPessoa: args(context)['idPessoa'],
-    );
+    return PontosPage(idPessoa: args(context)['idPessoa']);
   },
   '/enderecos_page': (context) {
-    return EnderecosPage(
-      idPessoa: args(context)['idPessoa'],
-    );
+    return EnderecosPage(idPessoa: args(context)['idPessoa']);
   },
   '/selecionar_pessoa': (context) {
     final retorno = args(context)['retornarSomenteId'];
     final retornarSomenteId = retorno == true || retorno == 'true';
-    return SelecionarPessoaPage(
-      retornarSomenteId: retornarSomenteId,
-    );
+    return SelecionarPessoaPage(retornarSomenteId: retornarSomenteId);
   },
 
   ///PAGAMENTOS:
@@ -101,6 +96,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       idFormaDePagamento: args(context)['idFormaDePagamento'],
     );
   },
+  '/financeiro': (context) {
+    return const FinanceiroMenuPage();
+  },
+  '/administracao': (context) {
+    return const AdministracaoMenuPage();
+  },
 
   ///COMERCIAL:
   '/comercial': (context) {
@@ -110,9 +111,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     return const PedidosPage();
   },
   '/pedido': (context) {
-    return PedidoPage(
-      idPedido: args(context)['idPedido'],
-    );
+    return PedidoPage(idPedido: args(context)['idPedido']);
   },
   '/romaneios': (context) {
     return const RomaneiosPage();
@@ -120,25 +119,38 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/romaneio': (context) {
     return RomaneioPage(
       idRomaneio: args(context)['idRomaneio'],
+      permitirEdicao: args(context)['permitirEdicao'] ?? true,
+      funcionarioSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+          ),
+      tableDePrecoSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            onlyView: onlyView ?? false,
+          ),
+      pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          SeletorPessoa(
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            retornarSomenteId: false,
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+          ),
     );
   },
-  //Navigator.pushNamed(
-//   context,
-//   '/criar_romaneio_por_parametros',
-//   arguments: {
-//     'funcionarioId': 1,
-//     'tabelaPrecoId': 2,
-//     'operacao': 'compra',
-//     'itens': [
-//       {'produtoId': 10, 'quantidade': 3},
-//       {'produtoId': 11, 'quantidade': 1},
-//     ],
-//   },
-// );
+
   '/criar_romaneio_por_parametros': (context) {
-    return CriarRomaneioPorParametrosPage(
-      parametros: args(context),
-    );
+    final argumentos = args(context);
+    final hashLista =
+        (argumentos['listaCompartilhadaHash'] ?? argumentos['hashLista'])
+            ?.toString() ??
+        '';
+
+    return CriarRomaneioPorParametrosPage(hashLista: hashLista);
   },
 
   ///PRODUTOS:
@@ -158,17 +170,13 @@ Map<String, Widget Function(BuildContext)> routes = {
     return CategoriasPage();
   },
   '/produtos/categoria': (context) {
-    return CategoriaPage(
-      idCategoria: args(context)['idCategoria'],
-    );
+    return CategoriaPage(idCategoria: args(context)['idCategoria']);
   },
   '/referencias': (context) {
     return const ReferenciasPage();
   },
   '/referencia': (context) {
-    return ReferenciaPage(
-      idReferencia: args(context)['idReferencia'],
-    );
+    return ReferenciaPage(idReferencia: args(context)['idReferencia']);
   },
   '/produtos': (context) {
     return ProdutosPage();
@@ -180,8 +188,8 @@ Map<String, Widget Function(BuildContext)> routes = {
       tamanhoId: args(context)['tamanhoId'],
     );
   },
-  //Preços:
 
+  //Preços:
   '/tabelas_de_preco': (context) {
     return TabelasDePrecoPage();
   },
@@ -207,29 +215,29 @@ Map<String, Widget Function(BuildContext)> routes = {
   //Estoque:
   '/estoque': (context) {
     return EstoqueSaldoPage(
-      seletorCores: ({itemsSelecionadosInicial, onChanged}) => CorSeletor(
-        modo: CorSeletorModo.multipla,
-        onChanged: onChanged,
-      ),
-      seletorTamanhos: ({itemsSelecionadosInicial, onChanged}) =>
+      seletorCores: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          CorSeletor(modo: CorSeletorModo.multipla, onChanged: onChanged),
+      seletorTamanhos: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
           TamanhoSeletor(
-        modo: TamanhoSeletorModo.multipla,
-        onChanged: onChanged,
-      ),
+            modo: TamanhoSeletorModo.multipla,
+            onChanged: onChanged,
+          ),
     );
   },
   '/entrada_manual_de_produtos': (context) {
     return EntradaManulDeProdutosPage(
-      funcionariosSeletor: ({itemsSelecionadosInicial, onChanged}) =>
+      funcionariosSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
           FuncionarioSeletor(
-        modo: FuncionarioSeletorModo.unica,
-        onChanged: onChanged,
-      ),
-      tabelasDePrecoSeletor: ({itemsSelecionadosInicial, onChanged}) =>
-          TabelasDePrecoSeletor(
-        modo: TabelasDePrecoSeletorModo.unica,
-        onChanged: onChanged,
-      ),
+            modo: FuncionarioSeletorModo.unica,
+            onChanged: onChanged,
+            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
+          ),
+      tabelasDePrecoSeletor:
+          ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              TabelasDePrecoSeletor(
+                modo: TabelasDePrecoSeletorModo.unica,
+                onChanged: onChanged,
+              ),
     );
   },
 
@@ -238,9 +246,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     return ConfiguracaoSTMPPage();
   },
   '/parametros_empresa': (context) {
-    return EmpresaParametrosPage(
-      idEmpresa: args(context)['empresaId'],
-    );
+    return EmpresaParametrosPage(idEmpresa: args(context)['empresaId']);
   },
 };
 

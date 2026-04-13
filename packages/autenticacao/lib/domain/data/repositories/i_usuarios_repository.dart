@@ -1,3 +1,4 @@
+import 'package:autenticacao/domain/models/terminal_do_usuario.dart';
 import 'package:autenticacao/domain/models/usuario.dart';
 
 abstract class IUsuariosRepository {
@@ -14,6 +15,25 @@ abstract class IUsuariosRepository {
   Future<void> salvarUsuarioDaSessao(Usuario usuario);
 
   Future<void> apagarUsuarioDaSessao();
+
+  Future<List<TerminalDoUsuario>> buscarTerminaisDoUsuario({
+    required int usuarioId,
+    required int idEmpresa,
+  });
+
+  Future<List<TerminalDoUsuario>> buscarTerminaisDaEmpresa({
+    required int idEmpresa,
+  });
+
+  Future<void> desvincularTerminalDoUsuario({
+    required int usuarioId,
+    required int terminalId,
+  });
+  Future<void> vincularTerminalAoUsuario({
+    required int usuarioId,
+    required int terminalId,
+    required int idEmpresa,
+  });
 
   Future<Usuario> salvarUsuario({
     int? id,

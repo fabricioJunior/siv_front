@@ -14,41 +14,73 @@ class EmpresasPage extends StatelessWidget {
       create: (context) => sl<EmpresasBloc>()..add(EmpresasIniciou()),
       child: Scaffold(
         floatingActionButton: _novaEmpresaButton(context),
-        appBar: AppBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              BlocBuilder<EmpresasBloc, EmpresasState>(
-                builder: (context, state) {
-                  if (state is EmpresasCarregarEmProgresso) {
-                    return CircularProgressIndicator.adaptive();
-                  }
-                  if (state is EmpresasCarregarFalha) {
-                    return Text(
-                      'Falhao ao carregar empresas',
-                    );
-                  }
-                  if (state is EmpresasCarregarSucesso &&
-                      state.empresas.isEmpty) {
-                    return Text(
-                        'Nenhuma empresa cadastrada, para criar um nova empresa toque no botão + no canto inferior direito da tela');
-                  }
+        appBar: AppBar(
+          title: const Text('Empresas'),
+          actions: [
+            IconButton(
+              tooltip: 'Atualizar',
+              onPressed: () {
+                context.read<EmpresasBloc>().add(EmpresasIniciou());
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
+        ),
+        body: BlocBuilder<EmpresasBloc, EmpresasState>(
+          builder: (context, state) {
+            if (state is EmpresasCarregarEmProgresso) {
+              return const Center(child: CircularProgressIndicator.adaptive());
+            }
 
-                  if (state is EmpresasCarregarSucesso) {
-                    return ListView.builder(
-                      itemCount: state.empresas.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        return _empresaCard(context, state.empresas[index]);
-                      },
-                    );
-                  }
-                  return SizedBox();
+            if (state is EmpresasCarregarFalha) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.business_center_outlined, size: 46),
+                      const SizedBox(height: 12),
+                      const Text('Falha ao carregar empresas.'),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () {
+                          context.read<EmpresasBloc>().add(EmpresasIniciou());
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            if (state is EmpresasCarregarSucesso && state.empresas.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'Nenhuma empresa cadastrada. Toque em + para criar uma empresa.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+
+            if (state is EmpresasCarregarSucesso) {
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+                itemCount: state.empresas.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  return _empresaCard(context, state.empresas[index]);
                 },
-              ),
-            ],
-          ),
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );
@@ -59,9 +91,7 @@ class EmpresasPage extends StatelessWidget {
         builder: (context, state) {
           return FloatingActionButton(
             onPressed: () async {
-              await Navigator.of(context).pushNamed(
-                '/empresa',
-              );
+              await Navigator.of(context).pushNamed('/empresa');
               // ignore: use_build_context_synchronously
               context.read<EmpresasBloc>().add(EmpresasIniciou());
             },
@@ -71,36 +101,77 @@ class EmpresasPage extends StatelessWidget {
       );
 
   Widget _empresaCard(BuildContext context, Empresa empresa) => Card(
-        child: Ink(
-          child: InkWell(
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                '/empresa',
-                arguments: {
-                  'idEmpresa': empresa.id,
-                },
-              );
-            },
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Navigator.of(
+          context,
+        ).pushNamed('/empresa', arguments: {'idEmpresa': empresa.id});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  child: Text(
+                    empresa.nome.isEmpty
+                        ? '?'
+                        : empresa.nome.substring(0, 1).toUpperCase(),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${empresa.id} - ${empresa.nome}'),
-                      Text(empresa.cnpj),
+                      Text(
+                        empresa.nome,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        empresa.nomeFantasia,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
-                  SizedBox(
-                    height: 16,
-                  ),
-                  Text(empresa.nomeFantasia),
-                ],
-              ),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _infoChip(
+                  icon: Icons.badge_outlined,
+                  label: 'ID ${empresa.id ?? '-'}',
+                ),
+                _infoChip(icon: Icons.business_outlined, label: empresa.cnpj),
+                if ((empresa.uf ?? '').isNotEmpty)
+                  _infoChip(icon: Icons.map_outlined, label: empresa.uf!),
+              ],
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
+
+  Widget _infoChip({required IconData icon, required String label}) {
+    return Chip(
+      visualDensity: VisualDensity.compact,
+      avatar: Icon(icon, size: 16),
+      label: Text(label),
+    );
+  }
 }

@@ -17,17 +17,10 @@ const EmpresaDtoSchema = CollectionSchema(
   name: r'EmpresaDto',
   id: -7543039627240877726,
   properties: {
-    r'id': PropertySchema(
-      id: 0,
-      name: r'id',
-      type: IsarType.long,
-    ),
-    r'nome': PropertySchema(
-      id: 1,
-      name: r'nome',
-      type: IsarType.string,
-    )
+    r'id': PropertySchema(id: 0, name: r'id', type: IsarType.long),
+    r'nome': PropertySchema(id: 1, name: r'nome', type: IsarType.string),
   },
+
   estimateSize: _empresaDtoEstimateSize,
   serialize: _empresaDtoSerialize,
   deserialize: _empresaDtoDeserialize,
@@ -36,6 +29,7 @@ const EmpresaDtoSchema = CollectionSchema(
   indexes: {},
   links: {},
   embeddedSchemas: {},
+
   getId: _empresaDtoGetId,
   getLinks: _empresaDtoGetLinks,
   attach: _empresaDtoAttach,
@@ -113,17 +107,18 @@ extension EmpresaDtoQueryWhereSort
 extension EmpresaDtoQueryWhere
     on QueryBuilder<EmpresaDto, EmpresaDto, QWhereClause> {
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterWhereClause> dataBaseIdEqualTo(
-      Id dataBaseId) {
+    Id dataBaseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: dataBaseId,
-        upper: dataBaseId,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(lower: dataBaseId, upper: dataBaseId),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterWhereClause> dataBaseIdNotEqualTo(
-      Id dataBaseId) {
+    Id dataBaseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -146,8 +141,9 @@ extension EmpresaDtoQueryWhere
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterWhereClause> dataBaseIdGreaterThan(
-      Id dataBaseId,
-      {bool include = false}) {
+    Id dataBaseId, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: dataBaseId, includeLower: include),
@@ -156,8 +152,9 @@ extension EmpresaDtoQueryWhere
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterWhereClause> dataBaseIdLessThan(
-      Id dataBaseId,
-      {bool include = false}) {
+    Id dataBaseId, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: dataBaseId, includeUpper: include),
@@ -172,12 +169,14 @@ extension EmpresaDtoQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerDataBaseId,
-        includeLower: includeLower,
-        upper: upperDataBaseId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerDataBaseId,
+          includeLower: includeLower,
+          upper: upperDataBaseId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -185,40 +184,38 @@ extension EmpresaDtoQueryWhere
 extension EmpresaDtoQueryFilter
     on QueryBuilder<EmpresaDto, EmpresaDto, QFilterCondition> {
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> dataBaseIdEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'dataBaseId', value: value),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition>
-      dataBaseIdGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  dataBaseIdGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'dataBaseId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition>
-      dataBaseIdLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  dataBaseIdLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'dataBaseId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -229,23 +226,25 @@ extension EmpresaDtoQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'dataBaseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'dataBaseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> idEqualTo(
-      int value) {
+    int value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -254,11 +253,13 @@ extension EmpresaDtoQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -267,11 +268,13 @@ extension EmpresaDtoQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -282,13 +285,15 @@ extension EmpresaDtoQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
@@ -297,11 +302,13 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -311,12 +318,14 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -326,12 +335,14 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -343,14 +354,16 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'nome',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'nome',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -359,11 +372,13 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -372,53 +387,59 @@ extension EmpresaDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> nomeContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'nome',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'nome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> nomeMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'nome',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'nome',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> nomeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nome',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'nome', value: ''),
+      );
     });
   }
 
   QueryBuilder<EmpresaDto, EmpresaDto, QAfterFilterCondition> nomeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'nome',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'nome', value: ''),
+      );
     });
   }
 }
@@ -503,8 +524,9 @@ extension EmpresaDtoQueryWhereDistinct
     });
   }
 
-  QueryBuilder<EmpresaDto, EmpresaDto, QDistinct> distinctByNome(
-      {bool caseSensitive = true}) {
+  QueryBuilder<EmpresaDto, EmpresaDto, QDistinct> distinctByNome({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nome', caseSensitive: caseSensitive);
     });

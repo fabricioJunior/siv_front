@@ -8,11 +8,12 @@ abstract class TabelasDePrecoEvent extends Equatable {
 class TabelasDePrecoIniciou extends TabelasDePrecoEvent {
   final String? busca;
   final bool? inativa;
+  final int? tabelaInicialId;
 
-  TabelasDePrecoIniciou({this.busca, this.inativa});
+  TabelasDePrecoIniciou({this.busca, this.inativa, this.tabelaInicialId});
 
   @override
-  List<Object?> get props => [busca, inativa];
+  List<Object?> get props => [busca, inativa, tabelaInicialId];
 }
 
 class TabelasDePrecoDesativar extends TabelasDePrecoEvent {

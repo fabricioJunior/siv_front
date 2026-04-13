@@ -2,6 +2,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_
 import 'package:autenticacao/domain/models/usuario.dart';
 import 'package:core/remote_data_sourcers.dart';
 
+import '../local_data_sourcers/dtos/terminal_do_usuario_dto.dart';
 import 'dtos/usuario_dto.dart';
 import 'dtos/usuario_to_edit_dto.dart';
 
@@ -12,9 +13,7 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
   @override
   Future<Usuario?> getUsuario({int? id}) async {
     var pathParameters = {'id': id};
-    var response = await get(
-      pathParameters: pathParameters,
-    );
+    var response = await get(pathParameters: pathParameters);
     if (response.body == null) {
       return null;
     }
@@ -74,8 +73,10 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
       tipo: tipo,
       situacao: ativo ? 'ativo' : 'invativo',
     );
-    var response =
-        await put(body: usuarioToPost.toJson(), pathParameters: pathParameters);
+    var response = await put(
+      body: usuarioToPost.toJson(),
+      pathParameters: pathParameters,
+    );
 
     return UsuarioDto.fromJson(response.body);
   }
@@ -83,10 +84,11 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
 
 extension ToDto on Usuario {
   UsuarioDto toDto() => UsuarioDto(
-        id: id,
-        login: login,
-        nome: nome,
-        tipo: tipo,
-        senha: senha,
-      );
+    id: id,
+    login: login,
+    nome: nome,
+    tipo: tipo,
+    senha: senha,
+    terminaisDoUsuario: terminaisDoUsuario.map((e) => e.toDto()).toList(),
+  );
 }

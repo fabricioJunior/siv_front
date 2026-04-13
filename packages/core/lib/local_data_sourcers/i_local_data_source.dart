@@ -13,5 +13,5 @@ abstract interface class ILocalDataSource<E> {
 }
 
 abstract class Test<E, TestBuilder> {
-  E call(TestBuilder t);
+  Future<E> call(TestBuilder t);
 }

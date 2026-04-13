@@ -14,37 +14,28 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
   final ValueChanged<List<TabelaDePreco>>? onTabelaDePrecoChanged;
 
   @override
+  final List<SelectData>? itemsSelecionadosInicial;
+
+  @override
   final Function(List<SelectData>)? onChanged;
 
   final String titulo;
 
+  final bool onlyView;
+
   const TabelasDePrecoSeletor({
     super.key,
     this.modo = TabelasDePrecoSeletorModo.unica,
+    this.itemsSelecionadosInicial,
     this.tabelasSelecionadasIniciais = const [],
     this.onTabelaDePrecoChanged,
     this.titulo = 'Tabelas de preço',
     this.onChanged,
+    this.onlyView = false,
   });
 
   @override
   State<TabelasDePrecoSeletor> createState() => _TabelasDePrecoSeletorState();
-
-  @override
-  List<SelectData> get itemsSelecionadosInicial => tabelasSelecionadasIniciais
-      .map(
-        (tabela) => SelectData(
-          id: tabela.id ?? 0,
-          nome: tabela.nome,
-          data: {
-            'id': tabela.id,
-            'nome': tabela.nome,
-            'terminador': tabela.terminador,
-            'inativa': tabela.inativa,
-          },
-        ),
-      )
-      .toList();
 }
 
 class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
@@ -55,7 +46,13 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
   void initState() {
     super.initState();
     _tabelasDePrecoBloc = sl<TabelasDePrecoBloc>()
-      ..add(TabelasDePrecoIniciou());
+      ..add(
+        TabelasDePrecoIniciou(
+          tabelaInicialId: widget.itemsSelecionadosInicial?.isNotEmpty == true
+              ? widget.itemsSelecionadosInicial!.first.id
+              : null,
+        ),
+      );
   }
 
   @override
@@ -86,17 +83,43 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
             );
           }
 
-          if (state.tabelas.isEmpty) {
+          final tabelasAtivas = state.tabelas
+              .where((tabela) => !tabela.inativa)
+              .toList();
+          final idsSelecionados =
+              _idsExternosSelecionados ??
+              widget.tabelasSelecionadasIniciais
+                  .map((tabela) => tabela.id)
+                  .whereType<int>()
+                  .toSet();
+          final tabelasSelecionadas = [
+            ...state.tabelas.where(
+              (tabela) =>
+                  tabela.id != null && idsSelecionados.contains(tabela.id),
+            ),
+            ...widget.tabelasSelecionadasIniciais.where(
+              (tabelaInicial) =>
+                  tabelaInicial.id == null ||
+                  !state.tabelas.any(
+                    (tabela) => _mesmaTabela(tabela, tabelaInicial),
+                  ),
+            ),
+          ];
+          final tabelasDisponiveis = [
+            ...tabelasSelecionadas,
+            ...tabelasAtivas.where(
+              (tabela) =>
+                  tabela.id == null || !idsSelecionados.contains(tabela.id),
+            ),
+          ];
+
+          if (tabelasDisponiveis.isEmpty) {
             return _mensagem(
               context,
               'Nenhuma tabela de preço disponível para seleção.',
               theme.colorScheme.onSurfaceVariant,
             );
           }
-
-          final tabelasAtivas = state.tabelas
-              .where((tabela) => !tabela.inativa)
-              .toList();
 
           return SeletorGenerico<TabelaDePreco>(
             toSelectData: (item) => SelectData(
@@ -109,27 +132,16 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
                 'inativa': item.inativa,
               },
             ),
-            itens: tabelasAtivas,
+            itens: tabelasDisponiveis,
             itemLabel: (tabela) => tabela.nome,
+            onlyView: widget.onlyView,
             itemKey: (tabela) => tabela.id ?? tabela.nome,
             modo: widget.modo == TabelasDePrecoSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: _idsExternosSelecionados != null
-                ? tabelasAtivas
-                      .where(
-                        (tabela) =>
-                            _idsExternosSelecionados!.contains(tabela.id),
-                      )
-                      .toList()
-                : widget.tabelasSelecionadasIniciais
-                      .where(
-                        (tabelaInicial) => tabelasAtivas.any(
-                          (tabelaAtiva) =>
-                              _mesmaTabela(tabelaAtiva, tabelaInicial),
-                        ),
-                      )
-                      .toList(),
+            selecionadosIniciais: state.tabelaDePreco != null
+                ? [state.tabelaDePreco!]
+                : [],
             onChanged: (List<TabelaDePreco> selecionadas) {
               widget.onTabelaDePrecoChanged?.call(selecionadas);
               widget.onChanged?.call(
@@ -152,9 +164,9 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma tabela de preço',
             maxSugestoes: 5,
-            chipAvatarBuilder: (_, __) =>
+            chipAvatarBuilder: (context, item) =>
                 const Icon(Icons.attach_money_outlined, size: 16),
-            sugestaoLeadingBuilder: (context, __) {
+            sugestaoLeadingBuilder: (context, item) {
               final colorScheme = Theme.of(context).colorScheme;
               return CircleAvatar(
                 radius: 14,

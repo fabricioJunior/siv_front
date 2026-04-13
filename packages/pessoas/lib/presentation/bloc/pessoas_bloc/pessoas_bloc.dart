@@ -9,8 +9,10 @@ part 'pessoas_state.dart';
 
 class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
   final RecuperarPessoas _recuperarPessoas;
+  final RecuperarPessoa _recuperarPessoa;
   PessoasBloc(
     this._recuperarPessoas,
+    this._recuperarPessoa,
   ) : super(PessoasInitial()) {
     on<PessoasIniciou>(_onPessoasIniciou);
   }
@@ -24,9 +26,13 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
       var pessoas = await _recuperarPessoas.call(
         busca: event.busca,
       );
+      var pessoaSelecionada = event.idPessoaSelecionada != null
+          ? await _recuperarPessoa.call(idPessoa: event.idPessoaSelecionada!)
+          : null;
       emit(
         PessoasCarregarSucesso(
           pessoas: pessoas.toList(),
+          pessoaSelecionada: pessoaSelecionada,
           pagina: state.pagina + 1,
         ),
       );

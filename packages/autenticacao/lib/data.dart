@@ -3,4 +3,6 @@ export 'domain/data/data_sourcers/local/i_usuario_da_sessao_local_data_source.da
 export 'domain/data/data_sourcers/local/i_licenciado_da_sessao_local_data_source.dart';
 export 'domain/data/data_sourcers/local/i_permissoes_do_usuario_local_data_source.dart';
 export 'domain/data/data_sourcers/remote/i_empresas_remote_data_source.dart';
+export 'domain/data/data_sourcers/remote/i_terminais_da_empresa_remote_data_source.dart';
+export 'domain/data/data_sourcers/remote/i_terminais_do_usuario_remote_data_source.dart';
 export 'domain/data/data_sourcers/local/i_empresa_da_sessao_local_data_source.dart';

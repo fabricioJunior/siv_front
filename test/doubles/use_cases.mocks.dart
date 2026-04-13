@@ -44,56 +44,31 @@ import 'package:mockito/mockito.dart' as _i1;
 
 class _FakeITokenRepository_0 extends _i1.SmartFake
     implements _i2.ITokenRepository {
-  _FakeITokenRepository_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeITokenRepository_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeIUsuariosRepository_1 extends _i1.SmartFake
     implements _i3.IUsuariosRepository {
-  _FakeIUsuariosRepository_1(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeIUsuariosRepository_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeILicenciadosRepository_2 extends _i1.SmartFake
     implements _i4.ILicenciadosRepository {
-  _FakeILicenciadosRepository_2(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeILicenciadosRepository_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeUsuario_3 extends _i1.SmartFake implements _i5.Usuario {
-  _FakeUsuario_3(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeUsuario_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeIEmpresasRepository_4 extends _i1.SmartFake
     implements _i6.IEmpresasRepository {
-  _FakeIEmpresasRepository_4(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeIEmpresasRepository_4(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [OnAutenticado].
@@ -105,45 +80,34 @@ class MockOnAutenticado extends _i1.Mock implements _i7.OnAutenticado {
   }
 
   @override
-  _i2.ITokenRepository get tokenRepository => (super.noSuchMethod(
-        Invocation.getter(#tokenRepository),
-        returnValue: _FakeITokenRepository_0(
-          this,
-          Invocation.getter(#tokenRepository),
-        ),
-      ) as _i2.ITokenRepository);
+  _i2.ITokenRepository get tokenRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#tokenRepository),
+            returnValue: _FakeITokenRepository_0(
+              this,
+              Invocation.getter(#tokenRepository),
+            ),
+          )
+          as _i2.ITokenRepository);
 
   @override
   set lastToken(_i8.Token? _lastToken) => super.noSuchMethod(
-        Invocation.setter(
-          #lastToken,
-          _lastToken,
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.setter(#lastToken, _lastToken),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  _i9.Stream<_i8.Token> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Stream<_i8.Token>.empty(),
-      ) as _i9.Stream<_i8.Token>);
+  _i9.Stream<_i8.Token> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Stream<_i8.Token>.empty(),
+          )
+          as _i9.Stream<_i8.Token>);
 
   @override
-  void onTokenPut(
-    _i8.Token? token,
-    _i9.EventSink<dynamic>? sink,
-  ) =>
+  void onTokenPut(_i8.Token? token, _i9.EventSink<dynamic>? sink) =>
       super.noSuchMethod(
-        Invocation.method(
-          #onTokenPut,
-          [
-            token,
-            sink,
-          ],
-        ),
+        Invocation.method(#onTokenPut, [token, sink]),
         returnValueForMissingStub: null,
       );
 }
@@ -157,13 +121,12 @@ class MockOnDesautenticado extends _i1.Mock implements _i10.OnDesautenticado {
   }
 
   @override
-  _i9.Stream<Null> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Stream<Null>.empty(),
-      ) as _i9.Stream<Null>);
+  _i9.Stream<Null> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Stream<Null>.empty(),
+          )
+          as _i9.Stream<Null>);
 }
 
 /// A class which mocks [EstaAutenticado].
@@ -175,22 +138,23 @@ class MockEstaAutenticado extends _i1.Mock implements _i11.EstaAutenticado {
   }
 
   @override
-  _i2.ITokenRepository get tokenRepository => (super.noSuchMethod(
-        Invocation.getter(#tokenRepository),
-        returnValue: _FakeITokenRepository_0(
-          this,
-          Invocation.getter(#tokenRepository),
-        ),
-      ) as _i2.ITokenRepository);
+  _i2.ITokenRepository get tokenRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#tokenRepository),
+            returnValue: _FakeITokenRepository_0(
+              this,
+              Invocation.getter(#tokenRepository),
+            ),
+          )
+          as _i2.ITokenRepository);
 
   @override
-  _i9.Future<bool> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Future<bool>.value(false),
-      ) as _i9.Future<bool>);
+  _i9.Future<bool> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Future<bool>.value(false),
+          )
+          as _i9.Future<bool>);
 }
 
 /// A class which mocks [Deslogar].
@@ -202,41 +166,46 @@ class MockDeslogar extends _i1.Mock implements _i12.Deslogar {
   }
 
   @override
-  _i2.ITokenRepository get tokenRepository => (super.noSuchMethod(
-        Invocation.getter(#tokenRepository),
-        returnValue: _FakeITokenRepository_0(
-          this,
-          Invocation.getter(#tokenRepository),
-        ),
-      ) as _i2.ITokenRepository);
+  _i2.ITokenRepository get tokenRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#tokenRepository),
+            returnValue: _FakeITokenRepository_0(
+              this,
+              Invocation.getter(#tokenRepository),
+            ),
+          )
+          as _i2.ITokenRepository);
 
   @override
-  _i3.IUsuariosRepository get usuariosRepository => (super.noSuchMethod(
-        Invocation.getter(#usuariosRepository),
-        returnValue: _FakeIUsuariosRepository_1(
-          this,
-          Invocation.getter(#usuariosRepository),
-        ),
-      ) as _i3.IUsuariosRepository);
+  _i3.IUsuariosRepository get usuariosRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#usuariosRepository),
+            returnValue: _FakeIUsuariosRepository_1(
+              this,
+              Invocation.getter(#usuariosRepository),
+            ),
+          )
+          as _i3.IUsuariosRepository);
 
   @override
-  _i4.ILicenciadosRepository get licenciadosRepository => (super.noSuchMethod(
-        Invocation.getter(#licenciadosRepository),
-        returnValue: _FakeILicenciadosRepository_2(
-          this,
-          Invocation.getter(#licenciadosRepository),
-        ),
-      ) as _i4.ILicenciadosRepository);
+  _i4.ILicenciadosRepository get licenciadosRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#licenciadosRepository),
+            returnValue: _FakeILicenciadosRepository_2(
+              this,
+              Invocation.getter(#licenciadosRepository),
+            ),
+          )
+          as _i4.ILicenciadosRepository);
 
   @override
-  _i9.Future<void> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Future<void>.value(),
-        returnValueForMissingStub: _i9.Future<void>.value(),
-      ) as _i9.Future<void>);
+  _i9.Future<void> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
 }
 
 /// A class which mocks [RecuperarUsuarioDaSessao].
@@ -249,28 +218,25 @@ class MockRecuperarUsuarioDaSessao extends _i1.Mock
   }
 
   @override
-  _i3.IUsuariosRepository get usuariosRepository => (super.noSuchMethod(
-        Invocation.getter(#usuariosRepository),
-        returnValue: _FakeIUsuariosRepository_1(
-          this,
-          Invocation.getter(#usuariosRepository),
-        ),
-      ) as _i3.IUsuariosRepository);
+  _i3.IUsuariosRepository get usuariosRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#usuariosRepository),
+            returnValue: _FakeIUsuariosRepository_1(
+              this,
+              Invocation.getter(#usuariosRepository),
+            ),
+          )
+          as _i3.IUsuariosRepository);
 
   @override
-  _i9.Future<_i5.Usuario> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Future<_i5.Usuario>.value(_FakeUsuario_3(
-          this,
-          Invocation.method(
-            #call,
-            [],
-          ),
-        )),
-      ) as _i9.Future<_i5.Usuario>);
+  _i9.Future<_i5.Usuario> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Future<_i5.Usuario>.value(
+              _FakeUsuario_3(this, Invocation.method(#call, [])),
+            ),
+          )
+          as _i9.Future<_i5.Usuario>);
 }
 
 /// A class which mocks [RecuperarEmpresaDaSessao].
@@ -283,22 +249,23 @@ class MockRecuperarEmpresaDaSessao extends _i1.Mock
   }
 
   @override
-  _i6.IEmpresasRepository get empresasRepository => (super.noSuchMethod(
-        Invocation.getter(#empresasRepository),
-        returnValue: _FakeIEmpresasRepository_4(
-          this,
-          Invocation.getter(#empresasRepository),
-        ),
-      ) as _i6.IEmpresasRepository);
+  _i6.IEmpresasRepository get empresasRepository =>
+      (super.noSuchMethod(
+            Invocation.getter(#empresasRepository),
+            returnValue: _FakeIEmpresasRepository_4(
+              this,
+              Invocation.getter(#empresasRepository),
+            ),
+          )
+          as _i6.IEmpresasRepository);
 
   @override
-  _i9.Future<_i15.Empresa?> call() => (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i9.Future<_i15.Empresa?>.value(),
-      ) as _i9.Future<_i15.Empresa?>);
+  _i9.Future<_i15.Empresa?> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i9.Future<_i15.Empresa?>.value(),
+          )
+          as _i9.Future<_i15.Empresa?>);
 }
 
 /// A class which mocks [SincronizarPermissoesDoUsuario].
@@ -311,15 +278,14 @@ class MockSincronizarPermissoesDoUsuario extends _i1.Mock
   }
 
   @override
-  _i9.Future<Iterable<_i15.PermissaoDoUsuario>> call(
-          {required int? idUsuario}) =>
+  _i9.Future<Iterable<_i15.PermissaoDoUsuario>> call({
+    required int? idUsuario,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-          {#idUsuario: idUsuario},
-        ),
-        returnValue: _i9.Future<Iterable<_i15.PermissaoDoUsuario>>.value(
-            <_i15.PermissaoDoUsuario>[]),
-      ) as _i9.Future<Iterable<_i15.PermissaoDoUsuario>>);
+            Invocation.method(#call, [], {#idUsuario: idUsuario}),
+            returnValue: _i9.Future<Iterable<_i15.PermissaoDoUsuario>>.value(
+              <_i15.PermissaoDoUsuario>[],
+            ),
+          )
+          as _i9.Future<Iterable<_i15.PermissaoDoUsuario>>);
 }

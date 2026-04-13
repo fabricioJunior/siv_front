@@ -9,9 +9,9 @@ class RomaneioIniciou extends RomaneioEvent {
 }
 
 class RomaneioCampoAlterado extends RomaneioEvent {
-  final String? pessoaId;
-  final String? funcionarioId;
-  final String? tabelaPrecoId;
+  final int? pessoaId;
+  final int? funcionarioId;
+  final int? tabelaPrecoId;
   final TipoOperacao? operacao;
   final String? observacao;
 

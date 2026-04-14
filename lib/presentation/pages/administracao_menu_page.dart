@@ -7,40 +7,38 @@ class AdministracaoMenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itens = <Widget>[
-      if (PermissaoPorNome.acessoPermitido('ADMFM001')) ...[
-        _ItemMenu(
-          icon: Icons.person_outline,
-          titulo: 'Usuários',
-          subtitulo: 'Acesso, cadastro e manutenção de usuários.',
-          onTap: () => Navigator.pushNamed(context, '/usuarios'),
-        ),
-        const SizedBox(height: 12),
-        _ItemMenu(
-          icon: Icons.lock_outline,
-          titulo: 'Grupos de acesso',
-          subtitulo: 'Permissões, perfis e vínculos por grupo.',
-          onTap: () => Navigator.pushNamed(context, '/grupos_de_acesso'),
-        ),
-        const SizedBox(height: 12),
-      ],
-      if (PermissaoPorNome.acessoPermitido('ADMFM004')) ...[
-        _ItemMenu(
-          icon: Icons.business_outlined,
-          titulo: 'Empresas',
-          subtitulo: 'Gestão de empresas, parâmetros e terminais.',
-          onTap: () => Navigator.pushNamed(context, '/empresas'),
-        ),
-        const SizedBox(height: 12),
-      ],
-      if (PermissaoPorNome.acessoPermitido('SYSFM001')) ...[
-        _ItemMenu(
-          icon: Icons.settings_outlined,
-          titulo: 'Configurações',
-          subtitulo: 'SMTP e ajustes sistêmicos da aplicação.',
-          onTap: () => Navigator.pushNamed(context, '/configuracao_smtp'),
-        ),
-        const SizedBox(height: 12),
-      ],
+      _ItemMenu(
+        icon: Icons.person_outline,
+        titulo: 'Usuários',
+        subtitulo: 'Acesso, cadastro e manutenção de usuários.',
+        componente: 'ADMFM001',
+        onTap: () => Navigator.pushNamed(context, '/usuarios'),
+      ),
+      const SizedBox(height: 12),
+      _ItemMenu(
+        icon: Icons.lock_outline,
+        titulo: 'Grupos de acesso',
+        subtitulo: 'Permissões, perfis e vínculos por grupo.',
+        componente: 'ADMFM002',
+        onTap: () => Navigator.pushNamed(context, '/grupos_de_acesso'),
+      ),
+      const SizedBox(height: 12),
+      _ItemMenu(
+        icon: Icons.business_outlined,
+        titulo: 'Empresas',
+        subtitulo: 'Gestão de empresas, parâmetros e terminais.',
+        componente: 'ADMFM004',
+        onTap: () => Navigator.pushNamed(context, '/empresas'),
+      ),
+      const SizedBox(height: 12),
+      _ItemMenu(
+        icon: Icons.settings_outlined,
+        titulo: 'Configurações',
+        subtitulo: 'SMTP e ajustes sistêmicos da aplicação.',
+        componente: 'SYSFM001',
+        onTap: () => Navigator.pushNamed(context, '/configuracao_smtp'),
+      ),
+      const SizedBox(height: 12),
       _ItemMenu(
         icon: Icons.sync,
         titulo: 'Sincronização',
@@ -134,17 +132,22 @@ class _ItemMenu extends StatelessWidget {
   final IconData icon;
   final String titulo;
   final String subtitulo;
+  final String? componente;
   final VoidCallback onTap;
 
   const _ItemMenu({
     required this.icon,
     required this.titulo,
     required this.subtitulo,
+    this.componente,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final permitido =
+        componente == null || PermissaoPorNome.acessoPermitido(componente!);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -152,15 +155,33 @@ class _ItemMenu extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(icon),
+          child: Icon(permitido ? icon : Icons.lock_outline),
         ),
         title: Text(
           titulo,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(subtitulo),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        subtitle: Text(
+          permitido
+              ? subtitulo
+              : 'Acesso bloqueado para o seu perfil. Consulte o administrador.',
+        ),
+        trailing: Icon(permitido ? Icons.chevron_right : Icons.lock),
+        onTap: () {
+          if (permitido) {
+            onTap();
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Você não possui permissão para acessar esta funcionalidade.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
       ),
     );
   }

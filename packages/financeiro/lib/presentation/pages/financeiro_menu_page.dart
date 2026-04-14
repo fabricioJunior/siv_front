@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 
 class FinanceiroMenuPage extends StatelessWidget {
   const FinanceiroMenuPage({super.key});
@@ -10,7 +11,7 @@ class FinanceiroMenuPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _MenuHeader(
+          const _MenuHeader(
             titulo: 'Fluxos financeiros',
             descricao:
                 'Centralize pagamentos, formas de pagamento e tabelas de preço em um único lugar.',
@@ -22,6 +23,7 @@ class FinanceiroMenuPage extends StatelessWidget {
             icon: Icons.payment,
             titulo: 'Pagamentos avulsos',
             subtitulo: 'Lançamentos, consulta e acompanhamento de pagamentos.',
+            componente: 'PAGFM001',
             onTap: () => Navigator.pushNamed(context, '/pagamentos_avulsos'),
           ),
           const SizedBox(height: 12),
@@ -29,6 +31,7 @@ class FinanceiroMenuPage extends StatelessWidget {
             icon: Icons.credit_card,
             titulo: 'Formas de pagamento',
             subtitulo: 'Cadastre e mantenha os meios de pagamento disponíveis.',
+            componente: 'GERFM001',
             onTap: () => Navigator.pushNamed(context, '/formas_de_pagamento'),
           ),
           const SizedBox(height: 12),
@@ -36,6 +39,7 @@ class FinanceiroMenuPage extends StatelessWidget {
             icon: Icons.receipt_long,
             titulo: 'Fluxo de caixa',
             subtitulo: 'Abra o caixa e acompanhe os lancamentos do extrato.',
+            componente: 'FCXFP001',
             onTap: () => Navigator.pushNamed(context, '/fluxo_de_caixa'),
           ),
           const SizedBox(height: 12),
@@ -43,6 +47,7 @@ class FinanceiroMenuPage extends StatelessWidget {
             icon: Icons.attach_money,
             titulo: 'Tabelas de preço',
             subtitulo: 'Gerencie preços e condições comerciais por tabela.',
+            componente: 'PRDFM010',
             onTap: () => Navigator.pushNamed(context, '/tabelas_de_preco'),
           ),
         ],
@@ -116,17 +121,22 @@ class _ItemMenu extends StatelessWidget {
   final IconData icon;
   final String titulo;
   final String subtitulo;
+  final String? componente;
   final VoidCallback onTap;
 
   const _ItemMenu({
     required this.icon,
     required this.titulo,
     required this.subtitulo,
+    this.componente,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final permitido =
+        componente == null || PermissaoPorNome.acessoPermitido(componente!);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -134,15 +144,33 @@ class _ItemMenu extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(icon),
+          child: Icon(permitido ? icon : Icons.lock_outline),
         ),
         title: Text(
           titulo,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(subtitulo),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        subtitle: Text(
+          permitido
+              ? subtitulo
+              : 'Acesso bloqueado para o seu perfil. Consulte o administrador.',
+        ),
+        trailing: Icon(permitido ? Icons.chevron_right : Icons.lock),
+        onTap: () {
+          if (permitido) {
+            onTap();
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Você não possui permissão para acessar esta funcionalidade.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
       ),
     );
   }

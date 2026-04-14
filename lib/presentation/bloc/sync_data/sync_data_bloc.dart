@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/paginacao/paginacao.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:estoque/estoque.dart';
 import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
@@ -17,6 +18,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   final SincronziarTabelasDePreco _sincronizarTabelasDePreco;
   final SincronizarPrecos _sincronizarPrecos;
   final AppBloc _appBloc;
+  final IPermissoesController _permissoesController;
 
   StreamSubscription<Paginacao>? _codigosSubscription;
   StreamSubscription<Paginacao>? _estoqueSubscription;
@@ -29,6 +31,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     this._sincronizarTabelasDePreco,
     this._sincronizarPrecos,
     this._appBloc,
+    this._permissoesController,
   ) : super(const SyncDataState()) {
     on<SyncDataSolicitouSincronizacao>(_onSolicitouSincronizacao);
     on<SyncDataAtualizacaoRecebida>(_onAtualizacaoRecebida);
@@ -54,13 +57,15 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
 
     await _cancelarSincronizacoesAtivas();
 
+    final modulosPermitidos = _resolverModulosPermitidos();
+
     final modulosEmSincronizacao = <SyncModulo, SyncModuloState>{
       for (final modulo in state.modulos.entries)
         modulo.key: modulo.value.copyWith(
-          status: modulo.key == SyncModulo.precosDaReferencia
-              ? SyncModuloStatus.aguardando
-              : SyncModuloStatus.sincronizando,
-          erro: null,
+          status: _resolverStatusInicialModulo(modulo.key, modulosPermitidos),
+          erro: modulosPermitidos.contains(modulo.key)
+              ? null
+              : 'Sincronização não permitida para o seu perfil.',
           paginaAtual: 0,
           totalPaginas: 0,
           paginasSincronizadas: 0,
@@ -82,9 +87,15 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       ),
     );
 
-    _iniciarSincronizacaoCodigos();
-    _iniciarSincronizacaoEstoque();
-    _iniciarSincronizacaoTabelasDePreco();
+    if (modulosPermitidos.contains(SyncModulo.codigos)) {
+      _iniciarSincronizacaoCodigos();
+    }
+    if (modulosPermitidos.contains(SyncModulo.estoque)) {
+      _iniciarSincronizacaoEstoque();
+    }
+    if (modulosPermitidos.contains(SyncModulo.tabelasDePreco)) {
+      _iniciarSincronizacaoTabelasDePreco();
+    }
   }
 
   void _onAtualizacaoRecebida(
@@ -95,8 +106,10 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     final houveProcessamentoNaPagina =
         event.paginacao.itensProcessadosNaPagina > 0;
     final paginasSincronizadas = houveProcessamentoNaPagina
-        ? (modulo.paginasSincronizadas + 1)
-            .clamp(0, event.paginacao.totalPaginas)
+        ? (modulo.paginasSincronizadas + 1).clamp(
+            0,
+            event.paginacao.totalPaginas,
+          )
         : modulo.paginasSincronizadas;
     final itensSincronizados =
         (modulo.itensSincronizados + event.paginacao.itensProcessadosNaPagina)
@@ -149,6 +162,11 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
 
     if (event.modulo == SyncModulo.tabelasDePreco) {
+      if (!_resolverModulosPermitidos().contains(
+        SyncModulo.precosDaReferencia,
+      )) {
+        return;
+      }
       final moduloPrecos = state.modulos[SyncModulo.precosDaReferencia]!;
       if (moduloPrecos.status == SyncModuloStatus.aguardando) {
         emit(
@@ -186,12 +204,13 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       final moduloPrecos = modulosAtualizados[SyncModulo.precosDaReferencia]!;
       if (moduloPrecos.status != SyncModuloStatus.concluido &&
           moduloPrecos.status != SyncModuloStatus.falha) {
-        modulosAtualizados[SyncModulo.precosDaReferencia] =
-            moduloPrecos.copyWith(
-          status: SyncModuloStatus.falha,
-          erro: 'A sincronização depende da conclusão das tabelas de preço.',
-          atualizadoEm: DateTime.now(),
-        );
+        modulosAtualizados[SyncModulo.precosDaReferencia] = moduloPrecos
+            .copyWith(
+              status: SyncModuloStatus.falha,
+              erro:
+                  'A sincronização depende da conclusão das tabelas de preço.',
+              atualizadoEm: DateTime.now(),
+            );
       }
     }
 
@@ -304,9 +323,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       },
       onDone: () {
         add(
-          const SyncDataModuloConcluido(
-            modulo: SyncModulo.precosDaReferencia,
-          ),
+          const SyncDataModuloConcluido(modulo: SyncModulo.precosDaReferencia),
         );
       },
       cancelOnError: true,
@@ -329,8 +346,71 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
 
   bool _sincronizacaoEmAndamentoSemErros() {
     return state.sincronizando &&
-        state.modulos.values
-            .every((modulo) => modulo.status != SyncModuloStatus.falha);
+        state.modulos.values.every(
+          (modulo) => modulo.status != SyncModuloStatus.falha,
+        );
+  }
+
+  Set<SyncModulo> _resolverModulosPermitidos() {
+    final permitidos = <SyncModulo>{};
+
+    if (_temAcessoAAlgumComponente(const [
+      'PRDFM001',
+      'PRDFM003',
+      'PRDFM004',
+      'PRDFM005',
+      'PRDFM006',
+      'PRDFM007',
+      'PRDFM010',
+      'PRDFM011',
+    ])) {
+      permitidos.add(SyncModulo.codigos);
+    }
+
+    if (_temAcessoAAlgumComponente(const [
+      'PRDFL001',
+      'BALFP001',
+      'BALFP002',
+      'BALFP003',
+      'BALFP004',
+    ])) {
+      permitidos.add(SyncModulo.estoque);
+    }
+
+    if (_temAcessoAAlgumComponente(const ['PRDFM010'])) {
+      permitidos.add(SyncModulo.tabelasDePreco);
+    }
+
+    if (_temAcessoAAlgumComponente(const ['PRDFM011'])) {
+      permitidos.add(SyncModulo.precosDaReferencia);
+    }
+
+    return permitidos;
+  }
+
+  SyncModuloStatus _resolverStatusInicialModulo(
+    SyncModulo modulo,
+    Set<SyncModulo> modulosPermitidos,
+  ) {
+    if (!modulosPermitidos.contains(modulo)) {
+      return SyncModuloStatus.concluido;
+    }
+
+    if (modulo == SyncModulo.precosDaReferencia) {
+      return SyncModuloStatus.aguardando;
+    }
+
+    return SyncModuloStatus.sincronizando;
+  }
+
+  bool _temAcessoAAlgumComponente(List<String> componentes) {
+    for (final componente in componentes) {
+      if (_permissoesController.temAcesso(idComponente: componente)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   Future<void> _cancelarSincronizacoesAtivas() async {

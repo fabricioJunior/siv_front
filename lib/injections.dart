@@ -132,7 +132,7 @@ void _presentation() {
   sl.registerLazySingleton<IAcessoGlobalSessao>(() => sl<AppBloc>());
 
   sl.registerLazySingleton<SyncDataBloc>(
-    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl()),
+    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 }
 

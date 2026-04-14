@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Pedidos, romaneios e rotinas de venda.',
                   color: Colors.deepOrange,
                   route: '/comercial',
+                  componentesNecessarios: ['PEDFC001', 'ROMFP001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.inventory_2_outlined,
@@ -57,6 +58,7 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Saldo, filtros e acompanhamento do estoque.',
                   color: Colors.indigo,
                   route: '/estoque',
+                  componentesNecessarios: ['PRDFL001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.payment,
@@ -64,6 +66,7 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Recebimentos avulsos e controle rápido.',
                   color: Colors.teal,
                   route: '/pagamentos_avulsos',
+                  componentesNecessarios: ['PAGFM001', 'PAGFP005'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.input,
@@ -71,47 +74,57 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Lançamento manual de produtos no fluxo.',
                   color: Colors.redAccent,
                   route: '/entrada_manual_de_produtos',
+                  componentesNecessarios: ['ROMFP001', 'ROMFP002'],
                 ),
               ];
 
               final cadastros = <_AccessFlowItem>[
-                if (PermissaoPorNome.acessoPermitido('PESFM001'))
-                  const _AccessFlowItem(
-                    icon: Icons.people,
-                    title: 'Pessoas',
-                    subtitle: 'Clientes, fornecedores e cadastros gerais.',
-                    color: Colors.pink,
-                    route: '/pessoas',
-                  ),
-                if (PermissaoPorNome.acessoPermitido('PRODFM001'))
-                  const _AccessFlowItem(
-                    icon: Icons.shopping_bag,
-                    title: 'Produtos',
-                    subtitle:
-                        'Referências, cores, tamanhos, marcas e categorias.',
-                    color: Colors.deepPurple,
-                    route: '/menu_produtos',
-                  ),
+                const _AccessFlowItem(
+                  icon: Icons.people,
+                  title: 'Pessoas',
+                  subtitle: 'Clientes, fornecedores e cadastros gerais.',
+                  color: Colors.pink,
+                  route: '/pessoas',
+                  componentesNecessarios: ['PESFM001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.shopping_bag,
+                  title: 'Produtos',
+                  subtitle:
+                      'Referências, cores, tamanhos, marcas e categorias.',
+                  color: Colors.deepPurple,
+                  route: '/menu_produtos',
+                  componentesNecessarios: [
+                    'PRDFM001',
+                    'PRDFM003',
+                    'PRDFM004',
+                    'PRDFM006',
+                  ],
+                ),
                 const _AccessFlowItem(
                   icon: Icons.account_balance_wallet_outlined,
                   title: 'Financeiro',
                   subtitle: 'Formas de pagamento, preços e cobranças.',
                   color: Colors.brown,
                   route: '/financeiro',
+                  componentesNecessarios: [
+                    'GERFM001',
+                    'FCXFP001',
+                    'PRDFM010',
+                    'PAGFM001',
+                  ],
                 ),
               ];
 
               final administracao = <_AccessFlowItem>[
-                if (PermissaoPorNome.acessoPermitido('ADMFM001') ||
-                    PermissaoPorNome.acessoPermitido('ADMFM004') ||
-                    PermissaoPorNome.acessoPermitido('SYSFM001'))
-                  const _AccessFlowItem(
-                    icon: Icons.admin_panel_settings_outlined,
-                    title: 'Administração',
-                    subtitle: 'Usuários, grupos, empresas e configurações.',
-                    color: Colors.blueGrey,
-                    route: '/administracao',
-                  ),
+                const _AccessFlowItem(
+                  icon: Icons.admin_panel_settings_outlined,
+                  title: 'Administração',
+                  subtitle: 'Usuários, grupos, empresas e configurações.',
+                  color: Colors.blueGrey,
+                  route: '/administracao',
+                  componentesNecessarios: ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+                ),
                 const _AccessFlowItem(
                   icon: Icons.sync,
                   title: 'Sincronização',
@@ -462,6 +475,7 @@ class _AccessFlowItem {
   final String subtitle;
   final Color color;
   final String route;
+  final List<String> componentesNecessarios;
 
   const _AccessFlowItem({
     required this.icon,
@@ -469,6 +483,7 @@ class _AccessFlowItem {
     required this.subtitle,
     required this.color,
     required this.route,
+    this.componentesNecessarios = const [],
   });
 }
 
@@ -479,12 +494,30 @@ class _AccessFlowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final permitido =
+        item.componentesNecessarios.isEmpty ||
+        item.componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => Navigator.pushNamed(context, item.route),
+        onTap: () {
+          if (permitido) {
+            Navigator.pushNamed(context, item.route);
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Você não possui permissão para acessar esta funcionalidade.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -495,9 +528,14 @@ class _AccessFlowCard extends StatelessWidget {
                 width: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  color: item.color.withValues(alpha: 0.12),
+                  color: permitido
+                      ? item.color.withValues(alpha: 0.12)
+                      : Colors.grey.withValues(alpha: 0.18),
                 ),
-                child: Icon(item.icon, color: item.color),
+                child: Icon(
+                  permitido ? item.icon : Icons.lock_outline,
+                  color: permitido ? item.color : Colors.grey.shade700,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -513,14 +551,16 @@ class _AccessFlowCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.subtitle,
+                      permitido
+                          ? item.subtitle
+                          : 'Acesso bloqueado para o seu perfil. Fale com o administrador.',
                       style: const TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right),
+              Icon(permitido ? Icons.chevron_right : Icons.lock),
             ],
           ),
         ),

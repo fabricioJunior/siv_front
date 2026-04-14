@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 
 class ComercialMenuPage extends StatelessWidget {
   const ComercialMenuPage({super.key});
@@ -22,6 +23,7 @@ class ComercialMenuPage extends StatelessWidget {
             icon: Icons.receipt_long,
             titulo: 'Pedidos',
             subtitulo: 'Criação, conferência, faturamento e acompanhamento.',
+            componente: 'PEDFC001',
             onTap: () => Navigator.pushNamed(context, '/pedidos'),
           ),
           const SizedBox(height: 12),
@@ -29,6 +31,7 @@ class ComercialMenuPage extends StatelessWidget {
             icon: Icons.local_shipping,
             titulo: 'Romaneios',
             subtitulo: 'Montagem, ajuste, expedição e observações de romaneio.',
+            componente: 'ROMFP001',
             onTap: () => Navigator.pushNamed(context, '/romaneios'),
           ),
         ],
@@ -102,17 +105,22 @@ class _ItemMenu extends StatelessWidget {
   final IconData icon;
   final String titulo;
   final String subtitulo;
+  final String? componente;
   final VoidCallback onTap;
 
   const _ItemMenu({
     required this.icon,
     required this.titulo,
     required this.subtitulo,
+    this.componente,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final permitido =
+        componente == null || PermissaoPorNome.acessoPermitido(componente!);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -120,15 +128,33 @@ class _ItemMenu extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(icon),
+          child: Icon(permitido ? icon : Icons.lock_outline),
         ),
         title: Text(
           titulo,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(subtitulo),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        subtitle: Text(
+          permitido
+              ? subtitulo
+              : 'Acesso bloqueado para o seu perfil. Consulte o administrador.',
+        ),
+        trailing: Icon(permitido ? Icons.chevron_right : Icons.lock),
+        onTap: () {
+          if (permitido) {
+            onTap();
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Você não possui permissão para acessar esta funcionalidade.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
       ),
     );
   }

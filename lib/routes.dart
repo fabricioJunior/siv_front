@@ -4,6 +4,7 @@ import 'package:comercial/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:estoque/presentation.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +74,7 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   ///PESSOAS:
   '/pessoas': (context) {
-    return const PessoasPage();
+    return _rotaProtegida(route: '/pessoas', child: const PessoasPage());
   },
   '/pessoa': (context) {
     return PessoaPage(idPessoa: args(context)['idPessoa']);
@@ -95,13 +96,22 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   ///PAGAMENTOS:
   '/pagamentos_avulsos': (context) {
-    return const PagamentosAvulsosPage();
+    return _rotaProtegida(
+      route: '/pagamentos_avulsos',
+      child: const PagamentosAvulsosPage(),
+    );
   },
   '/pagamento_avulso': (context) {
-    return PagamentoAvulsoPage();
+    return _rotaProtegida(
+      route: '/pagamento_avulso',
+      child: PagamentoAvulsoPage(),
+    );
   },
   '/formas_de_pagamento': (context) {
-    return FormasDePagamentoPage();
+    return _rotaProtegida(
+      route: '/formas_de_pagamento',
+      child: FormasDePagamentoPage(),
+    );
   },
   '/forma_de_pagamento': (context) {
     return FormaDePagamentoPage(
@@ -109,7 +119,10 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/financeiro': (context) {
-    return const FinanceiroMenuPage();
+    return _rotaProtegida(
+      route: '/financeiro',
+      child: const FinanceiroMenuPage(),
+    );
   },
   '/fluxo_de_caixa': (context) {
     final sessao = sl<IAcessoGlobalSessao>();
@@ -123,27 +136,36 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? terminalIdArg
         : int.tryParse(terminalIdArg?.toString() ?? '');
 
-    return FluxoDeCaixaPage(
-      empresaId: empresaId ?? sessao.empresaIdDaSessao,
-      terminalId: terminalId ?? sessao.terminalIdDaSessao,
+    return _rotaProtegida(
+      route: '/fluxo_de_caixa',
+      child: FluxoDeCaixaPage(
+        empresaId: empresaId ?? sessao.empresaIdDaSessao,
+        terminalId: terminalId ?? sessao.terminalIdDaSessao,
+      ),
     );
   },
   '/administracao': (context) {
-    return const AdministracaoMenuPage();
+    return _rotaProtegida(
+      route: '/administracao',
+      child: const AdministracaoMenuPage(),
+    );
   },
 
   ///COMERCIAL:
   '/comercial': (context) {
-    return const ComercialMenuPage();
+    return _rotaProtegida(
+      route: '/comercial',
+      child: const ComercialMenuPage(),
+    );
   },
   '/pedidos': (context) {
-    return const PedidosPage();
+    return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
   '/pedido': (context) {
     return PedidoPage(idPedido: args(context)['idPedido']);
   },
   '/romaneios': (context) {
-    return const RomaneiosPage();
+    return _rotaProtegida(route: '/romaneios', child: const RomaneiosPage());
   },
   '/romaneio': (context) {
     return RomaneioPage(
@@ -184,7 +206,10 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   ///PRODUTOS:
   '/menu_produtos': (context) {
-    return const MenuProdutosPage();
+    return _rotaProtegida(
+      route: '/menu_produtos',
+      child: const MenuProdutosPage(),
+    );
   },
   '/tamanhos': (context) {
     return TamanhosPage();
@@ -220,7 +245,10 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   //Preços:
   '/tabelas_de_preco': (context) {
-    return TabelasDePrecoPage();
+    return _rotaProtegida(
+      route: '/tabelas_de_preco',
+      child: TabelasDePrecoPage(),
+    );
   },
   '/selecionar_tabela_de_preco': (context) {
     return SelecionarTabelaDePrecoPage();
@@ -243,30 +271,38 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   //Estoque:
   '/estoque': (context) {
-    return EstoqueSaldoPage(
-      seletorCores: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-          CorSeletor(modo: CorSeletorModo.multipla, onChanged: onChanged),
-      seletorTamanhos: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-          TamanhoSeletor(
-            modo: TamanhoSeletorModo.multipla,
-            onChanged: onChanged,
-          ),
+    return _rotaProtegida(
+      route: '/estoque',
+      child: EstoqueSaldoPage(
+        seletorCores: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            CorSeletor(modo: CorSeletorModo.multipla, onChanged: onChanged),
+        seletorTamanhos: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            TamanhoSeletor(
+              modo: TamanhoSeletorModo.multipla,
+              onChanged: onChanged,
+            ),
+      ),
     );
   },
   '/entrada_manual_de_produtos': (context) {
-    return EntradaManulDeProdutosPage(
-      funcionariosSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-          FuncionarioSeletor(
-            modo: FuncionarioSeletorModo.unica,
-            onChanged: onChanged,
-            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
-          ),
-      tabelasDePrecoSeletor:
-          ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-              TabelasDePrecoSeletor(
-                modo: TabelasDePrecoSeletorModo.unica,
-                onChanged: onChanged,
-              ),
+    return _rotaProtegida(
+      route: '/entrada_manual_de_produtos',
+      child: EntradaManulDeProdutosPage(
+        funcionariosSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                FuncionarioSeletor(
+                  modo: FuncionarioSeletorModo.unica,
+                  onChanged: onChanged,
+                  itemsSelecionadosInicial:
+                      itemsSelecionadosInicial ?? const [],
+                ),
+        tabelasDePrecoSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                TabelasDePrecoSeletor(
+                  modo: TabelasDePrecoSeletorModo.unica,
+                  onChanged: onChanged,
+                ),
+      ),
     );
   },
 
@@ -281,3 +317,71 @@ Map<String, Widget Function(BuildContext)> routes = {
 
 Map<String, dynamic> args(BuildContext context) =>
     ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
+
+Widget _rotaProtegida({required String route, required Widget child}) {
+  final componentes = _componentesDaRota[route];
+  if (componentes == null || componentes.isEmpty) {
+    return child;
+  }
+
+  if (componentes.any(PermissaoPorNome.acessoPermitido)) {
+    return child;
+  }
+
+  return const _AcessoNegadoPage();
+}
+
+const Map<String, List<String>> _componentesDaRota = {
+  '/comercial': ['PEDFC001', 'ROMFP001'],
+  '/pedidos': ['PEDFC001', 'PEDFM001'],
+  '/romaneios': ['ROMFP001'],
+  '/estoque': ['PRDFL001'],
+  '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
+  '/pessoas': ['PESFM001'],
+  '/menu_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
+  '/financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],
+  '/formas_de_pagamento': ['GERFM001'],
+  '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
+  '/tabelas_de_preco': ['PRDFM010'],
+  '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
+  '/pagamento_avulso': ['PAGFM001'],
+  '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+};
+
+class _AcessoNegadoPage extends StatelessWidget {
+  const _AcessoNegadoPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Acesso bloqueado')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Você não possui permissão para acessar esta funcionalidade. Consulte o administrador do sistema.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

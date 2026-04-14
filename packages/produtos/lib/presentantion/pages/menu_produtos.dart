@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 
 class MenuProdutosPage extends StatelessWidget {
   const MenuProdutosPage({super.key});
@@ -22,6 +23,7 @@ class MenuProdutosPage extends StatelessWidget {
             icon: Icons.model_training,
             titulo: 'Modelos / Referências',
             subtitulo: 'Base do catálogo com referências, produtos e mídias.',
+            componente: 'PRDFM003',
             onTap: () => Navigator.of(context).pushNamed('/referencias'),
           ),
           const SizedBox(height: 12),
@@ -29,6 +31,7 @@ class MenuProdutosPage extends StatelessWidget {
             icon: Icons.straighten,
             titulo: 'Tamanhos',
             subtitulo: 'Cadastre e mantenha os tamanhos disponíveis.',
+            componente: 'PRDFM001',
             onTap: () => Navigator.of(context).pushNamed('/tamanhos'),
           ),
           const SizedBox(height: 12),
@@ -36,6 +39,7 @@ class MenuProdutosPage extends StatelessWidget {
             icon: Icons.palette,
             titulo: 'Cores',
             subtitulo: 'Gerencie variações e paleta do catálogo.',
+            componente: 'PRDFM001',
             onTap: () => Navigator.of(context).pushNamed('/cores'),
           ),
           const SizedBox(height: 12),
@@ -43,6 +47,7 @@ class MenuProdutosPage extends StatelessWidget {
             icon: Icons.category,
             titulo: 'Categorias',
             subtitulo: 'Estruture grupos e classificação dos produtos.',
+            componente: 'PRDFM004',
             onTap: () => Navigator.of(context).pushNamed('/categorias'),
           ),
           const SizedBox(height: 12),
@@ -50,6 +55,7 @@ class MenuProdutosPage extends StatelessWidget {
             icon: Icons.branding_watermark,
             titulo: 'Marcas',
             subtitulo: 'Cadastre e atualize marcas vinculadas aos itens.',
+            componente: 'PRDFM006',
             onTap: () => Navigator.of(context).pushNamed('/marcas'),
           ),
         ],
@@ -123,17 +129,22 @@ class _ItemMenu extends StatelessWidget {
   final IconData icon;
   final String titulo;
   final String subtitulo;
+  final String? componente;
   final VoidCallback onTap;
 
   const _ItemMenu({
     required this.icon,
     required this.titulo,
     required this.subtitulo,
+    this.componente,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final permitido =
+        componente == null || PermissaoPorNome.acessoPermitido(componente!);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -141,15 +152,33 @@ class _ItemMenu extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(icon),
+          child: Icon(permitido ? icon : Icons.lock_outline),
         ),
         title: Text(
           titulo,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(subtitulo),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        subtitle: Text(
+          permitido
+              ? subtitulo
+              : 'Acesso bloqueado para o seu perfil. Consulte o administrador.',
+        ),
+        trailing: Icon(permitido ? Icons.chevron_right : Icons.lock),
+        onTap: () {
+          if (permitido) {
+            onTap();
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Você não possui permissão para acessar esta funcionalidade.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
       ),
     );
   }

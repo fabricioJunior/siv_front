@@ -22,12 +22,12 @@ Usuario fakeUsuario(
         TipoUsuario tipo = TipoUsuario.sysadmin,
         String senha = 'senha'}) =>
     Usuario.create(
-        id: id,
-        login: login,
-        nome: nome,
-        tipo: tipo,
-        senha: senha,
-        terminaisDoUsuario: []);
+      id: id,
+      login: login,
+      nome: nome,
+      tipo: tipo,
+      senha: senha,
+    );
 
 Permissao fakePermissao({
   String id = '1',

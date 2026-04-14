@@ -9,6 +9,7 @@ import '../../doubles/fakes.dart';
 import '../../doubles/use_cases.mocks.dart';
 
 final RecuperarPessoas recuperarPessoas = MockRecuperarPessoas();
+final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 
 late PessoasBloc pessoasBloc;
 
@@ -22,6 +23,7 @@ void main() {
   setUp(() {
     pessoasBloc = PessoasBloc(
       recuperarPessoas,
+      recuperarPessoa,
     );
   });
 
@@ -36,7 +38,7 @@ void main() {
       PessoasCarregarEmProgresso(),
       PessoasCarregarSucesso(
         pessoas: pessoas,
-        pagina: 0,
+        pagina: 1,
       )
     ],
   );

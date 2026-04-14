@@ -7,6 +7,7 @@ abstract class LoginState extends Equatable {
   final List<Empresa>? empresas;
   final List<Licenciado>? licenciados;
   final Licenciado? licenciadoSelecionado;
+  final Usuario? usuarioDaSessao;
 
   const LoginState({
     this.usuario,
@@ -15,6 +16,7 @@ abstract class LoginState extends Equatable {
     this.empresas,
     this.licenciados,
     this.licenciadoSelecionado,
+    this.usuarioDaSessao,
   });
 
   LoginState.fromLastState(
@@ -25,13 +27,15 @@ abstract class LoginState extends Equatable {
     List<Empresa>? empresas,
     List<Licenciado>? licenciados,
     Licenciado? licenciadoSelecionado,
+    Usuario? usuarioDaSessao,
   })  : usuario = usuario ?? lastState.usuario,
         senha = senha ?? lastState.senha,
         idEmpresa = idEmpresa ?? lastState.idEmpresa,
         empresas = empresas ?? lastState.empresas,
         licenciados = licenciados ?? lastState.licenciados,
         licenciadoSelecionado =
-            licenciadoSelecionado ?? lastState.licenciadoSelecionado;
+            licenciadoSelecionado ?? lastState.licenciadoSelecionado,
+        usuarioDaSessao = usuarioDaSessao ?? lastState.usuarioDaSessao;
 
   @override
   List<Object?> get props => [
@@ -41,6 +45,7 @@ abstract class LoginState extends Equatable {
         empresas,
         licenciados,
         licenciadoSelecionado,
+        usuarioDaSessao,
       ];
 }
 
@@ -70,6 +75,7 @@ class LoginAutenticarSucesso extends LoginState {
     super.lastState, {
     required super.empresas,
     required super.idEmpresa,
+    required super.usuarioDaSessao,
   }) : super.fromLastState();
 }
 

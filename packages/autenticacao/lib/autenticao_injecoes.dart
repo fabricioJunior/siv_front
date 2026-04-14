@@ -71,6 +71,9 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
     ),
   );
   sl.registerFactory<UsuariosBloc>(() => UsuariosBloc(sl()));
@@ -162,6 +165,24 @@ void _usesCases() {
     ),
   );
 
+  sl.registerFactory<RecuperarTerminalDaSessao>(
+    () => RecuperarTerminalDaSessao(
+      usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<SalvarTerminalDaSessao>(
+    () => SalvarTerminalDaSessao(
+      usuariosRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<LimparTerminalDaSessao>(
+    () => LimparTerminalDaSessao(
+      usuariosRepository: sl(),
+    ),
+  );
+
   sl.registerFactory<RecuperarLicenciados>(
     () => RecuperarLicenciados(
       repository: sl(),
@@ -190,6 +211,12 @@ void _usesCases() {
     () => RecuperarTerminaisDoUsuario(
       usuariosRepository: sl(),
       empresasRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarTerminaisDoUsuarioPorEmpresa>(
+    () => RecuperarTerminaisDoUsuarioPorEmpresa(
+      usuariosRepository: sl(),
     ),
   );
 
@@ -298,6 +325,7 @@ void _repositories() {
       usuariosRemoteDataSource: sl(),
       usuarioDaSessaoRemoteDataSource: sl(),
       usuarioDaSessaoLocalDataSource: sl(),
+      terminalDaSessaoLocalDataSource: sl(),
       terminaisDoUsuarioRemoteDataSource: sl(),
       terminaisDaEmpresaRemoteDataSource: sl(),
     ),

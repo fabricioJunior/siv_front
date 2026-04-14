@@ -16,18 +16,52 @@ final Deslogar deslogar = MockDeslogar();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
 final RecuperarLicenciadoDaSessao recuperarLicenciadoDaSessao =
-    MockRecuperarLicenciadoDaSessao();
+    FakeRecuperarLicenciadoDaSessao();
 final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
 final RecuperarEmpresaDaSessao recuperarEmpresaDaSessao =
     MockRecuperarEmpresaDaSessao();
+final RecuperarTerminalDaSessao recuperarTerminalDaSessao =
+    FakeRecuperarTerminalDaSessao();
+final RecuperarTerminaisDoUsuarioPorEmpresa
+recuperarTerminaisDoUsuarioPorEmpresa =
+    FakeRecuperarTerminaisDoUsuarioPorEmpresa();
+final SalvarTerminalDaSessao salvarTerminalDaSessao =
+    FakeSalvarTerminalDaSessao();
 
 final SincronizarPermissoesDoUsuario sincronizarPermissoesDoUsuario =
     MockSincronizarPermissoesDoUsuario();
 
-class MockRecuperarLicenciadoDaSessao extends Mock
-    implements RecuperarLicenciadoDaSessao {}
+var licenciado = const Licenciado(
+  id: '1',
+  nome: 'Licenciado teste',
+  urlApi: 'https://api.teste.com',
+);
+
+class FakeRecuperarLicenciadoDaSessao implements RecuperarLicenciadoDaSessao {
+  @override
+  Future<Licenciado?> call() async => licenciado;
+}
 
 class MockApiBaseUrlConfig extends Mock implements ApiBaseUrlConfig {}
+
+class FakeRecuperarTerminalDaSessao implements RecuperarTerminalDaSessao {
+  @override
+  Future<TerminalDoUsuario?> call() async => null;
+}
+
+class FakeRecuperarTerminaisDoUsuarioPorEmpresa
+    implements RecuperarTerminaisDoUsuarioPorEmpresa {
+  @override
+  Future<List<TerminalDoUsuario>> call({
+    required int idUsuario,
+    required int idEmpresa,
+  }) async => const [];
+}
+
+class FakeSalvarTerminalDaSessao implements SalvarTerminalDaSessao {
+  @override
+  Future<void> call(TerminalDoUsuario terminal) async {}
+}
 
 late AppBloc appBloc;
 
@@ -36,14 +70,13 @@ void main() {
   setUp(() {
     _setupRecuperarUsuarioDaSessao(usuario);
     _setupOnDesautenticado();
-    _setupRecuperarLicenciadoDaSessao();
+    _setupRecuperarEmpresaDaSessao();
+    _setupSincronizarPermissoes();
   });
   blocTest(
     'emite estado com informações salvas de autenticacao',
     setUp: () {
-      _setupOnTokenCriado(
-        null,
-      );
+      _setupOnTokenCriado(null);
       _setupEstaAutenticado(true);
     },
     build: () {
@@ -55,15 +88,20 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        recuperarTerminalDaSessao,
+        recuperarTerminaisDoUsuarioPorEmpresa,
+        salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
     },
     act: (bloc) => bloc.add(AppIniciou()),
     expect: () => [
+      const AppState(statusAutenticacao: StatusAutenticacao.carregandoDados),
       AppState(
-          statusAutenticacao: StatusAutenticacao.autenticado,
-          usuarioDaSessao: usuario),
+        statusAutenticacao: StatusAutenticacao.autenticado,
+        usuarioDaSessao: usuario,
+      ),
     ],
   );
   blocTest(
@@ -86,13 +124,16 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        recuperarTerminalDaSessao,
+        recuperarTerminaisDoUsuarioPorEmpresa,
+        salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
     },
     expect: () => [
       AppState(
-        statusAutenticacao: StatusAutenticacao.autenticado,
+        statusAutenticacao: StatusAutenticacao.autenticando,
         usuarioDaSessao: usuario,
       ),
     ],
@@ -114,6 +155,9 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        recuperarTerminalDaSessao,
+        recuperarTerminaisDoUsuarioPorEmpresa,
+        salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         apiBaseUrlConfig,
       );
@@ -144,6 +188,12 @@ void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
   when(recuperarUsuarioDaSessao.call()).thenAnswer((_) async => usuario);
 }
 
-void _setupRecuperarLicenciadoDaSessao() {
-  when(recuperarLicenciadoDaSessao.call()).thenAnswer((_) async => null);
+void _setupRecuperarEmpresaDaSessao() {
+  when(recuperarEmpresaDaSessao.call()).thenAnswer((_) async => null);
+}
+
+void _setupSincronizarPermissoes() {
+  when(
+    sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id),
+  ).thenAnswer((_) async => <PermissaoDoUsuario>[]);
 }

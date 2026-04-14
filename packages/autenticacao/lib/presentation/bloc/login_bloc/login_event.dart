@@ -20,8 +20,9 @@ class LoginAdicionouSenha extends LoginEvent {
 
 class LoginAutenticou extends LoginEvent {
   final Empresa? empresa;
+  final TerminalDoUsuario? terminal;
 
-  LoginAutenticou({this.empresa});
+  LoginAutenticou({this.empresa, this.terminal});
 }
 
 class LoginSelecionouLicenciado extends LoginEvent {

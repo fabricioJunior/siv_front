@@ -5,11 +5,12 @@ import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/sessao.dart';
 
 part 'app_state.dart';
 part 'app_event.dart';
 
-class AppBloc extends Bloc<AppEvent, AppState> {
+class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
   final OnAutenticado _onAutenticado;
   final OnDesautenticado _onDesautenticado;
   final EstaAutenticado _estaAutenticado;
@@ -17,6 +18,10 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
   final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
   final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
+  final RecuperarTerminalDaSessao _recuperarTerminalDaSessao;
+  final RecuperarTerminaisDoUsuarioPorEmpresa
+  _recuperarTerminaisDoUsuarioPorEmpresa;
+  final SalvarTerminalDaSessao _salvarTerminalDaSessao;
   final SincronizarPermissoesDoUsuario _sincronizarPermissoesDoUsuario;
 
   final ApiBaseUrlConfig _apiBaseUrlConfig;
@@ -31,6 +36,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._onDesautenticado,
     this._recuperarLicenciadoDaSessao,
     this._recuperarEmpresaDaSessao,
+    this._recuperarTerminalDaSessao,
+    this._recuperarTerminaisDoUsuarioPorEmpresa,
+    this._salvarTerminalDaSessao,
     this._sincronizarPermissoesDoUsuario,
     this._apiBaseUrlConfig,
   ) : super(const AppState()) {
@@ -43,6 +51,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppIniciou>(_onAppIniciou);
     on<AppAutenticou>(_onAppAutenticou);
     on<AppDesautenticou>(_onDesautenticou);
+    on<AppSelecionouTerminalDaSessao>(_onSelecionouTerminalDaSessao);
   }
 
   FutureOr<void> _onAppAutenticou(
@@ -64,11 +73,21 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       }
 
       var licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
-      await _sincronizarPermissoesDoUsuario(idUsuario: usuarioDaSessao.id);
+      final terminalDaSessao = await _recuperarTerminalDaSessao.call();
       var permissoes = await _sincronizarPermissoesDoUsuario(
         idUsuario: usuarioDaSessao.id,
       );
       var permissoesMap = _mapPermissoes(permissoes);
+      final terminaisDaEmpresaDaSessao =
+          await _carregarTerminaisDaEmpresaDaSessao(
+            usuarioDaSessao: usuarioDaSessao,
+            empresaDaSessao: empresaDaSessao,
+          );
+      final terminalDaSessaoResolvido = await _resolverTerminalDaSessao(
+        empresaDaSessao: empresaDaSessao,
+        terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
+        terminalSalvo: terminalDaSessao,
+      );
       if (event.token.idEmpresa == null) {}
       emit(
         state.copyWith(
@@ -77,6 +96,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
               : StatusAutenticacao.autenticado,
           usuarioDaSessao: () => usuarioDaSessao,
           empresaDaSessao: () => empresaDaSessao,
+          terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
+          terminalDaSessao: () => terminalDaSessaoResolvido,
           licenciadoDaSessao: () => licenciadoDaSessao,
           permissoesDoUsuario: permissoesMap,
         ),
@@ -97,6 +118,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           statusAutenticacao: StatusAutenticacao.naoAutenticao,
           usuarioDaSessao: () => null,
           empresaDaSessao: () => null,
+          terminalDaSessao: () => null,
           licenciadoDaSessao: () => null,
         ),
       );
@@ -133,6 +155,19 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final empresaDaSessao = estaAutenticado
           ? await _recuperarEmpresaDaSessao.call()
           : null;
+      final terminalDaSessao = estaAutenticado
+          ? await _recuperarTerminalDaSessao.call()
+          : null;
+      final terminaisDaEmpresaDaSessao =
+          await _carregarTerminaisDaEmpresaDaSessao(
+            usuarioDaSessao: usuarioDaSessao,
+            empresaDaSessao: empresaDaSessao,
+          );
+      final terminalDaSessaoResolvido = await _resolverTerminalDaSessao(
+        empresaDaSessao: empresaDaSessao,
+        terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
+        terminalSalvo: terminalDaSessao,
+      );
       Map<String, PermissaoDoUsuario>? permissoesMap;
       if (estaAutenticado) {
         var permissoes = await _sincronizarPermissoesDoUsuario(
@@ -144,6 +179,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         state.copyWith(
           usuarioDaSessao: () => usuarioDaSessao,
           empresaDaSessao: () => empresaDaSessao,
+          terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
+          terminalDaSessao: () => terminalDaSessaoResolvido,
           statusAutenticacao: estaAutenticado
               ? StatusAutenticacao.autenticado
               : StatusAutenticacao.naoAutenticao,
@@ -164,6 +201,73 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       ),
     );
   }
+
+  Future<TerminalDoUsuario?> _resolverTerminalDaSessao({
+    required Empresa? empresaDaSessao,
+    required List<TerminalDoUsuario> terminaisDaEmpresaDaSessao,
+    required TerminalDoUsuario? terminalSalvo,
+  }) async {
+    if (empresaDaSessao == null) {
+      return terminalSalvo;
+    }
+
+    if (terminaisDaEmpresaDaSessao.isEmpty) {
+      return terminalSalvo?.idEmpresa == empresaDaSessao.id
+          ? terminalSalvo
+          : null;
+    }
+
+    if (terminalSalvo != null) {
+      final terminalValido = terminaisDaEmpresaDaSessao.where(
+        (t) => t.id == terminalSalvo.id,
+      );
+      if (terminalValido.isNotEmpty) {
+        return terminalValido.first;
+      }
+    }
+
+    final terminalSelecionado = terminaisDaEmpresaDaSessao.first;
+    await _salvarTerminalDaSessao.call(terminalSelecionado);
+    return terminalSelecionado;
+  }
+
+  Future<List<TerminalDoUsuario>> _carregarTerminaisDaEmpresaDaSessao({
+    required Usuario? usuarioDaSessao,
+    required Empresa? empresaDaSessao,
+  }) async {
+    if (usuarioDaSessao == null || empresaDaSessao == null) {
+      return const [];
+    }
+
+    try {
+      return await _recuperarTerminaisDoUsuarioPorEmpresa.call(
+        idUsuario: usuarioDaSessao.id,
+        idEmpresa: empresaDaSessao.id,
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  FutureOr<void> _onSelecionouTerminalDaSessao(
+    AppSelecionouTerminalDaSessao event,
+    Emitter<AppState> emit,
+  ) async {
+    await _salvarTerminalDaSessao.call(event.terminal);
+    emit(state.copyWith(terminalDaSessao: () => event.terminal));
+  }
+
+  @override
+  int? get usuarioIdDaSessao => state.usuarioDaSessao?.id;
+
+  @override
+  int? get empresaIdDaSessao => state.empresaDaSessao?.id;
+
+  @override
+  int? get terminalIdDaSessao => state.terminalDaSessao?.id;
+
+  @override
+  String? get terminalNomeDaSessao => state.terminalDaSessao?.nome;
 
   @override
   Future<void> close() async {

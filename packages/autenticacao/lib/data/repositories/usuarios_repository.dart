@@ -8,6 +8,7 @@ class UsuariosRepository implements IUsuariosRepository {
   final IUsuariosRemoteDataSource usuariosRemoteDataSource;
   final IUsuarioDaSessaoRemoteDataSource usuarioDaSessaoRemoteDataSource;
   final IUsuarioDaSessaoLocalDataSource usuarioDaSessaoLocalDataSource;
+  final ITerminalDaSessaoLocalDataSource terminalDaSessaoLocalDataSource;
   final ITerminaisDoUsuarioRemoteDataSource terminaisDoUsuarioRemoteDataSource;
   final ITerminaisDaEmpresaRemoteDataSource terminaisDaEmpresaRemoteDataSource;
 
@@ -15,6 +16,7 @@ class UsuariosRepository implements IUsuariosRepository {
     required this.usuariosRemoteDataSource,
     required this.usuarioDaSessaoRemoteDataSource,
     required this.usuarioDaSessaoLocalDataSource,
+    required this.terminalDaSessaoLocalDataSource,
     required this.terminaisDoUsuarioRemoteDataSource,
     required this.terminaisDaEmpresaRemoteDataSource,
   });
@@ -39,6 +41,12 @@ class UsuariosRepository implements IUsuariosRepository {
   @override
   Future<void> apagarUsuarioDaSessao() async {
     await usuarioDaSessaoLocalDataSource.deleteAll();
+  }
+
+  @override
+  Future<TerminalDoUsuario?> getTerminalDaSessaoSalvo() async {
+    final all = await terminalDaSessaoLocalDataSource.fetchAll();
+    return all.isEmpty ? null : all.first;
   }
 
   @override
@@ -81,6 +89,17 @@ class UsuariosRepository implements IUsuariosRepository {
   @override
   Future<void> salvarUsuarioDaSessao(Usuario usuario) {
     return usuarioDaSessaoLocalDataSource.put(usuario);
+  }
+
+  @override
+  Future<void> salvarTerminalDaSessao(TerminalDoUsuario terminal) async {
+    await terminalDaSessaoLocalDataSource.deleteAll();
+    await terminalDaSessaoLocalDataSource.put(terminal);
+  }
+
+  @override
+  Future<void> limparTerminalDaSessao() async {
+    await terminalDaSessaoLocalDataSource.deleteAll();
   }
 
   @override

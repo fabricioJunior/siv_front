@@ -12,9 +12,15 @@ abstract class IUsuariosRepository {
 
   Future<Usuario?> getUsuarioDaSessaoSalvo();
 
+  Future<TerminalDoUsuario?> getTerminalDaSessaoSalvo();
+
   Future<void> salvarUsuarioDaSessao(Usuario usuario);
 
+  Future<void> salvarTerminalDaSessao(TerminalDoUsuario terminal);
+
   Future<void> apagarUsuarioDaSessao();
+
+  Future<void> limparTerminalDaSessao();
 
   Future<List<TerminalDoUsuario>> buscarTerminaisDoUsuario({
     required int usuarioId,

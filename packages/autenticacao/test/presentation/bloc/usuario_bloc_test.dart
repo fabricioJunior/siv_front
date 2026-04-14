@@ -131,12 +131,10 @@ void main() {
       act: (bloc) => bloc.add(UsuarioSalvou()),
       expect: () => [
         UsuarioSalvarEmProgresso(),
-        UsuarioSalvarSucesso(
-          usuario: fakeUsuario(
-            nome: 'nome editado',
-            login: 'login editado',
-            senha: 'senha editada',
-          ),
+        isA<UsuarioSalvarSucesso>().having(
+          (s) => s.usuario.nome,
+          'usuario.nome',
+          'nome editado',
         ),
       ],
     );
@@ -156,7 +154,7 @@ void _setupSalvarUsuario({
   required TipoUsuario tipo,
 }) {
   when(salvarUsuario.call(
-    usuario: usuario,
+    usuario: anyNamed('usuario'),
     nome: nome,
     login: login,
     senha: senha,

@@ -2,7 +2,12 @@ import '../../models/caixa.dart';
 
 abstract class ICaixaRemoteDataSource {
   Future<Caixa> abrirCaixa({
-    int idEmpresa,
-    int terminalId,
+    required int idEmpresa,
+    required int terminalId,
+  });
+
+  Future<Caixa?> recuperarCaixaAberto({
+    required int idEmpresa,
+    required int terminalId,
   });
 }

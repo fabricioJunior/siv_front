@@ -11,9 +11,4 @@ UsuarioDto _$UsuarioDtoFromJson(Map<String, dynamic> json) => UsuarioDto(
   login: json['usuario'] as String,
   nome: json['nome'] as String,
   tipo: UsuarioDto._tipoUsuarioFromJson(json['tipo'] as String),
-  terminaisDoUsuario:
-      (json['terminaisDoUsuario'] as List<dynamic>?)
-          ?.map((e) => TerminalDoUsuarioDto.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      [],
 );

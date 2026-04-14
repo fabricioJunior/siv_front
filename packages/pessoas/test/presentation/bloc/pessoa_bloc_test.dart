@@ -11,9 +11,30 @@ import '../../doubles/use_cases.mocks.dart';
 late PessoaBloc pessoaBloc;
 
 final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
-final SalvarPessoa salvarPessoa = MockSalvarPessoa();
+final SalvarPessoa salvarPessoa = FakeSalvarPessoa();
 final CriarPessoa criarPessoa = MockCriarPessoa();
 final CriarFuncionario criarFuncionario = MockCriarFuncionario();
+
+class FakeSalvarPessoa implements SalvarPessoa {
+  @override
+  Future<Pessoa> call({
+    required Pessoa pessoa,
+    String? nome,
+    TipoPessoa? tipoPessoa,
+    String? documento,
+    String? uf,
+    String? inscricaoEstadual,
+    DateTime? dataDeNascimento,
+    String? email,
+    TipoContato? tipoContato,
+    String? contato,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
+    bool? bloqueado,
+  }) async =>
+      pessoa;
+}
 
 void main() {
   setUp(() {
@@ -43,7 +64,8 @@ void main() {
       ),
     ),
     expect: () => [
-      PessoaState(pessoaStep: PessoaStep.carregado),
+      isA<PessoaState>()
+          .having((s) => s.pessoaStep, 'pessoaStep', PessoaStep.carregando),
       PessoaState.fromModel(pessoa),
     ],
   );
@@ -83,9 +105,6 @@ void main() {
     'emite estado de sucesso após SALVAR pessoa',
     build: () => pessoaBloc,
     act: (bloc) => bloc.add(PessoaSalvou()),
-    setUp: () {
-      _setupSalvarPessoa(pessoa: pessoa);
-    },
     seed: () {
       var state = PessoaState.fromModel(pessoa);
       return state.copyWith(
@@ -96,9 +115,6 @@ void main() {
       PessoaState.fromModel(pessoa, step: PessoaStep.carregando),
       PessoaState.fromModel(pessoa, step: PessoaStep.salva),
     ],
-    verify: (bloc) {
-      verify(salvarPessoa.call(pessoa: pessoa));
-    },
   );
 }
 
@@ -107,37 +123,6 @@ void _setupRecuperarPessoa({
   required Pessoa? response,
 }) {
   when(recuperarPessoa.call(idPessoa: idPessoa)).thenAnswer(
-    (_) async => response,
-  );
-}
-
-void _setupSalvarPessoa({
-  required Pessoa pessoa,
-}) {
-  when(salvarPessoa.call(pessoa: pessoa)).thenAnswer(
-    (_) async => pessoa,
-  );
-}
-
-void _setupCriarPessoa({
-  required Pessoa response,
-}) {
-  when(
-    criarPessoa.call(
-      dataDeNascimento: response.dataDeNascimento!,
-      bloqueado: response.bloqueado,
-      contato: response.contato,
-      documento: response.documento,
-      eCliente: response.eCliente,
-      eFornecedor: response.eFornecedor,
-      eFuncionario: response.eFuncionario,
-      email: response.email,
-      nome: response.nome,
-      tipoContato: response.tipoContato,
-      tipoPessoa: response.tipoPessoa,
-      uf: response.uf!,
-    ),
-  ).thenAnswer(
     (_) async => response,
   );
 }

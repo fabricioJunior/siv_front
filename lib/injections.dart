@@ -2,7 +2,8 @@ import 'package:autenticacao/autenticao_injecoes.dart' as auth;
 import 'package:autenticacao/data.dart';
 import 'package:autenticacao/data/remote/auth_http_interceptor.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_data_source.dart'
-    as auth show IEmpresasRemoteDataSource;
+    as auth
+    show IEmpresasRemoteDataSource;
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
@@ -10,6 +11,7 @@ import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/sessao.dart';
 import 'package:estoque/estoque_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
@@ -26,9 +28,11 @@ import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/licenciado_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/terminal_da_sessao_dto.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/usuario_dto.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/terminal_da_sessao_local_data_source.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
 import 'package:siv_front/data/infra/remote_data_sourcers/empresas_remote_data_source.dart';
 import 'package:siv_front/data/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
@@ -43,11 +47,7 @@ Future<void> resolverDependenciasApp() async {
   sl.registerLazySingleton<IHttpSource>(
     () => HttpSource(
       client: InterceptedClient.build(
-        interceptors: [
-          AuthHttpInterceptor(
-            sl(),
-          )
-        ],
+        interceptors: [AuthHttpInterceptor(sl())],
       ),
     ),
   );
@@ -79,61 +79,60 @@ void _remoteDataSources() {
     ),
   );
   sl.registerFactory<IUsuariosRemoteDataSource>(
-    () => UsuariosRemoteDatasource(
-      informacoesParaRequest: sl(),
-    ),
+    () => UsuariosRemoteDatasource(informacoesParaRequest: sl()),
   );
   sl.registerFactory<auth.IEmpresasRemoteDataSource>(
-    () => EmpresasRemoteDataSource(
-      informacoesParaRequest: sl(),
-    ),
+    () => EmpresasRemoteDataSource(informacoesParaRequest: sl()),
   );
 }
 
 void _localDataSource() {
   sl.registerFactory<IUsuarioDaSessaoLocalDataSource>(
-      () => UsuarioDaSessaoLocalDataSource(getIsar: _getIsar));
+    () => UsuarioDaSessaoLocalDataSource(getIsar: _getIsar),
+  );
 
   sl.registerFactory<IEmpresaDaSessaoLocalDataSource>(
-    () => EmpresaDaSessaoLocalDataSource(
-      getIsar: _getIsar,
-    ),
+    () => EmpresaDaSessaoLocalDataSource(getIsar: _getIsar),
   );
   sl.registerFactory<ILicenciadoDaSessaoLocalDataSource>(
-    () => LicenciadoDaSessaoLocalDataSource(
-      getIsar: _getIsar,
-    ),
+    () => LicenciadoDaSessaoLocalDataSource(getIsar: _getIsar),
+  );
+
+  sl.registerFactory<ITerminalDaSessaoLocalDataSource>(
+    () => TerminalDaSessaoLocalDataSource(getIsar: _getIsar),
   );
 
   sl.registerFactory<ILeitorDataDatasource>(
-      () => ProdutoDoLeitorLocalDataSource(
-            codigosLocalDataSource: sl(),
-            produtoEstoqueLocalDataSource: sl(),
-            precosDeReferenciasLocalDataSource: sl(),
-          ));
+    () => ProdutoDoLeitorLocalDataSource(
+      codigosLocalDataSource: sl(),
+      produtoEstoqueLocalDataSource: sl(),
+      precosDeReferenciasLocalDataSource: sl(),
+    ),
+  );
 }
 
 void _presentation() {
-  sl.registerLazySingleton(() => AppBloc(
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-      )..add(AppIniciou()));
+  sl.registerLazySingleton(
+    () => AppBloc(
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    )..add(AppIniciou()),
+  );
+
+  sl.registerLazySingleton<IAcessoGlobalSessao>(() => sl<AppBloc>());
 
   sl.registerLazySingleton<SyncDataBloc>(
-    () => SyncDataBloc(
-      sl(),
-      sl(),
-      sl(),
-      sl(),
-      sl(),
-    ),
+    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl()),
   );
 }
 
@@ -150,9 +149,7 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
   IHttpSource get httpClient => httpSource;
 
   @override
-  Uri get uriBase => Uri.parse(
-        apiBaseUrlConfig.urlBase,
-      );
+  Uri get uriBase => Uri.parse(apiBaseUrlConfig.urlBase);
 }
 
 Future<Isar> _getIsar({bool? isSyncData = false}) async {
@@ -160,6 +157,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
     UsuarioDtoSchema,
     EmpresaDtoSchema,
     LicenciadoDtoSchema,
+    TerminalDaSessaoDtoSchema,
   ];
 
   return sl<IIsarDatabaseInstance>().getIsar(

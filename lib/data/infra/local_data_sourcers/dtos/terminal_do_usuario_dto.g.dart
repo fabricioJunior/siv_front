@@ -13,13 +13,14 @@ const TerminalDoUsuarioDtoSchema = Schema(
   name: r'TerminalDoUsuarioDto',
   id: -4894669120949043947,
   properties: {
-    r'id': PropertySchema(id: 0, name: r'id', type: IsarType.long),
+    r'hashCode': PropertySchema(id: 0, name: r'hashCode', type: IsarType.long),
+    r'id': PropertySchema(id: 1, name: r'id', type: IsarType.long),
     r'idEmpresa': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'idEmpresa',
       type: IsarType.long,
     ),
-    r'nome': PropertySchema(id: 2, name: r'nome', type: IsarType.string),
+    r'nome': PropertySchema(id: 3, name: r'nome', type: IsarType.string),
   },
 
   estimateSize: _terminalDoUsuarioDtoEstimateSize,
@@ -44,9 +45,10 @@ void _terminalDoUsuarioDtoSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.id);
-  writer.writeLong(offsets[1], object.idEmpresa);
-  writer.writeString(offsets[2], object.nome);
+  writer.writeLong(offsets[0], object.hashCode);
+  writer.writeLong(offsets[1], object.id);
+  writer.writeLong(offsets[2], object.idEmpresa);
+  writer.writeString(offsets[3], object.nome);
 }
 
 TerminalDoUsuarioDto _terminalDoUsuarioDtoDeserialize(
@@ -56,9 +58,9 @@ TerminalDoUsuarioDto _terminalDoUsuarioDtoDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = TerminalDoUsuarioDto(
-    id: reader.readLongOrNull(offsets[0]) ?? 0,
-    idEmpresa: reader.readLongOrNull(offsets[1]) ?? 0,
-    nome: reader.readStringOrNull(offsets[2]) ?? '',
+    id: reader.readLongOrNull(offsets[1]) ?? 0,
+    idEmpresa: reader.readLongOrNull(offsets[2]) ?? 0,
+    nome: reader.readStringOrNull(offsets[3]) ?? '',
   );
   return object;
 }
@@ -71,10 +73,12 @@ P _terminalDoUsuarioDtoDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 2:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 3:
       return (reader.readStringOrNull(offset) ?? '') as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -88,6 +92,77 @@ extension TerminalDoUsuarioDtoQueryFilter
           TerminalDoUsuarioDto,
           QFilterCondition
         > {
+  QueryBuilder<
+    TerminalDoUsuarioDto,
+    TerminalDoUsuarioDto,
+    QAfterFilterCondition
+  >
+  hashCodeEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'hashCode', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TerminalDoUsuarioDto,
+    TerminalDoUsuarioDto,
+    QAfterFilterCondition
+  >
+  hashCodeGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'hashCode',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TerminalDoUsuarioDto,
+    TerminalDoUsuarioDto,
+    QAfterFilterCondition
+  >
+  hashCodeLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'hashCode',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TerminalDoUsuarioDto,
+    TerminalDoUsuarioDto,
+    QAfterFilterCondition
+  >
+  hashCodeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'hashCode',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<
     TerminalDoUsuarioDto,
     TerminalDoUsuarioDto,

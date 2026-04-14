@@ -1,7 +1,15 @@
 library data;
 
+export 'data/remote/caixa_remote_data_source.dart';
 export 'data/remote/dtos/forma_de_pagamento_dto.dart';
+export 'data/remote/dtos/caixa_dto.dart';
+export 'data/remote/dtos/extrato_caixa_dto.dart';
+export 'data/remote/extrato_caixa_remote_data_source.dart';
 export 'data/remote/formas_de_pagamento_remote_data_source.dart';
+export 'data/repositories/caixa_repository.dart';
 export 'data/repositories/formas_de_pagamento_repository.dart';
+export 'domain/data/remote/i_caixa_remote_data_source.dart';
+export 'domain/data/remote/i_extrato_caixa_remote_data_source.dart';
 export 'domain/data/remote/i_formas_de_pagamento_remote_data_source.dart';
+export 'domain/data/repositories/i_caixa_repository.dart';
 export 'domain/data/repositories/i_formas_de_pagamento_repository.dart';

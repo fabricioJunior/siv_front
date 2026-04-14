@@ -1,6 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/presentation.dart';
+import 'package:autenticacao/models.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
@@ -264,6 +265,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 8),
+                    const TerminalDaSessaoWidget(titulo: 'Terminal atual'),
                   ],
                 ),
               ),
@@ -285,6 +288,17 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.swap_horiz),
                 label: const Text('Trocar empresa'),
               ),
+              FilledButton.tonalIcon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.16),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  _trocarTerminal(context);
+                },
+                icon: const Icon(Icons.point_of_sale_outlined),
+                label: const Text('Trocar terminal'),
+              ),
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -302,6 +316,80 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Future<void> _trocarTerminal(BuildContext context) async {
+    final appState = sl<AppBloc>().state;
+
+    if (appState.usuarioDaSessao == null || appState.empresaDaSessao == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Usuário ou empresa da sessão não encontrados.'),
+        ),
+      );
+      return;
+    }
+
+    final terminaisDaEmpresa = appState.terminaisDaEmpresaDaSessao;
+
+    if (terminaisDaEmpresa.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nenhum terminal disponivel para a empresa da sessao.'),
+        ),
+      );
+      return;
+    }
+
+    final resultado = await Navigator.of(context).pushNamed(
+      '/selecionar_terminal',
+      arguments: {'terminais': terminaisDaEmpresa},
+    );
+
+    if (!context.mounted || resultado is! Map) {
+      return;
+    }
+
+    final idTerminal = resultado['idTerminal'];
+    final idEmpresa = resultado['idEmpresa'];
+    final nomeTerminal = resultado['nomeTerminal'];
+
+    if (idTerminal is! int || idEmpresa is! int || nomeTerminal is! String) {
+      return;
+    }
+
+    sl<AppBloc>().add(
+      AppSelecionouTerminalDaSessao(
+        terminal: _TerminalSelecionado(
+          id: idTerminal,
+          idEmpresa: idEmpresa,
+          nome: nomeTerminal,
+        ),
+      ),
+    );
+  }
+}
+
+class _TerminalSelecionado implements TerminalDoUsuario {
+  @override
+  final int id;
+
+  @override
+  final int idEmpresa;
+
+  @override
+  final String nome;
+
+  _TerminalSelecionado({
+    required this.id,
+    required this.idEmpresa,
+    required this.nome,
+  });
+
+  @override
+  List<Object?> get props => [id, idEmpresa, nome];
+
+  @override
+  bool? get stringify => true;
 }
 
 class _AccessSection extends StatelessWidget {

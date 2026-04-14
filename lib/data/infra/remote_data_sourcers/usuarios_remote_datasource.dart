@@ -2,7 +2,6 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_
 import 'package:autenticacao/domain/models/usuario.dart';
 import 'package:core/remote_data_sourcers.dart';
 
-import '../local_data_sourcers/dtos/terminal_do_usuario_dto.dart';
 import 'dtos/usuario_dto.dart';
 import 'dtos/usuario_to_edit_dto.dart';
 
@@ -83,12 +82,6 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
 }
 
 extension ToDto on Usuario {
-  UsuarioDto toDto() => UsuarioDto(
-    id: id,
-    login: login,
-    nome: nome,
-    tipo: tipo,
-    senha: senha,
-    terminaisDoUsuario: terminaisDoUsuario.map((e) => e.toDto()).toList(),
-  );
+  UsuarioDto toDto() =>
+      UsuarioDto(id: id, login: login, nome: nome, tipo: tipo, senha: senha);
 }

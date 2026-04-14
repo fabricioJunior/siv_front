@@ -18,7 +18,14 @@ final RecuperarEmpresas recuperarEmpresas = MockRecuperarEmpresas();
 final RecuperarLicenciados recuperarLicenciados = MockRecuperarLicenciados();
 final SalvarLicenciadoDaSessao salvarLicenciadoDaSessao =
     MockSalvarLicenciadoDaSessao();
+final SalvarTerminalDaSessao salvarTerminalDaSessao =
+    MockSalvarTerminalDaSessao();
+final LimparTerminalDaSessao limparTerminalDaSessao =
+    MockLimparTerminalDaSessao();
 final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
+final RecuperarTerminaisDoUsuarioPorEmpresa
+    recuperarTerminaisDoUsuarioPorEmpresa =
+    FakeRecuperarTerminaisDoUsuarioPorEmpresa();
 late LoginBloc loginBloc;
 
 class MockRecuperarLicenciados extends Mock implements RecuperarLicenciados {}
@@ -31,6 +38,28 @@ class MockSalvarLicenciadoDaSessao extends Mock
 
 class MockApiBaseUrlConfig extends Mock implements ApiBaseUrlConfig {}
 
+class MockSalvarTerminalDaSessao extends Mock
+    implements SalvarTerminalDaSessao {
+  @override
+  Future<void> call(TerminalDoUsuario terminal) async {}
+}
+
+class MockLimparTerminalDaSessao extends Mock
+    implements LimparTerminalDaSessao {
+  @override
+  Future<void> call() async {}
+}
+
+class FakeRecuperarTerminaisDoUsuarioPorEmpresa
+    implements RecuperarTerminaisDoUsuarioPorEmpresa {
+  @override
+  Future<List<TerminalDoUsuario>> call({
+    required int idUsuario,
+    required int idEmpresa,
+  }) async =>
+      const [];
+}
+
 void main() {
   setUp(() {
     loginBloc = LoginBloc(
@@ -39,7 +68,10 @@ void main() {
       recuperarEmpresas,
       recuperarLicenciados,
       salvarLicenciadoDaSessao,
+      salvarTerminalDaSessao,
+      limparTerminalDaSessao,
       apiBaseUrlConfig,
+      recuperarTerminaisDoUsuarioPorEmpresa,
     );
     var usuario = fakeUsuario();
     _setupRecuperarUsuarioDaSessao(usuario);
@@ -64,16 +96,6 @@ void main() {
     );
     var estadoDeAutenticacaoEmProgresso =
         LoginAutenticarEmProgresso(estadoComLicenciadoSelecionado);
-    var estadoDeSucessoNaAutenticao = LoginAutenticarSucesso(
-      estadoDeAutenticacaoEmProgresso,
-      empresas: [],
-      idEmpresa: null,
-    );
-
-    var estadoDeFalhaNaAutenticacao = LoginAutenticarFalha(
-      estadoDeAutenticacaoEmProgresso,
-      erro: 'Usuário ou senha incorretos',
-    );
 
     blocTest<LoginBloc, LoginState>(
       'armazena usuario informado pelo usuário',
@@ -107,7 +129,7 @@ void main() {
       },
       expect: () => [
         estadoDeAutenticacaoEmProgresso,
-        estadoDeSucessoNaAutenticao,
+        isA<LoginAutenticarSucesso>(),
       ],
     );
     blocTest<LoginBloc, LoginState>(
@@ -122,7 +144,13 @@ void main() {
       },
       expect: () => [
         estadoDeAutenticacaoEmProgresso,
-        estadoDeFalhaNaAutenticacao,
+        isA<LoginAutenticarFalha>()
+            .having((s) => s.tipo, 'tipo', LoginErroTipo.credenciaisInvalidas)
+            .having(
+              (s) => s.erro,
+              'erro',
+              'Usuário ou senha incorretos. Revise os dados e tente novamente.',
+            ),
       ],
     );
     blocTest<LoginBloc, LoginState>(
@@ -137,7 +165,13 @@ void main() {
       },
       expect: () => [
         estadoDeAutenticacaoEmProgresso,
-        estadoDeFalhaNaAutenticacao,
+        isA<LoginAutenticarFalha>()
+            .having((s) => s.tipo, 'tipo', LoginErroTipo.desconhecido)
+            .having(
+              (s) => s.erro,
+              'erro',
+              'Falha na autenticação. Se o problema persistir, entre em contato com o suporte.',
+            ),
       ],
     );
 
@@ -149,10 +183,13 @@ void main() {
         bloc.add(LoginAutenticou());
       },
       expect: () => [
-        LoginAutenticarFalha(
-          estadoSucessoAdicionarSenha,
-          erro: 'Selecione o licenciado para continuar',
-        ),
+        isA<LoginAutenticarFalha>()
+            .having((s) => s.tipo, 'tipo', LoginErroTipo.validacao)
+            .having(
+              (s) => s.erro,
+              'erro',
+              'Selecione o licenciado para continuar.',
+            ),
       ],
     );
   });
@@ -172,7 +209,7 @@ void _setupFalhaCriarTokenDeAutenticacao(
   String senha,
 ) {
   when(criarTokenDeAutenticacao.call(usuario: usuario, senha: senha))
-      .thenThrow((_) async => Exception('erro desconhecido'));
+      .thenThrow(Exception('erro desconhecido'));
 }
 
 void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
@@ -182,4 +219,3 @@ void _setupRecuperarUsuarioDaSessao(Usuario usuario) {
 void _setupRecuperarEmpresas() {
   when(recuperarEmpresas.call()).thenAnswer((_) async => []);
 }
-

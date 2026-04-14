@@ -111,7 +111,8 @@ void main() {
     blocTest<TamanhoBloc, TamanhoState>(
       'deve salvar tamanho existente quando id não é null',
       setUp: () {
-        _setupCriarTamanho(
+        _setupAtualizarTamanho(
+          id: 1,
           nome: 'P Atualizado',
           response: fakeTamanho(id: 1, nome: 'P Atualizado'),
         );
@@ -139,7 +140,7 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(criarTamanho.call('P Atualizado')).called(1);
+        verify(atualizarTamanho.call(1, 'P Atualizado')).called(1);
       },
     );
 
@@ -179,4 +180,12 @@ void _setupRecuperarTamanho({required int id, required Tamanho? response}) {
 
 void _setupCriarTamanho({required String nome, required Tamanho response}) {
   when(criarTamanho.call(nome)).thenAnswer((_) async => response);
+}
+
+void _setupAtualizarTamanho({
+  required int id,
+  required String nome,
+  required Tamanho response,
+}) {
+  when(atualizarTamanho.call(id, nome)).thenAnswer((_) async => response);
 }

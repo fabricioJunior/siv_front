@@ -1,7 +1,10 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
+import 'package:autenticacao/models.dart' show TerminalDoUsuario;
 import 'package:comercial/pages.dart';
 import 'package:empresas/presentation.dart';
 import 'package:estoque/presentation.dart';
+import 'package:core/injecoes.dart';
+import 'package:core/sessao.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/pages.dart';
@@ -11,6 +14,7 @@ import 'package:precos/presentation.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
+import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
@@ -42,6 +46,14 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/selecionar_empresa': (context) {
     return const SelecionarEmpresaPage();
+  },
+  '/selecionar_terminal': (context) {
+    final terminaisArg = args(context)['terminais'];
+    final terminais = terminaisArg is List<TerminalDoUsuario>
+        ? terminaisArg
+        : const <TerminalDoUsuario>[];
+
+    return SelecionarTerminalPage(terminais: terminais);
   },
 
   ///EMPRESAS:
@@ -98,6 +110,23 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/financeiro': (context) {
     return const FinanceiroMenuPage();
+  },
+  '/fluxo_de_caixa': (context) {
+    final sessao = sl<IAcessoGlobalSessao>();
+    final empresaIdArg = args(context)['empresaId'];
+    final terminalIdArg = args(context)['terminalId'];
+
+    final empresaId = empresaIdArg is int
+        ? empresaIdArg
+        : int.tryParse(empresaIdArg?.toString() ?? '');
+    final terminalId = terminalIdArg is int
+        ? terminalIdArg
+        : int.tryParse(terminalIdArg?.toString() ?? '');
+
+    return FluxoDeCaixaPage(
+      empresaId: empresaId ?? sessao.empresaIdDaSessao,
+      terminalId: terminalId ?? sessao.terminalIdDaSessao,
+    );
   },
   '/administracao': (context) {
     return const AdministracaoMenuPage();

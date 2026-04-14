@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
-import 'package:flutter/material.dart';
 import 'package:precos/models.dart';
 import 'package:precos/use_cases.dart';
 

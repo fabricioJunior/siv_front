@@ -15,6 +15,7 @@ class Deslogar {
 
   Future<void> call() async {
     await licenciadosRepository.limparLicenciadoDaSessao();
+    await usuariosRepository.limparTerminalDaSessao();
     await usuariosRepository.apagarUsuarioDaSessao();
     await tokenRepository.deleteToken(notificarTokenExcluido: false);
   }

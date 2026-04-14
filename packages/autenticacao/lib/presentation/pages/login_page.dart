@@ -370,13 +370,62 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
 
+    final terminaisDaEmpresa = await bloc.buscarTerminaisParaEmpresa(idEmpresa);
+
+    TerminalDoUsuario? terminalSelecionado;
+    if (terminaisDaEmpresa.length == 1) {
+      terminalSelecionado = terminaisDaEmpresa.first;
+    } else if (terminaisDaEmpresa.length > 1) {
+      terminalSelecionado = await _selecionarTerminal(
+        context,
+        terminaisDaEmpresa,
+      );
+
+      if (!context.mounted || terminalSelecionado == null) {
+        return;
+      }
+    }
+
     bloc.add(
       LoginAutenticou(
         empresa: _EmpresaSelecionada(
           id: idEmpresa,
           nome: nomeEmpresa,
         ),
+        terminal: terminalSelecionado,
       ),
+    );
+  }
+
+  Future<TerminalDoUsuario?> _selecionarTerminal(
+    BuildContext context,
+    List<TerminalDoUsuario> terminais,
+  ) async {
+    final resultado = await Navigator.of(context).pushNamed(
+      '/selecionar_terminal',
+      arguments: {'terminais': terminais},
+    );
+
+    if (!context.mounted || resultado is! Map) {
+      return null;
+    }
+
+    final idTerminal = resultado['idTerminal'];
+    final idEmpresa = resultado['idEmpresa'];
+    final nomeTerminal = resultado['nomeTerminal'];
+
+    if (idTerminal is! int || idEmpresa is! int) {
+      return null;
+    }
+
+    if (nomeTerminal is! String || nomeTerminal.trim().isEmpty) {
+      return null;
+    }
+
+    return _TerminalSelecionado(
+      id: idTerminal,
+      idEmpresa: idEmpresa,
+      nome: nomeTerminal,
     );
   }
 
@@ -487,4 +536,27 @@ class _EmpresaSelecionada implements Empresa {
     required this.id,
     required this.nome,
   });
+}
+
+class _TerminalSelecionado implements TerminalDoUsuario {
+  @override
+  final int id;
+
+  @override
+  final int idEmpresa;
+
+  @override
+  final String nome;
+
+  _TerminalSelecionado({
+    required this.id,
+    required this.idEmpresa,
+    required this.nome,
+  });
+
+  @override
+  List<Object?> get props => [id, idEmpresa, nome];
+
+  @override
+  bool? get stringify => true;
 }

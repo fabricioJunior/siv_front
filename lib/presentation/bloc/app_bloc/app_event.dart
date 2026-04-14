@@ -11,3 +11,9 @@ class AppAutenticou extends AppEvent {
 }
 
 class AppDesautenticou extends AppEvent {}
+
+class AppSelecionouTerminalDaSessao extends AppEvent {
+  final TerminalDoUsuario terminal;
+
+  AppSelecionouTerminalDaSessao({required this.terminal});
+}

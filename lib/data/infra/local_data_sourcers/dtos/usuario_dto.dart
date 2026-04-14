@@ -1,7 +1,5 @@
-import 'package:autenticacao/domain/models/terminal_do_usuario.dart';
 import 'package:autenticacao/models.dart';
 import 'package:core/isar_anotacoes.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/dtos/terminal_do_usuario_dto.dart';
 
 part 'usuario_dto.g.dart';
 
@@ -32,15 +30,11 @@ class UsuarioDto implements Usuario, IsarDto {
     required this.nome,
     required this.tipo,
     required this.senha,
-    required this.terminaisDoUsuario,
   });
 
   @override
-  List<Object?> get props => [id, nome, tipo, login, terminaisDoUsuario];
+  List<Object?> get props => [id, nome, tipo, login];
 
   @override
   bool? get stringify => true;
-
-  @override
-  final List<TerminalDoUsuarioDto> terminaisDoUsuario;
 }

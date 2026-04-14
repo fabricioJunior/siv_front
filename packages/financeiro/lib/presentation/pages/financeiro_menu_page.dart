@@ -33,6 +33,13 @@ class FinanceiroMenuPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ItemMenu(
+            icon: Icons.receipt_long,
+            titulo: 'Fluxo de caixa',
+            subtitulo: 'Abra o caixa e acompanhe os lancamentos do extrato.',
+            onTap: () => Navigator.pushNamed(context, '/fluxo_de_caixa'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
             icon: Icons.attach_money,
             titulo: 'Tabelas de preço',
             subtitulo: 'Gerencie preços e condições comerciais por tabela.',

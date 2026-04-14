@@ -7,11 +7,10 @@ Usuario fakeUsuario({
   String login = 'login',
   String nome = 'nome do usuario',
   TipoUsuario tipo = TipoUsuario.padrao,
-}) =>
-    Usuario.create(
-      id: id,
-      login: login,
-      nome: nome,
-      tipo: tipo,
-      senha: 'senha',
-    );
+}) => Usuario.create(
+  id: id,
+  login: login,
+  nome: nome,
+  tipo: tipo,
+  senha: 'senha',
+);

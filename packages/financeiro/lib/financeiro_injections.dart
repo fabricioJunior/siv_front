@@ -11,6 +11,18 @@ void resolverFinanceiroInjections() {
 }
 
 void _remoteDataSources() {
+  sl.registerFactory<ICaixaRemoteDataSource>(
+    () => CaixaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IExtratoCaixaRemoteDataSource>(
+    () => ExtratoCaixaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
   sl.registerFactory<IFormasDePagamentoRemoteDataSource>(
     () => FormasDePagamentoRemoteDataSource(
       informacoesParaRequest: sl(),
@@ -19,6 +31,13 @@ void _remoteDataSources() {
 }
 
 void _repositories() {
+  sl.registerFactory<ICaixaRepository>(
+    () => CaixaRepository(
+      caixaRemoteDataSource: sl(),
+      extratoCaixaRemoteDataSource: sl(),
+    ),
+  );
+
   sl.registerFactory<IFormasDePagamentoRepository>(
     () => FormasDePagamentoRepository(
       remoteDataSource: sl(),
@@ -27,6 +46,18 @@ void _repositories() {
 }
 
 void _useCases() {
+  sl.registerFactory<AbrirCaixa>(
+    () => AbrirCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<BuscarExtratoCaixa>(
+    () => BuscarExtratoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<BuscarExtratoCaixaPorDocumento>(
+    () => BuscarExtratoCaixaPorDocumento(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarFormasDePagamento>(
     () => RecuperarFormasDePagamento(repository: sl()),
   );
@@ -45,6 +76,14 @@ void _useCases() {
 }
 
 void _presentation() {
+  sl.registerFactory<FluxoDeCaixaBloc>(
+    () => FluxoDeCaixaBloc(
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
   sl.registerFactory<FormasDePagamentoBloc>(
     () => FormasDePagamentoBloc(
       sl(),

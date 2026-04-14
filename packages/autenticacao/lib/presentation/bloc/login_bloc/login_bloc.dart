@@ -10,6 +10,8 @@ import 'package:core/remote_data_sourcers.dart' show HttpException;
 
 import '../../../domain/models/empresa.dart';
 import '../../../domain/models/licenciado.dart';
+import '../../../domain/models/terminal_do_usuario.dart';
+import '../../../domain/models/usuario.dart';
 
 part 'login_state.dart';
 part 'login_event.dart';
@@ -20,7 +22,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final RecuperarEmpresas _recuperarEmpresas;
   final RecuperarLicenciados _recuperarLicenciados;
   final SalvarLicenciadoDaSessao _salvarLicenciadoDaSessao;
+  final SalvarTerminalDaSessao _salvarTerminalDaSessao;
+  final LimparTerminalDaSessao _limparTerminalDaSessao;
   final ApiBaseUrlConfig _apiBaseUrlConfig;
+  final RecuperarTerminaisDoUsuarioPorEmpresa
+      _recuperarTerminaisDoUsuarioPorEmpresa;
 
   LoginBloc(
     this._criarTokenDeAutenticacao,
@@ -28,7 +34,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     this._recuperarEmpresas,
     this._recuperarLicenciados,
     this._salvarLicenciadoDaSessao,
+    this._salvarTerminalDaSessao,
+    this._limparTerminalDaSessao,
     this._apiBaseUrlConfig,
+    this._recuperarTerminaisDoUsuarioPorEmpresa,
   ) : super(const LoginInicial()) {
     on<LoginCarregouLicenciados>(_onLoginCarregouLicenciados);
     on<LoginCarregouEmpresas>(_onLoginCarregouEmpresas);
@@ -159,7 +168,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         empresa: event.empresa,
       );
 
-      await _recuperarUsuarioDaSessao.call();
+      final usuarioDaSessao = await _recuperarUsuarioDaSessao.call();
       if (token == null) {
         emit(
           LoginAutenticarFalha(
@@ -173,6 +182,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       }
 
       await _salvarLicenciadoDaSessao.call(state.licenciadoSelecionado!);
+      if (event.terminal != null) {
+        await _salvarTerminalDaSessao.call(event.terminal!);
+      } else if (event.empresa != null) {
+        await _limparTerminalDaSessao.call();
+      }
 
       List<Empresa> empresas;
       try {
@@ -194,6 +208,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           state,
           empresas: empresas,
           idEmpresa: event.empresa?.id,
+          usuarioDaSessao: usuarioDaSessao,
         ),
       );
     } catch (e, s) {
@@ -292,5 +307,20 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           'Falha na autenticação. Se o problema persistir, entre em contato com o suporte.',
       },
     );
+  }
+
+  Future<List<TerminalDoUsuario>> buscarTerminaisParaEmpresa(
+    int idEmpresa,
+  ) async {
+    final usuarioId = state.usuarioDaSessao?.id;
+    if (usuarioId == null) return const [];
+    try {
+      return await _recuperarTerminaisDoUsuarioPorEmpresa.call(
+        idUsuario: usuarioId,
+        idEmpresa: idEmpresa,
+      );
+    } catch (_) {
+      return const [];
+    }
   }
 }

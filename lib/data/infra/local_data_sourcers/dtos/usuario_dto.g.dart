@@ -27,15 +27,8 @@ const UsuarioDtoSchema = CollectionSchema(
       name: r'stringify',
       type: IsarType.bool,
     ),
-    r'terminaisDoUsuario': PropertySchema(
-      id: 6,
-      name: r'terminaisDoUsuario',
-      type: IsarType.objectList,
-
-      target: r'TerminalDoUsuarioDto',
-    ),
     r'tipo': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'tipo',
       type: IsarType.byte,
       enumMap: _UsuarioDtotipoEnumValueMap,
@@ -49,7 +42,7 @@ const UsuarioDtoSchema = CollectionSchema(
   idName: r'dataBaseId',
   indexes: {},
   links: {},
-  embeddedSchemas: {r'TerminalDoUsuarioDto': TerminalDoUsuarioDtoSchema},
+  embeddedSchemas: {},
 
   getId: _usuarioDtoGetId,
   getLinks: _usuarioDtoGetLinks,
@@ -71,18 +64,6 @@ int _usuarioDtoEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  bytesCount += 3 + object.terminaisDoUsuario.length * 3;
-  {
-    final offsets = allOffsets[TerminalDoUsuarioDto]!;
-    for (var i = 0; i < object.terminaisDoUsuario.length; i++) {
-      final value = object.terminaisDoUsuario[i];
-      bytesCount += TerminalDoUsuarioDtoSchema.estimateSize(
-        value,
-        offsets,
-        allOffsets,
-      );
-    }
-  }
   return bytesCount;
 }
 
@@ -98,13 +79,7 @@ void _usuarioDtoSerialize(
   writer.writeString(offsets[3], object.nome);
   writer.writeString(offsets[4], object.senha);
   writer.writeBool(offsets[5], object.stringify);
-  writer.writeObjectList<TerminalDoUsuarioDto>(
-    offsets[6],
-    allOffsets,
-    TerminalDoUsuarioDtoSchema.serialize,
-    object.terminaisDoUsuario,
-  );
-  writer.writeByte(offsets[7], object.tipo.index);
+  writer.writeByte(offsets[6], object.tipo.index);
 }
 
 UsuarioDto _usuarioDtoDeserialize(
@@ -118,16 +93,8 @@ UsuarioDto _usuarioDtoDeserialize(
     login: reader.readString(offsets[2]),
     nome: reader.readString(offsets[3]),
     senha: reader.readStringOrNull(offsets[4]),
-    terminaisDoUsuario:
-        reader.readObjectList<TerminalDoUsuarioDto>(
-          offsets[6],
-          TerminalDoUsuarioDtoSchema.deserialize,
-          allOffsets,
-          TerminalDoUsuarioDto(),
-        ) ??
-        [],
     tipo:
-        _UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offsets[7])] ??
+        _UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offsets[6])] ??
         TipoUsuario.padrao,
   );
   return object;
@@ -153,15 +120,6 @@ P _usuarioDtoDeserializeProp<P>(
     case 5:
       return (reader.readBoolOrNull(offset)) as P;
     case 6:
-      return (reader.readObjectList<TerminalDoUsuarioDto>(
-                offset,
-                TerminalDoUsuarioDtoSchema.deserialize,
-                allOffsets,
-                TerminalDoUsuarioDto(),
-              ) ??
-              [])
-          as P;
-    case 7:
       return (_UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offset)] ??
               TipoUsuario.padrao)
           as P;
@@ -934,71 +892,6 @@ extension UsuarioDtoQueryFilter
     });
   }
 
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'terminaisDoUsuario',
-        length,
-        true,
-        length,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'terminaisDoUsuario', 0, true, 0, true);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'terminaisDoUsuario', 0, false, 999999, true);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioLengthLessThan(int length, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'terminaisDoUsuario', 0, true, length, include);
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioLengthGreaterThan(int length, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'terminaisDoUsuario',
-        length,
-        include,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'terminaisDoUsuario',
-        lower,
-        includeLower,
-        upper,
-        includeUpper,
-      );
-    });
-  }
-
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> tipoEqualTo(
     TipoUsuario value,
   ) {
@@ -1060,14 +953,7 @@ extension UsuarioDtoQueryFilter
 }
 
 extension UsuarioDtoQueryObject
-    on QueryBuilder<UsuarioDto, UsuarioDto, QFilterCondition> {
-  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition>
-  terminaisDoUsuarioElement(FilterQuery<TerminalDoUsuarioDto> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'terminaisDoUsuario');
-    });
-  }
-}
+    on QueryBuilder<UsuarioDto, UsuarioDto, QFilterCondition> {}
 
 extension UsuarioDtoQueryLinks
     on QueryBuilder<UsuarioDto, UsuarioDto, QFilterCondition> {}
@@ -1350,13 +1236,6 @@ extension UsuarioDtoQueryProperty
   QueryBuilder<UsuarioDto, bool?, QQueryOperations> stringifyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'stringify');
-    });
-  }
-
-  QueryBuilder<UsuarioDto, List<TerminalDoUsuarioDto>, QQueryOperations>
-  terminaisDoUsuarioProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'terminaisDoUsuario');
     });
   }
 

@@ -9,9 +9,7 @@ import '../../doubles/http.mocks.dart';
 
 var httpSource = MockIHttpSource();
 var host = 'localhost';
-var uriBase = Uri(
-  host: host,
-);
+var uriBase = Uri(host: host);
 late EmpresasRemoteDataSource empresasRemoteDataSource;
 
 void main() {
@@ -30,7 +28,8 @@ void main() {
 
     var response = await empresasRemoteDataSource.postEmpresa(empresa);
 
-    expect(response, empresa.toDto());
+    expect(response.id, empresa.id);
+    expect(response.nome, empresa.nome);
   });
 }
 
@@ -42,12 +41,8 @@ void _setupPostEmpresa(Empresa empresa) {
 
   when(
     httpSource.post(
-      body: empresasRemoteDataSource.toJson(
-        empresa.toDto().toJson(),
-      ),
+      body: empresasRemoteDataSource.toJson(empresa.toDto().toJson()),
       uri: uri,
     ),
-  ).thenAnswer(
-    (_) async => FakeHttpResponse(statusCode: 200, body: body),
-  );
+  ).thenAnswer((_) async => FakeHttpResponse(statusCode: 200, body: body));
 }

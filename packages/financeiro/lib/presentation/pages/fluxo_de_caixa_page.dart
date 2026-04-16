@@ -145,6 +145,33 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         child: TerminalDaSessaoWidget(),
                       ),
                       const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonalIcon(
+                          onPressed: carregando || state.caixaId == null
+                              ? null
+                              : () async {
+                                  await Navigator.of(context).pushNamed(
+                                    '/suprimentos',
+                                    arguments: {'caixaId': state.caixaId},
+                                  );
+
+                                  if (!context.mounted ||
+                                      state.caixaId == null) {
+                                    return;
+                                  }
+
+                                  context.read<FluxoDeCaixaBloc>().add(
+                                        FluxoDeCaixaIniciou(
+                                          caixaId: state.caixaId!,
+                                        ),
+                                      );
+                                },
+                          icon: const Icon(Icons.savings_outlined),
+                          label: const Text('Suprimentos'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(

@@ -28,6 +28,12 @@ void _remoteDataSources() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<ISuprimentosRemoteDataSource>(
+    () => SuprimentosRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -40,6 +46,12 @@ void _repositories() {
 
   sl.registerFactory<IFormasDePagamentoRepository>(
     () => FormasDePagamentoRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<ISuprimentosRepository>(
+    () => SuprimentosRepository(
       remoteDataSource: sl(),
     ),
   );
@@ -74,6 +86,22 @@ void _useCases() {
     () => CriarFormaDePagamento(repository: sl()),
   );
 
+  sl.registerFactory<CriarSuprimento>(
+    () => CriarSuprimento(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarSuprimento>(
+    () => RecuperarSuprimento(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarSuprimentos>(
+    () => RecuperarSuprimentos(repository: sl()),
+  );
+
+  sl.registerFactory<CancelarSuprimento>(
+    () => CancelarSuprimento(repository: sl()),
+  );
+
   sl.registerFactory<AtualizarFormaDePagamento>(
     () => AtualizarFormaDePagamento(repository: sl()),
   );
@@ -85,6 +113,19 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<SuprimentosBloc>(
+    () => SuprimentosBloc(
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<SuprimentoBloc>(
+    () => SuprimentoBloc(
       sl(),
     ),
   );

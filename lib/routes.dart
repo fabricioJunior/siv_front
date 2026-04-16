@@ -144,6 +144,28 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/suprimentos': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/suprimentos',
+      child: SuprimentosPage(caixaId: caixaId),
+    );
+  },
+  '/suprimento': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/suprimento',
+      child: SuprimentoPage(caixaId: caixaId),
+    );
+  },
   '/administracao': (context) {
     return _rotaProtegida(
       route: '/administracao',

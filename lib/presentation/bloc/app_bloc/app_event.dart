@@ -17,3 +17,10 @@ class AppSelecionouTerminalDaSessao extends AppEvent {
 
   AppSelecionouTerminalDaSessao({required this.terminal});
 }
+
+class AppAtualizouCaixaDaSessao extends AppEvent {
+  final int terminalId;
+  final int? caixaId;
+
+  AppAtualizouCaixaDaSessao({required this.terminalId, required this.caixaId});
+}

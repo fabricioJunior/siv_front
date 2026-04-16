@@ -9,4 +9,8 @@ abstract class IRomaneiosRepository {
   Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId);
   Future<void> adicionarItemRomaneio(int romaneioId, RomaneioItem item);
   Future<void> removerItemRomaneio(int romaneioId, RomaneioItem item);
+  Future<void> receberRomaneioNoCaixa({
+    required int caixaId,
+    required int romaneioId,
+  });
 }

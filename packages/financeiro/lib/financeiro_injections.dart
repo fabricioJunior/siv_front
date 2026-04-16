@@ -58,6 +58,10 @@ void _useCases() {
     () => BuscarExtratoCaixaPorDocumento(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarCaixaAberto>(
+    () => RecuperarCaixaAberto(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarFormasDePagamento>(
     () => RecuperarFormasDePagamento(repository: sl()),
   );
@@ -78,6 +82,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<FluxoDeCaixaBloc>(
     () => FluxoDeCaixaBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

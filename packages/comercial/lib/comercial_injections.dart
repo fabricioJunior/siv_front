@@ -11,6 +11,10 @@ void resolverComercialInjections() {
 }
 
 void _remoteDataSources() {
+  sl.registerFactory<IReceberRomaneioNoCaixaRemoteDataSource>(
+    () => ReceberRomaneioNoCaixaRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IPedidosRemoteDataSource>(
     () => PedidosRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -26,7 +30,10 @@ void _repositories() {
   );
 
   sl.registerFactory<IRomaneiosRepository>(
-    () => RomaneiosRepository(remoteDataSource: sl()),
+    () => RomaneiosRepository(
+      remoteDataSource: sl(),
+      caixasRemoteDataSource: sl(),
+    ),
   );
 }
 
@@ -61,6 +68,10 @@ void _useCases() {
   sl.registerFactory<AtualizarObservacaoRomaneio>(
     () => AtualizarObservacaoRomaneio(repository: sl()),
   );
+
+  sl.registerFactory<ReceberRomaneioNoCaixa>(
+    () => ReceberRomaneioNoCaixa(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -84,6 +95,7 @@ void _presentation() {
   sl.registerFactory<RomaneiosBloc>(
     () => RomaneiosBloc(
       sl(),
+      sl(),
     ),
   );
 
@@ -94,11 +106,16 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<RomaneioCriacaoBloc>(
     () => RomaneioCriacaoBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

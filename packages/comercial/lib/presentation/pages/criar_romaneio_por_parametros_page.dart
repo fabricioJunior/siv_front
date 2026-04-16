@@ -4,6 +4,12 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 
+const String _resultadoRomaneioStatusKey = 'status';
+const String _resultadoRomaneioIdKey = 'romaneioId';
+const String _resultadoRomaneioStatusSucesso = 'sucesso';
+const String _resultadoRomaneioStatusFalha = 'falha';
+const String _resultadoRomaneioStatusParcial = 'parcial';
+
 class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final String hashLista;
 
@@ -43,10 +49,20 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                   ),
                 RomaneioCriacaoStep.falha => _FalhaRomaneioView(
                     erro: state.erro ?? 'Falha ao criar romaneio.',
+                    romaneioId: state.listaCompartilhada?.idLista,
                     onTentarNovamente: () {
                       context.read<RomaneioCriacaoBloc>().add(
                             RomaneioCriacaoSolicitada(hashLista: hashLista),
                           );
+                    },
+                    onVoltar: () {
+                      final romaneioId = state.listaCompartilhada?.idLista;
+                      Navigator.of(context).pop({
+                        _resultadoRomaneioStatusKey: romaneioId == null
+                            ? _resultadoRomaneioStatusFalha
+                            : _resultadoRomaneioStatusParcial,
+                        _resultadoRomaneioIdKey: romaneioId,
+                      });
                     },
                   ),
                 RomaneioCriacaoStep.sucesso => _SucessoRomaneioView(
@@ -89,21 +105,45 @@ class _ProcessandoRomaneioView extends StatelessWidget {
 
 class _FalhaRomaneioView extends StatelessWidget {
   final String erro;
+  final int? romaneioId;
   final VoidCallback onTentarNovamente;
+  final VoidCallback onVoltar;
 
   const _FalhaRomaneioView({
     required this.erro,
+    required this.romaneioId,
     required this.onTentarNovamente,
+    required this.onVoltar,
   });
 
   @override
   Widget build(BuildContext context) {
+    final romaneioPendente = romaneioId != null;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, size: 48),
+          Icon(
+            romaneioPendente
+                ? Icons.warning_amber_rounded
+                : Icons.error_outline,
+            size: 48,
+          ),
           const SizedBox(height: 12),
+          if (romaneioPendente) ...[
+            Text(
+              'Romaneio criado com pendência',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O romaneio #$romaneioId já foi criado. Agora, volte e abra os romaneios pendentes para concluir o recebimento manualmente.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(
             erro,
             textAlign: TextAlign.center,
@@ -112,7 +152,23 @@ class _FalhaRomaneioView extends StatelessWidget {
           FilledButton.icon(
             onPressed: onTentarNovamente,
             icon: const Icon(Icons.refresh),
-            label: const Text('Tentar novamente'),
+            label: Text(
+              romaneioPendente
+                  ? 'Tentar concluir novamente'
+                  : 'Tentar novamente',
+            ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onVoltar,
+            icon: Icon(
+              romaneioPendente ? Icons.warning_amber : Icons.arrow_back,
+            ),
+            label: Text(
+              romaneioPendente
+                  ? 'Voltar e ver pendências'
+                  : 'Voltar para entrada manual',
+            ),
           ),
         ],
       ),
@@ -178,6 +234,11 @@ class _SucessoRomaneioView extends StatelessWidget {
               : () {
                   Navigator.of(context).pushReplacementNamed(
                     '/romaneio',
+                    result: {
+                      _resultadoRomaneioStatusKey:
+                          _resultadoRomaneioStatusSucesso,
+                      _resultadoRomaneioIdKey: romaneio?.id,
+                    },
                     arguments: {
                       'idRomaneio': romaneio!.id,
                       'permitirEdicao': false,
@@ -189,7 +250,10 @@ class _SucessoRomaneioView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => Navigator.of(context).pop({
+            _resultadoRomaneioStatusKey: _resultadoRomaneioStatusSucesso,
+            _resultadoRomaneioIdKey: romaneio?.id,
+          }),
           child: const Text('Fechar'),
         ),
       ],

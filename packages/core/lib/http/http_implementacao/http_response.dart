@@ -12,7 +12,7 @@ class HttpResponse implements IHttpResponse {
   String? get message => response.body;
 
   @override
-  dynamic get body => jsonDecode(response.body);
+  dynamic get body => response.body.isEmpty ? null : jsonDecode(response.body);
 
   @override
   int get statusCode => response.statusCode;

@@ -6,6 +6,7 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
+import 'package:financeiro/use_cases.dart';
 
 part 'app_state.dart';
 part 'app_event.dart';
@@ -23,6 +24,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
   _recuperarTerminaisDoUsuarioPorEmpresa;
   final SalvarTerminalDaSessao _salvarTerminalDaSessao;
   final SincronizarPermissoesDoUsuario _sincronizarPermissoesDoUsuario;
+  final RecuperarCaixaAberto _recuperarCaixaAberto;
 
   final ApiBaseUrlConfig _apiBaseUrlConfig;
 
@@ -40,6 +42,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     this._recuperarTerminaisDoUsuarioPorEmpresa,
     this._salvarTerminalDaSessao,
     this._sincronizarPermissoesDoUsuario,
+    this._recuperarCaixaAberto,
     this._apiBaseUrlConfig,
   ) : super(const AppState()) {
     _onAutenticacoSubscription = _onAutenticado.call().listen(
@@ -52,6 +55,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     on<AppAutenticou>(_onAppAutenticou);
     on<AppDesautenticou>(_onDesautenticou);
     on<AppSelecionouTerminalDaSessao>(_onSelecionouTerminalDaSessao);
+    on<AppAtualizouCaixaDaSessao>(_onAtualizouCaixaDaSessao);
   }
 
   FutureOr<void> _onAppAutenticou(
@@ -88,6 +92,10 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
         terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
         terminalSalvo: terminalDaSessao,
       );
+      final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
+        empresaDaSessao: empresaDaSessao,
+        terminalDaSessao: terminalDaSessaoResolvido,
+      );
       if (event.token.idEmpresa == null) {}
       emit(
         state.copyWith(
@@ -98,6 +106,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
           empresaDaSessao: () => empresaDaSessao,
           terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
           terminalDaSessao: () => terminalDaSessaoResolvido,
+          caixaIdDaSessao: () => caixaIdDaSessao,
           licenciadoDaSessao: () => licenciadoDaSessao,
           permissoesDoUsuario: permissoesMap,
         ),
@@ -119,6 +128,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
           usuarioDaSessao: () => null,
           empresaDaSessao: () => null,
           terminalDaSessao: () => null,
+          caixaIdDaSessao: () => null,
           licenciadoDaSessao: () => null,
         ),
       );
@@ -168,6 +178,10 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
         terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
         terminalSalvo: terminalDaSessao,
       );
+      final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
+        empresaDaSessao: empresaDaSessao,
+        terminalDaSessao: terminalDaSessaoResolvido,
+      );
       Map<String, PermissaoDoUsuario>? permissoesMap;
       if (estaAutenticado) {
         var permissoes = await _sincronizarPermissoesDoUsuario(
@@ -181,6 +195,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
           empresaDaSessao: () => empresaDaSessao,
           terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
           terminalDaSessao: () => terminalDaSessaoResolvido,
+          caixaIdDaSessao: () => caixaIdDaSessao,
           statusAutenticacao: estaAutenticado
               ? StatusAutenticacao.autenticado
               : StatusAutenticacao.naoAutenticao,
@@ -254,7 +269,44 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     Emitter<AppState> emit,
   ) async {
     await _salvarTerminalDaSessao.call(event.terminal);
-    emit(state.copyWith(terminalDaSessao: () => event.terminal));
+    final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
+      empresaDaSessao: state.empresaDaSessao,
+      terminalDaSessao: event.terminal,
+    );
+    emit(
+      state.copyWith(
+        terminalDaSessao: () => event.terminal,
+        caixaIdDaSessao: () => caixaIdDaSessao,
+      ),
+    );
+  }
+
+  FutureOr<void> _onAtualizouCaixaDaSessao(
+    AppAtualizouCaixaDaSessao event,
+    Emitter<AppState> emit,
+  ) {
+    if (state.terminalDaSessao?.id == event.terminalId) {
+      emit(state.copyWith(caixaIdDaSessao: () => event.caixaId));
+    }
+  }
+
+  Future<int?> _recuperarCaixaIdDaSessao({
+    required Empresa? empresaDaSessao,
+    required TerminalDoUsuario? terminalDaSessao,
+  }) async {
+    if (empresaDaSessao == null || terminalDaSessao == null) {
+      return null;
+    }
+
+    try {
+      final caixa = await _recuperarCaixaAberto.call(
+        idEmpresa: empresaDaSessao.id,
+        idTerminal: terminalDaSessao.id,
+      );
+      return caixa?.id;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -268,6 +320,14 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
 
   @override
   String? get terminalNomeDaSessao => state.terminalDaSessao?.nome;
+
+  @override
+  int? get caixaIdDaSessao => state.caixaIdDaSessao;
+
+  @override
+  void atualizarCaixaIdDaSessao({required int terminalId, int? caixaId}) {
+    add(AppAtualizouCaixaDaSessao(terminalId: terminalId, caixaId: caixaId));
+  }
 
   @override
   Future<void> close() async {

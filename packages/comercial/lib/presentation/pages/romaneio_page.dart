@@ -72,6 +72,28 @@ class _RomaneioPageState extends State<RomaneioPage> {
             return;
           }
 
+          if (state.step == RomaneioStep.envioPendenciaConcluido) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('Envio dos itens pendentes concluído com sucesso.'),
+              ),
+            );
+            return;
+          }
+
+          if (state.step == RomaneioStep.envioPendenciaIncompleto) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.erro ??
+                      'Ainda existem itens pendentes para envio deste romaneio.',
+                ),
+              ),
+            );
+            return;
+          }
+
           if (state.step == RomaneioStep.validacaoInvalida ||
               state.step == RomaneioStep.falha) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -151,6 +173,42 @@ class _RomaneioPageState extends State<RomaneioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (state.possuiPendenciaDeEnvio) ...[
+          Card(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTituloSecao(
+                    context,
+                    'Pendências de envio',
+                    Icons.cloud_off_outlined,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Existem ${state.quantidadeItensPendentes} item(ns) não enviados para o servidor.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () {
+                            context.read<RomaneioBloc>().add(
+                                  RomaneioContinuarEnvioSolicitado(),
+                                );
+                          },
+                    icon: const Icon(Icons.sync),
+                    label: const Text('Continuar envio deste romaneio'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -339,6 +397,40 @@ class _RomaneioPageState extends State<RomaneioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (state.possuiPendenciaDeEnvio) ...[
+          Card(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTituloSecao(
+                    context,
+                    'Pendências de envio',
+                    Icons.cloud_off_outlined,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Existem ${state.quantidadeItensPendentes} item(ns) pendentes para envio deste romaneio.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () {
+                      context.read<RomaneioBloc>().add(
+                            RomaneioContinuarEnvioSolicitado(),
+                          );
+                    },
+                    icon: const Icon(Icons.sync),
+                    label: const Text('Continuar envio'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         Card(
           clipBehavior: Clip.antiAlias,
           elevation: 0,

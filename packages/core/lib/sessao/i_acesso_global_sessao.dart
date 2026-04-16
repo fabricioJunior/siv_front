@@ -3,4 +3,7 @@ abstract class IAcessoGlobalSessao {
   int? get empresaIdDaSessao;
   int? get terminalIdDaSessao;
   String? get terminalNomeDaSessao;
+  int? get caixaIdDaSessao;
+
+  void atualizarCaixaIdDaSessao({required int terminalId, int? caixaId});
 }

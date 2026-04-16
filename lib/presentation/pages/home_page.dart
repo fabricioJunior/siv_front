@@ -2,6 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:autenticacao/models.dart';
+import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
@@ -74,6 +75,7 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Lançamento manual de produtos no fluxo.',
                   color: Colors.redAccent,
                   route: '/entrada_manual_de_produtos',
+                  precisaDeCaixaAberto: true,
                   componentesNecessarios: ['ROMFP001', 'ROMFP002'],
                 ),
               ];
@@ -476,6 +478,7 @@ class _AccessFlowItem {
   final Color color;
   final String route;
   final List<String> componentesNecessarios;
+  final bool precisaDeCaixaAberto;
 
   const _AccessFlowItem({
     required this.icon,
@@ -483,6 +486,7 @@ class _AccessFlowItem {
     required this.subtitle,
     required this.color,
     required this.route,
+    this.precisaDeCaixaAberto = false,
     this.componentesNecessarios = const [],
   });
 }
@@ -506,6 +510,18 @@ class _AccessFlowCard extends StatelessWidget {
         onTap: () {
           if (permitido) {
             Navigator.pushNamed(context, item.route);
+            return;
+          }
+          if (item.precisaDeCaixaAberto &&
+              sl<IAcessoGlobalSessao>().caixaIdDaSessao == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'A funcionalidade selecionada requer um caixa aberto nesse terminal. Por favor, abra um caixa para acessar.',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
             return;
           }
 

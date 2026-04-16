@@ -7,6 +7,19 @@ abstract class FluxoDeCaixaEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class FluxoDeCaixaRecuperouCaixaAberto extends FluxoDeCaixaEvent {
+  final int empresaId;
+  final int terminalId;
+
+  const FluxoDeCaixaRecuperouCaixaAberto({
+    required this.empresaId,
+    required this.terminalId,
+  });
+
+  @override
+  List<Object?> get props => [empresaId, terminalId];
+}
+
 class FluxoDeCaixaIniciou extends FluxoDeCaixaEvent {
   final int caixaId;
 

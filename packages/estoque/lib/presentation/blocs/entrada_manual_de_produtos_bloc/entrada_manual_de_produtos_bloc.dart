@@ -19,6 +19,7 @@ class EntradaManualDeProdutosBloc
     on<EntradaManualLeituraSolicitada>(_onLeituraSolicitada);
     on<EntradaManualEdicaoSolicitada>(_onEdicaoSolicitada);
     on<EntradaManualSalvarSolicitado>(_onSalvarSolicitado);
+    on<EntradaManualResetSolicitado>(_onResetSolicitado);
   }
 
   FutureOr<void> _onFuncionarioSelecionado(
@@ -123,6 +124,13 @@ class EntradaManualDeProdutosBloc
       );
       addError(e, s);
     }
+  }
+
+  FutureOr<void> _onResetSolicitado(
+    EntradaManualResetSolicitado event,
+    Emitter<EntradaManualDeProdutosState> emit,
+  ) {
+    emit(const EntradaManualDeProdutosState());
   }
 
   String? _validarSelecoes() {

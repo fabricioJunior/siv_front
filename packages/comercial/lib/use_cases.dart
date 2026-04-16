@@ -7,6 +7,7 @@ export 'domain/use_cases/conferir_pedido.dart';
 export 'domain/use_cases/criar_pedido.dart';
 export 'domain/use_cases/criar_romaneio.dart';
 export 'domain/use_cases/faturar_pedido.dart';
+export 'domain/use_cases/receber_romaneio_no_caixa.dart';
 export 'domain/use_cases/recuperar_itens_romaneio.dart';
 export 'domain/use_cases/recuperar_pedido.dart';
 export 'domain/use_cases/recuperar_pedidos.dart';

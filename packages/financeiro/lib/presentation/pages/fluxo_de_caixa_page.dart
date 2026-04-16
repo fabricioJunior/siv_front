@@ -1,6 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/sessao.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
@@ -33,27 +34,79 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final empresaId = widget.empresaId;
+    final terminalId = widget.terminalId;
+    final sessao = sl<IAcessoGlobalSessao>();
+
     return BlocProvider<FluxoDeCaixaBloc>(
-      create: (_) => sl<FluxoDeCaixaBloc>(),
+      create: (_) {
+        final bloc = sl<FluxoDeCaixaBloc>();
+
+        if (empresaId != null && terminalId != null) {
+          bloc.add(
+            FluxoDeCaixaRecuperouCaixaAberto(
+              empresaId: empresaId,
+              terminalId: terminalId,
+            ),
+          );
+        }
+
+        return bloc;
+      },
       child: Scaffold(
         appBar: AppBar(title: const Text('Fluxo de caixa')),
-        body: BlocBuilder<FluxoDeCaixaBloc, FluxoDeCaixaState>(
+        body: BlocConsumer<FluxoDeCaixaBloc, FluxoDeCaixaState>(
+          listenWhen: (previous, current) =>
+              previous.caixaId != current.caixaId ||
+              previous.caixa?.terminalId != current.caixa?.terminalId,
+          listener: (_, state) {
+            if (terminalId == null) {
+              return;
+            }
+
+            sessao.atualizarCaixaIdDaSessao(
+              terminalId: terminalId,
+              caixaId:
+                  state.caixa?.terminalId == terminalId ? state.caixaId : null,
+            );
+          },
           builder: (context, state) {
             final carregando = state is FluxoDeCaixaCarregarEmProgresso ||
                 state is FluxoDeCaixaAbrirEmProgresso ||
                 state is FluxoDeCaixaFecharEmProgresso;
+            final recuperandoCaixaAberto =
+                state is FluxoDeCaixaCarregarEmProgresso &&
+                    state.caixa == null &&
+                    state.caixaId == null;
             final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto;
             final carregandoAbertura = state is FluxoDeCaixaAbrirEmProgresso;
+            final erroRecuperacaoCaixa =
+                state is FluxoDeCaixaCarregarFalha && state.caixa == null
+                    ? 'Falha ao recuperar o caixa aberto. Tente novamente.'
+                    : null;
             final erroAbertura = state is FluxoDeCaixaAbrirFalha
                 ? 'Falha ao abrir o caixa. Tente novamente.'
                 : null;
+
+            if (recuperandoCaixaAberto) {
+              return const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 12),
+                    Text('Verificando caixa aberto...'),
+                  ],
+                ),
+              );
+            }
 
             if (!caixaAberto) {
               return AberturaDeCaixaPage(
                 empresaId: widget.empresaId,
                 terminalId: widget.terminalId,
                 carregando: carregandoAbertura,
-                erro: erroAbertura,
+                erro: erroAbertura ?? erroRecuperacaoCaixa,
                 onAbrir: () {
                   context.read<FluxoDeCaixaBloc>().add(
                         FluxoDeCaixaAbriuCaixa(

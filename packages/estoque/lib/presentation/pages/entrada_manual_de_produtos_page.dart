@@ -5,6 +5,12 @@ import 'package:core/seletores.dart';
 import 'package:estoque/presentation/blocs/entrada_manual_de_produtos_bloc/entrada_manual_de_produtos_bloc.dart';
 import 'package:flutter/material.dart';
 
+const String _resultadoRomaneioStatusKey = 'status';
+const String _resultadoRomaneioIdKey = 'romaneioId';
+const String _resultadoRomaneioStatusSucesso = 'sucesso';
+const String _resultadoRomaneioStatusFalha = 'falha';
+const String _resultadoRomaneioStatusParcial = 'parcial';
+
 class EntradaManulDeProdutosPage extends StatefulWidget {
   final SeletorWidget tabelasDePrecoSeletor;
   final SeletorWidget funcionariosSeletor;
@@ -76,13 +82,76 @@ class _EntradaManulDeProdutosPageState
 
               if (!context.mounted) return;
 
-              if (result == true) {
+              final resultadoStatus = result is Map<String, dynamic>
+                  ? result[_resultadoRomaneioStatusKey]?.toString()
+                  : result == true
+                  ? _resultadoRomaneioStatusSucesso
+                  : null;
+              final resultadoRomaneioId = result is Map<String, dynamic>
+                  ? result[_resultadoRomaneioIdKey]
+                  : null;
+
+              if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Romaneio criado com sucesso.'),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+
+                _leitorController.limpar();
+                context.read<EntradaManualDeProdutosBloc>().add(
+                  const EntradaManualResetSolicitado(),
+                );
+                return;
+              }
+
+              if (resultadoStatus == _resultadoRomaneioStatusFalha) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Falha ao criar o romaneio.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+
+              if (resultadoStatus == _resultadoRomaneioStatusParcial) {
+                _leitorController.limpar();
+                context.read<EntradaManualDeProdutosBloc>().add(
+                  const EntradaManualResetSolicitado(),
+                );
+
+                final romaneioId = resultadoRomaneioId?.toString() ?? '-';
+                final visualizarPendentes = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) {
+                    return AlertDialog(
+                      title: const Text('Romaneio criado parcialmente'),
+                      content: Text(
+                        'O romaneio #$romaneioId foi criado, mas não foi possível concluir o recebimento no caixa automaticamente. Deseja visualizar os romaneios pendentes para finalizar manualmente?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          child: const Text('Agora não'),
+                        ),
+                        FilledButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          child: const Text('Ver romaneios pendentes'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (!context.mounted || visualizarPendentes != true) {
+                  return;
+                }
+
+                await Navigator.of(context).pushNamed('/romaneios');
               }
             },
             builder: (context, state) {

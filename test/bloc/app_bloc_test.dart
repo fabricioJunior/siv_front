@@ -2,6 +2,9 @@ import 'package:autenticacao/uses_cases.dart';
 import 'package:autenticacao/models.dart';
 import 'package:core/bloc_test.dart';
 import 'package:core/injecoes.dart';
+import 'package:financeiro/data.dart';
+import 'package:financeiro/models.dart';
+import 'package:financeiro/use_cases.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
@@ -30,6 +33,7 @@ final SalvarTerminalDaSessao salvarTerminalDaSessao =
 
 final SincronizarPermissoesDoUsuario sincronizarPermissoesDoUsuario =
     MockSincronizarPermissoesDoUsuario();
+final RecuperarCaixaAberto recuperarCaixaAberto = FakeRecuperarCaixaAberto();
 
 var licenciado = const Licenciado(
   id: '1',
@@ -63,6 +67,16 @@ class FakeSalvarTerminalDaSessao implements SalvarTerminalDaSessao {
   Future<void> call(TerminalDoUsuario terminal) async {}
 }
 
+class FakeRecuperarCaixaAberto implements RecuperarCaixaAberto {
+  @override
+  ICaixaRepository get repository => throw UnimplementedError();
+
+  @override
+  Future<Caixa?> call({required int idEmpresa, required int idTerminal}) async {
+    return null;
+  }
+}
+
 late AppBloc appBloc;
 
 var usuario = fakeUsuario();
@@ -92,6 +106,7 @@ void main() {
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarCaixaAberto,
         apiBaseUrlConfig,
       );
     },
@@ -128,6 +143,7 @@ void main() {
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarCaixaAberto,
         apiBaseUrlConfig,
       );
     },
@@ -159,6 +175,7 @@ void main() {
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarCaixaAberto,
         apiBaseUrlConfig,
       );
     },

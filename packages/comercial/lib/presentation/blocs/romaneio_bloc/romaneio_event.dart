@@ -31,3 +31,5 @@ class RomaneioObservacaoAtualizada extends RomaneioEvent {
 
   RomaneioObservacaoAtualizada({this.observacao});
 }
+
+class RomaneioContinuarEnvioSolicitado extends RomaneioEvent {}

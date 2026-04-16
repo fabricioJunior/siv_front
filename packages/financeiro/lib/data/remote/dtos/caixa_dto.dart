@@ -51,8 +51,11 @@ class CaixaDto implements Caixa {
       terminalId: (json['terminalId'] as num?)?.toInt() ?? 0,
       abertura: DateTime.tryParse(json['abertura']?.toString() ?? '') ??
           DateTime.now(),
-      fechamento: DateTime.tryParse(json['fechamento']?.toString() ?? ''),
-      valorAbertura: (json['valorAbertura'] as num?)?.toDouble() ?? 0,
+      fechamento: json['fechamento'] == null
+          ? null
+          : DateTime.tryParse(json['fechamento']?.toString() ?? ''),
+      valorAbertura:
+          double.tryParse(json['valorAbertura']?.toString() ?? '0') ?? 0,
       valorFechamento: (json['valorFechamento'] as num?)?.toDouble(),
       situacao: situacaoValue == 'fechado'
           ? SituacaoCaixa.fechado

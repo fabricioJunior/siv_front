@@ -46,3 +46,7 @@ class EntradaManualSalvarSolicitado extends EntradaManualDeProdutosEvent {
   @override
   List<Object?> get props => [itens, operacao];
 }
+
+class EntradaManualResetSolicitado extends EntradaManualDeProdutosEvent {
+  const EntradaManualResetSolicitado();
+}

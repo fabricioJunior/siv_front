@@ -3,8 +3,12 @@ import 'package:comercial/models.dart';
 
 class RomaneiosRepository implements IRomaneiosRepository {
   final IRomaneiosRemoteDataSource remoteDataSource;
+  final IReceberRomaneioNoCaixaRemoteDataSource caixasRemoteDataSource;
 
-  RomaneiosRepository({required this.remoteDataSource});
+  RomaneiosRepository({
+    required this.remoteDataSource,
+    required this.caixasRemoteDataSource,
+  });
 
   @override
   Future<void> adicionarItemRomaneio(int romaneioId, RomaneioItem item) {
@@ -44,5 +48,16 @@ class RomaneiosRepository implements IRomaneiosRepository {
   @override
   Future<void> removerItemRomaneio(int romaneioId, RomaneioItem item) {
     return remoteDataSource.removerItemRomaneio(romaneioId, item);
+  }
+
+  @override
+  Future<void> receberRomaneioNoCaixa({
+    required int caixaId,
+    required int romaneioId,
+  }) {
+    return caixasRemoteDataSource.receberRomaneio(
+      caixaId: caixaId,
+      romaneioId: romaneioId,
+    );
   }
 }

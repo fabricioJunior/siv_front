@@ -6,6 +6,7 @@ class AppState extends Equatable {
   final Empresa? empresaDaSessao;
   final List<TerminalDoUsuario> terminaisDaEmpresaDaSessao;
   final TerminalDoUsuario? terminalDaSessao;
+  final int? caixaIdDaSessao;
   final Licenciado? licenciadoDaSessao;
   final Map<String, PermissaoDoUsuario> permissoesDoUsuario;
   const AppState({
@@ -14,6 +15,7 @@ class AppState extends Equatable {
     this.empresaDaSessao,
     this.terminaisDaEmpresaDaSessao = const [],
     this.terminalDaSessao,
+    this.caixaIdDaSessao,
     this.licenciadoDaSessao,
     this.permissoesDoUsuario = const {},
   });
@@ -24,6 +26,7 @@ class AppState extends Equatable {
     Empresa? Function()? empresaDaSessao,
     List<TerminalDoUsuario>? terminaisDaEmpresaDaSessao,
     TerminalDoUsuario? Function()? terminalDaSessao,
+    int? Function()? caixaIdDaSessao,
     Licenciado? Function()? licenciadoDaSessao,
     Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
   }) => AppState(
@@ -39,6 +42,9 @@ class AppState extends Equatable {
     terminalDaSessao: terminalDaSessao != null
         ? terminalDaSessao()
         : this.terminalDaSessao,
+    caixaIdDaSessao: caixaIdDaSessao != null
+        ? caixaIdDaSessao()
+        : this.caixaIdDaSessao,
     licenciadoDaSessao: licenciadoDaSessao != null
         ? licenciadoDaSessao()
         : this.licenciadoDaSessao,
@@ -52,6 +58,7 @@ class AppState extends Equatable {
     empresaDaSessao,
     terminaisDaEmpresaDaSessao,
     terminalDaSessao,
+    caixaIdDaSessao,
     permissoesDoUsuario,
   ];
 }

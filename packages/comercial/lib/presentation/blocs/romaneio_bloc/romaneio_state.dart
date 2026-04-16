@@ -9,6 +9,9 @@ class RomaneioState extends Equatable {
   final String? observacao;
   final List<RomaneioItem> itens;
   final Romaneio? romaneio;
+  final bool possuiPendenciaDeEnvio;
+  final int quantidadeItensPendentes;
+  final String? hashListaPendente;
   final String? erro;
   final RomaneioStep step;
 
@@ -21,6 +24,9 @@ class RomaneioState extends Equatable {
     this.observacao,
     this.itens = const [],
     this.romaneio,
+    this.possuiPendenciaDeEnvio = false,
+    this.quantidadeItensPendentes = 0,
+    this.hashListaPendente,
     this.erro,
     required this.step,
   });
@@ -34,6 +40,9 @@ class RomaneioState extends Equatable {
         observacao = '',
         itens = const [],
         romaneio = null,
+        possuiPendenciaDeEnvio = false,
+        quantidadeItensPendentes = 0,
+        hashListaPendente = null,
         erro = null,
         step = RomaneioStep.inicial;
 
@@ -49,6 +58,9 @@ class RomaneioState extends Equatable {
         observacao = model.observacao ?? '',
         itens = itensDoRomaneio,
         romaneio = model,
+        possuiPendenciaDeEnvio = false,
+        quantidadeItensPendentes = 0,
+        hashListaPendente = null,
         erro = null,
         step = step ?? RomaneioStep.editando;
 
@@ -61,6 +73,9 @@ class RomaneioState extends Equatable {
     String? observacao,
     List<RomaneioItem>? itens,
     Romaneio? romaneio,
+    bool? possuiPendenciaDeEnvio,
+    int? quantidadeItensPendentes,
+    String? hashListaPendente,
     String? erro,
     RomaneioStep? step,
   }) {
@@ -73,6 +88,11 @@ class RomaneioState extends Equatable {
       observacao: observacao ?? this.observacao,
       itens: itens ?? this.itens,
       romaneio: romaneio ?? this.romaneio,
+      possuiPendenciaDeEnvio:
+          possuiPendenciaDeEnvio ?? this.possuiPendenciaDeEnvio,
+      quantidadeItensPendentes:
+          quantidadeItensPendentes ?? this.quantidadeItensPendentes,
+      hashListaPendente: hashListaPendente ?? this.hashListaPendente,
       erro: erro,
       step: step ?? this.step,
     );
@@ -88,6 +108,9 @@ class RomaneioState extends Equatable {
         observacao,
         itens,
         romaneio,
+        possuiPendenciaDeEnvio,
+        quantidadeItensPendentes,
+        hashListaPendente,
         erro,
         step,
       ];
@@ -102,6 +125,8 @@ enum RomaneioStep {
   criado,
   salvo,
   observacaoAtualizada,
+  envioPendenciaConcluido,
+  envioPendenciaIncompleto,
   validacaoInvalida,
   falha,
 }

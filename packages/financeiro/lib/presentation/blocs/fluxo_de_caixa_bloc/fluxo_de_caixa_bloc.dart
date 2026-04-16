@@ -12,15 +12,68 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
   final AbrirCaixa _abrirCaixa;
   final BuscarExtratoCaixa _buscarExtratoCaixa;
   final BuscarExtratoCaixaPorDocumento _buscarExtratoCaixaPorDocumento;
+  final RecuperarCaixaAberto _recuperarCaixaAberto;
 
   FluxoDeCaixaBloc(
     this._abrirCaixa,
     this._buscarExtratoCaixa,
     this._buscarExtratoCaixaPorDocumento,
+    this._recuperarCaixaAberto,
   ) : super(const FluxoDeCaixaInitial()) {
+    on<FluxoDeCaixaRecuperouCaixaAberto>(_onRecuperouCaixaAberto);
     on<FluxoDeCaixaIniciou>(_onIniciou);
     on<FluxoDeCaixaAbriuCaixa>(_onAbriuCaixa);
     on<FluxoDeCaixaFiltrouDocumento>(_onFiltrouDocumento);
+  }
+
+  FutureOr<void> _onRecuperouCaixaAberto(
+    FluxoDeCaixaRecuperouCaixaAberto event,
+    Emitter<FluxoDeCaixaState> emit,
+  ) async {
+    try {
+      emit(
+        FluxoDeCaixaCarregarEmProgresso(
+          caixa: state.caixa,
+          caixaId: state.caixaId,
+          extratos: state.extratos,
+        ),
+      );
+
+      final caixa = await _recuperarCaixaAberto.call(
+        idEmpresa: event.empresaId,
+        idTerminal: event.terminalId,
+      );
+
+      if (caixa == null) {
+        emit(
+          const FluxoDeCaixaCarregarSucesso(
+            caixa: null,
+            caixaId: null,
+            extratos: [],
+          ),
+        );
+        return;
+      }
+
+      final extratos = await _buscarExtratoCaixa.call(caixaId: caixa.id);
+
+      emit(
+        FluxoDeCaixaCarregarSucesso(
+          caixa: caixa,
+          caixaId: caixa.id,
+          extratos: extratos,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        FluxoDeCaixaCarregarFalha(
+          caixa: state.caixa,
+          caixaId: state.caixaId,
+          extratos: state.extratos,
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onIniciou(

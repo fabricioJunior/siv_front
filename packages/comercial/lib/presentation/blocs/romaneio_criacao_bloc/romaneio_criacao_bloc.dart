@@ -5,6 +5,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/sessao.dart';
 
 part 'romaneio_criacao_event.dart';
 part 'romaneio_criacao_state.dart';
@@ -20,6 +21,8 @@ class RomaneioCriacaoBloc
       _removerListaDeProdutosCompartilhada;
   final RemoverProdutoCompartilhado _removerProdutoCompartilhado;
   final AtualizarListaCompartilhada _atualizarListaCompartilhada;
+  final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
   RomaneioCriacaoBloc(
     this._criarRomaneio,
@@ -29,6 +32,8 @@ class RomaneioCriacaoBloc
     this._removerListaDeProdutosCompartilhada,
     this._removerProdutoCompartilhado,
     this._atualizarListaCompartilhada,
+    this._receberRomaneioNoCaixa,
+    this._acessoGlobalSessao,
   ) : super(const RomaneioCriacaoState.initial()) {
     on<RomaneioCriacaoSolicitada>(_onSolicitada);
   }
@@ -39,6 +44,9 @@ class RomaneioCriacaoBloc
   ) async {
     ListaDeProdutosCompartilhada? listaCompartilhada;
     var produtosCompartilhados = <ProdutoCompartilhado>[];
+    TipoOperacao? operacao;
+    var itens = <RomaneioItem>[];
+    var falhaAoReceberNoCaixa = false;
 
     emit(
       state.copyWith(
@@ -58,10 +66,10 @@ class RomaneioCriacaoBloc
       produtosCompartilhados = await _recuperarListaDeProdutosCompartilhada
           .recuperarProdutos(event.hashLista);
 
-      final operacao = listaCompartilhada == null
+      operacao = listaCompartilhada == null
           ? null
           : _resolverOperacao(listaCompartilhada);
-      final itens = _extrairItens(produtosCompartilhados);
+      itens = _extrairItens(produtosCompartilhados);
       final erro = _validar(listaCompartilhada, operacao, itens);
 
       if (erro != null) {
@@ -101,9 +109,10 @@ class RomaneioCriacaoBloc
 
       final romaneioId = criado.id;
 
-      await _atualizarListaCompartilhada.call(listaCompartilhada.copyWith(
+      listaCompartilhada = listaCompartilhada.copyWith(
         idLista: romaneioId,
-      ));
+      );
+      await _atualizarListaCompartilhada.call(listaCompartilhada);
       if (romaneioId == null) {
         throw StateError('A API não retornou o id do romaneio criado.');
       }
@@ -116,11 +125,29 @@ class RomaneioCriacaoBloc
         await _removerProdutoCompartilhado.call(item.hash);
       }
 
-      final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
       await _removerListaCompartilhadaSeNecessario(event.hashLista);
-      await _atualizarListaCompartilhada.call(listaCompartilhada.copyWith(
+      listaCompartilhada = listaCompartilhada.copyWith(
         processada: true,
-      ));
+      );
+      await _atualizarListaCompartilhada.call(listaCompartilhada);
+
+      if (operacao == TipoOperacao.transferencia_entrada) {
+        falhaAoReceberNoCaixa = true;
+        final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
+        if (caixaId == null) {
+          throw StateError(
+            'Não foi possível receber romaneio: caixa da sessão não encontrado.',
+          );
+        }
+
+        await _receberRomaneioNoCaixa.call(
+          caixaId: caixaId,
+          romaneioId: romaneioId,
+        );
+        falhaAoReceberNoCaixa = false;
+      }
+
+      final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
       emit(
         state.copyWith(
           step: RomaneioCriacaoStep.sucesso,
@@ -139,11 +166,36 @@ class RomaneioCriacaoBloc
           hashLista: event.hashLista,
           listaCompartilhada: listaCompartilhada,
           produtosCompartilhados: produtosCompartilhados,
-          erro: 'Falha ao criar o romaneio.',
+          erro: _mensagemFalhaProcessamento(
+            listaCompartilhada: listaCompartilhada,
+            operacao: operacao,
+            falhaAoReceberNoCaixa: falhaAoReceberNoCaixa,
+          ),
+          totalItensProcessados: itens.length,
         ),
       );
       addError(e, s);
     }
+  }
+
+  String _mensagemFalhaProcessamento({
+    required ListaDeProdutosCompartilhada? listaCompartilhada,
+    required TipoOperacao? operacao,
+    required bool falhaAoReceberNoCaixa,
+  }) {
+    final romaneioId = listaCompartilhada?.idLista;
+
+    if (falhaAoReceberNoCaixa &&
+        romaneioId != null &&
+        operacao == TipoOperacao.transferencia_entrada) {
+      return 'O romaneio #$romaneioId foi criado, mas não foi possível recebê-lo no caixa automaticamente. Volte e abra os romaneios pendentes para concluir o processo manualmente.';
+    }
+
+    if (romaneioId != null) {
+      return 'O romaneio #$romaneioId foi criado, mas o processamento não foi concluído automaticamente. Volte e confira os romaneios pendentes.';
+    }
+
+    return 'Falha ao criar o romaneio. Tente novamente.';
   }
 
   String? _validar(

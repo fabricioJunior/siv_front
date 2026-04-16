@@ -13,6 +13,16 @@ class RecuperarListaDeProdutosCompartilhada {
     return _repository.recuperar(hash);
   }
 
+  Future<Iterable<ListaDeProdutosCompartilhada>> recuperarListas({
+    int? idLista,
+    OrigemCompartilhadaTipo? origem,
+  }) {
+    return _repository.recuperarListas(
+      idLista: idLista,
+      origem: origem,
+    );
+  }
+
   Future<List<ProdutoCompartilhado>> recuperarProdutos(String hashLista) {
     return _repository.recuperarProdutos(hashLista);
   }

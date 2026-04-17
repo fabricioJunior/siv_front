@@ -31,16 +31,52 @@ class ReferenciaMidiasBloc
     on<ReferenciaMidiasAtualizou>(_onReferenciaMidiasAtualizou);
   }
 
+  List<ReferenciaMidia> _midiasAtuais() =>
+      List<ReferenciaMidia>.from(state.midias);
+
+  List<MidiaUploadPendente> _uploadsPendentesAtuais() =>
+      List<MidiaUploadPendente>.from(state.uploadsPendentes);
+
+  List<MidiaUploadPendente> _atualizarUploadPendente(
+    List<MidiaUploadPendente> uploads,
+    String uploadId, {
+    double? progresso,
+    String? status,
+  }) {
+    return uploads
+        .map((upload) {
+          if (upload.id != uploadId) return upload;
+          return upload.copyWith(progresso: progresso, status: status);
+        })
+        .toList(growable: false);
+  }
+
   Future<void> _onReferenciasIniciou(
     ReferenciasIniciou event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
-    emit(ReferenciaMidiasCarregando());
+    emit(
+      ReferenciaMidiasCarregando(
+        midias: state.midias,
+        uploadsPendentes: state.uploadsPendentes,
+      ),
+    );
     try {
       final midias = await _recuperarMidias.call(event.referenciaId);
-      emit(ReferenciaMidiasCarregado(midias));
+      emit(
+        ReferenciaMidiasCarregado(
+          midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
     } catch (e, s) {
-      emit(ReferenciaMidiasErro('Erro ao carregar mídias'));
+      emit(
+        ReferenciaMidiasErro(
+          'Erro ao carregar mídias',
+          midias: state.midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
       addError(e, s);
     }
   }
@@ -49,29 +85,151 @@ class ReferenciaMidiasBloc
     ReferenciasMidiaAdicinou event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
-    final midiasList = state is ReferenciaMidiasCarregado
-        ? (state as ReferenciaMidiasCarregado).midias
-        : <ReferenciaMidia>[];
-    emit(ReferenciaMidiasCarregando());
-    try {
-      for (final imagem in event.midias) {
-        if (imagem.path == null) continue;
-        await _criarReferenciaMidia.call(
+    var midiasAtuais = _midiasAtuais();
+    var uploadsPendentes = _uploadsPendentesAtuais();
+
+    final novosUploads = event.midias
+        .asMap()
+        .entries
+        .map((entry) {
+          return MidiaUploadPendente(
+            id: 'upload-${DateTime.now().microsecondsSinceEpoch}-${entry.key}',
+            imagem: entry.value,
+          );
+        })
+        .toList(growable: false);
+
+    uploadsPendentes = [...uploadsPendentes, ...novosUploads];
+    emit(
+      ReferenciaMidiasCarregado(
+        midiasAtuais,
+        uploadsPendentes: uploadsPendentes,
+        carregando: true,
+      ),
+    );
+
+    for (final entry in event.midias.asMap().entries) {
+      final imagem = entry.value;
+      final upload = novosUploads[entry.key];
+
+      if (imagem.path == null) {
+        uploadsPendentes = uploadsPendentes
+            .where((item) => item.id != upload.id)
+            .toList(growable: false);
+        emit(
+          ReferenciaMidiasErro(
+            'Uma das imagens selecionadas é inválida para envio.',
+            midias: midiasAtuais,
+            uploadsPendentes: uploadsPendentes,
+            carregando: uploadsPendentes.isNotEmpty,
+          ),
+        );
+        continue;
+      }
+
+      var ultimoPercentualEmitido = -1;
+
+      try {
+        final midiaCriada = await _criarReferenciaMidia.call(
           filePath: imagem.path!,
           referenciaId: event.referenciaId,
-          ePrincipal: midiasList.isEmpty,
+          ePrincipal: midiasAtuais.isEmpty && entry.key == 0,
           ePublica: true,
           tipo: TipoReferenciaMidia.imagem,
-          field: imagem.field ?? 'midia',
+          field: imagem.field ?? 'file',
           descricao: imagem.descricao,
-          cor: event.cor,
-          tamanho: event.tamanho,
+          cor: imagem.cor ?? event.cor,
+          tamanho: imagem.tamanho ?? event.tamanho,
+          onSendProgress: (sent, total) {
+            if (emit.isDone) return;
+            final progresso = total <= 0
+                ? 0.0
+                : (sent / total).clamp(0.0, 1.0).toDouble();
+            final percentualAtual = (progresso * 100).round();
+
+            if (percentualAtual == ultimoPercentualEmitido &&
+                percentualAtual < 100) {
+              return;
+            }
+
+            ultimoPercentualEmitido = percentualAtual;
+            uploadsPendentes = _atualizarUploadPendente(
+              uploadsPendentes,
+              upload.id,
+              progresso: progresso,
+              status: percentualAtual >= 100
+                  ? 'Finalizando envio...'
+                  : 'Enviando... $percentualAtual%',
+            );
+
+            emit(
+              ReferenciaMidiasCarregado(
+                midiasAtuais,
+                uploadsPendentes: uploadsPendentes,
+                carregando: true,
+              ),
+            );
+          },
+        );
+
+        if (midiaCriada.ePrincipal) {
+          await _cacheImagemService.updateImageInCache(
+            event.referenciaId.toString(),
+            midiaCriada.url,
+          );
+        }
+
+        midiasAtuais = [...midiasAtuais, midiaCriada];
+        uploadsPendentes = uploadsPendentes
+            .where((item) => item.id != upload.id)
+            .toList(growable: false);
+
+        if (!emit.isDone) {
+          emit(
+            ReferenciaMidiasCarregado(
+              midiasAtuais,
+              uploadsPendentes: uploadsPendentes,
+              carregando: uploadsPendentes.isNotEmpty,
+            ),
+          );
+        }
+      } catch (e, s) {
+        final mensagem = e.toString().replaceFirst('Exception: ', '').trim();
+        uploadsPendentes = uploadsPendentes
+            .where((item) => item.id != upload.id)
+            .toList(growable: false);
+
+        if (!emit.isDone) {
+          emit(
+            ReferenciaMidiasErro(
+              mensagem.isEmpty ? 'Erro ao adicionar mídia' : mensagem,
+              midias: midiasAtuais,
+              uploadsPendentes: uploadsPendentes,
+              carregando: uploadsPendentes.isNotEmpty,
+            ),
+          );
+        }
+        addError(e, s);
+      }
+    }
+
+    try {
+      final midiasSincronizadas = await _recuperarMidias.call(
+        event.referenciaId,
+      );
+      if (!emit.isDone) {
+        emit(
+          ReferenciaMidiasCarregado(
+            midiasSincronizadas,
+            uploadsPendentes: const [],
+          ),
         );
       }
-      add(ReferenciasIniciou(event.referenciaId));
     } catch (e, s) {
-      emit(ReferenciaMidiasErro('Erro ao adicionar mídia'));
       addError(e, s);
+      if (!emit.isDone) {
+        emit(ReferenciaMidiasCarregado(midiasAtuais));
+      }
     }
   }
 
@@ -79,15 +237,32 @@ class ReferenciaMidiasBloc
     ReferenciaMidiasRemoveu event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
-    emit(ReferenciaMidiasCarregando());
+    emit(
+      ReferenciaMidiasCarregando(
+        midias: state.midias,
+        uploadsPendentes: state.uploadsPendentes,
+      ),
+    );
     try {
       await _excluirReferenciaMidia.call(
         referenciaId: event.referenciaId,
         id: event.midiaId,
       );
-      add(ReferenciasIniciou(event.referenciaId));
+      final midias = await _recuperarMidias.call(event.referenciaId);
+      emit(
+        ReferenciaMidiasCarregado(
+          midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
     } catch (e, s) {
-      emit(ReferenciaMidiasErro('Erro ao remover mídia'));
+      emit(
+        ReferenciaMidiasErro(
+          'Erro ao remover mídia',
+          midias: state.midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
       addError(e, s);
     }
   }
@@ -96,7 +271,12 @@ class ReferenciaMidiasBloc
     ReferenciaMidiasAtualizou event,
     Emitter<ReferenciaMidiasState> emit,
   ) async {
-    emit(ReferenciaMidiasCarregando());
+    emit(
+      ReferenciaMidiasCarregando(
+        midias: state.midias,
+        uploadsPendentes: state.uploadsPendentes,
+      ),
+    );
     try {
       await _atualizarReferenciaMidia.call(
         ReferenciaMidia.create(
@@ -106,6 +286,8 @@ class ReferenciaMidiasBloc
           ePrincipal: event.ePrincipal,
           ePublica: event.ePublica,
           descricao: event.midia.descricao,
+          tamanho: event.midia.tamanho,
+          cor: event.midia.cor,
         ),
       );
       if (event.ePrincipal) {
@@ -115,9 +297,21 @@ class ReferenciaMidiasBloc
         );
       }
 
-      add(ReferenciasIniciou(event.referenciaId));
+      final midias = await _recuperarMidias.call(event.referenciaId);
+      emit(
+        ReferenciaMidiasCarregado(
+          midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
     } catch (e, s) {
-      emit(ReferenciaMidiasErro('Erro ao atualizar mídia'));
+      emit(
+        ReferenciaMidiasErro(
+          'Erro ao atualizar mídia',
+          midias: state.midias,
+          uploadsPendentes: state.uploadsPendentes,
+        ),
+      );
       addError(e, s);
     }
   }

@@ -13,6 +13,7 @@ abstract class IReferenciaMidiasRepository {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    void Function(int sent, int total)? onSendProgress,
   });
 
   Future<ReferenciaMidia> atualizarReferenciaMidia(

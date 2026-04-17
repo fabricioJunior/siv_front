@@ -65,6 +65,7 @@ abstract class RemoteDataSourceBase {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     FileType fileType = FileType.other,
+    void Function(int sent, int total)? onSendProgress,
   }) async {
     var uri = _wrapUri(
       queryParameters: queryParameters,
@@ -77,6 +78,7 @@ abstract class RemoteDataSourceBase {
       body: body,
       headers: headers,
       fileType: fileType,
+      onSendProgress: onSendProgress,
     );
     _validateResponse(libResponse);
     return libResponse;

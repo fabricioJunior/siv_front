@@ -166,6 +166,17 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: SuprimentoPage(caixaId: caixaId),
     );
   },
+  '/contagem_do_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/contagem_do_caixa',
+      child: ContagemDoCaixaPage(caixaId: caixaId),
+    );
+  },
   '/administracao': (context) {
     return _rotaProtegida(
       route: '/administracao',

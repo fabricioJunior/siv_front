@@ -5,9 +5,29 @@ import 'package:core/bloc.dart';
 import 'package:core/imagens.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/modals/referencia_midia_metadados_modal.dart';
+import 'package:produtos/presentantion/widgets/cor_seletor.dart';
+import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 import '../bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 
 const int _limiteMaximoMidias = 20;
+const _duracaoTransicaoSuave = Duration(milliseconds: 280);
+const _curvaTransicaoSuave = Curves.easeOutCubic;
+
+Widget _transicaoSuave(Widget child, Animation<double> animation) {
+  final animacaoCurva = CurvedAnimation(
+    parent: animation,
+    curve: _curvaTransicaoSuave,
+  );
+
+  return FadeTransition(
+    opacity: animacaoCurva,
+    child: SizeTransition(
+      sizeFactor: animacaoCurva,
+      axisAlignment: -1,
+      child: child,
+    ),
+  );
+}
 
 class ReferenciaMidiasWidget extends StatelessWidget {
   final int referenciaId;
@@ -26,11 +46,18 @@ class ReferenciaMidiasWidget extends StatelessWidget {
           sl<ReferenciaMidiasBloc>()..add(ReferenciasIniciou(referenciaId)),
       child: BlocBuilder<ReferenciaMidiasBloc, ReferenciaMidiasState>(
         builder: (context, state) {
-          final carregando = state is ReferenciaMidiasCarregando;
-          final midias = state is ReferenciaMidiasCarregado
-              ? state.midias
-              : <ReferenciaMidia>[];
-          final limiteAtingido = midias.length >= _limiteMaximoMidias;
+          final carregando = state.carregando;
+          final midias = state.midias;
+          final uploadsPendentes = state.uploadsPendentes;
+          final totalMidias = midias.length + uploadsPendentes.length;
+          final limiteAtingido = totalMidias >= _limiteMaximoMidias;
+          final progressoMedioUpload = uploadsPendentes.isEmpty
+              ? 0.0
+              : uploadsPendentes.fold<double>(
+                      0,
+                      (total, item) => total + item.progresso,
+                    ) /
+                    uploadsPendentes.length;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,54 +65,128 @@ class ReferenciaMidiasWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Mídias (${midias.length}/$_limiteMaximoMidias)',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  if (carregando)
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else if (permiteEditar)
-                    IconButton(
-                      icon: const Icon(Icons.add_a_photo),
-                      onPressed: limiteAtingido
-                          ? null
-                          : () => _adicionarMidia(context),
-                      tooltip: limiteAtingido
-                          ? 'Limite de imagens atingido'
-                          : 'Adicionar imagem',
+                  AnimatedSwitcher(
+                    duration: _duracaoTransicaoSuave,
+                    transitionBuilder: _transicaoSuave,
+                    child: Text(
+                      'Mídias ($totalMidias/$_limiteMaximoMidias)',
+                      key: ValueKey(totalMidias),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: _duracaoTransicaoSuave,
+                    switchInCurve: _curvaTransicaoSuave,
+                    switchOutCurve: Curves.easeInOut,
+                    transitionBuilder: _transicaoSuave,
+                    child: carregando
+                        ? const SizedBox(
+                            key: ValueKey('midias_loading'),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : permiteEditar
+                        ? IconButton(
+                            key: const ValueKey('midias_add_button'),
+                            icon: const Icon(Icons.add_a_photo),
+                            onPressed: limiteAtingido
+                                ? null
+                                : () => _adicionarMidia(context),
+                            tooltip: limiteAtingido
+                                ? 'Limite de imagens atingido'
+                                : 'Adicionar imagem',
+                          )
+                        : const SizedBox.shrink(
+                            key: ValueKey('midias_no_action'),
+                          ),
+                  ),
                 ],
               ),
-              if (state is ReferenciaMidiasErro)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    state.mensagem,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+              AnimatedSwitcher(
+                duration: _duracaoTransicaoSuave,
+                transitionBuilder: _transicaoSuave,
+                child: state is ReferenciaMidiasErro
+                    ? Padding(
+                        key: ValueKey(state.mensagem),
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          state.mensagem,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('sem_erro_midias')),
+              ),
               const SizedBox(height: 8),
-              if (midias.isEmpty && !carregando)
-                _MidiasEmptyState(
-                  limiteAtingido: limiteAtingido,
-                  permiteEditar: permiteEditar,
-                  onAdicionar: () => _adicionarMidia(context),
+              AnimatedSize(
+                duration: _duracaoTransicaoSuave,
+                curve: _curvaTransicaoSuave,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: _duracaoTransicaoSuave,
+                      transitionBuilder: _transicaoSuave,
+                      child: uploadsPendentes.isNotEmpty
+                          ? Padding(
+                              key: ValueKey(
+                                'uploads_${uploadsPendentes.length}',
+                              ),
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _MidiasUploadEmAndamento(
+                                uploadsPendentes: uploadsPendentes,
+                                progressoMedio: progressoMedioUpload,
+                              ),
+                            )
+                          : const SizedBox.shrink(
+                              key: ValueKey('sem_uploads_pendentes'),
+                            ),
+                    ),
+                    AnimatedSwitcher(
+                      duration: _duracaoTransicaoSuave,
+                      switchInCurve: _curvaTransicaoSuave,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: _transicaoSuave,
+                      child:
+                          midias.isEmpty &&
+                              uploadsPendentes.isEmpty &&
+                              !carregando
+                          ? KeyedSubtree(
+                              key: const ValueKey('midias_empty_state'),
+                              child: _MidiasEmptyState(
+                                limiteAtingido: limiteAtingido,
+                                permiteEditar: permiteEditar,
+                                onAdicionar: () => _adicionarMidia(context),
+                              ),
+                            )
+                          : midias.isNotEmpty
+                          ? KeyedSubtree(
+                              key: ValueKey('midias_carousel_${midias.length}'),
+                              child: _MidiasCarousel(
+                                midias: midias,
+                                permiteEditar: permiteEditar,
+                                onRemover: (midiaId) =>
+                                    _removerMidia(context, midiaId),
+                                onEditar: (midia, ePrincipal, ePublica) =>
+                                    _atualizarMidia(
+                                      context,
+                                      midia,
+                                      ePrincipal,
+                                      ePublica,
+                                    ),
+                              ),
+                            )
+                          : const SizedBox.shrink(
+                              key: ValueKey('midias_placeholder'),
+                            ),
+                    ),
+                  ],
                 ),
-              if (midias.isNotEmpty)
-                _MidiasCarousel(
-                  midias: midias,
-                  permiteEditar: permiteEditar,
-                  onRemover: (midiaId) => _removerMidia(context, midiaId),
-                  onEditar: (midia, ePrincipal, ePublica) =>
-                      _atualizarMidia(context, midia, ePrincipal, ePublica),
-                ),
+              ),
             ],
           );
         },
@@ -98,7 +199,7 @@ class ReferenciaMidiasWidget extends StatelessWidget {
 
     final bloc = context.read<ReferenciaMidiasBloc>();
     final state = bloc.state;
-    final total = state is ReferenciaMidiasCarregado ? state.midias.length : 0;
+    final total = state.midias.length + state.uploadsPendentes.length;
 
     if (total >= _limiteMaximoMidias) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,34 +212,46 @@ class ReferenciaMidiasWidget extends StatelessWidget {
       return;
     }
 
-    final picked = await showSelecionarImagemModal(context);
-    if (picked == null || picked.isEmpty) return;
+    final picked = await showSelecionarImagemModal(
+      context,
+      allowMultiple: true,
+    );
+    if (!context.mounted || picked == null || picked.isEmpty) return;
 
-    // Metadados opcionais: descrição livre + cor e tamanho associados
+    final vagasRestantes = _limiteMaximoMidias - total;
+    final imagensSelecionadas = picked.take(vagasRestantes).toList();
+
+    if (picked.length > vagasRestantes && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Somente $vagasRestantes imagem(ns) puderam ser adicionadas por causa do limite.',
+          ),
+        ),
+      );
+    }
+
+    final imagensParaRevisao = imagensSelecionadas
+        .map(
+          (imagem) => Imagem(
+            path: imagem.path,
+            bytes: imagem.bytes,
+            field: 'file',
+            descricao: imagem.descricao,
+          ),
+        )
+        .toList(growable: false);
+
     // ignore: use_build_context_synchronously
-    final metadados = await ReferenciaMidiaMetadadosModal.show(context);
-    if (metadados == null) return; // usuário cancelou
-
-    final cor = metadados.cor;
-    final tamanho = metadados.tamanho;
-
-    // Monta a field key usando cor_tamanho com underscore como separador
-
-    final imagem = Imagem(
-      path: picked.first.path,
-      bytes: picked.first.bytes,
-      field: 'image',
-      descricao: metadados.descricao,
+    final metadados = await ReferenciaMidiaMetadadosModal.show(
+      context,
+      imagens: imagensParaRevisao,
     );
+    if (!context.mounted || metadados == null || metadados.imagens.isEmpty) {
+      return;
+    }
 
-    bloc.add(
-      ReferenciasMidiaAdicinou(
-        referenciaId,
-        [imagem],
-        cor: cor?.nome,
-        tamanho: tamanho?.nome,
-      ),
-    );
+    bloc.add(ReferenciasMidiaAdicinou(referenciaId, metadados.imagens));
   }
 
   void _removerMidia(BuildContext context, int midiaId) {
@@ -225,6 +338,212 @@ class _MidiasEmptyState extends StatelessWidget {
   }
 }
 
+class _MidiasUploadEmAndamento extends StatelessWidget {
+  final List<MidiaUploadPendente> uploadsPendentes;
+  final double progressoMedio;
+
+  const _MidiasUploadEmAndamento({
+    required this.uploadsPendentes,
+    required this.progressoMedio,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final percentualGeral = (progressoMedio.clamp(0.0, 1.0) * 100).round();
+
+    return AnimatedContainer(
+      duration: _duracaoTransicaoSuave,
+      curve: _curvaTransicaoSuave,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cloud_upload_outlined, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: _duracaoTransicaoSuave,
+                  transitionBuilder: _transicaoSuave,
+                  child: Text(
+                    'Enviando ${uploadsPendentes.length} imagem(ns) • $percentualGeral%',
+                    key: ValueKey(percentualGeral),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: progressoMedio.clamp(0.0, 1.0)),
+              duration: _duracaoTransicaoSuave,
+              curve: _curvaTransicaoSuave,
+              builder: (context, valor, _) {
+                return LinearProgressIndicator(
+                  value: valor == 0 ? null : valor,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 250,
+            child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              itemCount: uploadsPendentes.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                return SizedBox(
+                  width: 260,
+                  child: _MidiaUploadCard(upload: uploadsPendentes[index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MidiaUploadCard extends StatelessWidget {
+  final MidiaUploadPendente upload;
+
+  const _MidiaUploadCard({required this.upload});
+
+  @override
+  Widget build(BuildContext context) {
+    final progresso = upload.progresso.clamp(0.0, 1.0).toDouble();
+    final nomeArquivo = (upload.imagem.path ?? upload.imagem.url ?? 'imagem')
+        .split(RegExp(r'[/\\]'))
+        .last;
+
+    return AnimatedContainer(
+      duration: _duracaoTransicaoSuave,
+      curve: _curvaTransicaoSuave,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: upload.imagem.bytes != null
+                            ? Image.memory(
+                                upload.imagem.bytes!,
+                                fit: BoxFit.cover,
+                                gaplessPlayback: true,
+                              )
+                            : Container(
+                                color: Colors.black12,
+                                child: const Center(
+                                  child: Icon(Icons.image_outlined, size: 40),
+                                ),
+                              ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        duration: _duracaoTransicaoSuave,
+                        opacity: progresso >= 1 ? 0.12 : 1,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(color: Colors.black26),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: SizedBox(
+                        width: 42,
+                        height: 42,
+                        child: CircularProgressIndicator(
+                          value: progresso > 0 && progresso < 1
+                              ? progresso
+                              : null,
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                nomeArquivo,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              if (upload.imagem.descricao?.isNotEmpty == true)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    upload.imagem.descricao!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              if (upload.imagem.cor?.isNotEmpty == true ||
+                  upload.imagem.tamanho?.isNotEmpty == true)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (upload.imagem.cor?.isNotEmpty == true)
+                        Chip(
+                          label: Text('Cor: ${upload.imagem.cor}'),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      if (upload.imagem.tamanho?.isNotEmpty == true)
+                        Chip(
+                          label: Text('Tamanho: ${upload.imagem.tamanho}'),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: progresso),
+                duration: _duracaoTransicaoSuave,
+                curve: _curvaTransicaoSuave,
+                builder: (context, valor, _) {
+                  return LinearProgressIndicator(
+                    value: valor > 0 ? valor : null,
+                  );
+                },
+              ),
+              const SizedBox(height: 4),
+              AnimatedSwitcher(
+                duration: _duracaoTransicaoSuave,
+                transitionBuilder: _transicaoSuave,
+                child: Text(
+                  upload.status,
+                  key: ValueKey(upload.status),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _MidiasCarousel extends StatefulWidget {
   final List<ReferenciaMidia> midias;
   final bool permiteEditar;
@@ -306,7 +625,7 @@ class _MidiasCarouselState extends State<_MidiasCarousel> {
         return Column(
           children: [
             SizedBox(
-              height: 210,
+              height: 240,
               child: ScrollConfiguration(
                 behavior: const MaterialScrollBehavior().copyWith(
                   dragDevices: {
@@ -318,6 +637,7 @@ class _MidiasCarouselState extends State<_MidiasCarousel> {
                 ),
                 child: PageView.builder(
                   controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
                   padEnds: false,
                   itemCount: widget.midias.length,
                   onPageChanged: (index) {
@@ -338,8 +658,7 @@ class _MidiasCarouselState extends State<_MidiasCarousel> {
                             midia: midia,
                             permiteEditar: widget.permiteEditar,
                             onRemover: () => widget.onRemover(midia.id),
-                            onEditar: (ePrincipal, ePublica) =>
-                                widget.onEditar(midia, ePrincipal, ePublica),
+                            onEditar: widget.onEditar,
                           ),
                         ),
                       ),
@@ -378,7 +697,8 @@ class _MidiaCarouselCard extends StatelessWidget {
   final ReferenciaMidia midia;
   final bool permiteEditar;
   final VoidCallback onRemover;
-  final void Function(bool ePrincipal, bool ePublica) onEditar;
+  final void Function(ReferenciaMidia midia, bool ePrincipal, bool ePublica)
+  onEditar;
 
   const _MidiaCarouselCard({
     super.key,
@@ -431,70 +751,144 @@ class _MidiaCarouselCard extends StatelessWidget {
   Future<void> _abrirEdicaoMidia(BuildContext context) async {
     var ePrincipal = midia.ePrincipal;
     var ePublica = midia.ePublica;
+    var corSelecionada = midia.cor;
+    var tamanhoSelecionado = midia.tamanho;
+    final descricaoController = TextEditingController(text: midia.descricao);
 
     final salvo = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
+        final mediaQuery = MediaQuery.of(context);
+        final nomeArquivo = midia.url.split('/').last;
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Editar configurações da mídia',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Imagem padrão'),
-                      subtitle: const Text(
-                        'Define esta mídia como padrão da referência.',
-                      ),
-                      value: ePrincipal,
-                      onChanged: (value) {
-                        setModalState(() {
-                          ePrincipal = value;
-                        });
-                      },
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Imagem pública'),
-                      subtitle: const Text(
-                        'Controla se esta mídia é visível publicamente.',
-                      ),
-                      value: ePublica,
-                      onChanged: (value) {
-                        setModalState(() {
-                          ePublica = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancelar'),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + mediaQuery.viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Editar mídia',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Salvar'),
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          height: 180,
+                          color: Colors.black12,
+                          child: ImagemViewWidget(
+                            url: midia.url,
+                            onlyFromCache: false,
+                            cacheKey: midia.id.toString(),
+                            placeholder: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        nomeArquivo,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: descricaoController,
+                        decoration: const InputDecoration(
+                          labelText: 'Descrição',
+                          hintText: 'Ex: Vista frontal, detalhe do bordado...',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 2,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 12),
+                      CorSeletor(
+                        modo: CorSeletorModo.unica,
+                        titulo: 'Cor (opcional)',
+                        coresSelecionadasIniciais: corSelecionada == null
+                            ? const []
+                            : [_CorTemporaria(nome: corSelecionada!)],
+                        onCorChanged: (cores) {
+                          setModalState(() {
+                            corSelecionada = cores.firstOrNull?.nome;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      TamanhoSeletor(
+                        modo: TamanhoSeletorModo.unica,
+                        titulo: 'Tamanho (opcional)',
+                        tamanhosSelecionadosIniciais: tamanhoSelecionado == null
+                            ? const []
+                            : [_TamanhoTemporario(nome: tamanhoSelecionado!)],
+                        onTamanhosChanged: (tamanhos) {
+                          setModalState(() {
+                            tamanhoSelecionado = tamanhos.firstOrNull?.nome;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Imagem padrão'),
+                        subtitle: const Text(
+                          'Define esta mídia como padrão da referência.',
+                        ),
+                        value: ePrincipal,
+                        onChanged: (value) {
+                          setModalState(() {
+                            ePrincipal = value;
+                          });
+                        },
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Imagem pública'),
+                        subtitle: const Text(
+                          'Controla se esta mídia é visível publicamente.',
+                        ),
+                        value: ePublica,
+                        onChanged: (value) {
+                          setModalState(() {
+                            ePublica = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancelar'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Salvar'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -504,8 +898,21 @@ class _MidiaCarouselCard extends StatelessWidget {
     );
 
     if (salvo == true) {
-      onEditar(ePrincipal, ePublica);
+      final descricao = descricaoController.text.trim();
+      final midiaAtualizada = ReferenciaMidia.create(
+        id: midia.id,
+        url: midia.url,
+        referenciaId: midia.referenciaId,
+        ePrincipal: ePrincipal,
+        ePublica: ePublica,
+        descricao: descricao.isEmpty ? null : descricao,
+        cor: corSelecionada,
+        tamanho: tamanhoSelecionado,
+      );
+      onEditar(midiaAtualizada, ePrincipal, ePublica);
     }
+
+    descricaoController.dispose();
   }
 
   @override
@@ -525,7 +932,7 @@ class _MidiaCarouselCard extends StatelessWidget {
                   color: Colors.black12,
                   child: ImagemViewWidget(
                     url: midia.url,
-                    key: UniqueKey(),
+                    key: ValueKey('midia_${midia.id}_${midia.url}'),
                     onlyFromCache: false,
                     cacheKey: midia.id.toString(),
                     placeholder: const Center(
@@ -606,7 +1013,65 @@ class _MidiaCarouselCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+        if (midia.cor?.isNotEmpty == true || midia.tamanho?.isNotEmpty == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                if (midia.cor?.isNotEmpty == true)
+                  Chip(
+                    label: Text('Cor: ${midia.cor}'),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                if (midia.tamanho?.isNotEmpty == true)
+                  Chip(
+                    label: Text('Tamanho: ${midia.tamanho}'),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
+          ),
       ],
     );
   }
+}
+
+class _CorTemporaria implements Cor {
+  @override
+  final int? id = null;
+
+  @override
+  final bool? inativo = false;
+
+  @override
+  final String nome;
+
+  const _CorTemporaria({required this.nome});
+
+  @override
+  List<Object?> get props => [id, nome, inativo];
+
+  @override
+  bool? get stringify => true;
+}
+
+class _TamanhoTemporario implements Tamanho {
+  @override
+  final int? id = null;
+
+  @override
+  final bool inativo = false;
+
+  @override
+  final String nome;
+
+  const _TamanhoTemporario({required this.nome});
+
+  @override
+  List<Object?> get props => [id, nome, inativo];
+
+  @override
+  bool? get stringify => true;
 }

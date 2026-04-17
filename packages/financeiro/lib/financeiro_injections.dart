@@ -34,6 +34,12 @@ void _remoteDataSources() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<IContagemDoCaixaRemoteDataSource>(
+    () => ContagemDoCaixaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -52,6 +58,12 @@ void _repositories() {
 
   sl.registerFactory<ISuprimentosRepository>(
     () => SuprimentosRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IContagemDoCaixaRepository>(
+    () => ContagemDoCaixaRepository(
       remoteDataSource: sl(),
     ),
   );
@@ -102,6 +114,14 @@ void _useCases() {
     () => CancelarSuprimento(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarContagemDoCaixa>(
+    () => RecuperarContagemDoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<SalvarItemDaContagemDoCaixa>(
+    () => SalvarItemDaContagemDoCaixa(repository: sl()),
+  );
+
   sl.registerFactory<AtualizarFormaDePagamento>(
     () => AtualizarFormaDePagamento(repository: sl()),
   );
@@ -126,6 +146,13 @@ void _presentation() {
 
   sl.registerFactory<SuprimentoBloc>(
     () => SuprimentoBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<ContagemDoCaixaBloc>(
+    () => ContagemDoCaixaBloc(
+      sl(),
       sl(),
     ),
   );

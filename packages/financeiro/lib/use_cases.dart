@@ -10,3 +10,5 @@ export 'domain/use_cases/criar_suprimento.dart';
 export 'domain/use_cases/recuperar_suprimento.dart';
 export 'domain/use_cases/recuperar_suprimentos.dart';
 export 'domain/use_cases/cancelar_suprimento.dart';
+export 'domain/use_cases/recuperar_contagem_do_caixa.dart';
+export 'domain/use_cases/salvar_item_da_contagem_do_caixa.dart';

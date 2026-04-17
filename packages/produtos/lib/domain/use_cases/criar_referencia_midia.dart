@@ -6,7 +6,7 @@ class CriarReferenciaMidia {
 
   CriarReferenciaMidia({required this.referenciaMidiasRepository});
 
-  Future<void> call({
+  Future<ReferenciaMidia> call({
     required String filePath,
     required int referenciaId,
     required bool ePrincipal,
@@ -16,6 +16,7 @@ class CriarReferenciaMidia {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    void Function(int sent, int total)? onSendProgress,
   }) {
     return referenciaMidiasRepository.criarReferenciaMidia(
       filePath: filePath,
@@ -27,6 +28,7 @@ class CriarReferenciaMidia {
       descricao: descricao,
       cor: cor,
       tamanho: tamanho,
+      onSendProgress: onSendProgress,
     );
   }
 }

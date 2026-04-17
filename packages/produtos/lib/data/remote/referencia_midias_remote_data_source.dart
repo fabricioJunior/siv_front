@@ -24,6 +24,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'isDefault': referenciaMidia.ePrincipal,
       'isPublic': referenciaMidia.ePublica,
       'description': referenciaMidia.descricao,
+      'cor': referenciaMidia.cor,
+      'tamanho': referenciaMidia.tamanho,
     };
     var response = await put(pathParameters: pathParameters, body: body);
 
@@ -41,6 +43,7 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    void Function(int sent, int total)? onSendProgress,
   }) async {
     var pathParameters = {'referenciaId': referenciaId.toString()};
     var body = {
@@ -52,10 +55,12 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'tamanho': tamanho,
     };
     var response = await postFile(
-      field: 'Imagem',
+      field: 'file',
       file: File(filePath),
+      fileType: FileType.image,
       pathParameters: pathParameters,
       body: body,
+      onSendProgress: onSendProgress,
     );
 
     return ReferenciaMidiaDto.fromJson(response.body);
@@ -70,7 +75,7 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       path: '/v1/referencias/$referenciaId/midias/$id',
     );
     final response = await httpClient.delete(uri: uri);
-    if (response.statusCode != 204) {
+    if (response.statusCode != 204 && response.statusCode != 200) {
       throw Exception('Erro ao excluir mídia: ${response.statusCode}');
     }
   }

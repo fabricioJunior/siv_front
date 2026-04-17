@@ -21,6 +21,7 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   cpf_cnpj_validator: ^2.0.0
   path_provider: ^2.1.5
+  path: ^1.9.1
   equatable: ^2.0.7
   mockito: ^5.4.4
   flutter_bloc: ^9.0.0
@@ -30,6 +31,7 @@ dependencies:
   cep_sdk: ^0.0.1
   image_picker: ^1.2.1
   flutter_image_compress: ^2.4.0
+  image: ^4.5.4
   http_parser: ^4.1.2
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.1

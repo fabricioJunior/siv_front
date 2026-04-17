@@ -10,3 +10,5 @@ export 'presentation/pages/forma_de_pagamento_page.dart';
 export 'presentation/pages/formas_de_pagamento_page.dart';
 export 'presentation/pages/suprimentos_page.dart';
 export 'presentation/pages/suprimento_page.dart';
+export 'presentation/blocs/contagem_do_caixa_bloc/contagem_do_caixa_bloc.dart';
+export 'presentation/pages/contagem_do_caixa_page.dart';

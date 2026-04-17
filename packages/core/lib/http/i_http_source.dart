@@ -29,6 +29,7 @@ abstract class IHttpSource {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool compressImage = true,
+    void Function(int sent, int total)? onSendProgress,
   });
 }
 

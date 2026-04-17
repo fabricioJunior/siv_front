@@ -12,6 +12,7 @@ abstract class IReferenciaMidiasRemoteDataSource {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    void Function(int sent, int total)? onSendProgress,
   });
   Future<ReferenciaMidia> atualizarReferenciaMidia(
     ReferenciaMidia referenciaMidia,

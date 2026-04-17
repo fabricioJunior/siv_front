@@ -172,6 +172,22 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonalIcon(
+                          onPressed: carregando || state.caixaId == null
+                              ? null
+                              : () {
+                                  Navigator.of(context).pushNamed(
+                                    '/contagem_do_caixa',
+                                    arguments: {'caixaId': state.caixaId},
+                                  );
+                                },
+                          icon: const Icon(Icons.calculate_outlined),
+                          label: const Text('Contagem do caixa'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(

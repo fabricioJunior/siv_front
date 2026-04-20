@@ -252,34 +252,62 @@ class _LoginPageState extends State<LoginPage> {
                                             final emProgresso = state
                                                 is LoginAutenticarEmProgresso;
 
-                                            return SizedBox(
-                                              height: 48,
-                                              child: ElevatedButton(
-                                                key: const Key(
-                                                  'login_page_entrar_button',
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                SizedBox(
+                                                  height: 48,
+                                                  child: ElevatedButton(
+                                                    key: const Key(
+                                                      'login_page_entrar_button',
+                                                    ),
+                                                    onPressed: emProgresso
+                                                        ? null
+                                                        : () {
+                                                            if (formKey
+                                                                    .currentState
+                                                                    ?.validate() ??
+                                                                false) {
+                                                              bloc.add(
+                                                                LoginAutenticou(),
+                                                              );
+                                                            }
+                                                          },
+                                                    child: emProgresso
+                                                        ? const SizedBox(
+                                                            width: 20,
+                                                            height: 20,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                            ),
+                                                          )
+                                                        : const Text('ENTRAR'),
+                                                  ),
                                                 ),
-                                                onPressed: emProgresso
-                                                    ? null
-                                                    : () {
-                                                        if (formKey.currentState
-                                                                ?.validate() ??
-                                                            false) {
-                                                          bloc.add(
-                                                            LoginAutenticou(),
+                                                const SizedBox(height: 12),
+                                                OutlinedButton.icon(
+                                                  key: const Key(
+                                                    'login_page_configuracao_dispositivo_button',
+                                                  ),
+                                                  onPressed: emProgresso
+                                                      ? null
+                                                      : () {
+                                                          Navigator.of(context)
+                                                              .pushNamed(
+                                                            '/configuracao_dispositivo',
                                                           );
-                                                        }
-                                                      },
-                                                child: emProgresso
-                                                    ? const SizedBox(
-                                                        width: 20,
-                                                        height: 20,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                        ),
-                                                      )
-                                                    : const Text('ENTRAR'),
-                                              ),
+                                                        },
+                                                  icon: const Icon(
+                                                    Icons
+                                                        .phone_android_outlined,
+                                                  ),
+                                                  label: const Text(
+                                                    'Configurações do dispositivo',
+                                                  ),
+                                                ),
+                                              ],
                                             );
                                           },
                                         ),
@@ -371,6 +399,8 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     final terminaisDaEmpresa = await bloc.buscarTerminaisParaEmpresa(idEmpresa);
+
+    if (!context.mounted) return;
 
     TerminalDoUsuario? terminalSelecionado;
     if (terminaisDaEmpresa.length == 1) {

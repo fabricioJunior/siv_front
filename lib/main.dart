@@ -246,6 +246,17 @@ class AppLoadingView extends StatelessWidget {
                       ),
                     ),
                   ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  key: const Key('app_loading_configuracao_dispositivo_button'),
+                  onPressed: () {
+                    Navigator.of(
+                      context,
+                    ).pushNamed('/configuracao_dispositivo');
+                  },
+                  icon: const Icon(Icons.phone_android_outlined),
+                  label: const Text('Configurações do dispositivo'),
+                ),
               ],
             ),
           ),

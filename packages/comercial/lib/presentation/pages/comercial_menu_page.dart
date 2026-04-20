@@ -20,6 +20,15 @@ class ComercialMenuPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _ItemMenu(
+            icon: Icons.shopping_cart_checkout_outlined,
+            titulo: 'Venda',
+            subtitulo:
+                'Seleção de cliente, vendedor, contagem e envio ao caixa.',
+            componente: 'PEDFC001',
+            onTap: () => Navigator.pushNamed(context, '/venda'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
             icon: Icons.receipt_long,
             titulo: 'Pedidos',
             subtitulo: 'Criação, conferência, faturamento e acompanhamento.',

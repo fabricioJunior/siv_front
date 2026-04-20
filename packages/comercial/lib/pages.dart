@@ -4,3 +4,4 @@ export 'presentation/pages/pedidos_page.dart';
 export 'presentation/pages/pedido_page.dart';
 export 'presentation/pages/romaneios_page.dart';
 export 'presentation/pages/romaneio_page.dart';
+export 'presentation/pages/venda_page.dart';

@@ -12,10 +12,16 @@ import 'package:siv_front/routes.dart';
 //https://apollo-api-stg.coralcloud.app/docs
 
 void main() async {
-  await sl.reset();
-  await configs();
+  WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(MyApp());
+  try {
+    await sl.reset();
+    await configs();
+    runApp(MyApp());
+  } catch (e, s) {
+    log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
+    runApp(AppInitializationErrorApp(error: e, stackTrace: s));
+  }
 }
 
 Future<void> configs() async {
@@ -79,20 +85,23 @@ class MyApp extends StatelessWidget {
             builder: (context, state) {
               if (state.statusAutenticacao ==
                   StatusAutenticacao.carregandoDados) {
-                return const Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text('Carregando dados do usuário...'),
-                        SizedBox(height: 16),
-                        CircularProgressIndicator(),
-                      ],
-                    ),
-                  ),
+                return AppLoadingView(
+                  etapaAtual: state.etapaAtualInicializacao,
+                  etapasConcluidas: state.etapasInicializacaoConcluidas,
                 );
               }
+
+              if (state.statusAutenticacao ==
+                  StatusAutenticacao.falhaInicializacao) {
+                return InitializationErrorView(
+                  mensagem:
+                      state.mensagemErroInicializacao ??
+                      'Não foi possível iniciar o aplicativo.',
+                  detalhesTecnicos: state.detalhesErroInicializacao,
+                  onRetry: () => sl<AppBloc>().add(AppIniciou()),
+                );
+              }
+
               return child ?? const SizedBox.shrink();
             },
           ),
@@ -150,6 +159,222 @@ class GlobalBlocObserver extends BlocObserver {
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     log('${bloc.runtimeType} $error $stackTrace', name: 'Test log');
+  }
+}
+
+class AppLoadingView extends StatelessWidget {
+  final String? etapaAtual;
+  final List<String> etapasConcluidas;
+
+  const AppLoadingView({
+    super.key,
+    this.etapaAtual,
+    this.etapasConcluidas = const [],
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 20),
+                Text(
+                  'Carregando dados do aplicativo...',
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  etapaAtual ?? 'Preparando ambiente',
+                  style: theme.textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                if (etapasConcluidas.isNotEmpty || etapaAtual != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Etapas de carregamento',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          ...etapasConcluidas.map(
+                            (etapa) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 18,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(etapa)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (etapaAtual != null)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(etapaAtual!)),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AppInitializationErrorApp extends StatelessWidget {
+  final Object error;
+  final StackTrace stackTrace;
+
+  const AppInitializationErrorApp({
+    super.key,
+    required this.error,
+    required this.stackTrace,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: InitializationErrorView(
+        mensagem:
+            'Não foi possível concluir a inicialização do aplicativo. Verifique a configuração e tente novamente.',
+        detalhesTecnicos:
+            'Origem: ${error.runtimeType}\n\nErro: $error\n\nStack trace:\n$stackTrace',
+      ),
+    );
+  }
+}
+
+class InitializationErrorView extends StatelessWidget {
+  final String mensagem;
+  final String? detalhesTecnicos;
+  final VoidCallback? onRetry;
+
+  const InitializationErrorView({
+    super.key,
+    required this.mensagem,
+    this.detalhesTecnicos,
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 56,
+                    color: theme.colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Falha ao iniciar o aplicativo',
+                    style: theme.textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    mensagem,
+                    style: theme.textTheme.bodyLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      if (onRetry != null)
+                        FilledButton.icon(
+                          onPressed: onRetry,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Tentar novamente'),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: () => _mostrarDetalhes(context),
+                        icon: const Icon(Icons.bug_report_outlined),
+                        label: const Text('Informações técnicas'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _mostrarDetalhes(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Informações técnicas'),
+          content: SizedBox(
+            width: 560,
+            child: SingleChildScrollView(
+              child: SelectableText(
+                detalhesTecnicos?.trim().isNotEmpty == true
+                    ? detalhesTecnicos!
+                    : 'Sem detalhes técnicos disponíveis.',
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

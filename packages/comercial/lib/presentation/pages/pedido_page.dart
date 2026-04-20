@@ -1,13 +1,21 @@
 import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PedidoPage extends StatefulWidget {
   final int? idPedido;
+  final SeletorWidget? funcionarioSeletor;
+  final SeletorWidget? tabelaDePrecoSeletor;
 
-  const PedidoPage({super.key, this.idPedido});
+  const PedidoPage({
+    super.key,
+    this.idPedido,
+    this.funcionarioSeletor,
+    this.tabelaDePrecoSeletor,
+  });
 
   @override
   State<PedidoPage> createState() => _PedidoPageState();
@@ -185,23 +193,58 @@ class _PedidoPageState extends State<PedidoPage> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            _campoNumero(
-                              controller: _funcionarioIdController,
-                              label: 'Funcionario ID',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                funcionarioId: value,
+                            if (widget.funcionarioSeletor != null)
+                              widget.funcionarioSeletor!.buildComParametros(
+                                SeletorParamentros(
+                                  itemsSelecionadosInicial: _selectDataInicial(
+                                        idTexto: state.funcionarioId,
+                                        nomeFallback: 'Funcionário selecionado',
+                                      ) ??
+                                      const [],
+                                  onlyView: widget.idPedido != null,
+                                  onChanged: (selecionados) => _onCampoAlterado(
+                                    context,
+                                    funcionarioId: selecionados.isEmpty
+                                        ? ''
+                                        : '${selecionados.first.id}',
+                                  ),
+                                ),
+                              )
+                            else
+                              _campoNumero(
+                                controller: _funcionarioIdController,
+                                label: 'Funcionario ID',
+                                onChanged: (value) => _onCampoAlterado(
+                                  context,
+                                  funcionarioId: value,
+                                ),
                               ),
-                            ),
                             const SizedBox(height: 12),
-                            _campoNumero(
-                              controller: _tabelaPrecoIdController,
-                              label: 'Tabela de preco ID',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                tabelaPrecoId: value,
+                            if (widget.tabelaDePrecoSeletor != null)
+                              widget.tabelaDePrecoSeletor!.buildComParametros(
+                                SeletorParamentros(
+                                  itemsSelecionadosInicial: _selectDataInicial(
+                                    idTexto: state.tabelaPrecoId,
+                                    nomeFallback: 'Tabela selecionada',
+                                  ),
+                                  onlyView: widget.idPedido != null,
+                                  onChanged: (selecionados) => _onCampoAlterado(
+                                    context,
+                                    tabelaPrecoId: selecionados.isEmpty
+                                        ? ''
+                                        : '${selecionados.first.id}',
+                                  ),
+                                ),
+                              )
+                            else
+                              _campoNumero(
+                                controller: _tabelaPrecoIdController,
+                                label: 'Tabela de preco ID',
+                                onChanged: (value) => _onCampoAlterado(
+                                  context,
+                                  tabelaPrecoId: value,
+                                ),
                               ),
-                            ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               initialValue: _tipos.contains(state.tipo)
@@ -371,6 +414,24 @@ class _PedidoPageState extends State<PedidoPage> {
         return null;
       },
     );
+  }
+
+  List<SelectData>? _selectDataInicial({
+    required String? idTexto,
+    required String nomeFallback,
+  }) {
+    final id = int.tryParse(idTexto ?? '');
+    if (id == null || id <= 0) {
+      return null;
+    }
+
+    return [
+      SelectData(
+        id: id,
+        nome: nomeFallback,
+        data: {'id': id, 'nome': nomeFallback},
+      ),
+    ];
   }
 
   Widget _campoTexto({

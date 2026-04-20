@@ -47,6 +47,7 @@ class ListaDeProdutosCompartilhadaLocalDataSource
       atualizadaEm: entity.atualizadaEm,
       origemIndex: entity.origem.index,
       idLista: entity.idLista,
+      pessoaId: entity.pessoaId,
       funcionarioId: entity.funcionarioId,
       tabelaPrecoId: entity.tabelaPrecoId,
     );

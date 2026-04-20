@@ -7,6 +7,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
   final OrigemCompartilhadaTipo origem;
   final DateTime criadaEm;
   final DateTime atualizadaEm;
+  final int? pessoaId;
   final int? funcionarioId;
   final int? tabelaPrecoId;
   final bool? processada;
@@ -17,6 +18,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
     required this.origem,
     required this.criadaEm,
     required this.atualizadaEm,
+    this.pessoaId,
     this.funcionarioId,
     this.tabelaPrecoId,
     this.processada,
@@ -28,6 +30,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
     OrigemCompartilhadaTipo? origem,
     DateTime? criadaEm,
     DateTime? atualizadaEm,
+    int? pessoaId,
     int? funcionarioId,
     int? tabelaPrecoId,
     bool? processada,
@@ -38,6 +41,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
       origem: origem ?? this.origem,
       criadaEm: criadaEm ?? this.criadaEm,
       atualizadaEm: atualizadaEm ?? this.atualizadaEm,
+      pessoaId: pessoaId ?? this.pessoaId,
       funcionarioId: funcionarioId ?? this.funcionarioId,
       tabelaPrecoId: tabelaPrecoId ?? this.tabelaPrecoId,
       processada: processada ?? this.processada,
@@ -49,6 +53,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
     required OrigemCompartilhadaTipo origem,
     DateTime? criadaEm,
     DateTime? atualizadaEm,
+    int? pessoaId,
     int? funcionarioId,
     int? tabelaPrecoId,
   }) {
@@ -59,6 +64,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
       origem: origem,
       criadaEm: criadaEm ?? agora,
       atualizadaEm: atualizadaEm ?? agora,
+      pessoaId: pessoaId,
       funcionarioId: funcionarioId,
       tabelaPrecoId: tabelaPrecoId,
     );
@@ -71,6 +77,7 @@ class ListaDeProdutosCompartilhada extends Equatable {
         atualizadaEm,
         hash,
         idLista,
+        pessoaId,
         funcionarioId,
         tabelaPrecoId,
       ];
@@ -79,4 +86,5 @@ class ListaDeProdutosCompartilhada extends Equatable {
 enum OrigemCompartilhadaTipo {
   romenioEntradaDeProdutos,
   romenioSaidaDeProdutos,
+  venda,
 }

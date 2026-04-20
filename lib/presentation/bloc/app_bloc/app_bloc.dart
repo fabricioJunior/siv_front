@@ -63,35 +63,52 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     Emitter<AppState> emit,
   ) async {
     try {
-      var usuarioDaSessao = await _recuperarUsuarioDaSessao();
-      final empresaDaSessao = event.token.idEmpresa == null
-          ? null
-          : await _recuperarEmpresaDaSessao.call();
       if (event.token.idEmpresa != null) {
-        emit(
-          state.copyWith(
-            usuarioDaSessao: null,
-            statusAutenticacao: StatusAutenticacao.carregandoDados,
-          ),
-        );
+        _atualizarEtapaCarregamento(emit, 'Recuperando usuário da sessão');
+      }
+      var usuarioDaSessao = await _recuperarUsuarioDaSessao();
+      final Empresa? empresaDaSessao;
+      if (event.token.idEmpresa == null) {
+        empresaDaSessao = null;
+      } else {
+        _atualizarEtapaCarregamento(emit, 'Carregando empresa da sessão');
+        empresaDaSessao = await _recuperarEmpresaDaSessao.call();
       }
 
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Carregando dados do licenciado');
+      }
       var licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Carregando terminal da sessão');
+      }
       final terminalDaSessao = await _recuperarTerminalDaSessao.call();
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Sincronizando permissões');
+      }
       var permissoes = await _sincronizarPermissoesDoUsuario(
         idUsuario: usuarioDaSessao.id,
       );
       var permissoesMap = _mapPermissoes(permissoes);
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Carregando terminais disponíveis');
+      }
       final terminaisDaEmpresaDaSessao =
           await _carregarTerminaisDaEmpresaDaSessao(
             usuarioDaSessao: usuarioDaSessao,
             empresaDaSessao: empresaDaSessao,
           );
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Validando terminal ativo');
+      }
       final terminalDaSessaoResolvido = await _resolverTerminalDaSessao(
         empresaDaSessao: empresaDaSessao,
         terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
         terminalSalvo: terminalDaSessao,
       );
+      if (event.token.idEmpresa != null) {
+        _atualizarEtapaCarregamento(emit, 'Carregando caixa da sessão');
+      }
       final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
         empresaDaSessao: empresaDaSessao,
         terminalDaSessao: terminalDaSessaoResolvido,
@@ -109,9 +126,14 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
           caixaIdDaSessao: () => caixaIdDaSessao,
           licenciadoDaSessao: () => licenciadoDaSessao,
           permissoesDoUsuario: permissoesMap,
+          mensagemErroInicializacao: null,
+          detalhesErroInicializacao: null,
+          etapaAtualInicializacao: null,
+          etapasInicializacaoConcluidas: const [],
         ),
       );
     } catch (e, s) {
+      _emitFalhaInicializacao(emit, e, s);
       addError(e, s);
     }
   }
@@ -130,6 +152,10 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
           terminalDaSessao: () => null,
           caixaIdDaSessao: () => null,
           licenciadoDaSessao: () => null,
+          mensagemErroInicializacao: null,
+          detalhesErroInicializacao: null,
+          etapaAtualInicializacao: null,
+          etapasInicializacaoConcluidas: const [],
         ),
       );
     } catch (e, s) {
@@ -139,51 +165,67 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
 
   FutureOr<void> _onAppIniciou(AppIniciou event, Emitter<AppState> emit) async {
     try {
+      _atualizarEtapaCarregamento(emit, 'Validando licenciamento');
       final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
       if (licenciadoDaSessao != null) {
+        _atualizarEtapaCarregamento(emit, 'Configurando conexão com a API');
         _apiBaseUrlConfig.atualizar(licenciadoDaSessao.urlApi);
       } else {
         emit(
           state.copyWith(
             usuarioDaSessao: null,
             statusAutenticacao: StatusAutenticacao.naoAutenticao,
+            mensagemErroInicializacao: null,
+            detalhesErroInicializacao: null,
+            etapaAtualInicializacao: null,
+            etapasInicializacaoConcluidas: const [],
           ),
         );
         return;
       }
-      emit(
-        state.copyWith(
-          usuarioDaSessao: null,
-          statusAutenticacao: StatusAutenticacao.carregandoDados,
-        ),
-      );
+      _atualizarEtapaCarregamento(emit, 'Verificando autenticação');
 
       var estaAutenticado = await _estaAutenticado.call();
-      var usuarioDaSessao = estaAutenticado
-          ? await _recuperarUsuarioDaSessao()
-          : null;
-      final empresaDaSessao = estaAutenticado
-          ? await _recuperarEmpresaDaSessao.call()
-          : null;
-      final terminalDaSessao = estaAutenticado
-          ? await _recuperarTerminalDaSessao.call()
-          : null;
+      Usuario? usuarioDaSessao;
+      Empresa? empresaDaSessao;
+      TerminalDoUsuario? terminalDaSessao;
+
+      if (estaAutenticado) {
+        _atualizarEtapaCarregamento(emit, 'Recuperando usuário da sessão');
+        usuarioDaSessao = await _recuperarUsuarioDaSessao();
+
+        _atualizarEtapaCarregamento(emit, 'Carregando empresa da sessão');
+        empresaDaSessao = await _recuperarEmpresaDaSessao.call();
+
+        _atualizarEtapaCarregamento(emit, 'Carregando terminal da sessão');
+        terminalDaSessao = await _recuperarTerminalDaSessao.call();
+      }
+      if (estaAutenticado) {
+        _atualizarEtapaCarregamento(emit, 'Carregando terminais disponíveis');
+      }
       final terminaisDaEmpresaDaSessao =
           await _carregarTerminaisDaEmpresaDaSessao(
             usuarioDaSessao: usuarioDaSessao,
             empresaDaSessao: empresaDaSessao,
           );
+      if (estaAutenticado) {
+        _atualizarEtapaCarregamento(emit, 'Validando terminal ativo');
+      }
       final terminalDaSessaoResolvido = await _resolverTerminalDaSessao(
         empresaDaSessao: empresaDaSessao,
         terminaisDaEmpresaDaSessao: terminaisDaEmpresaDaSessao,
         terminalSalvo: terminalDaSessao,
       );
+      if (estaAutenticado) {
+        _atualizarEtapaCarregamento(emit, 'Carregando caixa da sessão');
+      }
       final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
         empresaDaSessao: empresaDaSessao,
         terminalDaSessao: terminalDaSessaoResolvido,
       );
       Map<String, PermissaoDoUsuario>? permissoesMap;
       if (estaAutenticado) {
+        _atualizarEtapaCarregamento(emit, 'Sincronizando permissões');
         var permissoes = await _sincronizarPermissoesDoUsuario(
           idUsuario: usuarioDaSessao!.id,
         );
@@ -200,9 +242,14 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
               ? StatusAutenticacao.autenticado
               : StatusAutenticacao.naoAutenticao,
           permissoesDoUsuario: estaAutenticado ? permissoesMap : null,
+          mensagemErroInicializacao: null,
+          detalhesErroInicializacao: null,
+          etapaAtualInicializacao: null,
+          etapasInicializacaoConcluidas: const [],
         ),
       );
     } catch (e, s) {
+      _emitFalhaInicializacao(emit, e, s);
       addError(e, s);
     }
   }
@@ -307,6 +354,43 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     } catch (_) {
       return null;
     }
+  }
+
+  void _emitFalhaInicializacao(
+    Emitter<AppState> emit,
+    Object erro,
+    StackTrace stackTrace,
+  ) {
+    emit(
+      state.copyWith(
+        statusAutenticacao: StatusAutenticacao.falhaInicializacao,
+        mensagemErroInicializacao:
+            'Não foi possível concluir a inicialização do aplicativo. Tente novamente ou consulte os detalhes técnicos.',
+        detalhesErroInicializacao:
+            'Etapa: ${state.etapaAtualInicializacao ?? 'Não identificada'}\n\nOrigem: ${erro.runtimeType}\n\nErro: $erro\n\nStack trace:\n$stackTrace',
+      ),
+    );
+  }
+
+  void _atualizarEtapaCarregamento(Emitter<AppState> emit, String etapa) {
+    final etapasConcluidas = List<String>.from(
+      state.etapasInicializacaoConcluidas,
+    );
+    final etapaAnterior = state.etapaAtualInicializacao;
+
+    if (etapaAnterior != null &&
+        etapaAnterior != etapa &&
+        !etapasConcluidas.contains(etapaAnterior)) {
+      etapasConcluidas.add(etapaAnterior);
+    }
+
+    emit(
+      state.copyWith(
+        statusAutenticacao: StatusAutenticacao.carregandoDados,
+        etapaAtualInicializacao: etapa,
+        etapasInicializacaoConcluidas: etapasConcluidas,
+      ),
+    );
   }
 
   @override

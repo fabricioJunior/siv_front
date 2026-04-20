@@ -280,36 +280,40 @@ class _EntradaManulDeProdutosPageState
                 opacity: state.leituraIniciada ? 0.7 : 1,
                 child: Column(
                   children: [
-                    widget.funcionariosSeletor(
-                      itemsSelecionadosInicial:
-                          state.funcionarioSelecionado == null
-                          ? null
-                          : [state.funcionarioSelecionado!],
-                      onChanged: (selecionados) {
-                        bloc.add(
-                          EntradaManualFuncionarioSelecionado(
-                            funcionarioSelecionado: selecionados.isEmpty
-                                ? null
-                                : selecionados.first,
-                          ),
-                        );
-                      },
+                    widget.funcionariosSeletor.buildComParametros(
+                      SeletorParamentros(
+                        itemsSelecionadosInicial:
+                            state.funcionarioSelecionado == null
+                            ? null
+                            : [state.funcionarioSelecionado!],
+                        onChanged: (selecionados) {
+                          bloc.add(
+                            EntradaManualFuncionarioSelecionado(
+                              funcionarioSelecionado: selecionados.isEmpty
+                                  ? null
+                                  : selecionados.first,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    widget.tabelasDePrecoSeletor(
-                      itemsSelecionadosInicial:
-                          state.tabelaDePrecoSelecionada == null
-                          ? null
-                          : [state.tabelaDePrecoSelecionada!],
-                      onChanged: (selecionados) {
-                        bloc.add(
-                          EntradaManualTabelaDePrecoSelecionada(
-                            tabelaDePrecoSelecionada: selecionados.isEmpty
-                                ? null
-                                : selecionados.first,
-                          ),
-                        );
-                      },
+                    widget.tabelasDePrecoSeletor.buildComParametros(
+                      SeletorParamentros(
+                        itemsSelecionadosInicial:
+                            state.tabelaDePrecoSelecionada == null
+                            ? null
+                            : [state.tabelaDePrecoSelecionada!],
+                        onChanged: (selecionados) {
+                          bloc.add(
+                            EntradaManualTabelaDePrecoSelecionada(
+                              tabelaDePrecoSelecionada: selecionados.isEmpty
+                                  ? null
+                                  : selecionados.first,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),

@@ -100,6 +100,7 @@ class RomaneioCriacaoBloc
       final criado = precisaCriarRomaneio
           ? await _criarRomaneio.call(
               Romaneio.create(
+                pessoaId: listaCompartilhada.pessoaId,
                 funcionarioId: listaCompartilhada.funcionarioId,
                 tabelaPrecoId: listaCompartilhada.tabelaPrecoId,
                 operacao: operacao,
@@ -131,7 +132,8 @@ class RomaneioCriacaoBloc
       );
       await _atualizarListaCompartilhada.call(listaCompartilhada);
 
-      if (operacao == TipoOperacao.transferencia_entrada) {
+      if (operacao == TipoOperacao.transferencia_entrada ||
+          operacao == TipoOperacao.venda) {
         falhaAoReceberNoCaixa = true;
         final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
         if (caixaId == null) {
@@ -185,10 +187,8 @@ class RomaneioCriacaoBloc
   }) {
     final romaneioId = listaCompartilhada?.idLista;
 
-    if (falhaAoReceberNoCaixa &&
-        romaneioId != null &&
-        operacao == TipoOperacao.transferencia_entrada) {
-      return 'O romaneio #$romaneioId foi criado, mas não foi possível recebê-lo no caixa automaticamente. Volte e abra os romaneios pendentes para concluir o processo manualmente.';
+    if (falhaAoReceberNoCaixa && romaneioId != null) {
+      return 'O romaneio #$romaneioId foi criado, mas não foi possível encaminhá-lo ao caixa automaticamente. Volte e conclua o processo manualmente.';
     }
 
     if (romaneioId != null) {
@@ -213,6 +213,10 @@ class RomaneioCriacaoBloc
 
     if (listaCompartilhada.tabelaPrecoId == null) {
       return 'A lista compartilhada não possui um tabelaPrecoId válido.';
+    }
+
+    if (operacao == TipoOperacao.venda && listaCompartilhada.pessoaId == null) {
+      return 'A lista compartilhada não possui um cliente válido para a venda.';
     }
 
     if (operacao == null) {
@@ -251,6 +255,8 @@ class RomaneioCriacaoBloc
         return TipoOperacao.transferencia_entrada;
       case OrigemCompartilhadaTipo.romenioSaidaDeProdutos:
         return TipoOperacao.transferencia_saida;
+      case OrigemCompartilhadaTipo.venda:
+        return TipoOperacao.venda;
     }
   }
 

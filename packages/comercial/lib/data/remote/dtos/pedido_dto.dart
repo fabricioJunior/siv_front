@@ -150,7 +150,7 @@ class PedidoDto implements Pedido {
   bool? get stringify => true;
 }
 
-int? _toInt(dynamic value) => (value as num?)?.toInt();
+int? _toInt(dynamic value) => int.tryParse(value?.toString() ?? '');
 
 DateTime? _toDate(dynamic value) {
   if (value == null) return null;
@@ -160,5 +160,10 @@ DateTime? _toDate(dynamic value) {
 
 String? _toDateOnly(DateTime? value) {
   if (value == null) return null;
-  return value.toIso8601String().split('T').first;
+
+  final ano = value.year.toString().padLeft(4, '0');
+  final mes = value.month.toString().padLeft(2, '0');
+  final dia = value.day.toString().padLeft(2, '0');
+
+  return '$ano-$mes-$dia';
 }

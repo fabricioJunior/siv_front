@@ -17,6 +17,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
   final Function(List<SelectData>)? onChanged;
 
   final String titulo;
+  final TipoFuncionario? tipoFuncionario;
 
   final bool onlyView;
 
@@ -27,6 +28,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
     required this.itemsSelecionadosInicial,
     this.onFuncionarioChanged,
     this.titulo = 'Funcionários',
+    this.tipoFuncionario,
     this.onChanged,
     this.onlyView = false,
   });
@@ -76,8 +78,14 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
             );
           }
 
-          final funcionariosAtivos =
-              state.funcionarios.where((f) => !f.inativo).toList();
+          final funcionariosAtivos = state.funcionarios
+              .where(
+                (f) =>
+                    !f.inativo &&
+                    (widget.tipoFuncionario == null ||
+                        f.tipo == widget.tipoFuncionario),
+              )
+              .toList();
           final idsSelecionadosIniciais = widget
               .funcionariosSelecionadosIniciais
               .map((funcionario) => funcionario.id)

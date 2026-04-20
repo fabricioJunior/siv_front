@@ -36,7 +36,7 @@ class AdministracaoMenuPage extends StatelessWidget {
         titulo: 'Configurações',
         subtitulo: 'SMTP e ajustes sistêmicos da aplicação.',
         componente: 'SYSFM001',
-        onTap: () => Navigator.pushNamed(context, '/configuracao_smtp'),
+        onTap: () => Navigator.pushNamed(context, '/configuracoes'),
       ),
       const SizedBox(height: 12),
       _ItemMenu(

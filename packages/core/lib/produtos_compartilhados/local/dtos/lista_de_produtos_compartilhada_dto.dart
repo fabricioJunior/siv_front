@@ -13,6 +13,7 @@ class ListaDeProdutosCompartilhadaDto extends ListaDeProdutosCompartilhada
     required super.atualizadaEm,
     required this.origemIndex,
     super.idLista,
+    super.pessoaId,
     super.funcionarioId,
     super.tabelaPrecoId,
     super.processada,

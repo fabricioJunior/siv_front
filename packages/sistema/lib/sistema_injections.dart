@@ -1,7 +1,10 @@
 import 'package:core/injecoes.dart';
 import 'package:sistema/data.dart';
+import 'package:sistema/data/local/dispositivo_local_datasource.dart';
 import 'package:sistema/data/remote/configuracao_stmp_remote_datasource.dart';
+import 'package:sistema/data/repositories/dispositivo_repository.dart';
 import 'package:sistema/presentation/bloc/configuracao_stmp_bloc/configuracao_stmp_bloc.dart';
+import 'package:sistema/presentation/bloc/dispositivo_bloc/dispositivo_bloc.dart';
 import 'package:sistema/uses_cases.dart';
 
 void resolverSistemaInjections() {
@@ -17,6 +20,10 @@ void _remoteDataSources() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<IDispositivoLocalDataSource>(
+    () => DispositivoLocalDataSource(),
+  );
 }
 
 void _repositories() {
@@ -24,6 +31,10 @@ void _repositories() {
     () => ConfiguracaoSTMPRepository(
       remoteDataSource: sl(),
     ),
+  );
+
+  sl.registerFactory<IDispositivoRepository>(
+    () => DispositivoRepository(localDataSource: sl()),
   );
 }
 
@@ -51,6 +62,14 @@ void _useCases() {
       repository: sl(),
     ),
   );
+
+  sl.registerFactory<RecuperarInfoDispositivo>(
+    () => RecuperarInfoDispositivo(repository: sl()),
+  );
+
+  sl.registerFactory<ApagarDadosLocais>(
+    () => ApagarDadosLocais(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -60,6 +79,13 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+    ),
+  );
+
+  sl.registerFactory<DispositivoBloc>(
+    () => DispositivoBloc(
+      recuperarInfo: sl(),
+      apagarDados: sl(),
     ),
   );
 }

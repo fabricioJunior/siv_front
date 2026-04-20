@@ -8,6 +8,30 @@ typedef SeletorWidget = Widget Function({
   bool? onlyView,
 });
 
+class SeletorParamentros {
+  final List<SelectData>? itemsSelecionadosInicial;
+  final void Function(List<SelectData>)? onChanged;
+  final bool onlyView;
+
+  const SeletorParamentros({
+    this.itemsSelecionadosInicial,
+    this.onChanged,
+    this.onlyView = false,
+  });
+}
+
+typedef SeletorParametros = SeletorParamentros;
+
+extension SeletorWidgetExtension on SeletorWidget {
+  Widget buildComParametros(SeletorParamentros parametros) {
+    return call(
+      itemsSelecionadosInicial: parametros.itemsSelecionadosInicial,
+      onChanged: parametros.onChanged,
+      onlyView: parametros.onlyView,
+    );
+  }
+}
+
 abstract class ISeletor extends Widget {
   final List<SelectData>? itemsSelecionadosInicial;
   final Function(List<SelectData>)? onChanged;

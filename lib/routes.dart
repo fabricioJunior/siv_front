@@ -8,6 +8,7 @@ import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
+import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:pagamentos/pages.dart';
@@ -191,11 +192,60 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const ComercialMenuPage(),
     );
   },
+  '/venda': (context) {
+    return _rotaProtegida(
+      route: '/venda',
+      child: VendaPage(
+        pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            SeletorPessoa(
+              itemsSelecionadosInicial: itemsSelecionadosInicial,
+              retornarSomenteId: false,
+              onChanged: onChanged,
+              onlyView: onlyView ?? false,
+            ),
+        vendedoresSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            FuncionarioSeletor(
+              modo: FuncionarioSeletorModo.unica,
+              tipoFuncionario: TipoFuncionario.vendedor,
+              itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
+              onChanged: onChanged,
+              onlyView: onlyView ?? false,
+              titulo: 'Vendedores',
+            ),
+        tabelasDePrecoSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                TabelasDePrecoSeletor(
+                  modo: TabelasDePrecoSeletorModo.unica,
+                  itemsSelecionadosInicial: itemsSelecionadosInicial,
+                  onChanged: onChanged,
+                  onlyView: onlyView ?? false,
+                ),
+      ),
+    );
+  },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
   '/pedido': (context) {
-    return PedidoPage(idPedido: args(context)['idPedido']);
+    return PedidoPage(
+      idPedido: args(context)['idPedido'],
+      funcionarioSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+            titulo: 'Funcionário',
+          ),
+      tabelaDePrecoSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+            titulo: 'Tabela de preço',
+          ),
+    );
   },
   '/romaneios': (context) {
     return _rotaProtegida(route: '/romaneios', child: const RomaneiosPage());
@@ -340,8 +390,14 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
 
   //CONFIGURACOES:
+  '/configuracoes': (context) {
+    return const ConfiguracoesPage();
+  },
   '/configuracao_smtp': (context) {
     return ConfiguracaoSTMPPage();
+  },
+  '/configuracao_dispositivo': (context) {
+    return const ConfiguracaoDispositivoPage();
   },
   '/parametros_empresa': (context) {
     return EmpresaParametrosPage(idEmpresa: args(context)['empresaId']);
@@ -366,6 +422,7 @@ Widget _rotaProtegida({required String route, required Widget child}) {
 
 const Map<String, List<String>> _componentesDaRota = {
   '/comercial': ['PEDFC001', 'ROMFP001'],
+  '/venda': ['PEDFC001', 'ROMFP001'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
   '/estoque': ['PRDFL001'],

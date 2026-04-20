@@ -125,4 +125,11 @@ void _presentation() {
       sl(),
     ),
   );
+
+  sl.registerFactory<VendaBloc>(
+    () => VendaBloc(
+      sl(),
+      sl(),
+    ),
+  );
 }

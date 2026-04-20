@@ -9,6 +9,10 @@ class AppState extends Equatable {
   final int? caixaIdDaSessao;
   final Licenciado? licenciadoDaSessao;
   final Map<String, PermissaoDoUsuario> permissoesDoUsuario;
+  final String? mensagemErroInicializacao;
+  final String? detalhesErroInicializacao;
+  final String? etapaAtualInicializacao;
+  final List<String> etapasInicializacaoConcluidas;
   const AppState({
     this.statusAutenticacao = StatusAutenticacao.naoAutenticao,
     this.usuarioDaSessao,
@@ -18,6 +22,10 @@ class AppState extends Equatable {
     this.caixaIdDaSessao,
     this.licenciadoDaSessao,
     this.permissoesDoUsuario = const {},
+    this.mensagemErroInicializacao,
+    this.detalhesErroInicializacao,
+    this.etapaAtualInicializacao,
+    this.etapasInicializacaoConcluidas = const [],
   });
 
   AppState copyWith({
@@ -29,6 +37,10 @@ class AppState extends Equatable {
     int? Function()? caixaIdDaSessao,
     Licenciado? Function()? licenciadoDaSessao,
     Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
+    Object? mensagemErroInicializacao = _sentinelaAppState,
+    Object? detalhesErroInicializacao = _sentinelaAppState,
+    Object? etapaAtualInicializacao = _sentinelaAppState,
+    List<String>? etapasInicializacaoConcluidas,
   }) => AppState(
     statusAutenticacao: statusAutenticacao ?? this.statusAutenticacao,
     usuarioDaSessao: usuarioDaSessao != null
@@ -49,6 +61,20 @@ class AppState extends Equatable {
         ? licenciadoDaSessao()
         : this.licenciadoDaSessao,
     permissoesDoUsuario: permissoesDoUsuario ?? this.permissoesDoUsuario,
+    mensagemErroInicializacao:
+        identical(mensagemErroInicializacao, _sentinelaAppState)
+        ? this.mensagemErroInicializacao
+        : mensagemErroInicializacao as String?,
+    detalhesErroInicializacao:
+        identical(detalhesErroInicializacao, _sentinelaAppState)
+        ? this.detalhesErroInicializacao
+        : detalhesErroInicializacao as String?,
+    etapaAtualInicializacao:
+        identical(etapaAtualInicializacao, _sentinelaAppState)
+        ? this.etapaAtualInicializacao
+        : etapaAtualInicializacao as String?,
+    etapasInicializacaoConcluidas:
+        etapasInicializacaoConcluidas ?? this.etapasInicializacaoConcluidas,
   );
 
   @override
@@ -60,12 +86,19 @@ class AppState extends Equatable {
     terminalDaSessao,
     caixaIdDaSessao,
     permissoesDoUsuario,
+    mensagemErroInicializacao,
+    detalhesErroInicializacao,
+    etapaAtualInicializacao,
+    etapasInicializacaoConcluidas,
   ];
 }
+
+const Object _sentinelaAppState = Object();
 
 enum StatusAutenticacao {
   autenticado,
   autenticando,
   naoAutenticao,
   carregandoDados,
+  falhaInicializacao,
 }

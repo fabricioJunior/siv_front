@@ -64,7 +64,7 @@ const PaginacaoSchema = CollectionSchema(
   getId: _paginacaoGetId,
   getLinks: _paginacaoGetLinks,
   attach: _paginacaoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _paginacaoEstimateSize(

@@ -13,7 +13,7 @@ extension GetLicenciadoDtoCollection on Isar {
   IsarCollection<LicenciadoDto> get licenciadoDtos => this.collection();
 }
 
-const LicenciadoDtoSchema = CollectionSchema(
+final LicenciadoDtoSchema = CollectionSchema(
   name: r'LicenciadoDto',
   id: 4017759059101818657,
   properties: {

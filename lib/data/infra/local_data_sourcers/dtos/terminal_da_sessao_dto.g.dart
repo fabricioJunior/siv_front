@@ -14,7 +14,7 @@ extension GetTerminalDaSessaoDtoCollection on Isar {
       this.collection();
 }
 
-const TerminalDaSessaoDtoSchema = CollectionSchema(
+final TerminalDaSessaoDtoSchema = CollectionSchema(
   name: r'TerminalDaSessaoDto',
   id: -5952529021257383402,
   properties: {

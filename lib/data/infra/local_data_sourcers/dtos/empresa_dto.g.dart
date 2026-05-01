@@ -13,7 +13,7 @@ extension GetEmpresaDtoCollection on Isar {
   IsarCollection<EmpresaDto> get empresaDtos => this.collection();
 }
 
-const EmpresaDtoSchema = CollectionSchema(
+final EmpresaDtoSchema = CollectionSchema(
   name: r'EmpresaDto',
   id: -7543039627240877726,
   properties: {

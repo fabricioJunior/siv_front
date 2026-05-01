@@ -13,7 +13,7 @@ extension GetCodigoDtoCollection on Isar {
   IsarCollection<CodigoDto> get codigoDtos => this.collection();
 }
 
-const CodigoDtoSchema = CollectionSchema(
+final CodigoDtoSchema = CollectionSchema(
   name: r'CodigoDto',
   id: -9160587924011446633,
   properties: {

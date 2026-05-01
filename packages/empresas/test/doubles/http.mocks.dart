@@ -105,6 +105,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool? compressImage = true,
+    void Function(int, int)? onSendProgress,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#postMultipart, [], {
@@ -115,6 +116,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
               #body: body,
               #headers: headers,
               #compressImage: compressImage,
+              #onSendProgress: onSendProgress,
             }),
             returnValue: _i4.Future<_i2.IHttpResponse>.value(
               _FakeIHttpResponse_0(
@@ -127,6 +129,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
                   #body: body,
                   #headers: headers,
                   #compressImage: compressImage,
+                  #onSendProgress: onSendProgress,
                 }),
               ),
             ),

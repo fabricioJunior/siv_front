@@ -13,7 +13,7 @@ extension GetProdutoEstoqueDtoCollection on Isar {
   IsarCollection<ProdutoEstoqueDto> get produtoEstoqueDtos => this.collection();
 }
 
-const ProdutoEstoqueDtoSchema = CollectionSchema(
+final ProdutoEstoqueDtoSchema = CollectionSchema(
   name: r'ProdutoEstoqueDto',
   id: -6565322416163939010,
   properties: {

@@ -53,18 +53,23 @@ const ListaDeProdutosCompartilhadaDtoSchema = CollectionSchema(
       name: r'origemIndex',
       type: IsarType.long,
     ),
-    r'processada': PropertySchema(
+    r'pessoaId': PropertySchema(
       id: 7,
+      name: r'pessoaId',
+      type: IsarType.long,
+    ),
+    r'processada': PropertySchema(
+      id: 8,
       name: r'processada',
       type: IsarType.bool,
     ),
     r'stringify': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'stringify',
       type: IsarType.bool,
     ),
     r'tabelaPrecoId': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'tabelaPrecoId',
       type: IsarType.long,
     )
@@ -80,7 +85,7 @@ const ListaDeProdutosCompartilhadaDtoSchema = CollectionSchema(
   getId: _listaDeProdutosCompartilhadaDtoGetId,
   getLinks: _listaDeProdutosCompartilhadaDtoGetLinks,
   attach: _listaDeProdutosCompartilhadaDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _listaDeProdutosCompartilhadaDtoEstimateSize(
@@ -106,9 +111,10 @@ void _listaDeProdutosCompartilhadaDtoSerialize(
   writer.writeLong(offsets[4], object.hashCode);
   writer.writeLong(offsets[5], object.idLista);
   writer.writeLong(offsets[6], object.origemIndex);
-  writer.writeBool(offsets[7], object.processada);
-  writer.writeBool(offsets[8], object.stringify);
-  writer.writeLong(offsets[9], object.tabelaPrecoId);
+  writer.writeLong(offsets[7], object.pessoaId);
+  writer.writeBool(offsets[8], object.processada);
+  writer.writeBool(offsets[9], object.stringify);
+  writer.writeLong(offsets[10], object.tabelaPrecoId);
 }
 
 ListaDeProdutosCompartilhadaDto _listaDeProdutosCompartilhadaDtoDeserialize(
@@ -124,8 +130,9 @@ ListaDeProdutosCompartilhadaDto _listaDeProdutosCompartilhadaDtoDeserialize(
     hash: reader.readString(offsets[3]),
     idLista: reader.readLongOrNull(offsets[5]),
     origemIndex: reader.readLong(offsets[6]),
-    processada: reader.readBoolOrNull(offsets[7]),
-    tabelaPrecoId: reader.readLongOrNull(offsets[9]),
+    pessoaId: reader.readLongOrNull(offsets[7]),
+    processada: reader.readBoolOrNull(offsets[8]),
+    tabelaPrecoId: reader.readLongOrNull(offsets[10]),
   );
   return object;
 }
@@ -152,10 +159,12 @@ P _listaDeProdutosCompartilhadaDtoDeserializeProp<P>(
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
       return (reader.readBoolOrNull(offset)) as P;
     case 9:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 10:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -831,6 +840,80 @@ extension ListaDeProdutosCompartilhadaDtoQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'pessoaId',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'pessoaId',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pessoaId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'pessoaId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'pessoaId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> pessoaIdBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'pessoaId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QAfterFilterCondition> processadaIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1072,6 +1155,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByPessoaId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pessoaId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByPessoaIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pessoaId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QAfterSortBy> sortByProcessada() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'processada', Sort.asc);
@@ -1231,6 +1328,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByPessoaId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pessoaId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByPessoaIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pessoaId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QAfterSortBy> thenByProcessada() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'processada', Sort.asc);
@@ -1327,6 +1438,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QDistinct> distinctByPessoaId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pessoaId');
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QDistinct> distinctByProcessada() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'processada');
@@ -1405,6 +1523,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryProperty on QueryBuilder<
       origemIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'origemIndex');
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, int?, QQueryOperations>
+      pessoaIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pessoaId');
     });
   }
 

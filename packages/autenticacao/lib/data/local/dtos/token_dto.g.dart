@@ -13,7 +13,7 @@ extension GetTokenDtoCollection on Isar {
   IsarCollection<TokenDto> get tokenDtos => this.collection();
 }
 
-const TokenDtoSchema = CollectionSchema(
+final TokenDtoSchema = CollectionSchema(
   name: r'TokenDto',
   id: -2886639869332665103,
   properties: {

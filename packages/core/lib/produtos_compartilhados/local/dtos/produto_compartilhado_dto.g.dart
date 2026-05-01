@@ -94,7 +94,7 @@ const ProdutoCompartilhadoDtoSchema = CollectionSchema(
   getId: _produtoCompartilhadoDtoGetId,
   getLinks: _produtoCompartilhadoDtoGetLinks,
   attach: _produtoCompartilhadoDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _produtoCompartilhadoDtoEstimateSize(

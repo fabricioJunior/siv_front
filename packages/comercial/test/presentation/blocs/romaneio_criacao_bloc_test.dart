@@ -209,7 +209,7 @@ void main() {
           .having(
             (state) => state.erro,
             'orientacao',
-            contains('pendentes'),
+            contains('conclua o processo manualmente'),
           ),
     ],
   );

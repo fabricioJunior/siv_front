@@ -2,7 +2,7 @@ name: autenticacao
 description: "A new Flutter package project."
 version: 0.0.1
 publish_to: none
-isar_version: &isar_version 3.3.0-dev.1
+isar_version: &isar_version 3.3.2
 
 homepage:
 
@@ -26,7 +26,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.14.4
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
   analyzer: any

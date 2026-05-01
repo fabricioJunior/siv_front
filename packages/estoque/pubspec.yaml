@@ -3,7 +3,7 @@ description: "A new Flutter package project."
 version: 0.0.1
 publish_to: none
 homepage:
-isar_version: &isar_version 3.3.0-dev.1
+isar_version: &isar_version 3.3.2
 
 environment:
   sdk: ^3.10.7

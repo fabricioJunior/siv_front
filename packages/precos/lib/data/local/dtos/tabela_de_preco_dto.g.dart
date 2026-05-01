@@ -13,7 +13,7 @@ extension GetTabelaDePrecoDtoCollection on Isar {
   IsarCollection<TabelaDePrecoDto> get tabelaDePrecoDtos => this.collection();
 }
 
-const TabelaDePrecoDtoSchema = CollectionSchema(
+final TabelaDePrecoDtoSchema = CollectionSchema(
   name: r'TabelaDePrecoDto',
   id: -5020471522758576192,
   properties: {

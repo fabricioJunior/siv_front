@@ -13,7 +13,7 @@ extension GetTabelaDePrecoDtoCollection on Isar {
   IsarCollection<TabelaDePrecoDto> get tabelaDePrecoDtos => this.collection();
 }
 
-final TabelaDePrecoDtoSchema = CollectionSchema(
+const TabelaDePrecoDtoSchema = CollectionSchema(
   name: r'TabelaDePrecoDto',
   id: -5020471522758576192,
   properties: {
@@ -40,7 +40,7 @@ final TabelaDePrecoDtoSchema = CollectionSchema(
   getId: _tabelaDePrecoDtoGetId,
   getLinks: _tabelaDePrecoDtoGetLinks,
   attach: _tabelaDePrecoDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _tabelaDePrecoDtoEstimateSize(

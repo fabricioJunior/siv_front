@@ -41,6 +41,7 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeITokenRepository_0 extends _i1.SmartFake
     implements _i2.ITokenRepository {
@@ -91,8 +92,8 @@ class MockOnAutenticado extends _i1.Mock implements _i7.OnAutenticado {
           as _i2.ITokenRepository);
 
   @override
-  set lastToken(_i8.Token? _lastToken) => super.noSuchMethod(
-    Invocation.setter(#lastToken, _lastToken),
+  set lastToken(_i8.Token? value) => super.noSuchMethod(
+    Invocation.setter(#lastToken, value),
     returnValueForMissingStub: null,
   );
 

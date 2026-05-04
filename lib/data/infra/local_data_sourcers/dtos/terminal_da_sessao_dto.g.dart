@@ -14,7 +14,7 @@ extension GetTerminalDaSessaoDtoCollection on Isar {
       this.collection();
 }
 
-final TerminalDaSessaoDtoSchema = CollectionSchema(
+const TerminalDaSessaoDtoSchema = CollectionSchema(
   name: r'TerminalDaSessaoDto',
   id: -5952529021257383402,
   properties: {
@@ -40,7 +40,7 @@ final TerminalDaSessaoDtoSchema = CollectionSchema(
   getId: _terminalDaSessaoDtoGetId,
   getLinks: _terminalDaSessaoDtoGetLinks,
   attach: _terminalDaSessaoDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _terminalDaSessaoDtoEstimateSize(

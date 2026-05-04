@@ -13,7 +13,7 @@ extension GetPermissaoDtoCollection on Isar {
   IsarCollection<PermissaoDto> get permissaoDtos => this.collection();
 }
 
-final PermissaoDtoSchema = CollectionSchema(
+const PermissaoDtoSchema = CollectionSchema(
   name: r'PermissaoDto',
   id: 101743438866494632,
   properties: {
@@ -44,7 +44,7 @@ final PermissaoDtoSchema = CollectionSchema(
   getId: _permissaoDtoGetId,
   getLinks: _permissaoDtoGetLinks,
   attach: _permissaoDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _permissaoDtoEstimateSize(

@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
@@ -46,6 +47,10 @@ class _PessoasPageState extends State<PessoasPage>
         floatingActionButton: BlocBuilder<PessoasBloc, PessoasState>(
           builder: (context, state) {
             if (state is PessoasCarregarEmProgresso) {
+              return const SizedBox.shrink();
+            }
+
+            if (!PermissaoPorNome.acessoPermitido('PESFM001')) {
               return const SizedBox.shrink();
             }
 

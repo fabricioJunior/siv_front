@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Clientes, fornecedores e cadastros gerais.',
                   color: Colors.pink,
                   route: '/pessoas',
-                  componentesNecessarios: ['PESFM001'],
+                  componentesNecessarios: [' PESFC001, PESFC002','PESFM003' ],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.shopping_bag,

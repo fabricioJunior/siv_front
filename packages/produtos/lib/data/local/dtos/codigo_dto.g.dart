@@ -13,15 +13,11 @@ extension GetCodigoDtoCollection on Isar {
   IsarCollection<CodigoDto> get codigoDtos => this.collection();
 }
 
-final CodigoDtoSchema = CollectionSchema(
+const CodigoDtoSchema = CollectionSchema(
   name: r'CodigoDto',
   id: -9160587924011446633,
   properties: {
-    r'codigo': PropertySchema(
-      id: 0,
-      name: r'codigo',
-      type: IsarType.string,
-    ),
+    r'codigo': PropertySchema(id: 0, name: r'codigo', type: IsarType.string),
     r'produtoId': PropertySchema(
       id: 1,
       name: r'produtoId',
@@ -31,8 +27,9 @@ final CodigoDtoSchema = CollectionSchema(
       id: 2,
       name: r'tipoIndex',
       type: IsarType.long,
-    )
+    ),
   },
+
   estimateSize: _codigoDtoEstimateSize,
   serialize: _codigoDtoSerialize,
   deserialize: _codigoDtoDeserialize,
@@ -41,10 +38,11 @@ final CodigoDtoSchema = CollectionSchema(
   indexes: {},
   links: {},
   embeddedSchemas: {},
+
   getId: _codigoDtoGetId,
   getLinks: _codigoDtoGetLinks,
   attach: _codigoDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _codigoDtoEstimateSize(
@@ -122,17 +120,18 @@ extension CodigoDtoQueryWhereSort
 extension CodigoDtoQueryWhere
     on QueryBuilder<CodigoDto, CodigoDto, QWhereClause> {
   QueryBuilder<CodigoDto, CodigoDto, QAfterWhereClause> dataBaseIdEqualTo(
-      Id dataBaseId) {
+    Id dataBaseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: dataBaseId,
-        upper: dataBaseId,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(lower: dataBaseId, upper: dataBaseId),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterWhereClause> dataBaseIdNotEqualTo(
-      Id dataBaseId) {
+    Id dataBaseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -155,8 +154,9 @@ extension CodigoDtoQueryWhere
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterWhereClause> dataBaseIdGreaterThan(
-      Id dataBaseId,
-      {bool include = false}) {
+    Id dataBaseId, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: dataBaseId, includeLower: include),
@@ -165,8 +165,9 @@ extension CodigoDtoQueryWhere
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterWhereClause> dataBaseIdLessThan(
-      Id dataBaseId,
-      {bool include = false}) {
+    Id dataBaseId, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: dataBaseId, includeUpper: include),
@@ -181,12 +182,14 @@ extension CodigoDtoQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerDataBaseId,
-        includeLower: includeLower,
-        upper: upperDataBaseId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerDataBaseId,
+          includeLower: includeLower,
+          upper: upperDataBaseId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -198,11 +201,13 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -212,12 +217,14 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -227,12 +234,14 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -244,14 +253,16 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'codigo',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'codigo',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -260,11 +271,13 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -273,77 +286,82 @@ extension CodigoDtoQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> codigoContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'codigo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'codigo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> codigoMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'codigo',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'codigo',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> codigoIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'codigo',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'codigo', value: ''),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> codigoIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'codigo',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'codigo', value: ''),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> dataBaseIdEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'dataBaseId', value: value),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition>
-      dataBaseIdGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  dataBaseIdGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'dataBaseId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -352,11 +370,13 @@ extension CodigoDtoQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'dataBaseId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'dataBaseId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -367,37 +387,38 @@ extension CodigoDtoQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'dataBaseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'dataBaseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> produtoIdEqualTo(
-      int value) {
+    int value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'produtoId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'produtoId', value: value),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition>
-      produtoIdGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  produtoIdGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'produtoId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'produtoId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -406,11 +427,13 @@ extension CodigoDtoQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'produtoId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'produtoId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -421,37 +444,38 @@ extension CodigoDtoQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'produtoId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'produtoId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition> tipoIndexEqualTo(
-      int value) {
+    int value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'tipoIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'tipoIndex', value: value),
+      );
     });
   }
 
   QueryBuilder<CodigoDto, CodigoDto, QAfterFilterCondition>
-      tipoIndexGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  tipoIndexGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'tipoIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'tipoIndex',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -460,11 +484,13 @@ extension CodigoDtoQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'tipoIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'tipoIndex',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -475,13 +501,15 @@ extension CodigoDtoQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'tipoIndex',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'tipoIndex',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -583,8 +611,9 @@ extension CodigoDtoQuerySortThenBy
 
 extension CodigoDtoQueryWhereDistinct
     on QueryBuilder<CodigoDto, CodigoDto, QDistinct> {
-  QueryBuilder<CodigoDto, CodigoDto, QDistinct> distinctByCodigo(
-      {bool caseSensitive = true}) {
+  QueryBuilder<CodigoDto, CodigoDto, QDistinct> distinctByCodigo({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'codigo', caseSensitive: caseSensitive);
     });

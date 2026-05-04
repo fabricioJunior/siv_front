@@ -23,6 +23,7 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeIHttpResponse_0 extends _i1.SmartFake implements _i2.IHttpResponse {
   _FakeIHttpResponse_0(
@@ -149,6 +150,10 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool? compressImage = true,
+    void Function(
+      int,
+      int,
+    )? onSendProgress,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -162,6 +167,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
             #body: body,
             #headers: headers,
             #compressImage: compressImage,
+            #onSendProgress: onSendProgress,
           },
         ),
         returnValue: _i4.Future<_i2.IHttpResponse>.value(_FakeIHttpResponse_0(
@@ -177,6 +183,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
               #body: body,
               #headers: headers,
               #compressImage: compressImage,
+              #onSendProgress: onSendProgress,
             },
           ),
         )),

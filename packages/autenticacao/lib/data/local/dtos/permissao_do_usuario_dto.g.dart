@@ -14,7 +14,7 @@ extension GetPermissaoDoUsuarioDtoCollection on Isar {
       this.collection();
 }
 
-final PermissaoDoUsuarioDtoSchema = CollectionSchema(
+const PermissaoDoUsuarioDtoSchema = CollectionSchema(
   name: r'PermissaoDoUsuarioDto',
   id: -7971753999369630841,
   properties: {
@@ -75,7 +75,7 @@ final PermissaoDoUsuarioDtoSchema = CollectionSchema(
   getId: _permissaoDoUsuarioDtoGetId,
   getLinks: _permissaoDoUsuarioDtoGetLinks,
   attach: _permissaoDoUsuarioDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _permissaoDoUsuarioDtoEstimateSize(

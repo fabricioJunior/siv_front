@@ -13,7 +13,7 @@ extension GetUsuarioDtoCollection on Isar {
   IsarCollection<UsuarioDto> get usuarioDtos => this.collection();
 }
 
-final UsuarioDtoSchema = CollectionSchema(
+const UsuarioDtoSchema = CollectionSchema(
   name: r'UsuarioDto',
   id: -1363298923562748804,
   properties: {
@@ -47,7 +47,7 @@ final UsuarioDtoSchema = CollectionSchema(
   getId: _usuarioDtoGetId,
   getLinks: _usuarioDtoGetLinks,
   attach: _usuarioDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _usuarioDtoEstimateSize(

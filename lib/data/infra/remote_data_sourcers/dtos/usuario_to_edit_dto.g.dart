@@ -18,10 +18,10 @@ UsarioToEditDto _$UsarioToEditDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$UsarioToEditDtoToJson(UsarioToEditDto instance) =>
     <String, dynamic>{
-      if (instance.id case final value?) 'id': value,
-      if (instance.login case final value?) 'usuario': value,
+      'id': ?instance.id,
+      'usuario': ?instance.login,
       'nome': instance.nome,
       'tipo': UsarioToEditDto._tipoUsuarioToJson(instance.tipo),
-      if (instance.senha case final value?) 'senha': value,
+      'senha': ?instance.senha,
       'situacao': instance.situacao,
     };

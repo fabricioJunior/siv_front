@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
@@ -42,11 +43,13 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
     return BlocProvider<PessoaBloc>.value(
       value: _bloc,
       child: Scaffold(
-        floatingActionButton: ElevatedButton.icon(
-          icon: const Icon(Icons.edit_outlined),
-          label: const Text('Editar'),
-          onPressed: _editarPessoa,
-        ),
+        floatingActionButton: PermissaoPorNome.acessoPermitido('PESFM001')
+            ? ElevatedButton.icon(
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Editar'),
+                onPressed: _editarPessoa,
+              )
+            : null,
         appBar: AppBar(
           title: Text('Pessoa #${widget.idPessoa}'),
         ),

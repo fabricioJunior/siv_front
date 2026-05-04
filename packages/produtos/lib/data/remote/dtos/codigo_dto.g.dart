@@ -8,7 +8,7 @@ part of 'codigo_dto.dart';
 
 CodigoDto _$CodigoDtoFromJson(Map<String, dynamic> json) => CodigoDto(
   codigo: json['codigo'] as String,
-  tipo: $enumDecode(_$TipoCodigoEnumMap, json['tipo'] ?? 'ean13'),
+  tipo: CodigoDto.tipoFromJson(json['tipo'] as String?),
   produtoId: (json['produtoId'] as num).toInt(),
 );
 

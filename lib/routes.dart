@@ -427,7 +427,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/romaneios': ['ROMFP001'],
   '/estoque': ['PRDFL001'],
   '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
-  '/pessoas': ['PESFM001'],
+  '/pessoas': ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],
   '/menu_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
   '/financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],
   '/formas_de_pagamento': ['GERFM001'],

@@ -380,6 +380,10 @@ class _PessoaPageState extends State<PessoaPage> {
   Widget _buildFooterAcoes(BuildContext context, PessoaState state) {
     final carregando = state.pessoaStep == PessoaStep.carregando;
 
+    if (!PermissaoPorNome.acessoPermitido('PESFM001')) {
+      return const SizedBox.shrink();
+    }
+
     return SafeArea(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,

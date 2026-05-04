@@ -14,7 +14,7 @@ extension GetPrecoDaReferenciaDtoCollection on Isar {
       this.collection();
 }
 
-final PrecoDaReferenciaDtoSchema = CollectionSchema(
+const PrecoDaReferenciaDtoSchema = CollectionSchema(
   name: r'PrecoDaReferenciaDto',
   id: 8562752919205862277,
   properties: {
@@ -64,7 +64,7 @@ final PrecoDaReferenciaDtoSchema = CollectionSchema(
   getId: _precoDaReferenciaDtoGetId,
   getLinks: _precoDaReferenciaDtoGetLinks,
   attach: _precoDaReferenciaDtoAttach,
-  version: '3.3.0-dev.1',
+  version: '3.3.2',
 );
 
 int _precoDaReferenciaDtoEstimateSize(

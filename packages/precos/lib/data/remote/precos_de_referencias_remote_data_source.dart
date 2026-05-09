@@ -53,8 +53,24 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
     required int tabelaDePrecoId,
   }) async {
     final pathParameters = {'tabelaDePrecoId': tabelaDePrecoId};
-    final response = await get(pathParameters: pathParameters);
-    return PrecosDaReferenciaDto.fromJson(response.body).items;
+    int pagina = 1;
+    
+    List<PrecoDaReferencia> precosDaReferencia = [];
+    while (true) {
+      final response = await get(
+        pathParameters: pathParameters,
+        queryParameters: {'page': pagina.toString()},
+      );
+      final precosDaReferenciaDto = PrecosDaReferenciaDto.fromJson(
+        response.body,
+      );
+      if (precosDaReferenciaDto.items.isEmpty) {
+        break;
+      }
+      precosDaReferencia.addAll(precosDaReferenciaDto.items);
+      pagina++;
+    }
+    return precosDaReferencia;
   }
 
   @override
@@ -70,5 +86,6 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  String get path => '/v1/tabelas-de-precos/{tabelaDePrecoId}/referencias';
+  String get path =>
+      '/v1/tabelas-de-precos/{tabelaDePrecoId}/referencias/{referenciaId}';
 }

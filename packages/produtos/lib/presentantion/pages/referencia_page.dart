@@ -213,7 +213,6 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
           'tabelaDePrecoId': tabelaDePrecoId,
           'referenciaId': referenciaId,
           'referenciaNome': _referencia?.nome ?? _nomeController.text.trim(),
-          'valorInicial': 0.0,
         },
       );
     } catch (_) {

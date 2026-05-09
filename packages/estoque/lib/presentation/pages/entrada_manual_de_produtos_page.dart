@@ -234,6 +234,7 @@ class _EntradaManulDeProdutosPageState
                                 LeitorWidget(
                                   controller: _leitorController,
                                   dataSource: sl(),
+                                  buscaDataSource: sl(),
                                   tabelaDePrecoId: state.tabelaDePrecoId,
                                   aceitarApenasProdutosComPreco: true,
                                   campoCodigoHint:

@@ -5,6 +5,19 @@ abstract class EditarPrecoDaReferenciaEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class EditarPrecoDaReferenciaCarregou extends EditarPrecoDaReferenciaEvent {
+  final int tabelaDePrecoId;
+  final int referenciaId;
+
+  EditarPrecoDaReferenciaCarregou({
+    required this.tabelaDePrecoId,
+    required this.referenciaId,
+  });
+
+  @override
+  List<Object?> get props => [tabelaDePrecoId, referenciaId];
+}
+
 class EditarPrecoDaReferenciaSalvou extends EditarPrecoDaReferenciaEvent {
   final int tabelaDePrecoId;
   final int referenciaId;

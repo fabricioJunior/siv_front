@@ -1,10 +1,8 @@
 import 'package:core/data_sourcers.dart';
 import 'package:estoque/data/local/dtos/produto_estoque_dto.dart';
 import 'package:estoque/domain/data/datasourcers/i_produtos_estoque_local_datasource.dart';
-import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
-import 'package:estoque/domain/models/paginacao_do_estoque.dart';
-import 'package:estoque/domain/models/produto_do_estoque.dart';
-import 'package:estoque/domain/models/saldo_do_estoque.dart';
+import 'package:estoque/estoque.dart';
+import 'package:isar_community/isar.dart';
 
 class ProdutosEstoqueLocalDatasource
     extends IsarLocalDataSourceBase<ProdutoEstoqueDto, ProdutoDoEstoque>
@@ -139,8 +137,44 @@ class ProdutosEstoqueLocalDatasource
   Future<ProdutoDoEstoque?> obterProduto(int id) {
     return fetchById(id);
   }
+
+  @override
+  Future<List<ProdutoDoEstoque>> buscarProdutosPorTexto(
+    String texto, {
+    String? tamanho,
+    String? cor,
+  }) async {
+    return (await fetchWhere(
+      _FindProduto(texto: texto, tamanho: tamanho, cor: cor),
+    )).toList();
+  }
 }
 
 String _normalizarTexto(String valor) {
   return valor.trim().toLowerCase();
+}
+
+class _FindProduto extends IsarFind<ProdutoEstoqueDto> {
+  final String? texto;
+
+  final String? tamanho;
+  final String? cor;
+
+  _FindProduto({required this.texto, required this.tamanho, required this.cor});
+  @override
+  Future<Iterable<ProdutoEstoqueDto>> call(
+    IsarCollection<ProdutoEstoqueDto> t,
+  ) async {
+    return await t
+        .filter()
+        .optional(
+          texto != null,
+          (q) => q.nomeContains(texto ?? '', caseSensitive: false),
+        )
+        .and()
+        .optional(tamanho != null, (q) => q.tamanhoNomeContains(tamanho!))
+        .and()
+        .optional(cor != null, (q) => q.corNomeContains(cor!))
+        .findAll();
+  }
 }

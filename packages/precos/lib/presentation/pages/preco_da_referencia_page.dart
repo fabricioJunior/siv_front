@@ -8,7 +8,7 @@ class PrecoDaReferenciaPage extends StatefulWidget {
   final int tabelaDePrecoId;
   final int referenciaId;
   final String referenciaNome;
-  final double valorInicial;
+  final double? valorInicial;
   final Widget imagensDaReferencia;
 
   const PrecoDaReferenciaPage({
@@ -16,7 +16,7 @@ class PrecoDaReferenciaPage extends StatefulWidget {
     required this.tabelaDePrecoId,
     required this.referenciaId,
     required this.referenciaNome,
-    required this.valorInicial,
+    this.valorInicial,
     required this.imagensDaReferencia,
   });
 
@@ -38,16 +38,19 @@ class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
 
     _referenciaIdController.text = widget.referenciaId.toString();
     _referenciaNomeController.text = widget.referenciaNome;
-    _valorController.text = widget.valorInicial.toStringAsFixed(2);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _valorFocusNode.requestFocus();
-      _valorController.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _valorController.text.length,
-      );
-    });
+    if (widget.valorInicial != null) {
+      _valorController.text = widget.valorInicial!.toStringAsFixed(2);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _valorFocusNode.requestFocus();
+        _valorController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _valorController.text.length,
+        );
+      });
+    }
   }
 
   @override
@@ -65,7 +68,18 @@ class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<EditarPrecoDaReferenciaBloc>(
-          create: (context) => sl<EditarPrecoDaReferenciaBloc>(),
+          create: (context) {
+            final bloc = sl<EditarPrecoDaReferenciaBloc>();
+            if (widget.valorInicial == null) {
+              bloc.add(
+                EditarPrecoDaReferenciaCarregou(
+                  tabelaDePrecoId: widget.tabelaDePrecoId,
+                  referenciaId: widget.referenciaId,
+                ),
+              );
+            }
+            return bloc;
+          },
         ),
         BlocProvider<TabelaDePrecoBloc>(
           create: (context) => sl<TabelaDePrecoBloc>()
@@ -80,10 +94,21 @@ class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
             EditarPrecoDaReferenciaBloc,
             EditarPrecoDaReferenciaState
           >(
-            listenWhen: (previous, current) =>
-                previous.step == EditarPrecoDaReferenciaStep.salvando &&
-                current.step == EditarPrecoDaReferenciaStep.sucesso,
-            listener: (context, state) => Navigator.of(context).pop(true),
+            listener: (context, state) {
+              if (state.step == EditarPrecoDaReferenciaStep.sucesso) {
+                Navigator.of(context).pop(true);
+              }
+              if (state.valorCarregado != null &&
+                  _valorController.text.isEmpty) {
+                _valorController.text =
+                    state.valorCarregado!.toStringAsFixed(2);
+                _valorFocusNode.requestFocus();
+                _valorController.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _valorController.text.length,
+                );
+              }
+            },
           ),
           BlocListener<TabelaDePrecoBloc, TabelaDePrecoState>(
             listener: (context, state) {
@@ -100,6 +125,8 @@ class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
               EditarPrecoDaReferenciaState
             >(
               builder: (context, state) {
+                final carregando =
+                    state.step == EditarPrecoDaReferenciaStep.carregando;
                 final salvando =
                     state.step == EditarPrecoDaReferenciaStep.salvando;
 
@@ -114,7 +141,9 @@ class _PrecoDaReferenciaPageState extends State<PrecoDaReferenciaPage> {
 
                 return Scaffold(
                   appBar: AppBar(title: const Text('Preço da Referência')),
-                  body: SafeArea(
+                  body: carregando
+                      ? const Center(child: CircularProgressIndicator())
+                      : SafeArea(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(16),
                       child: Form(

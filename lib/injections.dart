@@ -7,6 +7,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
@@ -24,6 +25,7 @@ import 'package:pagamentos/pagamentos_injections.dart';
 import 'package:precos/precos_injection.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/leitor/produto_busca_do_leitor_data_source.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
@@ -106,6 +108,14 @@ void _localDataSource() {
     () => ProdutoDoLeitorLocalDataSource(
       codigosLocalDataSource: sl(),
       produtoEstoqueLocalDataSource: sl(),
+      precosDeReferenciasLocalDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<ILeitorBuscaDataDatasource>(
+    () => ProdutoBuscaDoLeitorDataSource(
+      produtoEstoqueLocalDataSource: sl(),
+      codigosLocalDataSource: sl(),
       precosDeReferenciasLocalDataSource: sl(),
     ),
   );

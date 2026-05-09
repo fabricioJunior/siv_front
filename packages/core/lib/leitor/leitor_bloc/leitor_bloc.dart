@@ -148,9 +148,12 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       return;
     }
 
+    final quantidadeAdicionada =
+        event.quantidade > 0 ? event.quantidade : 1;
+
     if (state.controlarQuantidade &&
         estoqueDisponivel >= 0 &&
-        quantidadeAtual + 1 > estoqueDisponivel) {
+        quantidadeAtual + quantidadeAdicionada > estoqueDisponivel) {
       emit(
         state.copyWith(
           processando: false,
@@ -175,7 +178,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       estoqueDisponivel: estoqueDisponivel,
       valorUnitario: valorProduto ?? itemExistente?.valorUnitario,
       dados: leitorData.dados,
-      quantidadeLida: quantidadeAtual + 1,
+      quantidadeLida: quantidadeAtual + quantidadeAdicionada,
     );
 
     if (indiceExistente >= 0) {
@@ -193,7 +196,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           descricao: itemAtualizado.descricao,
           tamanho: itemAtualizado.tamanho,
           cor: itemAtualizado.cor,
-          quantidade: 1,
+          quantidade: quantidadeAdicionada,
           quantidadeAposOperacao: itemAtualizado.quantidadeLida,
         ),
       );

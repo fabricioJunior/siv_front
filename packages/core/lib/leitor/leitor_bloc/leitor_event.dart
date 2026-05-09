@@ -6,8 +6,9 @@ sealed class LeitorEvent {
 
 class LeitorCodigoInformado extends LeitorEvent {
   final String codigo;
+  final int quantidade;
 
-  const LeitorCodigoInformado(this.codigo);
+  const LeitorCodigoInformado(this.codigo, {this.quantidade = 1});
 }
 
 class LeitorQuantidadeRemovida extends LeitorEvent {

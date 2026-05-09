@@ -1,6 +1,9 @@
 import 'package:core/bloc.dart';
+import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
+import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
+import 'package:core/leitor/leitor_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +19,7 @@ class LeitorWidget extends StatefulWidget {
   final bool autofocus;
   final int? tabelaDePrecoId;
   final bool aceitarApenasProdutosComPreco;
+  final ILeitorBuscaDataDatasource? buscaDataSource;
 
   const LeitorWidget({
     super.key,
@@ -30,6 +34,7 @@ class LeitorWidget extends StatefulWidget {
     this.autofocus = true,
     this.tabelaDePrecoId,
     this.aceitarApenasProdutosComPreco = false,
+    this.buscaDataSource,
   });
 
   @override
@@ -224,6 +229,36 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       }
     }
     return 'Sem descricao';
+  }
+
+  Future<void> _abrirBuscaManual() async {
+    final buscaDataSource = widget.buscaDataSource;
+    if (buscaDataSource == null) return;
+
+    final resultado = await showDialog<({LeitorData produto, int quantidade})>(
+      context: context,
+      builder: (dialogContext) => _BuscaProdutoDialog(
+        buscaDataSource: buscaDataSource,
+        tabelaDePrecoId: widget.tabelaDePrecoId,
+        modoRemocao: _modoRemocao,
+      ),
+    );
+
+    if (resultado == null) {
+      _solicitarFoco();
+      return;
+    }
+
+    final codigo = resultado.produto.codigoDeBarras;
+    final quantidade = resultado.quantidade;
+
+    if (_modoRemocao) {
+      _controller.removerQuantidade(codigo, quantidade: quantidade);
+    } else {
+      _controller.lerCodigoComQuantidade(codigo, quantidade);
+    }
+
+    _solicitarFoco();
   }
 
   Widget _gradePorReferencia(LeitorState state) {
@@ -501,6 +536,13 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ? null
                             : () => _controller.limpar(),
                       ),
+                      if (widget.buscaDataSource != null)
+                        ActionChip(
+                          avatar: const Icon(Icons.search_outlined, size: 18),
+                          label: const Text('Busca manual'),
+                          onPressed:
+                              state.processando ? null : _abrirBuscaManual,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -741,6 +783,331 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   }
 }
 
+class _BuscaProdutoDialog extends StatefulWidget {
+  final ILeitorBuscaDataDatasource buscaDataSource;
+  final int? tabelaDePrecoId;
+  final bool modoRemocao;
+
+  const _BuscaProdutoDialog({
+    required this.buscaDataSource,
+    this.tabelaDePrecoId,
+    required this.modoRemocao,
+  });
+
+  @override
+  State<_BuscaProdutoDialog> createState() => _BuscaProdutoDialogState();
+}
+
+class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
+  late final LeitorBuscaBloc _buscaBloc;
+  final _textoController = TextEditingController();
+  final _textoFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _buscaBloc = LeitorBuscaBloc(
+      dataSource: widget.buscaDataSource,
+      tabelaDePrecoId: widget.tabelaDePrecoId,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _textoFocusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _buscaBloc.close();
+    _textoController.dispose();
+    _textoFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selecionarProduto(LeitorData produto) async {
+    final quantidade = await showDialog<int>(
+      context: context,
+      builder: (ctx) => _QuantidadeDialog(
+        produto: produto,
+        modoRemocao: widget.modoRemocao,
+      ),
+    );
+    if (quantidade == null || quantidade <= 0) return;
+    if (!mounted) return;
+    Navigator.of(context).pop((produto: produto, quantidade: quantidade));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: _buscaBloc,
+      child: BlocBuilder<LeitorBuscaBloc, LeitorBuscaState>(
+        builder: (context, state) {
+          final resultadosFiltrados = state.resultadosFiltrados;
+
+          return Dialog(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560, maxHeight: 680),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.modoRemocao
+                                ? 'Busca manual — Remover produto'
+                                : 'Busca manual de produto',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _textoController,
+                      focusNode: _textoFocusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Buscar produto',
+                        hintText: 'Digite o nome ou código da referência',
+                        suffixIcon: state.processando
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.search_outlined),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (v) => _buscaBloc
+                          .add(LeitorBuscaTextoBuscado(v)),
+                      onChanged: (v) => _buscaBloc
+                          .add(LeitorBuscaTextoBuscado(v)),
+                    ),
+                    if (state.tamanhosDisponiveis.isNotEmpty ||
+                        state.coresDisponiveis.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (state.tamanhosDisponiveis.isNotEmpty) ...[
+                              Text(
+                                'Tam:',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(width: 4),
+                              ...state.tamanhosDisponiveis.map(
+                                (t) => Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: FilterChip(
+                                    label: Text(t),
+                                    selected: state.tamanhoFiltro == t,
+                                    onSelected: (sel) => _buscaBloc.add(
+                                      LeitorBuscaTamanhoFiltrado(sel ? t : null),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (state.coresDisponiveis.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                'Cor:',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(width: 4),
+                              ...state.coresDisponiveis.map(
+                                (c) => Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: FilterChip(
+                                    label: Text(c),
+                                    selected: state.corFiltro == c,
+                                    onSelected: (sel) => _buscaBloc.add(
+                                      LeitorBuscaCorFiltrada(sel ? c : null),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    if (state.erro != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          state.erro!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    Flexible(
+                      child: _textoController.text.trim().isEmpty
+                          ? Center(
+                              child: Text(
+                                'Digite para buscar produtos.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            )
+                          : resultadosFiltrados.isEmpty && !state.processando
+                              ? Center(
+                                  child: Text(
+                                    'Nenhum produto encontrado.',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  itemCount: resultadosFiltrados.length,
+                                  separatorBuilder: (_, __) =>
+                                      const Divider(height: 1),
+                                  itemBuilder: (context, index) {
+                                    final produto = resultadosFiltrados[index];
+                                    final tamanho = produto.tamanho.trim();
+                                    final cor = produto.cor.trim();
+                                    final subtitulo = [
+                                      if (cor.isNotEmpty) 'Cor: $cor',
+                                      if (tamanho.isNotEmpty) 'Tam: $tamanho',
+                                      'Cód: ${produto.codigoDeBarras}',
+                                    ].join('  •  ');
+                                    return ListTile(
+                                      title: Text(produto.descricao),
+                                      subtitle: Text(subtitulo),
+                                      trailing: const Icon(
+                                        Icons.chevron_right_outlined,
+                                      ),
+                                      onTap: () => _selecionarProduto(produto),
+                                    );
+                                  },
+                                ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _QuantidadeDialog extends StatefulWidget {
+  final LeitorData produto;
+  final bool modoRemocao;
+
+  const _QuantidadeDialog({
+    required this.produto,
+    required this.modoRemocao,
+  });
+
+  @override
+  State<_QuantidadeDialog> createState() => _QuantidadeDialogState();
+}
+
+class _QuantidadeDialogState extends State<_QuantidadeDialog> {
+  final _quantidadeController = TextEditingController(text: '1');
+  final _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      _quantidadeController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _quantidadeController.text.length,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _quantidadeController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _confirmar() {
+    final quantidade = int.tryParse(_quantidadeController.text.trim()) ?? 0;
+    if (quantidade <= 0) return;
+    Navigator.of(context).pop(quantidade);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tamanho = widget.produto.tamanho.trim();
+    final cor = widget.produto.cor.trim();
+    final rotulo = [
+      if (cor.isNotEmpty) 'Cor: $cor',
+      if (tamanho.isNotEmpty) 'Tam: $tamanho',
+    ].join('  •  ');
+
+    return AlertDialog(
+      title: Text(
+        widget.modoRemocao ? 'Quantidade a remover' : 'Quantidade a adicionar',
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.produto.descricao,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          if (rotulo.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              rotulo,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          const SizedBox(height: 16),
+          TextField(
+            controller: _quantidadeController,
+            focusNode: _focusNode,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Quantidade',
+              hintText: 'Informe a quantidade',
+            ),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _confirmar(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _confirmar,
+          child: Text(widget.modoRemocao ? 'Remover' : 'Adicionar'),
+        ),
+      ],
+    );
+  }
+}
+
 class LeitorController extends ChangeNotifier {
   LeitorBloc? _bloc;
   LeitorState _state = LeitorState.initial();
@@ -793,6 +1160,10 @@ class LeitorController extends ChangeNotifier {
 
   void lerCodigo(String codigo) {
     _bloc?.add(LeitorCodigoInformado(codigo));
+  }
+
+  void lerCodigoComQuantidade(String codigo, int quantidade) {
+    _bloc?.add(LeitorCodigoInformado(codigo, quantidade: quantidade));
   }
 
   void removerQuantidade(String codigo, {int quantidade = 1}) {

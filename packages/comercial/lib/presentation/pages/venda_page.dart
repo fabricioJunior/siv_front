@@ -166,6 +166,7 @@ class _VendaPageState extends State<VendaPage> {
                             LeitorWidget(
                               controller: _leitorController,
                               dataSource: sl(),
+                              buscaDataSource: sl(),
                               tabelaDePrecoId: state.tabelaDePrecoId,
                               aceitarApenasProdutosComPreco: true,
                               campoCodigoHint:

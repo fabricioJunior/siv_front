@@ -80,6 +80,9 @@ void _usesCases() {
   sl.registerFactory<AtualizarPrecoDaReferencia>(
     () => AtualizarPrecoDaReferencia(precosDeReferenciasRepository: sl()),
   );
+  sl.registerFactory<ObterPrecoDaReferencia>(
+    () => ObterPrecoDaReferencia(precosDeReferenciasRepository: sl()),
+  );
   sl.registerFactory<RemoverPrecoDaReferencia>(
     () => RemoverPrecoDaReferencia(precosDeReferenciasRepository: sl()),
   );
@@ -97,7 +100,7 @@ void _presentantion() {
     () => TabelaDePrecoBloc(sl(), sl(), sl()),
   );
   sl.registerFactory<EditarPrecoDaReferenciaBloc>(
-    () => EditarPrecoDaReferenciaBloc(sl()),
+    () => EditarPrecoDaReferenciaBloc(sl(), sl()),
   );
   sl.registerFactory<PrecosDaTabelaBloc>(() => PrecosDaTabelaBloc(sl(), sl()));
 }

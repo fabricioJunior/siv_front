@@ -6,6 +6,7 @@ export 'domain/use_cases/desativar_tabela_de_preco.dart';
 export 'domain/use_cases/recuperar_precos_das_referencias.dart';
 export 'domain/use_cases/criar_preco_da_referencia.dart';
 export 'domain/use_cases/atualizar_preco_da_referencia.dart';
+export 'domain/use_cases/obter_preco_da_referencia.dart';
 export 'domain/use_cases/remover_preco_da_referencia.dart';
 export 'domain/use_cases/sincronizar_precos.dart';
 export 'domain/use_cases/sincronziar_tabelas_de_preco.dart';

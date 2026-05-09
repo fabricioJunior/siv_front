@@ -116,7 +116,8 @@ class PrecosDeReferenciasRepository implements IPrecosDeReferenciasRepository {
 
       await precosDeReferenciasLocalDataSource.salvarPrecosDasReferencias(
         precos,
-      );
+      ); 
+
       totalItensSincronizados += precos.length;
 
       final paginacaoAtual = Paginacao<PrecoDaReferencia>(

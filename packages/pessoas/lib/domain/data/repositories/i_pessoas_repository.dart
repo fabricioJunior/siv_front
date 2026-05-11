@@ -4,6 +4,9 @@ abstract class IPessoasRepository {
   Future<Iterable<Pessoa>> recuperarPessoas({
     int pagina,
     String? busca,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
   });
 
   Future<Pessoa?> recuperarPessoa(int id);

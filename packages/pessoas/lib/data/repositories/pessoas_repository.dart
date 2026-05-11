@@ -18,10 +18,19 @@ class PessoasRepository implements IPessoasRepository {
 
   @override
   Future<Iterable<Pessoa>> recuperarPessoas({
-    int pagina = 0,
+    int pagina = 1,
     String? busca,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
   }) {
-    return remoteDataSource.getPessoas(busca: busca);
+    return remoteDataSource.getPessoas(
+      pagina: pagina,
+      busca: busca,
+      eCliente: eCliente,
+      eFornecedor: eFornecedor,
+      eFuncionario: eFuncionario,
+    );
   }
 
   @override

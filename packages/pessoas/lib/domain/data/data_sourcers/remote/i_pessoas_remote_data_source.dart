@@ -4,6 +4,9 @@ abstract class IPessoasRemoteDataSource {
   Future<List<Pessoa>> getPessoas({
     int pagina,
     String? busca,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
   });
 
   Future<Pessoa?> getPessoa(int id);

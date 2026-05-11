@@ -18,6 +18,8 @@ class _PessoasPageState extends State<PessoasPage>
   late final PessoasBloc bloc;
   late final Debouncer debouncer;
   late final TabController _tabController;
+  late final ScrollController _scrollController;
+  String _buscaAtual = '';
 
   @override
   void initState() {
@@ -28,12 +30,22 @@ class _PessoasPageState extends State<PessoasPage>
       ..addListener(() {
         if (!_tabController.indexIsChanging) {
           setState(() {});
+          bloc.add(
+            PessoasIniciou(
+              busca: _buscaAtual,
+              eFuncionario: _filtroEFuncionario,
+            ),
+          );
         }
       });
+    _scrollController = ScrollController()..addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -41,7 +53,8 @@ class _PessoasPageState extends State<PessoasPage>
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PessoasBloc>(
-      create: (context) => bloc..add(PessoasIniciou()),
+      create: (context) =>
+          bloc..add(PessoasIniciou(eFuncionario: _filtroEFuncionario)),
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         floatingActionButton: BlocBuilder<PessoasBloc, PessoasState>(
@@ -92,11 +105,23 @@ class _PessoasPageState extends State<PessoasPage>
                 ),
                 onChanged: (value) {
                   debouncer.run(() {
-                    bloc.add(PessoasIniciou(busca: value));
+                    _buscaAtual = value;
+                    bloc.add(
+                      PessoasIniciou(
+                        busca: value,
+                        eFuncionario: _filtroEFuncionario,
+                      ),
+                    );
                   });
                 },
                 onSubmitted: (value) {
-                  bloc.add(PessoasIniciou(busca: value));
+                  _buscaAtual = value;
+                  bloc.add(
+                    PessoasIniciou(
+                      busca: value,
+                      eFuncionario: _filtroEFuncionario,
+                    ),
+                  );
                 },
               ),
             ),
@@ -124,7 +149,7 @@ class _PessoasPageState extends State<PessoasPage>
                     if (pessoas.isEmpty) {
                       return _buildEmptyState();
                     }
-                    return _buildPessoasList(context, pessoas);
+                    return _buildPessoasList(context, pessoas, state);
                   default:
                     return const SizedBox();
                 }
@@ -146,20 +171,42 @@ class _PessoasPageState extends State<PessoasPage>
       case TipoPessoaTab.fornecedores:
         return pessoas.where((pessoa) => pessoa.eFornecedor).toList();
       case TipoPessoaTab.funcionarios:
-        return pessoas.where((pessoa) => pessoa.eFuncionario).toList();
+        return pessoas;
     }
   }
 
-  Widget _buildPessoasList(BuildContext context, List<Pessoa> pessoas) {
+  Widget _buildPessoasList(
+    BuildContext context,
+    List<Pessoa> pessoas,
+    PessoasState state,
+  ) {
     return ListView.separated(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: pessoas.length,
+      itemCount: pessoas.length + (state.carregandoMais ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
+        if (index >= pessoas.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Center(child: CircularProgressIndicator.adaptive()),
+          );
+        }
         var pessoa = pessoas[index];
         return _buildPessoaCard(context, pessoa);
       },
     );
+  }
+
+  bool? get _filtroEFuncionario =>
+      _tabController.index == TipoPessoaTab.funcionarios.index ? true : null;
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final limite = _scrollController.position.maxScrollExtent - 200;
+    if (_scrollController.position.pixels >= limite) {
+      bloc.add(PessoasCarregouMais());
+    }
   }
 
   Widget _buildPessoaCard(BuildContext context, Pessoa pessoa) {

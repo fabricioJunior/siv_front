@@ -9,10 +9,18 @@ class RecuperarPessoas {
       : _pessoasRepository = pessoasRepository;
 
   Future<Iterable<Pessoa>> call({
+    int pagina = 1,
     String? busca,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
   }) async {
     return await _pessoasRepository.recuperarPessoas(
+      pagina: pagina,
       busca: busca,
+      eCliente: eCliente,
+      eFornecedor: eFornecedor,
+      eFuncionario: eFuncionario,
     );
   }
 }

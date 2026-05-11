@@ -4,7 +4,7 @@ import 'package:pessoas/data/remote/dtos/pessoas_dto.dart';
 import 'package:pessoas/domain/data/data_sourcers/remote/i_pessoas_remote_data_source.dart';
 import 'package:pessoas/domain/models/pessoa.dart';
 
-int _pageSize = 10;
+const int _pageSize = 8;
 
 class PessoasRemoteDataSource extends RemoteDataSourceBase
     implements IPessoasRemoteDataSource {
@@ -37,6 +37,9 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
   Future<List<Pessoa>> getPessoas({
     int pagina = 1,
     String? busca,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
   }) async {
     var query = {
       'pagina': pagina.toString(),
@@ -44,6 +47,15 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     };
     if (busca != null && busca.isNotEmpty) {
       query['searchTerm'] = busca;
+    }
+    if (eCliente != null) {
+      query['eCliente'] = eCliente.toString();
+    }
+    if (eFornecedor != null) {
+      query['eFornecedor'] = eFornecedor.toString();
+    }
+    if (eFuncionario != null) {
+      query['eFuncionario'] = eFuncionario.toString();
     }
     final response = await get(
       queryParameters: query,

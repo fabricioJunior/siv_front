@@ -20,21 +20,25 @@ class UsuarioDto implements Usuario {
   @override
   final TipoUsuario tipo;
 
+  @override
+  @JsonKey(name: 'situacao', fromJson:  _situacaoFromJson)
+  final bool ativo;
+
   UsuarioDto({
     required this.id,
     required this.login,
     required this.nome,
     required this.tipo,
     this.senha,
+    this.ativo = true,
   });
 
   factory UsuarioDto.fromJson(Map<String, dynamic> json) =>
       _$UsuarioDtoFromJson(json);
 
   @override
-  @override
   @JsonKey(includeFromJson: true)
-  List<Object?> get props => [id, login, nome];
+  List<Object?> get props => [id, login, nome, ativo];
 
   @override
   @JsonKey(includeFromJson: true)
@@ -43,6 +47,19 @@ class UsuarioDto implements Usuario {
   @override
   @JsonKey(includeFromJson: false)
   final String? senha;
+  
+ 
+  static bool _situacaoFromJson(String json) {
+    switch (json) {
+      case 'ativo':
+        return true;
+      case 'bloqueado':
+        return false;
+      case 'invativo':
+        return false;
+    }
+    return true;
+  }
 
   static String _tipoUsuarioToJson(TipoUsuario tipo) {
     switch (tipo) {

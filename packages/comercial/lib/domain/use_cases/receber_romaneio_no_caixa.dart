@@ -1,4 +1,5 @@
 import 'package:comercial/data.dart';
+import 'package:comercial/models.dart';
 
 class ReceberRomaneioNoCaixa {
   final IRomaneiosRepository _repository;
@@ -9,10 +10,12 @@ class ReceberRomaneioNoCaixa {
   Future<void> call({
     required int caixaId,
     required int romaneioId,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
   }) {
     return _repository.receberRomaneioNoCaixa(
       caixaId: caixaId,
       romaneioId: romaneioId,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
     );
   }
 }

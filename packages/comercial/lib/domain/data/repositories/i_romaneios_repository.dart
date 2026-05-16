@@ -12,5 +12,6 @@ abstract class IRomaneiosRepository {
   Future<void> receberRomaneioNoCaixa({
     required int caixaId,
     required int romaneioId,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
   });
 }

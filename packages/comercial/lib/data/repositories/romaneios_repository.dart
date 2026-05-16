@@ -54,10 +54,12 @@ class RomaneiosRepository implements IRomaneiosRepository {
   Future<void> receberRomaneioNoCaixa({
     required int caixaId,
     required int romaneioId,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
   }) {
     return caixasRemoteDataSource.receberRomaneio(
       caixaId: caixaId,
       romaneioId: romaneioId,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
     );
   }
 }

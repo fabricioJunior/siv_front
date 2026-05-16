@@ -53,6 +53,7 @@ abstract class Romaneio implements Equatable {
   DateTime? get data;
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
+  List<RomaneioPagamentoRealizado> get formasDePagamentoRealizadas;
 
   factory Romaneio.create({
     int? id,
@@ -72,6 +73,7 @@ abstract class Romaneio implements Equatable {
     DateTime? data,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
+    List<RomaneioPagamentoRealizado>? formasDePagamentoRealizadas,
   }) = _RomaneioImpl;
 
   @override
@@ -93,6 +95,7 @@ abstract class Romaneio implements Equatable {
         data,
         criadoEm,
         atualizadoEm,
+        formasDePagamentoRealizadas,
       ];
 
   @override
@@ -134,6 +137,8 @@ class _RomaneioImpl implements Romaneio {
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
+  @override
+  final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
 
   const _RomaneioImpl({
     this.id,
@@ -153,7 +158,8 @@ class _RomaneioImpl implements Romaneio {
     this.data,
     this.criadoEm,
     this.atualizadoEm,
-  });
+    List<RomaneioPagamentoRealizado>? formasDePagamentoRealizadas,
+  }) : formasDePagamentoRealizadas = formasDePagamentoRealizadas ?? const [];
 
   @override
   List<Object?> get props => [
@@ -174,7 +180,52 @@ class _RomaneioImpl implements Romaneio {
         data,
         criadoEm,
         atualizadoEm,
+        formasDePagamentoRealizadas,
       ];
+
+  @override
+  bool? get stringify => true;
+}
+
+abstract class RomaneioPagamentoRealizado implements Equatable {
+  int get controle;
+  int get formaDePagamentoId;
+  int get parcela;
+  double get valor;
+
+  factory RomaneioPagamentoRealizado.create({
+    required int controle,
+    required int formaDePagamentoId,
+    required int parcela,
+    required double valor,
+  }) = _RomaneioPagamentoRealizadoImpl;
+
+  @override
+  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor];
+
+  @override
+  bool? get stringify => true;
+}
+
+class _RomaneioPagamentoRealizadoImpl implements RomaneioPagamentoRealizado {
+  @override
+  final int controle;
+  @override
+  final int formaDePagamentoId;
+  @override
+  final int parcela;
+  @override
+  final double valor;
+
+  const _RomaneioPagamentoRealizadoImpl({
+    required this.controle,
+    required this.formaDePagamentoId,
+    required this.parcela,
+    required this.valor,
+  });
+
+  @override
+  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor];
 
   @override
   bool? get stringify => true;

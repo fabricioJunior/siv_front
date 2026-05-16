@@ -122,6 +122,9 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           processando: false,
           processoAtual: null,
           listaCompartilhadaHash: lista.hash,
+          formasDePagamentoRealizadas: event.formasDePagamentoRealizadas
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false),
           erro: null,
         ),
       );

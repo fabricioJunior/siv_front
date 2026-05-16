@@ -245,6 +245,14 @@ class UsuarioPage extends StatelessWidget {
                   context.read<UsuarioBloc>().add(UsuarioEditou(senha: value));
                 },
                 validator: (value) {
+                  final state = context.read<UsuarioBloc>().state;
+                  final inativandoUsuarioExistente = usuario != null &&
+                      state is UsuarioEditarEmProgresso;
+
+                  if (inativandoUsuarioExistente) {
+                    return null;
+                  }
+
                   if (value == null || value.isEmpty) {
                     return 'Informe a senha do usuário';
                   }
@@ -304,10 +312,47 @@ class UsuarioPage extends StatelessWidget {
                         : (value) {
                             if (value != null) {
                               context.read<UsuarioBloc>().add(
-                                    UsuarioEditou(tipo: value),
+                                    UsuarioEditou(
+                                      tipo: value,
+                                      ativo: value == TipoUsuario.sysadmin
+                                          ? true
+                                          : null,
+                                    ),
                                   );
                             }
                           },
+                  );
+                },
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              BlocBuilder<UsuarioBloc, UsuarioState>(
+                builder: (context, state) {
+                  final tipoSelecionado = state is UsuarioEditarEmProgresso
+                      ? (state.tipo ?? TipoUsuario.padrao)
+                      : (usuario?.tipo ?? TipoUsuario.padrao);
+                  final isSysadmin = tipoSelecionado == TipoUsuario.sysadmin;
+                  bool ativo = state is UsuarioEditarEmProgresso
+                      ? state.ativo
+                      : (usuario?.ativo ?? true);
+                        
+                  return SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: isSysadmin ? true : ativo,
+                    onChanged: readOnly || isSysadmin
+                        ? null
+                        : (value) {
+                            context.read<UsuarioBloc>().add(
+                                  UsuarioEditou(ativo: value),
+                                );
+                          },
+                    title: const Text('Usuário ativo'),
+                    subtitle: Text(
+                      isSysadmin
+                          ? 'Usuário sysadmin não pode ser inativado.'
+                          : (ativo ? 'Status: Ativo' : 'Status: Inativo'),
+                    ),
                   );
                 },
               ),

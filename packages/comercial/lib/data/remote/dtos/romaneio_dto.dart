@@ -35,6 +35,8 @@ class RomaneioDto implements Romaneio {
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
+  @override
+  final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
 
   const RomaneioDto({
     this.id,
@@ -54,6 +56,7 @@ class RomaneioDto implements Romaneio {
     this.data,
     this.criadoEm,
     this.atualizadoEm,
+    this.formasDePagamentoRealizadas = const [],
   });
 
   factory RomaneioDto.fromJson(Map<String, dynamic> json) {
@@ -75,6 +78,9 @@ class RomaneioDto implements Romaneio {
       data: _toDate(json['data']),
       criadoEm: _toDate(json['criadoEm']),
       atualizadoEm: _toDate(json['atualizadoEm']),
+      formasDePagamentoRealizadas: _toFormasDePagamentoRealizadas(
+        json['formasDePagamentoRealizadas'],
+      ),
     );
   }
 
@@ -97,6 +103,7 @@ class RomaneioDto implements Romaneio {
       data: romaneio.data,
       criadoEm: romaneio.criadoEm,
       atualizadoEm: romaneio.atualizadoEm,
+      formasDePagamentoRealizadas: romaneio.formasDePagamentoRealizadas,
     );
   }
 
@@ -136,6 +143,7 @@ class RomaneioDto implements Romaneio {
         data,
         criadoEm,
         atualizadoEm,
+        formasDePagamentoRealizadas,
       ];
 
   @override
@@ -151,3 +159,19 @@ DateTime? _toDate(dynamic value) {
   if (value is DateTime) return value;
   return DateTime.tryParse(value.toString());
 }
+
+List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
+  final itens = value as List<dynamic>? ?? const [];
+
+  return itens
+      .whereType<Map<String, dynamic>>()
+      .map((json) => RomaneioPagamentoRealizado.create(
+            controle: _toInt(json['controle']) ?? 0,
+            formaDePagamentoId: _toInt(json['formaDePagamentoId']) ?? 0,
+            parcela: _toInt(json['parcela']) ?? 1,
+            valor: _toDouble(json['valor']) ?? 0,
+          ))
+      .where((item) => item.formaDePagamentoId > 0 && item.valor > 0)
+      .toList(growable: false);
+}
+

@@ -1,4 +1,5 @@
 import 'package:comercial/presentation.dart';
+import 'package:comercial/models.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/leitor_widget.dart';
@@ -15,12 +16,14 @@ class VendaPage extends StatefulWidget {
   final SeletorWidget pessoaSeletor;
   final SeletorWidget vendedoresSeletor;
   final SeletorWidget tabelasDePrecoSeletor;
+  final SeletorWidget formasDePagamentoSeletor;
 
   const VendaPage({
     super.key,
     required this.pessoaSeletor,
     required this.vendedoresSeletor,
     required this.tabelasDePrecoSeletor,
+    required this.formasDePagamentoSeletor,
   });
 
   @override
@@ -73,6 +76,8 @@ class _VendaPageState extends State<VendaPage> {
               '/criar_romaneio_por_parametros',
               arguments: {
                 'listaCompartilhadaHash': listaCompartilhadaHash,
+                'formasDePagamentoRealizadas':
+                    state.formasDePagamentoRealizadas,
               },
             );
 
@@ -90,7 +95,7 @@ class _VendaPageState extends State<VendaPage> {
             if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Venda finalizada e encaminhada ao caixa.'),
+                  content: Text('Venda finalizada com sucesso.'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -113,7 +118,7 @@ class _VendaPageState extends State<VendaPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Venda gerou o romaneio #$romaneioId, mas o encaminhamento ao caixa precisa ser concluído manualmente.',
+                    'Venda gerou o romaneio #$romaneioId, mas o processamento não foi concluído automaticamente.',
                   ),
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -601,7 +606,33 @@ class _VendaPageState extends State<VendaPage> {
         .toList(growable: false);
 
     if (acao == _VendaAcao.finalizar) {
-      bloc.add(VendaFinalizarSolicitada(itens: itens));
+      final formasDePagamentoRealizadas = await showDialog<List<Map<String, dynamic>>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return PagamentosRealizadosWidget(
+            hashLista: state.listaCompartilhadaHash ?? '',
+            resumoInicial: PagamentosRealizadosResumo(
+              listaCompartilhada: null,
+              produtosCompartilhados: const [],
+              quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
+              valorTotalProdutos: _leitorController.valorTotalLido,
+            ),
+            formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
+          );
+        },
+      );
+
+      if (formasDePagamentoRealizadas == null) {
+        return;
+      }
+
+      bloc.add(
+        VendaFinalizarSolicitada(
+          itens: itens,
+          formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        ),
+      );
       return;
     }
 

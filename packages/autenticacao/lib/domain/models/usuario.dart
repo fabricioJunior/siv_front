@@ -7,6 +7,7 @@ abstract class Usuario implements Equatable {
   String get nome;
   TipoUsuario get tipo;
   String? get senha;
+  bool get ativo;
 
   factory Usuario.create({
     required int id,
@@ -14,6 +15,7 @@ abstract class Usuario implements Equatable {
     required String nome,
     required TipoUsuario tipo,
     String? senha,
+    required bool ativo,
   }) = _UsuarioImpl;
 
   @override
@@ -39,6 +41,8 @@ class _UsuarioImpl implements Usuario {
   final TipoUsuario tipo;
   @override
   final String? senha;
+  @override
+  final bool ativo;
 
   _UsuarioImpl({
     required this.id,
@@ -46,6 +50,7 @@ class _UsuarioImpl implements Usuario {
     required this.nome,
     required this.tipo,
     this.senha,
+    this.ativo = true,
   });
 
   _UsuarioImpl copyWith({
@@ -54,6 +59,7 @@ class _UsuarioImpl implements Usuario {
     String? nome,
     TipoUsuario? tipo,
     String? senha,
+    bool? ativo,
     List<TerminalDoUsuario>? terminaisDoUsuario,
   }) {
     return _UsuarioImpl(
@@ -62,6 +68,7 @@ class _UsuarioImpl implements Usuario {
       nome: nome ?? this.nome,
       tipo: tipo ?? this.tipo,
       senha: senha ?? this.senha,
+      ativo: ativo ?? this.ativo,
     );
   }
 
@@ -84,6 +91,7 @@ extension UsuarioCopyWith on Usuario {
     String? nome,
     TipoUsuario? tipo,
     String? senha,
+    bool? ativo,
     List<TerminalDoUsuario>? terminaisDoUsuario,
   }) {
     if (this is _UsuarioImpl) {
@@ -93,6 +101,7 @@ extension UsuarioCopyWith on Usuario {
         nome: nome,
         tipo: tipo,
         senha: senha,
+        ativo: ativo,
         terminaisDoUsuario: terminaisDoUsuario,
       );
     }
@@ -102,6 +111,7 @@ extension UsuarioCopyWith on Usuario {
       nome: nome ?? this.nome,
       tipo: tipo ?? this.tipo,
       senha: senha ?? this.senha,
+      ativo: ativo ?? this.ativo,
     );
   }
 }

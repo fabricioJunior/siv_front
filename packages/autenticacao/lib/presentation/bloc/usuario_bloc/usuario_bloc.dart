@@ -65,6 +65,7 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
           nome: event.nome,
           senha: event.senha,
           tipo: event.tipo,
+          ativo: event.ativo,
           grupoDeAcesso: event.grupoDeAcesso,
         ),
       );
@@ -77,7 +78,7 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
   ) async {
     try {
       var informacoesDoUsuario = state as UsuarioEditarEmProgresso;
-      emit(UsuarioSalvarEmProgresso());
+      emit(UsuarioSalvarEmProgresso(ativo: informacoesDoUsuario.ativo));
 
       var usuario = await _salvarUsuario.call(
         usuario: informacoesDoUsuario.usuario,
@@ -85,6 +86,10 @@ class UsuarioBloc extends Bloc<UsuarioEvent, UsuarioState> {
         nome: informacoesDoUsuario.nome!,
         senha: informacoesDoUsuario.senha,
         tipo: informacoesDoUsuario.tipo ?? TipoUsuario.padrao,
+        ativo: (informacoesDoUsuario.tipo ?? TipoUsuario.padrao) ==
+                TipoUsuario.sysadmin
+            ? true
+            : informacoesDoUsuario.ativo,
       );
 
       emit(UsuarioSalvarSucesso(usuario: usuario));

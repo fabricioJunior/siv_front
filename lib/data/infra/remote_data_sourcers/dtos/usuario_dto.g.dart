@@ -11,4 +11,7 @@ UsuarioDto _$UsuarioDtoFromJson(Map<String, dynamic> json) => UsuarioDto(
   login: json['usuario'] as String,
   nome: json['nome'] as String,
   tipo: UsuarioDto._tipoUsuarioFromJson(json['tipo'] as String),
+  ativo: json['situacao'] == null
+      ? true
+      : UsuarioDto._situacaoFromJson(json['situacao'] as String),
 );

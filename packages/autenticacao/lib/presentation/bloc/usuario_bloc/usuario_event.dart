@@ -13,6 +13,7 @@ class UsuarioEditou extends UsuarioEvent {
   final String? login;
   final String? senha;
   final TipoUsuario? tipo;
+  final bool? ativo;
   final GrupoDeAcesso? grupoDeAcesso;
 
   UsuarioEditou({
@@ -20,6 +21,7 @@ class UsuarioEditou extends UsuarioEvent {
     this.login,
     this.senha,
     this.tipo,
+    this.ativo,
     this.grupoDeAcesso,
   });
 }

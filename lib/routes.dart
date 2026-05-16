@@ -220,6 +220,15 @@ Map<String, Widget Function(BuildContext)> routes = {
                   onChanged: onChanged,
                   onlyView: onlyView ?? false,
                 ),
+        formasDePagamentoSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                FormasDePagamentoSeletor(
+                  modo: FormasDePagamentoSeletorModo.unica,
+                  itemsSelecionadosInicial: itemsSelecionadosInicial,
+                  onChanged: onChanged,
+                  onlyView: onlyView ?? false,
+                  titulo: 'Forma de pagamento',
+                ),
       ),
     );
   },
@@ -283,8 +292,17 @@ Map<String, Widget Function(BuildContext)> routes = {
         (argumentos['listaCompartilhadaHash'] ?? argumentos['hashLista'])
             ?.toString() ??
         '';
+    final formasDePagamentoRaw =
+        argumentos['formasDePagamentoRealizadas'] as List<dynamic>? ?? const [];
+    final formasDePagamentoRealizadas = formasDePagamentoRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
 
-    return CriarRomaneioPorParametrosPage(hashLista: hashLista);
+    return CriarRomaneioPorParametrosPage(
+      hashLista: hashLista,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+    );
   },
 
   ///PRODUTOS:

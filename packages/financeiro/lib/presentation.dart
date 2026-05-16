@@ -12,3 +12,4 @@ export 'presentation/pages/suprimentos_page.dart';
 export 'presentation/pages/suprimento_page.dart';
 export 'presentation/blocs/contagem_do_caixa_bloc/contagem_do_caixa_bloc.dart';
 export 'presentation/pages/contagem_do_caixa_page.dart';
+export 'presentation/widgets/formas_de_pagamento_seletor.dart';

@@ -17,18 +17,19 @@ const UsuarioDtoSchema = CollectionSchema(
   name: r'UsuarioDto',
   id: -1363298923562748804,
   properties: {
-    r'hashCode': PropertySchema(id: 0, name: r'hashCode', type: IsarType.long),
-    r'id': PropertySchema(id: 1, name: r'id', type: IsarType.long),
-    r'login': PropertySchema(id: 2, name: r'login', type: IsarType.string),
-    r'nome': PropertySchema(id: 3, name: r'nome', type: IsarType.string),
-    r'senha': PropertySchema(id: 4, name: r'senha', type: IsarType.string),
+    r'ativo': PropertySchema(id: 0, name: r'ativo', type: IsarType.bool),
+    r'hashCode': PropertySchema(id: 1, name: r'hashCode', type: IsarType.long),
+    r'id': PropertySchema(id: 2, name: r'id', type: IsarType.long),
+    r'login': PropertySchema(id: 3, name: r'login', type: IsarType.string),
+    r'nome': PropertySchema(id: 4, name: r'nome', type: IsarType.string),
+    r'senha': PropertySchema(id: 5, name: r'senha', type: IsarType.string),
     r'stringify': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'stringify',
       type: IsarType.bool,
     ),
     r'tipo': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'tipo',
       type: IsarType.byte,
       enumMap: _UsuarioDtotipoEnumValueMap,
@@ -73,13 +74,14 @@ void _usuarioDtoSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.hashCode);
-  writer.writeLong(offsets[1], object.id);
-  writer.writeString(offsets[2], object.login);
-  writer.writeString(offsets[3], object.nome);
-  writer.writeString(offsets[4], object.senha);
-  writer.writeBool(offsets[5], object.stringify);
-  writer.writeByte(offsets[6], object.tipo.index);
+  writer.writeBool(offsets[0], object.ativo);
+  writer.writeLong(offsets[1], object.hashCode);
+  writer.writeLong(offsets[2], object.id);
+  writer.writeString(offsets[3], object.login);
+  writer.writeString(offsets[4], object.nome);
+  writer.writeString(offsets[5], object.senha);
+  writer.writeBool(offsets[6], object.stringify);
+  writer.writeByte(offsets[7], object.tipo.index);
 }
 
 UsuarioDto _usuarioDtoDeserialize(
@@ -89,12 +91,13 @@ UsuarioDto _usuarioDtoDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = UsuarioDto(
-    id: reader.readLong(offsets[1]),
-    login: reader.readString(offsets[2]),
-    nome: reader.readString(offsets[3]),
-    senha: reader.readStringOrNull(offsets[4]),
+    ativo: reader.readBoolOrNull(offsets[0]) ?? true,
+    id: reader.readLong(offsets[2]),
+    login: reader.readString(offsets[3]),
+    nome: reader.readString(offsets[4]),
+    senha: reader.readStringOrNull(offsets[5]),
     tipo:
-        _UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+        _UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offsets[7])] ??
         TipoUsuario.padrao,
   );
   return object;
@@ -108,18 +111,20 @@ P _usuarioDtoDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? true) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 7:
       return (_UsuarioDtotipoValueEnumMap[reader.readByteOrNull(offset)] ??
               TipoUsuario.padrao)
           as P;
@@ -237,6 +242,16 @@ extension UsuarioDtoQueryWhere
 
 extension UsuarioDtoQueryFilter
     on QueryBuilder<UsuarioDto, UsuarioDto, QFilterCondition> {
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> ativoEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'ativo', value: value),
+      );
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterFilterCondition> dataBaseIdEqualTo(
     Id value,
   ) {
@@ -960,6 +975,18 @@ extension UsuarioDtoQueryLinks
 
 extension UsuarioDtoQuerySortBy
     on QueryBuilder<UsuarioDto, UsuarioDto, QSortBy> {
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByAtivo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ativo', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByAtivoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ativo', Sort.desc);
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> sortByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hashCode', Sort.asc);
@@ -1047,6 +1074,18 @@ extension UsuarioDtoQuerySortBy
 
 extension UsuarioDtoQuerySortThenBy
     on QueryBuilder<UsuarioDto, UsuarioDto, QSortThenBy> {
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByAtivo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ativo', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByAtivoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ativo', Sort.desc);
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QAfterSortBy> thenByDataBaseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataBaseId', Sort.asc);
@@ -1146,6 +1185,12 @@ extension UsuarioDtoQuerySortThenBy
 
 extension UsuarioDtoQueryWhereDistinct
     on QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> {
+  QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByAtivo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ativo');
+    });
+  }
+
   QueryBuilder<UsuarioDto, UsuarioDto, QDistinct> distinctByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hashCode');
@@ -1200,6 +1245,12 @@ extension UsuarioDtoQueryProperty
   QueryBuilder<UsuarioDto, int, QQueryOperations> dataBaseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataBaseId');
+    });
+  }
+
+  QueryBuilder<UsuarioDto, bool, QQueryOperations> ativoProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ativo');
     });
   }
 

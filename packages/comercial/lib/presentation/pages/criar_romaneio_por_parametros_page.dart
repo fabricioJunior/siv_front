@@ -12,10 +12,12 @@ const String _resultadoRomaneioStatusParcial = 'parcial';
 
 class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final String hashLista;
+  final List<Map<String, dynamic>> formasDePagamentoRealizadas;
 
   const CriarRomaneioPorParametrosPage({
     super.key,
     required this.hashLista,
+    this.formasDePagamentoRealizadas = const [],
   });
 
   @override
@@ -23,7 +25,10 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     return BlocProvider<RomaneioCriacaoBloc>(
       create: (_) => sl<RomaneioCriacaoBloc>()
         ..add(
-          RomaneioCriacaoSolicitada(hashLista: hashLista),
+          RomaneioCriacaoSolicitada(
+            hashLista: hashLista,
+            formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+          ),
         ),
       child: BlocConsumer<RomaneioCriacaoBloc, RomaneioCriacaoState>(
         listenWhen: (previous, current) => previous.erro != current.erro,
@@ -52,7 +57,11 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                     romaneioId: state.listaCompartilhada?.idLista,
                     onTentarNovamente: () {
                       context.read<RomaneioCriacaoBloc>().add(
-                            RomaneioCriacaoSolicitada(hashLista: hashLista),
+                            RomaneioCriacaoSolicitada(
+                          hashLista: hashLista,
+                          formasDePagamentoRealizadas:
+                              formasDePagamentoRealizadas,
+                            ),
                           );
                     },
                     onVoltar: () {

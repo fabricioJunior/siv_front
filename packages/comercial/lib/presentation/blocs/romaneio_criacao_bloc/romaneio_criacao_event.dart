@@ -9,9 +9,13 @@ abstract class RomaneioCriacaoEvent extends Equatable {
 
 class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final String hashLista;
+  final List<Map<String, dynamic>> formasDePagamentoRealizadas;
 
-  const RomaneioCriacaoSolicitada({required this.hashLista});
+  const RomaneioCriacaoSolicitada({
+    required this.hashLista,
+    this.formasDePagamentoRealizadas = const [],
+  });
 
   @override
-  List<Object?> get props => [hashLista];
+  List<Object?> get props => [hashLista, formasDePagamentoRealizadas];
 }

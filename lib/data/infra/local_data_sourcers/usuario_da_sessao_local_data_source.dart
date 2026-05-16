@@ -16,6 +16,12 @@ class UsuarioDaSessaoLocalDataSource
 }
 
 extension _ToDto on Usuario {
-  UsuarioDto toDto() =>
-      UsuarioDto(id: id, login: login, nome: nome, tipo: tipo, senha: senha);
+  UsuarioDto toDto() => UsuarioDto(
+    id: id,
+    login: login,
+    nome: nome,
+    tipo: tipo,
+    senha: senha,
+    ativo: ativo,
+  );
 }

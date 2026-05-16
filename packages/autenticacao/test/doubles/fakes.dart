@@ -27,6 +27,7 @@ Usuario fakeUsuario(
       nome: nome,
       tipo: tipo,
       senha: senha,
+      ativo: true,
     );
 
 Permissao fakePermissao({

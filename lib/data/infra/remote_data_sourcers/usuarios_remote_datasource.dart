@@ -70,7 +70,7 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
       nome: nome,
       senha: senha,
       tipo: tipo,
-      situacao: ativo ? 'ativo' : 'invativo',
+      situacao: ativo ? 'ativo' : 'bloqueado',
     );
     var response = await put(
       body: usuarioToPost.toJson(),
@@ -82,6 +82,12 @@ class UsuariosRemoteDatasource extends RemoteDataSourceBase
 }
 
 extension ToDto on Usuario {
-  UsuarioDto toDto() =>
-      UsuarioDto(id: id, login: login, nome: nome, tipo: tipo, senha: senha);
+  UsuarioDto toDto() => UsuarioDto(
+    id: id,
+    login: login,
+    nome: nome,
+    tipo: tipo,
+    senha: senha,
+    ativo: ativo,
+  );
 }

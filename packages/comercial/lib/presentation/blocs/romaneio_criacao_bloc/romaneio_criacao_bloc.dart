@@ -46,6 +46,7 @@ class RomaneioCriacaoBloc
     var produtosCompartilhados = <ProdutoCompartilhado>[];
     TipoOperacao? operacao;
     var itens = <RomaneioItem>[];
+    var formasDePagamentoRealizadas = <RomaneioPagamentoRealizado>[];
     var falhaAoReceberNoCaixa = false;
 
     emit(
@@ -70,7 +71,14 @@ class RomaneioCriacaoBloc
           ? null
           : _resolverOperacao(listaCompartilhada);
       itens = _extrairItens(produtosCompartilhados);
-      final erro = _validar(listaCompartilhada, operacao, itens);
+      formasDePagamentoRealizadas =
+          _extrairFormasDePagamentoRealizadas(event.formasDePagamentoRealizadas);
+      final erro = _validar(
+        listaCompartilhada,
+        operacao,
+        itens,
+        formasDePagamentoRealizadas,
+      );
 
       if (erro != null) {
         emit(
@@ -145,6 +153,7 @@ class RomaneioCriacaoBloc
         await _receberRomaneioNoCaixa.call(
           caixaId: caixaId,
           romaneioId: romaneioId,
+          formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         );
         falhaAoReceberNoCaixa = false;
       }
@@ -202,6 +211,7 @@ class RomaneioCriacaoBloc
     ListaDeProdutosCompartilhada? listaCompartilhada,
     TipoOperacao? operacao,
     List<RomaneioItem> itens,
+    List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
   ) {
     if (listaCompartilhada == null) {
       return 'Lista compartilhada não encontrada para o hash informado.';
@@ -227,7 +237,40 @@ class RomaneioCriacaoBloc
       return 'A lista compartilhada não possui produtos válidos para criar o romaneio.';
     }
 
+    if (operacao == TipoOperacao.venda && formasDePagamentoRealizadas.isEmpty) {
+      return 'Informe ao menos uma forma de pagamento realizada para criar o romaneio de venda.';
+    }
+
     return null;
+  }
+
+  List<RomaneioPagamentoRealizado> _extrairFormasDePagamentoRealizadas(
+    List<Map<String, dynamic>> formas,
+  ) {
+    return formas
+        .map((item) {
+          final formaDePagamentoId = _toInt(item['formaDePagamentoId']);
+          final valor = _toDouble(item['valor']);
+          final parcela = _toInt(item['parcela']) ?? 1;
+          final controle = _toInt(item['controle']) ?? 0;
+
+          if (formaDePagamentoId == null || formaDePagamentoId <= 0) {
+            return null;
+          }
+
+          if (valor == null || valor <= 0) {
+            return null;
+          }
+
+          return RomaneioPagamentoRealizado.create(
+            controle: controle > 0 ? controle : 1,
+            formaDePagamentoId: formaDePagamentoId,
+            parcela: parcela > 0 ? parcela : 1,
+            valor: valor,
+          );
+        })
+        .whereType<RomaneioPagamentoRealizado>()
+        .toList(growable: false);
   }
 
   List<RomaneioItem> _extrairItens(List<ProdutoCompartilhado> produtos) {
@@ -270,5 +313,17 @@ class RomaneioCriacaoBloc
     } catch (e, s) {
       addError(e, s);
     }
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
   }
 }

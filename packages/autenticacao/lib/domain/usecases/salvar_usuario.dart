@@ -15,6 +15,7 @@ class SalvarUsuario {
     String? login,
     String? senha,
     required TipoUsuario tipo,
+    required bool ativo,
   }) async {
     return await usuariosRepository.salvarUsuario(
       id: idUsuario ?? usuario?.id,
@@ -22,7 +23,7 @@ class SalvarUsuario {
       senha: senha,
       tipo: tipo,
       nome: nome,
-      ativo: true,
+      ativo: ativo,
       usuario: login,
     );
   }

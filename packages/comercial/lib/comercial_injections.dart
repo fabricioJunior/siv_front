@@ -47,6 +47,10 @@ void _useCases() {
   sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
   sl.registerFactory<CancelarPedido>(() => CancelarPedido(repository: sl()));
 
+  sl.registerFactory<CarregarResumoPagamentosRealizados>(
+    () => CarregarResumoPagamentosRealizados(recuperarLista: sl()),
+  );
+
   sl.registerFactory<RecuperarRomaneios>(
     () => RecuperarRomaneios(repository: sl()),
   );
@@ -132,4 +136,5 @@ void _presentation() {
       sl(),
     ),
   );
+
 }

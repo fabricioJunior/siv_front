@@ -33,6 +33,8 @@ class _PessoasPageState extends State<PessoasPage>
           bloc.add(
             PessoasIniciou(
               busca: _buscaAtual,
+              eCliente: _filtroECliente,
+              eFornecedor: _filtroEFornecedor,
               eFuncionario: _filtroEFuncionario,
             ),
           );
@@ -53,8 +55,14 @@ class _PessoasPageState extends State<PessoasPage>
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PessoasBloc>(
-      create: (context) =>
-          bloc..add(PessoasIniciou(eFuncionario: _filtroEFuncionario)),
+      create: (context) => bloc
+        ..add(
+          PessoasIniciou(
+            eCliente: _filtroECliente,
+            eFornecedor: _filtroEFornecedor,
+            eFuncionario: _filtroEFuncionario,
+          ),
+        ),
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         floatingActionButton: BlocBuilder<PessoasBloc, PessoasState>(
@@ -74,7 +82,14 @@ class _PessoasPageState extends State<PessoasPage>
                 await Navigator.of(context).pushNamed('/pessoa');
 
                 // ignore: use_build_context_synchronously
-                context.read<PessoasBloc>().add(PessoasIniciou());
+                context.read<PessoasBloc>().add(
+                      PessoasIniciou(
+                        busca: _buscaAtual,
+                        eCliente: _filtroECliente,
+                        eFornecedor: _filtroEFornecedor,
+                        eFuncionario: _filtroEFuncionario,
+                      ),
+                    );
               },
             );
           },
@@ -109,6 +124,8 @@ class _PessoasPageState extends State<PessoasPage>
                     bloc.add(
                       PessoasIniciou(
                         busca: value,
+                        eCliente: _filtroECliente,
+                        eFornecedor: _filtroEFornecedor,
                         eFuncionario: _filtroEFuncionario,
                       ),
                     );
@@ -119,6 +136,8 @@ class _PessoasPageState extends State<PessoasPage>
                   bloc.add(
                     PessoasIniciou(
                       busca: value,
+                      eCliente: _filtroECliente,
+                      eFornecedor: _filtroEFornecedor,
                       eFuncionario: _filtroEFuncionario,
                     ),
                   );
@@ -167,9 +186,9 @@ class _PessoasPageState extends State<PessoasPage>
       case TipoPessoaTab.todos:
         return pessoas;
       case TipoPessoaTab.clientes:
-        return pessoas.where((pessoa) => pessoa.eCliente).toList();
+        return pessoas;
       case TipoPessoaTab.fornecedores:
-        return pessoas.where((pessoa) => pessoa.eFornecedor).toList();
+        return pessoas;
       case TipoPessoaTab.funcionarios:
         return pessoas;
     }
@@ -200,6 +219,12 @@ class _PessoasPageState extends State<PessoasPage>
 
   bool? get _filtroEFuncionario =>
       _tabController.index == TipoPessoaTab.funcionarios.index ? true : null;
+
+  bool? get _filtroECliente =>
+      _tabController.index == TipoPessoaTab.clientes.index ? true : null;
+
+  bool? get _filtroEFornecedor =>
+      _tabController.index == TipoPessoaTab.fornecedores.index ? true : null;
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;

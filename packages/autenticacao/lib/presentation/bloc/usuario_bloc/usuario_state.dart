@@ -41,6 +41,7 @@ class UsuarioEditarEmProgresso extends UsuarioState {
   final String? login;
   final String? senha;
   final TipoUsuario? tipo;
+  final bool ativo;
   @override
   final Usuario? usuario;
 
@@ -50,7 +51,8 @@ class UsuarioEditarEmProgresso extends UsuarioState {
   })  : nome = usuario?.nome,
         login = usuario?.login,
         senha = usuario?.senha,
-        tipo = usuario?.tipo;
+        tipo = usuario?.tipo,
+        ativo = usuario?.ativo ?? true;
 
   UsuarioEditarEmProgresso.fromLastState(
     UsuarioEditarEmProgresso state, {
@@ -58,12 +60,14 @@ class UsuarioEditarEmProgresso extends UsuarioState {
     String? login,
     String? senha,
     TipoUsuario? tipo,
+    bool? ativo,
     Usuario? usuario,
     GrupoDeAcesso? grupoDeAcesso,
   })  : nome = nome ?? state.nome,
         login = login ?? state.login,
         senha = senha ?? state.senha,
         tipo = tipo ?? state.tipo,
+        ativo = ativo ?? state.ativo,
         usuario = usuario ?? state.usuario;
 
   UsuarioEditarEmProgresso.empty({
@@ -71,6 +75,7 @@ class UsuarioEditarEmProgresso extends UsuarioState {
     this.login,
     this.senha,
     this.tipo,
+    this.ativo = true,
     this.usuario,
   });
 
@@ -80,13 +85,21 @@ class UsuarioEditarEmProgresso extends UsuarioState {
         login,
         senha,
         tipo,
+        ativo,
         usuario,
       ];
 }
 
 class UsuarioSalvarEmProgresso extends UsuarioState {
+  final bool ativo;
+
+  UsuarioSalvarEmProgresso({required this.ativo});
+
   @override
   Usuario? get usuario => null;
+
+  @override
+  List<Object?> get props => [ativo];
 }
 
 class UsuarioSalvarSucesso extends UsuarioState {

@@ -93,14 +93,25 @@ class StubAtualizarListaCompartilhada implements AtualizarListaCompartilhada {
 }
 
 class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
-  final Future<void> Function({required int caixaId, required int romaneioId})
-      onCall;
+  final Future<void> Function({
+    required int caixaId,
+    required int romaneioId,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+  }) onCall;
 
   StubReceberRomaneioNoCaixa(this.onCall);
 
   @override
-  Future<void> call({required int caixaId, required int romaneioId}) {
-    return onCall(caixaId: caixaId, romaneioId: romaneioId);
+  Future<void> call({
+    required int caixaId,
+    required int romaneioId,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+  }) {
+    return onCall(
+      caixaId: caixaId,
+      romaneioId: romaneioId,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+    );
   }
 }
 
@@ -169,14 +180,23 @@ void main() {
       StubRemoverProdutoCompartilhado((_) async {}),
       StubAtualizarListaCompartilhada((_) async {}),
       StubReceberRomaneioNoCaixa(
-        ({required caixaId, required romaneioId}) async {
+        ({
+          required caixaId,
+          required romaneioId,
+          required formasDePagamentoRealizadas,
+        }) async {
           throw Exception('erro ao receber no caixa');
         },
       ),
       const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
     ),
     act: (bloc) =>
-        bloc.add(const RomaneioCriacaoSolicitada(hashLista: hashLista)),
+        bloc.add(
+          const RomaneioCriacaoSolicitada(
+            hashLista: hashLista,
+            formasDePagamentoRealizadas: const [],
+          ),
+        ),
     expect: () => [
       isA<RomaneioCriacaoState>().having(
         (state) => state.step,

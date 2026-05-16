@@ -130,7 +130,7 @@ void main() {
       ),
       act: (bloc) => bloc.add(UsuarioSalvou()),
       expect: () => [
-        UsuarioSalvarEmProgresso(),
+        UsuarioSalvarEmProgresso(ativo: true),
         isA<UsuarioSalvarSucesso>().having(
           (s) => s.usuario.nome,
           'usuario.nome',
@@ -159,5 +159,6 @@ void _setupSalvarUsuario({
     login: login,
     senha: senha,
     tipo: tipo,
+    ativo: true
   )).thenAnswer((_) async => response);
 }

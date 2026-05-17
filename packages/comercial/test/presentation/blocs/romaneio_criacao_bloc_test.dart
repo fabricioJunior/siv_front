@@ -135,6 +135,14 @@ class FakeAcessoGlobalSessao implements IAcessoGlobalSessao {
 
   @override
   void atualizarCaixaIdDaSessao({required int terminalId, int? caixaId}) {}
+  
+  @override
+  // TODO: implement estoqueSincronizado
+  bool get estoqueSincronizado => throw UnimplementedError();
+  
+  @override
+  // TODO: implement estoqueSincronizando
+  Stream<bool> get estoqueSincronizando => throw UnimplementedError();
 }
 
 void main() {

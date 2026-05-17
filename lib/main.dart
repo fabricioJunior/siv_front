@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
+import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
@@ -393,10 +394,28 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
+    var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
+    if (usuarioId == null) {
+      return;
+    }
     if (route.settings.name == '/entrada_manual_de_produtos') {
       sl<SyncDataBloc>().add(
         const SyncDataSolicitouSincronizacao(
           origem: SyncDataOrigem.entradaDeProdutos,
+        ),
+      );
+    }
+    if (route.settings.name == '/criar_romaneio_por_parametros') {
+      sl<SyncDataBloc>().add(
+        const SyncDataSolicitouSincronizacao(
+          origem: SyncDataOrigem.criarRomaneio,
+        ),
+      );
+    }
+    if (route.settings.name == '/venda') {
+      sl<SyncDataBloc>().add(
+        const SyncDataSolicitouSincronizacao(
+          origem: SyncDataOrigem.vendas,
         ),
       );
     }

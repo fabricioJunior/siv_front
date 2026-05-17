@@ -174,6 +174,7 @@ class _VendaPageState extends State<VendaPage> {
                               buscaDataSource: sl(),
                               tabelaDePrecoId: state.tabelaDePrecoId,
                               aceitarApenasProdutosComPreco: true,
+                              controlarQuantidade: true,
                               campoCodigoHint:
                                   'Bipe ou informe o código do produto',
                             ),

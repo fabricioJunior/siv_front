@@ -27,6 +27,7 @@ import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart
 import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_grupo_de_acessos.dart';
 import 'package:autenticacao/domain/usecases/grupos_de_acesso/recuperar_permissoes_do_grupo_de_acesso.dart';
+import 'package:autenticacao/domain/usecases/recuperar_permissoes_do_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuario.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
@@ -309,7 +310,10 @@ void _usesCases() {
   sl.registerFactory<SincronizarPermissoesDoUsuario>(
       () => SincronizarPermissoesDoUsuario(
             repository: sl(),
-          ));
+          )); 
+  sl.registerFactory<RecuperarPermissoesDoUsuario>(() => RecuperarPermissoesDoUsuario(
+        permissoesRepository: sl(),
+      ));
 }
 
 void _repositories() {

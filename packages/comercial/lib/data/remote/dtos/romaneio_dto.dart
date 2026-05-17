@@ -79,7 +79,7 @@ class RomaneioDto implements Romaneio {
       criadoEm: _toDate(json['criadoEm']),
       atualizadoEm: _toDate(json['atualizadoEm']),
       formasDePagamentoRealizadas: _toFormasDePagamentoRealizadas(
-        json['formasDePagamentoRealizadas'],
+        json['formasDePagamentoRealizadas'] ?? json['pagamentos'],
       ),
     );
   }
@@ -150,7 +150,7 @@ class RomaneioDto implements Romaneio {
   bool? get stringify => true;
 }
 
-int? _toInt(dynamic value) => (value as num?)?.toInt();
+int? _toInt(dynamic value) => int.tryParse(value.toString());
 
 double? _toDouble(dynamic value) => (value as num?)?.toDouble();
 
@@ -163,15 +163,41 @@ DateTime? _toDate(dynamic value) {
 List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
   final itens = value as List<dynamic>? ?? const [];
 
-  return itens
-      .whereType<Map<String, dynamic>>()
-      .map((json) => RomaneioPagamentoRealizado.create(
-            controle: _toInt(json['controle']) ?? 0,
-            formaDePagamentoId: _toInt(json['formaDePagamentoId']) ?? 0,
-            parcela: _toInt(json['parcela']) ?? 1,
-            valor: _toDouble(json['valor']) ?? 0,
-          ))
-      .where((item) => item.formaDePagamentoId > 0 && item.valor > 0)
-      .toList(growable: false);
+  final pagamentos = <RomaneioPagamentoRealizado>[];
+
+  for (var i = 0; i < itens.length; i++) {
+    final item = itens[i];
+    if (item is! Map) {
+      continue;
+    }
+
+    final json = Map<String, dynamic>.from(item);
+    final valor = _toDouble(json['valor']) ?? 0;
+    if (valor <= 0) {
+      continue;
+    }
+
+    final formaDePagamentoId = _toInt(json['formaDePagamentoId']) ?? 0;
+    final descricao = (json['descricao'] ??
+            json['formaDePagamentoNome'] ??
+            json['tipoDocumento'])
+        ?.toString();
+
+    if (formaDePagamentoId <= 0 && (descricao == null || descricao.trim().isEmpty)) {
+      continue;
+    }
+
+    pagamentos.add(
+      RomaneioPagamentoRealizado.create(
+        controle: _toInt(json['controle']) ?? _toInt(json['documento']) ?? i + 1,
+        formaDePagamentoId: formaDePagamentoId,
+        parcela: _toInt(json['parcela']) ?? _toInt(json['faturaParcela']) ?? 1,
+        valor: valor,
+        descricao: descricao?.trim().isEmpty == true ? null : descricao?.trim(),
+      ),
+    );
+  }
+
+  return pagamentos;
 }
 

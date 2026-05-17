@@ -393,6 +393,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
   Widget _buildVisualizacaoContent(BuildContext context, RomaneioState state) {
     final romaneio = state.romaneio;
     final observacao = (state.observacao ?? '').trim();
+    final pagamentos = romaneio?.formasDePagamentoRealizadas ?? const [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,6 +563,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
           ],
         ),
         const SizedBox(height: 16),
+        if (pagamentos.isNotEmpty) ...[
+          _buildPagamentosCard(context, pagamentos),
+          const SizedBox(height: 16),
+        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -644,6 +649,91 @@ class _RomaneioPageState extends State<RomaneioPage> {
         const SizedBox(height: 16),
         _buildItensRomaneioCard(context, state),
       ],
+    );
+  }
+
+  Widget _buildPagamentosCard(
+    BuildContext context,
+    List<RomaneioPagamentoRealizado> pagamentos,
+  ) {
+    final theme = Theme.of(context);
+    final totalPago = pagamentos.fold<double>(
+      0,
+      (acumulado, pagamento) => acumulado + pagamento.valor,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Formas de pagamento',
+              Icons.credit_card_outlined,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Total pago: ${_formatarValorMonetario(totalPago)}',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            ListView.separated(
+              itemCount: pagamentos.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final pagamento = pagamentos[index];
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        child: Text('${index + 1}'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _descricaoPagamento(pagamento),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Parcela(s): ${pagamento.parcela}',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _formatarValorMonetario(pagamento.valor),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -881,6 +971,19 @@ class _RomaneioPageState extends State<RomaneioPage> {
       return fallback;
     }
     return valor.trim();
+  }
+
+  String _descricaoPagamento(RomaneioPagamentoRealizado pagamento) {
+    final descricao = pagamento.descricao?.trim();
+    if (descricao != null && descricao.isNotEmpty) {
+      return descricao;
+    }
+
+    if (pagamento.formaDePagamentoId > 0) {
+      return 'Forma #${pagamento.formaDePagamentoId}';
+    }
+
+    return 'Forma de pagamento';
   }
 
   String _formatarData(DateTime? data) {

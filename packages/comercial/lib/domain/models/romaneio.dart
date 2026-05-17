@@ -192,16 +192,18 @@ abstract class RomaneioPagamentoRealizado implements Equatable {
   int get formaDePagamentoId;
   int get parcela;
   double get valor;
+  String? get descricao;
 
   factory RomaneioPagamentoRealizado.create({
     required int controle,
     required int formaDePagamentoId,
     required int parcela,
     required double valor,
+    String? descricao,
   }) = _RomaneioPagamentoRealizadoImpl;
 
   @override
-  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor];
+  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor, descricao];
 
   @override
   bool? get stringify => true;
@@ -216,16 +218,19 @@ class _RomaneioPagamentoRealizadoImpl implements RomaneioPagamentoRealizado {
   final int parcela;
   @override
   final double valor;
+  @override
+  final String? descricao;
 
   const _RomaneioPagamentoRealizadoImpl({
     required this.controle,
     required this.formaDePagamentoId,
     required this.parcela,
     required this.valor,
+    this.descricao,
   });
 
   @override
-  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor];
+  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor, descricao];
 
   @override
   bool? get stringify => true;

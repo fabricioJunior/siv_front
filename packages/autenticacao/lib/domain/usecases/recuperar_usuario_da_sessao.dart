@@ -6,7 +6,7 @@ class RecuperarUsuarioDaSessao {
 
   RecuperarUsuarioDaSessao({required this.usuariosRepository});
 
-  Future<Usuario> call() async {
+  Future<Usuario?> call() async {
     var usuarioDaSessao = await usuariosRepository.getUsuarioDaSessaoSalvo();
     if (usuarioDaSessao == null) {
       usuarioDaSessao = await usuariosRepository.getUsuarioDaSessao();

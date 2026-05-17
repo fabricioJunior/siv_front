@@ -87,7 +87,7 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
         _atualizarEtapaCarregamento(emit, 'Sincronizando permissões');
       }
       var permissoes = await _sincronizarPermissoesDoUsuario(
-        idUsuario: usuarioDaSessao.id,
+        idUsuario: usuarioDaSessao!.id,
       );
       var permissoesMap = _mapPermissoes(permissoes);
       if (event.token.idEmpresa != null) {

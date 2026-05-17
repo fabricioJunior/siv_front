@@ -51,15 +51,27 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<List<PrecoDaReferencia>> obterPrecosDasReferencias({
     required int tabelaDePrecoId,
+    DateTime? ultimaAtualizacaoInicio,
+    DateTime? ultimaAtualizacaoFim,
   }) async {
     final pathParameters = {'tabelaDePrecoId': tabelaDePrecoId};
     int pagina = 1;
-    
+
     List<PrecoDaReferencia> precosDaReferencia = [];
     while (true) {
+      final queryParameters = <String, String>{'page': pagina.toString()};
+      if (ultimaAtualizacaoInicio != null) {
+        queryParameters['ultimaAtualizacaoInicio'] =
+            ultimaAtualizacaoInicio.toIso8601String();
+      }
+      if (ultimaAtualizacaoFim != null) {
+        queryParameters['ultimaAtualizacaoFim'] =
+            ultimaAtualizacaoFim.toIso8601String();
+      }
+
       final response = await get(
         pathParameters: pathParameters,
-        queryParameters: {'page': pagina.toString()},
+        queryParameters: queryParameters,
       );
       final precosDaReferenciaDto = PrecosDaReferenciaDto.fromJson(
         response.body,

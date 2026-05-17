@@ -40,16 +40,27 @@ class CodigoDeBarrasRepository implements ICodigosRepository {
   @override
   Stream<Paginacao> sincronizarCodigos() async* {
     var paginacao = await _paginacaoDataSource.buscarPaginacao('codigos_sync');
-    int page = paginacao?.ended == true ? 0 : paginacao?.paginaAtual ?? 0;
+    final syncAnteriorConcluida = paginacao?.ended == true;
+    final ultimaAtualizacaoFim = DateTime.now();
+    final ultimaAtualizacaoInicio =
+        syncAnteriorConcluida ? paginacao!.dataAtualizacao : null;
+    final ultimaAtualizacaoFimFiltro =
+        syncAnteriorConcluida ? ultimaAtualizacaoFim : null;
+    int page = syncAnteriorConcluida ? 0 : paginacao?.paginaAtual ?? 0;
     int pageSize = 2000;
     while (true) {
       final codigosPaginados = await _codigosRemoteDataSource.buscarCodigos(
         pagina: page,
         limite: pageSize,
+        ultimaAtualizacaoInicio: ultimaAtualizacaoInicio,
+        ultimaAtualizacaoFim: ultimaAtualizacaoFimFiltro,
       );
 
       if (codigosPaginados.items?.isEmpty ?? true) {
-        final paginacaoFinal = codigosPaginados.copyWith(ended: true);
+        final paginacaoFinal = codigosPaginados.copyWith(
+          ended: true,
+          dataAtualizacao: ultimaAtualizacaoFimFiltro ?? DateTime.now(),
+        );
         yield paginacaoFinal;
         await _paginacaoDataSource.salvarPaginacao(paginacaoFinal);
         break;
@@ -58,9 +69,15 @@ class CodigoDeBarrasRepository implements ICodigosRepository {
         codigosPaginados.items!,
       );
 
-      yield codigosPaginados;
+      yield codigosPaginados.copyWith(
+        dataAtualizacao: ultimaAtualizacaoFimFiltro ?? DateTime.now(),
+      );
 
-      await _paginacaoDataSource.salvarPaginacao(codigosPaginados);
+      await _paginacaoDataSource.salvarPaginacao(
+        codigosPaginados.copyWith(
+          dataAtualizacao: ultimaAtualizacaoFimFiltro ?? DateTime.now(),
+        ),
+      );
       page++;
     }
   }

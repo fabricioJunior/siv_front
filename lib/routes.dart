@@ -285,6 +285,17 @@ Map<String, Widget Function(BuildContext)> routes = {
           ),
     );
   },
+  '/cancelar_romaneio': (context) {
+    final idRomaneioArg = args(context)['idRomaneio'];
+    final idRomaneio = idRomaneioArg is int
+        ? idRomaneioArg
+        : int.tryParse(idRomaneioArg?.toString() ?? '');
+
+    return _rotaProtegida(
+      route: '/cancelar_romaneio',
+      child: CancelamentoRomaneioPage(idRomaneio: idRomaneio),
+    );
+  },
 
   '/criar_romaneio_por_parametros': (context) {
     final argumentos = args(context);
@@ -443,6 +454,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/venda': ['PEDFC001', 'ROMFP001'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
+  '/cancelar_romaneio': ['ROMFP001'],
   '/estoque': ['PRDFL001'],
   '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
   '/pessoas': ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],

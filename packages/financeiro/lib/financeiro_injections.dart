@@ -29,6 +29,12 @@ void _remoteDataSources() {
     ),
   );
 
+  sl.registerFactory<ICancelamentosRemoteDataSource>(
+    () => CancelamentosRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
   sl.registerFactory<ISuprimentosRemoteDataSource>(
     () => SuprimentosRemoteDataSource(
       informacoesParaRequest: sl(),
@@ -52,6 +58,12 @@ void _repositories() {
 
   sl.registerFactory<IFormasDePagamentoRepository>(
     () => FormasDePagamentoRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<ICancelamentosRepository>(
+    () => CancelamentosRepository(
       remoteDataSource: sl(),
     ),
   );
@@ -110,6 +122,10 @@ void _useCases() {
     () => RecuperarSuprimentos(repository: sl()),
   );
 
+  sl.registerFactory<CancelarRomaneio>(
+    () => CancelarRomaneio(repository: sl()),
+  );
+
   sl.registerFactory<CancelarSuprimento>(
     () => CancelarSuprimento(repository: sl()),
   );
@@ -132,6 +148,13 @@ void _presentation() {
     () => FluxoDeCaixaBloc(
       sl(),
       sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<CancelamentoRomaneioBloc>(
+    () => CancelamentoRomaneioBloc(
       sl(),
       sl(),
     ),

@@ -181,217 +181,474 @@ class _PedidoPageState extends State<PedidoPage> {
                       padding: const EdgeInsets.all(16),
                       child: Form(
                         key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _campoNumero(
-                              controller: _pessoaIdController,
-                              label: 'Pessoa ID',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                pessoaId: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            if (widget.funcionarioSeletor != null)
-                              widget.funcionarioSeletor!.buildComParametros(
-                                SeletorParamentros(
-                                  itemsSelecionadosInicial: _selectDataInicial(
-                                        idTexto: state.funcionarioId,
-                                        nomeFallback: 'Funcionário selecionado',
-                                      ) ??
-                                      const [],
-                                  onlyView: widget.idPedido != null,
-                                  onChanged: (selecionados) => _onCampoAlterado(
-                                    context,
-                                    funcionarioId: selecionados.isEmpty
-                                        ? ''
-                                        : '${selecionados.first.id}',
-                                  ),
-                                ),
-                              )
-                            else
-                              _campoNumero(
-                                controller: _funcionarioIdController,
-                                label: 'Funcionario ID',
-                                onChanged: (value) => _onCampoAlterado(
-                                  context,
-                                  funcionarioId: value,
-                                ),
-                              ),
-                            const SizedBox(height: 12),
-                            if (widget.tabelaDePrecoSeletor != null)
-                              widget.tabelaDePrecoSeletor!.buildComParametros(
-                                SeletorParamentros(
-                                  itemsSelecionadosInicial: _selectDataInicial(
-                                    idTexto: state.tabelaPrecoId,
-                                    nomeFallback: 'Tabela selecionada',
-                                  ),
-                                  onlyView: widget.idPedido != null,
-                                  onChanged: (selecionados) => _onCampoAlterado(
-                                    context,
-                                    tabelaPrecoId: selecionados.isEmpty
-                                        ? ''
-                                        : '${selecionados.first.id}',
-                                  ),
-                                ),
-                              )
-                            else
-                              _campoNumero(
-                                controller: _tabelaPrecoIdController,
-                                label: 'Tabela de preco ID',
-                                onChanged: (value) => _onCampoAlterado(
-                                  context,
-                                  tabelaPrecoId: value,
-                                ),
-                              ),
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<String>(
-                              initialValue: _tipos.contains(state.tipo)
-                                  ? state.tipo
-                                  : _tipos.first,
-                              decoration:
-                                  const InputDecoration(labelText: 'Tipo'),
-                              items: _tipos
-                                  .map(
-                                    (tipo) => DropdownMenuItem(
-                                      value: tipo,
-                                      child: Text(tipo),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: carregando
-                                  ? null
-                                  : (value) => _onCampoAlterado(
-                                        context,
-                                        tipo: value,
-                                      ),
-                            ),
-                            const SizedBox(height: 12),
-                            _campoNumero(
-                              controller: _parcelasController,
-                              label: 'Parcelas',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                parcelas: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _campoNumero(
-                              controller: _intervaloController,
-                              label: 'Intervalo (dias)',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                intervalo: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _campoTexto(
-                              controller: _dataBaseController,
-                              label: 'Data base pagamento (YYYY-MM-DD)',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                dataBasePagamento: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _campoTexto(
-                              controller: _previsaoFaturamentoController,
-                              label: 'Previsao faturamento (YYYY-MM-DD)',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                previsaoDeFaturamento: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _campoTexto(
-                              controller: _previsaoEntregaController,
-                              label: 'Previsao entrega (YYYY-MM-DD)',
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                previsaoDeEntrega: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _observacaoController,
-                              maxLines: 3,
-                              decoration: const InputDecoration(
-                                labelText: 'Observacao',
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Informe a observacao';
-                                }
-                                return null;
-                              },
-                              onChanged: (value) => _onCampoAlterado(
-                                context,
-                                observacao: value,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SwitchListTile.adaptive(
-                              contentPadding: EdgeInsets.zero,
-                              value: state.fiscal ?? false,
-                              onChanged: carregando
-                                  ? null
-                                  : (value) => _onCampoAlterado(
-                                        context,
-                                        fiscal: value,
-                                      ),
-                              title: const Text('Fiscal'),
-                            ),
-                            if (state.id != null) ...[
-                              const SizedBox(height: 16),
-                              const Divider(),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  FilledButton.icon(
-                                    onPressed: carregando
-                                        ? null
-                                        : () {
-                                            context.read<PedidoBloc>().add(
-                                                  PedidoConferiu(),
-                                                );
-                                          },
-                                    icon: const Icon(Icons.fact_check),
-                                    label: const Text('Conferir'),
-                                  ),
-                                  FilledButton.icon(
-                                    onPressed: carregando
-                                        ? null
-                                        : () {
-                                            context.read<PedidoBloc>().add(
-                                                  PedidoFaturou(),
-                                                );
-                                          },
-                                    icon: const Icon(Icons.point_of_sale),
-                                    label: const Text('Faturar'),
-                                  ),
-                                  OutlinedButton.icon(
-                                    onPressed:
-                                        carregando ? null : _cancelarPedido,
-                                    icon: const Icon(Icons.cancel),
-                                    label: const Text('Cancelar'),
-                                  ),
-                                ],
-                              ),
-                              if (state.pedido?.situacao != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                    'Situacao atual: ${state.pedido?.situacao}'),
-                              ],
-                            ],
-                          ],
-                        ),
+                        child: _buildFormularioPedido(context, state, carregando),
                       ),
                     ),
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildFormularioPedido(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCabecalhoPedidoCard(context, state),
+        const SizedBox(height: 16),
+        _buildDadosVinculadosCard(context, state, carregando),
+        const SizedBox(height: 16),
+        _buildCondicoesCard(context, state, carregando),
+        const SizedBox(height: 16),
+        _buildDatasCard(context, carregando),
+        const SizedBox(height: 16),
+        _buildObservacaoCard(context, carregando),
+        if (state.id != null) ...[
+          const SizedBox(height: 16),
+          _buildAcoesDoPedidoCard(context, state, carregando),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCabecalhoPedidoCard(BuildContext context, PedidoState state) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primaryContainer,
+              Theme.of(context).colorScheme.secondaryContainer,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  child: Text('${state.id ?? widget.idPedido ?? '-'}'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pedido #${state.id ?? widget.idPedido ?? 'novo'}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        state.pedido?.situacao?.trim().isNotEmpty == true
+                            ? 'Situação: ${state.pedido?.situacao}'
+                            : 'Situação: em edição',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildInfoChip(
+                  context,
+                  icon: Icons.shopping_bag_outlined,
+                  label: 'Tipo: ${state.tipo ?? _tipos.first}',
+                ),
+                _buildInfoChip(
+                  context,
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Parcelas: ${state.parcelas ?? '-'}',
+                ),
+                _buildInfoChip(
+                  context,
+                  icon: Icons.event_repeat_outlined,
+                  label: 'Intervalo: ${state.intervalo ?? '-'} dias',
+                ),
+                _buildInfoChip(
+                  context,
+                  icon: Icons.shield_outlined,
+                  label: (state.fiscal ?? false) ? 'Fiscal: sim' : 'Fiscal: não',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDadosVinculadosCard(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Dados vinculados',
+              Icons.badge_outlined,
+            ),
+            const SizedBox(height: 12),
+            _campoNumero(
+              controller: _pessoaIdController,
+              label: 'Pessoa ID',
+              onChanged: (value) => _onCampoAlterado(
+                context,
+                pessoaId: value,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (widget.funcionarioSeletor != null)
+              IgnorePointer(
+                ignoring: carregando,
+                child: widget.funcionarioSeletor!.buildComParametros(
+                  SeletorParamentros(
+                    itemsSelecionadosInicial: _selectDataInicial(
+                          idTexto: state.funcionarioId,
+                          nomeFallback: 'Funcionário selecionado',
+                        ) ??
+                        const [],
+                    onlyView: widget.idPedido != null,
+                    onChanged: (selecionados) => _onCampoAlterado(
+                      context,
+                      funcionarioId:
+                          selecionados.isEmpty ? '' : '${selecionados.first.id}',
+                    ),
+                  ),
+                ),
+              )
+            else
+              _campoNumero(
+                controller: _funcionarioIdController,
+                label: 'Funcionário ID',
+                onChanged: (value) => _onCampoAlterado(
+                  context,
+                  funcionarioId: value,
+                ),
+              ),
+            const SizedBox(height: 12),
+            if (widget.tabelaDePrecoSeletor != null)
+              IgnorePointer(
+                ignoring: carregando,
+                child: widget.tabelaDePrecoSeletor!.buildComParametros(
+                  SeletorParamentros(
+                    itemsSelecionadosInicial: _selectDataInicial(
+                      idTexto: state.tabelaPrecoId,
+                      nomeFallback: 'Tabela selecionada',
+                    ),
+                    onlyView: widget.idPedido != null,
+                    onChanged: (selecionados) => _onCampoAlterado(
+                      context,
+                      tabelaPrecoId:
+                          selecionados.isEmpty ? '' : '${selecionados.first.id}',
+                    ),
+                  ),
+                ),
+              )
+            else
+              _campoNumero(
+                controller: _tabelaPrecoIdController,
+                label: 'Tabela de preço ID',
+                onChanged: (value) => _onCampoAlterado(
+                  context,
+                  tabelaPrecoId: value,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCondicoesCard(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Condições do pedido',
+              Icons.tune_rounded,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue:
+                  _tipos.contains(state.tipo) ? state.tipo : _tipos.first,
+              decoration: const InputDecoration(labelText: 'Tipo'),
+              items: _tipos
+                  .map(
+                    (tipo) => DropdownMenuItem(
+                      value: tipo,
+                      child: Text(tipo),
+                    ),
+                  )
+                  .toList(),
+              onChanged: carregando
+                  ? null
+                  : (value) => _onCampoAlterado(
+                        context,
+                        tipo: value,
+                      ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _campoNumero(
+                    controller: _parcelasController,
+                    label: 'Parcelas',
+                    onChanged: (value) => _onCampoAlterado(
+                      context,
+                      parcelas: value,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _campoNumero(
+                    controller: _intervaloController,
+                    label: 'Intervalo (dias)',
+                    onChanged: (value) => _onCampoAlterado(
+                      context,
+                      intervalo: value,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: state.fiscal ?? false,
+              onChanged: carregando
+                  ? null
+                  : (value) => _onCampoAlterado(
+                        context,
+                        fiscal: value,
+                      ),
+              title: const Text('Fiscal'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatasCard(BuildContext context, bool carregando) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Datas',
+              Icons.event_note_outlined,
+            ),
+            const SizedBox(height: 12),
+            _campoTexto(
+              controller: _dataBaseController,
+              label: 'Data base pagamento (YYYY-MM-DD)',
+              onChanged: (value) => _onCampoAlterado(
+                context,
+                dataBasePagamento: value,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _campoTexto(
+              controller: _previsaoFaturamentoController,
+              label: 'Previsão faturamento (YYYY-MM-DD)',
+              onChanged: (value) => _onCampoAlterado(
+                context,
+                previsaoDeFaturamento: value,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _campoTexto(
+              controller: _previsaoEntregaController,
+              label: 'Previsão entrega (YYYY-MM-DD)',
+              onChanged: (value) => _onCampoAlterado(
+                context,
+                previsaoDeEntrega: value,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildObservacaoCard(BuildContext context, bool carregando) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Observação',
+              Icons.edit_note_outlined,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _observacaoController,
+              maxLines: 3,
+              readOnly: carregando,
+              decoration: const InputDecoration(
+                labelText: 'Observação',
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Informe a observação';
+                }
+                return null;
+              },
+              onChanged: (value) => _onCampoAlterado(
+                context,
+                observacao: value,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAcoesDoPedidoCard(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTituloSecao(
+              context,
+              'Ações do pedido',
+              Icons.bolt_outlined,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.icon(
+                  onPressed: carregando
+                      ? null
+                      : () {
+                          context.read<PedidoBloc>().add(
+                                PedidoConferiu(),
+                              );
+                        },
+                  icon: const Icon(Icons.fact_check),
+                  label: const Text('Conferir'),
+                ),
+                FilledButton.icon(
+                  onPressed: carregando
+                      ? null
+                      : () {
+                          context.read<PedidoBloc>().add(
+                                PedidoFaturou(),
+                              );
+                        },
+                  icon: const Icon(Icons.point_of_sale),
+                  label: const Text('Faturar'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: carregando ? null : _cancelarPedido,
+                  icon: const Icon(Icons.cancel),
+                  label: const Text('Cancelar'),
+                ),
+              ],
+            ),
+            if (state.pedido?.situacao != null) ...[
+              const SizedBox(height: 8),
+              Text('Situação atual: ${state.pedido?.situacao}'),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTituloSecao(
+    BuildContext context,
+    String titulo,
+    IconData icone,
+  ) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icone, size: 20, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(
+          titulo,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colors.primary),
+          const SizedBox(width: 6),
+          Text(label),
+        ],
       ),
     );
   }

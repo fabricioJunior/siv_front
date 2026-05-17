@@ -8,6 +8,8 @@ abstract class IPrecosDeReferenciasRemoteDataSource {
 
   Future<List<PrecoDaReferencia>> obterPrecosDasReferencias({
     required int tabelaDePrecoId,
+    DateTime? ultimaAtualizacaoInicio,
+    DateTime? ultimaAtualizacaoFim,
   });
 
   Future<PrecoDaReferencia> atualizarPrecoDaReferencia({

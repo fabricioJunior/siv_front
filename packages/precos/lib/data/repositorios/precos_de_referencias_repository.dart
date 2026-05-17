@@ -78,13 +78,21 @@ class PrecosDeReferenciasRepository implements IPrecosDeReferenciasRepository {
 
   @override
   Stream<Paginacao<PrecoDaReferencia>> syncPrecosDasReferencias() async* {
-    final paginacao = await paginacaoDataSource.buscarPaginacao(
+    final paginacaoAnterior = await paginacaoDataSource.buscarPaginacao(
       'precos_das_referencias_sync',
     );
     final tabelas = await tabelasDePrecoLocalDataSource.obterTabelasDePreco();
-    final paginaInicial = paginacao?.ended == true
+
+    final bool syncAnteriorConcluida = paginacaoAnterior?.ended == true;
+    final paginaInicial = syncAnteriorConcluida
         ? 0
-        : (paginacao?.paginaAtual ?? 0);
+        : (paginacaoAnterior?.paginaAtual ?? 0);
+
+    // Filtros incrementais: só aplicados quando a sync anterior completou.
+    final DateTime? ultimaAtualizacaoInicio =
+        syncAnteriorConcluida ? paginacaoAnterior!.dataAtualizacao : null;
+    final DateTime? ultimaAtualizacaoFim =
+        syncAnteriorConcluida ? DateTime.now() : null;
 
     if (tabelas.isEmpty || paginaInicial >= tabelas.length) {
       final paginacaoFinal = Paginacao<PrecoDaReferencia>(
@@ -112,11 +120,15 @@ class PrecosDeReferenciasRepository implements IPrecosDeReferenciasRepository {
       }
 
       final precos = await precosDeReferenciasRemoteDataSource
-          .obterPrecosDasReferencias(tabelaDePrecoId: tabelaId);
+          .obterPrecosDasReferencias(
+        tabelaDePrecoId: tabelaId,
+        ultimaAtualizacaoInicio: ultimaAtualizacaoInicio,
+        ultimaAtualizacaoFim: ultimaAtualizacaoFim,
+      );
 
       await precosDeReferenciasLocalDataSource.salvarPrecosDasReferencias(
         precos,
-      ); 
+      );
 
       totalItensSincronizados += precos.length;
 
@@ -127,7 +139,7 @@ class PrecosDeReferenciasRepository implements IPrecosDeReferenciasRepository {
         itensProcessadosNaPagina: precos.length,
         totalItens: totalItensSincronizados,
         key: 'precos_das_referencias_sync',
-        dataAtualizacao: DateTime.now(),
+        dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now(),
         ended: index == tabelas.length - 1,
         items: precos,
       );

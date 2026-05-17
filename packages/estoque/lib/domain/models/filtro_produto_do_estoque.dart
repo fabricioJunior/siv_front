@@ -10,6 +10,8 @@ class FiltroProdutoDoEstoque extends Equatable {
   final List<int> tamanhoIds;
   final int page;
   final int limit;
+  final DateTime? ultimaAtualizacaoInicio;
+  final DateTime? ultimaAtualizacaoFim;
 
   const FiltroProdutoDoEstoque({
     this.empresaIds = const [],
@@ -21,6 +23,8 @@ class FiltroProdutoDoEstoque extends Equatable {
     this.tamanhoIds = const [],
     this.page = 1,
     this.limit = 20,
+    this.ultimaAtualizacaoFim,
+    this.ultimaAtualizacaoInicio,
   });
 
   FiltroProdutoDoEstoque copyWith({

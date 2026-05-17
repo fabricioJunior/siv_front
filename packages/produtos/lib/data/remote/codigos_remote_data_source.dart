@@ -12,11 +12,21 @@ class CodigosRemoteDataSource extends RemoteDataSourceBase
   Future<Paginacao<Codigo>> buscarCodigos({
     required int pagina,
     required int limite,
+    DateTime? ultimaAtualizacaoInicio,
+    DateTime? ultimaAtualizacaoFim,
   }) async {
     var qeryParameters = {
       'page': pagina.toString(),
       'limite': limite.toString(),
     };
+    if (ultimaAtualizacaoInicio != null) {
+      qeryParameters['ultimaAtualizacaoInicio'] =
+          ultimaAtualizacaoInicio.toIso8601String();
+    }
+    if (ultimaAtualizacaoFim != null) {
+      qeryParameters['ultimaAtualizacaoFim'] =
+          ultimaAtualizacaoFim.toIso8601String();
+    }
     var response = await get(queryParameters: qeryParameters);
     return PaginacaoDto<Codigo>.fromJson(
       response.body,

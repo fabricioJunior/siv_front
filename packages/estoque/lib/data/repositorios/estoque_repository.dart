@@ -31,23 +31,39 @@ class EstoqueRepository implements IEstoqueRepository {
 
   @override
   Stream<Paginacao> syncEstoque() async* {
-    var pagincao = await paginacaoDataSource.buscarPaginacao('estoque_sync');
-    int page = pagincao?.ended == true ? 0 : (pagincao?.paginaAtual ?? 0);
+    var paginacaoAnterior = await paginacaoDataSource.buscarPaginacao('estoque_sync');
+
+    final bool syncAnteriorConcluida = paginacaoAnterior?.ended == true;
+    final int page = syncAnteriorConcluida ? 0 : (paginacaoAnterior?.paginaAtual ?? 0);
+
+    // Só aplica filtro de data incremental quando a sync anterior completou.
+    // Se estava incompleta, faz sync completa para garantir consistência.
+    final DateTime? ultimaAtualizacaoInicio =
+        syncAnteriorConcluida ? paginacaoAnterior!.dataAtualizacao : null;
+    final DateTime? ultimaAtualizacaoFim =
+        syncAnteriorConcluida ? DateTime.now() : null;
+
+    var paginaAtual = page;
 
     while (true) {
       var saldo = await estoqueSaldoRemoteDataSource.obterSaldo(
-        filtro: FiltroProdutoDoEstoque(page: page, limit: 1000),
+        filtro: FiltroProdutoDoEstoque(
+          page: paginaAtual,
+          limit: 1000,
+          ultimaAtualizacaoInicio: ultimaAtualizacaoInicio,
+          ultimaAtualizacaoFim: ultimaAtualizacaoFim,
+        ),
       );
 
       if (saldo.items.isEmpty) {
         var paginacao = Paginacao(
           key: 'estoque_sync',
-          paginaAtual: page,
+          paginaAtual: paginaAtual,
           totalPaginas: saldo.meta.totalPages,
           itensPorPagina: saldo.meta.itemsPerPage,
           itensProcessadosNaPagina: 0,
           totalItens: saldo.meta.totalItems,
-          dataAtualizacao: DateTime.now(),
+          dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now(),
           ended: true,
         );
         yield paginacao;
@@ -59,16 +75,16 @@ class EstoqueRepository implements IEstoqueRepository {
 
       var pagicao = Paginacao(
         key: 'estoque_sync',
-        paginaAtual: page,
+        paginaAtual: paginaAtual,
         totalPaginas: saldo.meta.totalPages,
         itensPorPagina: saldo.meta.itemsPerPage,
         itensProcessadosNaPagina: saldo.meta.itemCount,
         totalItens: saldo.meta.totalItems,
-        dataAtualizacao: DateTime.now(),
+        dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now(),
       );
       yield pagicao;
       await paginacaoDataSource.salvarPaginacao(pagicao);
-      page++;
+      paginaAtual++;
     }
   }
 }

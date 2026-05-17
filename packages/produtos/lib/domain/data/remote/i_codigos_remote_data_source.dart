@@ -5,6 +5,8 @@ abstract class ICodigosRemoteDataSource {
   Future<Paginacao<Codigo>> buscarCodigos({
     required int pagina,
     required int limite,
+    DateTime? ultimaAtualizacaoInicio,
+    DateTime? ultimaAtualizacaoFim,
   });
 
   Future<int?> recuperarProdutoIdPorCodigoDeBarras(String codigoDeBarras);

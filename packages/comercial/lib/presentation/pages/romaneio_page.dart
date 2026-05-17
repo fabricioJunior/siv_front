@@ -49,6 +49,23 @@ class _RomaneioPageState extends State<RomaneioPage> {
     super.dispose();
   }
 
+  Future<void> _cancelarRomaneio(int? idRomaneio) async {
+    if (idRomaneio == null || idRomaneio <= 0) {
+      return;
+    }
+
+    final cancelado = await Navigator.of(context).pushNamed(
+      '/cancelar_romaneio',
+      arguments: {'idRomaneio': idRomaneio},
+    );
+
+    if (!mounted || cancelado != true) {
+      return;
+    }
+
+    Navigator.of(context).pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RomaneioBloc>(
@@ -337,6 +354,30 @@ class _RomaneioPageState extends State<RomaneioPage> {
           ),
         ),
         if (state.id != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTituloSecao(
+                    context,
+                    'Ações do romaneio',
+                    Icons.bolt_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: carregando || _romaneioCancelado(state)
+                        ? null
+                        : () => _cancelarRomaneio(state.id),
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Cancelar romaneio'),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -640,6 +681,32 @@ class _RomaneioPageState extends State<RomaneioPage> {
                   Text(
                     observacao,
                     style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+        if (state.id != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTituloSecao(
+                    context,
+                    'Ações do romaneio',
+                    Icons.bolt_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _romaneioCancelado(state)
+                        ? null
+                        : () => _cancelarRomaneio(state.id),
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Cancelar romaneio'),
                   ),
                 ],
               ),
@@ -1007,6 +1074,11 @@ class _RomaneioPageState extends State<RomaneioPage> {
       return quantidade.toInt().toString();
     }
     return quantidade.toStringAsFixed(2).replaceAll('.', ',');
+  }
+
+  bool _romaneioCancelado(RomaneioState state) {
+    final situacao = state.romaneio?.situacao?.trim().toLowerCase() ?? '';
+    return situacao == 'cancelado';
   }
 
   void _sincronizarControllers(RomaneioState state) {

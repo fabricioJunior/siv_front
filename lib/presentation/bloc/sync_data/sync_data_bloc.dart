@@ -1,13 +1,14 @@
 import 'dart:async';
 
+import 'package:autenticacao/models.dart';
+import 'package:autenticacao/domain/usecases/recuperar_permissoes_do_usuario.dart';
+import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/paginacao/paginacao.dart';
-import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:estoque/estoque.dart';
 import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
-import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 
 part 'sync_data_event.dart';
 part 'sync_data_state.dart';
@@ -17,8 +18,10 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   final SincronizarEstoque _sincronizarEstoque;
   final SincronziarTabelasDePreco _sincronizarTabelasDePreco;
   final SincronizarPrecos _sincronizarPrecos;
-  final AppBloc _appBloc;
-  final IPermissoesController _permissoesController;
+  final EstaAutenticado _estaAutenticado;
+  final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
+  final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
+  final RecuperarPermissoesDoUsuario _recuperarPermissoesDoUsuario;
 
   StreamSubscription<Paginacao>? _codigosSubscription;
   StreamSubscription<Paginacao>? _estoqueSubscription;
@@ -30,8 +33,10 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     this._sincronizarEstoque,
     this._sincronizarTabelasDePreco,
     this._sincronizarPrecos,
-    this._appBloc,
-    this._permissoesController,
+    this._estaAutenticado,
+    this._recuperarUsuarioDaSessao,
+    this._recuperarEmpresaDaSessao,
+    this._recuperarPermissoesDoUsuario,
   ) : super(const SyncDataState()) {
     on<SyncDataSolicitouSincronizacao>(_onSolicitouSincronizacao);
     on<SyncDataAtualizacaoRecebida>(_onAtualizacaoRecebida);
@@ -43,7 +48,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     SyncDataSolicitouSincronizacao event,
     Emitter<SyncDataState> emit,
   ) async {
-    if (!_usuarioAutenticadoComEmpresa()) {
+    if (!await _usuarioAutenticadoComEmpresa()) {
       return;
     }
 
@@ -57,7 +62,8 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
 
     await _cancelarSincronizacoesAtivas();
 
-    final modulosPermitidos = _resolverModulosPermitidos();
+    final permissoesDoUsuario = await _carregarPermissoesDoUsuario();
+    final modulosPermitidos = _resolverModulosPermitidos(permissoesDoUsuario);
 
     final modulosEmSincronizacao = <SyncModulo, SyncModuloState>{
       for (final modulo in state.modulos.entries)
@@ -83,6 +89,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
         iniciadoEm: DateTime.now(),
         finalizadoEm: null,
         origemUltimaSincronizacao: event.origem,
+        permissoesDoUsuario: permissoesDoUsuario,
         modulos: modulosEmSincronizacao,
       ),
     );
@@ -338,10 +345,11 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
   }
 
-  bool _usuarioAutenticadoComEmpresa() {
-    final appState = _appBloc.state;
-    return appState.statusAutenticacao == StatusAutenticacao.autenticado &&
-        appState.empresaDaSessao != null;
+  Future<bool> _usuarioAutenticadoComEmpresa() async {
+    final estaAutenticado = await _estaAutenticado();
+    final empresa = await _recuperarEmpresaDaSessao();
+    return estaAutenticado &&
+        empresa != null;
   }
 
   bool _sincronizacaoEmAndamentoSemErros() {
@@ -351,8 +359,25 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
         );
   }
 
-  Set<SyncModulo> _resolverModulosPermitidos() {
+  Future<Map<String, PermissaoDoUsuario>> _carregarPermissoesDoUsuario() async {
+    final usuario = await _recuperarUsuarioDaSessao();
+    if (usuario == null) {
+      return const {};
+    }
+
+    final permissoes = await _recuperarPermissoesDoUsuario(usuario.id);
+    return Map.fromEntries(
+      permissoes.map(
+        (permissao) => MapEntry(permissao.componenteId, permissao),
+      ),
+    );
+  }
+
+  Set<SyncModulo> _resolverModulosPermitidos([
+    Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
+  ]) {
     final permitidos = <SyncModulo>{};
+    final permissoes = permissoesDoUsuario ?? state.permissoesDoUsuario;
 
     if (_temAcessoAAlgumComponente(const [
       'PRDFM001',
@@ -363,7 +388,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       'PRDFM007',
       'PRDFM010',
       'PRDFM011',
-    ])) {
+    ], permissoes)) {
       permitidos.add(SyncModulo.codigos);
     }
 
@@ -373,15 +398,15 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       'BALFP002',
       'BALFP003',
       'BALFP004',
-    ])) {
+    ], permissoes)) {
       permitidos.add(SyncModulo.estoque);
     }
 
-    if (_temAcessoAAlgumComponente(const ['PRDFM010'])) {
+    if (_temAcessoAAlgumComponente(const ['PRDFM010'], permissoes)) {
       permitidos.add(SyncModulo.tabelasDePreco);
     }
 
-    if (_temAcessoAAlgumComponente(const ['PRDFM011'])) {
+    if (_temAcessoAAlgumComponente(const ['PRDFM011'], permissoes)) {
       permitidos.add(SyncModulo.precosDaReferencia);
     }
 
@@ -403,9 +428,12 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     return SyncModuloStatus.sincronizando;
   }
 
-  bool _temAcessoAAlgumComponente(List<String> componentes) {
+  bool _temAcessoAAlgumComponente(
+    List<String> componentes,
+    Map<String, PermissaoDoUsuario> permissoesDoUsuario,
+  ) {
     for (final componente in componentes) {
-      if (_permissoesController.temAcesso(idComponente: componente)) {
+      if (permissoesDoUsuario.containsKey(componente)) {
         return true;
       }
     }

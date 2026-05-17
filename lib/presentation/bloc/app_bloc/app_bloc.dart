@@ -5,13 +5,12 @@ import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/sessao.dart';
 import 'package:financeiro/use_cases.dart';
 
 part 'app_state.dart';
 part 'app_event.dart';
 
-class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
+class AppBloc extends Bloc<AppEvent, AppState>  {
   final OnAutenticado _onAutenticado;
   final OnDesautenticado _onDesautenticado;
   final EstaAutenticado _estaAutenticado;
@@ -393,25 +392,6 @@ class AppBloc extends Bloc<AppEvent, AppState> implements IAcessoGlobalSessao {
     );
   }
 
-  @override
-  int? get usuarioIdDaSessao => state.usuarioDaSessao?.id;
-
-  @override
-  int? get empresaIdDaSessao => state.empresaDaSessao?.id;
-
-  @override
-  int? get terminalIdDaSessao => state.terminalDaSessao?.id;
-
-  @override
-  String? get terminalNomeDaSessao => state.terminalDaSessao?.nome;
-
-  @override
-  int? get caixaIdDaSessao => state.caixaIdDaSessao;
-
-  @override
-  void atualizarCaixaIdDaSessao({required int terminalId, int? caixaId}) {
-    add(AppAtualizouCaixaDaSessao(terminalId: terminalId, caixaId: caixaId));
-  }
 
   @override
   Future<void> close() async {

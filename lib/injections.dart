@@ -26,6 +26,7 @@ import 'package:precos/precos_injection.dart';
 import 'package:produtos/produtos_injection.dart';
 import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/leitor/produto_busca_do_leitor_data_source.dart';
+import 'package:siv_front/presentation/acesso_global_sessao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
@@ -140,10 +141,12 @@ void _presentation() {
     )..add(AppIniciou()),
   );
 
-  sl.registerLazySingleton<IAcessoGlobalSessao>(() => sl<AppBloc>());
+  sl.registerLazySingleton<IAcessoGlobalSessao>(
+    () => AcessoGlobalSessao(appBloc: sl(), syncDataBloc: sl()),
+  );
 
   sl.registerLazySingleton<SyncDataBloc>(
-    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 }
 

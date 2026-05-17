@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:core/bloc.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
+import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -51,6 +55,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   bool _controllerInterno = false;
   bool _modoRemocao = false;
   _LeitorVisualizacao _visualizacao = _LeitorVisualizacao.historico;
+   bool _sincronizando = sl<IAcessoGlobalSessao>().dadosSincronizados;
+  StreamSubscription<bool>? _sincronizacaoSubscription;
 
   @override
   void initState() {
@@ -61,6 +67,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _controller = widget.controller ?? LeitorController();
     _bloc = _criarBloc();
     _controller.bind(_bloc);
+    final sessao = sl<IAcessoGlobalSessao>();
+    _sincronizando = !sessao.dadosSincronizados;
+    _sincronizacaoSubscription = sessao.sincronizandoDados.listen((sincronizando) {
+      if (mounted) setState(() => _sincronizando = sincronizando);
+    });
   }
 
   @override
@@ -97,6 +108,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
   @override
   void dispose() {
+    _sincronizacaoSubscription?.cancel();
     _controller.unbind(_bloc);
     _bloc.close();
     _codigoController.dispose();
@@ -437,6 +449,31 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_sincronizando) {
+      return Card(
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Sincronizando as informações, por favor aguarde',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return BlocProvider.value(
       value: _bloc,
       child: BlocConsumer<LeitorBloc, LeitorState>(

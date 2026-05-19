@@ -39,7 +39,10 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               }
 
               if (state.step == PagamentosRealizadosStep.concluido) {
-                Navigator.of(context).pop(state.resultado);
+                Navigator.of(context).pop({
+                  'formasDePagamentoRealizadas': state.resultado,
+                  'desconto': state.valorDescontoAplicado,
+                });
               }
             },
             builder: (context, state) {
@@ -79,6 +82,20 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                               : null,
                           icon: const Icon(Icons.add),
                           label: const Text('Adicionar forma de pagamento'),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: state.step == PagamentosRealizadosStep.editando
+                                ? () => _abrirDialogoDesconto(context, state)
+                                : null,
+                            icon: const Icon(Icons.percent),
+                            label: Text(
+                              state.valorDescontoAplicado > 0
+                                  ? 'Editar desconto'
+                                  : 'Adicionar desconto',
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         _DetalhePagamentoCard(state: state),
@@ -135,6 +152,14 @@ class _ResumoPagamentoCard extends StatelessWidget {
                 _InfoBox(
                   titulo: 'Valor dos produtos',
                   valor: _formatarMoeda(state.valorTotalProdutos),
+                ),
+                _InfoBox(
+                  titulo: 'Desconto',
+                  valor: _formatarMoeda(state.valorDescontoAplicado),
+                ),
+                _InfoBox(
+                  titulo: 'Total c/ desconto',
+                  valor: _formatarMoeda(state.valorTotalComDesconto),
                 ),
                 _InfoBox(
                   titulo: 'Pago bruto',
@@ -313,7 +338,7 @@ class _LinhaPagamentoCard extends StatelessWidget {
               ],
             ),
             if (linha.ehDinheiro &&
-                bloc.state.valorTotalBruto > bloc.state.valorTotalProdutos) ...[
+                bloc.state.valorTotalBruto > bloc.state.valorTotalComDesconto) ...[
               const SizedBox(height: 8),
               Text(
                 'Troco estimado: ${_formatarMoeda(bloc.state.valorTroco)}',
@@ -356,6 +381,129 @@ class _InfoBox extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+Future<void> _abrirDialogoDesconto(
+  BuildContext context,
+  PagamentosRealizadosState state,
+) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+  var tipoSelecionado = state.descontoTipo ?? DescontoTipo.valorBruto;
+  final valorInicial = state.descontoValorTexto.isNotEmpty
+      ? state.descontoValorTexto
+      : (state.descontoTipo == DescontoTipo.forcaValorTotal
+          ? state.valorTotalComDesconto.toStringAsFixed(2)
+          : state.valorDescontoAplicado.toStringAsFixed(2));
+  final controller = TextEditingController(
+    text: state.valorDescontoAplicado > 0 ? valorInicial : '',
+  );
+
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          String dica;
+          String label;
+
+          switch (tipoSelecionado) {
+            case DescontoTipo.valorBruto:
+              label = 'Valor do desconto';
+              dica =
+                  'Informe um valor entre 0 e ${_formatarMoeda(state.valorTotalProdutos)}.';
+            case DescontoTipo.porcentagem:
+              label = 'Percentual de desconto';
+              dica = 'Informe um percentual entre 0 e 100.';
+            case DescontoTipo.forcaValorTotal:
+              label = 'Novo valor total';
+              dica =
+                  'Informe o total final desejado. O desconto sera valor original menos esse total.';
+          }
+
+          return AlertDialog(
+            title: const Text('Aplicar desconto'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<DescontoTipo>(
+                  value: tipoSelecionado,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de desconto',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: DescontoTipo.valorBruto,
+                      child: Text('Valor bruto'),
+                    ),
+                    DropdownMenuItem(
+                      value: DescontoTipo.porcentagem,
+                      child: Text('Porcentagem'),
+                    ),
+                    DropdownMenuItem(
+                      value: DescontoTipo.forcaValorTotal,
+                      child: Text('Forca valor total'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      tipoSelecionado = value;
+                      controller.clear();
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: controller,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: label,
+                    border: const OutlineInputBorder(),
+                    helperText: dica,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              if (state.valorDescontoAplicado > 0)
+                TextButton(
+                  onPressed: () {
+                    bloc.add(
+                      const PagamentosRealizadosDescontoAlterado(
+                        tipo: null,
+                        valorTexto: '',
+                      ),
+                    );
+                    Navigator.of(dialogContext).pop(false);
+                  },
+                  child: const Text('Remover desconto'),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Aplicar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  if (confirmou == true) {
+    bloc.add(
+      PagamentosRealizadosDescontoAlterado(
+        tipo: tipoSelecionado,
+        valorTexto: controller.text,
       ),
     );
   }

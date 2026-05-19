@@ -298,7 +298,7 @@ class _HomePageState extends State<HomePage> {
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/selecionar_empresa');
+                  Navigator.pushNamed(context, '/login', arguments: {'trocandoDeEmpresa': true});
                 },
                 icon: const Icon(Icons.swap_horiz),
                 label: const Text('Trocar empresa'),
@@ -425,7 +425,7 @@ class _AccessSection extends StatelessWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:CrossAxisAlignment.start,
       children: [
         Text(
           title,

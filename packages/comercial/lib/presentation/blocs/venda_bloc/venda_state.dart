@@ -14,6 +14,7 @@ class VendaState extends Equatable {
   final VendaProcesso? processoAtual;
   final String? listaCompartilhadaHash;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
+  final double valorDesconto;
   final int? pedidoCriadoId;
 
   const VendaState({
@@ -26,6 +27,7 @@ class VendaState extends Equatable {
     this.processoAtual,
     this.listaCompartilhadaHash,
     this.formasDePagamentoRealizadas = const [],
+    this.valorDesconto = 0,
     this.pedidoCriadoId,
   });
 
@@ -46,6 +48,7 @@ class VendaState extends Equatable {
     Object? processoAtual = _sentinela,
     Object? listaCompartilhadaHash = _sentinela,
     Object? formasDePagamentoRealizadas = _sentinela,
+    double? valorDesconto,
     Object? pedidoCriadoId = _sentinela,
   }) {
     return VendaState(
@@ -67,10 +70,11 @@ class VendaState extends Equatable {
       listaCompartilhadaHash: identical(listaCompartilhadaHash, _sentinela)
           ? this.listaCompartilhadaHash
           : listaCompartilhadaHash as String?,
-        formasDePagamentoRealizadas:
+      formasDePagamentoRealizadas:
           identical(formasDePagamentoRealizadas, _sentinela)
-            ? this.formasDePagamentoRealizadas
-            : formasDePagamentoRealizadas as List<Map<String, dynamic>>,
+              ? this.formasDePagamentoRealizadas
+              : formasDePagamentoRealizadas as List<Map<String, dynamic>>,
+      valorDesconto: valorDesconto ?? this.valorDesconto,
       pedidoCriadoId: identical(pedidoCriadoId, _sentinela)
           ? this.pedidoCriadoId
           : pedidoCriadoId as int?,
@@ -88,6 +92,7 @@ class VendaState extends Equatable {
         processoAtual,
         listaCompartilhadaHash,
         formasDePagamentoRealizadas,
+        valorDesconto,
         pedidoCriadoId,
       ];
 }

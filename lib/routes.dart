@@ -27,7 +27,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/home': (context) => const HomePage(),
   '/sincronizacao': (context) => const SyncPage(),
   ////AUTENTICACAO:
-  '/login': (context) => const LoginPage(),
+  '/login': (context) =>  LoginPage(
+    trocandoDeEmpresa:  args(context)['trocandoDeEmpresa'] ?? false,
+  ),
   '/usuarios': (context) => const UsuariosPage(),
   '/usuario': (context) {
     return UsuarioPage(idUsuario: args(context)['idUsuario']);
@@ -303,6 +305,10 @@ Map<String, Widget Function(BuildContext)> routes = {
         (argumentos['listaCompartilhadaHash'] ?? argumentos['hashLista'])
             ?.toString() ??
         '';
+    final descontoArg = argumentos['desconto'];
+    final desconto = descontoArg is num
+      ? descontoArg.toDouble()
+      : double.tryParse(descontoArg?.toString() ?? '') ?? 0;
     final formasDePagamentoRaw =
         argumentos['formasDePagamentoRealizadas'] as List<dynamic>? ?? const [];
     final formasDePagamentoRealizadas = formasDePagamentoRaw
@@ -313,6 +319,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     return CriarRomaneioPorParametrosPage(
       hashLista: hashLista,
       formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+      desconto: desconto,
     );
   },
 

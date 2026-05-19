@@ -267,7 +267,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       situacao: state.romaneio?.situacao,
       quantidade: state.romaneio?.quantidade,
       valorBruto: state.romaneio?.valorBruto,
-      valorDesconto: state.romaneio?.valorDesconto,
+      desconto: state.romaneio?.desconto,
       valorLiquido: state.romaneio?.valorLiquido,
       data: state.romaneio?.data,
       criadoEm: state.romaneio?.criadoEm,

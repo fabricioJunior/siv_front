@@ -1,3 +1,4 @@
+
 import 'package:comercial/models.dart';
 
 class RomaneioDto implements Romaneio {
@@ -24,7 +25,7 @@ class RomaneioDto implements Romaneio {
   @override
   final double? valorBruto;
   @override
-  final double? valorDesconto;
+  final double? desconto;
   @override
   final double? valorLiquido;
   @override
@@ -38,6 +39,7 @@ class RomaneioDto implements Romaneio {
   @override
   final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
 
+
   const RomaneioDto({
     this.id,
     this.pessoaId,
@@ -50,7 +52,7 @@ class RomaneioDto implements Romaneio {
     this.situacao,
     this.quantidade,
     this.valorBruto,
-    this.valorDesconto,
+    this.desconto,
     this.valorLiquido,
     this.observacao,
     this.data,
@@ -72,7 +74,7 @@ class RomaneioDto implements Romaneio {
       situacao: json['situacao']?.toString(),
       quantidade: _toDouble(json['quantidade']),
       valorBruto: _toDouble(json['valorBruto']),
-      valorDesconto: _toDouble(json['valorDesconto']),
+      desconto: _toDouble(json['desconto']) ?? _toDouble(json['valorDesconto']),
       valorLiquido: _toDouble(json['valorLiquido']),
       observacao: json['observacao']?.toString(),
       data: _toDate(json['data']),
@@ -81,6 +83,7 @@ class RomaneioDto implements Romaneio {
       formasDePagamentoRealizadas: _toFormasDePagamentoRealizadas(
         json['formasDePagamentoRealizadas'] ?? json['pagamentos'],
       ),
+     
     );
   }
 
@@ -97,7 +100,7 @@ class RomaneioDto implements Romaneio {
       situacao: romaneio.situacao,
       quantidade: romaneio.quantidade,
       valorBruto: romaneio.valorBruto,
-      valorDesconto: romaneio.valorDesconto,
+      desconto: romaneio.desconto,
       valorLiquido: romaneio.valorLiquido,
       observacao: romaneio.observacao,
       data: romaneio.data,
@@ -113,6 +116,7 @@ class RomaneioDto implements Romaneio {
       'funcionarioId': funcionarioId,
       'tabelaPrecoId': tabelaPrecoId,
       'operacao': operacao?.toJsonValue(),
+      'desconto': desconto,
     };
   }
 
@@ -121,6 +125,7 @@ class RomaneioDto implements Romaneio {
       'pessoaId': pessoaId,
       'funcionarioId': funcionarioId,
       'tabelaPrecoId': tabelaPrecoId,
+      'desconto': desconto,
     };
   }
 
@@ -137,13 +142,14 @@ class RomaneioDto implements Romaneio {
         situacao,
         quantidade,
         valorBruto,
-        valorDesconto,
+        desconto,
         valorLiquido,
         observacao,
         data,
         criadoEm,
         atualizadoEm,
         formasDePagamentoRealizadas,
+        desconto,
       ];
 
   @override
@@ -173,7 +179,7 @@ List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
 
     final json = Map<String, dynamic>.from(item);
     final valor = _toDouble(json['valor']) ?? 0;
-    if (valor <= 0) {
+    if (valor == 0) {
       continue;
     }
 

@@ -8,7 +8,7 @@ class TerminaisDoUsuarioRemoteDataSource extends RemoteDataSourceBase
   TerminaisDoUsuarioRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/v1/usuarios/{usuarioId}/terminais/{id}';
+  String get path => '/v1/usuarios/{usuarioId}/terminais/empresas/{id}';
 
   @override
   Future<List<TerminalDoUsuario>> buscarTerminaisDoUsuario(
@@ -16,8 +16,7 @@ class TerminaisDoUsuarioRemoteDataSource extends RemoteDataSourceBase
     int idEmpresa,
   ) async {
     final response = await get(
-      pathParameters: {'usuarioId': usuarioId.toString()},
-      queryParameters: {'id': idEmpresa.toString()},
+      pathParameters: {'usuarioId': usuarioId.toString(), 'id': idEmpresa.toString()},
     );
 
     if (response.statusCode == 204 ||

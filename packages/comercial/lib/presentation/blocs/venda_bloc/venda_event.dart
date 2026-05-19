@@ -45,14 +45,16 @@ class VendaEdicaoSolicitada extends VendaEvent {
 class VendaFinalizarSolicitada extends VendaEvent {
   final List<Map<String, dynamic>> itens;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
+  final double valorDesconto;
 
   const VendaFinalizarSolicitada({
     required this.itens,
     required this.formasDePagamentoRealizadas,
+    this.valorDesconto = 0,
   });
 
   @override
-  List<Object?> get props => [itens, formasDePagamentoRealizadas];
+  List<Object?> get props => [itens, formasDePagamentoRealizadas, valorDesconto];
 }
 
 class VendaCriarPedidoSolicitado extends VendaEvent {

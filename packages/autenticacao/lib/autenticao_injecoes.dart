@@ -7,6 +7,7 @@ import 'package:autenticacao/data/remote/grupos_de_acesso_remote_data_source.dar
 import 'package:autenticacao/data/remote/permissoes_remote_data_source.dart';
 import 'package:autenticacao/data/remote_data_sourcers.dart';
 import 'package:autenticacao/data/repositories/empresas_repository.dart';
+import 'package:autenticacao/data/repositories/credenciais_de_autenticacao_repository.dart';
 import 'package:autenticacao/data/repositories/grupos_de_acesso_repository.dart';
 import 'package:autenticacao/data/repositories/licenciados_repository.dart';
 import 'package:autenticacao/data/repositories/permissoes_do_usuario_repository.dart';
@@ -20,6 +21,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_terminais_da_emp
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_terminais_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart';
+import 'package:autenticacao/domain/data/repositories/i_credenciais_de_autenticacao_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_grupos_de_acesso_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_permissoes_do_usuario_repository.dart';
@@ -66,6 +68,9 @@ void resolverDependenciasAutenticacao() {
 void _presentation() {
   sl.registerFactory<LoginBloc>(
     () => LoginBloc(
+      sl(),
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -140,7 +145,20 @@ void _usesCases() {
       tokenRepository: sl(),
       usuariosRepository: sl(),
       licenciadosRepository: sl(),
+      limparCredenciaisDeAutenticacao: sl(),
     ),
+  );
+
+  sl.registerFactory<SalvarCredenciaisDeAutenticacao>(
+    () => SalvarCredenciaisDeAutenticacao(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarCredenciaisDeAutenticacao>(
+    () => RecuperarCredenciaisDeAutenticacao(repository: sl()),
+  );
+
+  sl.registerFactory<LimparCredenciaisDeAutenticacao>(
+    () => LimparCredenciaisDeAutenticacao(repository: sl()),
   );
 
   sl.registerSingleton<OnAutenticado>(
@@ -322,6 +340,10 @@ void _repositories() {
       localDataSource: sl(),
       remoteDataSource: sl(),
     ),
+  );
+
+  sl.registerFactory<ICredenciaisDeAutenticacaoRepository>(
+    () => const CredenciaisDeAutenticacaoRepository(),
   );
 
   sl.registerFactory<IUsuariosRepository>(

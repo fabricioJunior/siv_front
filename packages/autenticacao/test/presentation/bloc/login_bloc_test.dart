@@ -14,14 +14,20 @@ final CriarTokenDeAutenticacao criarTokenDeAutenticacao =
     MockCriarTokenDeAutenticacao();
 final RecuperarUsuarioDaSessao recuperarUsuarioDaSessao =
     MockRecuperarUsuarioDaSessao();
+final RecuperarCredenciaisDeAutenticacao recuperarCredenciaisDeAutenticacao =
+  MockRecuperarCredenciaisDeAutenticacao();
 final RecuperarEmpresas recuperarEmpresas = MockRecuperarEmpresas();
 final RecuperarLicenciados recuperarLicenciados = MockRecuperarLicenciados();
+final RecuperarLicenciadoDaSessao recuperarLicenciadoDaSessao =
+  MockRecuperarLicenciadoDaSessao();
 final SalvarLicenciadoDaSessao salvarLicenciadoDaSessao =
     MockSalvarLicenciadoDaSessao();
 final SalvarTerminalDaSessao salvarTerminalDaSessao =
     MockSalvarTerminalDaSessao();
 final LimparTerminalDaSessao limparTerminalDaSessao =
     MockLimparTerminalDaSessao();
+final SalvarCredenciaisDeAutenticacao salvarCredenciaisDeAutenticacao =
+  MockSalvarCredenciaisDeAutenticacao();
 final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
 final RecuperarTerminaisDoUsuarioPorEmpresa
     recuperarTerminaisDoUsuarioPorEmpresa =
@@ -29,6 +35,12 @@ final RecuperarTerminaisDoUsuarioPorEmpresa
 late LoginBloc loginBloc;
 
 class MockRecuperarLicenciados extends Mock implements RecuperarLicenciados {}
+
+class MockRecuperarCredenciaisDeAutenticacao extends Mock
+  implements RecuperarCredenciaisDeAutenticacao {}
+
+class MockRecuperarLicenciadoDaSessao extends Mock
+  implements RecuperarLicenciadoDaSessao {}
 
 class MockSalvarLicenciadoDaSessao extends Mock
     implements SalvarLicenciadoDaSessao {
@@ -50,6 +62,12 @@ class MockLimparTerminalDaSessao extends Mock
   Future<void> call() async {}
 }
 
+class MockSalvarCredenciaisDeAutenticacao extends Mock
+    implements SalvarCredenciaisDeAutenticacao {
+  @override
+  Future<void> call({required String usuario, required String senha}) async {}
+}
+
 class FakeRecuperarTerminaisDoUsuarioPorEmpresa
     implements RecuperarTerminaisDoUsuarioPorEmpresa {
   @override
@@ -65,11 +83,14 @@ void main() {
     loginBloc = LoginBloc(
       criarTokenDeAutenticacao,
       recuperarUsuarioDaSessao,
+      recuperarCredenciaisDeAutenticacao,
       recuperarEmpresas,
       recuperarLicenciados,
+      recuperarLicenciadoDaSessao,
       salvarLicenciadoDaSessao,
       salvarTerminalDaSessao,
       limparTerminalDaSessao,
+      salvarCredenciaisDeAutenticacao,
       apiBaseUrlConfig,
       recuperarTerminaisDoUsuarioPorEmpresa,
     );

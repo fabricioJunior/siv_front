@@ -21,6 +21,7 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosFormaAlterada>(_onFormaAlterada);
     on<PagamentosRealizadosValorAlterado>(_onValorAlterado);
     on<PagamentosRealizadosParcelasAlteradas>(_onParcelasAlteradas);
+    on<PagamentosRealizadosDescontoAlterado>(_onDescontoAlterado);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
   }
 
@@ -142,6 +143,75 @@ class PagamentosRealizadosBloc
     );
   }
 
+  void _onDescontoAlterado(
+    PagamentosRealizadosDescontoAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    if (event.tipo == null || event.valorTexto.trim().isEmpty) {
+      emit(
+        state.copyWith(
+          descontoTipo: null,
+          descontoValorTexto: '',
+          valorDescontoAplicado: 0,
+          erro: null,
+        ),
+      );
+      return;
+    }
+
+    final valorBase = state.valorTotalProdutos;
+    final valorInformado = _toDouble(event.valorTexto);
+    if (valorInformado == null) {
+      emit(state.copyWith(erro: 'Informe um valor válido para desconto.'));
+      return;
+    }
+
+    double descontoAplicado;
+    switch (event.tipo!) {
+      case DescontoTipo.valorBruto:
+        if (valorInformado < 0 || valorInformado > valorBase) {
+          emit(
+            state.copyWith(
+              erro:
+                  'O desconto em valor bruto deve estar entre 0 e ${_formatarMoeda(valorBase)}.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorInformado;
+      case DescontoTipo.porcentagem:
+        if (valorInformado < 0 || valorInformado > 100) {
+          emit(
+            state.copyWith(
+              erro: 'O desconto em porcentagem deve estar entre 0 e 100.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorBase * (valorInformado / 100);
+      case DescontoTipo.forcaValorTotal:
+        if (valorInformado < 0 || valorInformado > valorBase) {
+          emit(
+            state.copyWith(
+              erro:
+                  'O valor total forçado deve estar entre 0 e ${_formatarMoeda(valorBase)}.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorBase - valorInformado;
+    }
+
+    emit(
+      state.copyWith(
+        descontoTipo: event.tipo,
+        descontoValorTexto: event.valorTexto,
+        valorDescontoAplicado: double.parse(descontoAplicado.toStringAsFixed(2)),
+        erro: null,
+      ),
+    );
+  }
+
   void _onFinalizacaoSolicitada(
     PagamentosRealizadosFinalizacaoSolicitada event,
     Emitter<PagamentosRealizadosState> emit,
@@ -209,16 +279,17 @@ class PagamentosRealizadosBloc
 
     final totalBruto = _calcularTotalBruto(linhasValidadas);
     final possuiDinheiro = linhasValidadas.any((linha) => linha.ehDinheiro);
-    final troco = possuiDinheiro && totalBruto > resumo.valorTotalProdutos
-        ? totalBruto - resumo.valorTotalProdutos
+    final totalComDesconto = state.valorTotalComDesconto;
+    final troco = possuiDinheiro && totalBruto > totalComDesconto
+        ? totalBruto - totalComDesconto
         : 0.0;
     final totalLiquido = totalBruto - troco;
 
-    if ((totalLiquido - resumo.valorTotalProdutos).abs() > 0.01) {
+    if ((totalLiquido - totalComDesconto).abs() > 0.01) {
       emit(
         state.copyWith(
           erro:
-              'O total dos pagamentos deve ser igual ao valor pendente de ${_formatarMoeda(resumo.valorTotalProdutos)}.',
+              'O total dos pagamentos deve ser igual ao valor pendente de ${_formatarMoeda(totalComDesconto)}.',
         ),
       );
       return;

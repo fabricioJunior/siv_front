@@ -125,6 +125,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           formasDePagamentoRealizadas: event.formasDePagamentoRealizadas
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false),
+          valorDesconto: event.valorDesconto,
           erro: null,
         ),
       );

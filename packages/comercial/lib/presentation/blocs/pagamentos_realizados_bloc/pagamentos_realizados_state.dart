@@ -8,12 +8,21 @@ enum PagamentosRealizadosStep {
   concluido,
 }
 
+enum DescontoTipo {
+  valorBruto,
+  porcentagem,
+  forcaValorTotal,
+}
+
 class PagamentosRealizadosState extends Equatable {
   final PagamentosRealizadosStep step;
   final String? hashLista;
   final PagamentosRealizadosResumo? resumo;
   final List<SelectData> formasDePagamento;
   final List<PagamentoRealizadoLinha> linhas;
+  final DescontoTipo? descontoTipo;
+  final String descontoValorTexto;
+  final double valorDescontoAplicado;
   final String? erro;
   final List<Map<String, dynamic>> resultado;
 
@@ -23,20 +32,32 @@ class PagamentosRealizadosState extends Equatable {
     this.resumo,
     this.formasDePagamento = const [],
     this.linhas = const [],
+    this.descontoTipo,
+    this.descontoValorTexto = '',
+    this.valorDescontoAplicado = 0,
     this.erro,
     this.resultado = const [],
   });
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
+  double get valorTotalComDesconto =>
+      (valorTotalProdutos - valorDescontoAplicado)
+          .clamp(0, double.infinity)
+          .toDouble();
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
   double get valorTotalBruto =>
       linhas.fold<double>(0, (soma, linha) => soma + linha.valor);
-  double get valorTroco => _possuiDinheiro && valorTotalBruto > valorTotalProdutos
-      ? valorTotalBruto - valorTotalProdutos
-      : 0;
+  double get valorTroco =>
+      _possuiDinheiro && valorTotalBruto > valorTotalComDesconto
+          ? valorTotalBruto - valorTotalComDesconto
+          : 0;
   double get valorLiquido => valorTotalBruto - valorTroco;
   double get valorRestante =>
-      (valorTotalProdutos - valorLiquido).clamp(0, double.infinity).toDouble();
+      (valorTotalComDesconto - valorLiquido)
+          .clamp(0, double.infinity)
+          .toDouble();
+  double get valorDescontoAplicadoArredondado =>
+      double.parse(valorDescontoAplicado.toStringAsFixed(2));
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
   bool get podeFinalizar =>
       step == PagamentosRealizadosStep.editando && linhas.isNotEmpty;
@@ -49,6 +70,9 @@ class PagamentosRealizadosState extends Equatable {
     PagamentosRealizadosResumo? resumo,
     List<SelectData>? formasDePagamento,
     List<PagamentoRealizadoLinha>? linhas,
+    Object? descontoTipo = _sentinela,
+    String? descontoValorTexto,
+    double? valorDescontoAplicado,
     Object? erro = _sentinela,
     List<Map<String, dynamic>>? resultado,
   }) {
@@ -59,6 +83,11 @@ class PagamentosRealizadosState extends Equatable {
       resumo: resumo ?? this.resumo,
       formasDePagamento: formasDePagamento ?? this.formasDePagamento,
       linhas: linhas ?? this.linhas,
+      descontoTipo: identical(descontoTipo, _sentinela)
+          ? this.descontoTipo
+          : descontoTipo as DescontoTipo?,
+      descontoValorTexto: descontoValorTexto ?? this.descontoValorTexto,
+      valorDescontoAplicado: valorDescontoAplicado ?? this.valorDescontoAplicado,
       erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       resultado: resultado ?? this.resultado,
     );
@@ -71,6 +100,9 @@ class PagamentosRealizadosState extends Equatable {
         resumo,
         formasDePagamento,
         linhas,
+        descontoTipo,
+        descontoValorTexto,
+        valorDescontoAplicadoArredondado,
         erro,
         resultado,
       ];

@@ -138,6 +138,9 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
     )..add(AppIniciou()),
   );
 

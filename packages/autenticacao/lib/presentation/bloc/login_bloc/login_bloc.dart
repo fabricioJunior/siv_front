@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io' show SocketException;
 
-import 'package:autenticacao/domain/usecases/criar_token_de_autenticacao.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
@@ -19,11 +18,14 @@ part 'login_event.dart';
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final CriarTokenDeAutenticacao _criarTokenDeAutenticacao;
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
+  final RecuperarCredenciaisDeAutenticacao _recuperarCredenciaisDeAutenticacao;
   final RecuperarEmpresas _recuperarEmpresas;
   final RecuperarLicenciados _recuperarLicenciados;
+  final RecuperarLicenciadoDaSessao _recuperarLicenciadoDaSessao;
   final SalvarLicenciadoDaSessao _salvarLicenciadoDaSessao;
   final SalvarTerminalDaSessao _salvarTerminalDaSessao;
   final LimparTerminalDaSessao _limparTerminalDaSessao;
+  final SalvarCredenciaisDeAutenticacao _salvarCredenciaisDeAutenticacao;
   final ApiBaseUrlConfig _apiBaseUrlConfig;
   final RecuperarTerminaisDoUsuarioPorEmpresa
       _recuperarTerminaisDoUsuarioPorEmpresa;
@@ -31,20 +33,110 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc(
     this._criarTokenDeAutenticacao,
     this._recuperarUsuarioDaSessao,
+    this._recuperarCredenciaisDeAutenticacao,
     this._recuperarEmpresas,
     this._recuperarLicenciados,
+    this._recuperarLicenciadoDaSessao,
     this._salvarLicenciadoDaSessao,
     this._salvarTerminalDaSessao,
     this._limparTerminalDaSessao,
+    this._salvarCredenciaisDeAutenticacao,
     this._apiBaseUrlConfig,
     this._recuperarTerminaisDoUsuarioPorEmpresa,
   ) : super(const LoginInicial()) {
     on<LoginCarregouLicenciados>(_onLoginCarregouLicenciados);
     on<LoginCarregouEmpresas>(_onLoginCarregouEmpresas);
+    on<LoginReiniciouSelecaoDeEmpresa>(_onLoginReiniciouSelecaoDeEmpresa);
     on<LoginSelecionouLicenciado>(_onLoginSelecionouLicenciado);
     on<LoginAdicionouUsuario>(_onUsuarioAdicionoUsuario);
     on<LoginAdicionouSenha>(_onLoginAdicionouSenha);
     on<LoginAutenticou>(_onLoginAutenticou);
+  }
+
+  FutureOr<void> _onLoginReiniciouSelecaoDeEmpresa(
+    LoginReiniciouSelecaoDeEmpresa event,
+    Emitter<LoginState> emit,
+  ) async {
+    try {
+      emit(LoginCarregarLicenciadosEmProgresso(state));
+
+      final credenciais = await _recuperarCredenciaisDeAutenticacao.call();
+      final usuarioDaSessao = await _recuperarUsuarioDaSessao.call();
+      if (credenciais == null ||
+          credenciais.usuario.trim().isEmpty ||
+          credenciais.senha.isEmpty) {
+        emit(
+          LoginAutenticarFalha(
+            state,
+            tipo: LoginErroTipo.validacao,
+            erro:
+                'Não foi possível recuperar as credenciais salvas. Faça login novamente para selecionar a empresa.',
+          ),
+        );
+        return;
+      }
+
+      final licenciados = await _recuperarLicenciados.call();
+      final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
+
+      Licenciado? licenciadoSelecionado = licenciadoDaSessao;
+      if (licenciadoSelecionado != null &&
+          !licenciados.any((item) => item.id == licenciadoSelecionado!.id)) {
+        licenciadoSelecionado = null;
+      }
+
+      emit(
+        LoginCarregarLicenciadosSucesso(
+          state,
+          licenciados: licenciados,
+        ),
+      );
+      emit(
+        LoginAdicionarUsuarioSucesso(
+          state,
+          usuario: credenciais.usuario.trim(),
+        ),
+      );
+      emit(
+        LoginAdicionarSenhaSucesso(
+          state,
+          senha: credenciais.senha,
+        ),
+      );
+
+      if (licenciadoSelecionado != null) {
+        _apiBaseUrlConfig.atualizar(licenciadoSelecionado.urlApi);
+        emit(
+          LoginSelecionarLicenciadoSucesso(
+            state,
+            licenciadoSelecionado: licenciadoSelecionado,
+          ),
+        );
+      }
+
+      emit(LoginCarregarEmpresasEmProgresso(
+        state,
+      ));
+      final empresas = await _recuperarEmpresas.call();
+      await _limparTerminalDaSessao.call();
+      emit(
+        LoginAutenticarSucesso(
+          state,
+          empresas: empresas,
+          idEmpresa: null,
+          usuarioDaSessao: usuarioDaSessao,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        _criarEstadoDeFalha(
+          e,
+          currentState: state,
+          fallbackType: LoginErroTipo.carregamentoEmpresas,
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onLoginCarregouEmpresas(
@@ -180,13 +272,16 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         );
         return;
       }
-
-      await _salvarLicenciadoDaSessao.call(state.licenciadoSelecionado!);
       if (event.terminal != null) {
         await _salvarTerminalDaSessao.call(event.terminal!);
       } else if (event.empresa != null) {
         await _limparTerminalDaSessao.call();
       }
+      await _salvarLicenciadoDaSessao.call(state.licenciadoSelecionado!);
+      await _salvarCredenciaisDeAutenticacao.call(
+        usuario: usuario,
+        senha: senha,
+      );
 
       List<Empresa> empresas;
       try {

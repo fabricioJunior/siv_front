@@ -18,6 +18,14 @@ class AppSelecionouTerminalDaSessao extends AppEvent {
   AppSelecionouTerminalDaSessao({required this.terminal});
 }
 
+class AppLimpouTerminalDaSessao extends AppEvent {}
+
+class AppSelecionouEmpresaDaSessao extends AppEvent {
+  final Empresa empresa;
+
+  AppSelecionouEmpresaDaSessao({required this.empresa});
+}
+
 class AppAtualizouCaixaDaSessao extends AppEvent {
   final int terminalId;
   final int? caixaId;

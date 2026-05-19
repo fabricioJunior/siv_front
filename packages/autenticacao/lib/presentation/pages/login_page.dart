@@ -5,7 +5,9 @@ import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+
+  final bool trocandoDeEmpresa;
+  const LoginPage({super.key, this.trocandoDeEmpresa = false,});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -19,7 +21,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    bloc.add(LoginCarregouLicenciados());
+    if (widget.trocandoDeEmpresa) {
+      bloc.add(LoginReiniciouSelecaoDeEmpresa());
+    } else {
+      bloc.add(LoginCarregouLicenciados());
+    }
   }
 
   @override
@@ -84,6 +90,9 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                     );
+                  }
+                  if(widget.trocandoDeEmpresa){
+                     return Center(child: CircularProgressIndicator.adaptive());
                   }
                   return Form(
                     key: formKey,

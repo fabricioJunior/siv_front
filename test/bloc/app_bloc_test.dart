@@ -23,6 +23,10 @@ final RecuperarLicenciadoDaSessao recuperarLicenciadoDaSessao =
 final ApiBaseUrlConfig apiBaseUrlConfig = MockApiBaseUrlConfig();
 final RecuperarEmpresaDaSessao recuperarEmpresaDaSessao =
     MockRecuperarEmpresaDaSessao();
+final CriarTokenDeAutenticacao criarTokenDeAutenticacao =
+  FakeCriarTokenDeAutenticacao();
+final RecuperarCredenciaisDeAutenticacao recuperarCredenciaisDeAutenticacao =
+  FakeRecuperarCredenciaisDeAutenticacao();
 final RecuperarTerminalDaSessao recuperarTerminalDaSessao =
     FakeRecuperarTerminalDaSessao();
 final RecuperarTerminaisDoUsuarioPorEmpresa
@@ -30,6 +34,8 @@ recuperarTerminaisDoUsuarioPorEmpresa =
     FakeRecuperarTerminaisDoUsuarioPorEmpresa();
 final SalvarTerminalDaSessao salvarTerminalDaSessao =
     FakeSalvarTerminalDaSessao();
+final LimparTerminalDaSessao limparTerminalDaSessao =
+  FakeLimparTerminalDaSessao();
 
 final SincronizarPermissoesDoUsuario sincronizarPermissoesDoUsuario =
     MockSincronizarPermissoesDoUsuario();
@@ -53,6 +59,29 @@ class FakeRecuperarTerminalDaSessao implements RecuperarTerminalDaSessao {
   Future<TerminalDoUsuario?> call() async => null;
 }
 
+class FakeCriarTokenDeAutenticacao implements CriarTokenDeAutenticacao {
+  @override
+  Future<Token?> call({
+    required String usuario,
+    required String senha,
+    Empresa? empresa,
+  }) async {
+    return Token(
+      jwtToken: '',
+      dataDeCriacao: DateTime.now(),
+      dataDeExpiracao: DateTime.now(),
+      idEmpresa: empresa?.id,
+    );
+  }
+}
+
+class FakeRecuperarCredenciaisDeAutenticacao
+    implements RecuperarCredenciaisDeAutenticacao {
+  @override
+  Future<CredenciaisDeAutenticacao?> call() async =>
+      const CredenciaisDeAutenticacao(usuario: 'user', senha: 'pass');
+}
+
 class FakeRecuperarTerminaisDoUsuarioPorEmpresa
     implements RecuperarTerminaisDoUsuarioPorEmpresa {
   @override
@@ -65,6 +94,11 @@ class FakeRecuperarTerminaisDoUsuarioPorEmpresa
 class FakeSalvarTerminalDaSessao implements SalvarTerminalDaSessao {
   @override
   Future<void> call(TerminalDoUsuario terminal) async {}
+}
+
+class FakeLimparTerminalDaSessao implements LimparTerminalDaSessao {
+  @override
+  Future<void> call() async {}
 }
 
 class FakeRecuperarCaixaAberto implements RecuperarCaixaAberto {
@@ -102,9 +136,12 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        criarTokenDeAutenticacao,
+        recuperarCredenciaisDeAutenticacao,
         recuperarTerminalDaSessao,
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
+        limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         recuperarCaixaAberto,
         apiBaseUrlConfig,
@@ -139,9 +176,12 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        criarTokenDeAutenticacao,
+        recuperarCredenciaisDeAutenticacao,
         recuperarTerminalDaSessao,
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
+        limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         recuperarCaixaAberto,
         apiBaseUrlConfig,
@@ -171,9 +211,12 @@ void main() {
         onDesautenticado,
         recuperarLicenciadoDaSessao,
         recuperarEmpresaDaSessao,
+        criarTokenDeAutenticacao,
+        recuperarCredenciaisDeAutenticacao,
         recuperarTerminalDaSessao,
         recuperarTerminaisDoUsuarioPorEmpresa,
         salvarTerminalDaSessao,
+        limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
         recuperarCaixaAberto,
         apiBaseUrlConfig,

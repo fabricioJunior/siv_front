@@ -656,8 +656,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
                   valor: state.tabelaPrecoId != null
                       ? 'Tabela de preço #${state.tabelaPrecoId}'
                       : '-',
-                  complemento: romaneio?.valorDesconto != null
-                      ? 'Desconto ${_formatarValorMonetario(romaneio?.valorDesconto)}'
+                  complemento: romaneio?.desconto != null
+                      ? 'Desconto ${_formatarValorMonetario(romaneio?.desconto)}'
                       : null,
                 ),
               ],

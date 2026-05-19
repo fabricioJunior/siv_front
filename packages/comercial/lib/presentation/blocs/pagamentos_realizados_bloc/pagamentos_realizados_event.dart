@@ -72,6 +72,19 @@ class PagamentosRealizadosParcelasAlteradas extends PagamentosRealizadosEvent {
   List<Object?> get props => [linhaId, parcelasTexto];
 }
 
+class PagamentosRealizadosDescontoAlterado extends PagamentosRealizadosEvent {
+  final DescontoTipo? tipo;
+  final String valorTexto;
+
+  const PagamentosRealizadosDescontoAlterado({
+    required this.tipo,
+    required this.valorTexto,
+  });
+
+  @override
+  List<Object?> get props => [tipo, valorTexto];
+}
+
 class PagamentosRealizadosFinalizacaoSolicitada extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
 }

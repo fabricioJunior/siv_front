@@ -112,6 +112,7 @@ class RomaneioCriacaoBloc
                 funcionarioId: listaCompartilhada.funcionarioId,
                 tabelaPrecoId: listaCompartilhada.tabelaPrecoId,
                 operacao: operacao,
+                desconto: event.desconto,
               ),
             )
           : await _recuperarRomaneio.call(listaCompartilhada.idLista!);

@@ -78,6 +78,7 @@ class _VendaPageState extends State<VendaPage> {
                 'listaCompartilhadaHash': listaCompartilhadaHash,
                 'formasDePagamentoRealizadas':
                     state.formasDePagamentoRealizadas,
+                'desconto': state.valorDesconto,
               },
             );
 
@@ -607,7 +608,7 @@ class _VendaPageState extends State<VendaPage> {
         .toList(growable: false);
 
     if (acao == _VendaAcao.finalizar) {
-      final formasDePagamentoRealizadas = await showDialog<List<Map<String, dynamic>>>(
+      final pagamentoResultado = await showDialog<Map<String, dynamic>>(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) {
@@ -624,14 +625,24 @@ class _VendaPageState extends State<VendaPage> {
         },
       );
 
-      if (formasDePagamentoRealizadas == null) {
+      if (pagamentoResultado == null) {
         return;
       }
+
+      final formasDePagamentoRaw =
+          pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
+              const [];
+      final formasDePagamentoRealizadas = formasDePagamentoRaw
+          .whereType<Map<String, dynamic>>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList(growable: false);
+      final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
 
       bloc.add(
         VendaFinalizarSolicitada(
           itens: itens,
           formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+          valorDesconto: valorDesconto,
         ),
       );
       return;
@@ -717,5 +728,11 @@ class _VendaPageState extends State<VendaPage> {
 
   String _formatarMoeda(double valor) {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
   }
 }

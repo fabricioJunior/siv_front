@@ -620,6 +620,7 @@ class _VendaPageState extends State<VendaPage> {
               quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
               valorTotalProdutos: _leitorController.valorTotalLido,
             ),
+            pessoaId: clienteSelecionado?.id,
             formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
           );
         },

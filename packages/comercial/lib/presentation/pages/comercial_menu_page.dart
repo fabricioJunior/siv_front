@@ -29,6 +29,15 @@ class ComercialMenuPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ItemMenu(
+            icon: Icons.assignment_return_outlined,
+            titulo: 'Devolução',
+            subtitulo:
+                'Seleção do romaneio original, leitura dos itens e recebimento no caixa.',
+            componente: 'PEDFC001',
+            onTap: () => Navigator.pushNamed(context, '/devolucao'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
             icon: Icons.receipt_long,
             titulo: 'Pedidos',
             subtitulo: 'Criação, conferência, faturamento e acompanhamento.',

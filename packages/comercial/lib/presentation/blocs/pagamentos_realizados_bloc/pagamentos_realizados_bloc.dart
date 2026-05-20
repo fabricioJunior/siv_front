@@ -12,9 +12,12 @@ part 'pagamentos_realizados_state.dart';
 class PagamentosRealizadosBloc
     extends Bloc<PagamentosRealizadosEvent, PagamentosRealizadosState> {
   final CarregarResumoPagamentosRealizados _carregarResumo;
+  final BuscarSaldoCreditoDevolucao _buscarSaldoCreditoDevolucao;
 
-  PagamentosRealizadosBloc(this._carregarResumo)
-      : super(const PagamentosRealizadosState()) {
+  PagamentosRealizadosBloc(
+    this._carregarResumo,
+    this._buscarSaldoCreditoDevolucao,
+  ) : super(const PagamentosRealizadosState()) {
     on<PagamentosRealizadosIniciado>(_onIniciado);
     on<PagamentosRealizadosLinhaAdicionada>(_onLinhaAdicionada);
     on<PagamentosRealizadosLinhaRemovida>(_onLinhaRemovida);
@@ -34,21 +37,39 @@ class PagamentosRealizadosBloc
         step: PagamentosRealizadosStep.carregando,
         erro: null,
         hashLista: event.hashLista,
+        pessoaId: event.pessoaId,
+        carregandoSaldoCreditoDevolucao: false,
+        saldoCreditoDevolucao: 0,
       ),
     );
 
     try {
-      final resumo = event.resumoInicial ?? await _carregarResumo.call(event.hashLista);
+      final resumo =
+          event.resumoInicial ?? await _carregarResumo.call(event.hashLista);
+      final pessoaId = event.pessoaId ?? resumo.listaCompartilhada?.pessoaId;
       emit(
         state.copyWith(
           step: PagamentosRealizadosStep.editando,
+          pessoaId: pessoaId,
           resumo: resumo,
           formasDePagamento: const [],
           linhas: [PagamentoRealizadoLinha.nova()],
           erro: null,
           resultado: const [],
+          carregandoSaldoCreditoDevolucao: pessoaId != null,
         ),
       );
+
+      if (pessoaId != null) {
+        final saldo =
+            await _buscarSaldoCreditoDevolucao.call(pessoaId: pessoaId);
+        emit(
+          state.copyWith(
+            saldoCreditoDevolucao: saldo,
+            carregandoSaldoCreditoDevolucao: false,
+          ),
+        );
+      }
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -206,7 +227,8 @@ class PagamentosRealizadosBloc
       state.copyWith(
         descontoTipo: event.tipo,
         descontoValorTexto: event.valorTexto,
-        valorDescontoAplicado: double.parse(descontoAplicado.toStringAsFixed(2)),
+        valorDescontoAplicado:
+            double.parse(descontoAplicado.toStringAsFixed(2)),
         erro: null,
       ),
     );
@@ -235,7 +257,8 @@ class PagamentosRealizadosBloc
 
       final valor = _toDouble(linha.valorTexto);
       if (valor == null || valor <= 0) {
-        emit(state.copyWith(erro: 'Informe um valor válido em todas as linhas.'));
+        emit(state.copyWith(
+            erro: 'Informe um valor válido em todas as linhas.'));
         return;
       }
 
@@ -278,6 +301,30 @@ class PagamentosRealizadosBloc
     }
 
     final totalBruto = _calcularTotalBruto(linhasValidadas);
+    final totalCreditoDevolucao = linhasValidadas
+        .where((linha) => linha.ehCreditoDevolucao)
+        .fold<double>(0, (acumulado, linha) => acumulado + linha.valor);
+
+    if (totalCreditoDevolucao > 0 && state.carregandoSaldoCreditoDevolucao) {
+      emit(
+        state.copyWith(
+          erro:
+              'Aguarde o carregamento do saldo de credito de devolucao para finalizar.',
+        ),
+      );
+      return;
+    }
+
+    if (totalCreditoDevolucao - state.saldoCreditoDevolucao > 0.01) {
+      emit(
+        state.copyWith(
+          erro:
+              'O valor em credito de devolucao excede o saldo disponivel de ${_formatarMoeda(state.saldoCreditoDevolucao)}.',
+        ),
+      );
+      return;
+    }
+
     final possuiDinheiro = linhasValidadas.any((linha) => linha.ehDinheiro);
     final totalComDesconto = state.valorTotalComDesconto;
     final troco = possuiDinheiro && totalBruto > totalComDesconto
@@ -310,7 +357,8 @@ class PagamentosRealizadosBloc
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {
-    return linhas.fold<double>(0, (acumulado, linha) => acumulado + linha.valor);
+    return linhas.fold<double>(
+        0, (acumulado, linha) => acumulado + linha.valor);
   }
 
   String _formatarMoeda(double valor) {

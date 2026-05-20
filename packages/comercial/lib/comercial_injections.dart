@@ -15,6 +15,15 @@ void _remoteDataSources() {
     () => ReceberRomaneioNoCaixaRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<ICreditoDevolucaoRemoteDataSource>(
+    () => CreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
+  sl.registerFactory<ISaldoTotalCreditoDevolucaoRemoteDataSource>(
+    () =>
+        SaldoTotalCreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IPedidosRemoteDataSource>(
     () => PedidosRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -27,6 +36,13 @@ void _remoteDataSources() {
 void _repositories() {
   sl.registerFactory<IPedidosRepository>(
     () => PedidosRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<ICreditoDevolucaoRepository>(
+    () => CreditoDevolucaoRepository(
+      remoteDataSource: sl(),
+      saldoTotalRemoteDataSource: sl(),
+    ),
   );
 
   sl.registerFactory<IRomaneiosRepository>(
@@ -49,6 +65,14 @@ void _useCases() {
 
   sl.registerFactory<CarregarResumoPagamentosRealizados>(
     () => CarregarResumoPagamentosRealizados(recuperarLista: sl()),
+  );
+
+  sl.registerFactory<BuscarCreditoDevolucaoMovimentacoes>(
+    () => BuscarCreditoDevolucaoMovimentacoes(repository: sl()),
+  );
+
+  sl.registerFactory<BuscarSaldoCreditoDevolucao>(
+    () => BuscarSaldoCreditoDevolucao(repository: sl()),
   );
 
   sl.registerFactory<RecuperarRomaneios>(
@@ -137,4 +161,21 @@ void _presentation() {
     ),
   );
 
+  sl.registerFactory<PagamentosRealizadosBloc>(
+    () => PagamentosRealizadosBloc(
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<DevolucaoBloc>(
+    () => DevolucaoBloc(
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
 }

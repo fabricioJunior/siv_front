@@ -8,118 +8,191 @@ import 'package:flutter/material.dart';
 class PagamentosRealizadosWidget extends StatelessWidget {
   final String hashLista;
   final PagamentosRealizadosResumo? resumoInicial;
+  final int? pessoaId;
   final SeletorWidget formasDePagamentoSeletor;
 
   const PagamentosRealizadosWidget({
     super.key,
     required this.hashLista,
     this.resumoInicial,
+    this.pessoaId,
     required this.formasDePagamentoSeletor,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PagamentosRealizadosBloc>(
-      create: (_) => PagamentosRealizadosBloc(sl())
+      create: (_) => sl<PagamentosRealizadosBloc>()
         ..add(
           PagamentosRealizadosIniciado(
             hashLista: hashLista,
             resumoInicial: resumoInicial,
+            pessoaId: pessoaId,
           ),
         ),
       child: BlocConsumer<PagamentosRealizadosBloc, PagamentosRealizadosState>(
-            listenWhen: (previous, current) =>
-                previous.step != current.step || previous.erro != current.erro,
-            listener: (context, state) {
-              if (state.step == PagamentosRealizadosStep.falha &&
-                  state.erro != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.erro!)),
-                );
-              }
+        listenWhen: (previous, current) =>
+            previous.step != current.step || previous.erro != current.erro,
+        listener: (context, state) {
+          if (state.step == PagamentosRealizadosStep.falha &&
+              state.erro != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.erro!)),
+            );
+          }
 
-              if (state.step == PagamentosRealizadosStep.concluido) {
-                Navigator.of(context).pop({
-                  'formasDePagamentoRealizadas': state.resultado,
-                  'desconto': state.valorDescontoAplicado,
-                });
-              }
-            },
-            builder: (context, state) {
-              if (state.step == PagamentosRealizadosStep.carregando ||
-                  state.step == PagamentosRealizadosStep.inicial) {
-                return const SizedBox(
-                  width: 640,
-                  height: 420,
-                  child: Center(child: CircularProgressIndicator.adaptive()),
-                );
-              }
+          if (state.step == PagamentosRealizadosStep.concluido) {
+            Navigator.of(context).pop({
+              'formasDePagamentoRealizadas': state.resultado,
+              'desconto': state.valorDescontoAplicado,
+            });
+          }
+        },
+        builder: (context, state) {
+          if (state.step == PagamentosRealizadosStep.carregando ||
+              state.step == PagamentosRealizadosStep.inicial) {
+            return const SizedBox(
+              width: 640,
+              height: 420,
+              child: Center(child: CircularProgressIndicator.adaptive()),
+            );
+          }
 
-              return AlertDialog(
-                insetPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                title: const Text('Pagamentos realizados'),
-                content: SizedBox(
-                  width: 760,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _ResumoPagamentoCard(state: state),
-                        const SizedBox(height: 16),
-                        ...state.linhas.map(
-                          (linha) => _LinhaPagamentoCard(
-                            linha: linha,
-                            formasDePagamentoSeletor: formasDePagamentoSeletor,
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: state.podeAdicionarLinha
-                              ? () => context
-                                  .read<PagamentosRealizadosBloc>()
-                                  .add(const PagamentosRealizadosLinhaAdicionada())
-                              : null,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Adicionar forma de pagamento'),
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: state.step == PagamentosRealizadosStep.editando
+          return AlertDialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            title: const Text('Pagamentos realizados'),
+            content: SizedBox(
+              width: 760,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ResumoPagamentoCard(state: state),
+                    const SizedBox(height: 12),
+                    _SaldoCreditoDevolucaoCard(state: state),
+                    const SizedBox(height: 16),
+                    ...state.linhas.map(
+                      (linha) => _LinhaPagamentoCard(
+                        linha: linha,
+                        formasDePagamentoSeletor: formasDePagamentoSeletor,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: state.podeAdicionarLinha
+                          ? () => context
+                              .read<PagamentosRealizadosBloc>()
+                              .add(const PagamentosRealizadosLinhaAdicionada())
+                          : null,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Adicionar forma de pagamento'),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed:
+                            state.step == PagamentosRealizadosStep.editando
                                 ? () => _abrirDialogoDesconto(context, state)
                                 : null,
-                            icon: const Icon(Icons.percent),
-                            label: Text(
-                              state.valorDescontoAplicado > 0
-                                  ? 'Editar desconto'
-                                  : 'Adicionar desconto',
-                            ),
-                          ),
+                        icon: const Icon(Icons.percent),
+                        label: Text(
+                          state.valorDescontoAplicado > 0
+                              ? 'Editar desconto'
+                              : 'Adicionar desconto',
                         ),
-                        const SizedBox(height: 8),
-                        _DetalhePagamentoCard(state: state),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    _DetalhePagamentoCard(state: state),
+                  ],
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: state.step == PagamentosRealizadosStep.editando
+                    ? () => context
+                        .read<PagamentosRealizadosBloc>()
+                        .add(const PagamentosRealizadosFinalizacaoSolicitada())
+                    : null,
+                child: const Text('Finalizar pagamentos'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SaldoCreditoDevolucaoCard extends StatelessWidget {
+  final PagamentosRealizadosState state;
+
+  const _SaldoCreditoDevolucaoCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final possuiPessoa = state.pessoaId != null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Credito de devolucao do cliente',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            if (!possuiPessoa)
+              const Text(
+                'Cliente nao informado. Nao foi possivel consultar saldo de credito de devolucao.',
+              )
+            else if (state.carregandoSaldoCreditoDevolucao)
+              const Row(
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  FilledButton(
-                    onPressed: state.step == PagamentosRealizadosStep.editando
-                        ? () => context
-                            .read<PagamentosRealizadosBloc>()
-                            .add(const PagamentosRealizadosFinalizacaoSolicitada())
-                        : null,
-                    child: const Text('Finalizar pagamentos'),
+                  SizedBox(width: 8),
+                  Text('Consultando saldo...'),
+                ],
+              )
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _InfoBox(
+                    titulo: 'Saldo disponivel',
+                    valor: _formatarMoeda(state.saldoCreditoDevolucao),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      final pessoaId = state.pessoaId;
+                      if (pessoaId == null) return;
+                      Navigator.of(context).pushNamed(
+                        '/credito_devolucao_movimentacoes',
+                        arguments: {'pessoaId': pessoaId},
+                      );
+                    },
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Ver movimentacoes'),
                   ),
                 ],
-              );
-            },
-          ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -255,9 +328,8 @@ class _LinhaPagamentoCard extends StatelessWidget {
                         ? const []
                         : [formaSelecionada],
                     onChanged: (selecionadas) {
-                      final forma = selecionadas.isNotEmpty
-                          ? selecionadas.first
-                          : null;
+                      final forma =
+                          selecionadas.isNotEmpty ? selecionadas.first : null;
                       bloc.add(
                         PagamentosRealizadosFormaAlterada(
                           linhaId: linha.id,
@@ -273,8 +345,9 @@ class _LinhaPagamentoCard extends StatelessWidget {
                   onPressed: bloc.state.linhas.length == 1
                       ? null
                       : () => bloc.add(
-                          PagamentosRealizadosLinhaRemovida(linhaId: linha.id),
-                        ),
+                            PagamentosRealizadosLinhaRemovida(
+                                linhaId: linha.id),
+                          ),
                   icon: const Icon(Icons.delete_outline),
                   tooltip: 'Remover forma de pagamento',
                 ),
@@ -338,7 +411,8 @@ class _LinhaPagamentoCard extends StatelessWidget {
               ],
             ),
             if (linha.ehDinheiro &&
-                bloc.state.valorTotalBruto > bloc.state.valorTotalComDesconto) ...[
+                bloc.state.valorTotalBruto >
+                    bloc.state.valorTotalComDesconto) ...[
               const SizedBox(height: 8),
               Text(
                 'Troco estimado: ${_formatarMoeda(bloc.state.valorTroco)}',

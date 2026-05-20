@@ -37,6 +37,7 @@ enum TipoOperacao {
 
 abstract class Romaneio implements Equatable {
   int? get id;
+  List<int> get romaneiosDevolucao;
   int? get pessoaId;
   String? get pessoaNome;
   int? get funcionarioId;
@@ -57,6 +58,7 @@ abstract class Romaneio implements Equatable {
 
   factory Romaneio.create({
     int? id,
+    List<int>? romaneiosDevolucao,
     int? pessoaId,
     String? pessoaNome,
     int? funcionarioId,
@@ -79,6 +81,7 @@ abstract class Romaneio implements Equatable {
   @override
   List<Object?> get props => [
         id,
+        romaneiosDevolucao,
         pessoaId,
         pessoaNome,
         funcionarioId,
@@ -105,6 +108,8 @@ abstract class Romaneio implements Equatable {
 class _RomaneioImpl implements Romaneio {
   @override
   final int? id;
+  @override
+  final List<int> romaneiosDevolucao;
   @override
   final int? pessoaId;
   @override
@@ -142,6 +147,7 @@ class _RomaneioImpl implements Romaneio {
 
   const _RomaneioImpl({
     this.id,
+    List<int>? romaneiosDevolucao,
     this.pessoaId,
     this.pessoaNome,
     this.funcionarioId,
@@ -159,11 +165,13 @@ class _RomaneioImpl implements Romaneio {
     this.criadoEm,
     this.atualizadoEm,
     List<RomaneioPagamentoRealizado>? formasDePagamentoRealizadas,
-  }) : formasDePagamentoRealizadas = formasDePagamentoRealizadas ?? const [];
+  })  : romaneiosDevolucao = romaneiosDevolucao ?? const [],
+        formasDePagamentoRealizadas = formasDePagamentoRealizadas ?? const [];
 
   @override
   List<Object?> get props => [
         id,
+        romaneiosDevolucao,
         pessoaId,
         pessoaNome,
         funcionarioId,
@@ -203,7 +211,8 @@ abstract class RomaneioPagamentoRealizado implements Equatable {
   }) = _RomaneioPagamentoRealizadoImpl;
 
   @override
-  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor, descricao];
+  List<Object?> get props =>
+      [controle, formaDePagamentoId, parcela, valor, descricao];
 
   @override
   bool? get stringify => true;
@@ -230,7 +239,8 @@ class _RomaneioPagamentoRealizadoImpl implements RomaneioPagamentoRealizado {
   });
 
   @override
-  List<Object?> get props => [controle, formaDePagamentoId, parcela, valor, descricao];
+  List<Object?> get props =>
+      [controle, formaDePagamentoId, parcela, valor, descricao];
 
   @override
   bool? get stringify => true;

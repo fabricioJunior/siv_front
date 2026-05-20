@@ -17,9 +17,12 @@ enum DescontoTipo {
 class PagamentosRealizadosState extends Equatable {
   final PagamentosRealizadosStep step;
   final String? hashLista;
+  final int? pessoaId;
   final PagamentosRealizadosResumo? resumo;
   final List<SelectData> formasDePagamento;
   final List<PagamentoRealizadoLinha> linhas;
+  final bool carregandoSaldoCreditoDevolucao;
+  final double saldoCreditoDevolucao;
   final DescontoTipo? descontoTipo;
   final String descontoValorTexto;
   final double valorDescontoAplicado;
@@ -29,9 +32,12 @@ class PagamentosRealizadosState extends Equatable {
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
     this.hashLista,
+    this.pessoaId,
     this.resumo,
     this.formasDePagamento = const [],
     this.linhas = const [],
+    this.carregandoSaldoCreditoDevolucao = false,
+    this.saldoCreditoDevolucao = 0,
     this.descontoTipo,
     this.descontoValorTexto = '',
     this.valorDescontoAplicado = 0,
@@ -52,10 +58,9 @@ class PagamentosRealizadosState extends Equatable {
           ? valorTotalBruto - valorTotalComDesconto
           : 0;
   double get valorLiquido => valorTotalBruto - valorTroco;
-  double get valorRestante =>
-      (valorTotalComDesconto - valorLiquido)
-          .clamp(0, double.infinity)
-          .toDouble();
+  double get valorRestante => (valorTotalComDesconto - valorLiquido)
+      .clamp(0, double.infinity)
+      .toDouble();
   double get valorDescontoAplicadoArredondado =>
       double.parse(valorDescontoAplicado.toStringAsFixed(2));
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
@@ -67,9 +72,12 @@ class PagamentosRealizadosState extends Equatable {
   PagamentosRealizadosState copyWith({
     PagamentosRealizadosStep? step,
     Object? hashLista = _sentinela,
+    Object? pessoaId = _sentinela,
     PagamentosRealizadosResumo? resumo,
     List<SelectData>? formasDePagamento,
     List<PagamentoRealizadoLinha>? linhas,
+    bool? carregandoSaldoCreditoDevolucao,
+    double? saldoCreditoDevolucao,
     Object? descontoTipo = _sentinela,
     String? descontoValorTexto,
     double? valorDescontoAplicado,
@@ -78,16 +86,24 @@ class PagamentosRealizadosState extends Equatable {
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
-      hashLista:
-          identical(hashLista, _sentinela) ? this.hashLista : hashLista as String?,
+      hashLista: identical(hashLista, _sentinela)
+          ? this.hashLista
+          : hashLista as String?,
+      pessoaId:
+          identical(pessoaId, _sentinela) ? this.pessoaId : pessoaId as int?,
       resumo: resumo ?? this.resumo,
       formasDePagamento: formasDePagamento ?? this.formasDePagamento,
       linhas: linhas ?? this.linhas,
+      carregandoSaldoCreditoDevolucao: carregandoSaldoCreditoDevolucao ??
+          this.carregandoSaldoCreditoDevolucao,
+      saldoCreditoDevolucao:
+          saldoCreditoDevolucao ?? this.saldoCreditoDevolucao,
       descontoTipo: identical(descontoTipo, _sentinela)
           ? this.descontoTipo
           : descontoTipo as DescontoTipo?,
       descontoValorTexto: descontoValorTexto ?? this.descontoValorTexto,
-      valorDescontoAplicado: valorDescontoAplicado ?? this.valorDescontoAplicado,
+      valorDescontoAplicado:
+          valorDescontoAplicado ?? this.valorDescontoAplicado,
       erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       resultado: resultado ?? this.resultado,
     );
@@ -97,9 +113,12 @@ class PagamentosRealizadosState extends Equatable {
   List<Object?> get props => [
         step,
         hashLista,
+        pessoaId,
         resumo,
         formasDePagamento,
         linhas,
+        carregandoSaldoCreditoDevolucao,
+        saldoCreditoDevolucao,
         descontoTipo,
         descontoValorTexto,
         valorDescontoAplicadoArredondado,
@@ -137,12 +156,37 @@ class PagamentoRealizadoLinha extends Equatable {
   bool get ehDinheiro =>
       (formaDePagamento?.data['tipo']?.toString().trim().toLowerCase() ?? '') ==
       'dinheiro';
+  bool get ehCreditoDevolucao {
+    final dados = formaDePagamento?.data;
+    final candidatos = [
+      dados?['tipoDocumento']?.toString(),
+      dados?['tipo']?.toString(),
+      dados?['descricao']?.toString(),
+      formaDePagamento?.nome,
+    ];
+
+    for (final item in candidatos) {
+      final normalizado = (item ?? '')
+          .toLowerCase()
+          .trim()
+          .replaceAll(' ', '_')
+          .replaceAll('-', '_');
+      if (normalizado.contains('credito_de_devolucao') ||
+          normalizado.contains('crédito_de_devolução')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   int get parcelasMaximas {
     final parcelas = formaDePagamento?.data['parcelas'];
     if (parcelas is int) return parcelas;
     if (parcelas is num) return parcelas.toInt();
     return int.tryParse(parcelas?.toString() ?? '') ?? 1;
   }
+
   bool get aceitaParcelamento => parcelasMaximas > 1;
   double get valorParcela => parcelas <= 0 ? 0 : valor / parcelas;
 

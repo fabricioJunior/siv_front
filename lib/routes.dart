@@ -27,9 +27,8 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/home': (context) => const HomePage(),
   '/sincronizacao': (context) => const SyncPage(),
   ////AUTENTICACAO:
-  '/login': (context) =>  LoginPage(
-    trocandoDeEmpresa:  args(context)['trocandoDeEmpresa'] ?? false,
-  ),
+  '/login': (context) =>
+      LoginPage(trocandoDeEmpresa: args(context)['trocandoDeEmpresa'] ?? false),
   '/usuarios': (context) => const UsuariosPage(),
   '/usuario': (context) {
     return UsuarioPage(idUsuario: args(context)['idUsuario']);
@@ -234,6 +233,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/devolucao': (context) {
+    return _rotaProtegida(route: '/devolucao', child: const DevolucaoPage());
+  },
+  '/credito_devolucao_movimentacoes': (context) {
+    final pessoaIdArg = args(context)['pessoaId'];
+    final pessoaId = pessoaIdArg is int
+        ? pessoaIdArg
+        : int.tryParse(pessoaIdArg?.toString() ?? '');
+
+    return _rotaProtegida(
+      route: '/credito_devolucao_movimentacoes',
+      child: CreditoDevolucaoMovimentacoesPage(pessoaId: pessoaId ?? 0),
+    );
+  },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
@@ -307,8 +320,8 @@ Map<String, Widget Function(BuildContext)> routes = {
         '';
     final descontoArg = argumentos['desconto'];
     final desconto = descontoArg is num
-      ? descontoArg.toDouble()
-      : double.tryParse(descontoArg?.toString() ?? '') ?? 0;
+        ? descontoArg.toDouble()
+        : double.tryParse(descontoArg?.toString() ?? '') ?? 0;
     final formasDePagamentoRaw =
         argumentos['formasDePagamentoRealizadas'] as List<dynamic>? ?? const [];
     final formasDePagamentoRealizadas = formasDePagamentoRaw
@@ -459,6 +472,8 @@ Widget _rotaProtegida({required String route, required Widget child}) {
 const Map<String, List<String>> _componentesDaRota = {
   '/comercial': ['PEDFC001', 'ROMFP001'],
   '/venda': ['PEDFC001', 'ROMFP001'],
+  '/devolucao': ['PEDFC001', 'ROMFP001'],
+  '/credito_devolucao_movimentacoes': ['PEDFC001', 'ROMFP001'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],

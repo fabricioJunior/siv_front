@@ -1,9 +1,10 @@
-
 import 'package:comercial/models.dart';
 
 class RomaneioDto implements Romaneio {
   @override
   final int? id;
+  @override
+  final List<int> romaneiosDevolucao;
   @override
   final int? pessoaId;
   @override
@@ -39,9 +40,9 @@ class RomaneioDto implements Romaneio {
   @override
   final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
 
-
   const RomaneioDto({
     this.id,
+    this.romaneiosDevolucao = const [],
     this.pessoaId,
     this.pessoaNome,
     this.funcionarioId,
@@ -64,6 +65,7 @@ class RomaneioDto implements Romaneio {
   factory RomaneioDto.fromJson(Map<String, dynamic> json) {
     return RomaneioDto(
       id: _toInt(json['romaneioId'] ?? json['id']),
+      romaneiosDevolucao: _toIntList(json['romaneiosDevolucao']),
       pessoaId: _toInt(json['pessoaId']),
       pessoaNome: json['pessoaNome']?.toString(),
       funcionarioId: _toInt(json['funcionarioId']),
@@ -83,13 +85,13 @@ class RomaneioDto implements Romaneio {
       formasDePagamentoRealizadas: _toFormasDePagamentoRealizadas(
         json['formasDePagamentoRealizadas'] ?? json['pagamentos'],
       ),
-     
     );
   }
 
   factory RomaneioDto.fromModel(Romaneio romaneio) {
     return RomaneioDto(
       id: romaneio.id,
+      romaneiosDevolucao: romaneio.romaneiosDevolucao,
       pessoaId: romaneio.pessoaId,
       pessoaNome: romaneio.pessoaNome,
       funcionarioId: romaneio.funcionarioId,
@@ -116,6 +118,8 @@ class RomaneioDto implements Romaneio {
       'funcionarioId': funcionarioId,
       'tabelaPrecoId': tabelaPrecoId,
       'operacao': operacao?.toJsonValue(),
+      if (romaneiosDevolucao.isNotEmpty)
+        'romaneiosDevolucao': romaneiosDevolucao,
       'desconto': desconto,
     };
   }
@@ -132,6 +136,7 @@ class RomaneioDto implements Romaneio {
   @override
   List<Object?> get props => [
         id,
+        romaneiosDevolucao,
         pessoaId,
         pessoaNome,
         funcionarioId,
@@ -189,13 +194,15 @@ List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
             json['tipoDocumento'])
         ?.toString();
 
-    if (formaDePagamentoId <= 0 && (descricao == null || descricao.trim().isEmpty)) {
+    if (formaDePagamentoId <= 0 &&
+        (descricao == null || descricao.trim().isEmpty)) {
       continue;
     }
 
     pagamentos.add(
       RomaneioPagamentoRealizado.create(
-        controle: _toInt(json['controle']) ?? _toInt(json['documento']) ?? i + 1,
+        controle:
+            _toInt(json['controle']) ?? _toInt(json['documento']) ?? i + 1,
         formaDePagamentoId: formaDePagamentoId,
         parcela: _toInt(json['parcela']) ?? _toInt(json['faturaParcela']) ?? 1,
         valor: valor,
@@ -207,3 +214,10 @@ List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
   return pagamentos;
 }
 
+List<int> _toIntList(dynamic value) {
+  final itens = value as List<dynamic>? ?? const [];
+  return itens
+      .map((item) => _toInt(item))
+      .whereType<int>()
+      .toList(growable: false);
+}

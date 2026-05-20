@@ -10,14 +10,16 @@ sealed class PagamentosRealizadosEvent extends Equatable {
 class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final String hashLista;
   final PagamentosRealizadosResumo? resumoInicial;
+  final int? pessoaId;
 
   const PagamentosRealizadosIniciado({
     required this.hashLista,
     this.resumoInicial,
+    this.pessoaId,
   });
 
   @override
-  List<Object?> get props => [hashLista, resumoInicial];
+  List<Object?> get props => [hashLista, resumoInicial, pessoaId];
 }
 
 class PagamentosRealizadosLinhaAdicionada extends PagamentosRealizadosEvent {
@@ -85,6 +87,7 @@ class PagamentosRealizadosDescontoAlterado extends PagamentosRealizadosEvent {
   List<Object?> get props => [tipo, valorTexto];
 }
 
-class PagamentosRealizadosFinalizacaoSolicitada extends PagamentosRealizadosEvent {
+class PagamentosRealizadosFinalizacaoSolicitada
+    extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
 }

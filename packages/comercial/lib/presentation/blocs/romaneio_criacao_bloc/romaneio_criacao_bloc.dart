@@ -71,8 +71,8 @@ class RomaneioCriacaoBloc
           ? null
           : _resolverOperacao(listaCompartilhada);
       itens = _extrairItens(produtosCompartilhados);
-      formasDePagamentoRealizadas =
-          _extrairFormasDePagamentoRealizadas(event.formasDePagamentoRealizadas);
+      formasDePagamentoRealizadas = _extrairFormasDePagamentoRealizadas(
+          event.formasDePagamentoRealizadas);
       final erro = _validar(
         listaCompartilhada,
         operacao,
@@ -142,7 +142,8 @@ class RomaneioCriacaoBloc
       await _atualizarListaCompartilhada.call(listaCompartilhada);
 
       if (operacao == TipoOperacao.transferencia_entrada ||
-          operacao == TipoOperacao.venda) {
+          operacao == TipoOperacao.venda ||
+          operacao == TipoOperacao.venda_devolucao) {
         falhaAoReceberNoCaixa = true;
         final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
         if (caixaId == null) {
@@ -226,7 +227,9 @@ class RomaneioCriacaoBloc
       return 'A lista compartilhada não possui um tabelaPrecoId válido.';
     }
 
-    if (operacao == TipoOperacao.venda && listaCompartilhada.pessoaId == null) {
+    if ((operacao == TipoOperacao.venda ||
+            operacao == TipoOperacao.venda_devolucao) &&
+        listaCompartilhada.pessoaId == null) {
       return 'A lista compartilhada não possui um cliente válido para a venda.';
     }
 
@@ -301,6 +304,8 @@ class RomaneioCriacaoBloc
         return TipoOperacao.transferencia_saida;
       case OrigemCompartilhadaTipo.venda:
         return TipoOperacao.venda;
+      case OrigemCompartilhadaTipo.vendaDevolucao:
+        return TipoOperacao.venda_devolucao;
     }
   }
 

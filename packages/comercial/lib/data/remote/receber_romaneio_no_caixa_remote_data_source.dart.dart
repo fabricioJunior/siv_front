@@ -16,18 +16,22 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
   }) async {
+    final formasDePagamento = formasDePagamentoRealizadas
+        .map((forma) => _formaDePagamentoToJson(forma))
+        .toList(growable: false);
+
     await post(
       pathParameters: {'caixaId': caixaId},
       body: {
         'romaneioId': romaneioId,
-        'formasDePagamento': formasDePagamentoRealizadas
-            .map((forma) => _formaDePagamentoToJson(forma))
-            .toList(growable: false),
+        if (formasDePagamento.isNotEmpty)
+          'formasDePagamento': formasDePagamento,
       },
     );
   }
 
-  Map<String, dynamic> _formaDePagamentoToJson(RomaneioPagamentoRealizado forma) {
+  Map<String, dynamic> _formaDePagamentoToJson(
+      RomaneioPagamentoRealizado forma) {
     return {
       'controle': forma.controle,
       'formaDePagamentoId': forma.formaDePagamentoId,

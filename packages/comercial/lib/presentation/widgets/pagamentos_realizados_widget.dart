@@ -1,9 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PagamentosRealizadosWidget extends StatelessWidget {
   final String hashLista;
@@ -58,10 +61,22 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             );
           }
 
-          return AlertDialog(
+            final ultimoId =
+              state.linhas.isEmpty ? null : state.linhas.last.id;
+
+          final dialog = AlertDialog(
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            title: const Text('Pagamentos realizados'),
+            title: Row(
+              children: [
+                const Expanded(child: Text('Pagamentos realizados')),
+                IconButton(
+                  tooltip: 'Ajuda de atalhos',
+                  onPressed: () => _abrirAjudaAtalhos(context),
+                  icon: const Icon(Icons.help_outline),
+                ),
+              ],
+            ),
             content: SizedBox(
               width: 760,
               child: SingleChildScrollView(
@@ -69,7 +84,15 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ResumoPagamentoCard(state: state),
+                    _ResumoPagamentoCard(
+                      state: state,
+                      onDescontoPressed:
+                          state.step == PagamentosRealizadosStep.editando
+                              ? () => _abrirDialogoDesconto(context, state)
+                              : null,
+                    ),
+                    const SizedBox(height: 12),
+                    _DetalhePagamentoCard(state: state),
                     const SizedBox(height: 12),
                     _SaldoCreditoDevolucaoCard(state: state),
                     const SizedBox(height: 16),
@@ -77,6 +100,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                       (linha) => _LinhaPagamentoCard(
                         linha: linha,
                         formasDePagamentoSeletor: formasDePagamentoSeletor,
+                        autofocusValor: linha.id == ultimoId,
                       ),
                     ),
                     TextButton.icon(
@@ -88,23 +112,12 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                       icon: const Icon(Icons.add),
                       label: const Text('Adicionar forma de pagamento'),
                     ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed:
-                            state.step == PagamentosRealizadosStep.editando
-                                ? () => _abrirDialogoDesconto(context, state)
-                                : null,
-                        icon: const Icon(Icons.percent),
-                        label: Text(
-                          state.valorDescontoAplicado > 0
-                              ? 'Editar desconto'
-                              : 'Adicionar desconto',
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 8),
-                    _DetalhePagamentoCard(state: state),
+                    if (state.linhas.isNotEmpty)
+                      Text(
+                        'Distribua o valor recebido entre as formas de pagamento.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                   ],
                 ),
               ),
@@ -123,6 +136,26 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                 child: const Text('Finalizar pagamentos'),
               ),
             ],
+          );
+
+          return CallbackShortcuts(
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.escape): () {
+                Navigator.of(context).pop();
+              },
+              const SingleActivator(LogicalKeyboardKey.enter, control: true):
+                  () {
+                if (state.step == PagamentosRealizadosStep.editando) {
+                  context.read<PagamentosRealizadosBloc>().add(
+                    const PagamentosRealizadosFinalizacaoSolicitada(),
+                  );
+                }
+              },
+            },
+            child: Focus(
+              autofocus: true,
+              child: dialog,
+            ),
           );
         },
       ),
@@ -171,6 +204,7 @@ class _SaldoCreditoDevolucaoCard extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.spaceBetween,
                 children: [
                   _InfoBox(
                     titulo: 'Saldo disponivel',
@@ -199,8 +233,12 @@ class _SaldoCreditoDevolucaoCard extends StatelessWidget {
 
 class _ResumoPagamentoCard extends StatelessWidget {
   final PagamentosRealizadosState state;
+  final VoidCallback? onDescontoPressed;
 
-  const _ResumoPagamentoCard({required this.state});
+  const _ResumoPagamentoCard({
+    required this.state,
+    required this.onDescontoPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +250,25 @@ class _ResumoPagamentoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Resumo da venda', style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Resumo da venda',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: onDescontoPressed,
+                  icon: const Icon(Icons.percent),
+                  label: Text(
+                    state.valorDescontoAplicado > 0
+                        ? 'Editar desconto'
+                        : 'Adicionar desconto',
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,
@@ -264,6 +320,11 @@ class _DetalhePagamentoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final restante = state.valorRestante;
     final theme = Theme.of(context);
+    final total = state.valorTotalComDesconto <= 0
+        ? state.valorTotalProdutos
+        : state.valorTotalComDesconto;
+    final pagoLimitado = math.min(state.valorTotalBruto, total);
+    final progresso = total <= 0 ? 1.0 : (pagoLimitado / total).clamp(0.0, 1.0);
 
     return Card(
       color: restante.abs() < 0.01
@@ -286,6 +347,13 @@ class _DetalhePagamentoCard extends StatelessWidget {
                   ? 'O valor informado cobre o total da venda.'
                   : 'Adicione formas de pagamento até zerar o valor pendente.',
             ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(value: progresso),
+            const SizedBox(height: 4),
+            Text(
+              'Progresso do recebimento: ${(progresso * 100).toStringAsFixed(0)}%',
+              style: theme.textTheme.bodySmall,
+            ),
             if (state.erro != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -303,10 +371,12 @@ class _DetalhePagamentoCard extends StatelessWidget {
 class _LinhaPagamentoCard extends StatelessWidget {
   final PagamentoRealizadoLinha linha;
   final SeletorWidget formasDePagamentoSeletor;
+  final bool autofocusValor;
 
   const _LinhaPagamentoCard({
     required this.linha,
     required this.formasDePagamentoSeletor,
+    required this.autofocusValor,
   });
 
   @override
@@ -359,13 +429,26 @@ class _LinhaPagamentoCard extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     key: ValueKey('valor-${linha.id}'),
+                    autofocus: autofocusValor,
                     initialValue: linha.valorTexto,
                     decoration: const InputDecoration(
                       labelText: 'Valor recebido',
                       border: OutlineInputBorder(),
                     ),
+                    inputFormatters: [_decimalInputFormatter],
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: formaSelecionada != null && linha.aceitaParcelamento
+                        ? TextInputAction.next
+                        : TextInputAction.done,
+                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                    onFieldSubmitted: (_) {
+                      if (formaSelecionada != null && linha.aceitaParcelamento) {
+                        FocusScope.of(context).nextFocus();
+                        return;
+                      }
+                      FocusScope.of(context).unfocus();
+                    },
                     onChanged: (value) => bloc.add(
                       PagamentosRealizadosValorAlterado(
                         linhaId: linha.id,
@@ -384,7 +467,11 @@ class _LinhaPagamentoCard extends StatelessWidget {
                         labelText: 'Parcelas (${linha.parcelasMaximas})',
                         border: const OutlineInputBorder(),
                       ),
+                      inputFormatters: [_integerInputFormatter],
                       keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                       onChanged: (value) => bloc.add(
                         PagamentosRealizadosParcelasAlteradas(
                           linhaId: linha.id,
@@ -499,50 +586,62 @@ Future<void> _abrirDialogoDesconto(
 
           return AlertDialog(
             title: const Text('Aplicar desconto'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<DescontoTipo>(
-                  value: tipoSelecionado,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo de desconto',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: DescontoTipo.valorBruto,
-                      child: Text('Valor bruto'),
+            content: SizedBox(
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<DescontoTipo>(
+                      value: tipoSelecionado,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de desconto',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: DescontoTipo.valorBruto,
+                          child: Text('Valor bruto'),
+                        ),
+                        DropdownMenuItem(
+                          value: DescontoTipo.porcentagem,
+                          child: Text('Porcentagem'),
+                        ),
+                        DropdownMenuItem(
+                          value: DescontoTipo.forcaValorTotal,
+                          child: Text('Forca valor total'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          tipoSelecionado = value;
+                          controller.clear();
+                        });
+                      },
                     ),
-                    DropdownMenuItem(
-                      value: DescontoTipo.porcentagem,
-                      child: Text('Porcentagem'),
-                    ),
-                    DropdownMenuItem(
-                      value: DescontoTipo.forcaValorTotal,
-                      child: Text('Forca valor total'),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      inputFormatters: [_decimalInputFormatter],
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                      onFieldSubmitted: (_) => Navigator.of(dialogContext).pop(true),
+                      decoration: InputDecoration(
+                        labelText: label,
+                        border: const OutlineInputBorder(),
+                        helperText: dica,
+                        helperMaxLines: 3,
+                      ),
                     ),
                   ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      tipoSelecionado = value;
-                      controller.clear();
-                    });
-                  },
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: controller,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: label,
-                    border: const OutlineInputBorder(),
-                    helperText: dica,
-                  ),
-                ),
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -583,6 +682,100 @@ Future<void> _abrirDialogoDesconto(
   }
 }
 
+Future<void> _abrirAjudaAtalhos(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Atalhos disponiveis'),
+        content: const SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _AtalhoInfo(
+                atalho: 'Esc',
+                descricao: 'Fecha o dialogo de pagamentos.',
+              ),
+              SizedBox(height: 8),
+              _AtalhoInfo(
+                atalho: 'Ctrl + Enter',
+                descricao: 'Finaliza os pagamentos quando a tela estiver em edicao.',
+              ),
+              SizedBox(height: 8),
+              _AtalhoInfo(
+                atalho: 'Enter',
+                descricao: 'No campo Valor recebido, avanca para Parcelas quando houver parcelamento.',
+              ),
+              SizedBox(height: 8),
+              _AtalhoInfo(
+                atalho: 'Enter',
+                descricao: 'No campo de desconto, aplica o desconto.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 String _formatarMoeda(double valor) {
   return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
 }
+
+class _AtalhoInfo extends StatelessWidget {
+  final String atalho;
+  final String descricao;
+
+  const _AtalhoInfo({required this.atalho, required this.descricao});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            atalho,
+            style: theme.textTheme.labelLarge,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(descricao)),
+      ],
+    );
+  }
+}
+
+final _integerInputFormatter = FilteringTextInputFormatter.allow(
+  RegExp(r'\d*'),
+);
+
+final _decimalInputFormatter = TextInputFormatter.withFunction(
+  (oldValue, newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final normalizado = newValue.text.replaceAll('.', ',');
+    final regex = RegExp(r'^\d+(,\d{0,2})?$');
+    if (!regex.hasMatch(normalizado)) {
+      return oldValue;
+    }
+
+    return newValue.copyWith(text: normalizado);
+  },
+);

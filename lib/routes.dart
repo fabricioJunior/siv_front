@@ -168,6 +168,28 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: SuprimentoPage(caixaId: caixaId),
     );
   },
+  '/sangrias': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/sangrias',
+      child: SangriasPage(caixaId: caixaId),
+    );
+  },
+  '/sangria': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/sangria',
+      child: SangriaPage(caixaId: caixaId),
+    );
+  },
   '/contagem_do_caixa': (context) {
     final caixaIdArg = args(context)['caixaId'];
     final caixaId = caixaIdArg is int

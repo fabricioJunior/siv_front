@@ -31,6 +31,12 @@ class EstoqueSaldoRemoteDataSource extends RemoteDataSourceBase
       if (filtro.corIds.isNotEmpty) 'corIds': filtro.corIds.join(','),
       if (filtro.tamanhoIds.isNotEmpty)
         'tamanhoIds': filtro.tamanhoIds.join(','),
+      if (filtro.ultimaAtualizacaoInicio != null)
+        'ultimaAtualizacaoInicio':
+            filtro.ultimaAtualizacaoInicio!.toIso8601String(),
+      if (filtro.ultimaAtualizacaoFim != null)
+        'ultimaAtualizacaoFim':
+            filtro.ultimaAtualizacaoFim!.toIso8601String(),
       'page': filtro.page.toString(),
       'limit': filtro.limit.toString(),
     };

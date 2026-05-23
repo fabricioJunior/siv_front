@@ -25,10 +25,23 @@ class RomaneiosBloc extends Bloc<RomaneiosEvent, RomaneiosState> {
     RomaneiosIniciou event,
     Emitter<RomaneiosState> emit,
   ) async {
-    try {
-      emit(state.copyWith(step: RomaneiosStep.carregando, erro: null));
+    final searchTerm = (event.searchTerm ?? state.searchTerm).trim();
+    final filtroBusca = searchTerm.isEmpty ? null : searchTerm;
 
-      final romaneios = await _recuperarRomaneios.call(page: 1, limit: 100);
+    try {
+      emit(
+        state.copyWith(
+          step: RomaneiosStep.carregando,
+          searchTerm: searchTerm,
+          erro: null,
+        ),
+      );
+
+      final romaneios = await _recuperarRomaneios.call(
+        page: 1,
+        limit: 50,
+        searchTerm: filtroBusca,
+      );
       final itensPendentesPorRomaneio =
           await _recuperarPendenciasDeEnvio(romaneios);
 
@@ -36,6 +49,7 @@ class RomaneiosBloc extends Bloc<RomaneiosEvent, RomaneiosState> {
         state.copyWith(
           romaneios: romaneios,
           itensPendentesPorRomaneio: itensPendentesPorRomaneio,
+          searchTerm: searchTerm,
           step: RomaneiosStep.sucesso,
           erro: null,
         ),

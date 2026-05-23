@@ -1,6 +1,6 @@
-import 'package:financeiro/domain/models/suprimento.dart';
+import 'package:financeiro/domain/models/sangria.dart';
 
-class SuprimentoDto implements Suprimento {
+class SangriaDto implements Sangria {
   @override
   final DateTime? criadoEm;
 
@@ -20,6 +20,9 @@ class SuprimentoDto implements Suprimento {
   final double valor;
 
   @override
+  final String origem;
+
+  @override
   final String descricao;
 
   @override
@@ -28,24 +31,25 @@ class SuprimentoDto implements Suprimento {
   @override
   final bool cancelado;
 
-  const SuprimentoDto({
+  const SangriaDto({
     this.criadoEm,
     this.atualizadoEm,
     this.canceladoEm,
     this.id,
     required this.caixaId,
     required this.valor,
+    required this.origem,
     required this.descricao,
     this.motivoCancelamento,
     this.cancelado = false,
   });
 
-  factory SuprimentoDto.fromJson(Map<String, dynamic> json) {
+  factory SangriaDto.fromJson(Map<String, dynamic> json) {
     final canceladoEm = _parseDateTime(
       json['canceladoEm'] ?? json['cancelledAt'] ?? json['deletedAt'],
     );
 
-    return SuprimentoDto(
+    return SangriaDto(
       criadoEm: _parseDateTime(json['criadoEm'] ?? json['createdAt']),
       atualizadoEm: _parseDateTime(json['atualizadoEm'] ?? json['updatedAt']),
       canceladoEm: canceladoEm,
@@ -54,6 +58,7 @@ class SuprimentoDto implements Suprimento {
           int.tryParse(json['caixa']?['id']?.toString() ?? '') ??
           0,
       valor: _parseDouble(json['valor'] ?? json['amount']) ?? 0,
+      origem: (json['origem'] ?? json['source'] ?? 'externa').toString(),
       descricao: (json['descricao'] ?? json['description'] ?? '').toString(),
       motivoCancelamento:
           (json['motivoCancelamento'] ?? json['motivo'])?.toString(),
@@ -62,17 +67,18 @@ class SuprimentoDto implements Suprimento {
     );
   }
 
-  factory SuprimentoDto.fromModel(Suprimento suprimento) {
-    return SuprimentoDto(
-      criadoEm: suprimento.criadoEm,
-      atualizadoEm: suprimento.atualizadoEm,
-      canceladoEm: suprimento.canceladoEm,
-      id: suprimento.id,
-      caixaId: suprimento.caixaId,
-      valor: suprimento.valor,
-      descricao: suprimento.descricao,
-      motivoCancelamento: suprimento.motivoCancelamento,
-      cancelado: suprimento.cancelado,
+  factory SangriaDto.fromModel(Sangria sangria) {
+    return SangriaDto(
+      criadoEm: sangria.criadoEm,
+      atualizadoEm: sangria.atualizadoEm,
+      canceladoEm: sangria.canceladoEm,
+      id: sangria.id,
+      caixaId: sangria.caixaId,
+      valor: sangria.valor,
+      origem: sangria.origem,
+      descricao: sangria.descricao,
+      motivoCancelamento: sangria.motivoCancelamento,
+      cancelado: sangria.cancelado,
     );
   }
 
@@ -81,6 +87,7 @@ class SuprimentoDto implements Suprimento {
       'id': id,
       'caixaId': caixaId,
       'valor': valor,
+      'origem': origem,
       'descricao': descricao,
       'criadoEm': criadoEm?.toIso8601String(),
       'atualizadoEm': atualizadoEm?.toIso8601String(),
@@ -94,6 +101,7 @@ class SuprimentoDto implements Suprimento {
     return {
       'valor': valor,
       'descricao': descricao,
+      'origem': origem,
     };
   }
 
@@ -105,6 +113,7 @@ class SuprimentoDto implements Suprimento {
         id,
         caixaId,
         valor,
+        origem,
         descricao,
         motivoCancelamento,
         cancelado,

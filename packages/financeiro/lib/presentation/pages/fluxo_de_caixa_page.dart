@@ -176,6 +176,33 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         child: FilledButton.tonalIcon(
                           onPressed: carregando || state.caixaId == null
                               ? null
+                              : () async {
+                                  await Navigator.of(context).pushNamed(
+                                    '/sangrias',
+                                    arguments: {'caixaId': state.caixaId},
+                                  );
+
+                                  if (!context.mounted ||
+                                      state.caixaId == null) {
+                                    return;
+                                  }
+
+                                  context.read<FluxoDeCaixaBloc>().add(
+                                        FluxoDeCaixaIniciou(
+                                          caixaId: state.caixaId!,
+                                        ),
+                                      );
+                                },
+                          icon: const Icon(Icons.money_off_csred_outlined),
+                          label: const Text('Sangrias'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonalIcon(
+                          onPressed: carregando || state.caixaId == null
+                              ? null
                               : () {
                                   Navigator.of(context).pushNamed(
                                     '/contagem_do_caixa',
@@ -261,7 +288,11 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                     ),
                   ),
                 if (state.extratos.isNotEmpty)
-                  _ResumoMovimentacoesExtrato(extratos: state.extratos),
+                  _ResumoMovimentacoesExtrato(
+                    totalEntradas: state.totalEntradas,
+                    totalSaidas: state.totalSaidas,
+                    saldo: state.saldo,
+                  ),
                 Expanded(
                   child: state.extratos.isEmpty
                       ? const Center(
@@ -458,21 +489,18 @@ class _ExtratoTile extends StatelessWidget {
 }
 
 class _ResumoMovimentacoesExtrato extends StatelessWidget {
-  final List<ExtratoCaixa> extratos;
+  final double totalEntradas;
+  final double totalSaidas;
+  final double saldo;
 
-  const _ResumoMovimentacoesExtrato({required this.extratos});
+  const _ResumoMovimentacoesExtrato({
+    required this.totalEntradas,
+    required this.totalSaidas,
+    required this.saldo,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final totalEntradas = extratos
-        .where(
-            (item) => item.tipoMovimento == TipoMovimentoExtratoCaixa.credito)
-        .fold<double>(0, (total, item) => total + item.valor);
-    final totalSaidas = extratos
-        .where((item) => item.tipoMovimento == TipoMovimentoExtratoCaixa.debito)
-        .fold<double>(0, (total, item) => total + item.valor);
-    final saldo = totalEntradas - totalSaidas;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
       child: Card(

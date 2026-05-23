@@ -3,6 +3,7 @@ import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/leitor_widget.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
 class DevolucaoPage extends StatefulWidget {
@@ -145,7 +146,6 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                   : () async {
                       final selecionado = await _abrirBuscaRomaneioOriginal(
                         context,
-                        state.romaneiosDeVenda,
                       );
 
                       if (!context.mounted || selecionado == null) {
@@ -355,92 +355,14 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
 
   Future<Romaneio?> _abrirBuscaRomaneioOriginal(
     BuildContext context,
-    List<Romaneio> romaneios,
   ) async {
     return showModalBottomSheet<Romaneio>(
       context: context,
       isScrollControlled: true,
-      builder: (dialogContext) {
-        var filtro = '';
-
-        return StatefulBuilder(
-          builder: (dialogContext, setStateDialog) {
-            final texto = filtro.trim().toLowerCase();
-            final filtrados = texto.isEmpty
-                ? romaneios
-                : romaneios.where((romaneio) {
-                    final id = romaneio.id?.toString() ?? '';
-                    final cliente = (romaneio.pessoaNome ?? '').toLowerCase();
-                    final pessoaId = romaneio.pessoaId?.toString() ?? '';
-                    return id.contains(texto) ||
-                        cliente.contains(texto) ||
-                        pessoaId.contains(texto);
-                  }).toList(growable: false);
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  16 + MediaQuery.of(dialogContext).viewInsets.bottom,
-                ),
-                child: SizedBox(
-                  height: MediaQuery.of(dialogContext).size.height * 0.75,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Selecionar romaneio de venda',
-                        style: Theme.of(dialogContext).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.search),
-                          hintText: 'Buscar por romaneio, cliente ou id',
-                        ),
-                        onChanged: (value) {
-                          setStateDialog(() {
-                            filtro = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: filtrados.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'Nenhum romaneio de venda encontrado para o filtro informado.',
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : ListView.separated(
-                                itemCount: filtrados.length,
-                                separatorBuilder: (_, __) => const Divider(),
-                                itemBuilder: (context, index) {
-                                  final romaneio = filtrados[index];
-                                  return ListTile(
-                                    leading: const Icon(Icons.receipt_long),
-                                    title:
-                                        Text('Romaneio #${romaneio.id ?? '-'}'),
-                                    subtitle: Text(
-                                      'Cliente: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}',
-                                    ),
-                                    onTap: () => Navigator.of(dialogContext)
-                                        .pop(romaneio),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => BlocProvider<DevolucaoBloc>.value(
+        value: context.read<DevolucaoBloc>(),
+        child: const _BuscaRomaneioOriginalSheet(),
+      ),
     );
   }
 
@@ -509,5 +431,147 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
 
   String _formatarMoeda(double valor) {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+}
+
+class _BuscaRomaneioOriginalSheet extends StatefulWidget {
+  const _BuscaRomaneioOriginalSheet();
+
+  @override
+  State<_BuscaRomaneioOriginalSheet> createState() =>
+      _BuscaRomaneioOriginalSheetState();
+}
+
+class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet> {
+  final Debouncer _debouncer = Debouncer(milliseconds: 350);
+  final TextEditingController _buscaController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<DevolucaoBloc>().add(
+          const DevolucaoBuscaRomaneiosSolicitada(searchTerm: ''),
+        );
+  }
+
+  @override
+  void dispose() {
+    _debouncer.cancel();
+    _buscaController.dispose();
+    super.dispose();
+  }
+
+  void _onBuscaAlterada(String value) {
+    setState(() {});
+    _debouncer.run(() {
+      context.read<DevolucaoBloc>().add(
+            DevolucaoBuscaRomaneiosSolicitada(searchTerm: value),
+          );
+    });
+  }
+
+  void _limparBusca() {
+    _debouncer.cancel();
+    _buscaController.clear();
+    setState(() {});
+    context.read<DevolucaoBloc>().add(
+          const DevolucaoBuscaRomaneiosSolicitada(searchTerm: ''),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DevolucaoBloc, DevolucaoState>(
+      builder: (context, state) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.75,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Selecionar romaneio de venda',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _buscaController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Buscar por romaneio, cliente ou id',
+                      suffixIcon: _buscaController.text.isEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: _limparBusca,
+                              icon: const Icon(Icons.close),
+                              tooltip: 'Limpar busca',
+                            ),
+                    ),
+                    textInputAction: TextInputAction.search,
+                    onChanged: _onBuscaAlterada,
+                    onSubmitted: (value) {
+                      _debouncer.cancel();
+                      context.read<DevolucaoBloc>().add(
+                            DevolucaoBuscaRomaneiosSolicitada(
+                              searchTerm: value,
+                            ),
+                          );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: state.carregandoBuscaRomaneios
+                        ? const Center(child: CircularProgressIndicator())
+                        : state.erroBuscaRomaneios != null
+                            ? Center(
+                                child: Text(
+                                  state.erroBuscaRomaneios!,
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                            : state.romaneiosBuscaDeVenda.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'Nenhum romaneio de venda encontrado para o filtro informado.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    itemCount:
+                                        state.romaneiosBuscaDeVenda.length,
+                                    separatorBuilder: (_, __) =>
+                                        const Divider(),
+                                    itemBuilder: (context, index) {
+                                      final romaneio =
+                                          state.romaneiosBuscaDeVenda[index];
+                                      return ListTile(
+                                        leading:
+                                            const Icon(Icons.receipt_long),
+                                        title: Text(
+                                          'Romaneio #${romaneio.id ?? '-'}',
+                                        ),
+                                        subtitle: Text(
+                                          'Cliente: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}',
+                                        ),
+                                        onTap: () =>
+                                            Navigator.of(context).pop(romaneio),
+                                      );
+                                    },
+                                  ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

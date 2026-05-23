@@ -60,12 +60,17 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<Romaneio>> recuperarRomaneios(
-      {int page = 1, int limit = 50}) async {
+  Future<List<Romaneio>> recuperarRomaneios({
+    int page = 1,
+    int limit = 50,
+    String? searchTerm,
+  }) async {
     final response = await get(
       queryParameters: {
         'page': '$page',
         'limit': '$limit',
+        'ordenacao': 'id_desc',
+        if (searchTerm != null) 'searchTerm': searchTerm,
       },
     );
 

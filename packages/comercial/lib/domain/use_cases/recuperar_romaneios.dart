@@ -8,7 +8,15 @@ class RecuperarRomaneios {
     required IRomaneiosRepository repository,
   }) : _repository = repository;
 
-  Future<List<Romaneio>> call({int page = 1, int limit = 50}) {
-    return _repository.recuperarRomaneios(page: page, limit: limit);
+  Future<List<Romaneio>> call({
+    int page = 1,
+    int limit = 50,
+    String? searchTerm,
+  }) {
+    return _repository.recuperarRomaneios(
+      page: page,
+      limit: limit,
+      searchTerm: searchTerm,
+    );
   }
 }

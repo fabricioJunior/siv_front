@@ -39,6 +39,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: state.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
 
@@ -53,18 +56,25 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
             caixa: null,
             caixaId: null,
             extratos: [],
+            totalEntradas: 0,
+            totalSaidas: 0,
+            saldo: 0,
           ),
         );
         return;
       }
 
       final extratos = await _buscarExtratoCaixa.call(caixaId: caixa.id);
+      final totais = _calcularTotais(extratos);
 
       emit(
         FluxoDeCaixaCarregarSucesso(
           caixa: caixa,
           caixaId: caixa.id,
           extratos: extratos,
+          totalEntradas: totais.totalEntradas,
+          totalSaidas: totais.totalSaidas,
+          saldo: totais.saldo,
         ),
       );
     } catch (e, s) {
@@ -73,6 +83,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: state.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
       addError(e, s);
@@ -89,16 +102,23 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: event.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
 
       final extratos = await _buscarExtratoCaixa.call(caixaId: event.caixaId);
+      final totais = _calcularTotais(extratos);
 
       emit(
         FluxoDeCaixaCarregarSucesso(
           caixa: state.caixa,
           caixaId: event.caixaId,
           extratos: extratos,
+          totalEntradas: totais.totalEntradas,
+          totalSaidas: totais.totalSaidas,
+          saldo: totais.saldo,
         ),
       );
     } catch (e, s) {
@@ -107,6 +127,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: event.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
       addError(e, s);
@@ -123,6 +146,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: state.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
 
@@ -132,12 +158,16 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
       );
 
       final extratos = await _buscarExtratoCaixa.call(caixaId: caixa.id);
+      final totais = _calcularTotais(extratos);
 
       emit(
         FluxoDeCaixaAbrirSucesso(
           caixa: caixa,
           caixaId: caixa.id,
           extratos: extratos,
+          totalEntradas: totais.totalEntradas,
+          totalSaidas: totais.totalSaidas,
+          saldo: totais.saldo,
         ),
       );
     } catch (e, s) {
@@ -146,6 +176,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: state.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
       addError(e, s);
@@ -167,6 +200,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
 
@@ -177,12 +213,16 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
               caixaId: caixaId,
               documento: documento,
             );
+      final totais = _calcularTotais(extratos);
 
       emit(
         FluxoDeCaixaCarregarSucesso(
           caixa: state.caixa,
           caixaId: caixaId,
           extratos: extratos,
+          totalEntradas: totais.totalEntradas,
+          totalSaidas: totais.totalSaidas,
+          saldo: totais.saldo,
         ),
       );
     } catch (e, s) {
@@ -191,6 +231,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
       addError(e, s);
@@ -207,6 +250,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: event.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
 
@@ -217,6 +263,9 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: null,
           caixaId: null,
           extratos: [],
+          totalEntradas: 0,
+          totalSaidas: 0,
+          saldo: 0,
         ),
       );
     } catch (e, s) {
@@ -225,9 +274,34 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
           caixa: state.caixa,
           caixaId: event.caixaId,
           extratos: state.extratos,
+          totalEntradas: state.totalEntradas,
+          totalSaidas: state.totalSaidas,
+          saldo: state.saldo,
         ),
       );
       addError(e, s);
     }
+  }
+
+  ({double totalEntradas, double totalSaidas, double saldo}) _calcularTotais(
+    List<ExtratoCaixa> extratos,
+  ) {
+    final totalEntradas = extratos
+        .where((item) =>
+            item.tipoMovimento == TipoMovimentoExtratoCaixa.credito &&
+            !item.cancelado)
+        .fold<double>(0, (total, item) => total + item.valor);
+
+    final totalSaidas = extratos
+        .where((item) =>
+            item.tipoMovimento == TipoMovimentoExtratoCaixa.debito &&
+            !item.cancelado)
+        .fold<double>(0, (total, item) => total + item.valor);
+
+    return (
+      totalEntradas: totalEntradas,
+      totalSaidas: totalSaidas,
+      saldo: totalEntradas + totalSaidas,
+    );
   }
 }

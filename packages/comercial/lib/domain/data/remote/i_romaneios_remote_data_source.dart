@@ -1,7 +1,7 @@
 import 'package:comercial/models.dart';
 
 abstract class IRomaneiosRemoteDataSource {
-  Future<List<Romaneio>> recuperarRomaneios({int page = 1, int limit = 50});
+  Future<List<Romaneio>> recuperarRomaneios({int page = 1, int limit = 50, String? searchTerm});
   Future<Romaneio> recuperarRomaneio(int id);
   Future<Romaneio> criarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio);

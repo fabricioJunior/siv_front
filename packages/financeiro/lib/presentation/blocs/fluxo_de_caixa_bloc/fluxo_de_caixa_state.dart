@@ -4,15 +4,28 @@ abstract class FluxoDeCaixaState extends Equatable {
   final Caixa? caixa;
   final int? caixaId;
   final List<ExtratoCaixa> extratos;
+  final double totalEntradas;
+  final double totalSaidas;
+  final double saldo;
 
   const FluxoDeCaixaState({
     required this.caixa,
     required this.caixaId,
     required this.extratos,
+    required this.totalEntradas,
+    required this.totalSaidas,
+    required this.saldo,
   });
 
   @override
-  List<Object?> get props => [caixa, caixaId, extratos];
+  List<Object?> get props => [
+        caixa,
+        caixaId,
+        extratos,
+        totalEntradas,
+        totalSaidas,
+        saldo,
+      ];
 }
 
 class FluxoDeCaixaInitial extends FluxoDeCaixaState {
@@ -21,6 +34,9 @@ class FluxoDeCaixaInitial extends FluxoDeCaixaState {
           caixa: null,
           caixaId: null,
           extratos: const [],
+          totalEntradas: 0,
+          totalSaidas: 0,
+          saldo: 0,
         );
 }
 
@@ -29,6 +45,9 @@ class FluxoDeCaixaCarregarEmProgresso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -37,6 +56,9 @@ class FluxoDeCaixaCarregarSucesso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -45,6 +67,9 @@ class FluxoDeCaixaCarregarFalha extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -53,6 +78,9 @@ class FluxoDeCaixaAbrirEmProgresso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -61,6 +89,9 @@ class FluxoDeCaixaAbrirSucesso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -69,6 +100,9 @@ class FluxoDeCaixaAbrirFalha extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -77,6 +111,9 @@ class FluxoDeCaixaFecharEmProgresso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -85,6 +122,9 @@ class FluxoDeCaixaFecharSucesso extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }
 
@@ -93,5 +133,8 @@ class FluxoDeCaixaFecharFalha extends FluxoDeCaixaState {
     required super.caixa,
     required super.caixaId,
     required super.extratos,
+    required super.totalEntradas,
+    required super.totalSaidas,
+    required super.saldo,
   });
 }

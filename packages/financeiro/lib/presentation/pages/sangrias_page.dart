@@ -4,26 +4,26 @@ import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
 
-class SuprimentosPage extends StatefulWidget {
+class SangriasPage extends StatefulWidget {
   final int caixaId;
 
-  const SuprimentosPage({
+  const SangriasPage({
     super.key,
     required this.caixaId,
   });
 
   @override
-  State<SuprimentosPage> createState() => _SuprimentosPageState();
+  State<SangriasPage> createState() => _SangriasPageState();
 }
 
-class _SuprimentosPageState extends State<SuprimentosPage> {
+class _SangriasPageState extends State<SangriasPage> {
   Future<void> _atualizar(BuildContext blocContext) async {
-    blocContext.read<SuprimentosBloc>().add(SuprimentosRecarregarSolicitado());
+    blocContext.read<SangriasBloc>().add(SangriasRecarregarSolicitado());
   }
 
-  Future<void> _novoSuprimento(BuildContext blocContext) async {
+  Future<void> _novaSangria(BuildContext blocContext) async {
     final resultado = await Navigator.of(blocContext).pushNamed(
-      '/suprimento',
+      '/sangria',
       arguments: {'caixaId': widget.caixaId},
     );
 
@@ -36,18 +36,18 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
     }
   }
 
-  Future<void> _cancelarSuprimento(
+  Future<void> _cancelarSangria(
     BuildContext blocContext,
-    Suprimento suprimento,
+    Sangria sangria,
   ) async {
     final motivo = await _solicitarMotivo();
-    if (!mounted || motivo == null || suprimento.id == null) {
+    if (!mounted || motivo == null || sangria.id == null) {
       return;
     }
 
-    blocContext.read<SuprimentosBloc>().add(
-          SuprimentoExclusaoSolicitada(
-            suprimentoId: suprimento.id!,
+    blocContext.read<SangriasBloc>().add(
+          SangriaExclusaoSolicitada(
+            sangriaId: sangria.id!,
             motivo: motivo,
           ),
         );
@@ -60,7 +60,7 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Excluir suprimento'),
+          title: const Text('Excluir sangria'),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -111,35 +111,34 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<SuprimentosBloc>(
-      create: (_) => sl<SuprimentosBloc>()
-        ..add(SuprimentosIniciou(caixaId: widget.caixaId)),
-      child: BlocConsumer<SuprimentosBloc, SuprimentosState>(
+    return BlocProvider<SangriasBloc>(
+      create: (_) =>
+          sl<SangriasBloc>()..add(SangriasIniciou(caixaId: widget.caixaId)),
+      child: BlocConsumer<SangriasBloc, SangriasState>(
         listenWhen: (previous, current) =>
             previous.step != current.step || previous.erro != current.erro,
         listener: (context, state) {
-          if (state.step == SuprimentosStep.cancelado) {
+          if (state.step == SangriasStep.cancelado) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Suprimento excluído com sucesso.')),
+              const SnackBar(content: Text('Sangria excluída com sucesso.')),
             );
           }
 
-          if (state.step == SuprimentosStep.falha && state.erro != null) {
+          if (state.step == SangriasStep.falha && state.erro != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.erro!)),
             );
           }
         },
         builder: (blocContext, state) {
-          final processando = state.step == SuprimentosStep.carregando ||
-              state.step == SuprimentosStep.cancelando;
-          final suprimentos = state.suprimentos;
+          final processando = state.step == SangriasStep.carregando ||
+              state.step == SangriasStep.cancelando;
+          final sangrias = state.sangrias;
 
           return Scaffold(
-            appBar: AppBar(title: const Text('Suprimentos do caixa')),
+            appBar: AppBar(title: const Text('Sangrias do caixa')),
             floatingActionButton: FloatingActionButton(
-              onPressed:
-                  processando ? null : () => _novoSuprimento(blocContext),
+              onPressed: processando ? null : () => _novaSangria(blocContext),
               child: const Icon(Icons.add),
             ),
             body: Column(
@@ -150,22 +149,22 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
                     leading: const Icon(Icons.point_of_sale_outlined),
                     title: Text('Caixa #${widget.caixaId}'),
                     subtitle: const Text(
-                      'Os suprimentos representam entradas de valores no caixa.',
+                      'As sangrias representam saídas de valores do caixa.',
                     ),
                   ),
                 ),
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      if (state.step == SuprimentosStep.carregando &&
-                          suprimentos.isEmpty) {
+                      if (state.step == SangriasStep.carregando &&
+                          sangrias.isEmpty) {
                         return const Center(
                           child: CircularProgressIndicator.adaptive(),
                         );
                       }
 
-                      if (state.step == SuprimentosStep.falha &&
-                          suprimentos.isEmpty) {
+                      if (state.step == SangriasStep.falha &&
+                          sangrias.isEmpty) {
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24),
@@ -176,7 +175,7 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
                                 const SizedBox(height: 12),
                                 Text(
                                   state.erro ??
-                                      'Falha ao carregar os suprimentos deste caixa.',
+                                      'Falha ao carregar as sangrias deste caixa.',
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 12),
@@ -190,7 +189,7 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
                         );
                       }
 
-                      if (suprimentos.isEmpty) {
+                      if (sangrias.isEmpty) {
                         return RefreshIndicator(
                           onRefresh: () => _atualizar(blocContext),
                           child: ListView(
@@ -201,7 +200,7 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
                               SizedBox(height: 12),
                               Center(
                                 child: Text(
-                                  'Nenhum suprimento cadastrado para este caixa.',
+                                  'Nenhuma sangria cadastrada para este caixa.',
                                 ),
                               ),
                             ],
@@ -213,17 +212,16 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
                         onRefresh: () => _atualizar(blocContext),
                         child: ListView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                          itemCount: suprimentos.length,
+                          itemCount: sangrias.length,
                           itemBuilder: (context, index) {
-                            final suprimento = suprimentos[index];
-                            return _SuprimentoCard(
-                              suprimento: suprimento,
+                            final sangria = sangrias[index];
+                            return _SangriaCard(
+                              sangria: sangria,
                               processando: processando,
-                              onExcluir:
-                                  suprimento.cancelado || suprimento.id == null
-                                      ? null
-                                      : () => _cancelarSuprimento(
-                                          blocContext, suprimento),
+                              onExcluir: sangria.cancelado || sangria.id == null
+                                  ? null
+                                  : () =>
+                                      _cancelarSangria(blocContext, sangria),
                             );
                           },
                         ),
@@ -240,20 +238,20 @@ class _SuprimentosPageState extends State<SuprimentosPage> {
   }
 }
 
-class _SuprimentoCard extends StatelessWidget {
-  final Suprimento suprimento;
+class _SangriaCard extends StatelessWidget {
+  final Sangria sangria;
   final bool processando;
   final VoidCallback? onExcluir;
 
-  const _SuprimentoCard({
-    required this.suprimento,
+  const _SangriaCard({
+    required this.sangria,
     required this.processando,
     required this.onExcluir,
   });
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = suprimento.cancelado ? Colors.red : Colors.green;
+    final statusColor = sangria.cancelado ? Colors.red : Colors.green;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -266,14 +264,14 @@ class _SuprimentoCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Suprimento #${suprimento.id ?? '-'}',
+                    'Sangria #${sangria.id ?? '-'}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 Chip(
-                  label: Text(suprimento.cancelado ? 'Cancelado' : 'Ativo'),
+                  label: Text(sangria.cancelado ? 'Cancelado' : 'Ativo'),
                   avatar: Icon(
-                    suprimento.cancelado ? Icons.block : Icons.check_circle,
+                    sangria.cancelado ? Icons.block : Icons.check_circle,
                     size: 16,
                     color: statusColor,
                   ),
@@ -281,13 +279,15 @@ class _SuprimentoCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text('Valor: ${_formatarMoeda(suprimento.valor)}'),
+            Text('Valor: ${_formatarMoeda(sangria.valor)}'),
             const SizedBox(height: 4),
-            Text('Descrição: ${suprimento.descricao}'),
-            if (suprimento.motivoCancelamento != null &&
-                suprimento.motivoCancelamento!.trim().isNotEmpty) ...[
+            Text('Origem: ${sangria.origem}'),
+            const SizedBox(height: 4),
+            Text('Descrição: ${sangria.descricao}'),
+            if (sangria.motivoCancelamento != null &&
+                sangria.motivoCancelamento!.trim().isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('Motivo da exclusão: ${suprimento.motivoCancelamento}'),
+              Text('Motivo da exclusão: ${sangria.motivoCancelamento}'),
             ],
             if (onExcluir != null) ...[
               const SizedBox(height: 12),

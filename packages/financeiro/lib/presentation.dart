@@ -6,6 +6,8 @@ export 'presentation/blocs/formas_de_pagamento_bloc/formas_de_pagamento_bloc.dar
 export 'presentation/blocs/cancelamento_romaneio_bloc/cancelamento_romaneio_bloc.dart';
 export 'presentation/blocs/suprimento_bloc/suprimento_bloc.dart';
 export 'presentation/blocs/suprimentos_bloc/suprimentos_bloc.dart';
+export 'presentation/blocs/sangria_bloc/sangria_bloc.dart';
+export 'presentation/blocs/sangrias_bloc/sangrias_bloc.dart';
 export 'presentation/blocs/fechamento_de_caixa_bloc/fechamento_de_caixa_bloc.dart';
 export 'presentation/pages/cancelamento_romaneio_page.dart';
 export 'presentation/pages/fluxo_de_caixa_page.dart';
@@ -13,6 +15,8 @@ export 'presentation/pages/forma_de_pagamento_page.dart';
 export 'presentation/pages/formas_de_pagamento_page.dart';
 export 'presentation/pages/suprimentos_page.dart';
 export 'presentation/pages/suprimento_page.dart';
+export 'presentation/pages/sangrias_page.dart';
+export 'presentation/pages/sangria_page.dart';
 export 'presentation/blocs/contagem_do_caixa_bloc/contagem_do_caixa_bloc.dart';
 export 'presentation/pages/contagem_do_caixa_page.dart';
 export 'presentation/widgets/formas_de_pagamento_seletor.dart';

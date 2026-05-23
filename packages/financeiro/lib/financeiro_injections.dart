@@ -41,6 +41,12 @@ void _remoteDataSources() {
     ),
   );
 
+  sl.registerFactory<ISangriasRemoteDataSource>(
+    () => SangriasRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
   sl.registerFactory<IContagemDoCaixaRemoteDataSource>(
     () => ContagemDoCaixaRemoteDataSource(
       informacoesParaRequest: sl(),
@@ -70,6 +76,12 @@ void _repositories() {
 
   sl.registerFactory<ISuprimentosRepository>(
     () => SuprimentosRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<ISangriasRepository>(
+    () => SangriasRepository(
       remoteDataSource: sl(),
     ),
   );
@@ -114,12 +126,24 @@ void _useCases() {
     () => CriarSuprimento(repository: sl()),
   );
 
+  sl.registerFactory<CriarSangria>(
+    () => CriarSangria(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarSuprimento>(
     () => RecuperarSuprimento(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarSangria>(
+    () => RecuperarSangria(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarSuprimentos>(
     () => RecuperarSuprimentos(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarSangrias>(
+    () => RecuperarSangrias(repository: sl()),
   );
 
   sl.registerFactory<CancelarRomaneio>(
@@ -128,6 +152,10 @@ void _useCases() {
 
   sl.registerFactory<CancelarSuprimento>(
     () => CancelarSuprimento(repository: sl()),
+  );
+
+  sl.registerFactory<CancelarSangria>(
+    () => CancelarSangria(repository: sl()),
   );
 
   sl.registerFactory<RecuperarContagemDoCaixa>(
@@ -178,6 +206,19 @@ void _presentation() {
 
   sl.registerFactory<SuprimentoBloc>(
     () => SuprimentoBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<SangriasBloc>(
+    () => SangriasBloc(
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<SangriaBloc>(
+    () => SangriaBloc(
       sl(),
     ),
   );

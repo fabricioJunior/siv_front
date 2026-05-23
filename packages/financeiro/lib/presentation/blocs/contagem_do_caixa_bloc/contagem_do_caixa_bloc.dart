@@ -19,8 +19,7 @@ class ContagemDoCaixaBloc
     this._recuperarContagem,
     this._recuperarItensPendentes,
     this._salvarItem,
-  )
-      : super(const ContagemDoCaixaState.initial()) {
+  ) : super(const ContagemDoCaixaState.initial()) {
     on<ContagemDoCaixaIniciou>(_onIniciou);
     on<ContagemDoCaixaItemValorAlterado>(_onItemValorAlterado);
     on<ContagemDoCaixaItemSalvou>(_onItemSalvou);
@@ -44,7 +43,7 @@ class ContagemDoCaixaBloc
       final itensPendentes = await _recuperarItensPendentes(
         caixaId: event.caixaId,
       );
-        final tiposPendentes =
+      final tiposPendentes =
           itensPendentes.map((item) => item.tipoDocumento).toSet();
 
       final valoresIniciais = <TipoContagemDoCaixaItem, String>{};
@@ -56,19 +55,9 @@ class ContagemDoCaixaBloc
         }
       }
 
-      final contagemInicial = contagem ?? await _salvarItem(
-        caixaId: event.caixaId,
-        contagemDoCaixa: _ContagemDoCaixaInterna(
-          id: null,
-          caixaId: event.caixaId,
-          observacao: '',
-          itens: const [],
-        ),
-      );
-
       emit(
         state.copyWith(
-          contagem: contagemInicial,
+          contagem: contagem,
           tiposPendentes: tiposPendentes.toList(),
           valoresEditados: valoresIniciais,
           step: ContagemDoCaixaStep.editando,

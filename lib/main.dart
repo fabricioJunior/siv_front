@@ -414,9 +414,12 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
     }
     if (route.settings.name == '/venda') {
       sl<SyncDataBloc>().add(
-        const SyncDataSolicitouSincronizacao(
-          origem: SyncDataOrigem.vendas,
-        ),
+        const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.vendas),
+      );
+    }
+    if (route.settings.name == '/estoque') {
+      sl<SyncDataBloc>().add(
+        const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.estoque),
       );
     }
   }

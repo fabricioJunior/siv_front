@@ -11,6 +11,15 @@ class DevolucaoIniciou extends DevolucaoEvent {
   const DevolucaoIniciou();
 }
 
+class DevolucaoBuscaRomaneiosSolicitada extends DevolucaoEvent {
+  final String? searchTerm;
+
+  const DevolucaoBuscaRomaneiosSolicitada({this.searchTerm});
+
+  @override
+  List<Object?> get props => [searchTerm];
+}
+
 class DevolucaoRomaneioOriginalSelecionado extends DevolucaoEvent {
   final Romaneio romaneio;
 

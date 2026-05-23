@@ -2,7 +2,7 @@ part of 'sync_data_bloc.dart';
 
 enum SyncModulo { codigos, estoque, tabelasDePreco, precosDaReferencia }
 
-enum SyncDataOrigem { home, entradaDeProdutos, manual , criarRomaneio, vendas}
+enum SyncDataOrigem { home, entradaDeProdutos, manual , criarRomaneio, vendas, estoque}
 
 enum SyncModuloStatus { aguardando, sincronizando, concluido, falha }
 

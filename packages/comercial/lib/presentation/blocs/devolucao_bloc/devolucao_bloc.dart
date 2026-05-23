@@ -26,6 +26,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     this._acessoGlobalSessao,
   ) : super(const DevolucaoState()) {
     on<DevolucaoIniciou>(_onIniciou);
+    on<DevolucaoBuscaRomaneiosSolicitada>(_onBuscaRomaneiosSolicitada);
     on<DevolucaoRomaneioOriginalSelecionado>(_onRomaneioOriginalSelecionado);
     on<DevolucaoLeituraSolicitada>(_onLeituraSolicitada);
     on<DevolucaoEdicaoSolicitada>(_onEdicaoSolicitada);
@@ -52,6 +53,9 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         state.copyWith(
           carregandoRomaneios: false,
           romaneiosDeVenda: romaneiosDeVenda,
+          romaneiosBuscaDeVenda: romaneiosDeVenda,
+          termoBuscaRomaneios: '',
+          erroBuscaRomaneios: null,
           erro: null,
         ),
       );
@@ -60,6 +64,54 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         state.copyWith(
           carregandoRomaneios: false,
           erro: 'Falha ao carregar romaneios de venda para devolucao.',
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  Future<void> _onBuscaRomaneiosSolicitada(
+    DevolucaoBuscaRomaneiosSolicitada event,
+    Emitter<DevolucaoState> emit,
+  ) async {
+    final searchTerm = (event.searchTerm ?? state.termoBuscaRomaneios).trim();
+    final filtroBusca = searchTerm.isEmpty ? null : searchTerm;
+
+    emit(
+      state.copyWith(
+        carregandoBuscaRomaneios: true,
+        termoBuscaRomaneios: searchTerm,
+        erroBuscaRomaneios: null,
+      ),
+    );
+
+    try {
+      final romaneios = await _recuperarRomaneios.call(
+        page: 1,
+        limit: 50,
+        searchTerm: filtroBusca,
+      );
+      final romaneiosDeVenda = romaneios
+          .where(
+            (romaneio) =>
+                romaneio.id != null && romaneio.operacao == TipoOperacao.venda,
+          )
+          .toList(growable: false);
+
+      emit(
+        state.copyWith(
+          carregandoBuscaRomaneios: false,
+          romaneiosBuscaDeVenda: romaneiosDeVenda,
+          termoBuscaRomaneios: searchTerm,
+          erroBuscaRomaneios: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          carregandoBuscaRomaneios: false,
+          termoBuscaRomaneios: searchTerm,
+          erroBuscaRomaneios: 'Falha ao buscar romaneios de venda.',
         ),
       );
       addError(e, s);

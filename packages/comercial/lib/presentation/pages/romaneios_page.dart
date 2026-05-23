@@ -2,126 +2,228 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
-class RomaneiosPage extends StatelessWidget {
+class RomaneiosPage extends StatefulWidget {
   const RomaneiosPage({super.key});
 
   @override
+  State<RomaneiosPage> createState() => _RomaneiosPageState();
+}
+
+class _RomaneiosPageState extends State<RomaneiosPage> {
+  late final RomaneiosBloc _romaneiosBloc;
+  final Debouncer _buscaDebouncer = Debouncer(milliseconds: 350);
+  final TextEditingController _buscaController = TextEditingController();
+  final FocusNode _buscaFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _romaneiosBloc = sl<RomaneiosBloc>()
+      ..add(RomaneiosIniciou(searchTerm: _buscaController.text));
+  }
+
+  @override
+  void dispose() {
+    _buscaDebouncer.cancel();
+    _buscaController.dispose();
+    _buscaFocusNode.dispose();
+    _romaneiosBloc.close();
+    super.dispose();
+  }
+
+  void _onBuscaAlteradaComDebounce(String _) {
+    setState(() {});
+    _buscaDebouncer.run(() {
+      if (!mounted) return;
+      _romaneiosBloc.add(
+            RomaneiosIniciou(searchTerm: _buscaController.text),
+          );
+    });
+  }
+
+  void _buscarAgora() {
+    _buscaDebouncer.cancel();
+    _romaneiosBloc.add(
+          RomaneiosIniciou(searchTerm: _buscaController.text),
+        );
+  }
+
+  void _limparBusca() {
+    _buscaDebouncer.cancel();
+    _buscaController.clear();
+    setState(() {});
+    _romaneiosBloc.add(
+          RomaneiosIniciou(searchTerm: ''),
+        );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider<RomaneiosBloc>(
-      create: (_) => sl<RomaneiosBloc>()..add(RomaneiosIniciou()),
+    return BlocProvider<RomaneiosBloc>.value(
+      value: _romaneiosBloc,
       child: Builder(
         builder: (context) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Romaneios')),
-            floatingActionButton: BlocBuilder<RomaneiosBloc, RomaneiosState>(
-              builder: (context, state) {
-                final carregando = state.step == RomaneiosStep.carregando;
-                return FloatingActionButton.extended(
-                  onPressed: carregando
-                      ? null
-                      : () async {
-                          final result = await Navigator.pushNamed(
-                            context,
-                            '/romaneio',
-                          );
-                          if (result == true && context.mounted) {
-                            context
-                                .read<RomaneiosBloc>()
-                                .add(RomaneiosIniciou());
-                          }
-                        },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Novo'),
-                );
-              },
-            ),
-            body: RefreshIndicator(
-              onRefresh: () async {
-                context.read<RomaneiosBloc>().add(RomaneiosIniciou());
-              },
-              child: BlocBuilder<RomaneiosBloc, RomaneiosState>(
+          return BlocListener<RomaneiosBloc, RomaneiosState>(
+            listenWhen: (previous, current) =>
+                previous.searchTerm != current.searchTerm,
+            listener: (context, state) {
+              if (_buscaFocusNode.hasFocus) return;
+              if (_buscaController.text == state.searchTerm) return;
+              _buscaController.text = state.searchTerm;
+              _buscaController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _buscaController.text.length),
+              );
+            },
+            child: Scaffold(
+              appBar: AppBar(title: const Text('Romaneios')),
+              floatingActionButton: BlocBuilder<RomaneiosBloc, RomaneiosState>(
                 builder: (context, state) {
-                  final totalRomaneios = state.romaneios.length;
-                  final totalPendentes = state.itensPendentesPorRomaneio.length;
-
-                  return ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _RomaneiosHeader(
-                        totalRomaneios: totalRomaneios,
-                        totalPendentes: totalPendentes,
-                      ),
-                      const SizedBox(height: 16),
-                      if (state.step == RomaneiosStep.carregando)
-                        const _EstadoListaCard(
-                          icon: Icons.hourglass_top_rounded,
-                          titulo: 'Carregando romaneios',
-                          descricao:
-                              'Aguarde enquanto os dados são atualizados.',
-                          child: CircularProgressIndicator.adaptive(),
-                        )
-                      else if (state.step == RomaneiosStep.falha)
-                        _EstadoListaCard(
-                          icon: Icons.error_outline,
-                          titulo: 'Falha ao carregar',
-                          descricao: state.erro ??
-                              'Não foi possível carregar os romaneios.',
-                        )
-                      else if (state.romaneios.isEmpty)
-                        const _EstadoListaCard(
-                          icon: Icons.inventory_2_outlined,
-                          titulo: 'Nenhum romaneio encontrado',
-                          descricao:
-                              'Crie um novo romaneio para começar a movimentação.',
-                        )
-                      else ...[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Text(
-                            'Lista de romaneios',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                        ),
-                        ...state.romaneios.map((romaneio) {
-                          final romaneioId = romaneio.id;
-                          final itensPendentes = romaneioId == null
-                              ? 0
-                              : (state.itensPendentesPorRomaneio[romaneioId] ??
-                                  0);
-                          final possuiPendencia = itensPendentes > 0;
-
-                          return _RomaneioCard(
-                            romaneio: romaneio,
-                            possuiPendencia: possuiPendencia,
-                            itensPendentes: itensPendentes,
-                            onTap: () async {
-                              final result = await Navigator.pushNamed(
-                                context,
-                                '/romaneio',
-                                arguments: {
-                                  'idRomaneio': romaneio.id,
-                                  'permitirEdicao': false,
-                                },
-                              );
-                              if (result == true && context.mounted) {
-                                context.read<RomaneiosBloc>().add(
-                                      RomaneiosIniciou(),
-                                    );
-                              }
-                            },
-                          );
-                        }),
-                      ],
-                    ],
+                  final carregando = state.step == RomaneiosStep.carregando;
+                  return FloatingActionButton.extended(
+                    onPressed: carregando
+                        ? null
+                        : () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              '/romaneio',
+                            );
+                            if (result == true && context.mounted) {
+                              context.read<RomaneiosBloc>().add(
+                                    RomaneiosIniciou(
+                                      searchTerm: state.searchTerm,
+                                    ),
+                                  );
+                            }
+                          },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Novo'),
                   );
                 },
+              ),
+              body: RefreshIndicator(
+                onRefresh: () async {
+                  _romaneiosBloc.add(
+                        RomaneiosIniciou(
+                          searchTerm: _romaneiosBloc.state.searchTerm,
+                        ),
+                      );
+                },
+                child: BlocBuilder<RomaneiosBloc, RomaneiosState>(
+                  builder: (context, state) {
+                    final totalRomaneios = state.romaneios.length;
+                    final totalPendentes =
+                        state.itensPendentesPorRomaneio.length;
+                    final buscaAtiva = state.searchTerm.trim().isNotEmpty;
+
+                    return ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _RomaneiosHeader(
+                          totalRomaneios: totalRomaneios,
+                          totalPendentes: totalPendentes,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _buscaController,
+                          focusNode: _buscaFocusNode,
+                          textInputAction: TextInputAction.search,
+                          onChanged: _onBuscaAlteradaComDebounce,
+                          onSubmitted: (_) => _buscarAgora(),
+                          decoration: InputDecoration(
+                            hintText: 'Buscar por ID, pessoa ou situação',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _buscaController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    onPressed: _limparBusca,
+                                    icon: const Icon(Icons.close),
+                                    tooltip: 'Limpar busca',
+                                  ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            isDense: true,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (state.step == RomaneiosStep.carregando)
+                          const _EstadoListaCard(
+                            icon: Icons.hourglass_top_rounded,
+                            titulo: 'Carregando romaneios',
+                            descricao:
+                                'Aguarde enquanto os dados são atualizados.',
+                            child: CircularProgressIndicator.adaptive(),
+                          )
+                        else if (state.step == RomaneiosStep.falha)
+                          _EstadoListaCard(
+                            icon: Icons.error_outline,
+                            titulo: 'Falha ao carregar',
+                            descricao: state.erro ??
+                                'Não foi possível carregar os romaneios.',
+                          )
+                        else if (state.romaneios.isEmpty)
+                          _EstadoListaCard(
+                            icon: Icons.inventory_2_outlined,
+                            titulo: buscaAtiva
+                                ? 'Nenhum resultado para a busca'
+                                : 'Nenhum romaneio encontrado',
+                            descricao: buscaAtiva
+                                ? 'Tente outro termo. A busca retorna no máximo 50 romaneios.'
+                                : 'Crie um novo romaneio para começar a movimentação.',
+                          )
+                        else ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              'Lista de romaneios',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ),
+                          ...state.romaneios.map((romaneio) {
+                            final romaneioId = romaneio.id;
+                            final itensPendentes = romaneioId == null
+                                ? 0
+                                : (state.itensPendentesPorRomaneio[
+                                          romaneioId] ??
+                                      0);
+                            final possuiPendencia = itensPendentes > 0;
+
+                            return _RomaneioCard(
+                              romaneio: romaneio,
+                              possuiPendencia: possuiPendencia,
+                              itensPendentes: itensPendentes,
+                              onTap: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  '/romaneio',
+                                  arguments: {
+                                    'idRomaneio': romaneio.id,
+                                    'permitirEdicao': false,
+                                  },
+                                );
+                                if (result == true && context.mounted) {
+                                  context.read<RomaneiosBloc>().add(
+                                        RomaneiosIniciou(
+                                          searchTerm: state.searchTerm,
+                                        ),
+                                      );
+                                }
+                              },
+                            );
+                          }),
+                        ],
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           );

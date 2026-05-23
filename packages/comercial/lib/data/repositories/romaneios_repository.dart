@@ -41,8 +41,16 @@ class RomaneiosRepository implements IRomaneiosRepository {
   }
 
   @override
-  Future<List<Romaneio>> recuperarRomaneios({int page = 1, int limit = 50}) {
-    return remoteDataSource.recuperarRomaneios(page: page, limit: limit);
+  Future<List<Romaneio>> recuperarRomaneios({
+    int page = 1,
+    int limit = 50,
+    String? searchTerm,
+  }) {
+    return remoteDataSource.recuperarRomaneios(
+      page: page,
+      limit: limit,
+      searchTerm: searchTerm,
+    );
   }
 
   @override

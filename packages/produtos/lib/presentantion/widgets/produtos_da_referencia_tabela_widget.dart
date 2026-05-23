@@ -5,35 +5,39 @@ import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 
-class ProdutosDaReferenciaTabelaidget extends StatefulWidget {
+class ProdutosDaReferenciaTabelaWidget extends StatefulWidget {
   final int referenciaId;
   final bool permitirCriacaoDeNovoProduto;
 
-  const ProdutosDaReferenciaTabelaidget({
+  const ProdutosDaReferenciaTabelaWidget({
     super.key,
     required this.referenciaId,
     this.permitirCriacaoDeNovoProduto = false,
   });
 
   @override
-  State<ProdutosDaReferenciaTabelaidget> createState() =>
-      _ProdutosDaReferenciaTabelaidgetState();
+  State<ProdutosDaReferenciaTabelaWidget> createState() =>
+      _ProdutosDaReferenciaTabelaWidgetState();
 }
 
-class _ProdutosDaReferenciaTabelaidgetState
-    extends State<ProdutosDaReferenciaTabelaidget> {
+class _ProdutosDaReferenciaTabelaWidgetState
+    extends State<ProdutosDaReferenciaTabelaWidget>
+    with SingleTickerProviderStateMixin {
   late final ProdutosDaReferenciaBloc _bloc;
+  late final TabController _tabController;
   final ScrollController _horizontalController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _bloc = sl<ProdutosDaReferenciaBloc>()
       ..add(ProdutosDaReferenciaIniciou(referenciaId: widget.referenciaId));
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _horizontalController.dispose();
     _bloc.close();
     super.dispose();
@@ -78,35 +82,166 @@ class _ProdutosDaReferenciaTabelaidgetState
             );
           }
 
-          return Scrollbar(
-            controller: _horizontalController,
-            thumbVisibility: true,
-            child: ScrollConfiguration(
-              behavior: const MaterialScrollBehavior().copyWith(
-                dragDevices: {
-                  PointerDeviceKind.touch,
-                  PointerDeviceKind.mouse,
-                  PointerDeviceKind.stylus,
-                  PointerDeviceKind.trackpad,
-                },
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Grade'),
+                  Tab(text: 'Produtos'),
+                ],
               ),
-              child: SingleChildScrollView(
-                controller: _horizontalController,
-                scrollDirection: Axis.horizontal,
-                physics: const ClampingScrollPhysics(),
-                child: DataTable(
-                  columns: _buildColumns(state.tamanhos),
-                  rows: _buildRows(
+              const SizedBox(height: 12),
+              AnimatedBuilder(
+                animation: _tabController,
+                builder: (context, _) {
+                  if (_tabController.index == 1) {
+                    return _buildProdutosCards(state.produtos);
+                  }
+
+                  return _buildGradeTab(
+                    context,
                     state.cores,
                     state.tamanhos,
                     state.mapaCorTamanhoParaProduto,
-                    context,
-                  ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGradeTab(
+    BuildContext context,
+    List<Cor> cores,
+    List<Tamanho> tamanhos,
+    Map<String, Produto> mapaCorTamanhoParaProduto,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildDisponiveisListas(cores, tamanhos),
+        const SizedBox(height: 12),
+        Scrollbar(
+          controller: _horizontalController,
+          thumbVisibility: true,
+          child: ScrollConfiguration(
+            behavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.trackpad,
+              },
+            ),
+            child: SingleChildScrollView(
+              controller: _horizontalController,
+              scrollDirection: Axis.horizontal,
+              physics: const ClampingScrollPhysics(),
+              child: DataTable(
+                columns: _buildColumns(tamanhos),
+                rows: _buildRows(
+                  cores,
+                  tamanhos,
+                  mapaCorTamanhoParaProduto,
+                  context,
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProdutosCards(List<Produto> produtos) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: produtos
+          .map(
+            (produto) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text('Produto #${produto.id ?? '-'}'),
+                subtitle: Text(
+                  'ID externo: ${produto.idExterno}\nCor: ${produto.cor?.nome ?? produto.corId} • Tamanho: ${produto.tamanho?.nome ?? produto.tamanhoId}',
+                ),
+                trailing: IconButton(
+                  onPressed: null,
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Exclusão pendente de alinhamento com backend',
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  Widget _buildDisponiveisListas(List<Cor> cores, List<Tamanho> tamanhos) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _buildListaDisponivelCard(
+          titulo: 'Cores disponíveis',
+          icone: Icons.palette_outlined,
+          itens: cores.map((cor) => cor.nome).toList(growable: false),
+        ),
+        _buildListaDisponivelCard(
+          titulo: 'Tamanhos disponíveis',
+          icone: Icons.straighten_outlined,
+          itens: tamanhos.map((tamanho) => tamanho.nome).toList(growable: false),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListaDisponivelCard({
+    required String titulo,
+    required IconData icone,
+    required List<String> itens,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 220),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.withValues(alpha: 0.08),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icone, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                titulo,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: itens
+                .map(
+                  (item) => Chip(
+                    visualDensity: VisualDensity.compact,
+                    label: Text(item),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
       ),
     );
   }
@@ -182,6 +317,6 @@ class _ProdutosDaReferenciaTabelaidgetState
         },
       );
     }
-    return Icon(Icons.close, size: 18, color: Colors.grey);
+    return const Icon(Icons.close, size: 18, color: Colors.grey);
   }
 }

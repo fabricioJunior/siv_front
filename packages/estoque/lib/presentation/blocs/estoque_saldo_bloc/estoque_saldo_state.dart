@@ -10,6 +10,9 @@ class EstoqueSaldoState extends Equatable {
   final int totalPages;
   final int totalItems;
   final String termoBusca;
+  final FiltroDisponibilidadeEstoque disponibilidadeEstoque;
+  final DateTime? atualizadoEmInicio;
+  final DateTime? atualizadoEmFim;
   final List<int> corIdsSelecionadas;
   final List<int> tamanhoIdsSelecionados;
   final bool sincronizando;
@@ -23,6 +26,9 @@ class EstoqueSaldoState extends Equatable {
     this.totalPages = 0,
     this.totalItems = 0,
     this.termoBusca = '',
+    this.disponibilidadeEstoque = FiltroDisponibilidadeEstoque.todos,
+    this.atualizadoEmInicio,
+    this.atualizadoEmFim,
     this.corIdsSelecionadas = const [],
     this.tamanhoIdsSelecionados = const [],
     this.sincronizando = false,
@@ -39,6 +45,9 @@ class EstoqueSaldoState extends Equatable {
     int? totalPages,
     int? totalItems,
     String? termoBusca,
+    FiltroDisponibilidadeEstoque? disponibilidadeEstoque,
+    Object? atualizadoEmInicio = _sentinelaErro,
+    Object? atualizadoEmFim = _sentinelaErro,
     List<int>? corIdsSelecionadas,
     List<int>? tamanhoIdsSelecionados,
     bool? sincronizando,
@@ -52,6 +61,14 @@ class EstoqueSaldoState extends Equatable {
       totalPages: totalPages ?? this.totalPages,
       totalItems: totalItems ?? this.totalItems,
       termoBusca: termoBusca ?? this.termoBusca,
+      disponibilidadeEstoque:
+          disponibilidadeEstoque ?? this.disponibilidadeEstoque,
+      atualizadoEmInicio: identical(atualizadoEmInicio, _sentinelaErro)
+          ? this.atualizadoEmInicio
+          : atualizadoEmInicio as DateTime?,
+      atualizadoEmFim: identical(atualizadoEmFim, _sentinelaErro)
+          ? this.atualizadoEmFim
+          : atualizadoEmFim as DateTime?,
       corIdsSelecionadas: corIdsSelecionadas ?? this.corIdsSelecionadas,
       tamanhoIdsSelecionados:
           tamanhoIdsSelecionados ?? this.tamanhoIdsSelecionados,
@@ -69,6 +86,9 @@ class EstoqueSaldoState extends Equatable {
     totalPages,
     totalItems,
     termoBusca,
+    disponibilidadeEstoque,
+    atualizadoEmInicio,
+    atualizadoEmFim,
     corIdsSelecionadas,
     tamanhoIdsSelecionados,
     sincronizando,

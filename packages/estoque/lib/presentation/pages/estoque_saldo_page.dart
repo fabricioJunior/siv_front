@@ -5,6 +5,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
+import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
 import 'package:estoque/presentation.dart';
 import 'package:flutter/material.dart';
 
@@ -33,6 +34,10 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
 
   List<int> _corIds = const [];
   List<int> _tamanhoIds = const [];
+  FiltroDisponibilidadeEstoque _disponibilidadeEstoque =
+      FiltroDisponibilidadeEstoque.todos;
+  DateTime? _atualizadoEmInicio;
+  DateTime? _atualizadoEmFim;
 
   @override
   void initState() {
@@ -57,8 +62,31 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         termoBusca: _buscaController.text.trim(),
         corIds: _corIds,
         tamanhoIds: _tamanhoIds,
+        disponibilidadeEstoque: _disponibilidadeEstoque,
+        atualizadoEmInicio: _atualizadoEmInicio,
+        atualizadoEmFim: _atualizadoEmFim,
       ),
     );
+  }
+
+  Future<void> _selecionarPeriodoAtualizacao() async {
+    final intervaloSelecionado = await showDateRangePicker(
+      context: context,
+      initialDateRange: _atualizadoEmInicio != null && _atualizadoEmFim != null
+          ? DateTimeRange(start: _atualizadoEmInicio!, end: _atualizadoEmFim!)
+          : null,
+      currentDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+      helpText: 'Filtrar por período de atualização',
+    );
+
+    if (!mounted || intervaloSelecionado == null) return;
+    setState(() {
+      _atualizadoEmInicio = intervaloSelecionado.start;
+      _atualizadoEmFim = intervaloSelecionado.end;
+    });
+    _recarregar();
   }
 
   void _onScroll() {
@@ -113,7 +141,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SearchBar(
                       controller: _buscaController,
@@ -121,6 +149,70 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                           'Buscar por nome, produto externo ou referência externa',
                       onChanged: (_) => _debouncer.run(_recarregar),
                       onSubmitted: (_) => _recarregar(),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Todos'),
+                          selected: _disponibilidadeEstoque ==
+                              FiltroDisponibilidadeEstoque.todos,
+                          onSelected: (_) {
+                            setState(() {
+                              _disponibilidadeEstoque =
+                                  FiltroDisponibilidadeEstoque.todos;
+                            });
+                            _recarregar();
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Com estoque'),
+                          selected: _disponibilidadeEstoque ==
+                              FiltroDisponibilidadeEstoque.comEstoque,
+                          onSelected: (_) {
+                            setState(() {
+                              _disponibilidadeEstoque =
+                                  FiltroDisponibilidadeEstoque.comEstoque;
+                            });
+                            _recarregar();
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Sem estoque'),
+                          selected: _disponibilidadeEstoque ==
+                              FiltroDisponibilidadeEstoque.semEstoque,
+                          onSelected: (_) {
+                            setState(() {
+                              _disponibilidadeEstoque =
+                                  FiltroDisponibilidadeEstoque.semEstoque;
+                            });
+                            _recarregar();
+                          },
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _selecionarPeriodoAtualizacao,
+                          icon: const Icon(Icons.calendar_today_outlined),
+                          label: Text(
+                            _atualizadoEmInicio == null || _atualizadoEmFim == null
+                                ? 'Atualizado em (intervalo)'
+                                : 'Atualizado: ${_formatDateOnly(_atualizadoEmInicio!)} - ${_formatDateOnly(_atualizadoEmFim!)}',
+                          ),
+                        ),
+                        if (_atualizadoEmInicio != null || _atualizadoEmFim != null)
+                          TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _atualizadoEmInicio = null;
+                                _atualizadoEmFim = null;
+                              });
+                              _recarregar();
+                            },
+                            icon: const Icon(Icons.close),
+                            label: const Text('Limpar data'),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     ...[
@@ -296,5 +388,12 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     final h = value.hour.toString().padLeft(2, '0');
     final min = value.minute.toString().padLeft(2, '0');
     return '$d/$m/$y $h:$min';
+  }
+
+  String _formatDateOnly(DateTime value) {
+    final d = value.day.toString().padLeft(2, '0');
+    final m = value.month.toString().padLeft(2, '0');
+    final y = value.year.toString();
+    return '$d/$m/$y';
   }
 }

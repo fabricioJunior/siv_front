@@ -1,5 +1,7 @@
 import 'package:core/equals.dart';
 
+enum FiltroDisponibilidadeEstoque { todos, comEstoque, semEstoque }
+
 class FiltroProdutoDoEstoque extends Equatable {
   final List<int> empresaIds;
   final List<int> referenciaIds;
@@ -10,6 +12,9 @@ class FiltroProdutoDoEstoque extends Equatable {
   final List<int> tamanhoIds;
   final int page;
   final int limit;
+  final FiltroDisponibilidadeEstoque disponibilidadeEstoque;
+  final DateTime? atualizadoEmInicio;
+  final DateTime? atualizadoEmFim;
   final DateTime? ultimaAtualizacaoInicio;
   final DateTime? ultimaAtualizacaoFim;
 
@@ -23,6 +28,9 @@ class FiltroProdutoDoEstoque extends Equatable {
     this.tamanhoIds = const [],
     this.page = 1,
     this.limit = 20,
+    this.disponibilidadeEstoque = FiltroDisponibilidadeEstoque.todos,
+    this.atualizadoEmInicio,
+    this.atualizadoEmFim,
     this.ultimaAtualizacaoFim,
     this.ultimaAtualizacaoInicio,
   });
@@ -37,6 +45,11 @@ class FiltroProdutoDoEstoque extends Equatable {
     List<int>? tamanhoIds,
     int? page,
     int? limit,
+    FiltroDisponibilidadeEstoque? disponibilidadeEstoque,
+    DateTime? atualizadoEmInicio,
+    DateTime? atualizadoEmFim,
+    DateTime? ultimaAtualizacaoInicio,
+    DateTime? ultimaAtualizacaoFim,
   }) {
     return FiltroProdutoDoEstoque(
       empresaIds: empresaIds ?? this.empresaIds,
@@ -48,6 +61,13 @@ class FiltroProdutoDoEstoque extends Equatable {
       tamanhoIds: tamanhoIds ?? this.tamanhoIds,
       page: page ?? this.page,
       limit: limit ?? this.limit,
+      disponibilidadeEstoque:
+          disponibilidadeEstoque ?? this.disponibilidadeEstoque,
+        atualizadoEmInicio: atualizadoEmInicio ?? this.atualizadoEmInicio,
+        atualizadoEmFim: atualizadoEmFim ?? this.atualizadoEmFim,
+      ultimaAtualizacaoInicio:
+          ultimaAtualizacaoInicio ?? this.ultimaAtualizacaoInicio,
+      ultimaAtualizacaoFim: ultimaAtualizacaoFim ?? this.ultimaAtualizacaoFim,
     );
   }
 
@@ -62,5 +82,10 @@ class FiltroProdutoDoEstoque extends Equatable {
     tamanhoIds,
     page,
     limit,
+    disponibilidadeEstoque,
+    atualizadoEmInicio,
+    atualizadoEmFim,
+    ultimaAtualizacaoInicio,
+    ultimaAtualizacaoFim,
   ];
 }

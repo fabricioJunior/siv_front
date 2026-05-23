@@ -439,7 +439,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                               ),
                               child:
                                   (_referencia?.id ?? widget.idReferencia) > 0
-                                  ? ProdutosDaReferenciaTabelaidget(
+                                  ? ProdutosDaReferenciaTabelaWidget(
                                       permitirCriacaoDeNovoProduto: true,
                                       referenciaId:
                                           _referencia?.id ??

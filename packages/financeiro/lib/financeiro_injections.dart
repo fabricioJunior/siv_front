@@ -134,8 +134,16 @@ void _useCases() {
     () => RecuperarContagemDoCaixa(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarItensPendentesParaContagemDoCaixaUseCase>(
+    () => RecuperarItensPendentesParaContagemDoCaixaUseCase(repository: sl()),
+  );
+
   sl.registerFactory<SalvarItemDaContagemDoCaixa>(
     () => SalvarItemDaContagemDoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<EncerrarContagemDoCaixa>(
+    () => EncerrarContagemDoCaixa(repository: sl()),
   );
 
   sl.registerFactory<AtualizarFormaDePagamento>(
@@ -146,6 +154,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<FluxoDeCaixaBloc>(
     () => FluxoDeCaixaBloc(
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -175,6 +184,14 @@ void _presentation() {
 
   sl.registerFactory<ContagemDoCaixaBloc>(
     () => ContagemDoCaixaBloc(
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<FechamentoDeCaixaBloc>(
+    () => FechamentoDeCaixaBloc(
       sl(),
       sl(),
     ),

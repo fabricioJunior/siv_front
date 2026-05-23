@@ -43,8 +43,7 @@ class VinculorGrupoDeAcessoDoUsuarioRemoteDataSource
     var result = await post(
       pathParameters: pathParamenters,
       body: {
-        'grupoId': idGrupoDeAcesso,
-        'empresaId': idEmpresa,
+        '{empresaId/grupoId}': '$idEmpresa/$idGrupoDeAcesso',
       },
     );
 

@@ -20,6 +20,15 @@ abstract class ExtratoCaixa {
 
 enum TipoDocumentoExtratoCaixa {
   dinheiro,
+  pix,
+  cartao,
+  cheque,
+  fatura,
+  troco,
+  voucher,
+  tedDoc,
+  adiantamento,
+  creditoDeDevolucao,
 }
 
 enum TipoHistoricoExtratoCaixa {

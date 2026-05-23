@@ -3,6 +3,7 @@ part of 'contagem_do_caixa_bloc.dart';
 class ContagemDoCaixaState extends Equatable {
   final int? caixaId;
   final ContagemDoCaixa? contagem;
+  final List<TipoContagemDoCaixaItem> tiposPendentes;
   final Map<TipoContagemDoCaixaItem, String> valoresEditados;
   final TipoContagemDoCaixaItem? itemSendoSalvo;
   final TipoContagemDoCaixaItem? tipoComErro;
@@ -12,6 +13,7 @@ class ContagemDoCaixaState extends Equatable {
   const ContagemDoCaixaState({
     this.caixaId,
     this.contagem,
+    this.tiposPendentes = const [],
     this.valoresEditados = const {},
     this.itemSendoSalvo,
     this.tipoComErro,
@@ -22,6 +24,7 @@ class ContagemDoCaixaState extends Equatable {
   const ContagemDoCaixaState.initial()
       : caixaId = null,
         contagem = null,
+        tiposPendentes = const [],
         valoresEditados = const {},
         itemSendoSalvo = null,
         tipoComErro = null,
@@ -31,6 +34,7 @@ class ContagemDoCaixaState extends Equatable {
   ContagemDoCaixaState copyWith({
     int? caixaId,
     ContagemDoCaixa? contagem,
+    List<TipoContagemDoCaixaItem>? tiposPendentes,
     Map<TipoContagemDoCaixaItem, String>? valoresEditados,
     TipoContagemDoCaixaItem? itemSendoSalvo,
     TipoContagemDoCaixaItem? tipoComErro,
@@ -42,6 +46,7 @@ class ContagemDoCaixaState extends Equatable {
     return ContagemDoCaixaState(
       caixaId: caixaId ?? this.caixaId,
       contagem: contagem ?? this.contagem,
+      tiposPendentes: tiposPendentes ?? this.tiposPendentes,
       valoresEditados: valoresEditados ?? this.valoresEditados,
       itemSendoSalvo:
           clearItemSendoSalvo ? null : itemSendoSalvo ?? this.itemSendoSalvo,
@@ -55,6 +60,7 @@ class ContagemDoCaixaState extends Equatable {
   List<Object?> get props => [
         caixaId,
         contagem,
+        tiposPendentes,
         valoresEditados,
         itemSendoSalvo,
         tipoComErro,

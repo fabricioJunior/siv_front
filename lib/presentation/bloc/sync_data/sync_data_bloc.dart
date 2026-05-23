@@ -62,8 +62,15 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
 
     await _cancelarSincronizacoesAtivas();
 
+    final usuarioDaSessao = await _recuperarUsuarioDaSessao();
+    final usuarioAtualEhSysAdmin =
+      usuarioDaSessao?.tipo == TipoUsuario.sysadmin;
+
     final permissoesDoUsuario = await _carregarPermissoesDoUsuario();
-    final modulosPermitidos = _resolverModulosPermitidos(permissoesDoUsuario);
+    final modulosPermitidos = _resolverModulosPermitidos(
+      permissoesDoUsuario: permissoesDoUsuario,
+      usuarioAtualEhSysAdmin: usuarioAtualEhSysAdmin,
+    );
 
     final modulosEmSincronizacao = <SyncModulo, SyncModuloState>{
       for (final modulo in state.modulos.entries)
@@ -89,6 +96,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
         iniciadoEm: DateTime.now(),
         finalizadoEm: null,
         origemUltimaSincronizacao: event.origem,
+        usuarioAtualEhSysAdmin: usuarioAtualEhSysAdmin,
         permissoesDoUsuario: permissoesDoUsuario,
         modulos: modulosEmSincronizacao,
       ),
@@ -373,9 +381,14 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
   }
 
-  Set<SyncModulo> _resolverModulosPermitidos([
+  Set<SyncModulo> _resolverModulosPermitidos({
     Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
-  ]) {
+    bool? usuarioAtualEhSysAdmin,
+  }) {
+    if (usuarioAtualEhSysAdmin ?? state.usuarioAtualEhSysAdmin) {
+      return SyncModulo.values.toSet();
+    }
+
     final permitidos = <SyncModulo>{};
     final permissoes = permissoesDoUsuario ?? state.permissoesDoUsuario;
 

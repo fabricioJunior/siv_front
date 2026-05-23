@@ -11,9 +11,15 @@ part 'contagem_do_caixa_state.dart';
 class ContagemDoCaixaBloc
     extends Bloc<ContagemDoCaixaEvent, ContagemDoCaixaState> {
   final RecuperarContagemDoCaixa _recuperarContagem;
+  final RecuperarItensPendentesParaContagemDoCaixaUseCase
+      _recuperarItensPendentes;
   final SalvarItemDaContagemDoCaixa _salvarItem;
 
-  ContagemDoCaixaBloc(this._recuperarContagem, this._salvarItem)
+  ContagemDoCaixaBloc(
+    this._recuperarContagem,
+    this._recuperarItensPendentes,
+    this._salvarItem,
+  )
       : super(const ContagemDoCaixaState.initial()) {
     on<ContagemDoCaixaIniciou>(_onIniciou);
     on<ContagemDoCaixaItemValorAlterado>(_onItemValorAlterado);
@@ -35,27 +41,45 @@ class ContagemDoCaixaBloc
 
     try {
       final contagem = await _recuperarContagem(caixaId: event.caixaId);
+      final itensPendentes = await _recuperarItensPendentes(
+        caixaId: event.caixaId,
+      );
+        final tiposPendentes =
+          itensPendentes.map((item) => item.tipoDocumento).toSet();
 
       final valoresIniciais = <TipoContagemDoCaixaItem, String>{};
       if (contagem != null) {
         for (final item in contagem.itens) {
-          valoresIniciais[item.tipo] = item.valor.toStringAsFixed(2);
+          if (tiposPendentes.contains(item.tipoDocumento)) {
+            valoresIniciais[item.tipoDocumento] = item.valor.toStringAsFixed(2);
+          }
         }
       }
 
+      final contagemInicial = contagem ?? await _salvarItem(
+        caixaId: event.caixaId,
+        contagemDoCaixa: _ContagemDoCaixaInterna(
+          id: null,
+          caixaId: event.caixaId,
+          observacao: '',
+          itens: const [],
+        ),
+      );
+
       emit(
         state.copyWith(
-          contagem: contagem,
+          contagem: contagemInicial,
+          tiposPendentes: tiposPendentes.toList(),
           valoresEditados: valoresIniciais,
           step: ContagemDoCaixaStep.editando,
           erro: null,
         ),
       );
-    } catch (_) {
+    } catch (error) {
       emit(
         state.copyWith(
           step: ContagemDoCaixaStep.falha,
-          erro: 'Falha ao carregar a contagem do caixa. Tente novamente.',
+          erro: _mensagemFalhaCarregamento(error),
         ),
       );
     }
@@ -109,12 +133,12 @@ class ContagemDoCaixaBloc
       final itemExistente = _buscarItemPorTipo(itensAtualizados, event.tipo);
       final itemAtualizado = _ContagemDoCaixaItemInterno(
         id: itemExistente?.id,
-        tipo: event.tipo,
+        tipoDocumento: event.tipo,
         valor: valor,
       );
 
       final indiceExistente = itensAtualizados.indexWhere(
-        (i) => i.tipo == event.tipo,
+        (i) => i.tipoDocumento == event.tipo,
       );
       if (indiceExistente >= 0) {
         itensAtualizados[indiceExistente] = itemAtualizado;
@@ -127,14 +151,14 @@ class ContagemDoCaixaBloc
         itens: itensAtualizados,
       );
 
-      await _salvarItem(
+      final contagemPersistida = await _salvarItem(
         caixaId: caixaId,
         contagemDoCaixa: contagemAtualizada,
       );
 
       emit(
         state.copyWith(
-          contagem: contagemAtualizada,
+          contagem: contagemPersistida,
           step: ContagemDoCaixaStep.editando,
           clearItemSendoSalvo: true,
           clearTipoComErro: true,
@@ -164,7 +188,7 @@ class ContagemDoCaixaBloc
     final itensExistentes =
         state.contagem?.itens ?? const <ContagemDoCaixaItem>[];
 
-    for (final tipo in TipoContagemDoCaixaItem.values) {
+    for (final tipo in state.tiposPendentes) {
       final valorDigitado = (state.valoresEditados[tipo] ?? '').trim();
       if (valorDigitado.isEmpty) {
         continue;
@@ -187,7 +211,7 @@ class ContagemDoCaixaBloc
       itensPreenchidos.add(
         _ContagemDoCaixaItemInterno(
           id: itemExistente?.id,
-          tipo: tipo,
+          tipoDocumento: tipo,
           valor: valor,
         ),
       );
@@ -220,14 +244,14 @@ class ContagemDoCaixaBloc
     );
 
     try {
-      await _salvarItem(
+      final contagemPersistida = await _salvarItem(
         caixaId: caixaId,
         contagemDoCaixa: contagemAtualizada,
       );
 
       emit(
         state.copyWith(
-          contagem: contagemAtualizada,
+          contagem: contagemPersistida,
           step: ContagemDoCaixaStep.editando,
           clearItemSendoSalvo: true,
           clearTipoComErro: true,
@@ -264,12 +288,20 @@ class ContagemDoCaixaBloc
     TipoContagemDoCaixaItem tipo,
   ) {
     for (final item in itens) {
-      if (item.tipo == tipo) {
+      if (item.tipoDocumento == tipo) {
         return item;
       }
     }
     return null;
   }
+}
+
+String _mensagemFalhaCarregamento(Object error) {
+  if (error is FormatException) {
+    return 'Falha ao processar os dados do caixa. Verifique o retorno da API e tente novamente.';
+  }
+
+  return 'Falha ao carregar a contagem do caixa. Tente novamente.';
 }
 
 class _ContagemDoCaixaInterna implements ContagemDoCaixa {
@@ -307,16 +339,16 @@ class _ContagemDoCaixaItemInterno implements ContagemDoCaixaItem {
   final double valor;
 
   @override
-  final TipoContagemDoCaixaItem tipo;
+  final TipoContagemDoCaixaItem tipoDocumento;
 
   const _ContagemDoCaixaItemInterno({
     this.id,
     required this.valor,
-    required this.tipo,
+    required this.tipoDocumento,
   });
 
   @override
-  List<Object?> get props => [id, valor, tipo];
+  List<Object?> get props => [id, valor, tipoDocumento];
 
   @override
   bool? get stringify => true;

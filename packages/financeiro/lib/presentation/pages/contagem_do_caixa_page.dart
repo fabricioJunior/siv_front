@@ -3,6 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ContagemDoCaixaPage extends StatelessWidget {
   final int caixaId;
@@ -46,6 +47,41 @@ class ContagemDoCaixaPage extends StatelessWidget {
               );
             }
 
+            if (state.step == ContagemDoCaixaStep.falha &&
+                state.contagem == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 36,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        state.erro ??
+                            'Falha ao carregar a contagem do caixa. Tente novamente.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () {
+                          context.read<ContagemDoCaixaBloc>().add(
+                                ContagemDoCaixaIniciou(caixaId: caixaId),
+                              );
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             return _ContagemDoCaixaForm(caixaId: caixaId);
           },
         ),
@@ -84,7 +120,8 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
   }
 
   void _syncControllersFromState(ContagemDoCaixaState state) {
-    for (final tipo in TipoContagemDoCaixaItem.values) {
+    for (final tipo in state.tiposPendentes) {
+      _controllers.putIfAbsent(tipo, () => TextEditingController());
       final controller = _controllers[tipo]!;
       final valor = state.valoresEditados[tipo] ?? '';
       if (controller.text != valor) {
@@ -126,20 +163,40 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
         }
       },
       builder: (context, state) {
+        _syncControllersFromState(state);
         final salvando = state.step == ContagemDoCaixaStep.salvandoItem;
+        for (final tipo in state.tiposPendentes) {
+          _controllers.putIfAbsent(tipo, () => TextEditingController());
+        }
 
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            if (state.contagem != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  'Itens já contados: ${state.contagem!.itens.length} / ${TipoContagemDoCaixaItem.values.length}',
-                  style: Theme.of(context).textTheme.bodySmall,
+            if (state.tiposPendentes.isNotEmpty) ...[
+              Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: const Icon(Icons.playlist_add_check_circle_outlined),
+                  title: const Text('Contagem pendente'),
+                  subtitle: Text(
+                    'Preencha os itens pendentes de pagamento para concluir o fechamento.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: Chip(
+                    label: Text('${state.tiposPendentes.length} itens'),
+                  ),
                 ),
               ),
-            ...TipoContagemDoCaixaItem.values.map(
+            ] else
+              const Card(
+                margin: EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: Icon(Icons.check_circle_outline, color: Colors.green),
+                  title: Text('Nenhum item pendente'),
+                  subtitle: Text('Nao ha contagens pendentes para este caixa.'),
+                ),
+              ),
+            ...state.tiposPendentes.map(
               (tipo) => _ItemContagemCard(
                 tipo: tipo,
                 controller: _controllers[tipo]!,
@@ -196,7 +253,7 @@ class _ItemContagemCard extends StatelessWidget {
   });
 
   bool get _jaSalvo =>
-      state.contagem?.itens.any((i) => i.tipo == tipo) ?? false;
+      state.contagem?.itens.any((i) => i.tipoDocumento == tipo) ?? false;
 
   bool get _salvandoEsteItem => state.itemSendoSalvo == tipo;
 
@@ -204,12 +261,31 @@ class _ItemContagemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorIcone = _corTipo(tipo);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colorIcone.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(_iconeTipo(tipo), color: colorIcone, size: 20),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +294,9 @@ class _ItemContagemCard extends StatelessWidget {
                     children: [
                       Text(
                         _labelTipo(tipo),
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       if (_jaSalvo) ...[
                         const SizedBox(width: 6),
@@ -236,9 +314,11 @@ class _ItemContagemCard extends StatelessWidget {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    inputFormatters: [_decimalInputFormatter],
                     decoration: InputDecoration(
                       prefixText: 'R\$ ',
                       isDense: true,
+                      hintText: '0,00',
                       errorText: _erroNesteItem ? state.erro : null,
                     ),
                     onChanged: (valor) {
@@ -292,4 +372,68 @@ class _ItemContagemCard extends StatelessWidget {
         return 'Crédito de devolução';
     }
   }
+
+  IconData _iconeTipo(TipoContagemDoCaixaItem tipo) {
+    switch (tipo) {
+      case TipoContagemDoCaixaItem.dinheiro:
+        return Icons.payments_outlined;
+      case TipoContagemDoCaixaItem.pix:
+        return Icons.pix;
+      case TipoContagemDoCaixaItem.cartao:
+        return Icons.credit_card_outlined;
+      case TipoContagemDoCaixaItem.fatura:
+        return Icons.receipt_long_outlined;
+      case TipoContagemDoCaixaItem.cheque:
+        return Icons.request_quote_outlined;
+      case TipoContagemDoCaixaItem.troco:
+        return Icons.currency_exchange;
+      case TipoContagemDoCaixaItem.voucher:
+        return Icons.confirmation_number_outlined;
+      case TipoContagemDoCaixaItem.tedDoc:
+        return Icons.swap_horiz_outlined;
+      case TipoContagemDoCaixaItem.adiantamento:
+        return Icons.trending_up_outlined;
+      case TipoContagemDoCaixaItem.creditoDeDevolucao:
+        return Icons.assignment_return_outlined;
+    }
+  }
+
+  Color _corTipo(TipoContagemDoCaixaItem tipo) {
+    switch (tipo) {
+      case TipoContagemDoCaixaItem.dinheiro:
+        return Colors.green;
+      case TipoContagemDoCaixaItem.pix:
+        return Colors.teal;
+      case TipoContagemDoCaixaItem.cartao:
+        return Colors.blue;
+      case TipoContagemDoCaixaItem.fatura:
+        return Colors.indigo;
+      case TipoContagemDoCaixaItem.cheque:
+        return Colors.brown;
+      case TipoContagemDoCaixaItem.troco:
+        return Colors.orange;
+      case TipoContagemDoCaixaItem.voucher:
+        return Colors.deepPurple;
+      case TipoContagemDoCaixaItem.tedDoc:
+        return Colors.cyan;
+      case TipoContagemDoCaixaItem.adiantamento:
+        return Colors.deepOrange;
+      case TipoContagemDoCaixaItem.creditoDeDevolucao:
+        return Colors.pink;
+    }
+  }
 }
+
+final _decimalInputFormatter = TextInputFormatter.withFunction(
+  (oldValue, newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final normalizado = newValue.text.replaceAll('.', ',');
+    final regex = RegExp(r'^\d+(,\d{0,2})?$');
+    if (!regex.hasMatch(normalizado)) {
+      return oldValue;
+    }
+
+    return newValue.copyWith(text: normalizado);
+  },
+);

@@ -8,19 +8,20 @@ class ContagemDoCaixaItemDto implements ContagemDoCaixaItem {
   final double valor;
 
   @override
-  final TipoContagemDoCaixaItem tipo;
+  
+  final TipoContagemDoCaixaItem tipoDocumento;
 
   const ContagemDoCaixaItemDto({
     this.id,
     required this.valor,
-    required this.tipo,
+    required this.tipoDocumento,
   });
 
   factory ContagemDoCaixaItemDto.fromJson(Map<String, dynamic> json) {
     return ContagemDoCaixaItemDto(
-      id: (json['id'] as num?)?.toInt(),
+      id: int.tryParse(json['id'] as String? ?? ''),
       valor: _parseDouble(json['valor'] ?? json['amount']) ?? 0.0,
-      tipo: _parseTipo(json['tipo'] ?? json['type']),
+      tipoDocumento: _parseTipo(json['tipoDocumento'] ?? json['type']),
     );
   }
 
@@ -32,14 +33,45 @@ class ContagemDoCaixaItemDto implements ContagemDoCaixaItem {
 
   static TipoContagemDoCaixaItem _parseTipo(dynamic value) {
     final str = value?.toString() ?? '';
+    final strNormalizado = _normalizarTexto(str);
     return TipoContagemDoCaixaItem.values.firstWhere(
-      (e) => e.name == str || e.name.toLowerCase() == str.toLowerCase(),
+      (e) =>
+          e.name == str ||
+          _normalizarTexto(e.name) == strNormalizado,
       orElse: () => TipoContagemDoCaixaItem.dinheiro,
     );
   }
 
+  static String _normalizarTexto(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('à', 'a')
+        .replaceAll('â', 'a')
+        .replaceAll('ã', 'a')
+        .replaceAll('ä', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('è', 'e')
+        .replaceAll('ê', 'e')
+        .replaceAll('ë', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ì', 'i')
+        .replaceAll('î', 'i')
+        .replaceAll('ï', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ò', 'o')
+        .replaceAll('ô', 'o')
+        .replaceAll('õ', 'o')
+        .replaceAll('ö', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ù', 'u')
+        .replaceAll('û', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ç', 'c');
+  }
+
   @override
-  List<Object?> get props => [id, valor, tipo];
+  List<Object?> get props => [id, valor, tipoDocumento];
 
   @override
   bool? get stringify => true;

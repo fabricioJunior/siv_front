@@ -50,3 +50,12 @@ class FluxoDeCaixaFiltrouDocumento extends FluxoDeCaixaEvent {
   @override
   List<Object?> get props => [documento];
 }
+
+class FluxoDeCaixaFechouCaixa extends FluxoDeCaixaEvent {
+  final int caixaId;
+
+  const FluxoDeCaixaFechouCaixa({required this.caixaId});
+
+  @override
+  List<Object?> get props => [caixaId];
+}

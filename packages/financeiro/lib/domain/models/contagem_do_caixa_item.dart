@@ -3,10 +3,10 @@ import 'package:core/equals.dart';
 abstract class ContagemDoCaixaItem implements Equatable {
   int? get id;
   double get valor;
-  TipoContagemDoCaixaItem get tipo;
+  TipoContagemDoCaixaItem get tipoDocumento;
 
   @override
-  List<Object?> get props => [id, valor, tipo];
+  List<Object?> get props => [id, valor, tipoDocumento];
 
   @override
   bool? get stringify => true;

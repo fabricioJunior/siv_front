@@ -95,6 +95,7 @@ class SyncModuloState extends Equatable {
 class SyncDataState extends Equatable {
   final Map<SyncModulo, SyncModuloState> modulos;
   final Map<String, PermissaoDoUsuario> permissoesDoUsuario;
+  final bool usuarioAtualEhSysAdmin;
   final bool homeJaSincronizada;
   final DateTime? iniciadoEm;
   final DateTime? finalizadoEm;
@@ -112,6 +113,7 @@ class SyncDataState extends Equatable {
       ),
     },
     this.permissoesDoUsuario = const {},
+    this.usuarioAtualEhSysAdmin = false,
     this.homeJaSincronizada = false,
     this.iniciadoEm,
     this.finalizadoEm,
@@ -121,6 +123,7 @@ class SyncDataState extends Equatable {
   SyncDataState copyWith({
     Map<SyncModulo, SyncModuloState>? modulos,
     Map<String, PermissaoDoUsuario>? permissoesDoUsuario,
+    bool? usuarioAtualEhSysAdmin,
     bool? homeJaSincronizada,
     DateTime? iniciadoEm,
     DateTime? finalizadoEm,
@@ -129,6 +132,8 @@ class SyncDataState extends Equatable {
     return SyncDataState(
       modulos: modulos ?? this.modulos,
       permissoesDoUsuario: permissoesDoUsuario ?? this.permissoesDoUsuario,
+      usuarioAtualEhSysAdmin:
+          usuarioAtualEhSysAdmin ?? this.usuarioAtualEhSysAdmin,
       homeJaSincronizada: homeJaSincronizada ?? this.homeJaSincronizada,
       iniciadoEm: iniciadoEm ?? this.iniciadoEm,
       finalizadoEm: finalizadoEm,
@@ -145,7 +150,8 @@ class SyncDataState extends Equatable {
   @override
   List<Object?> get props => [
         modulos,
-      permissoesDoUsuario,
+        permissoesDoUsuario,
+        usuarioAtualEhSysAdmin,
         homeJaSincronizada,
         iniciadoEm,
         finalizadoEm,

@@ -36,10 +36,9 @@ class ContagemDoCaixaDto implements ContagemDoCaixa {
         : <ContagemDoCaixaItemDto>[];
 
     return ContagemDoCaixaDto(
-      id: (json['id'] as num?)?.toInt(),
-      caixaId: (json['caixaId'] as num?)?.toInt() ??
-          (json['caixa']?['id'] as num?)?.toInt() ??
-          caixaId,
+      id: int.tryParse((json['id']?.toString() ?? '')),
+      caixaId: int.tryParse((json['caixaId']?.toString() ?? '')) ?? caixaId,
+         
       observacao: (json['observacao'] ?? json['observation'] ?? '').toString(),
       itens: itens,
     );

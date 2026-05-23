@@ -78,11 +78,11 @@ class ExtratoCaixaDto implements ExtratoCaixa {
           DateTime.now(),
       atualizadoEm: DateTime.tryParse(json['atualizadoEm']?.toString() ?? '') ??
           DateTime.now(),
-      empresaId: (json['empresaId'] as num?)?.toInt() ?? 0,
+      empresaId: json['empresaId'] as int? ?? 0,
       data: DateTime.tryParse(json['data']?.toString() ?? '') ?? DateTime.now(),
-      caixaId: (json['caixaId'] as num?)?.toInt() ?? 0,
-      documento: (json['documento'] as num?)?.toInt() ?? 0,
-      liquidacao: (json['liquidacao'] as num?)?.toInt() ?? 0,
+      caixaId: int.tryParse(json['caixaId']?.toString() ?? '') ?? 0,
+      documento: int.tryParse(json['documento']?.toString() ?? '') ?? 0,
+      liquidacao: int.tryParse(json['liquidacao']?.toString() ?? '') ?? 0,
       tipoDocumento:
           _tipoDocumentoFromJson(json['tipoDocumento']?.toString() ?? ''),
       tipoHistorico:
@@ -90,17 +90,37 @@ class ExtratoCaixaDto implements ExtratoCaixa {
       tipoMovimento:
           _tipoMovimentoFromJson(json['tipoMovimento']?.toString() ?? ''),
       valor: (json['valor'] as num?)?.toDouble() ?? 0,
-      faturaId: (json['faturaId'] as num?)?.toInt(),
-      faturaParcela: (json['faturaParcela'] as num?)?.toInt(),
+      faturaId:  int.tryParse(json['faturaId']?.toString() ?? '') ?? 0,
+      faturaParcela: int.tryParse(json['faturaParcela']?.toString() ?? '') ?? 0,
       observacao: json['observacao']?.toString(),
       cancelado: json['cancelado'] == true,
       motivoCancelamento: json['motivoCancelamento']?.toString(),
-      operadorId: (json['operadorId'] as num?)?.toInt() ?? 0,
+      operadorId: int.tryParse(json['operadorId']?.toString() ?? '') ?? 0,
     );
   }
 
   static TipoDocumentoExtratoCaixa _tipoDocumentoFromJson(String value) {
-    switch (value.trim().toLowerCase()) {
+    switch (_normalizar(value)) {
+      case 'pix':
+        return TipoDocumentoExtratoCaixa.pix;
+      case 'cartao':
+        return TipoDocumentoExtratoCaixa.cartao;
+      case 'cheque':
+        return TipoDocumentoExtratoCaixa.cheque;
+      case 'fatura':
+        return TipoDocumentoExtratoCaixa.fatura;
+      case 'troco':
+        return TipoDocumentoExtratoCaixa.troco;
+      case 'voucher':
+        return TipoDocumentoExtratoCaixa.voucher;
+      case 'ted_doc':
+      case 'teddoc':
+        return TipoDocumentoExtratoCaixa.tedDoc;
+      case 'adiantamento':
+        return TipoDocumentoExtratoCaixa.adiantamento;
+      case 'credito_de_devolucao':
+      case 'creditodevolucao':
+        return TipoDocumentoExtratoCaixa.creditoDeDevolucao;
       case 'dinheiro':
       default:
         return TipoDocumentoExtratoCaixa.dinheiro;
@@ -125,5 +145,37 @@ class ExtratoCaixaDto implements ExtratoCaixa {
       default:
         return TipoMovimentoExtratoCaixa.debito;
     }
+  }
+
+  static String _normalizar(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('à', 'a')
+        .replaceAll('â', 'a')
+        .replaceAll('ã', 'a')
+        .replaceAll('ä', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('è', 'e')
+        .replaceAll('ê', 'e')
+        .replaceAll('ë', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ì', 'i')
+        .replaceAll('î', 'i')
+        .replaceAll('ï', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ò', 'o')
+        .replaceAll('ô', 'o')
+        .replaceAll('õ', 'o')
+        .replaceAll('ö', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ù', 'u')
+        .replaceAll('û', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ç', 'c')
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
   }
 }

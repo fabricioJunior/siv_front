@@ -6,6 +6,7 @@ export 'presentation/blocs/formas_de_pagamento_bloc/formas_de_pagamento_bloc.dar
 export 'presentation/blocs/cancelamento_romaneio_bloc/cancelamento_romaneio_bloc.dart';
 export 'presentation/blocs/suprimento_bloc/suprimento_bloc.dart';
 export 'presentation/blocs/suprimentos_bloc/suprimentos_bloc.dart';
+export 'presentation/blocs/fechamento_de_caixa_bloc/fechamento_de_caixa_bloc.dart';
 export 'presentation/pages/cancelamento_romaneio_page.dart';
 export 'presentation/pages/fluxo_de_caixa_page.dart';
 export 'presentation/pages/forma_de_pagamento_page.dart';

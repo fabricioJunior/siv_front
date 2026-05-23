@@ -7,7 +7,7 @@ class SalvarItemDaContagemDoCaixa {
   SalvarItemDaContagemDoCaixa({required IContagemDoCaixaRepository repository})
       : _repository = repository;
 
-  Future<void> call({
+  Future<ContagemDoCaixa> call({
     required int caixaId,
     required ContagemDoCaixa contagemDoCaixa,
   }) {

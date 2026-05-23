@@ -36,7 +36,7 @@ class CaixaRemoteDataSource extends RemoteDataSourceBase
       'terminalId': terminalId.toString(),
     };
 
-    var pathParameters = {'operacao': 'aberto'};
+  var pathParameters = {'operacao': 'aberto'};
 
     final response = await get(
         queryParameters: queryParamenters, pathParameters: pathParameters);

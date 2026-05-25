@@ -27,7 +27,10 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),
   '/home': (context) => const HomePage(),
   '/sincronizacao': (context) => const SyncPage(),
-  '/impressao_progress': (context) => ImpressaoProgressPage(itens: args(context)['itens']),
+  '/impressao_progress': (context) => ImpressaoProgressPage(
+    itens: args(context)['itens'],
+    quantidadeDeVias: args(context)['quantidadeDeVias'] ?? 1,
+  ),
   ////AUTENTICACAO:
   '/login': (context) =>
       LoginPage(trocandoDeEmpresa: args(context)['trocandoDeEmpresa'] ?? false),

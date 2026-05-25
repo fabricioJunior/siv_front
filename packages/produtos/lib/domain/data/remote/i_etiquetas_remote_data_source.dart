@@ -3,6 +3,8 @@ import 'package:produtos/models.dart';
 abstract class IEtiquetasRemoteDataSource {
   Future<List<Etiqueta>> fetchEtiquetas();
 
+  Future<void> excluirEtiqueta(int id);
+
   Future<Etiqueta> createEtiqueta({
     required String nome,
     required double altura,

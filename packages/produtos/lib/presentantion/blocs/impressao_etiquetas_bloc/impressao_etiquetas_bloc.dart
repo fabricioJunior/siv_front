@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
@@ -36,6 +37,9 @@ class ImpressaoEtiquetasBloc
     on<ImpressaoEtiquetasAdicionarSolicitado>(_onAdicionarSolicitado);
     on<ImpressaoEtiquetasImprimirSolicitado>(_onImprimirSolicitado);
     on<ImpressaoEtiquetasPilhaLimpaSolicitada>(_onPilhaLimpaSolicitada);
+    on<ImpressaoEtiquetasPilhaQuantidadeAlterada>(_onPilhaQuantidadeAlterada);
+    on<ImpressaoEtiquetasPilhaItemRemovido>(_onPilhaItemRemovido);
+    on<ImpressaoEtiquetasPilhaOrdenacaoAlterada>(_onPilhaOrdenacaoAlterada);
   }
 
   FutureOr<void> _onIniciou(
@@ -205,8 +209,22 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
+      final viasOrdenadas = [...etiqueta.vias]
+        ..sort((a, b) => a.ordem.compareTo(b.ordem));
+
+      if (viasOrdenadas.isEmpty) {
+        emit(
+          state.copyWith(
+            processando: false,
+            erro: () => 'A etiqueta selecionada nao possui vias configuradas.',
+          ),
+        );
+        return;
+      }
+
       final novosItens = <EtiquetaImpressaoItem>[];
       final combinacoesSemCodigo = <String>[];
+      final requisicoes = <_RequisicaoEtiqueta>[];
 
       for (final produto in state.produtos) {
         final produtoId = produto.id;
@@ -230,34 +248,14 @@ class ImpressaoEtiquetasBloc
           continue;
         }
 
-        final codigoBarras = codigoStorage.trim();
-        final viasOrdenadas = [...etiqueta.vias]
-          ..sort((a, b) => a.ordem.compareTo(b.ordem));
-
-        if (viasOrdenadas.isEmpty) {
-          continue;
-        }
-
         for (var i = 0; i < quantidade; i++) {
-          for (final via in viasOrdenadas) {
-            final zplProcessado = _processarEtiquetaParaImpressao(
-              templateZpl: via.zpl,
-              titulo: state.tituloEmpresaSessao,
+          requisicoes.add(
+            _RequisicaoEtiqueta(
               cor: cor,
               tamanho: tamanho,
-              codigoBarras: codigoBarras,
-              preco: precoDaReferencia.valor,
-              descricao: referencia.nome,
-            );
-
-            novosItens.add(
-              EtiquetaImpressaoItem.create(
-                descricao:
-                    '${referencia.nome} | Cor: $cor | Tam: $tamanho | Via ${via.ordem + 1}',
-                zpl: zplProcessado,
-              ),
-            );
-          }
+              codigoBarras: codigoStorage.trim(),
+            ),
+          );
         }
       }
 
@@ -276,7 +274,7 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
-      if (novosItens.isEmpty) {
+      if (requisicoes.isEmpty) {
         emit(
           state.copyWith(
             processando: false,
@@ -286,10 +284,40 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
+      for (var i = 0; i < requisicoes.length; i++) {
+        final requisicao = requisicoes[i];
+        final via = viasOrdenadas[i % viasOrdenadas.length];
+
+        final zplProcessado = _processarEtiquetaParaImpressao(
+          templateZpl: via.zpl,
+          titulo: state.tituloEmpresaSessao,
+          cor: requisicao.cor,
+          tamanho: requisicao.tamanho,
+          codigoBarras: requisicao.codigoBarras,
+          preco: precoDaReferencia.valor,
+          descricao: referencia.nome,
+        );
+
+        novosItens.add(
+          EtiquetaImpressaoItem.create(
+            descricao:
+                '${referencia.nome} | Cor: ${requisicao.cor} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
+            zpl: zplProcessado,
+            referencia: referencia.nome,
+            cor: requisicao.cor,
+            tamanho: requisicao.tamanho,
+            viaOrdem: via.ordem,
+          ),
+        );
+      }
+
       emit(
         state.copyWith(
           processando: false,
-          pilhaImpressao: [...state.pilhaImpressao, ...novosItens],
+          pilhaImpressao: _ordenarPilha(
+            [...state.pilhaImpressao, ...novosItens],
+            state.pilhaOrdenacao,
+          ),
           sucesso: () => '${novosItens.length} etiqueta(s) adicionada(s) a pilha.',
         ),
       );
@@ -350,4 +378,238 @@ class ImpressaoEtiquetasBloc
       ),
     );
   }
+
+  FutureOr<void> _onPilhaQuantidadeAlterada(
+    ImpressaoEtiquetasPilhaQuantidadeAlterada event,
+    Emitter<ImpressaoEtiquetasState> emit,
+  ) {
+    final pilhaAtual = [...state.pilhaImpressao];
+    final itensDoGrupo = pilhaAtual
+        .where(
+          (item) => _mesmaCombinacao(
+            item: item,
+            referencia: event.referencia,
+            cor: event.cor,
+            tamanho: event.tamanho,
+          ),
+        )
+        .toList(growable: false);
+
+    if (itensDoGrupo.isEmpty) {
+      emit(state.copyWith(erro: () => 'Item nao encontrado na pilha.'));
+    } else {
+      final quantidadeAtual = itensDoGrupo.length;
+      final novaQuantidade = event.quantidade;
+
+      if (novaQuantidade <= 0) {
+        final pilhaSemGrupo = pilhaAtual
+            .where(
+              (item) => !_mesmaCombinacao(
+                item: item,
+                referencia: event.referencia,
+                cor: event.cor,
+                tamanho: event.tamanho,
+              ),
+            )
+            .toList(growable: false);
+
+        emit(
+          state.copyWith(
+            pilhaImpressao: _ordenarPilha(pilhaSemGrupo, state.pilhaOrdenacao),
+            sucesso: () =>
+                'Combinacao ${event.referencia} | ${event.cor} | ${event.tamanho} removida da pilha.',
+            erro: () => null,
+          ),
+        );
+      } else if (novaQuantidade != quantidadeAtual) {
+        if (novaQuantidade < quantidadeAtual) {
+          var quantidadeParaRemover = quantidadeAtual - novaQuantidade;
+          for (var i = pilhaAtual.length - 1;
+              i >= 0 && quantidadeParaRemover > 0;
+              i--) {
+            final item = pilhaAtual[i];
+            if (_mesmaCombinacao(
+              item: item,
+              referencia: event.referencia,
+              cor: event.cor,
+              tamanho: event.tamanho,
+            )) {
+              pilhaAtual.removeAt(i);
+              quantidadeParaRemover--;
+            }
+          }
+        } else {
+          final modelos = [...itensDoGrupo]
+            ..sort((a, b) => a.viaOrdem.compareTo(b.viaOrdem));
+          final quantidadeParaAdicionar = novaQuantidade - quantidadeAtual;
+
+          for (var i = 0; i < quantidadeParaAdicionar; i++) {
+            final base = modelos[(quantidadeAtual + i) % modelos.length];
+            pilhaAtual.add(base.copyWith());
+          }
+        }
+
+        emit(
+          state.copyWith(
+            pilhaImpressao: _ordenarPilha(pilhaAtual, state.pilhaOrdenacao),
+            sucesso: () =>
+                'Quantidade atualizada para $novaQuantidade na combinacao ${event.referencia} | ${event.cor} | ${event.tamanho}.',
+            erro: () => null,
+          ),
+        );
+      }
+    }
+  }
+
+  FutureOr<void> _onPilhaItemRemovido(
+    ImpressaoEtiquetasPilhaItemRemovido event,
+    Emitter<ImpressaoEtiquetasState> emit,
+  ) {
+    final pilhaSemItem = state.pilhaImpressao
+        .where(
+          (item) => !_mesmaCombinacao(
+            item: item,
+            referencia: event.referencia,
+            cor: event.cor,
+            tamanho: event.tamanho,
+          ),
+        )
+        .toList(growable: false);
+
+    emit(
+      state.copyWith(
+        pilhaImpressao: _ordenarPilha(pilhaSemItem, state.pilhaOrdenacao),
+        sucesso: () =>
+            'Combinacao ${event.referencia} | ${event.cor} | ${event.tamanho} removida da pilha.',
+        erro: () => null,
+      ),
+    );
+  }
+
+  FutureOr<void> _onPilhaOrdenacaoAlterada(
+    ImpressaoEtiquetasPilhaOrdenacaoAlterada event,
+    Emitter<ImpressaoEtiquetasState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        pilhaOrdenacao: event.ordenacao,
+        pilhaImpressao: _ordenarPilha(state.pilhaImpressao, event.ordenacao),
+        erro: () => null,
+      ),
+    );
+  }
+
+  bool _mesmaCombinacao({
+    required EtiquetaImpressaoItem item,
+    required String referencia,
+    required String cor,
+    required String tamanho,
+  }) {
+    return item.referencia == referencia &&
+        item.cor == cor &&
+        item.tamanho == tamanho;
+  }
+
+  List<EtiquetaImpressaoItem> _ordenarPilha(
+    List<EtiquetaImpressaoItem> itens,
+    PilhaImpressaoOrdenacao ordenacao,
+  ) {
+    if (ordenacao == PilhaImpressaoOrdenacao.insercao) {
+      return _balancearPilhaPorVia(itens);
+    }
+
+    final ordenados = [...itens];
+
+    int compararTexto(String a, String b) =>
+        a.toLowerCase().trim().compareTo(b.toLowerCase().trim());
+
+    ordenados.sort((a, b) {
+      if (ordenacao == PilhaImpressaoOrdenacao.referencia) {
+        final porReferencia = compararTexto(a.referencia, b.referencia);
+        if (porReferencia != 0) return porReferencia;
+        final porCor = compararTexto(a.cor, b.cor);
+        if (porCor != 0) return porCor;
+        final porTamanho = compararTexto(a.tamanho, b.tamanho);
+        if (porTamanho != 0) return porTamanho;
+        return a.viaOrdem.compareTo(b.viaOrdem);
+      }
+
+      if (ordenacao == PilhaImpressaoOrdenacao.referenciaCor) {
+        final porReferencia = compararTexto(a.referencia, b.referencia);
+        if (porReferencia != 0) return porReferencia;
+        final porCor = compararTexto(a.cor, b.cor);
+        if (porCor != 0) return porCor;
+        final porVia = a.viaOrdem.compareTo(b.viaOrdem);
+        if (porVia != 0) return porVia;
+        return compararTexto(a.tamanho, b.tamanho);
+      }
+
+      if (ordenacao == PilhaImpressaoOrdenacao.referenciaTamanho) {
+        final porReferencia = compararTexto(a.referencia, b.referencia);
+        if (porReferencia != 0) return porReferencia;
+        final porTamanho = compararTexto(a.tamanho, b.tamanho);
+        if (porTamanho != 0) return porTamanho;
+        final porVia = a.viaOrdem.compareTo(b.viaOrdem);
+        if (porVia != 0) return porVia;
+        return compararTexto(a.cor, b.cor);
+      }
+
+      if (ordenacao == PilhaImpressaoOrdenacao.cor) {
+        final porCor = compararTexto(a.cor, b.cor);
+        if (porCor != 0) return porCor;
+        final porTamanho = compararTexto(a.tamanho, b.tamanho);
+        if (porTamanho != 0) return porTamanho;
+        final porReferencia = compararTexto(a.referencia, b.referencia);
+        if (porReferencia != 0) return porReferencia;
+        return a.viaOrdem.compareTo(b.viaOrdem);
+      }
+
+      final porTamanho = compararTexto(a.tamanho, b.tamanho);
+      if (porTamanho != 0) return porTamanho;
+      final porCor = compararTexto(a.cor, b.cor);
+      if (porCor != 0) return porCor;
+      final porReferencia = compararTexto(a.referencia, b.referencia);
+      if (porReferencia != 0) return porReferencia;
+      return a.viaOrdem.compareTo(b.viaOrdem);
+    });
+
+    return _balancearPilhaPorVia(ordenados);
+  }
+
+  List<EtiquetaImpressaoItem> _balancearPilhaPorVia(
+    List<EtiquetaImpressaoItem> itens,
+  ) {
+    final filasPorVia = <int, Queue<EtiquetaImpressaoItem>>{};
+
+    for (final item in itens) {
+      filasPorVia.putIfAbsent(item.viaOrdem, Queue.new).add(item);
+    }
+
+    final viasOrdenadas = filasPorVia.keys.toList()..sort();
+    final resultado = <EtiquetaImpressaoItem>[];
+
+    while (filasPorVia.values.any((fila) => fila.isNotEmpty)) {
+      for (final via in viasOrdenadas) {
+        final fila = filasPorVia[via];
+        if (fila == null || fila.isEmpty) {
+          continue;
+        }
+        resultado.add(fila.removeFirst());
+      }
+    }
+
+    return resultado;
+  }
+}
+
+class _RequisicaoEtiqueta {
+  final String cor;
+  final String tamanho;
+  final String codigoBarras;
+
+  const _RequisicaoEtiqueta({
+    required this.cor,
+    required this.tamanho,
+    required this.codigoBarras,
+  });
 }

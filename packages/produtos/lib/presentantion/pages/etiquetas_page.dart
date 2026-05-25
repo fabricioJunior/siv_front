@@ -18,7 +18,9 @@ class EtiquetasPage extends StatelessWidget {
         appBar: AppBar(title: const Text('Etiquetas')),
         floatingActionButton: BlocBuilder<EtiquetasBloc, EtiquetasState>(
           builder: (context, state) {
-            final carregando = state is EtiquetasCriarEmProgresso;
+            final carregando =
+                state is EtiquetasCriarEmProgresso ||
+                state is EtiquetasExcluirEmProgresso;
             return FloatingActionButton(
               onPressed: carregando
                   ? null
@@ -122,6 +124,24 @@ class EtiquetasPage extends StatelessWidget {
                 ),
               );
             }
+
+            if (state is EtiquetasExcluirSucesso) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Etiqueta excluida com sucesso.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+
+            if (state is EtiquetasExcluirFalha) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Falha ao excluir etiqueta.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           },
           builder: (context, state) {
             if (state is EtiquetasCarregarEmProgresso && state.etiquetas.isEmpty) {
@@ -162,61 +182,70 @@ class EtiquetasPage extends StatelessWidget {
                     subtitle: Text(
                       'L ${etiqueta.largura.toStringAsFixed(1)} mm  •  A ${etiqueta.altura.toStringAsFixed(1)} mm  •  ${etiqueta.vias.length} via(s)  •  ${etiqueta.dpi.valor} DPI',
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.visibility_outlined),
-                      onPressed: () async {
-                        final resultado = await Navigator.of(context).pushNamed(
-                          '/etiqueta_preview_page',
-                          arguments: {
-                            'retornarResultado': true,
-                            'overrides': {
-                              ..._buildOverridesFromEtiqueta(etiqueta),
-                            },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.visibility_outlined),
+                          onPressed: () async {
+                            final resultado = await Navigator.of(context).pushNamed(
+                              '/etiqueta_preview_page',
+                              arguments: {
+                                'retornarResultado': true,
+                                'overrides': {
+                                  ..._buildOverridesFromEtiqueta(etiqueta),
+                                },
+                              },
+                            );
+
+                            if (!context.mounted || resultado is! Map) {
+                              return;
+                            }
+
+                            final nome =
+                                (resultado['nome']?.toString() ?? etiqueta.nome)
+                                    .trim();
+                            final altura = _toDouble(resultado['altura']);
+                            final largura = _toDouble(resultado['largura']);
+                            final dpi = EtiquetaDpiX.fromValue(resultado['dpi']);
+                            final elementos = _toElementos(resultado['elementos']);
+                            final vias = _toVias(
+                              resultado['vias'],
+                              fallbackQuantidade: etiqueta.vias.length,
+                              fallbackZpl: '',
+                            );
+
+                            if (nome.isEmpty ||
+                                altura == null ||
+                                largura == null ||
+                                elementos.isEmpty ||
+                                vias.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Dados invalidos retornados da etiqueta.'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              return;
+                            }
+
+                            context.read<EtiquetasBloc>().add(
+                              EtiquetasCriarSolicitado(
+                                nome: nome,
+                                altura: altura,
+                                largura: largura,
+                                dpi: dpi,
+                                elementos: elementos,
+                                vias: vias,
+                              ),
+                            );
                           },
-                        );
-
-                        if (!context.mounted || resultado is! Map) {
-                          return;
-                        }
-
-                        final nome =
-                            (resultado['nome']?.toString() ?? etiqueta.nome)
-                                .trim();
-                        final altura = _toDouble(resultado['altura']);
-                        final largura = _toDouble(resultado['largura']);
-                        final dpi = EtiquetaDpiX.fromValue(resultado['dpi']);
-                        final elementos = _toElementos(resultado['elementos']);
-                        final vias = _toVias(
-                          resultado['vias'],
-                          fallbackQuantidade: etiqueta.vias.length,
-                          fallbackZpl: '',
-                        );
-
-                        if (nome.isEmpty ||
-                            altura == null ||
-                            largura == null ||
-                            elementos.isEmpty ||
-                            vias.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Dados invalidos retornados da etiqueta.'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                          return;
-                        }
-
-                        context.read<EtiquetasBloc>().add(
-                          EtiquetasCriarSolicitado(
-                            nome: nome,
-                            altura: altura,
-                            largura: largura,
-                            dpi: dpi,
-                            elementos: elementos,
-                            vias: vias,
-                          ),
-                        );
-                      },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _showDeleteConfirmation(context, etiqueta),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -335,6 +364,42 @@ class EtiquetasPage extends StatelessWidget {
     return showDialog<_DadosEtiquetaInicial>(
       context: context,
       builder: (_) => const _DadosEtiquetaInicialDialog(),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Etiqueta etiqueta) {
+    final idEtiqueta = etiqueta.id;
+    if (idEtiqueta == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Etiqueta sem ID nao pode ser excluida.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir etiqueta'),
+        content: Text('Deseja excluir a etiqueta "${etiqueta.nome}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<EtiquetasBloc>().add(
+                EtiquetasExcluirSolicitado(id: idEtiqueta),
+              );
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
     );
   }
 }

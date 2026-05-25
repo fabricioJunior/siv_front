@@ -29,6 +29,11 @@ class EtiquetasRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<void> excluirEtiqueta(int id) {
+    return delete(pathParameters: {'id': id.toString()});
+  }
+
+  @override
   Future<Etiqueta> createEtiqueta({
     required String nome,
     required double altura,

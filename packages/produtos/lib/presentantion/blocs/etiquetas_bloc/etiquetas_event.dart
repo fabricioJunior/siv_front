@@ -31,3 +31,12 @@ class EtiquetasCriarSolicitado extends EtiquetasEvent {
   @override
   List<Object?> get props => [nome, altura, largura, dpi, elementos, vias];
 }
+
+class EtiquetasExcluirSolicitado extends EtiquetasEvent {
+  final int id;
+
+  const EtiquetasExcluirSolicitado({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}

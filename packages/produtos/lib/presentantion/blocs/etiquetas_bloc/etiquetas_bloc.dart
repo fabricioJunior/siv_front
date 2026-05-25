@@ -11,11 +11,13 @@ part 'etiquetas_state.dart';
 class EtiquetasBloc extends Bloc<EtiquetasEvent, EtiquetasState> {
   final RecuperarEtiquetas _recuperarEtiquetas;
   final CriarEtiqueta _criarEtiqueta;
+  final ExcluirEtiqueta _excluirEtiqueta;
 
-  EtiquetasBloc(this._recuperarEtiquetas, this._criarEtiqueta)
+  EtiquetasBloc(this._recuperarEtiquetas, this._criarEtiqueta, this._excluirEtiqueta)
     : super(const EtiquetasInitial()) {
     on<EtiquetasIniciou>(_onEtiquetasIniciou);
     on<EtiquetasCriarSolicitado>(_onEtiquetasCriarSolicitado);
+    on<EtiquetasExcluirSolicitado>(_onEtiquetasExcluirSolicitado);
   }
 
   FutureOr<void> _onEtiquetasIniciou(
@@ -54,6 +56,23 @@ class EtiquetasBloc extends Bloc<EtiquetasEvent, EtiquetasState> {
       );
     } catch (e, s) {
       emit(EtiquetasCriarFalha(etiquetas: state.etiquetas));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onEtiquetasExcluirSolicitado(
+    EtiquetasExcluirSolicitado event,
+    Emitter<EtiquetasState> emit,
+  ) async {
+    try {
+      emit(EtiquetasExcluirEmProgresso(etiquetas: state.etiquetas));
+      await _excluirEtiqueta(event.id);
+      final etiquetasFiltradas = state.etiquetas
+          .where((etiqueta) => etiqueta.id != event.id)
+          .toList(growable: false);
+      emit(EtiquetasExcluirSucesso(etiquetas: etiquetasFiltradas));
+    } catch (e, s) {
+      emit(EtiquetasExcluirFalha(etiquetas: state.etiquetas));
       addError(e, s);
     }
   }

@@ -1,5 +1,14 @@
 part of 'impressao_etiquetas_bloc.dart';
 
+enum PilhaImpressaoOrdenacao {
+  insercao,
+  referencia,
+  referenciaCor,
+  referenciaTamanho,
+  cor,
+  tamanho,
+}
+
 class ImpressaoEtiquetasState extends Equatable {
   final Etiqueta? etiquetaSelecionada;
   final SelectData? tabelaSelecionada;
@@ -13,6 +22,7 @@ class ImpressaoEtiquetasState extends Equatable {
   final Map<int, int> quantidadesPorProdutoId;
 
   final List<EtiquetaImpressaoItem> pilhaImpressao;
+  final PilhaImpressaoOrdenacao pilhaOrdenacao;
 
   final bool carregandoGrade;
   final bool processando;
@@ -32,6 +42,7 @@ class ImpressaoEtiquetasState extends Equatable {
     this.mapaCorTamanhoParaProduto = const {},
     this.quantidadesPorProdutoId = const {},
     this.pilhaImpressao = const [],
+    this.pilhaOrdenacao = PilhaImpressaoOrdenacao.insercao,
     this.carregandoGrade = false,
     this.processando = false,
     this.imprimindo = false,
@@ -60,6 +71,7 @@ class ImpressaoEtiquetasState extends Equatable {
     Map<String, Produto>? mapaCorTamanhoParaProduto,
     Map<int, int>? quantidadesPorProdutoId,
     List<EtiquetaImpressaoItem>? pilhaImpressao,
+    PilhaImpressaoOrdenacao? pilhaOrdenacao,
     bool? carregandoGrade,
     bool? processando,
     bool? imprimindo,
@@ -85,6 +97,7 @@ class ImpressaoEtiquetasState extends Equatable {
       quantidadesPorProdutoId:
           quantidadesPorProdutoId ?? this.quantidadesPorProdutoId,
       pilhaImpressao: pilhaImpressao ?? this.pilhaImpressao,
+        pilhaOrdenacao: pilhaOrdenacao ?? this.pilhaOrdenacao,
       carregandoGrade: carregandoGrade ?? this.carregandoGrade,
       processando: processando ?? this.processando,
       imprimindo: imprimindo ?? this.imprimindo,
@@ -105,6 +118,7 @@ class ImpressaoEtiquetasState extends Equatable {
     mapaCorTamanhoParaProduto,
     quantidadesPorProdutoId,
     pilhaImpressao,
+    pilhaOrdenacao,
     carregandoGrade,
     processando,
     imprimindo,

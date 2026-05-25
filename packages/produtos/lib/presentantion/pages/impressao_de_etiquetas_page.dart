@@ -2,6 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 
 class ImpressaoDeEtiquetasPage extends StatelessWidget {
@@ -35,10 +36,14 @@ class _ImpressaoDeEtiquetasView extends StatefulWidget {
 
 class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
   final Map<int, TextEditingController> _quantidadeControllers = {};
+  final Map<String, TextEditingController> _pilhaQuantidadeControllers = {};
 
   @override
   void dispose() {
     for (final controller in _quantidadeControllers.values) {
+      controller.dispose();
+    }
+    for (final controller in _pilhaQuantidadeControllers.values) {
       controller.dispose();
     }
     super.dispose();
@@ -69,6 +74,7 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
       },
       builder: (context, state) {
         final bloc = context.read<ImpressaoEtiquetasBloc>();
+        final gruposPilha = _agruparPilha(state.pilhaImpressao);
 
         return Scaffold(
           appBar: AppBar(title: const Text('Impressao de etiquetas')),
@@ -208,24 +214,119 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      if (state.pilhaImpressao.isNotEmpty) ...[
+                        DropdownButtonFormField<PilhaImpressaoOrdenacao>(
+                          value: state.pilhaOrdenacao,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            labelText: 'Ordenar pilha por',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.insercao,
+                              child: Text('Ordem de insercao'),
+                            ),
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.referencia,
+                              child: Text('Referencia'),
+                            ),
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.referenciaCor,
+                              child: Text('Referencia + Cor'),
+                            ),
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.referenciaTamanho,
+                              child: Text('Referencia + Tamanho'),
+                            ),
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.cor,
+                              child: Text('Cor'),
+                            ),
+                            DropdownMenuItem(
+                              value: PilhaImpressaoOrdenacao.tamanho,
+                              child: Text('Tamanho'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) return;
+                            bloc.add(
+                              ImpressaoEtiquetasPilhaOrdenacaoAlterada(
+                                ordenacao: value,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       if (state.pilhaImpressao.isEmpty)
                         const Text('Nenhuma etiqueta adicionada na pilha.')
-                      else
-                        ...state.pilhaImpressao
+                      else ...[
+                        ...gruposPilha
                             .take(8)
                             .map(
-                              (item) => ListTile(
+                              (grupo) => ListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.print_outlined, size: 18),
-                                title: Text(item.descricao),
+                                title: Text(
+                                  '${grupo.referencia} | Cor: ${grupo.cor} | Tam: ${grupo.tamanho}',
+                                ),
+                                subtitle: Text(
+                                  '${grupo.quantidade} etiqueta(s)',
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 72,
+                                      child: TextField(
+                                        controller: _getPilhaQuantidadeController(
+                                          grupo.chave,
+                                          grupo.quantidade,
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          labelText: 'Qtd',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        onChanged: (value) {
+                                          final parsed =
+                                              int.tryParse(value.trim()) ?? 0;
+                                          bloc.add(
+                                            ImpressaoEtiquetasPilhaQuantidadeAlterada(
+                                              referencia: grupo.referencia,
+                                              cor: grupo.cor,
+                                              tamanho: grupo.tamanho,
+                                              quantidade: parsed,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline),
+                                      onPressed: () {
+                                        bloc.add(
+                                          ImpressaoEtiquetasPilhaItemRemovido(
+                                            referencia: grupo.referencia,
+                                            cor: grupo.cor,
+                                            tamanho: grupo.tamanho,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                      if (state.pilhaImpressao.length > 8)
+                      ],
+                      if (gruposPilha.length > 8)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            '...e mais ${state.pilhaImpressao.length - 8} etiqueta(s) na pilha.',
+                            '...e mais ${gruposPilha.length - 8} combinacao(oes) na pilha.',
                           ),
                         ),
                       const SizedBox(height: 12),
@@ -251,6 +352,8 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                       '/impressao_progress',
                                       arguments: {
                                         'itens': state.pilhaImpressao,
+                                        'quantidadeDeVias':
+                                            state.etiquetaSelecionada?.vias.length ?? 1,
                                       },
                                     );
                                   },
@@ -351,5 +454,85 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
     );
     _quantidadeControllers[produtoId] = controller;
     return controller;
+  }
+
+  TextEditingController _getPilhaQuantidadeController(String chave, int valorAtual) {
+    final existente = _pilhaQuantidadeControllers[chave];
+    if (existente != null) {
+      final textoAtual = valorAtual <= 0 ? '' : valorAtual.toString();
+      if (existente.text != textoAtual) {
+        existente.text = textoAtual;
+      }
+      return existente;
+    }
+
+    final controller = TextEditingController(
+      text: valorAtual <= 0 ? '' : valorAtual.toString(),
+    );
+    _pilhaQuantidadeControllers[chave] = controller;
+    return controller;
+  }
+
+  List<_PilhaGrupoResumo> _agruparPilha(List<EtiquetaImpressaoItem> itens) {
+    final grupos = <String, _PilhaGrupoResumo>{};
+
+    for (final item in itens) {
+      final chave = '${item.referencia}__${item.cor}__${item.tamanho}';
+      final existente = grupos[chave];
+
+      if (existente == null) {
+        grupos[chave] = _PilhaGrupoResumo(
+          chave: chave,
+          referencia: item.referencia,
+          cor: item.cor,
+          tamanho: item.tamanho,
+          quantidade: 1,
+        );
+      } else {
+        grupos[chave] = existente.copyWith(quantidade: existente.quantidade + 1);
+      }
+    }
+
+    final chavesAtivas = grupos.keys.toSet();
+    final chavesParaRemover = _pilhaQuantidadeControllers.keys
+        .where((chave) => !chavesAtivas.contains(chave))
+        .toList(growable: false);
+    for (final chave in chavesParaRemover) {
+      _pilhaQuantidadeControllers.remove(chave)?.dispose();
+    }
+
+    return grupos.values.toList(growable: false);
+  }
+}
+
+class _PilhaGrupoResumo {
+  final String chave;
+  final String referencia;
+  final String cor;
+  final String tamanho;
+  final int quantidade;
+
+  const _PilhaGrupoResumo({
+    required this.chave,
+    required this.referencia,
+    required this.cor,
+    required this.tamanho,
+    required this.quantidade,
+  });
+
+  _PilhaGrupoResumo copyWith({
+    String? chave,
+    String? referencia,
+    String? cor,
+    String? tamanho,
+    int? quantidade,
+  }) {
+    return _PilhaGrupoResumo(
+      chave: chave ?? this.chave,
+      referencia: referencia ?? this.referencia,
+      cor: cor ?? this.cor,
+      tamanho: tamanho ?? this.tamanho,
+      quantidade: quantidade ?? this.quantidade,
+    );
   }
 }

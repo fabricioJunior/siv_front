@@ -13,6 +13,11 @@ class EtiquetasRepository implements IEtiquetasRepository {
   }
 
   @override
+  Future<void> excluirEtiqueta(int id) {
+    return etiquetasRemoteDataSource.excluirEtiqueta(id);
+  }
+
+  @override
   Future<Etiqueta> criarEtiqueta({
     required String nome,
     required double altura,

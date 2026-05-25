@@ -36,3 +36,15 @@ class EtiquetasCriarSucesso extends EtiquetasState {
 class EtiquetasCriarFalha extends EtiquetasState {
   const EtiquetasCriarFalha({required super.etiquetas});
 }
+
+class EtiquetasExcluirEmProgresso extends EtiquetasState {
+  const EtiquetasExcluirEmProgresso({required super.etiquetas});
+}
+
+class EtiquetasExcluirSucesso extends EtiquetasState {
+  const EtiquetasExcluirSucesso({required super.etiquetas});
+}
+
+class EtiquetasExcluirFalha extends EtiquetasState {
+  const EtiquetasExcluirFalha({required super.etiquetas});
+}

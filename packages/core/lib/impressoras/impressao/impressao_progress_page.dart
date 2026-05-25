@@ -9,9 +9,11 @@ class ImpressaoProgressPage extends StatelessWidget {
 	const ImpressaoProgressPage({
 		super.key,
 		required this.itens,
+		required this.quantidadeDeVias,
 	});
 
 	final List<ItemDeImpressao> itens;
+	final int quantidadeDeVias;
 
 	@override
 	Widget build(BuildContext context) {
@@ -19,6 +21,7 @@ class ImpressaoProgressPage extends StatelessWidget {
 			create: (_) => ImpressaoProgressCubit(
 				printersService: GetIt.instance<IPrintersService>(),
 				itens: itens,
+				quantidadeDeVias: quantidadeDeVias,
 			),
 			child: const _ImpressaoProgressView(),
 		);

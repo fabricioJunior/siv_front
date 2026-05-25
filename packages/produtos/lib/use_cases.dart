@@ -48,6 +48,7 @@ export 'domain/use_cases/recuperar_referencia_midias.dart';
 export 'domain/use_cases/atualizar_referencia_midia.dart';
 export 'domain/use_cases/sincronizar_codigos.dart';
 export 'domain/use_cases/criar_etiqueta.dart';
+export 'domain/use_cases/excluir_etiqueta.dart';
 export 'domain/use_cases/recuperar_etiquetas.dart';
 export 'domain/use_cases/processar_etiqueta_para_impressao.dart';
 export 'domain/use_cases/imprimir_etiquetas.dart';

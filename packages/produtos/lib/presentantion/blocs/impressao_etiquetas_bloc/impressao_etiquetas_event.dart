@@ -52,3 +52,44 @@ class ImpressaoEtiquetasAdicionarSolicitado extends ImpressaoEtiquetasEvent {}
 class ImpressaoEtiquetasImprimirSolicitado extends ImpressaoEtiquetasEvent {}
 
 class ImpressaoEtiquetasPilhaLimpaSolicitada extends ImpressaoEtiquetasEvent {}
+
+class ImpressaoEtiquetasPilhaQuantidadeAlterada extends ImpressaoEtiquetasEvent {
+  final String referencia;
+  final String cor;
+  final String tamanho;
+  final int quantidade;
+
+  ImpressaoEtiquetasPilhaQuantidadeAlterada({
+    required this.referencia,
+    required this.cor,
+    required this.tamanho,
+    required this.quantidade,
+  });
+
+  @override
+  List<Object?> get props => [referencia, cor, tamanho, quantidade];
+}
+
+class ImpressaoEtiquetasPilhaItemRemovido extends ImpressaoEtiquetasEvent {
+  final String referencia;
+  final String cor;
+  final String tamanho;
+
+  ImpressaoEtiquetasPilhaItemRemovido({
+    required this.referencia,
+    required this.cor,
+    required this.tamanho,
+  });
+
+  @override
+  List<Object?> get props => [referencia, cor, tamanho];
+}
+
+class ImpressaoEtiquetasPilhaOrdenacaoAlterada extends ImpressaoEtiquetasEvent {
+  final PilhaImpressaoOrdenacao ordenacao;
+
+  ImpressaoEtiquetasPilhaOrdenacaoAlterada({required this.ordenacao});
+
+  @override
+  List<Object?> get props => [ordenacao];
+}

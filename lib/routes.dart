@@ -21,11 +21,13 @@ import 'package:siv_front/presentation/pages/home_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
+import 'package:core/impressora.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/': (context) => const SplashPage(),
   '/home': (context) => const HomePage(),
   '/sincronizacao': (context) => const SyncPage(),
+  '/impressao_progress': (context) => ImpressaoProgressPage(itens: args(context)['itens']),
   ////AUTENTICACAO:
   '/login': (context) =>
       LoginPage(trocandoDeEmpresa: args(context)['trocandoDeEmpresa'] ?? false),
@@ -396,6 +398,25 @@ Map<String, Widget Function(BuildContext)> routes = {
       tamanhoId: args(context)['tamanhoId'],
     );
   },
+  '/etiquetas': (context) {
+    return _rotaProtegida(route: '/etiquetas', child: EtiquetasPage());
+  },
+  '/impressao_etiquetas': (context) {
+    return _rotaProtegida(
+      route: '/impressao_etiquetas',
+      child: ImpressaoDeEtiquetasPage(
+        tabelasDePrecoSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                TabelasDePrecoSeletor(
+                  modo: TabelasDePrecoSeletorModo.unica,
+                  itemsSelecionadosInicial: itemsSelecionadosInicial,
+                  onChanged: onChanged,
+                  onlyView: onlyView ?? false,
+                  titulo: 'Tabela de preco',
+                ),
+      ),
+    );
+  },
 
   //Preços:
   '/tabelas_de_preco': (context) {
@@ -473,6 +494,22 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/parametros_empresa': (context) {
     return EmpresaParametrosPage(idEmpresa: args(context)['empresaId']);
   },
+  // Impressoras:
+  '/etiqueta_preview_page': (context) {
+    final argumentos = args(context);
+    final overridesRaw = argumentos['overrides'];
+    final overrides = overridesRaw is Map
+        ? overridesRaw.map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+          )
+        : null;
+    final retornarResultado = argumentos['retornarResultado'] == true;
+
+    return EtiquetaPreviewPage(
+      overrides: overrides,
+      retornarResultado: retornarResultado,
+    );
+  },
 };
 
 Map<String, dynamic> args(BuildContext context) =>
@@ -503,6 +540,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
   '/pessoas': ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],
   '/menu_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
+  '/etiquetas': ['PRDFM003'],
+  '/impressao_etiquetas': ['PRDFM003'],
   '/financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],
   '/formas_de_pagamento': ['GERFM001'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],

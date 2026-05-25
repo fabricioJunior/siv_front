@@ -6,3 +6,5 @@ export 'domain/data/repositorios/i_marcas_repository.dart';
 export 'domain/data/repositorios/i_referencias_repository.dart';
 export 'domain/data/repositorios/i_produtos_repository.dart';
 export 'domain/data/repositorios/i_codigos_repository.dart';
+export 'domain/data/repositorios/i_etiquetas_repository.dart';
+export 'domain/data/repositorios/i_impressao_etiquetas_repository.dart';

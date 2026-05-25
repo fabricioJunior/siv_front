@@ -31,7 +31,7 @@ target 'Runner' do
   pod 'FirebaseFirestore',
     :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git',
     :tag => '11.15.0'
-
+ # pod 'printing_ffi', :path => 'printing_ffi.podspec' # Path to the printing_ffi plugin
   flutter_install_all_macos_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

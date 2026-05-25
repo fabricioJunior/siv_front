@@ -38,6 +38,7 @@ export 'domain/use_cases/criar_codigo_de_barras.dart';
 export 'domain/use_cases/atualizar_produto.dart';
 export 'domain/use_cases/excluir_produto.dart';
 export 'domain/use_cases/recuperar_produtos.dart';
+export 'domain/use_cases/recuperar_codigo_de_barras_do_produto.dart';
 export 'domain/use_cases/salvar_codigo_de_barras.dart';
 export 'domain/use_cases/deletar_codigo_de_barras.dart';
 
@@ -46,3 +47,7 @@ export 'domain/use_cases/excluir_referencia_midia.dart';
 export 'domain/use_cases/recuperar_referencia_midias.dart';
 export 'domain/use_cases/atualizar_referencia_midia.dart';
 export 'domain/use_cases/sincronizar_codigos.dart';
+export 'domain/use_cases/criar_etiqueta.dart';
+export 'domain/use_cases/recuperar_etiquetas.dart';
+export 'domain/use_cases/processar_etiqueta_para_impressao.dart';
+export 'domain/use_cases/imprimir_etiquetas.dart';

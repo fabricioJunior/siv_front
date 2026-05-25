@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:core/bloc.dart';
+import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/sessao.dart';
@@ -18,6 +19,7 @@ void main() async {
   try {
     await sl.reset();
     await configs();
+    initPrintingConfigs();
     runApp(MyApp());
   } catch (e, s) {
     log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');

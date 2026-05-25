@@ -58,6 +58,22 @@ class MenuProdutosPage extends StatelessWidget {
             componente: 'PRDFM006',
             onTap: () => Navigator.of(context).pushNamed('/marcas'),
           ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.qr_code_2_outlined,
+            titulo: 'Etiquetas',
+            subtitulo: 'Crie e personalize etiquetas ZPL para impressao.',
+            componente: 'PRDFM003',
+            onTap: () => Navigator.of(context).pushNamed('/etiquetas'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.print_outlined,
+            titulo: 'Impressao de etiquetas',
+            subtitulo: 'Monte a pilha por referencia e imprima etiquetas.',
+            componente: 'PRDFM003',
+            onTap: () => Navigator.of(context).pushNamed('/impressao_etiquetas'),
+          ),
         ],
       ),
     );

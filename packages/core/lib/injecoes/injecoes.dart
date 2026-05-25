@@ -1,4 +1,6 @@
 import 'package:core/imagens/cache_imagem_service.dart';
+import 'package:core/impressoras/printers/i_printers_service.dart';
+import 'package:core/impressoras/printers/printers_service.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/isar_database_instance.dart';
@@ -31,6 +33,8 @@ void coreInjections() {
   );
 
   sl.registerLazySingleton<ApiBaseUrlConfig>(() => ApiBaseUrlConfig());
+
+  sl.registerLazySingleton<IPrintersService>(() => PrintersService());
 
   sl.registerLazySingleton<CepService>(() => CepService());
 

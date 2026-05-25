@@ -1,6 +1,7 @@
 abstract class IAcessoGlobalSessao {
   int? get usuarioIdDaSessao;
   int? get empresaIdDaSessao;
+  String? get empresaNomeDaSessao;
   int? get terminalIdDaSessao;
   String? get terminalNomeDaSessao;
   int? get caixaIdDaSessao;

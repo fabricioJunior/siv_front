@@ -13,6 +13,7 @@ import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
+import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
@@ -21,18 +22,22 @@ import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
 import 'package:produtos/data/repositorios/marcas_repository.dart';
 import 'package:produtos/data/repositorios/referencias_repository.dart';
 import 'package:produtos/data/repositorios/produtos_repository.dart';
+import 'package:produtos/data/repositorios/etiquetas_repository.dart';
+import 'package:produtos/data/repositorios/impressao_etiquetas_repository.dart';
 import 'package:produtos/data/repositorios/codigos_repository.dart';
 import 'package:produtos/domain/data/local/i_codigos_local_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
+import 'package:produtos/domain/data/repositorios/i_etiquetas_repository.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_marcas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_produtos_remote_data_source.dart';
+import 'package:produtos/domain/data/remote/i_etiquetas_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigos_remote_data_source.dart';
 import 'package:produtos/presentantion/bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
 import 'package:produtos/presentation.dart';
@@ -73,6 +78,10 @@ void _data() {
 
   sl.registerFactory<IProdutosRemoteDataSource>(
     () => ProdutosRemoteDatasource(informacoesParaRequest: sl()),
+  );
+
+  sl.registerFactory<IEtiquetasRemoteDataSource>(
+    () => EtiquetasRemoteDatasource(informacoesParaRequest: sl()),
   );
 
   sl.registerFactory<ICodigosDoProdutoRemoteDatasource>(
@@ -118,6 +127,14 @@ void _repositores() {
 
   sl.registerFactory<IProdutosRepository>(
     () => ProdutosRepository(produtosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IEtiquetasRepository>(
+    () => EtiquetasRepository(etiquetasRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IImpressaoEtiquetasRepository>(
+    () => ImpressaoEtiquetasRepository(),
   );
 
   sl.registerFactory<ICodigosRepository>(
@@ -260,12 +277,32 @@ void _usesCases() {
 
   sl.registerFactory<CriarCodigoDeBarras>(() => CriarCodigoDeBarras());
 
+  sl.registerFactory<RecuperarCodigoDeBarrasDoProduto>(
+    () => RecuperarCodigoDeBarrasDoProduto(codigosRepository: sl()),
+  );
+
   sl.registerFactory<AtualizarProduto>(
     () => AtualizarProduto(produtosRepository: sl()),
   );
 
   sl.registerFactory<ExcluirProduto>(
     () => ExcluirProduto(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<CriarEtiqueta>(
+    () => CriarEtiqueta(etiquetasRepository: sl()),
+  );
+
+  sl.registerFactory<RecuperarEtiquetas>(
+    () => RecuperarEtiquetas(etiquetasRepository: sl()),
+  );
+
+  sl.registerFactory<ProcessarEtiquetaParaImpressao>(
+    () => ProcessarEtiquetaParaImpressao(),
+  );
+
+  sl.registerFactory<ImprimirEtiquetas>(
+    () => ImprimirEtiquetas(impressaoEtiquetasRepository: sl()),
   );
 
   sl.registerFactory<SalvarCodigoDeBarras>(
@@ -322,8 +359,14 @@ void _presentantion() {
 
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 
+  sl.registerFactory<EtiquetasBloc>(() => EtiquetasBloc(sl(), sl()));
+
   sl.registerFactory<ProdutosDaReferenciaBloc>(
     () => ProdutosDaReferenciaBloc(sl()),
+  );
+
+  sl.registerFactory<ImpressaoEtiquetasBloc>(
+    () => ImpressaoEtiquetasBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ProdutoBloc>(

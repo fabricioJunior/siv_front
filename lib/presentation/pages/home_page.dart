@@ -134,6 +134,14 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.lightBlue,
                   route: '/sincronizacao',
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.qr_code_2_outlined,
+                  title: 'Etiquetas',
+                  subtitle: 'Criação, pré-visualização e geração de etiquetas.',
+                  color: Colors.green,
+                  route: '/etiquetas',
+                  componentesNecessarios: ['PRDFM003'],
+                ),
               ];
 
               final userName = state.usuarioDaSessao?.nome ?? 'Usuário';

@@ -19,6 +19,9 @@ class AcessoGlobalSessao implements IAcessoGlobalSessao {
   
   @override
   int? get empresaIdDaSessao => _appBloc.state.empresaDaSessao?.id;
+
+  @override
+  String? get empresaNomeDaSessao => _appBloc.state.empresaDaSessao?.nome;
   
   @override
   int? get terminalIdDaSessao => _appBloc.state.terminalDaSessao?.id;

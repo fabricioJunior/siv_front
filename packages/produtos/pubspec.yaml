@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   core: 
     path: ../core
+  precos:
+    path: ../precos
   mockito: ^5.0.0
   json_annotation: ^4.9.0
   chips_input_autocomplete: ^1.2.2

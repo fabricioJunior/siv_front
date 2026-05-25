@@ -38,6 +38,22 @@ class CodigoDeBarrasRepository implements ICodigosRepository {
   }
 
   @override
+  Future<String?> recuperarCodigoPorProdutoId(int produtoId) async {
+    final codigos = await _codigosLocalDataSource.recuperarCodigosPorProdutoId(
+      produtoId,
+    );
+
+    for (final codigo in codigos) {
+      final valor = codigo.codigo.trim();
+      if (valor.isNotEmpty) {
+        return valor;
+      }
+    }
+
+    return null;
+  }
+
+  @override
   Stream<Paginacao> sincronizarCodigos() async* {
     var paginacao = await _paginacaoDataSource.buscarPaginacao('codigos_sync');
     final syncAnteriorConcluida = paginacao?.ended == true;

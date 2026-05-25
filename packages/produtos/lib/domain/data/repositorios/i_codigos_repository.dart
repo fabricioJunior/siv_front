@@ -5,5 +5,7 @@ abstract class ICodigosRepository {
 
   Future<void> deletarCodigo({required int produtoId, required String codigo});
 
+  Future<String?> recuperarCodigoPorProdutoId(int produtoId);
+
   Stream<Paginacao> sincronizarCodigos();
 }

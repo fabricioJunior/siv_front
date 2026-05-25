@@ -125,6 +125,9 @@ class FakeAcessoGlobalSessao implements IAcessoGlobalSessao {
   int? get empresaIdDaSessao => null;
 
   @override
+  String? get empresaNomeDaSessao => null;
+
+  @override
   int? get terminalIdDaSessao => null;
 
   @override
@@ -135,14 +138,12 @@ class FakeAcessoGlobalSessao implements IAcessoGlobalSessao {
 
   @override
   void atualizarCaixaIdDaSessao({required int terminalId, int? caixaId}) {}
-  
+
   @override
-  // TODO: implement estoqueSincronizado
-  bool get estoqueSincronizado => throw UnimplementedError();
-  
+  bool get dadosSincronizados => true;
+
   @override
-  // TODO: implement estoqueSincronizando
-  Stream<bool> get estoqueSincronizando => throw UnimplementedError();
+  Stream<bool> get sincronizandoDados => const Stream.empty();
 }
 
 void main() {

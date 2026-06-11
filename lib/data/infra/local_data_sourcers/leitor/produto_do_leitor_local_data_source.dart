@@ -22,8 +22,9 @@ class ProdutoDoLeitorLocalDataSource implements ILeitorDataDatasource {
   Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) async {
     var codigoEntity = await codigosLocalDataSource.recuperarCodigo(codigo);
     if (codigoEntity == null) return null;
-    var produto = await produtoEstoqueLocalDataSource
-        .obterProduto(codigoEntity.produtoId);
+    var produto = await produtoEstoqueLocalDataSource.obterProduto(
+      codigoEntity.produtoId,
+    );
     if (produto == null) return null;
     var precoDaReferencia = tabelaDePrecoId != null
         ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
@@ -31,6 +32,34 @@ class ProdutoDoLeitorLocalDataSource implements ILeitorDataDatasource {
             tabelaDePrecoId: tabelaDePrecoId,
           )
         : null;
+    return ProdutoDoLeitorData(
+      codigo: codigoEntity,
+      produto: produto,
+      precoDaReferencia: precoDaReferencia,
+    );
+  }
+
+  @override
+  Future<LeitorData?> getDataPorProdutoId(
+    int produtoId, {
+    int? tabelaDePrecoId,
+  }) async {
+    final produto = await produtoEstoqueLocalDataSource.obterProduto(produtoId);
+    if (produto == null) return null;
+
+    final codigos = await codigosLocalDataSource.recuperarCodigosPorProdutoId(
+      produtoId,
+    );
+    if (codigos.isEmpty) return null;
+
+    final codigoEntity = codigos.first;
+    final precoDaReferencia = tabelaDePrecoId != null
+        ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
+            referenciaId: produto.referenciaId,
+            tabelaDePrecoId: tabelaDePrecoId,
+          )
+        : null;
+
     return ProdutoDoLeitorData(
       codigo: codigoEntity,
       produto: produto,
@@ -55,11 +84,11 @@ class ProdutoDoLeitorData implements LeitorData {
 
   @override
   Map<String, dynamic> get dados => {
-        'codigo': codigo,
-        'produto': produto,
-        'precoDaReferencia': precoDaReferencia,
-        'valor': precoDaReferencia?.valor,
-      };
+    'codigo': codigo,
+    'produto': produto,
+    'precoDaReferencia': precoDaReferencia,
+    'valor': precoDaReferencia?.valor,
+  };
 
   @override
   String get descricao => produto.nome;

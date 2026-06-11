@@ -4,6 +4,16 @@ sealed class LeitorEvent {
   const LeitorEvent();
 }
 
+class LeitorProdutoPreCarregado {
+  final int produtoId;
+  final int quantidade;
+
+  const LeitorProdutoPreCarregado({
+    required this.produtoId,
+    required this.quantidade,
+  });
+}
+
 class LeitorCodigoInformado extends LeitorEvent {
   final String codigo;
   final int quantidade;
@@ -29,4 +39,10 @@ class LeitorItemExcluido extends LeitorEvent {
 
 class LeitorReiniciado extends LeitorEvent {
   const LeitorReiniciado();
+}
+
+class LeitorProdutosPreCarregadosInformados extends LeitorEvent {
+  final List<LeitorProdutoPreCarregado> produtos;
+
+  const LeitorProdutosPreCarregadosInformados(this.produtos);
 }

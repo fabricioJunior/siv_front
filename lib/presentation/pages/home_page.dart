@@ -62,6 +62,14 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['PRDFL001'],
                 ),
                 const _AccessFlowItem(
+                  icon: Icons.fact_check_outlined,
+                  title: 'Balanço',
+                  subtitle: 'Seleção de itens, contagem por lote e fechamento.',
+                  color: Colors.blue,
+                  route: '/balancos',
+                  componentesNecessarios: ['PRDFL001'],
+                ),
+                const _AccessFlowItem(
                   icon: Icons.payment,
                   title: 'Pagamentos',
                   subtitle: 'Recebimentos avulsos e controle rápido.',

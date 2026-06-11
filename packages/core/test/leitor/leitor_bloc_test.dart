@@ -48,10 +48,24 @@ class _FakeLeitorData with LeitorData {
 
 class _FakeLeitorDataDatasource extends Fake implements ILeitorDataDatasource {
   Future<LeitorData?> Function(String codigo, {int? tabelaDePrecoId})? handler;
+  Future<LeitorData?> Function(int produtoId, {int? tabelaDePrecoId})?
+      handlerPorProdutoId;
 
   @override
   Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) {
     return handler!(codigo, tabelaDePrecoId: tabelaDePrecoId);
+  }
+
+  @override
+  Future<LeitorData?> getDataPorProdutoId(
+    int produtoId, {
+    int? tabelaDePrecoId,
+  }) {
+    final handler = handlerPorProdutoId;
+    if (handler == null) {
+      return Future<LeitorData?>.value(null);
+    }
+    return handler(produtoId, tabelaDePrecoId: tabelaDePrecoId);
   }
 }
 
@@ -255,6 +269,70 @@ void main() {
           .having((state) => state.itens.isEmpty, 'itens.isEmpty', true)
           .having((state) => state.ultimoProdutoLido, 'ultimoProdutoLido', null)
           .having((state) => state.historico.length, 'historico.length', 4),
+    ],
+  );
+
+  blocTest<LeitorBloc, LeitorState>(
+    'pre-carregamento com controle ativo ignora estoque zero, limita quantidade e emite aviso',
+    build: () {
+      dataSource.handler = (codigo, {tabelaDePrecoId}) async {
+        if (codigo == '222') {
+          return _FakeLeitorData(
+            codigoDeBarras: '222',
+            descricao: 'Produto limitado',
+            quantidade: 3,
+          );
+        }
+        return null;
+      };
+      dataSource.handlerPorProdutoId = (produtoId, {tabelaDePrecoId}) async {
+        if (produtoId == 1) {
+          return _FakeLeitorData(
+            codigoDeBarras: '111',
+            descricao: 'Produto sem estoque',
+            quantidade: 0,
+          );
+        }
+        if (produtoId == 2) {
+          return _FakeLeitorData(
+            codigoDeBarras: '222',
+            descricao: 'Produto limitado',
+            quantidade: 3,
+          );
+        }
+        return null;
+      };
+      return LeitorBloc(
+        dataSource: dataSource,
+        controlarQuantidade: true,
+      );
+    },
+    act: (bloc) {
+      bloc.add(
+        const LeitorProdutosPreCarregadosInformados([
+          LeitorProdutoPreCarregado(produtoId: 1, quantidade: 2),
+          LeitorProdutoPreCarregado(produtoId: 2, quantidade: 10),
+        ]),
+      );
+    },
+    expect: () => [
+      isA<LeitorState>()
+          .having(
+            (state) => state.aviso
+                ?.contains('Pré-carregamento concluído com ajustes:'),
+            'aviso de ajustes',
+            true,
+          )
+          .having((state) => state.tokenAviso, 'tokenAviso', 1),
+      isA<LeitorState>()
+          .having((state) => state.processando, 'processando', true)
+          .having((state) => state.ultimoCodigoInformado,
+              'ultimoCodigoInformado', '222'),
+      isA<LeitorState>()
+          .having((state) => state.itens.length, 'itens.length', 1)
+          .having((state) => state.itens.single.codigoDeBarras, 'codigo', '222')
+          .having((state) => state.itens.single.quantidadeLida,
+              'quantidadeLida', 3),
     ],
   );
 }

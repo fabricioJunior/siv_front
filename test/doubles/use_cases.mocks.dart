@@ -14,18 +14,20 @@ import 'package:autenticacao/domain/data/repositories/i_token_repository.dart'
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart'
     as _i3;
 import 'package:autenticacao/domain/models/token.dart' as _i8;
-import 'package:autenticacao/domain/models/usuario.dart' as _i5;
+import 'package:autenticacao/domain/models/usuario.dart' as _i14;
 import 'package:autenticacao/domain/usecases/deslogar.dart' as _i12;
 import 'package:autenticacao/domain/usecases/esta_autenticado.dart' as _i11;
+import 'package:autenticacao/domain/usecases/limpar_credenciais_de_autenticacao.dart'
+    as _i5;
 import 'package:autenticacao/domain/usecases/on_autenticado.dart' as _i7;
 import 'package:autenticacao/domain/usecases/on_desautenticado.dart' as _i10;
 import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart'
-    as _i14;
+    as _i15;
 import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
     as _i13;
 import 'package:autenticacao/domain/usecases/sincronizar_permissoes_do_usuario.dart'
-    as _i16;
-import 'package:autenticacao/models.dart' as _i15;
+    as _i17;
+import 'package:autenticacao/models.dart' as _i16;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -61,9 +63,12 @@ class _FakeILicenciadosRepository_2 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
-class _FakeUsuario_3 extends _i1.SmartFake implements _i5.Usuario {
-  _FakeUsuario_3(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+class _FakeLimparCredenciaisDeAutenticacao_3 extends _i1.SmartFake
+    implements _i5.LimparCredenciaisDeAutenticacao {
+  _FakeLimparCredenciaisDeAutenticacao_3(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(parent, parentInvocation);
 }
 
 class _FakeIEmpresasRepository_4 extends _i1.SmartFake
@@ -200,6 +205,17 @@ class MockDeslogar extends _i1.Mock implements _i12.Deslogar {
           as _i4.ILicenciadosRepository);
 
   @override
+  _i5.LimparCredenciaisDeAutenticacao get limparCredenciaisDeAutenticacao =>
+      (super.noSuchMethod(
+            Invocation.getter(#limparCredenciaisDeAutenticacao),
+            returnValue: _FakeLimparCredenciaisDeAutenticacao_3(
+              this,
+              Invocation.getter(#limparCredenciaisDeAutenticacao),
+            ),
+          )
+          as _i5.LimparCredenciaisDeAutenticacao);
+
+  @override
   _i9.Future<void> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
@@ -230,21 +246,19 @@ class MockRecuperarUsuarioDaSessao extends _i1.Mock
           as _i3.IUsuariosRepository);
 
   @override
-  _i9.Future<_i5.Usuario> call() =>
+  _i9.Future<_i14.Usuario?> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i9.Future<_i5.Usuario>.value(
-              _FakeUsuario_3(this, Invocation.method(#call, [])),
-            ),
+            returnValue: _i9.Future<_i14.Usuario?>.value(),
           )
-          as _i9.Future<_i5.Usuario>);
+          as _i9.Future<_i14.Usuario?>);
 }
 
 /// A class which mocks [RecuperarEmpresaDaSessao].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarEmpresaDaSessao extends _i1.Mock
-    implements _i14.RecuperarEmpresaDaSessao {
+    implements _i15.RecuperarEmpresaDaSessao {
   MockRecuperarEmpresaDaSessao() {
     _i1.throwOnMissingStub(this);
   }
@@ -261,32 +275,32 @@ class MockRecuperarEmpresaDaSessao extends _i1.Mock
           as _i6.IEmpresasRepository);
 
   @override
-  _i9.Future<_i15.Empresa?> call() =>
+  _i9.Future<_i16.Empresa?> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i9.Future<_i15.Empresa?>.value(),
+            returnValue: _i9.Future<_i16.Empresa?>.value(),
           )
-          as _i9.Future<_i15.Empresa?>);
+          as _i9.Future<_i16.Empresa?>);
 }
 
 /// A class which mocks [SincronizarPermissoesDoUsuario].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSincronizarPermissoesDoUsuario extends _i1.Mock
-    implements _i16.SincronizarPermissoesDoUsuario {
+    implements _i17.SincronizarPermissoesDoUsuario {
   MockSincronizarPermissoesDoUsuario() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i9.Future<Iterable<_i15.PermissaoDoUsuario>> call({
+  _i9.Future<Iterable<_i16.PermissaoDoUsuario>> call({
     required int? idUsuario,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {#idUsuario: idUsuario}),
-            returnValue: _i9.Future<Iterable<_i15.PermissaoDoUsuario>>.value(
-              <_i15.PermissaoDoUsuario>[],
+            returnValue: _i9.Future<Iterable<_i16.PermissaoDoUsuario>>.value(
+              <_i16.PermissaoDoUsuario>[],
             ),
           )
-          as _i9.Future<Iterable<_i15.PermissaoDoUsuario>>);
+          as _i9.Future<Iterable<_i16.PermissaoDoUsuario>>);
 }

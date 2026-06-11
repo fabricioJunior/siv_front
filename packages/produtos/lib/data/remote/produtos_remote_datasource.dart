@@ -64,18 +64,50 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
     int? corId,
     int? tamanhoId,
   }) async {
-    final response = await get(
-      queryParameters: {
-        'incluir': 'tudo',
-        if (idExterno != null && idExterno.isNotEmpty) 'idExterno': idExterno,
-        if (referenciaId != null) 'referencia': referenciaId.toString(),
-        if (corId != null) 'corId': corId.toString(),
-        if (tamanhoId != null) 'tamanhoId': tamanhoId.toString(),
-      },
-    );
+    const limitePorPagina = 500;
+    var pagina = 1;
+    final acumulados = <Produto>[];
+    final chavesVistas = <String>{};
 
-    return ProdutosDto.fromJson(
-      response.body,
-    ).items.map((item) => item as Produto).toList();
+    while (true) {
+      final response = await get(
+        queryParameters: {
+          'incluir': 'tudo',
+          if (idExterno != null && idExterno.isNotEmpty) 'idExterno': idExterno,
+          if (referenciaId != null) 'referencia': referenciaId.toString(),
+          if (corId != null) 'corId': corId.toString(),
+          if (tamanhoId != null) 'tamanhoId': tamanhoId.toString(),
+          'page': pagina.toString(),
+          'limit': limitePorPagina.toString(),
+        },
+      );
+
+      final produtosPagina =
+          ProdutosDto.fromJson(response.body).items.map((item) => item as Produto).toList();
+
+      if (produtosPagina.isEmpty) {
+        break;
+      }
+
+      var adicionouNovos = false;
+      for (final produto in produtosPagina) {
+        final chave = produto.id != null
+            ? 'id:${produto.id}'
+            : 'r:${produto.referenciaId}-c:${produto.corId}-t:${produto.tamanhoId}-x:${produto.idExterno}';
+        if (chavesVistas.add(chave)) {
+          acumulados.add(produto);
+          adicionouNovos = true;
+        }
+      }
+
+      // Evita loop infinito quando backend ignora paginação e repete a mesma página.
+      if (!adicionouNovos || produtosPagina.length < limitePorPagina) {
+        break;
+      }
+
+      pagina++;
+    }
+
+    return acumulados;
   }
 }

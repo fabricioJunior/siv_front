@@ -5,4 +5,9 @@ abstract class ILeitorDataDatasource {
     String codigo, {
     int? tabelaDePrecoId,
   });
+
+  Future<LeitorData?> getDataPorProdutoId(
+    int produtoId, {
+    int? tabelaDePrecoId,
+  });
 }

@@ -52,6 +52,114 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       _onLeitorReiniciado,
       transformer: sequential(),
     );
+    on<LeitorProdutosPreCarregadosInformados>(
+      _onLeitorProdutosPreCarregadosInformados,
+      transformer: sequential(),
+    );
+  }
+
+  Future<void> _onLeitorProdutosPreCarregadosInformados(
+    LeitorProdutosPreCarregadosInformados event,
+    Emitter<LeitorState> emit,
+  ) async {
+    if (event.produtos.isEmpty) {
+      return;
+    }
+
+    final produtosNaoCarregados = <String>[];
+    final produtosCarregadosComAjuste = <String>[];
+    final quantidadesPrevistasPorCodigo = <String, int>{
+      for (final item in state.itens) item.codigoDeBarras: item.quantidadeLida,
+    };
+
+    for (final produto in event.produtos) {
+      if (produto.quantidade <= 0) {
+        continue;
+      }
+
+      final LeitorData? data;
+      try {
+        data = await _dataSource.getDataPorProdutoId(
+          produto.produtoId,
+          tabelaDePrecoId: _tabelaDePrecoId,
+        );
+      } catch (_) {
+        continue;
+      }
+
+      if (data == null) {
+        continue;
+      }
+
+      var quantidadeParaCarregar = produto.quantidade;
+      if (state.controlarQuantidade) {
+        final estoqueDisponivel = data.quantidade;
+        if (estoqueDisponivel == 0) {
+          produtosNaoCarregados.add(
+            '${data.descricao} (${data.descricao} - ${data.tamanho}/${data.cor}): estoque igual a zero.',
+          );
+          continue;
+        }
+
+        final quantidadeJaPrevista =
+            quantidadesPrevistasPorCodigo[data.codigoDeBarras] ?? 0;
+        final quantidadeDisponivelParaCarga =
+            estoqueDisponivel - quantidadeJaPrevista;
+
+        if (quantidadeDisponivelParaCarga <= 0) {
+          produtosNaoCarregados.add(
+            '${data.descricao} (${data.descricao} - ${data.tamanho}/${data.cor}): sem quantidade disponível para carregar.',
+          );
+          continue;
+        }
+
+        if (quantidadeParaCarregar > quantidadeDisponivelParaCarga) {
+          produtosCarregadosComAjuste.add(
+            '${data.descricao} (ID ${produto.produtoId}): solicitado ${produto.quantidade}, carregado $quantidadeDisponivelParaCarga.',
+          );
+          quantidadeParaCarregar = quantidadeDisponivelParaCarga;
+        }
+      }
+
+      if (quantidadeParaCarregar <= 0) {
+        continue;
+      }
+
+      quantidadesPrevistasPorCodigo[data.codigoDeBarras] =
+          (quantidadesPrevistasPorCodigo[data.codigoDeBarras] ?? 0) +
+              quantidadeParaCarregar;
+
+      add(
+        LeitorCodigoInformado(
+          data.codigoDeBarras,
+          quantidade: quantidadeParaCarregar,
+        ),
+      );
+    }
+
+    if (state.controlarQuantidade &&
+        (produtosNaoCarregados.isNotEmpty ||
+            produtosCarregadosComAjuste.isNotEmpty)) {
+      final mensagem = [
+        'Pré-carregamento concluído com ajustes:',
+        if (produtosNaoCarregados.isNotEmpty) ...[
+          'Não carregados:',
+          ...produtosNaoCarregados.map((item) => '- $item'),
+        ],
+        if (produtosCarregadosComAjuste.isNotEmpty) ...[
+          'Carregados com limite de estoque:',
+          ...produtosCarregadosComAjuste.map((item) => '- $item'),
+        ],
+      ].join('\n');
+
+      emit(
+        state.copyWith(
+          aviso: mensagem,
+          avisoTipo: null,
+          tokenAviso: state.tokenAviso + 1,
+        ),
+      );
+    }
   }
 
   Future<void> _onLeitorCodigoInformado(
@@ -148,8 +256,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
       return;
     }
 
-    final quantidadeAdicionada =
-        event.quantidade > 0 ? event.quantidade : 1;
+    final quantidadeAdicionada = event.quantidade > 0 ? event.quantidade : 1;
 
     if (state.controlarQuantidade &&
         estoqueDisponivel >= 0 &&

@@ -85,16 +85,55 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
     String? nome,
     bool? inativo,
   }) async {
-    var response = await get(
-      queryParameters: {
-        'incluir': 'tudo',
-        if (nome != null) 'nome': nome,
-        if (inativo != null) 'inativo': inativo.toString(),
-      },
-    );
+    const limitePorPagina = 400;
+    var pagina = 1;
+    final referencias = <Referencia>[];
+    final chavesVistas = <String>{};
 
-    return (response.body as List<dynamic>)
-        .map((e) => ReferenciaDto.fromJson(e))
-        .toList();
+    while (true) {
+      final response = await get(
+        queryParameters: {
+          'incluir': 'tudo',
+          if (nome != null && nome.isNotEmpty) 'nome': nome,
+          if (inativo != null) 'inativo': inativo.toString(),
+          'page': pagina.toString(),
+          'limit': limitePorPagina.toString(),
+        },
+      );
+
+      final body = response.body;
+      final itensDaPagina = body is Map<String, dynamic>
+          ? (body['items'] as List<dynamic>? ?? const <dynamic>[])
+          : (body is List<dynamic> ? body : const <dynamic>[]);
+
+      if (itensDaPagina.isEmpty) {
+        break;
+      }
+
+      var adicionouNovos = false;
+      for (final item in itensDaPagina) {
+        if (item is! Map<String, dynamic>) {
+          continue;
+        }
+
+        final referencia = ReferenciaDto.fromJson(item);
+        final chave = referencia.id != null
+            ? 'id:${referencia.id}'
+            : 'nome:${referencia.nome.toLowerCase()}-categoria:${referencia.categoriaId}';
+
+        if (chavesVistas.add(chave)) {
+          referencias.add(referencia);
+          adicionouNovos = true;
+        }
+      }
+
+      if (!adicionouNovos || itensDaPagina.length < limitePorPagina) {
+        break;
+      }
+
+      pagina++;
+    }
+
+    return referencias;
   }
 }

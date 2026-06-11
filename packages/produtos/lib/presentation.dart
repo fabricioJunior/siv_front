@@ -32,6 +32,8 @@ export 'package:produtos/presentantion/pages/referencias_page.dart';
 export 'package:produtos/presentantion/pages/referencia_page.dart';
 export 'package:produtos/presentantion/blocs/produtos_bloc/produtos_bloc.dart';
 export 'package:produtos/presentantion/pages/produtos_page.dart';
+export 'package:produtos/presentantion/pages/selecionar_produtos_page.dart';
+export 'package:produtos/presentantion/pages/selecionar_referencias_page.dart';
 export 'package:produtos/presentantion/pages/produto_page.dart';
 export 'package:produtos/presentantion/blocs/etiquetas_bloc/etiquetas_bloc.dart';
 export 'package:produtos/presentantion/pages/etiquetas_page.dart';

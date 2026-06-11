@@ -13,8 +13,10 @@ import 'package:flutter/services.dart';
 
 class LeitorWidget extends StatefulWidget {
   final bool controlarQuantidade;
+  final bool desativado;
   final ILeitorDataDatasource dataSource;
   final LeitorController? controller;
+  final List<ProdutosPreCarregado>? produtosPreCarregados;
   final ValueChanged<LeitorItemContado>? onUltimoProdutoLido;
   final ValueChanged<String>? onErro;
   final ValueChanged<String>? onAviso;
@@ -29,7 +31,9 @@ class LeitorWidget extends StatefulWidget {
     super.key,
     required this.dataSource,
     this.controlarQuantidade = false,
+    this.desativado = false,
     this.controller,
+    this.produtosPreCarregados,
     this.onUltimoProdutoLido,
     this.onErro,
     this.onAviso,
@@ -55,8 +59,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   bool _controllerInterno = false;
   bool _modoRemocao = false;
   _LeitorVisualizacao _visualizacao = _LeitorVisualizacao.historico;
-   bool _sincronizando = sl<IAcessoGlobalSessao>().dadosSincronizados;
+  bool _sincronizando = sl<IAcessoGlobalSessao>().dadosSincronizados;
   StreamSubscription<bool>? _sincronizacaoSubscription;
+  int? _assinaturaPreCargaAplicada;
 
   @override
   void initState() {
@@ -67,9 +72,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _controller = widget.controller ?? LeitorController();
     _bloc = _criarBloc();
     _controller.bind(_bloc);
+    _aplicarProdutosPreCarregados();
     final sessao = sl<IAcessoGlobalSessao>();
     _sincronizando = !sessao.dadosSincronizados;
-    _sincronizacaoSubscription = sessao.sincronizandoDados.listen((sincronizando) {
+    _sincronizacaoSubscription =
+        sessao.sincronizandoDados.listen((sincronizando) {
       if (mounted) setState(() => _sincronizando = sincronizando);
     });
   }
@@ -92,6 +99,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       _bloc.close();
       _bloc = _criarBloc(estadoInicial: estadoAtual);
       _controller.bind(_bloc);
+      _aplicarProdutosPreCarregados();
     }
 
     if (oldWidget.controller != widget.controller) {
@@ -103,6 +111,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       _controllerInterno = widget.controller == null;
       _controller = widget.controller ?? LeitorController();
       _controller.bind(_bloc);
+      _aplicarProdutosPreCarregados();
+    }
+
+    if (oldWidget.produtosPreCarregados != widget.produtosPreCarregados) {
+      _aplicarProdutosPreCarregados();
     }
   }
 
@@ -141,7 +154,29 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
+  void _aplicarProdutosPreCarregados() {
+    final produtos = widget.produtosPreCarregados;
+    if (produtos == null || produtos.isEmpty) {
+      return;
+    }
+
+    final assinaturaAtual = Object.hashAll(
+      produtos.map((item) => Object.hash(item.id, item.quantidade)),
+    );
+    if (_assinaturaPreCargaAplicada == assinaturaAtual) {
+      return;
+    }
+
+    _assinaturaPreCargaAplicada = assinaturaAtual;
+
+    _controller.preCarregarProdutos(produtos);
+  }
+
   void _submeterCodigo() {
+    if (widget.desativado) {
+      return;
+    }
+
     final codigo = _codigoController.text.trim();
     if (codigo.isEmpty) {
       _solicitarFoco();
@@ -244,6 +279,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   }
 
   Future<void> _abrirBuscaManual() async {
+    if (widget.desativado) return;
+
     final buscaDataSource = widget.buscaDataSource;
     if (buscaDataSource == null) return;
 
@@ -501,7 +538,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         child: TextField(
                           controller: _codigoController,
                           focusNode: _codigoFocusNode,
-                          autofocus: widget.autofocus,
+                          autofocus:
+                              widget.desativado ? false : widget.autofocus,
+                          enabled: !widget.desativado,
                           decoration: InputDecoration(
                             labelText: _modoRemocao
                                 ? 'Código para remover'
@@ -528,7 +567,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       ),
                       const SizedBox(width: 12),
                       FilledButton.icon(
-                        onPressed: state.processando ? null : _submeterCodigo,
+                        onPressed: state.processando || widget.desativado
+                            ? null
+                            : _submeterCodigo,
                         icon: Icon(
                           _modoRemocao
                               ? Icons.remove_circle_outline
@@ -559,17 +600,19 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                               : 'Ativar remoção por leitura',
                         ),
                         selected: _modoRemocao,
-                        onSelected: (_) {
-                          setState(() {
-                            _modoRemocao = !_modoRemocao;
-                          });
-                          _solicitarFoco();
-                        },
+                        onSelected: widget.desativado
+                            ? null
+                            : (_) {
+                                setState(() {
+                                  _modoRemocao = !_modoRemocao;
+                                });
+                                _solicitarFoco();
+                              },
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.refresh_outlined, size: 18),
                         label: const Text('Limpar leitura'),
-                        onPressed: state.itens.isEmpty
+                        onPressed: state.itens.isEmpty || widget.desativado
                             ? null
                             : () => _controller.limpar(),
                       ),
@@ -577,8 +620,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         ActionChip(
                           avatar: const Icon(Icons.search_outlined, size: 18),
                           label: const Text('Busca manual'),
-                          onPressed:
-                              state.processando ? null : _abrirBuscaManual,
+                          onPressed: state.processando || widget.desativado
+                              ? null
+                              : _abrirBuscaManual,
                         ),
                     ],
                   ),
@@ -720,20 +764,23 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                     children: [
                                       IconButton(
                                         tooltip: 'Remover uma unidade',
-                                        onPressed: () =>
-                                            _controller.removerQuantidade(
-                                          item.codigoDeBarras,
-                                        ),
+                                        onPressed: widget.desativado
+                                            ? null
+                                            : () =>
+                                                _controller.removerQuantidade(
+                                                  item.codigoDeBarras,
+                                                ),
                                         icon: const Icon(
                                           Icons.remove_circle_outline,
                                         ),
                                       ),
                                       IconButton(
                                         tooltip: 'Excluir item da contagem',
-                                        onPressed: () =>
-                                            _controller.removerItem(
-                                          item.codigoDeBarras,
-                                        ),
+                                        onPressed: widget.desativado
+                                            ? null
+                                            : () => _controller.removerItem(
+                                                  item.codigoDeBarras,
+                                                ),
                                         icon: const Icon(Icons.delete_outline),
                                       ),
                                     ],
@@ -815,7 +862,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       }
 
       _controller.syncState(state);
-      _solicitarFoco();
+      if (!widget.desativado) {
+        _solicitarFoco();
+      }
     });
   }
 }
@@ -927,10 +976,10 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                             : const Icon(Icons.search_outlined),
                       ),
                       textInputAction: TextInputAction.search,
-                      onSubmitted: (v) => _buscaBloc
-                          .add(LeitorBuscaTextoBuscado(v)),
-                      onChanged: (v) => _buscaBloc
-                          .add(LeitorBuscaTextoBuscado(v)),
+                      onSubmitted: (v) =>
+                          _buscaBloc.add(LeitorBuscaTextoBuscado(v)),
+                      onChanged: (v) =>
+                          _buscaBloc.add(LeitorBuscaTextoBuscado(v)),
                     ),
                     if (state.tamanhosDisponiveis.isNotEmpty ||
                         state.coresDisponiveis.isNotEmpty) ...[
@@ -952,7 +1001,8 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                                     label: Text(t),
                                     selected: state.tamanhoFiltro == t,
                                     onSelected: (sel) => _buscaBloc.add(
-                                      LeitorBuscaTamanhoFiltrado(sel ? t : null),
+                                      LeitorBuscaTamanhoFiltrado(
+                                          sel ? t : null),
                                     ),
                                   ),
                                 ),
@@ -1216,4 +1266,26 @@ class LeitorController extends ChangeNotifier {
   void limpar() {
     _bloc?.add(const LeitorReiniciado());
   }
+
+  void preCarregarProdutos(List<ProdutosPreCarregado> produtos) {
+    _bloc?.add(
+      LeitorProdutosPreCarregadosInformados(
+        produtos
+            .map(
+              (produto) => LeitorProdutoPreCarregado(
+                produtoId: produto.id,
+                quantidade: produto.quantidade,
+              ),
+            )
+            .toList(growable: false),
+      ),
+    );
+  }
+}
+
+class ProdutosPreCarregado {
+  final int id;
+  final int quantidade;
+
+  const ProdutosPreCarregado({required this.id, required this.quantidade});
 }

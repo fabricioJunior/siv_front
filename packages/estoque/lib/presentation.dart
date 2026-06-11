@@ -1,4 +1,14 @@
 export 'presentation/blocs/estoque_saldo_bloc/estoque_saldo_bloc.dart';
 export 'presentation/blocs/entrada_manual_de_produtos_bloc/entrada_manual_de_produtos_bloc.dart';
+export 'presentation/bloc/balanco/balanco_bloc.dart';
+export 'presentation/bloc/balanco/balanco_itens_bloc.dart';
+export 'presentation/bloc/lotes/lotes_bloc.dart';
+export 'presentation/bloc/lote/lote_bloc.dart';
 export 'presentation/pages/estoque_saldo_page.dart';
 export 'presentation/pages/entrada_manual_de_produtos_page.dart';
+export 'presentation/pages/balanco/balancos_page.dart';
+export 'presentation/pages/balanco/criar_balanco_page.dart';
+export 'presentation/pages/balanco/detalhes_balanco_page.dart';
+export 'presentation/pages/balanco/adicionar_itens_balanco_page.dart';
+export 'presentation/pages/balanco/criar_lote_balanco_page.dart';
+export 'presentation/pages/balanco/detalhes_lote_balanco_page.dart';

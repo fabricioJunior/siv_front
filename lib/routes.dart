@@ -8,6 +8,7 @@ import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
@@ -394,6 +395,36 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/produtos': (context) {
     return ProdutosPage();
   },
+  '/selecionar_produtos': (context) {
+    final raw = args(context)['idsSelecionados'];
+    final idsSelecionados = raw is List
+        ? raw
+              .map((e) => e is int ? e : int.tryParse(e.toString()))
+              .whereType<int>()
+              .toList()
+        : const <int>[];
+    return SelecionarProdutosPage(idsSelecionadosIniciais: idsSelecionados);
+  },
+  '/selecionar_referencias': (context) {
+    final raw = args(context)['idsSelecionados'];
+    final idsSelecionados = raw is List
+        ? raw
+              .map((e) => e is int ? e : int.tryParse(e.toString()))
+              .whereType<int>()
+              .toList()
+        : const <int>[];
+    return SelecionarReferenciasPage(idsSelecionadosIniciais: idsSelecionados);
+  },
+  '/selecionar_referencias_balanco': (context) {
+    final raw = args(context)['idsSelecionados'];
+    final idsSelecionados = raw is List
+        ? raw
+              .map((e) => e is int ? e : int.tryParse(e.toString()))
+              .whereType<int>()
+              .toList()
+        : const <int>[];
+    return SelecionarReferenciasPage(idsSelecionadosIniciais: idsSelecionados);
+  },
   '/produto': (context) {
     return ProdutoPage(
       referenciaId: args(context)['referenciaId'],
@@ -484,6 +515,77 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
 
+  // Balanço:
+  '/balancos': (context) {
+    return _rotaProtegida(
+      route: '/balancos',
+      child: BlocProvider(
+        create: (_) => sl<BalancoBloc>(),
+        child: const BalancosPage(),
+      ),
+    );
+  },
+  '/criar_balanco': (context) {
+    return _rotaProtegida(
+      route: '/criar_balanco',
+      child: BlocProvider(
+        create: (_) => sl<BalancoBloc>(),
+        child: const CriarBalancoPage(),
+      ),
+    );
+  },
+  '/detalhes_balanco': (context) {
+    final balancoId = args(context)['balancoId'] ?? 0;
+    return _rotaProtegida(
+      route: '/detalhes_balanco',
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => sl<BalancoBloc>()),
+          BlocProvider(create: (_) => sl<BalancoItensBloc>()),
+          BlocProvider(create: (_) => sl<LotesBloc>()),
+        ],
+        child: DetalhesBalancoPage(balancoId: balancoId),
+      ),
+    );
+  },
+  '/adicionar_itens_balanco': (context) {
+    final balancoId = args(context)['balancoId'] ?? 0;
+    return _rotaProtegida(
+      route: '/adicionar_itens_balanco',
+      child: BlocProvider(
+        create: (_) => sl<BalancoBloc>(),
+        child: AdicionarItensBalancoPage(balancoId: balancoId),
+      ),
+    );
+  },
+  '/criar_lote_balanco': (context) {
+    final balancoId = args(context)['balancoId'] ?? 0;
+    return _rotaProtegida(
+      route: '/criar_lote_balanco',
+      child: BlocProvider(
+        create: (_) => sl<LoteBloc>(),
+        child: CriarLoteBalancoPage(balancoId: balancoId),
+      ),
+    );
+  },
+  '/detalhes_lote_balanco': (context) {
+    final arguments = args(context);
+    final balancoId = arguments['balancoId'] ?? 0;
+    final loteId = arguments['loteId'] ?? 0;
+    final balancoFinalizado = arguments['balancoFinalizado'] == true;
+    return _rotaProtegida(
+      route: '/detalhes_lote_balanco',
+      child: BlocProvider(
+        create: (_) => sl<LoteBloc>(),
+        child: DetalhesLoteBalancoPage(
+          balancoId: balancoId,
+          loteId: loteId,
+          balancoFinalizado: balancoFinalizado,
+        ),
+      ),
+    );
+  },
+
   //CONFIGURACOES:
   '/configuracoes': (context) {
     return const ConfiguracoesPage();
@@ -540,9 +642,23 @@ const Map<String, List<String>> _componentesDaRota = {
   '/romaneios': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
   '/estoque': ['PRDFL001'],
+  '/balancos': ['PRDFL001'],
+  '/criar_balanco': ['PRDFL001'],
+  '/detalhes_balanco': ['PRDFL001'],
+  '/adicionar_itens_balanco': ['PRDFL001'],
+  '/criar_lote_balanco': ['PRDFL001'],
+  '/detalhes_lote_balanco': ['PRDFL001'],
   '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
   '/pessoas': ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],
   '/menu_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
+  '/selecionar_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
+  '/selecionar_referencias': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
+  '/selecionar_referencias_balanco': [
+    'PRDFM003',
+    'PRDFM001',
+    'PRDFM004',
+    'PRDFM006',
+  ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
   '/financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],

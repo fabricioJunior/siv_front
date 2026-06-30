@@ -180,11 +180,29 @@ class _DetalhesLoteBalancoPageState extends State<DetalhesLoteBalancoPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Descrição: ${state.lote?.lote ?? '-'}',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Descrição: ${state.lote?.lote ?? '-'}',
+                                        style: Theme.of(context).textTheme.titleSmall,
+                                      ),
+                                      ListenableBuilder(
+                                        listenable: _leitorController,
+                                        builder: (context, _) {
+                                          final contados = _leitorController.itens
+                                              .where((i) => i.quantidadeLida > 0)
+                                              .length;
+                                          if (contados == 0) return const SizedBox.shrink();
+                                          return Chip(
+                                            label: Text('$contados produto(s)'),
+                                            avatar: const Icon(Icons.check_circle_outline, size: 16),
+                                            visualDensity: VisualDensity.compact,
+                                            padding: EdgeInsets.zero,
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 8),
                                   Text(

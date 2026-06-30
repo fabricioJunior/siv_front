@@ -5,7 +5,7 @@ import 'package:autenticacao/domain/usecases/recuperar_permissoes_do_usuario.dar
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
-import 'package:core/paginacao/paginacao.dart';
+import 'package:core/paginacao.dart';
 import 'package:estoque/estoque.dart';
 import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
@@ -22,6 +22,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   final RecuperarUsuarioDaSessao _recuperarUsuarioDaSessao;
   final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
   final RecuperarPermissoesDoUsuario _recuperarPermissoesDoUsuario;
+  final LimparSincronizacaoIncremental _limparSincronizacaoIncremental;
 
   StreamSubscription<Paginacao>? _codigosSubscription;
   StreamSubscription<Paginacao>? _estoqueSubscription;
@@ -37,11 +38,21 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     this._recuperarUsuarioDaSessao,
     this._recuperarEmpresaDaSessao,
     this._recuperarPermissoesDoUsuario,
+    this._limparSincronizacaoIncremental,
   ) : super(const SyncDataState()) {
     on<SyncDataSolicitouSincronizacao>(_onSolicitouSincronizacao);
     on<SyncDataAtualizacaoRecebida>(_onAtualizacaoRecebida);
     on<SyncDataModuloConcluido>(_onModuloConcluido);
     on<SyncDataModuloFalhou>(_onModuloFalhou);
+    on<SyncDataSolicitouResetIncremental>(_onResetIncremental);
+  }
+
+  Future<void> _onResetIncremental(
+    SyncDataSolicitouResetIncremental event,
+    Emitter<SyncDataState> emit,
+  ) async {
+    await _limparSincronizacaoIncremental();
+    add(const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.manual));
   }
 
   Future<void> _onSolicitouSincronizacao(

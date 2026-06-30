@@ -50,7 +50,14 @@ abstract class IBalancoRepository {
   });
 
   /// Listar itens do balanço
-  Future<List<BalancoItem>> listarItensDoBalanco({required int balancoId});
+  Future<List<BalancoItem>> listarItensDoBalanco({
+    required int balancoId,
+    int page = 1,
+    int limit = 25,
+    bool? comDivergencia,
+    List<String>? referencias,
+    List<String>? ordenacao,
+  });
 
   /// Remover item do balanço
   Future<void> removerItemDoBalanco({
@@ -114,4 +121,6 @@ abstract class IBalancoRepository {
     required int loteId,
     required int produtoId,
   });
+
+  Future<void> calcularItensDoBalanco({required int balancoId});
 }

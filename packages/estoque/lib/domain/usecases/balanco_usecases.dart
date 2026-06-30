@@ -120,8 +120,22 @@ class ListarItensDoBalancoUseCase {
 
   ListarItensDoBalancoUseCase({required this.repository});
 
-  Future<List<BalancoItem>> call({required int balancoId}) {
-    return repository.listarItensDoBalanco(balancoId: balancoId);
+  Future<List<BalancoItem>> call({
+    required int balancoId,
+    int page = 1,
+    int limit = 25,
+    bool? comDivergencia,
+    List<String>? referencias,
+    List<String>? ordenacao,
+  }) {
+    return repository.listarItensDoBalanco(
+      balancoId: balancoId,
+      page: page,
+      limit: limit,
+      comDivergencia: comDivergencia,
+      referencias: referencias,
+      ordenacao: ordenacao,
+    );
   }
 }
 
@@ -274,5 +288,15 @@ class RemoverItemDoLoteBalancoUseCase {
       loteId: loteId,
       produtoId: produtoId,
     );
+  }
+}
+
+class CalcularItensDoBalancoUseCase {
+  final IBalancoRepository repository;
+
+  CalcularItensDoBalancoUseCase({required this.repository});
+
+  Future<void> call({required int balancoId}) {
+    return repository.calcularItensDoBalanco(balancoId: balancoId);
   }
 }

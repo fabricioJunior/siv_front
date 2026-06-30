@@ -275,6 +275,43 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: CreditoDevolucaoMovimentacoesPage(pessoaId: pessoaId ?? 0),
     );
   },
+  '/documentos_fiscais': (context) {
+    return _rotaProtegida(
+      route: '/documentos_fiscais',
+      child: const DocumentosFiscaisPage(),
+    );
+  },
+  '/documento_fiscal': (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    return _rotaProtegida(
+      route: '/documento_fiscal',
+      child: DocumentoFiscalPage(documentoId: args['id'] as int),
+    );
+  },
+  '/configuracao_fiscal': (context) {
+    return _rotaProtegida(
+      route: '/configuracao_fiscal',
+      child: const ConfiguracaoFiscalPage(),
+    );
+  },
+  '/relatorio_faturamento': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_faturamento',
+      child: const RelatorioFaturamentoPage(),
+    );
+  },
+  '/relatorio_curva_abc': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_curva_abc',
+      child: const RelatorioCurvaAbcPage(),
+    );
+  },
+  '/relatorio_clientes_ativos': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_clientes_ativos',
+      child: const RelatorioClientesAtivosPage(),
+    );
+  },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
@@ -638,6 +675,12 @@ const Map<String, List<String>> _componentesDaRota = {
   '/venda': ['PEDFC001', 'ROMFP001'],
   '/devolucao': ['PEDFC001', 'ROMFP001'],
   '/credito_devolucao_movimentacoes': ['PEDFC001', 'ROMFP001'],
+  '/documentos_fiscais': ['FISFM001'],
+  '/documento_fiscal': ['FISFM001'],
+  '/configuracao_fiscal': ['FISFM001'],
+  '/relatorio_faturamento': ['RELFC001'],
+  '/relatorio_curva_abc': ['RELFC002'],
+  '/relatorio_clientes_ativos': ['RELFC003'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],

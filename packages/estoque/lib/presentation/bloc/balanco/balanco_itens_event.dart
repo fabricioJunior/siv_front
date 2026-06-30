@@ -9,11 +9,23 @@ sealed class BalancoItensEvent extends Equatable {
 
 class CarregarItensDoBalancoEvent extends BalancoItensEvent {
   final int balancoId;
+  final int page;
+  final int limit;
+  final bool? comDivergencia;
+  final List<String>? referencias;
+  final List<String>? ordenacao;
 
-  const CarregarItensDoBalancoEvent({required this.balancoId});
+  const CarregarItensDoBalancoEvent({
+    required this.balancoId,
+    this.page = 1,
+    this.limit = 25,
+    this.comDivergencia,
+    this.referencias,
+    this.ordenacao,
+  });
 
   @override
-  List<Object?> get props => [balancoId];
+  List<Object?> get props => [balancoId, page, limit, comDivergencia, referencias, ordenacao];
 }
 
 class RemoverItemDoBalancoItensEvent extends BalancoItensEvent {
@@ -27,4 +39,13 @@ class RemoverItemDoBalancoItensEvent extends BalancoItensEvent {
 
   @override
   List<Object?> get props => [balancoId, produtoId];
+}
+
+class CalcularItensDoBalancoEvent extends BalancoItensEvent {
+  final int balancoId;
+
+  const CalcularItensDoBalancoEvent({required this.balancoId});
+
+  @override
+  List<Object?> get props => [balancoId];
 }

@@ -304,13 +304,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                     }
         
                                     final item = state.itens[index];
-                                    final referenciaIdExterno =
-                                        item.referenciaIdExterno
-                                                ?.trim()
-                                                .isNotEmpty ==
-                                            true
-                                        ? item.referenciaIdExterno!
-                                        : '-';
                                     final unidadeMedida =
                                         item.unidadeMedida?.trim().isNotEmpty ==
                                             true
@@ -320,7 +313,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                       child: ListTile(
                                         title: Text(item.nome),
                                         subtitle: Text(
-                                          'Ref: $referenciaIdExterno  |  Produto: ${item.produtoIdExterno}\nCor: ${item.corNome}  •  Tam: ${item.tamanhoNome}  •  UM: $unidadeMedida',
+                                          'Referência: ${item.referenciaId}  |  Produto: ${item.produtoIdExterno}\nCor: ${item.corNome}  •  Tam: ${item.tamanhoNome}  •  UM: $unidadeMedida',
                                         ),
                                         trailing: Column(
                                           mainAxisAlignment:

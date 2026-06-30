@@ -9,13 +9,16 @@ part 'balanco_itens_state.dart';
 class BalancoItensBloc extends Bloc<BalancoItensEvent, BalancoItensState> {
   final ListarItensDoBalancoUseCase listarItensDoBalanco;
   final RemoverItemDoBalancoUseCase removerItemDoBalanco;
+  final CalcularItensDoBalancoUseCase calcularItensDoBalanco;
 
   BalancoItensBloc({
     required this.listarItensDoBalanco,
     required this.removerItemDoBalanco,
+    required this.calcularItensDoBalanco,
   }) : super(const BalancoItensInitial()) {
     on<CarregarItensDoBalancoEvent>(_onCarregarItensDoBalanco);
     on<RemoverItemDoBalancoItensEvent>(_onRemoverItemDoBalanco);
+    on<CalcularItensDoBalancoEvent>(_onCalcularItensDoBalanco);
   }
 
   Future<void> _onCarregarItensDoBalanco(
@@ -24,7 +27,14 @@ class BalancoItensBloc extends Bloc<BalancoItensEvent, BalancoItensState> {
   ) async {
     emit(const BalancoItensLoading());
     try {
-      final itens = await listarItensDoBalanco(balancoId: event.balancoId);
+      final itens = await listarItensDoBalanco(
+        balancoId: event.balancoId,
+        page: event.page,
+        limit: event.limit,
+        comDivergencia: event.comDivergencia,
+        referencias: event.referencias,
+        ordenacao: event.ordenacao,
+      );
       emit(BalancoItensLoaded(itens: itens));
     } catch (e, s) {
       addError(e, s);
@@ -47,6 +57,21 @@ class BalancoItensBloc extends Bloc<BalancoItensEvent, BalancoItensState> {
     } catch (e, s) {
       addError(e, s);
       emit(BalancoItensError(message: 'Erro ao remover item do balanço'));
+    }
+  }
+
+  Future<void> _onCalcularItensDoBalanco(
+    CalcularItensDoBalancoEvent event,
+    Emitter<BalancoItensState> emit,
+  ) async {
+    emit(const BalancoItensLoading());
+    try {
+      await calcularItensDoBalanco(balancoId: event.balancoId);
+      final itens = await listarItensDoBalanco(balancoId: event.balancoId);
+      emit(BalancoItensLoaded(itens: itens));
+    } catch (e, s) {
+      addError(e, s);
+      emit(BalancoItensError(message: 'Erro ao calcular itens do balanço'));
     }
   }
 }

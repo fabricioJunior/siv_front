@@ -35,3 +35,7 @@ class SyncDataModuloFalhou extends SyncDataEvent {
     required this.erro,
   });
 }
+
+class SyncDataSolicitouResetIncremental extends SyncDataEvent {
+  const SyncDataSolicitouResetIncremental();
+}

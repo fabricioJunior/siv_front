@@ -16,3 +16,14 @@ export 'data/remote/saldo_total_credito_devolucao_remote_data_source.dart';
 export 'data/repositories/credito_devolucao_repository.dart';
 export 'data/repositories/pedidos_repository.dart';
 export 'data/repositories/romaneios_repository.dart';
+export 'data/repositories/integracao_fiscal_repository.dart';
+
+export 'domain/data/remote/i_integracao_fiscal_remote_data_source.dart';
+export 'domain/data/repositories/i_integracao_fiscal_repository.dart';
+
+export 'data/remote/integracao_fiscal_remote_data_source.dart';
+
+export 'domain/data/remote/i_relatorio_remote_data_source.dart';
+export 'domain/data/repositories/i_relatorio_repository.dart';
+export 'data/remote/relatorio_remote_data_source.dart';
+export 'data/repositories/relatorio_repository.dart';

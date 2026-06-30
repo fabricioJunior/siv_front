@@ -10,6 +10,7 @@
 #include <file_selector_windows/file_selector_windows.h>
 #include <firebase_core/firebase_core_plugin_c_api.h>
 #include <isar_community_flutter_libs/isar_flutter_libs_plugin.h>
+#include <printing/printing_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   CloudFirestorePluginCApiRegisterWithRegistrar(
@@ -20,4 +21,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
   IsarFlutterLibsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("IsarFlutterLibsPlugin"));
+  PrintingPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("PrintingPlugin"));
 }

@@ -31,6 +31,14 @@ void _remoteDataSources() {
   sl.registerFactory<IRomaneiosRemoteDataSource>(
     () => RomaneiosRemoteDataSource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IIntegracaoFiscalRemoteDataSource>(
+    () => IntegracaoFiscalRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
+  sl.registerFactory<IRelatorioRemoteDataSource>(
+    () => RelatorioRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -50,6 +58,14 @@ void _repositories() {
       remoteDataSource: sl(),
       caixasRemoteDataSource: sl(),
     ),
+  );
+
+  sl.registerFactory<IIntegracaoFiscalRepository>(
+    () => IntegracaoFiscalRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IRelatorioRepository>(
+    () => RelatorioRepository(remoteDataSource: sl()),
   );
 }
 
@@ -99,6 +115,32 @@ void _useCases() {
 
   sl.registerFactory<ReceberRomaneioNoCaixa>(
     () => ReceberRomaneioNoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<ListarDocumentosFiscais>(
+    () => ListarDocumentosFiscais(repository: sl()),
+  );
+  sl.registerFactory<GetDocumentoFiscalDetalhe>(
+    () => GetDocumentoFiscalDetalhe(sl()),
+  );
+  sl.registerFactory<GetConfiguracaoFiscal>(
+    () => GetConfiguracaoFiscal(repository: sl()),
+  );
+  sl.registerFactory<SalvarConfiguracaoFiscal>(
+    () => SalvarConfiguracaoFiscal(repository: sl()),
+  );
+  sl.registerFactory<ReprocessarDocumentoFiscal>(
+    () => ReprocessarDocumentoFiscal(repository: sl()),
+  );
+
+  sl.registerFactory<GetRelatorioFaturamento>(
+    () => GetRelatorioFaturamento(sl()),
+  );
+  sl.registerFactory<GetRelatorioCurvaAbc>(
+    () => GetRelatorioCurvaAbc(sl()),
+  );
+  sl.registerFactory<GetRelatorioClientesAtivos>(
+    () => GetRelatorioClientesAtivos(sl()),
   );
 }
 
@@ -177,5 +219,26 @@ void _presentation() {
       sl(),
       sl(),
     ),
+  );
+
+  sl.registerFactory<ConfiguracaoFiscalBloc>(
+    () => ConfiguracaoFiscalBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<DocumentosFiscaisBloc>(
+    () => DocumentosFiscaisBloc(sl(), sl()),
+  );
+  sl.registerFactory<DocumentoFiscalDetalheBloc>(
+    () => DocumentoFiscalDetalheBloc(sl()),
+  );
+
+  sl.registerFactory<RelatorioFaturamentoBloc>(
+    () => RelatorioFaturamentoBloc(sl()),
+  );
+  sl.registerFactory<RelatorioCurvaAbcBloc>(
+    () => RelatorioCurvaAbcBloc(sl()),
+  );
+  sl.registerFactory<RelatorioClientesBloc>(
+    () => RelatorioClientesBloc(sl()),
   );
 }

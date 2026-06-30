@@ -18,6 +18,9 @@ class PaginacaoDataSource extends IsarLocalDataSourceBase<Paginacao, Paginacao>
   }
 
   @override
+  Future<void> limparTudo() => deleteAll();
+
+  @override
   Paginacao toDto(Paginacao entity) {
     return entity;
   }

@@ -91,6 +91,9 @@ void _useCases() {
   sl.registerFactory<RemoverItemDoBalancoUseCase>(
     () => RemoverItemDoBalancoUseCase(repository: sl()),
   );
+  sl.registerFactory<CalcularItensDoBalancoUseCase>(
+    () => CalcularItensDoBalancoUseCase(repository: sl()),
+  );
   sl.registerFactory<CriarLoteBalancoUseCase>(
     () => CriarLoteBalancoUseCase(repository: sl()),
   );
@@ -141,6 +144,7 @@ void _presentation() {
     () => BalancoItensBloc(
       listarItensDoBalanco: sl(),
       removerItemDoBalanco: sl(),
+      calcularItensDoBalanco: sl(),
     ),
   );
   sl.registerFactory<LotesBloc>(

@@ -133,7 +133,7 @@ class _CriarLoteBalancoPageState extends State<CriarLoteBalancoPage> {
                           const SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton.icon(
+                            child: FilledButton.icon(
                               onPressed: state.status == LoteStatus.loading
                                   ? null
                                   : _criarLote,
@@ -143,6 +143,7 @@ class _CriarLoteBalancoPageState extends State<CriarLoteBalancoPage> {
                                       width: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
+                                        color: Colors.white,
                                       ),
                                     )
                                   : const Icon(Icons.add_task_outlined),

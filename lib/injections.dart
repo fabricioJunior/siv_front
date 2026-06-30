@@ -6,6 +6,7 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
     show IEmpresasRemoteDataSource;
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/paginacao.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
@@ -148,8 +149,12 @@ void _presentation() {
     () => AcessoGlobalSessao(appBloc: sl(), syncDataBloc: sl()),
   );
 
+  sl.registerFactory<LimparSincronizacaoIncremental>(
+    () => LimparSincronizacaoIncremental(paginacaoDataSource: sl()),
+  );
+
   sl.registerLazySingleton<SyncDataBloc>(
-    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+    () => SyncDataBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 }
 

@@ -109,7 +109,7 @@ class _CriarBalancoPageState extends State<CriarBalancoPage> {
                           const SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton.icon(
+                            child: FilledButton.icon(
                               onPressed: state is BalancoLoading
                                   ? null
                                   : _criarBalanco,
@@ -119,6 +119,7 @@ class _CriarBalancoPageState extends State<CriarBalancoPage> {
                                       width: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
+                                        color: Colors.white,
                                       ),
                                     )
                                   : const Icon(Icons.check_circle_outline),

@@ -91,8 +91,22 @@ class BalancoRepository implements IBalancoRepository {
   }
 
   @override
-  Future<List<BalancoItem>> listarItensDoBalanco({required int balancoId}) {
-    return remoteDataSource.listarItensDoBalanco(balancoId: balancoId);
+  Future<List<BalancoItem>> listarItensDoBalanco({
+    required int balancoId,
+    int page = 1,
+    int limit = 25,
+    bool? comDivergencia,
+    List<String>? referencias,
+    List<String>? ordenacao,
+  }) {
+    return remoteDataSource.listarItensDoBalanco(
+      balancoId: balancoId,
+      page: page,
+      limit: limit,
+      comDivergencia: comDivergencia,
+      referencias: referencias,
+      ordenacao: ordenacao,
+    );
   }
 
   @override
@@ -202,5 +216,10 @@ class BalancoRepository implements IBalancoRepository {
       loteId: loteId,
       produtoId: produtoId,
     );
+  }
+
+  @override
+  Future<void> calcularItensDoBalanco({required int balancoId}) {
+    return remoteDataSource.calcularItensDoBalanco(balancoId: balancoId);
   }
 }

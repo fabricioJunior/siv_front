@@ -1,5 +1,6 @@
 import 'package:core/remote_data_sourcers.dart';
 import 'package:estoque/data/remote/dtos/balanco_dto.dart';
+import 'package:estoque/data/remote/dtos/balanco_itens_dto.dart';
 import 'package:estoque/domain/data/remote/i_balanco_remote_data_source.dart';
 import 'package:estoque/domain/models/balanco.dart';
 
@@ -114,12 +115,31 @@ class BalancoRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<List<BalancoItem>> listarItensDoBalanco({
     required int balancoId,
+    int page = 1,
+    int limit = 25,
+    bool? comDivergencia,
+    List<String>? referencias,
+    List<String>? ordenacao,
   }) async {
-    final response = await get(pathParameters: {'path': '/$balancoId/itens'});
-    final items = response.body as List;
-    return items
-        .map((json) => _mapDtoToBalancoItem(BalancoItemDto.fromJson(json)))
-        .toList();
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (comDivergencia != null) {
+      queryParams['comDivergencia'] = comDivergencia.toString();
+    }
+    if (referencias != null && referencias.isNotEmpty) {
+      queryParams['referencias'] = referencias.join(',');
+    }
+    if (ordenacao != null && ordenacao.isNotEmpty) {
+      queryParams['ordenacao'] = ordenacao.join(',');
+    }
+    final response = await get(
+      pathParameters: {'path': '/$balancoId/itens'},
+      queryParameters: queryParams,
+    );
+    final items = BalancoItensDto.fromJson(response.body).itens;
+    return items.map((item) => _mapDtoToBalancoItem(item)).toList();
   }
 
   @override
@@ -245,6 +265,14 @@ class BalancoRemoteDataSource extends RemoteDataSourceBase
   }) async {
     await delete(
       pathParameters: {'path': '/$balancoId/lotes/$loteId/itens/$produtoId'},
+    );
+  }
+
+  @override
+  Future<void> calcularItensDoBalanco({required int balancoId}) async {
+    await post(
+      body: {},
+      pathParameters: {'path': '/$balancoId/itens/calcular'},
     );
   }
 

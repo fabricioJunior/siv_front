@@ -45,65 +45,50 @@ class _BalancosPageState extends State<BalancosPage> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.filter_alt_outlined,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Filtros',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String?>(
-                      value: _filtroSituacao,
-                      decoration: const InputDecoration(
-                        labelText: 'Situação',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: null, child: Text('Todos')),
-                        DropdownMenuItem(
-                          value: 'em_andamento',
-                          child: Text('Em Andamento'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'encerrado',
-                          child: Text('Encerrado'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'cancelado',
-                          child: Text('Cancelado'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _filtroSituacao = value;
-                          _currentPage = 1;
-                        });
-                        _carregarBalancos();
-                      },
-                    ),
-                  ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('Todos'),
+                  selected: _filtroSituacao == null,
+                  onSelected: (_) {
+                    setState(() { _filtroSituacao = null; _currentPage = 1; });
+                    _carregarBalancos();
+                  },
                 ),
-              ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Em Andamento'),
+                  selected: _filtroSituacao == 'em_andamento',
+                  selectedColor: Colors.blue.withOpacity(0.2),
+                  onSelected: (_) {
+                    setState(() { _filtroSituacao = 'em_andamento'; _currentPage = 1; });
+                    _carregarBalancos();
+                  },
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Encerrado'),
+                  selected: _filtroSituacao == 'encerrado',
+                  selectedColor: Colors.green.withOpacity(0.2),
+                  onSelected: (_) {
+                    setState(() { _filtroSituacao = 'encerrado'; _currentPage = 1; });
+                    _carregarBalancos();
+                  },
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Cancelado'),
+                  selected: _filtroSituacao == 'cancelado',
+                  selectedColor: Colors.red.withOpacity(0.2),
+                  onSelected: (_) {
+                    setState(() { _filtroSituacao = 'cancelado'; _currentPage = 1; });
+                    _carregarBalancos();
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -232,42 +217,81 @@ class BalancoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = _getSituacaoCor();
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade300),
+        side: BorderSide(color: Colors.grey.shade200),
       ),
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: _getSituacaoCor().withOpacity(0.15),
-          child: Icon(Icons.inventory_2_outlined, color: _getSituacaoCor()),
-        ),
-        title: Text('Balanço #${balanco.id}'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            Text(
-              'Data: ${_formatDateTime(balanco.data)}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (balanco.observacao != null)
-              Text(
-                'Observação: ${balanco.observacao}',
-                style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Container(width: 5, color: cor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: cor.withOpacity(0.12),
+                        child: Icon(Icons.inventory_2_outlined, color: cor, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Balanço #${balanco.id}',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey.shade500),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDateTime(balanco.data),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                            if (balanco.observacao != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                balanco.observacao!,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Chip(
+                        label: Text(
+                          _getSituacaoLabel(),
+                          style: TextStyle(color: cor, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                        backgroundColor: cor.withOpacity(0.12),
+                        side: BorderSide(color: cor.withOpacity(0.3)),
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-          ],
-        ),
-        trailing: Chip(
-          label: Text(_getSituacaoLabel()),
-          backgroundColor: _getSituacaoCor().withOpacity(0.2),
-          labelStyle: TextStyle(color: _getSituacaoCor()),
+            ],
+          ),
         ),
       ),
     );

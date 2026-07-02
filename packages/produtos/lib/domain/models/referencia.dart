@@ -16,6 +16,7 @@ abstract class Referencia implements Equatable {
   String? get descricao;
   String? get composicao;
   String? get cuidados;
+  String? get ncm;
   Categoria? get categoria;
   SubCategoria? get subCategoria;
 
@@ -32,6 +33,7 @@ abstract class Referencia implements Equatable {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) = _ReferenciaImpl;
@@ -50,6 +52,7 @@ abstract class Referencia implements Equatable {
     descricao,
     composicao,
     cuidados,
+    ncm,
     categoria,
     subCategoria,
   ];
@@ -84,6 +87,8 @@ class _ReferenciaImpl implements Referencia {
   @override
   final String? cuidados;
   @override
+  final String? ncm;
+  @override
   final Categoria? categoria;
   @override
   final SubCategoria? subCategoria;
@@ -101,6 +106,7 @@ class _ReferenciaImpl implements Referencia {
     this.descricao,
     this.composicao,
     this.cuidados,
+    this.ncm,
     this.categoria,
     this.subCategoria,
   });
@@ -118,6 +124,7 @@ class _ReferenciaImpl implements Referencia {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) {
@@ -134,6 +141,7 @@ class _ReferenciaImpl implements Referencia {
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
+      ncm: ncm ?? this.ncm,
       categoria: categoria ?? this.categoria,
       subCategoria: subCategoria ?? this.subCategoria,
     );
@@ -153,6 +161,7 @@ class _ReferenciaImpl implements Referencia {
     descricao,
     composicao,
     cuidados,
+    ncm,
     categoria,
     subCategoria,
   ];
@@ -175,6 +184,7 @@ extension ReferenciaCopyWith on Referencia {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) {
@@ -192,6 +202,7 @@ extension ReferenciaCopyWith on Referencia {
         descricao: descricao,
         composicao: composicao,
         cuidados: cuidados,
+        ncm: ncm,
         categoria: categoria,
         subCategoria: subCategoria,
       );
@@ -210,6 +221,7 @@ extension ReferenciaCopyWith on Referencia {
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
+      ncm: ncm ?? this.ncm,
       categoria: categoria ?? this.categoria,
       subCategoria: subCategoria ?? this.subCategoria,
     );

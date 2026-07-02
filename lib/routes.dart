@@ -227,6 +227,7 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: VendaPage(
         pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
             SeletorPessoa(
+              titulo: 'Cliente',
               itemsSelecionadosInicial: itemsSelecionadosInicial,
               retornarSomenteId: false,
               onChanged: onChanged,
@@ -239,11 +240,12 @@ Map<String, Widget Function(BuildContext)> routes = {
               itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
               onChanged: onChanged,
               onlyView: onlyView ?? false,
-              titulo: 'Vendedores',
+              titulo: 'Vendedor',
             ),
         tabelasDePrecoSeletor:
             ({itemsSelecionadosInicial, onChanged, onlyView}) =>
                 TabelasDePrecoSeletor(
+                  titulo: 'Tabela de preço',
                   modo: TabelasDePrecoSeletorModo.unica,
                   itemsSelecionadosInicial: itemsSelecionadosInicial,
                   onChanged: onChanged,
@@ -425,6 +427,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/referencias': (context) {
     return const ReferenciasPage();
+  },
+  '/referencias_pendentes_ncm': (context) {
+    return const ReferenciasPendentesNcmPage();
   },
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);

@@ -11,18 +11,20 @@ class SubCategoriasRepository implements ISubCategoriasRepository {
   Future<SubCategoria> atualizarSubCategoria(
     int categoriaId,
     int id,
-    String nome,
-  ) {
+    String nome, {
+    String? ncm,
+  }) {
     return subCategoriasRemoteDataSource.atualizarSubCategoria(
       categoriaId,
       id,
       nome,
+      ncm: ncm,
     );
   }
 
   @override
-  Future<SubCategoria> criarSubCategoria(int categoriaId, String nome) {
-    return subCategoriasRemoteDataSource.createSubCategoria(categoriaId, nome);
+  Future<SubCategoria> criarSubCategoria(int categoriaId, String nome, {String? ncm}) {
+    return subCategoriasRemoteDataSource.createSubCategoria(categoriaId, nome, ncm: ncm);
   }
 
   @override

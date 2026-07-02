@@ -12,6 +12,11 @@ abstract class IHttpSource {
     required Uri uri,
   });
 
+  Future<IHttpResponse> patch({
+    required dynamic body,
+    required Uri uri,
+  });
+
   Future<IHttpResponse> get({
     required Uri uri,
   });

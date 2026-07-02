@@ -12,6 +12,9 @@ import 'package:produtos/data/remote/categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
+import 'package:produtos/data/remote/referencias_pendentes_ncm_remote_datasource.dart';
+import 'package:produtos/data/repositorios/referencias_pendentes_ncm_repository.dart';
+import 'package:produtos/domain/data/remote/i_referencias_pendentes_ncm_remote_data_source.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
@@ -95,6 +98,10 @@ void _data() {
     () => ReferenciaMidiasRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IReferenciasPendentesNcmRemoteDataSource>(
+    () => ReferenciasPendentesNcmRemoteDatasource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<ICodigosLocalDataSource>(
     () => CodigosLocalDataSource(getIsar: _getIsar),
   );
@@ -148,6 +155,10 @@ void _repositores() {
 
   sl.registerFactory<IReferenciaMidiasRepository>(
     () => ReferenciaMidiasRepository(referenciaMidiasRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IReferenciasPendentesNcmRepository>(
+    () => ReferenciasPendentesNcmRepository(dataSource: sl()),
   );
 }
 
@@ -332,6 +343,14 @@ void _usesCases() {
   sl.registerFactory<AtualizarReferenciaMidia>(
     () => AtualizarReferenciaMidia(referenciaMidiasRepository: sl()),
   );
+
+  sl.registerFactory<RecuperarReferenciasSemNcm>(
+    () => RecuperarReferenciasSemNcm(repository: sl()),
+  );
+
+  sl.registerFactory<AtualizarNcmEmMassa>(
+    () => AtualizarNcmEmMassa(repository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -390,6 +409,10 @@ void _presentantion() {
   );
 
   sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());
+
+  sl.registerFactory<ReferenciasPendentesNcmBloc>(
+    () => ReferenciasPendentesNcmBloc(sl(), sl()),
+  );
 }
 
 Future<Isar> _getIsar({bool? isSyncData = false}) async {

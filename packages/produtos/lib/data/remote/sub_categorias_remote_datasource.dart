@@ -15,23 +15,30 @@ class SubCategoriasRemoteDatasource extends RemoteDataSourceBase
   Future<SubCategoria> atualizarSubCategoria(
     int categoriaId,
     int id,
-    String nome,
-  ) async {
+    String nome, {
+    String? ncm,
+  }) async {
     var response = await put(
       pathParameters: {
         'categoriaId': categoriaId.toString(),
         'id': id.toString(),
       },
-      body: {'nome': nome},
+      body: {
+        'nome': nome,
+        if (ncm != null) 'ncm': ncm,
+      },
     );
     return SubCategoriaDto.fromJson(response.body);
   }
 
   @override
-  Future<SubCategoria> createSubCategoria(int categoriaId, String nome) async {
+  Future<SubCategoria> createSubCategoria(int categoriaId, String nome, {String? ncm}) async {
     var response = await post(
       pathParameters: {'categoriaId': categoriaId.toString()},
-      body: {'nome': nome},
+      body: {
+        'nome': nome,
+        if (ncm != null) 'ncm': ncm,
+      },
     );
     return SubCategoriaDto.fromJson(response.body);
   }

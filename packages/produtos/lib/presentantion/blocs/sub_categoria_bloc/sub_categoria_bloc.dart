@@ -70,6 +70,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
       state.copyWith(
         subCategoriaStep: SubCategoriaStep.editando,
         nome: event.nome,
+        ncm: event.ncm ?? state.ncm,
       ),
     );
   }
@@ -86,6 +87,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
           state.categoriaId,
           state.id!,
           state.nome!,
+          ncm: state.ncm,
         );
         emit(
           SubCategoriaState.fromModel(
@@ -97,6 +99,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
         var subCategoria = await _criarSubCategoria.call(
           state.categoriaId,
           state.nome!,
+          ncm: state.ncm,
         );
         emit(
           SubCategoriaState.fromModel(

@@ -7,7 +7,7 @@ class CriarSubCategoria {
   CriarSubCategoria({required ISubCategoriasRepository subCategoriasRepository})
     : _subCategoriasRepository = subCategoriasRepository;
 
-  Future<SubCategoria> call(int categoriaId, String nome) async {
-    return _subCategoriasRepository.criarSubCategoria(categoriaId, nome);
+  Future<SubCategoria> call(int categoriaId, String nome, {String? ncm}) async {
+    return _subCategoriasRepository.criarSubCategoria(categoriaId, nome, ncm: ncm);
   }
 }

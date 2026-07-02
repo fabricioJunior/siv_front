@@ -17,11 +17,15 @@ class SubCategoriaDto implements SubCategoria {
   @override
   final String nome;
 
+  @override
+  final String? ncm;
+
   SubCategoriaDto({
     required this.id,
     required this.categoriaId,
     required this.inativa,
     required this.nome,
+    this.ncm,
   });
 
   factory SubCategoriaDto.fromJson(Map<String, dynamic> json) =>

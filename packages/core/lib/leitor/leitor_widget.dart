@@ -638,12 +638,6 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       runSpacing: 10,
                       children: [
                         _resumoInfoCard(
-                          icon: Icons.inventory_2_outlined,
-                          titulo: 'Itens distintos',
-                          valor: '${state.itens.length}',
-                          colorScheme: Theme.of(context).colorScheme,
-                        ),
-                        _resumoInfoCard(
                           icon: Icons.numbers_outlined,
                           titulo: 'Quantidade total',
                           valor: '${state.quantidadeTotalLida}',
@@ -651,20 +645,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         ),
                         if (widget.tabelaDePrecoId != null)
                           _resumoInfoCard(
-                            icon: Icons.attach_money_outlined,
+                            icon: Icons.payments_outlined,
                             titulo: 'Valor total',
                             valor: _formatarMoeda(state.valorTotalLido),
                             colorScheme: Theme.of(context).colorScheme,
                           ),
-                        _resumoInfoCard(
-                          icon: state.controlarQuantidade
-                              ? Icons.lock_outline
-                              : Icons.lock_open_outlined,
-                          titulo: 'Controle por estoque',
-                          valor:
-                              state.controlarQuantidade ? 'Ativo' : 'Inativo',
-                          colorScheme: Theme.of(context).colorScheme,
-                        ),
                       ],
                     ),
                   ),
@@ -751,11 +736,17 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                               itemBuilder: (context, index) {
                                 final item = state.itens[index];
                                 return ListTile(
-                                  dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text(item.descricao),
+                                  title: Text(
+                                    item.descricao,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
                                   subtitle: Text(
                                     '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                   trailing: Wrap(
                                     spacing: 4,
@@ -1072,6 +1063,7 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                                       if (cor.isNotEmpty) 'Cor: $cor',
                                       if (tamanho.isNotEmpty) 'Tam: $tamanho',
                                       'Cód: ${produto.codigoDeBarras}',
+                                      'Estoque: ${produto.quantidade}',
                                     ].join('  •  ');
                                     return ListTile(
                                       title: Text(produto.descricao),

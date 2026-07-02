@@ -14,6 +14,7 @@ abstract class IReferenciasRepository {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
   });
 
   Future<Referencia> atualizarReferencia({
@@ -27,6 +28,7 @@ abstract class IReferenciasRepository {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
   });
 
   Future<List<Referencia>> obterReferencias({String? nome, bool? inativo});

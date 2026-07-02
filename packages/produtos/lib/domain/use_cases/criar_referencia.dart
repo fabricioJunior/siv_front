@@ -18,6 +18,7 @@ class CriarReferencia {
     String? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
   }) async {
     return _referenciasRepository.criarReferencia(
       id: id,
@@ -30,6 +31,7 @@ class CriarReferencia {
       descricao: descricao,
       composicao: composicao,
       cuidados: cuidados,
+      ncm: ncm,
     );
   }
 }

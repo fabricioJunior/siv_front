@@ -96,8 +96,7 @@ class _RelatorioClientesAtivosPageState
                           child: SizedBox(
                             height: 20,
                             width: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         )
                       : IconButton(
@@ -136,8 +135,8 @@ class _RelatorioClientesAtivosPageState
                       children: [
                         const CircleAvatar(
                           backgroundColor: Colors.white24,
-                          child: Icon(Icons.people_outline,
-                              color: Colors.white),
+                          child:
+                              Icon(Icons.people_outline, color: Colors.white),
                         ),
                         const SizedBox(width: 12),
                         Column(
@@ -200,8 +199,7 @@ class _RelatorioClientesAtivosPageState
                                 decoration: InputDecoration(
                                   labelText: 'Últimos X dias',
                                   border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(10)),
                                   isDense: true,
                                   suffixText: 'dias',
                                 ),
@@ -217,8 +215,7 @@ class _RelatorioClientesAtivosPageState
                                       horizontal: 12, vertical: 10),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                        color: Theme.of(context)
-                                            .dividerColor),
+                                        color: Theme.of(context).dividerColor),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Row(
@@ -237,8 +234,7 @@ class _RelatorioClientesAtivosPageState
                                               fontSize: 13),
                                         ),
                                       ),
-                                      const Icon(
-                                          Icons.calendar_today_outlined,
+                                      const Icon(Icons.calendar_today_outlined,
                                           size: 16),
                                     ],
                                   ),
@@ -317,12 +313,10 @@ class _RelatorioClientesAtivosPageState
                               : null,
                         ),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             '${state.page}/${state.totalPages}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                         TextButton.icon(
@@ -388,8 +382,7 @@ class _ClienteCard extends StatelessWidget {
                           Text(
                             item.clienteNome as String,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13),
+                                fontWeight: FontWeight.w700, fontSize: 13),
                           ),
                           Text(
                             item.empresaNome as String,
@@ -407,8 +400,7 @@ class _ClienteCard extends StatelessWidget {
                         Text(
                           _fmtMoeda(item.valorTotalComprado as double),
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13),
+                              fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         Text(
                           '${item.quantidadeCompras} compra${(item.quantidadeCompras as int) != 1 ? 's' : ''} · '
@@ -445,8 +437,7 @@ class _EstadoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(

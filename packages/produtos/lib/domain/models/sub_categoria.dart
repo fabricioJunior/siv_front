@@ -3,4 +3,5 @@ abstract class SubCategoria {
   int get categoriaId;
   String get nome;
   bool get inativa;
+  String? get ncm;
 }

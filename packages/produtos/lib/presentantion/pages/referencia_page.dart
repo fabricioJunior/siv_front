@@ -24,6 +24,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   late final TextEditingController _descricaoController;
   late final TextEditingController _composicaoController;
   late final TextEditingController _cuidadosController;
+  late final TextEditingController _ncmController;
 
   bool _salvando = false;
   bool _abrindoPreco = false;
@@ -44,6 +45,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _descricaoController = TextEditingController();
     _composicaoController = TextEditingController();
     _cuidadosController = TextEditingController();
+    _ncmController = TextEditingController();
   }
 
   @override
@@ -56,6 +58,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _descricaoController.dispose();
     _composicaoController.dispose();
     _cuidadosController.dispose();
+    _ncmController.dispose();
     super.dispose();
   }
 
@@ -68,6 +71,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _descricaoController.text = referencia.descricao ?? '';
     _composicaoController.text = referencia.composicao ?? '';
     _cuidadosController.text = referencia.cuidados ?? '';
+    _ncmController.text = referencia.ncm ?? '';
     _categoriaSelecionada = referencia.categoria;
     _subCategoriaSelecionada = referencia.subCategoria;
   }
@@ -119,6 +123,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         descricao: _sanitizeOptional(_descricaoController.text),
         composicao: _sanitizeOptional(_composicaoController.text),
         cuidados: _sanitizeOptional(_cuidadosController.text),
+        ncm: _sanitizeOptional(_ncmController.text),
       );
 
       if (!mounted) return;
@@ -169,6 +174,9 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
 
     if (resultado == null) return;
 
+    final ncmSugerido =
+        resultado.subCategoria?.ncm ?? resultado.categoria.ncm;
+
     setState(() {
       _categoriaSelecionada = resultado.categoria;
       _subCategoriaSelecionada = resultado.subCategoria;
@@ -178,6 +186,9 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         subCategoriaId: resultado.subCategoria?.id,
         subCategoria: resultado.subCategoria,
       );
+      if (ncmSugerido != null && _ncmController.text.trim().isEmpty) {
+        _ncmController.text = ncmSugerido;
+      }
     });
   }
 
@@ -386,6 +397,17 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                               ),
                               child: Text(
                                 _subCategoriaSelecionada?.nome ?? '-',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _ncmController,
+                              maxLength: 30,
+                              decoration: const InputDecoration(
+                                labelText: 'NCM',
+                                hintText: 'Ex: 6101.20.00',
+                                border: OutlineInputBorder(),
+                                counterText: '',
                               ),
                             ),
                             const SizedBox(height: 8),

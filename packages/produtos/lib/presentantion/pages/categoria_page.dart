@@ -12,6 +12,7 @@ class CategoriaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final nomeController = TextEditingController();
+    final ncmController = TextEditingController();
 
     return BlocProvider<CategoriaBloc>(
       create: (context) =>
@@ -68,6 +69,9 @@ class CategoriaPage extends StatelessWidget {
                   if (state.nome != null && nomeController.text.isEmpty) {
                     nomeController.text = state.nome!;
                   }
+                  if (state.ncm != null && ncmController.text.isEmpty) {
+                    ncmController.text = state.ncm!;
+                  }
 
                   return Form(
                     key: formKey,
@@ -85,7 +89,7 @@ class CategoriaPage extends StatelessWidget {
                           controller: nomeController,
                           maxLength: 50,
                           autofocus: true,
-                          textInputAction: TextInputAction.done,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             hintText: 'Ex: Roupas, Calcados, Acessorios',
                             border: OutlineInputBorder(),
@@ -98,7 +102,33 @@ class CategoriaPage extends StatelessWidget {
                           },
                           onChanged: (value) {
                             context.read<CategoriaBloc>().add(
-                              CategoriaEditou(nome: value),
+                              CategoriaEditou(
+                                nome: value,
+                                ncm: ncmController.text.trim().isEmpty
+                                    ? null
+                                    : ncmController.text.trim(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('NCM'),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: ncmController,
+                          maxLength: 30,
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: 6101.20.00',
+                            border: OutlineInputBorder(),
+                            counterText: '',
+                          ),
+                          onChanged: (value) {
+                            context.read<CategoriaBloc>().add(
+                              CategoriaEditou(
+                                nome: nomeController.text,
+                                ncm: value.trim().isEmpty ? null : value.trim(),
+                              ),
                             );
                           },
                           onFieldSubmitted: (_) {

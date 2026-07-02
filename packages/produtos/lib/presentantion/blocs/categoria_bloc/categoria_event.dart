@@ -16,11 +16,12 @@ class CategoriaIniciou extends CategoriaEvent {
 
 class CategoriaEditou extends CategoriaEvent {
   final String nome;
+  final String? ncm;
 
-  CategoriaEditou({required this.nome});
+  CategoriaEditou({required this.nome, this.ncm});
 
   @override
-  List<Object?> get props => [nome];
+  List<Object?> get props => [nome, ncm];
 }
 
 class CategoriaSalvou extends CategoriaEvent {

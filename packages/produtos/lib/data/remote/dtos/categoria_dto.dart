@@ -14,7 +14,15 @@ class CategoriaDto implements Categoria {
   @override
   final String nome;
 
-  CategoriaDto({required this.id, required this.inativa, required this.nome});
+  @override
+  final String? ncm;
+
+  CategoriaDto({
+    required this.id,
+    required this.inativa,
+    required this.nome,
+    this.ncm,
+  });
 
   factory CategoriaDto.fromJson(Map<String, dynamic> json) =>
       _$CategoriaDtoFromJson(json);

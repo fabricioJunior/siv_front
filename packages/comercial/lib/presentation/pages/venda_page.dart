@@ -30,7 +30,7 @@ class VendaPage extends StatefulWidget {
   State<VendaPage> createState() => _VendaPageState();
 }
 
-enum _VendaAcao { finalizar, criarPedido }
+enum _VendaAcao { finalizar }
 
 class _VendaPageState extends State<VendaPage> {
   late final LeitorController _leitorController;
@@ -150,25 +150,23 @@ class _VendaPageState extends State<VendaPage> {
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.fromLTRB(
-                      16,
-                      16,
-                      16,
-                      16 + MediaQuery.of(context).viewInsets.bottom,
+                      12,
+                      12,
+                      12,
+                      12 + MediaQuery.of(context).viewInsets.bottom,
                     ),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight - 32,
+                        minHeight: constraints.maxHeight - 24,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildConfiguracaoCard(context, state),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 10),
                           if (state.leituraIniciada) ...[
                             _buildResumoDaVenda(context, state),
-                            const SizedBox(height: 12),
-                            _buildAcoes(context, state),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                             LeitorWidget(
                               controller: _leitorController,
                               dataSource: sl(),
@@ -200,17 +198,12 @@ class _VendaPageState extends State<VendaPage> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Iniciar venda', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              'Selecione o cliente, o vendedor e a tabela de preço antes de iniciar a contagem.',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             AbsorbPointer(
               absorbing: state.leituraIniciada || state.processando,
               child: Opacity(
@@ -234,7 +227,7 @@ class _VendaPageState extends State<VendaPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     widget.vendedoresSeletor.buildComParametros(
                       SeletorParamentros(
                         itemsSelecionadosInicial:
@@ -252,7 +245,7 @@ class _VendaPageState extends State<VendaPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     widget.tabelasDePrecoSeletor.buildComParametros(
                       SeletorParamentros(
                         itemsSelecionadosInicial:
@@ -274,29 +267,7 @@ class _VendaPageState extends State<VendaPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (state.clienteSelecionado != null)
-                  Chip(
-                    avatar: const Icon(Icons.person_outline, size: 18),
-                    label: Text(state.clienteSelecionado!.nome),
-                  ),
-                if (state.vendedorSelecionado != null)
-                  Chip(
-                    avatar: const Icon(Icons.badge_outlined, size: 18),
-                    label: Text(state.vendedorSelecionado!.nome),
-                  ),
-                if (state.tabelaDePrecoSelecionada != null)
-                  Chip(
-                    avatar: const Icon(Icons.price_change_outlined, size: 18),
-                    label: Text(state.tabelaDePrecoSelecionada!.nome),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: state.leituraIniciada
@@ -326,15 +297,10 @@ class _VendaPageState extends State<VendaPage> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Venda em andamento',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -364,12 +330,6 @@ class _VendaPageState extends State<VendaPage> {
                   children: [
                     _buildStatusBox(
                       context,
-                      titulo: 'Itens distintos',
-                      valor: '${_leitorController.quantidadeItensDistintos}',
-                      colorScheme: colorScheme,
-                    ),
-                    _buildStatusBox(
-                      context,
                       titulo: 'Quantidade total',
                       valor: '${_leitorController.quantidadeTotalLida}',
                       colorScheme: colorScheme,
@@ -384,73 +344,49 @@ class _VendaPageState extends State<VendaPage> {
                 );
               },
             ),
+            const SizedBox(height: 8),
+            AnimatedBuilder(
+              animation: _leitorController,
+              builder: (context, _) {
+                final temItens = _leitorController.itens.isNotEmpty;
+                final labelFinalizar =
+                    state.processoAtual == VendaProcesso.finalizarVenda
+                        ? 'Encaminhando...'
+                        : 'Finalizar e ir ao caixa';
+
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () => _confirmarReinicio(context)
+                          : null,
+                      icon: const Icon(Icons.refresh_outlined),
+                      label: const Text('Reiniciar contagem'),
+                    ),
+                    FilledButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () => _abrirConfirmacao(
+                              context, state, _VendaAcao.finalizar)
+                          : null,
+                      icon: state.processoAtual == VendaProcesso.finalizarVenda
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.point_of_sale_outlined),
+                      label: Text(labelFinalizar),
+                    ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAcoes(BuildContext context, VendaState state) {
-    return AnimatedBuilder(
-      animation: _leitorController,
-      builder: (context, _) {
-        final temItens = _leitorController.itens.isNotEmpty;
-        final labelFinalizar =
-            state.processoAtual == VendaProcesso.finalizarVenda
-                ? 'Encaminhando...'
-                : 'Finalizar e ir ao caixa';
-        final labelPedido = state.processoAtual == VendaProcesso.criarPedido
-            ? 'Criando pedido...'
-            : 'Criar pedido';
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: temItens && !state.processando
-                      ? () => _confirmarReinicio(context)
-                      : null,
-                  icon: const Icon(Icons.refresh_outlined),
-                  label: const Text('Reiniciar contagem'),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: temItens && !state.processando
-                      ? () => _abrirConfirmacao(
-                          context, state, _VendaAcao.criarPedido)
-                      : null,
-                  icon: state.processoAtual == VendaProcesso.criarPedido
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.receipt_long_outlined),
-                  label: Text(labelPedido),
-                ),
-                FilledButton.icon(
-                  onPressed: temItens && !state.processando
-                      ? () => _abrirConfirmacao(
-                          context, state, _VendaAcao.finalizar)
-                      : null,
-                  icon: state.processoAtual == VendaProcesso.finalizarVenda
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.point_of_sale_outlined),
-                  label: Text(labelFinalizar),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -458,21 +394,21 @@ class _VendaPageState extends State<VendaPage> {
     final theme = Theme.of(context);
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Icon(
               Icons.shopping_cart_checkout_outlined,
-              size: 48,
+              size: 40,
               color: theme.colorScheme.primary,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               'Pronto para iniciar a venda',
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               'Defina o cliente, o vendedor e a tabela de preço para começar a leitura dos produtos.',
               style: theme.textTheme.bodyMedium,
@@ -490,108 +426,67 @@ class _VendaPageState extends State<VendaPage> {
     _VendaAcao acao,
   ) async {
     final bloc = context.read<VendaBloc>();
-    SelectData? clienteSelecionado = state.clienteSelecionado;
-    SelectData? vendedorSelecionado = state.vendedorSelecionado;
+    final clienteSelecionado = state.clienteSelecionado;
+    final vendedorSelecionado = state.vendedorSelecionado;
 
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setStateDialog) {
-            return AlertDialog(
-              title: Text(
-                acao == _VendaAcao.finalizar
-                    ? 'Confirmar finalização da venda'
-                    : 'Confirmar criação do pedido',
-              ),
-              content: SingleChildScrollView(
-                child: SizedBox(
-                  width: 420,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Confira o resumo antes de continuar. Se necessário, ajuste o cliente ou o vendedor.',
-                        style: Theme.of(dialogContext).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoChip(
-                        icon: Icons.numbers_outlined,
-                        label:
-                            'Quantidade de produtos: ${_leitorController.quantidadeTotalLida}',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildInfoChip(
-                        icon: Icons.attach_money_outlined,
-                        label:
-                            'Valor total do pedido: ${_formatarMoeda(_leitorController.valorTotalLido)}',
-                      ),
-                      const SizedBox(height: 12),
-                      widget.pessoaSeletor.buildComParametros(
-                        SeletorParamentros(
-                          itemsSelecionadosInicial: clienteSelecionado == null
-                              ? null
-                              : [clienteSelecionado!],
-                          onChanged: (selecionados) {
-                            setStateDialog(() {
-                              clienteSelecionado = selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      widget.vendedoresSeletor.buildComParametros(
-                        SeletorParamentros(
-                          itemsSelecionadosInicial: vendedorSelecionado == null
-                              ? null
-                              : [vendedorSelecionado!],
-                          onChanged: (selecionados) {
-                            setStateDialog(() {
-                              vendedorSelecionado = selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
+        return AlertDialog(
+          title: const Text('Confirmar finalização da venda'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Confira o resumo antes de continuar.',
+                    style: Theme.of(dialogContext).textTheme.bodyMedium,
                   ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Voltar'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(
-                    acao == _VendaAcao.finalizar
-                        ? 'Finalizar venda'
-                        : 'Criar pedido',
+                  const SizedBox(height: 12),
+                  _buildInfoChip(
+                    icon: Icons.person_outline,
+                    label: 'Cliente: ${clienteSelecionado?.nome ?? '-'}',
                   ),
-                ),
-              ],
-            );
-          },
+                  const SizedBox(height: 8),
+                  _buildInfoChip(
+                    icon: Icons.badge_outlined,
+                    label: 'Vendedor: ${vendedorSelecionado?.nome ?? '-'}',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoChip(
+                    icon: Icons.numbers_outlined,
+                    label:
+                        'Quantidade de produtos: ${_leitorController.quantidadeTotalLida}',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoChip(
+                    icon: Icons.payments_outlined,
+                    label:
+                        'Valor total do pedido: ${_formatarMoeda(_leitorController.valorTotalLido)}',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Voltar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Finalizar venda'),
+            ),
+          ],
         );
       },
     );
 
     if (confirmou != true) {
       return;
-    }
-
-    if (clienteSelecionado != state.clienteSelecionado) {
-      bloc.add(VendaClienteSelecionado(clienteSelecionado: clienteSelecionado));
-    }
-    if (vendedorSelecionado != state.vendedorSelecionado) {
-      bloc.add(
-        VendaVendedorSelecionado(vendedorSelecionado: vendedorSelecionado),
-      );
     }
 
     final itens = _leitorController.itens
@@ -607,53 +502,42 @@ class _VendaPageState extends State<VendaPage> {
         )
         .toList(growable: false);
 
-    if (acao == _VendaAcao.finalizar) {
-      final pagamentoResultado = await showDialog<Map<String, dynamic>>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return PagamentosRealizadosWidget(
-            hashLista: state.listaCompartilhadaHash ?? '',
-            resumoInicial: PagamentosRealizadosResumo(
-              listaCompartilhada: null,
-              produtosCompartilhados: const [],
-              quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
-              valorTotalProdutos: _leitorController.valorTotalLido,
-            ),
-            pessoaId: clienteSelecionado?.id,
-            formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
-          );
-        },
-      );
+    final pagamentoResultado = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PagamentosRealizadosWidget(
+          hashLista: state.listaCompartilhadaHash ?? '',
+          resumoInicial: PagamentosRealizadosResumo(
+            listaCompartilhada: null,
+            produtosCompartilhados: const [],
+            quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
+            valorTotalProdutos: _leitorController.valorTotalLido,
+          ),
+          pessoaId: clienteSelecionado?.id,
+          formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
+        );
+      },
+    );
 
-      if (pagamentoResultado == null) {
-        return;
-      }
-
-      final formasDePagamentoRaw =
-          pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
-              const [];
-      final formasDePagamentoRealizadas = formasDePagamentoRaw
-          .whereType<Map<String, dynamic>>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList(growable: false);
-      final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
-
-      bloc.add(
-        VendaFinalizarSolicitada(
-          itens: itens,
-          formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-          valorDesconto: valorDesconto,
-        ),
-      );
+    if (pagamentoResultado == null) {
       return;
     }
 
+    final formasDePagamentoRaw =
+        pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
+            const [];
+    final formasDePagamentoRealizadas = formasDePagamentoRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+    final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
+
     bloc.add(
-      VendaCriarPedidoSolicitado(
+      VendaFinalizarSolicitada(
         itens: itens,
-        quantidadeProdutos: _leitorController.quantidadeTotalLida,
-        valorTotal: _leitorController.valorTotalLido,
+        formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        valorDesconto: valorDesconto,
       ),
     );
   }

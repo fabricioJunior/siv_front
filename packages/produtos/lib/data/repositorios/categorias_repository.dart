@@ -8,13 +8,13 @@ class CategoriasRepository implements ICategoriasRepository {
   CategoriasRepository({required this.categoriasRemoteDataSource});
 
   @override
-  Future<Categoria> atualizarCategoria(int id, String nome) {
-    return categoriasRemoteDataSource.atualizarCategoria(id, nome);
+  Future<Categoria> atualizarCategoria(int id, String nome, {String? ncm}) {
+    return categoriasRemoteDataSource.atualizarCategoria(id, nome, ncm: ncm);
   }
 
   @override
-  Future<Categoria> criarCategoria(String nome) {
-    return categoriasRemoteDataSource.createCategoria(nome);
+  Future<Categoria> criarCategoria(String nome, {String? ncm}) {
+    return categoriasRemoteDataSource.createCategoria(nome, ncm: ncm);
   }
 
   @override

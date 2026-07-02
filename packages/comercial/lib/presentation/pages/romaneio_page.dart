@@ -514,9 +514,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                           const SizedBox(height: 4),
                           Text(
                             _formatarData(
-                              romaneio?.data ??
-                                  romaneio?.atualizadoEm ??
-                                  romaneio?.criadoEm,
+                              romaneio?.criadoEm ?? romaneio?.atualizadoEm,
                             ),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),

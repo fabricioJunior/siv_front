@@ -12,17 +12,23 @@ class CategoriasRemoteDatasource extends RemoteDataSourceBase
   String get path => '/v1/categorias/{id}';
 
   @override
-  Future<Categoria> atualizarCategoria(int id, String nome) async {
+  Future<Categoria> atualizarCategoria(int id, String nome, {String? ncm}) async {
     var response = await put(
       pathParameters: {'id': id.toString()},
-      body: {'nome': nome},
+      body: {
+        'nome': nome,
+        if (ncm != null) 'ncm': ncm,
+      },
     );
     return CategoriaDto.fromJson(response.body);
   }
 
   @override
-  Future<Categoria> createCategoria(String nome) async {
-    var response = await post(body: {'nome': nome});
+  Future<Categoria> createCategoria(String nome, {String? ncm}) async {
+    var response = await post(body: {
+      'nome': nome,
+      if (ncm != null) 'ncm': ncm,
+    });
     return CategoriaDto.fromJson(response.body);
   }
 

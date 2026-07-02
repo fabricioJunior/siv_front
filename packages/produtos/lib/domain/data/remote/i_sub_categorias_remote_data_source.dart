@@ -1,7 +1,7 @@
 import 'package:produtos/models.dart';
 
 abstract class ISubCategoriasRemoteDataSource {
-  Future<SubCategoria> createSubCategoria(int categoriaId, String nome);
+  Future<SubCategoria> createSubCategoria(int categoriaId, String nome, {String? ncm});
   Future<List<SubCategoria>> fetchSubCategorias(
     int categoriaId, {
     String? nome,
@@ -12,6 +12,7 @@ abstract class ISubCategoriasRemoteDataSource {
   Future<SubCategoria> atualizarSubCategoria(
     int categoriaId,
     int id,
-    String nome,
-  );
+    String nome, {
+    String? ncm,
+  });
 }

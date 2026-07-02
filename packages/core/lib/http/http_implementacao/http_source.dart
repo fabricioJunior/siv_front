@@ -73,6 +73,18 @@ class HttpSource implements IHttpSource {
   }
 
   @override
+  Future<IHttpResponse> patch({required body, required Uri uri}) async {
+    log(jsonEncode(body));
+    var response = await client.patch(
+      uri,
+      body: jsonEncode(body),
+      headers: _defaultHeaders,
+    );
+
+    return HttpResponse(response: response);
+  }
+
+  @override
   Future<IHttpResponse> postMultipart({
     required Uri uri,
     required String field,

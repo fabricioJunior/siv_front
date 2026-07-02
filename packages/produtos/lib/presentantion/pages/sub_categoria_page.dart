@@ -17,6 +17,7 @@ class SubCategoriaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final nomeController = TextEditingController();
+    final ncmController = TextEditingController();
 
     return BlocProvider<SubCategoriaBloc>(
       create: (context) => sl<SubCategoriaBloc>()
@@ -38,7 +39,7 @@ class SubCategoriaPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 400),
+            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 520),
             child: BlocBuilder<SubCategoriaBloc, SubCategoriaState>(
               builder: (context, state) {
                 if (state.subCategoriaStep == SubCategoriaStep.carregando) {
@@ -50,6 +51,9 @@ class SubCategoriaPage extends StatelessWidget {
 
                 if (state.nome != null && nomeController.text.isEmpty) {
                   nomeController.text = state.nome!;
+                }
+                if (state.ncm != null && ncmController.text.isEmpty) {
+                  ncmController.text = state.ncm!;
                 }
 
                 return Column(
@@ -121,6 +125,7 @@ class SubCategoriaPage extends StatelessWidget {
                                 controller: nomeController,
                                 maxLength: 50,
                                 autofocus: true,
+                                textInputAction: TextInputAction.next,
                                 decoration: const InputDecoration(
                                   hintText: 'Ex: Camisetas, Calças, Bonés',
                                   border: OutlineInputBorder(),
@@ -134,7 +139,41 @@ class SubCategoriaPage extends StatelessWidget {
                                 },
                                 onChanged: (value) {
                                   context.read<SubCategoriaBloc>().add(
-                                    SubCategoriaEditou(nome: value),
+                                    SubCategoriaEditou(
+                                      nome: value,
+                                      ncm: ncmController.text.trim().isEmpty
+                                          ? null
+                                          : ncmController.text.trim(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'NCM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: ncmController,
+                                maxLength: 30,
+                                textInputAction: TextInputAction.done,
+                                decoration: const InputDecoration(
+                                  hintText: 'Ex: 6101.20.00',
+                                  border: OutlineInputBorder(),
+                                  counterText: '',
+                                ),
+                                onChanged: (value) {
+                                  context.read<SubCategoriaBloc>().add(
+                                    SubCategoriaEditou(
+                                      nome: nomeController.text,
+                                      ncm: value.trim().isEmpty
+                                          ? null
+                                          : value.trim(),
+                                    ),
                                   );
                                 },
                                 onFieldSubmitted: (_) {

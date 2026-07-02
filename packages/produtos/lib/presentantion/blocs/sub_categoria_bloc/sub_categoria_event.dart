@@ -17,11 +17,12 @@ class SubCategoriaIniciou extends SubCategoriaEvent {
 
 class SubCategoriaEditou extends SubCategoriaEvent {
   final String nome;
+  final String? ncm;
 
-  SubCategoriaEditou({required this.nome});
+  SubCategoriaEditou({required this.nome, this.ncm});
 
   @override
-  List<Object?> get props => [nome];
+  List<Object?> get props => [nome, ncm];
 }
 
 class SubCategoriaSalvou extends SubCategoriaEvent {

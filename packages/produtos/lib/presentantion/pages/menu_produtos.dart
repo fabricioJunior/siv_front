@@ -74,6 +74,16 @@ class MenuProdutosPage extends StatelessWidget {
             componente: 'PRDFM003',
             onTap: () => Navigator.of(context).pushNamed('/impressao_etiquetas'),
           ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.label_off_outlined,
+            titulo: 'Pendência de NCM',
+            subtitulo:
+                'Referências sem NCM — visualize e atualize em massa.',
+            componente: 'PRDFM004',
+            onTap: () =>
+                Navigator.of(context).pushNamed('/referencias_pendentes_ncm'),
+          ),
         ],
       ),
     );

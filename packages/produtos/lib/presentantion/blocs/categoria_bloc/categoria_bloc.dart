@@ -56,7 +56,11 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
     Emitter<CategoriaState> emit,
   ) async {
     emit(
-      state.copyWith(categoriaStep: CategoriaStep.editando, nome: event.nome),
+      state.copyWith(
+        categoriaStep: CategoriaStep.editando,
+        nome: event.nome,
+        ncm: event.ncm ?? state.ncm,
+      ),
     );
   }
 
@@ -68,10 +72,14 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
       emit(state.copyWith(categoriaStep: CategoriaStep.carregando));
 
       if (state.id != null) {
-        var categoria = await _atualizarCategoria.call(state.id!, state.nome!);
+        var categoria = await _atualizarCategoria.call(
+          state.id!,
+          state.nome!,
+          ncm: state.ncm,
+        );
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.salvo));
       } else {
-        var categoria = await _criarCategoria.call(state.nome!);
+        var categoria = await _criarCategoria.call(state.nome!, ncm: state.ncm);
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.criado));
       }
     } catch (e, s) {

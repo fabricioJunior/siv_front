@@ -8,3 +8,4 @@ export 'domain/data/repositorios/i_produtos_repository.dart';
 export 'domain/data/repositorios/i_codigos_repository.dart';
 export 'domain/data/repositorios/i_etiquetas_repository.dart';
 export 'domain/data/repositorios/i_impressao_etiquetas_repository.dart';
+export 'domain/data/repositorios/i_referencias_pendentes_ncm_repository.dart';

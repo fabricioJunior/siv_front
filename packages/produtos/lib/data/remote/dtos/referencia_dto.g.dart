@@ -24,6 +24,7 @@ ReferenciaDto _$ReferenciaDtoFromJson(Map<String, dynamic> json) =>
       descricao: json['descricao'] as String?,
       composicao: json['composicao'] as String?,
       cuidados: json['cuidados'] as String?,
+      ncm: json['ncm'] as String?,
       categoria: json['categoria'] == null
           ? null
           : CategoriaDto.fromJson(json['categoria'] as Map<String, dynamic>),
@@ -48,4 +49,5 @@ Map<String, dynamic> _$ReferenciaDtoToJson(ReferenciaDto instance) =>
       'descricao': instance.descricao,
       'composicao': instance.composicao,
       'cuidados': instance.cuidados,
+      'ncm': instance.ncm,
     };

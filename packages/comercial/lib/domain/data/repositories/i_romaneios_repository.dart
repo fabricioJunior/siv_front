@@ -5,6 +5,10 @@ abstract class IRomaneiosRepository {
     int page = 1,
     int limit = 50,
     String? searchTerm,
+    int? caixaId,
+    DateTime? dataHoraInicial,
+    DateTime? dataHoraFinal,
+    List<TipoOperacao>? operacoes,
   });
   Future<Romaneio> recuperarRomaneio(int id);
   Future<Romaneio> criarRomaneio(Romaneio romaneio);

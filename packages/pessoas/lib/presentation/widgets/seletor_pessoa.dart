@@ -18,6 +18,9 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
   final String rotaSelecao;
   final String? titulo;
   final bool onlyView;
+  final bool? eCliente;
+  final bool? eFuncionario;
+  final bool? eFornecedor;
 
   @override
   final List<SelectData>? itemsSelecionadosInicial;
@@ -38,6 +41,9 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
     this.itemsSelecionadosInicial,
     this.onChanged,
     this.onlyView = false,
+    this.eCliente,
+    this.eFuncionario,
+    this.eFornecedor,
   });
 
   @override
@@ -50,7 +56,12 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
   @override
   void initState() {
     super.initState();
-    _pessoasBloc = sl<PessoasBloc>()..add(PessoasIniciou());
+    _pessoasBloc = sl<PessoasBloc>()
+      ..add(PessoasIniciou(
+        eCliente: widget.eCliente,
+        eFuncionario: widget.eFuncionario,
+        eFornecedor: widget.eFornecedor,
+      ));
   }
 
   @override
@@ -160,6 +171,9 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
   }
 
   String _buildTitulo() {
+    if (widget.titulo != null && widget.titulo!.isNotEmpty) {
+      return widget.titulo!;
+    }
     if (widget.onlyView) {
       return widget.titulo ?? 'Pessoa';
     }

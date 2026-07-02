@@ -71,20 +71,29 @@ class _HomePageState extends State<HomePage> {
               // Operações do dia — Comercial expandido diretamente (remove sub-menu)
               final operacoes = <_AccessFlowItem>[
                 const _AccessFlowItem(
+                  icon: Icons.point_of_sale_outlined,
+                  title: 'Caixa',
+                  subtitle: 'Abertura, sangrias, suprimentos e fechamento.',
+                  color: Colors.teal,
+                  route: '/fluxo_de_caixa',
+                  componentesNecessarios: ['FCXFP001', 'FCXFP002', 'FCXFL001'],
+                ),
+                const _AccessFlowItem(
                   icon: Icons.shopping_cart_checkout_outlined,
                   title: 'Venda',
                   subtitle: 'Seleção de cliente, contagem e envio ao caixa.',
                   color: Colors.deepOrange,
                   route: '/venda',
+                  precisaDeTerminal: true,
                   componentesNecessarios: ['PEDFC001'],
                 ),
                 const _AccessFlowItem(
-                  icon: Icons.receipt_long,
-                  title: 'Pedidos',
-                  subtitle: 'Criação, conferência, faturamento e acompanhamento.',
-                  color: Colors.orange,
-                  route: '/pedidos',
-                  componentesNecessarios: ['PEDFC001', 'PEDFM001'],
+                  icon: Icons.sync_alt,
+                  title: 'Troca e devolução',
+                  subtitle: 'Seleção do romaneio original e recebimento no caixa.',
+                  color: Colors.redAccent,
+                  route: '/devolucao',
+                  componentesNecessarios: ['PEDFC001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.local_shipping,
@@ -95,12 +104,20 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['ROMFP001'],
                 ),
                 const _AccessFlowItem(
-                  icon: Icons.assignment_return_outlined,
-                  title: 'Devolução',
-                  subtitle: 'Seleção do romaneio original e recebimento no caixa.',
-                  color: Colors.redAccent,
-                  route: '/devolucao',
-                  componentesNecessarios: ['PEDFC001'],
+                  icon: Icons.point_of_sale,
+                  title: 'Vendas',
+                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
+                  color: Colors.green,
+                  route: '/vendas',
+                  componentesNecessarios: ['ROMFP001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.input,
+                  title: 'Entrada Manual',
+                  subtitle: 'Consulta por funcionário, quantidade e data.',
+                  color: Colors.teal,
+                  route: '/romaneios_entrada_manual',
+                  componentesNecessarios: ['ROMFP001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
@@ -117,15 +134,6 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.teal,
                   route: '/pagamentos_avulsos',
                   componentesNecessarios: ['PAGFM001', 'PAGFP005'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.input,
-                  title: 'Entrada manual',
-                  subtitle: 'Lançamento manual de produtos no fluxo.',
-                  color: Colors.brown,
-                  route: '/entrada_manual_de_produtos',
-                  precisaDeCaixaAberto: true,
-                  componentesNecessarios: ['ROMFP001', 'ROMFP002'],
                 ),
               ];
 
@@ -271,6 +279,10 @@ class _HomePageState extends State<HomePage> {
                           userInitial: userInitial,
                           empresaNome: empresaNome,
                         ),
+                        if (state.caixaIdDaSessao == null) ...[
+                          const SizedBox(height: 12),
+                          _buildAbrirCaixaBanner(context),
+                        ],
                         const SizedBox(height: 20),
                         _AccessSection(
                           title: 'Operações do dia',
@@ -337,6 +349,46 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAbrirCaixaBanner(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.point_of_sale_rounded, color: Colors.orange.shade700),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nenhum caixa aberto neste terminal',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Abra o caixa para iniciar vendas e recebimentos.',
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton(
+            onPressed: () => Navigator.pushNamed(context, '/fluxo_de_caixa'),
+            child: const Text('Abrir caixa'),
+          ),
+        ],
       ),
     );
   }
@@ -593,6 +645,7 @@ class _AccessFlowItem {
   final String route;
   final List<String> componentesNecessarios;
   final bool precisaDeCaixaAberto;
+  final bool precisaDeTerminal;
 
   const _AccessFlowItem({
     required this.icon,
@@ -601,6 +654,7 @@ class _AccessFlowItem {
     required this.color,
     required this.route,
     this.precisaDeCaixaAberto = false,
+    this.precisaDeTerminal = false,
     this.componentesNecessarios = const [],
   });
 }
@@ -617,7 +671,7 @@ class _AccessFlowCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
+        onTap: () async {
           if (item.precisaDeCaixaAberto &&
               sl<IAcessoGlobalSessao>().caixaIdDaSessao == null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -630,6 +684,55 @@ class _AccessFlowCard extends StatelessWidget {
             );
             return;
           }
+
+          if (item.precisaDeTerminal &&
+              sl<IAcessoGlobalSessao>().terminalIdDaSessao == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Selecione um terminal antes de iniciar uma venda.',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+
+            final appState = sl<AppBloc>().state;
+            final terminaisDaEmpresa = appState.terminaisDaEmpresaDaSessao;
+            if (terminaisDaEmpresa.isEmpty) {
+              return;
+            }
+
+            final resultado = await Navigator.of(context).pushNamed(
+              '/selecionar_terminal',
+              arguments: {'terminais': terminaisDaEmpresa},
+            );
+
+            if (!context.mounted || resultado is! Map) {
+              return;
+            }
+
+            final idTerminal = resultado['idTerminal'];
+            final idEmpresa = resultado['idEmpresa'];
+            final nomeTerminal = resultado['nomeTerminal'];
+
+            if (idTerminal is! int ||
+                idEmpresa is! int ||
+                nomeTerminal is! String) {
+              return;
+            }
+
+            sl<AppBloc>().add(
+              AppSelecionouTerminalDaSessao(
+                terminal: _TerminalSelecionado(
+                  id: idTerminal,
+                  idEmpresa: idEmpresa,
+                  nome: nomeTerminal,
+                ),
+              ),
+            );
+            return;
+          }
+
           Navigator.pushNamed(context, item.route);
         },
         child: IntrinsicHeight(

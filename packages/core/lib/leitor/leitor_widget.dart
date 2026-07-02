@@ -441,49 +441,6 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
-  Widget _resumoInfoCard({
-    required IconData icon,
-    required String titulo,
-    required String valor,
-    required ColorScheme colorScheme,
-  }) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 180),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  titulo,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  valor,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_sincronizando) {
@@ -626,41 +583,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _resumoInfoCard(
-                          icon: Icons.numbers_outlined,
-                          titulo: 'Quantidade total',
-                          valor: '${state.quantidadeTotalLida}',
-                          colorScheme: Theme.of(context).colorScheme,
-                        ),
-                        if (widget.tabelaDePrecoId != null)
-                          _resumoInfoCard(
-                            icon: Icons.payments_outlined,
-                            titulo: 'Valor total',
-                            valor: _formatarMoeda(state.valorTotalLido),
-                            colorScheme: Theme.of(context).colorScheme,
-                          ),
-                      ],
-                    ),
-                  ),
                   const Divider(),
                   SegmentedButton<_LeitorVisualizacao>(
                     segments: const [
-                      ButtonSegment<_LeitorVisualizacao>(
-                        value: _LeitorVisualizacao.historico,
-                        icon: Icon(Icons.history_outlined),
-                        label: Text('Histórico'),
-                      ),
                       ButtonSegment<_LeitorVisualizacao>(
                         value: _LeitorVisualizacao.porProduto,
                         icon: Icon(Icons.inventory_2_outlined),
@@ -670,6 +595,11 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         value: _LeitorVisualizacao.grade,
                         icon: Icon(Icons.grid_view_outlined),
                         label: Text('Grade'),
+                      ),
+                      ButtonSegment<_LeitorVisualizacao>(
+                        value: _LeitorVisualizacao.historico,
+                        icon: Icon(Icons.history_outlined),
+                        label: Text('Histórico'),
                       ),
                     ],
                     selected: {_visualizacao},
@@ -796,21 +726,16 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                 final foiAdicao =
                                     registro.tipo == LeitorHistoricoTipo.adicao;
                                 return ListTile(
-                                  dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  leading: Icon(
-                                    foiAdicao
-                                        ? Icons.add_circle_outline
-                                        : Icons.remove_circle_outline,
-                                    color: foiAdicao
-                                        ? Colors.green.shade700
-                                        : Colors.red.shade700,
-                                  ),
                                   title: Text(
                                     '${foiAdicao ? 'Adicionado' : 'Removido'} ${registro.quantidade} un. - ${registro.descricao}',
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
                                   ),
                                   subtitle: Text(
-                                    '${registro.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: registro.tamanho, cor: registro.cor)}\nSaldo do item: ${registro.quantidadeAposOperacao}  •  ${_formatarDataHora(registro.dataHora)}',
+                                    '${registro.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: registro.tamanho, cor: registro.cor)}\n${_formatarDataHora(registro.dataHora)}',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                 );
                               },

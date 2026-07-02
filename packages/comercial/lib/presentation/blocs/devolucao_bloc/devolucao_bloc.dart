@@ -63,7 +63,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
       emit(
         state.copyWith(
           carregandoRomaneios: false,
-          erro: 'Falha ao carregar romaneios de venda para devolucao.',
+          erro: 'Falha ao carregar romaneios de venda para devolução.',
         ),
       );
       addError(e, s);
@@ -128,7 +128,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     if (romaneioId == null) {
       emit(
         state.copyWith(
-          erro: 'O romaneio selecionado nao possui um identificador valido.',
+          erro: 'O romaneio selecionado não possui um identificador válido.',
         ),
       );
       return;
@@ -155,7 +155,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
           carregandoItensDoOriginal: false,
           itensDoRomaneioOriginalPorProduto: itensPorProduto,
           erro: itensPorProduto.isEmpty
-              ? 'O romaneio selecionado nao possui itens para devolucao.'
+              ? 'O romaneio selecionado não possui itens para devolução.'
               : null,
         ),
       );
@@ -200,7 +200,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     if (romaneioOriginal == null || romaneioOriginalId == null) {
       emit(
         state.copyWith(
-          erro: 'Selecione o romaneio original antes de confirmar a devolucao.',
+          erro: 'Selecione o romaneio original antes de confirmar a devolução.',
         ),
       );
       return;
@@ -210,7 +210,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     if (itens.isEmpty) {
       emit(
         state.copyWith(
-          erro: 'Leia ao menos um item para confirmar a devolucao.',
+          erro: 'Leia ao menos um item para confirmar a devolução.',
         ),
       );
       return;
@@ -227,7 +227,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
       emit(
         state.copyWith(
           erro:
-              'Nao foi possivel receber a devolucao: caixa da sessao nao encontrado.',
+              'Não foi possível receber a devolução: caixa da sessão não encontrado.',
         ),
       );
       return;
@@ -257,7 +257,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
 
       romaneioCriadoId = romaneioCriado.id;
       if (romaneioCriadoId == null || romaneioCriadoId <= 0) {
-        throw StateError('A API nao retornou o id do romaneio de devolucao.');
+        throw StateError('A API não retornou o id do romaneio de devolução.');
       }
 
       for (final item in itens) {
@@ -288,8 +288,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
           romaneioDevolucaoId: romaneioCriadoId,
           fluxoParcial: romaneioCriadoId != null,
           erro: romaneioCriadoId != null
-              ? 'O romaneio de devolucao #$romaneioCriadoId foi criado, mas nao foi recebido no caixa automaticamente. Conclua o recebimento manualmente.'
-              : 'Falha ao processar a devolucao. Tente novamente.',
+              ? 'O romaneio de devolução #$romaneioCriadoId foi criado, mas não foi recebido no caixa automaticamente. Conclua o recebimento manualmente.'
+              : 'Falha ao processar a devolução. Tente novamente.',
         ),
       );
       addError(e, s);
@@ -307,17 +307,19 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         erro: null,
         romaneioDevolucaoId: null,
         fluxoParcial: false,
+        romaneioOriginal: null,
+        itensDoRomaneioOriginalPorProduto: const {},
       ),
     );
   }
 
   String? _validarAntesDaLeitura() {
     if (state.romaneioOriginal == null) {
-      return 'Selecione o romaneio original para iniciar a devolucao.';
+      return 'Selecione o romaneio original para iniciar a devolução.';
     }
 
     if (state.itensDoRomaneioOriginalPorProduto.isEmpty) {
-      return 'O romaneio original nao possui itens disponiveis para devolucao.';
+      return 'O romaneio original não possui itens disponíveis para devolução.';
     }
 
     return null;
@@ -331,12 +333,12 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
       final quantidade = item.quantidade ?? 0;
 
       if (produtoId == null || produtoId <= 0) {
-        return 'Existe item sem produto valido na leitura da devolucao.';
+        return 'Existe item sem produto válido na leitura da devolução.';
       }
 
       final quantidadeDisponivel = disponiveis[produtoId];
       if (quantidadeDisponivel == null || quantidadeDisponivel <= 0) {
-        return 'O produto #$produtoId nao pertence ao romaneio original selecionado.';
+        return 'O produto #$produtoId não pertence ao romaneio original selecionado.';
       }
 
       if (quantidade <= 0) {

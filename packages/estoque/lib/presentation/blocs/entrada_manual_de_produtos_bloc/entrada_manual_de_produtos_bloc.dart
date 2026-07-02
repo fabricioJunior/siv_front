@@ -96,8 +96,8 @@ class EntradaManualDeProdutosBloc
 
     try {
       final origemCompartilhada = event.operacao == 'transferencia_saida'
-          ? OrigemCompartilhadaTipo.romenioSaidaDeProdutos
-          : OrigemCompartilhadaTipo.romenioEntradaDeProdutos;
+          ? OrigemCompartilhadaTipo.manualSaidaDeProdutos
+          : OrigemCompartilhadaTipo.manualEntradaDeProdutos;
 
       final lista = await _salvarListaDeProdutosCompartilhada(
         listaCompartilhada: ListaDeProdutosCompartilhada.criar(

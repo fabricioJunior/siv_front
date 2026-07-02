@@ -13,6 +13,8 @@ enum TipoOperacao {
   transferencia_saida,
   transferencia_entrada,
   transferencia_devolucao,
+  manual_entrada,
+  manual_saida,
   outros;
 
   String toJsonValue() => name;

@@ -45,11 +45,19 @@ class RomaneiosRepository implements IRomaneiosRepository {
     int page = 1,
     int limit = 50,
     String? searchTerm,
+    int? caixaId,
+    DateTime? dataHoraInicial,
+    DateTime? dataHoraFinal,
+    List<TipoOperacao>? operacoes,
   }) {
     return remoteDataSource.recuperarRomaneios(
       page: page,
       limit: limit,
       searchTerm: searchTerm,
+      caixaId: caixaId,
+      dataHoraInicial: dataHoraInicial,
+      dataHoraFinal: dataHoraFinal,
+      operacoes: operacoes,
     );
   }
 

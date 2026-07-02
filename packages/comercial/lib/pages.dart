@@ -5,6 +5,8 @@ export 'presentation/pages/devolucao_page.dart';
 export 'presentation/pages/pedidos_page.dart';
 export 'presentation/pages/pedido_page.dart';
 export 'presentation/pages/romaneios_page.dart';
+export 'presentation/pages/vendas_page.dart';
+export 'presentation/pages/romaneios_entrada_manual_page.dart';
 export 'presentation/pages/romaneio_page.dart';
 export 'presentation/pages/venda_page.dart';
 export 'presentation/pages/documentos_fiscais_page.dart';

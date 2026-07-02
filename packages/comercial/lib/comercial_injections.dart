@@ -169,6 +169,14 @@ void _presentation() {
     ),
   );
 
+  sl.registerFactory<VendasBloc>(
+    () => VendasBloc(sl()),
+  );
+
+  sl.registerFactory<RomaneiosEntradaManualBloc>(
+    () => RomaneiosEntradaManualBloc(sl()),
+  );
+
   sl.registerFactory<RomaneioBloc>(
     () => RomaneioBloc(
       sl(),

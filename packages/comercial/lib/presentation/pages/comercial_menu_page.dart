@@ -40,6 +40,14 @@ class ComercialMenuPage extends StatelessWidget {
         componente: 'ROMFP001',
         route: '/romaneios',
       ),
+      const _ItemData(
+        icon: Icons.point_of_sale_outlined,
+        titulo: 'Vendas',
+        subtitulo: 'Consulta de vendas por caixa, data/hora e cliente.',
+        cor: Colors.teal,
+        componente: 'ROMFP001',
+        route: '/vendas',
+      ),
     ];
 
     // Filtra apenas itens com permissão

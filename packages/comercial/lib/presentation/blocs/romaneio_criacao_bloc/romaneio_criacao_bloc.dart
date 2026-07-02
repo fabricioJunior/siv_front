@@ -142,6 +142,7 @@ class RomaneioCriacaoBloc
       await _atualizarListaCompartilhada.call(listaCompartilhada);
 
       if (operacao == TipoOperacao.transferencia_entrada ||
+          operacao == TipoOperacao.manual_entrada ||
           operacao == TipoOperacao.venda ||
           operacao == TipoOperacao.venda_devolucao) {
         falhaAoReceberNoCaixa = true;
@@ -306,6 +307,10 @@ class RomaneioCriacaoBloc
         return TipoOperacao.venda;
       case OrigemCompartilhadaTipo.vendaDevolucao:
         return TipoOperacao.venda_devolucao;
+      case OrigemCompartilhadaTipo.manualEntradaDeProdutos:
+        return TipoOperacao.manual_entrada;
+      case OrigemCompartilhadaTipo.manualSaidaDeProdutos:
+        return TipoOperacao.manual_saida;
     }
   }
 

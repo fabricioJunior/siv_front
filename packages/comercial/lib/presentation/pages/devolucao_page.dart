@@ -15,6 +15,7 @@ class DevolucaoPage extends StatefulWidget {
 
 class _DevolucaoPageState extends State<DevolucaoPage> {
   late final LeitorController _leitorController;
+  bool _ehTroca = false;
 
   @override
   void initState() {
@@ -49,20 +50,21 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
 
           final romaneioDevolucaoId = state.romaneioDevolucaoId;
           if (romaneioDevolucaoId != null && !state.fluxoParcial) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Devolucao concluida com sucesso. Romaneio #$romaneioDevolucaoId recebido no caixa.',
-                ),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            final ehTroca = _ehTroca;
+            _ehTroca = false;
             _leitorController.limpar();
+            context.read<DevolucaoBloc>().add(const DevolucaoResetSolicitado());
+
+            if (ehTroca) {
+              Navigator.of(context).pushNamed('/venda');
+            } else {
+              _mostrarConfirmacaoSucesso(context, romaneioDevolucaoId);
+            }
           }
         },
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Devolucao de mercadorias')),
+            appBar: AppBar(title: const Text('Troca e devolução')),
             body: SafeArea(
               child: SingleChildScrollView(
                 keyboardDismissBehavior:
@@ -91,7 +93,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                         controlarQuantidade: true,
                         aceitarApenasProdutosComPreco: false,
                         campoCodigoHint:
-                            'Bipe ou informe o codigo do produto para devolucao',
+                            'Bipe ou informe o código do produto para devolução',
                       ),
                     ] else
                       _buildEstadoInicial(),
@@ -136,7 +138,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Escolha um romaneio de venda do cliente para vincular a devolucao.',
+              'Escolha um romaneio de venda do cliente para vincular a devolução.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -189,7 +191,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                   _buildInfoChip(
                     icon: Icons.inventory_2_outlined,
                     label:
-                        'Produtos elegiveis: ${state.itensDoRomaneioOriginalPorProduto.length}',
+                        'Produtos elegíveis: ${state.itensDoRomaneioOriginalPorProduto.length}',
                   ),
                 ],
               ),
@@ -216,7 +218,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                       label: Text(
                         state.carregandoItensDoOriginal
                             ? 'Carregando itens do romaneio...'
-                            : '2. Iniciar leitura da devolucao',
+                            : '2. Iniciar leitura da devolução',
                       ),
                     ),
             ),
@@ -271,50 +273,66 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                OutlinedButton.icon(
-                  onPressed: temItens && !state.processando
-                      ? () => _confirmarReinicio(context)
-                      : null,
-                  icon: const Icon(Icons.refresh_outlined),
-                  label: const Text('Reiniciar leitura'),
-                ),
-                FilledButton.icon(
-                  onPressed: temItens && !state.processando
-                      ? () {
-                          final itens = _leitorController.itens
-                              .map(
-                                (item) => {
-                                  'produtoId': item.id,
-                                  'quantidade': item.quantidadeLida,
-                                  'nome': item.descricao,
-                                  'corNome': item.cor,
-                                  'tamanhoNome': item.tamanho,
-                                },
-                              )
-                              .toList(growable: false);
-
-                          bloc.add(
-                            DevolucaoConfirmacaoSolicitada(itens: itens),
-                          );
-                        }
-                      : null,
-                  icon: state.processando
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.assignment_turned_in_outlined),
-                  label: Text(
-                    state.processando
-                        ? 'Processando devolucao...'
-                        : '3. Confirmar devolucao',
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _ehTroca,
+                  onChanged: state.processando
+                      ? null
+                      : (value) => setState(() => _ehTroca = value),
+                  title: const Text('É uma troca?'),
+                  subtitle: const Text(
+                    'Ao confirmar, você será direcionado para iniciar a venda do produto de troca.',
                   ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () => _confirmarReinicio(context)
+                          : null,
+                      icon: const Icon(Icons.refresh_outlined),
+                      label: const Text('Reiniciar leitura'),
+                    ),
+                    FilledButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () {
+                              final itens = _leitorController.itens
+                                  .map(
+                                    (item) => {
+                                      'produtoId': item.id,
+                                      'quantidade': item.quantidadeLida,
+                                      'nome': item.descricao,
+                                      'corNome': item.cor,
+                                      'tamanhoNome': item.tamanho,
+                                    },
+                                  )
+                                  .toList(growable: false);
+
+                              bloc.add(
+                                DevolucaoConfirmacaoSolicitada(itens: itens),
+                              );
+                            }
+                          : null,
+                      icon: state.processando
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.assignment_turned_in_outlined),
+                      label: Text(
+                        state.processando
+                            ? 'Processando devolução...'
+                            : '3. Confirmar devolução',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -337,13 +355,13 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Fluxo de devolucao',
+              'Fluxo de troca e devolução',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Selecione um romaneio de venda, leia os itens devolvidos e confirme para criar e receber o romaneio de venda_devolucao.',
+              'Selecione um romaneio de venda, leia os itens devolvidos e confirme para criar e receber o romaneio de devolução no caixa.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -373,7 +391,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
         return AlertDialog(
           title: const Text('Reiniciar leitura'),
           content: const Text(
-            'Deseja realmente limpar os itens lidos nesta devolucao?',
+            'Deseja realmente limpar os itens lidos nesta devolução?',
           ),
           actions: [
             TextButton(
@@ -392,6 +410,32 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
     if (confirmar == true) {
       _leitorController.limpar();
     }
+  }
+
+  Future<void> _mostrarConfirmacaoSucesso(
+    BuildContext context,
+    int romaneioDevolucaoId,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(
+          Icons.check_circle,
+          color: Colors.green,
+          size: 48,
+        ),
+        title: const Text('Devolução concluída'),
+        content: Text(
+          'Romaneio #$romaneioDevolucaoId recebido no caixa com sucesso.',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildInfoChip({required IconData icon, required String label}) {

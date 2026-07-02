@@ -162,8 +162,10 @@ class _VendaPageState extends State<VendaPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildConfiguracaoCard(context, state),
-                          const SizedBox(height: 10),
+                          if (!state.leituraIniciada) ...[
+                            _buildConfiguracaoCard(context, state),
+                            const SizedBox(height: 10),
+                          ],
                           if (state.leituraIniciada) ...[
                             _buildResumoDaVenda(context, state),
                             const SizedBox(height: 10),
@@ -205,86 +207,74 @@ class _VendaPageState extends State<VendaPage> {
             Text('Iniciar venda', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             AbsorbPointer(
-              absorbing: state.leituraIniciada || state.processando,
-              child: Opacity(
-                opacity: state.leituraIniciada ? 0.7 : 1,
-                child: Column(
-                  children: [
-                    widget.pessoaSeletor.buildComParametros(
-                      SeletorParamentros(
-                        itemsSelecionadosInicial:
-                            state.clienteSelecionado == null
+              absorbing: state.processando,
+              child: Column(
+                children: [
+                  widget.pessoaSeletor.buildComParametros(
+                    SeletorParamentros(
+                      itemsSelecionadosInicial: state.clienteSelecionado == null
+                          ? null
+                          : [state.clienteSelecionado!],
+                      onChanged: (selecionados) {
+                        bloc.add(
+                          VendaClienteSelecionado(
+                            clienteSelecionado: selecionados.isEmpty
                                 ? null
-                                : [state.clienteSelecionado!],
-                        onChanged: (selecionados) {
-                          bloc.add(
-                            VendaClienteSelecionado(
-                              clienteSelecionado: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                        },
-                      ),
+                                : selecionados.first,
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    widget.vendedoresSeletor.buildComParametros(
-                      SeletorParamentros(
-                        itemsSelecionadosInicial:
-                            state.vendedorSelecionado == null
+                  ),
+                  const SizedBox(height: 8),
+                  widget.vendedoresSeletor.buildComParametros(
+                    SeletorParamentros(
+                      itemsSelecionadosInicial:
+                          state.vendedorSelecionado == null
+                              ? null
+                              : [state.vendedorSelecionado!],
+                      onChanged: (selecionados) {
+                        bloc.add(
+                          VendaVendedorSelecionado(
+                            vendedorSelecionado: selecionados.isEmpty
                                 ? null
-                                : [state.vendedorSelecionado!],
-                        onChanged: (selecionados) {
-                          bloc.add(
-                            VendaVendedorSelecionado(
-                              vendedorSelecionado: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                        },
-                      ),
+                                : selecionados.first,
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    widget.tabelasDePrecoSeletor.buildComParametros(
-                      SeletorParamentros(
-                        itemsSelecionadosInicial:
-                            state.tabelaDePrecoSelecionada == null
+                  ),
+                  const SizedBox(height: 8),
+                  widget.tabelasDePrecoSeletor.buildComParametros(
+                    SeletorParamentros(
+                      itemsSelecionadosInicial:
+                          state.tabelaDePrecoSelecionada == null
+                              ? null
+                              : [state.tabelaDePrecoSelecionada!],
+                      onChanged: (selecionados) {
+                        bloc.add(
+                          VendaTabelaDePrecoSelecionada(
+                            tabelaDePrecoSelecionada: selecionados.isEmpty
                                 ? null
-                                : [state.tabelaDePrecoSelecionada!],
-                        onChanged: (selecionados) {
-                          bloc.add(
-                            VendaTabelaDePrecoSelecionada(
-                              tabelaDePrecoSelecionada: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                        },
-                      ),
+                                : selecionados.first,
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
-              child: state.leituraIniciada
-                  ? TextButton.icon(
-                      onPressed: state.processando
-                          ? null
-                          : () => bloc.add(const VendaEdicaoSolicitada()),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Alterar dados iniciais'),
-                    )
-                  : FilledButton.icon(
-                      onPressed: state.podeIniciarLeitura
-                          ? () => bloc.add(const VendaLeituraSolicitada())
-                          : null,
-                      icon: const Icon(Icons.play_arrow_outlined),
-                      label: const Text('Iniciar venda'),
-                    ),
+              child: FilledButton.icon(
+                onPressed: state.podeIniciarLeitura
+                    ? () => bloc.add(const VendaLeituraSolicitada())
+                    : null,
+                icon: const Icon(Icons.play_arrow_outlined),
+                label: const Text('Iniciar venda'),
+              ),
             ),
           ],
         ),
@@ -294,6 +284,7 @@ class _VendaPageState extends State<VendaPage> {
 
   Widget _buildResumoDaVenda(BuildContext context, VendaState state) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bloc = context.read<VendaBloc>();
 
     return Card(
       child: Padding(
@@ -301,22 +292,37 @@ class _VendaPageState extends State<VendaPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                _buildInfoChip(
-                  icon: Icons.person_outline,
-                  label: 'Cliente: ${state.clienteSelecionado?.nome ?? '-'}',
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildInfoChip(
+                        icon: Icons.person_outline,
+                        label:
+                            'Cliente: ${state.clienteSelecionado?.nome ?? '-'}',
+                      ),
+                      _buildInfoChip(
+                        icon: Icons.badge_outlined,
+                        label:
+                            'Vendedor: ${state.vendedorSelecionado?.nome ?? '-'}',
+                      ),
+                      _buildInfoChip(
+                        icon: Icons.sell_outlined,
+                        label:
+                            'Tabela: ${state.tabelaDePrecoSelecionada?.nome ?? '-'}',
+                      ),
+                    ],
+                  ),
                 ),
-                _buildInfoChip(
-                  icon: Icons.badge_outlined,
-                  label: 'Vendedor: ${state.vendedorSelecionado?.nome ?? '-'}',
-                ),
-                _buildInfoChip(
-                  icon: Icons.sell_outlined,
-                  label:
-                      'Tabela: ${state.tabelaDePrecoSelecionada?.nome ?? '-'}',
+                IconButton(
+                  tooltip: 'Alterar cliente, vendedor ou tabela de preço',
+                  onPressed: state.processando
+                      ? null
+                      : () => bloc.add(const VendaEdicaoSolicitada()),
+                  icon: const Icon(Icons.edit_outlined),
                 ),
               ],
             ),
@@ -439,7 +445,7 @@ class _VendaPageState extends State<VendaPage> {
               width: 420,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Confira o resumo antes de continuar.',

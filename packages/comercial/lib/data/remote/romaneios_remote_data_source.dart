@@ -64,6 +64,10 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
     int page = 1,
     int limit = 50,
     String? searchTerm,
+    int? caixaId,
+    DateTime? dataHoraInicial,
+    DateTime? dataHoraFinal,
+    List<TipoOperacao>? operacoes,
   }) async {
     final response = await get(
       queryParameters: {
@@ -71,6 +75,13 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
         'limit': '$limit',
         'ordenacao': 'id_desc',
         if (searchTerm != null) 'searchTerm': searchTerm,
+        if (caixaId != null) 'caixaId': '$caixaId',
+        if (dataHoraInicial != null)
+          'dataHoraInicial': dataHoraInicial.toIso8601String(),
+        if (dataHoraFinal != null)
+          'dataHoraFinal': dataHoraFinal.toIso8601String(),
+        if (operacoes != null && operacoes.isNotEmpty)
+          'operacoes': operacoes.map((o) => o.toJsonValue()).join(','),
       },
     );
 

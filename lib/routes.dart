@@ -232,6 +232,7 @@ Map<String, Widget Function(BuildContext)> routes = {
               retornarSomenteId: false,
               onChanged: onChanged,
               onlyView: onlyView ?? false,
+              eCliente: true,
             ),
         vendedoresSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
             FuncionarioSeletor(
@@ -284,7 +285,8 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/documento_fiscal': (context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     return _rotaProtegida(
       route: '/documento_fiscal',
       child: DocumentoFiscalPage(documentoId: args['id'] as int),
@@ -340,6 +342,15 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/romaneios': (context) {
     return _rotaProtegida(route: '/romaneios', child: const RomaneiosPage());
+  },
+  '/vendas': (context) {
+    return _rotaProtegida(route: '/vendas', child: const VendasPage());
+  },
+  '/romaneios_entrada_manual': (context) {
+    return _rotaProtegida(
+      route: '/romaneios_entrada_manual',
+      child: const RomaneiosEntradaManualPage(),
+    );
   },
   '/romaneio': (context) {
     return RomaneioPage(
@@ -688,6 +699,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_ativos': ['RELFC003'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
+  '/vendas': ['ROMFP001'],
+  '/romaneios_entrada_manual': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
   '/estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],

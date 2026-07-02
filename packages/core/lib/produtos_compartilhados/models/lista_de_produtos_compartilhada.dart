@@ -88,4 +88,6 @@ enum OrigemCompartilhadaTipo {
   romenioSaidaDeProdutos,
   venda,
   vendaDevolucao,
+  manualEntradaDeProdutos,
+  manualSaidaDeProdutos,
 }

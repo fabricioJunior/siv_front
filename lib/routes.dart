@@ -2,6 +2,7 @@ import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:autenticacao/models.dart' show TerminalDoUsuario;
 import 'package:comercial/pages.dart';
 import 'package:empresas/presentation.dart';
+import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
@@ -14,6 +15,7 @@ import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:pagamentos/pages.dart';
 import 'package:precos/presentation.dart';
+import 'package:precos/use_cases.dart' show RecuperarPrecosDasReferencias;
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
@@ -532,6 +534,12 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   //Estoque:
+  '/gerencia_estoque': (context) {
+    return _rotaProtegida(
+      route: '/gerencia_estoque',
+      child: const GerenciaEstoqueMenuPage(),
+    );
+  },
   '/estoque': (context) {
     return _rotaProtegida(
       route: '/estoque',
@@ -543,6 +551,25 @@ Map<String, Widget Function(BuildContext)> routes = {
               modo: TamanhoSeletorModo.multipla,
               onChanged: onChanged,
             ),
+        seletorTabelaPreco: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            TabelasDePrecoSeletor(
+              modo: TabelasDePrecoSeletorModo.unica,
+              onChanged: onChanged,
+              titulo: 'Tabela de preço',
+            ),
+        obterPrecosDaTabela: (tabelaDePrecoId) async {
+          final precos = await sl<RecuperarPrecosDasReferencias>().call(
+            tabelaDePrecoId: tabelaDePrecoId,
+          );
+          return precos
+              .map(
+                (p) => PrecoReferenciaEstoque(
+                  referenciaId: p.referenciaId,
+                  valor: p.valor,
+                ),
+              )
+              .toList();
+        },
       ),
     );
   },
@@ -702,6 +729,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
+  '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
   '/criar_balanco': ['PRDFL001'],

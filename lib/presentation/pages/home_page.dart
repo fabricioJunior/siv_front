@@ -90,7 +90,8 @@ class _HomePageState extends State<HomePage> {
                 const _AccessFlowItem(
                   icon: Icons.sync_alt,
                   title: 'Troca e devolução',
-                  subtitle: 'Seleção do romaneio original e recebimento no caixa.',
+                  subtitle:
+                      'Seleção do romaneio original e recebimento no caixa.',
                   color: Colors.redAccent,
                   route: '/devolucao',
                   componentesNecessarios: ['PEDFC001'],
@@ -113,11 +114,20 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const _AccessFlowItem(
                   icon: Icons.input,
-                  title: 'Entrada Manual',
+                  title: 'Entradas Manuais',
                   subtitle: 'Consulta por funcionário, quantidade e data.',
                   color: Colors.teal,
                   route: '/romaneios_entrada_manual',
                   componentesNecessarios: ['ROMFP001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.warehouse_outlined,
+                  title: 'Gerência de Estoque',
+                  subtitle:
+                      'Entrada manual, consulta, histórico e balanço.',
+                  color: Colors.indigo,
+                  route: '/gerencia_estoque',
+                  componentesNecessarios: ['ROMFP001', 'PRDFL001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
@@ -149,7 +159,8 @@ class _HomePageState extends State<HomePage> {
                 const _AccessFlowItem(
                   icon: Icons.shopping_bag,
                   title: 'Produtos',
-                  subtitle: 'Referências, cores, tamanhos, marcas e categorias.',
+                  subtitle:
+                      'Referências, cores, tamanhos, marcas e categorias.',
                   color: Colors.deepPurple,
                   route: '/menu_produtos',
                   componentesNecessarios: [
@@ -194,7 +205,8 @@ class _HomePageState extends State<HomePage> {
                 const _AccessFlowItem(
                   icon: Icons.trending_up,
                   title: 'Faturamento e Ticket',
-                  subtitle: 'Consolidado de vendas, ticket médio e por vendedor.',
+                  subtitle:
+                      'Consolidado de vendas, ticket médio e por vendedor.',
                   color: Colors.green,
                   route: '/relatorio_faturamento',
                   componentesNecessarios: ['RELFC001'],
@@ -202,7 +214,8 @@ class _HomePageState extends State<HomePage> {
                 const _AccessFlowItem(
                   icon: Icons.bar_chart,
                   title: 'Curva ABC',
-                  subtitle: 'Classificação de produtos por participação no faturamento.',
+                  subtitle:
+                      'Classificação de produtos por participação no faturamento.',
                   color: Colors.indigo,
                   route: '/relatorio_curva_abc',
                   componentesNecessarios: ['RELFC002'],
@@ -210,7 +223,8 @@ class _HomePageState extends State<HomePage> {
                 const _AccessFlowItem(
                   icon: Icons.people_outline,
                   title: 'Clientes Ativos',
-                  subtitle: 'Clientes com compra recente no período selecionado.',
+                  subtitle:
+                      'Clientes com compra recente no período selecionado.',
                   color: Colors.purple,
                   route: '/relatorio_clientes_ativos',
                   componentesNecessarios: ['RELFC003'],
@@ -257,8 +271,9 @@ class _HomePageState extends State<HomePage> {
                       .where(
                         (item) =>
                             item.componentesNecessarios.isEmpty ||
-                            item.componentesNecessarios
-                                .any(PermissaoPorNome.acessoPermitido),
+                            item.componentesNecessarios.any(
+                              PermissaoPorNome.acessoPermitido,
+                            ),
                       )
                       .toList();
 
@@ -286,8 +301,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 20),
                         _AccessSection(
                           title: 'Operações do dia',
-                          subtitle:
-                              'Fluxos mais usados na rotina operacional.',
+                          subtitle: 'Fluxos mais usados na rotina operacional.',
                           items: _permitidos(operacoes),
                         ),
                         const SizedBox(height: 20),
@@ -371,9 +385,9 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Text(
                   'Nenhum caixa aberto neste terminal',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -593,18 +607,16 @@ class _AccessSection extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: Colors.black54),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
         ),
         const SizedBox(height: 12),
         LayoutBuilder(
@@ -612,8 +624,8 @@ class _AccessSection extends StatelessWidget {
             final columns = constraints.maxWidth >= 1100
                 ? 3
                 : constraints.maxWidth >= 700
-                    ? 2
-                    : 1;
+                ? 2
+                : 1;
             const spacing = 10.0;
             final itemWidth =
                 (constraints.maxWidth - ((columns - 1) * spacing)) / columns;

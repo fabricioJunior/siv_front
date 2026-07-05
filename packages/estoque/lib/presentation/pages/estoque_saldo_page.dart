@@ -6,17 +6,26 @@ import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
+import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
+import 'package:estoque/presentation/relatorios/pdf/estoque_relatorio_pdf_exporter.dart';
 import 'package:flutter/material.dart';
+
+typedef ObterPrecosDaTabela =
+    Future<List<PrecoReferenciaEstoque>> Function(int tabelaDePrecoId);
 
 class EstoqueSaldoPage extends StatefulWidget {
   final SeletorWidget seletorCores;
   final SeletorWidget seletorTamanhos;
+  final SeletorWidget seletorTabelaPreco;
+  final ObterPrecosDaTabela obterPrecosDaTabela;
 
   const EstoqueSaldoPage({
     super.key,
     required this.seletorCores,
     required this.seletorTamanhos,
+    required this.seletorTabelaPreco,
+    required this.obterPrecosDaTabela,
   });
 
   @override
@@ -38,6 +47,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
       FiltroDisponibilidadeEstoque.todos;
   DateTime? _atualizadoEmInicio;
   DateTime? _atualizadoEmFim;
+  SelectData? _tabelaDePrecoSelecionada;
+  bool _gerandoRelatorio = false;
 
   @override
   void initState() {
@@ -87,6 +98,32 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
       _atualizadoEmFim = intervaloSelecionado.end;
     });
     _recarregar();
+  }
+
+  Future<void> _gerarRelatorioValorEstoque() async {
+    final tabelaSelecionada = _tabelaDePrecoSelecionada;
+    if (tabelaSelecionada == null || _gerandoRelatorio) return;
+
+    setState(() => _gerandoRelatorio = true);
+    try {
+      final itens = await _bloc.carregarTodosOsItensParaRelatorio();
+      final precos = await widget.obterPrecosDaTabela(tabelaSelecionada.id);
+      await EstoqueRelatorioPdfExporter.exportarValorEstoque(
+        itens: itens,
+        precos: precos,
+        tabelaDePrecoNome: tabelaSelecionada.nome,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao gerar relatório de valor do estoque.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _gerandoRelatorio = false);
+    }
   }
 
   void _onScroll() {
@@ -233,6 +270,43 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       ),
                       const SizedBox(height: 12),
                     ],
+                    ...[
+                      widget.seletorTabelaPreco.call(
+                        onChanged: (dados) {
+                          setState(() {
+                            _tabelaDePrecoSelecionada = dados.isEmpty
+                                ? null
+                                : dados.first;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: FilledButton.icon(
+                          onPressed:
+                              _tabelaDePrecoSelecionada == null ||
+                                  _gerandoRelatorio
+                              ? null
+                              : _gerarRelatorioValorEstoque,
+                          icon: _gerandoRelatorio
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.picture_as_pdf_outlined),
+                          label: Text(
+                            _gerandoRelatorio
+                                ? 'Gerando relatório...'
+                                : 'Gerar relatório de valor do estoque',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     Expanded(
                       child: BlocBuilder<EstoqueSaldoBloc, EstoqueSaldoState>(
                         builder: (context, state) {
@@ -266,10 +340,42 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         
                           final exibirLoaderFinal =
                               state.step == EstoqueSaldoStep.carregandoMais;
-        
+
+                          final quantidadeTotal = state.itens.fold<double>(
+                            0,
+                            (soma, item) => soma + item.saldo,
+                          );
+
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Card(
+                                margin: EdgeInsets.zero,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 24,
+                                    runSpacing: 8,
+                                    children: [
+                                      _buildResumo(
+                                        context,
+                                        label: 'Produtos carregados',
+                                        valor: '${state.itens.length}',
+                                      ),
+                                      _buildResumo(
+                                        context,
+                                        label: 'Quantidade total',
+                                        valor: quantidadeTotal.round().toString(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                               Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 spacing: 12,
@@ -322,7 +428,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                               CrossAxisAlignment.end,
                                           children: [
                                             Text(
-                                              item.saldo.toStringAsFixed(2),
+                                              item.saldo.round().toString(),
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .titleMedium
@@ -355,6 +461,31 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
           ),
         );
       }
+    );
+  }
+
+  Widget _buildResumo(
+    BuildContext context, {
+    required String label,
+    required String valor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          valor,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
     );
   }
 

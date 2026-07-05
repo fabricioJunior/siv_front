@@ -190,6 +190,21 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     }
   }
 
+  Future<List<ProdutoDoEstoque>> carregarTodosOsItensParaRelatorio() async {
+    final filtro = _criarFiltro(
+      page: 1,
+      limit: state.totalItems > 0 ? state.totalItems : 100000,
+      termoBusca: state.termoBusca,
+      disponibilidadeEstoque: state.disponibilidadeEstoque,
+      atualizadoEmInicio: state.atualizadoEmInicio,
+      atualizadoEmFim: state.atualizadoEmFim,
+      corIds: state.corIdsSelecionadas,
+      tamanhoIds: state.tamanhoIdsSelecionados,
+    );
+    final saldo = await _recuperarSaldoDoEstoque(filtro: filtro);
+    return saldo.items;
+  }
+
   Future<SaldoDoEstoque> _carregarSaldoLocalAcumulado({
     required FiltroProdutoDoEstoque filtroBase,
     required int paginaAtual,

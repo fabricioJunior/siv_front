@@ -428,7 +428,7 @@ class _ExtratoTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Documento: ${item.documento}  •  ${_formatarDataHora(item.data)}',
+                    'Documento: ${item.documento}  •  ${_formatarDataHora(item.criadoEm)}',
                     style: theme.textTheme.bodySmall,
                   ),
                   if (item.observacao?.trim().isNotEmpty == true) ...[

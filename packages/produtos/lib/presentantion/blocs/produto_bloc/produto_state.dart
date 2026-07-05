@@ -30,7 +30,7 @@ class ProdutoState extends Equatable {
   const ProdutoState({
     required this.produtoStep,
     this.etapaAtual = 0,
-    this.criarCodigoBarrasAutomaticamente = false,
+    this.criarCodigoBarrasAutomaticamente = true,
     this.referenciaSelecionada,
     this.coresSelecionadas = const [],
     this.tamanhosSelecionados = const [],

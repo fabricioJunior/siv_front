@@ -76,7 +76,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
           state.copyWith(
             produtoStep: ProdutoStep.editando,
             etapaAtual: 0,
-            criarCodigoBarrasAutomaticamente: false,
+            criarCodigoBarrasAutomaticamente: true,
             referenciaSelecionada: null,
             coresSelecionadas: corInicial == null ? const [] : [corInicial],
             tamanhosSelecionados: tamanhoInicial == null

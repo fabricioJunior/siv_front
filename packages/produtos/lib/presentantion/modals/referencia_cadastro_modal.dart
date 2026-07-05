@@ -53,55 +53,100 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     return BlocProvider<ReferenciaCadastroBloc>(
       create: (context) =>
           sl<ReferenciaCadastroBloc>()..add(ReferenciaCadastroIniciou()),
-      child: BlocBuilder<ReferenciaCadastroBloc, ReferenciaCadastroState>(
-        builder: (context, state) {
-          _syncControllers(state);
+      child: BlocListener<ReferenciaCadastroBloc, ReferenciaCadastroState>(
+        listenWhen: (previous, current) =>
+            previous.step != ReferenciaCadastroStep.resumo &&
+            current.step == ReferenciaCadastroStep.resumo,
+        listener: (context, state) {
+          _continuarFluxoAutomaticamente(
+            context,
+            referenciaId: state.referenciaId,
+            referenciaNome: state.nome,
+          );
+        },
+        child: BlocBuilder<ReferenciaCadastroBloc, ReferenciaCadastroState>(
+          builder: (context, state) {
+            _syncControllers(state);
 
-          return SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Material(
-              color: Colors.white,
-              child: SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 16,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeader(context, state),
-                      const SizedBox(height: 12),
-                      if (state.carregandoCategorias ||
-                          state.carregandoSubCategorias)
-                        const Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Center(
-                            child: CircularProgressIndicator.adaptive(),
+            return SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: Material(
+                color: Colors.white,
+                child: SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 16,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(context, state),
+                        const SizedBox(height: 12),
+                        if (state.carregandoCategorias ||
+                            state.carregandoSubCategorias)
+                          const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
+                          )
+                        else
+                          Expanded(child: _buildStepContent(context, state)),
+                        if (state.mensagem != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              state.mensagem!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ),
-                        )
-                      else
-                        Expanded(child: _buildStepContent(context, state)),
-                      if (state.mensagem != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            state.mensagem!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      _buildActions(context, state),
-                    ],
+                        const SizedBox(height: 16),
+                        _buildActions(context, state),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  Future<void> _continuarFluxoAutomaticamente(
+    BuildContext context, {
+    required int? referenciaId,
+    required String? referenciaNome,
+  }) async {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    navigator.pop(true);
+
+    if (referenciaId == null) {
+      return;
+    }
+
+    final tabelaDePrecoId = await navigator.pushNamed(
+      '/selecionar_tabela_de_preco',
+    );
+
+    if (tabelaDePrecoId != null) {
+      await navigator.pushNamed(
+        '/preco_da_referencia_page',
+        arguments: {
+          'tabelaDePrecoId': tabelaDePrecoId,
+          'referenciaId': referenciaId,
+          'referenciaNome': referenciaNome ?? '',
+        },
+      );
+    }
+
+    await navigator.pushNamed(
+      '/produto',
+      arguments: {'referenciaId': referenciaId},
     );
   }
 
@@ -195,18 +240,36 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: _categoriaSearchController,
-          decoration: const InputDecoration(
-            labelText: 'Buscar categoria',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            setState(() {
-              _categoriaQuery = value;
-            });
-          },
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _categoriaSearchController,
+                decoration: const InputDecoration(
+                  labelText: 'Buscar categoria',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _categoriaQuery = value;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton.icon(
+              onPressed: () async {
+                final bloc = context.read<ReferenciaCadastroBloc>();
+                final salvou = await CategoriaModal.show(context: context);
+                if (salvou == true) {
+                  bloc.add(ReferenciaCadastroIniciou());
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Cadastrar categoria'),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -249,18 +312,51 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: _subCategoriaSearchController,
-          decoration: const InputDecoration(
-            labelText: 'Buscar sub-categoria',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            setState(() {
-              _subCategoriaQuery = value;
-            });
-          },
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _subCategoriaSearchController,
+                decoration: const InputDecoration(
+                  labelText: 'Buscar sub-categoria',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _subCategoriaQuery = value;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton.icon(
+              onPressed: () async {
+                final bloc = context.read<ReferenciaCadastroBloc>();
+                final categoria = state.categoria;
+                if (categoria?.id == null) {
+                  return;
+                }
+                final salvou = await showDialog<bool>(
+                  context: context,
+                  builder: (_) =>
+                      SubCategoriaPage(categoriaId: categoria!.id!),
+                );
+                if (salvou == true) {
+                  // Recarrega sub-categorias da categoria atual; o bloc
+                  // sempre volta a etapa para "categoria" nesse evento,
+                  // então o usuário clica em "Próximo" de novo.
+                  bloc.add(
+                    ReferenciaCadastroCategoriaSelecionada(
+                      categoria: categoria!,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Cadastrar sub-categoria'),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -419,6 +515,22 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: const [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Referencia criada! Continuando para definir o preco e cadastrar os produtos...',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         _ResumoItem(label: 'Categoria', value: state.categoria?.nome ?? '- '),
         _ResumoItem(
           label: 'Sub-categoria',
@@ -462,51 +574,7 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
 
   Widget _buildActions(BuildContext context, ReferenciaCadastroState state) {
     if (state.step == ReferenciaCadastroStep.resumo) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ElevatedButton.icon(
-            onPressed: () {
-              final referenciaId = state.referenciaId;
-              Navigator.of(context).pop(true);
-              Navigator.of(context).pushNamed(
-                '/produto',
-                arguments: {'referenciaId': referenciaId},
-              );
-            },
-            icon: const Icon(Icons.checkroom_outlined),
-            label: const Text('Cadastrar produtos desta referencia'),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.read<ReferenciaCadastroBloc>().add(
-                      ReferenciaCadastroReiniciar(),
-                    );
-                  },
-                  child: const Text('Criar nova referencia'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                    Navigator.of(context).pushNamed(
-                      '/referencia',
-                      arguments: {'idReferencia': state.referenciaId},
-                    );
-                  },
-                  child: const Text('Ver pagina da referencia'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
+      return const SizedBox.shrink();
     }
 
     return Row(

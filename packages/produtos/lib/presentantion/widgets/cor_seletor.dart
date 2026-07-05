@@ -3,7 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
-import 'package:produtos/presentantion/blocs/cores_bloc/cores_bloc.dart';
+import 'package:produtos/presentation.dart';
 
 enum CorSeletorModo { unica, multipla }
 
@@ -146,6 +146,13 @@ class _CorSeletorState extends State<CorSeletor> {
               );
             },
             confirmarEmSeparadores: const [',', ';'],
+            cadastrarLabel: 'Cadastrar cor',
+            onCadastrarPressed: () async {
+              final salvou = await CorModal.show(context: context);
+              if (salvou == true) {
+                _coresBloc.add(CoresIniciou());
+              }
+            },
           );
         },
       ),

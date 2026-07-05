@@ -111,18 +111,49 @@ class _CategoriaSubCategoriaSelecaoModalState
                       children: [
                         if (state.step ==
                             CategoriaSubCategoriaSelecaoStep.categoria)
-                          TextField(
-                            controller: _categoriaSearchController,
-                            decoration: const InputDecoration(
-                              labelText: 'Buscar categoria',
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _categoriaQuery = value;
-                              });
-                            },
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _categoriaSearchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar categoria',
+                                    prefixIcon: Icon(Icons.search),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _categoriaQuery = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  final bloc = context
+                                      .read<CategoriaSubCategoriaSelecaoBloc>();
+                                  final categoriaAtualId =
+                                      state.categoriaSelecionada?.id;
+                                  final subCategoriaAtualId =
+                                      state.subCategoriaSelecionada?.id;
+                                  final salvou = await CategoriaModal.show(
+                                    context: context,
+                                  );
+                                  if (salvou == true) {
+                                    bloc.add(
+                                      CategoriaSubCategoriaSelecaoIniciou(
+                                        categoriaAtualId: categoriaAtualId,
+                                        subCategoriaAtualId:
+                                            subCategoriaAtualId,
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('Cadastrar categoria'),
+                              ),
+                            ],
                           ),
                         if (state.step ==
                             CategoriaSubCategoriaSelecaoStep.categoria)
@@ -178,18 +209,50 @@ class _CategoriaSubCategoriaSelecaoModalState
                           ),
                         if (state.step ==
                             CategoriaSubCategoriaSelecaoStep.subCategoria)
-                          TextField(
-                            controller: _subCategoriaSearchController,
-                            decoration: const InputDecoration(
-                              labelText: 'Buscar sub-categoria',
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _subCategoriaQuery = value;
-                              });
-                            },
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _subCategoriaSearchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar sub-categoria',
+                                    prefixIcon: Icon(Icons.search),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _subCategoriaQuery = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  final bloc = context
+                                      .read<CategoriaSubCategoriaSelecaoBloc>();
+                                  final categoriaAtualId =
+                                      state.categoriaSelecionada!.id!;
+                                  final salvou = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => SubCategoriaPage(
+                                      categoriaId: categoriaAtualId,
+                                    ),
+                                  );
+                                  if (salvou == true) {
+                                    bloc.add(
+                                      CategoriaSubCategoriaSelecaoIniciou(
+                                        categoriaAtualId: categoriaAtualId,
+                                        subCategoriaAtualId:
+                                            state.subCategoriaSelecionada?.id,
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('Cadastrar sub-categoria'),
+                              ),
+                            ],
                           ),
                         if (state.step ==
                             CategoriaSubCategoriaSelecaoStep.subCategoria)

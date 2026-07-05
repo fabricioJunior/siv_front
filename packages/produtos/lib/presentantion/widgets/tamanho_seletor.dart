@@ -2,7 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
-import 'package:produtos/presentantion/blocs/tamanhos_bloc/tamanhos_bloc.dart';
+import 'package:produtos/presentation.dart';
 import 'package:core/seletores.dart';
 
 enum TamanhoSeletorModo { unica, multipla }
@@ -146,6 +146,13 @@ class _TamanhoSeletorState extends State<TamanhoSeletor> {
                 nome: item.nome,
                 data: {'tamanho': item.toString()},
               );
+            },
+            cadastrarLabel: 'Cadastrar tamanho',
+            onCadastrarPressed: () async {
+              final salvou = await TamanhoModal.show(context: context);
+              if (salvou == true) {
+                _tamanhosBloc.add(TamanhosIniciou(inativo: false));
+              }
             },
           );
         },

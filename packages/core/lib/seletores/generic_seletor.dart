@@ -74,6 +74,12 @@ class SeletorGenerico<T> extends StatefulWidget {
 
   final bool onlyView;
 
+  /// Callback opcional para abrir o cadastro de um novo item.
+  final VoidCallback? onCadastrarPressed;
+
+  /// Rótulo do botão de cadastro, exibido quando [onCadastrarPressed] é informado.
+  final String cadastrarLabel;
+
   const SeletorGenerico({
     super.key,
     required this.itens,
@@ -91,6 +97,8 @@ class SeletorGenerico<T> extends StatefulWidget {
     this.sugestaoTrailingBuilder,
     this.confirmarEmSeparadores = const [],
     this.onlyView = false,
+    this.onCadastrarPressed,
+    this.cadastrarLabel = 'Cadastrar novo',
   });
 
   @override
@@ -173,6 +181,15 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             Expanded(
               child: Text(widget.titulo, style: theme.textTheme.titleMedium),
             ),
+            if (!widget.onlyView && widget.onCadastrarPressed != null)
+              TextButton.icon(
+                onPressed: widget.onCadastrarPressed,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(widget.cadastrarLabel),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
             if (!widget.onlyView)
               Chip(
                 label: Text(

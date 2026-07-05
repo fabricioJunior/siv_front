@@ -3,7 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
-import 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.dart';
+import 'package:produtos/presentation.dart';
 
 enum ReferenciaSeletorModo { unica, multipla }
 
@@ -154,6 +154,21 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
                 nome: item.nome,
                 data: {'referencia': item.toString()},
               );
+            },
+            cadastrarLabel: 'Cadastrar referência',
+            onCadastrarPressed: () async {
+              final salvou = await ReferenciaCadastroModal.show(
+                context: context,
+              );
+              if (salvou == true) {
+                _referenciasBloc.add(
+                  ReferenciasIniciou(
+                    inativo: false,
+                    idsReferenciasSelecionadasIniciais:
+                        widget.idReferenciasSelecionadasIniciais,
+                  ),
+                );
+              }
             },
           );
         },

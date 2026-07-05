@@ -462,30 +462,48 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
 
   Widget _buildActions(BuildContext context, ReferenciaCadastroState state) {
     if (state.step == ReferenciaCadastroStep.resumo) {
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                context.read<ReferenciaCadastroBloc>().add(
-                  ReferenciaCadastroReiniciar(),
-                );
-              },
-              child: const Text('Criar nova referencia'),
-            ),
+          ElevatedButton.icon(
+            onPressed: () {
+              final referenciaId = state.referenciaId;
+              Navigator.of(context).pop(true);
+              Navigator.of(context).pushNamed(
+                '/produto',
+                arguments: {'referenciaId': referenciaId},
+              );
+            },
+            icon: const Icon(Icons.checkroom_outlined),
+            label: const Text('Cadastrar produtos desta referencia'),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-                Navigator.of(context).pushNamed(
-                  '/referencia',
-                  arguments: {'idReferencia': state.referenciaId},
-                );
-              },
-              child: const Text('Ir para pagina da referencia'),
-            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    context.read<ReferenciaCadastroBloc>().add(
+                      ReferenciaCadastroReiniciar(),
+                    );
+                  },
+                  child: const Text('Criar nova referencia'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                    Navigator.of(context).pushNamed(
+                      '/referencia',
+                      arguments: {'idReferencia': state.referenciaId},
+                    );
+                  },
+                  child: const Text('Ver pagina da referencia'),
+                ),
+              ),
+            ],
           ),
         ],
       );

@@ -16,7 +16,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
   @override
   final Function(List<SelectData>)? onChanged;
 
-  final String titulo;
+  final String? titulo;
   final TipoFuncionario? tipoFuncionario;
 
   final bool onlyView;
@@ -27,7 +27,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
     this.funcionariosSelecionadosIniciais = const [],
     required this.itemsSelecionadosInicial,
     this.onFuncionarioChanged,
-    this.titulo = 'Funcionários',
+    this.titulo,
     this.tipoFuncionario,
     this.onChanged,
     this.onlyView = false,
@@ -145,7 +145,10 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
                     .toList(),
               );
             },
-            titulo: widget.titulo,
+            titulo: widget.titulo ??
+                (widget.modo == FuncionarioSeletorModo.unica
+                    ? 'Funcionário'
+                    : 'Funcionários'),
             hintText: 'Digite para buscar um funcionário',
             sugestaoLeadingBuilder: (context, _) {
               final colorScheme = Theme.of(context).colorScheme;

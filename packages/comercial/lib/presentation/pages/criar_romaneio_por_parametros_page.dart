@@ -217,25 +217,20 @@ class _SucessoRomaneioView extends StatelessWidget {
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Romaneio criado com sucesso',
-                      style: theme.textTheme.titleMedium,
+                    Expanded(
+                      child: Text(
+                        'Entrada de produtos realizada com sucesso!',
+                        style: theme.textTheme.titleMedium,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text('Romaneio ID: ${romaneio?.id ?? '-'}'),
                 Text('Operação: ${romaneio?.operacao?.descricao ?? '-'}'),
-                Text('Funcionário ID: ${romaneio?.funcionarioId ?? '-'}'),
-                Text('Tabela de preço ID: ${romaneio?.tabelaPrecoId ?? '-'}'),
                 Text('Situação: ${romaneio?.situacao ?? '-'}'),
-                Text('Itens enviados: $quantidadeItens'),
-                if (romaneio?.quantidade != null)
-                  Text('Quantidade: ${romaneio!.quantidade}'),
+                Text('Quantidade de produtos: $quantidadeItens'),
                 if (romaneio?.valorBruto != null)
-                  Text('Valor bruto: ${romaneio!.valorBruto}'),
-                if (romaneio?.valorLiquido != null)
-                  Text('Valor líquido: ${romaneio!.valorLiquido}'),
+                  Text('Valor de entrada: ${romaneio!.valorBruto}'),
               ],
             ),
           ),
@@ -267,7 +262,7 @@ class _SucessoRomaneioView extends StatelessWidget {
             _resultadoRomaneioStatusKey: _resultadoRomaneioStatusSucesso,
             _resultadoRomaneioIdKey: romaneio?.id,
           }),
-          child: const Text('Fechar'),
+          child: const Text('Voltar'),
         ),
       ],
     );

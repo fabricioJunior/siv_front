@@ -150,7 +150,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
       initialData: commonData.dadosSincronizados,
       stream: commonData.sincronizandoDados,
       builder: (context, asyncSnapshot) {
-        if(asyncSnapshot.data == true){
+        if (asyncSnapshot.data == true) {
           return Scaffold(
             appBar: AppBar(title: const Text('Saldo de Estoque')),
             body: const Center(
@@ -168,7 +168,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
               ),
             ),
           );
-
         }
         return BlocProvider<EstoqueSaldoBloc>.value(
           value: _bloc,
@@ -194,7 +193,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       children: [
                         ChoiceChip(
                           label: const Text('Todos'),
-                          selected: _disponibilidadeEstoque ==
+                          selected:
+                              _disponibilidadeEstoque ==
                               FiltroDisponibilidadeEstoque.todos,
                           onSelected: (_) {
                             setState(() {
@@ -206,7 +206,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                         ),
                         ChoiceChip(
                           label: const Text('Com estoque'),
-                          selected: _disponibilidadeEstoque ==
+                          selected:
+                              _disponibilidadeEstoque ==
                               FiltroDisponibilidadeEstoque.comEstoque,
                           onSelected: (_) {
                             setState(() {
@@ -218,7 +219,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                         ),
                         ChoiceChip(
                           label: const Text('Sem estoque'),
-                          selected: _disponibilidadeEstoque ==
+                          selected:
+                              _disponibilidadeEstoque ==
                               FiltroDisponibilidadeEstoque.semEstoque,
                           onSelected: (_) {
                             setState(() {
@@ -232,12 +234,14 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                           onPressed: _selecionarPeriodoAtualizacao,
                           icon: const Icon(Icons.calendar_today_outlined),
                           label: Text(
-                            _atualizadoEmInicio == null || _atualizadoEmFim == null
+                            _atualizadoEmInicio == null ||
+                                    _atualizadoEmFim == null
                                 ? 'Atualizado em (intervalo)'
                                 : 'Atualizado: ${_formatDateOnly(_atualizadoEmInicio!)} - ${_formatDateOnly(_atualizadoEmFim!)}',
                           ),
                         ),
-                        if (_atualizadoEmInicio != null || _atualizadoEmFim != null)
+                        if (_atualizadoEmInicio != null ||
+                            _atualizadoEmFim != null)
                           TextButton.icon(
                             onPressed: () {
                               setState(() {
@@ -316,7 +320,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                               child: CircularProgressIndicator.adaptive(),
                             );
                           }
-        
+
                           if (state.step == EstoqueSaldoStep.falha &&
                               state.itens.isEmpty) {
                             return Center(
@@ -325,19 +329,21 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                               ),
                             );
                           }
-        
+
                           if (state.itens.isEmpty) {
                             if (state.sincronizando) {
-                              return Center(child: _buildSincronizando(context));
+                              return Center(
+                                child: _buildSincronizando(context),
+                              );
                             }
-        
+
                             return const Center(
                               child: Text(
                                 'Nenhum item encontrado para os filtros informados.',
                               ),
                             );
                           }
-        
+
                           final exibirLoaderFinal =
                               state.step == EstoqueSaldoStep.carregandoMais;
 
@@ -357,7 +363,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                     vertical: 12,
                                   ),
                                   child: Wrap(
-                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     spacing: 24,
                                     runSpacing: 8,
                                     children: [
@@ -369,7 +376,9 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                       _buildResumo(
                                         context,
                                         label: 'Quantidade total',
-                                        valor: quantidadeTotal.round().toString(),
+                                        valor: quantidadeTotal
+                                            .round()
+                                            .toString(),
                                       ),
                                     ],
                                   ),
@@ -383,7 +392,9 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                 children: [
                                   Text(
                                     'Total encontrado: ${state.totalItems}',
-                                    style: Theme.of(context).textTheme.labelLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelLarge,
                                   ),
                                   if (state.sincronizando)
                                     _buildSincronizando(context),
@@ -401,14 +412,16 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                   itemBuilder: (context, index) {
                                     if (index >= state.itens.length) {
                                       return const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 12),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
                                         child: Center(
                                           child:
                                               CircularProgressIndicator.adaptive(),
                                         ),
                                       );
                                     }
-        
+
                                     final item = state.itens[index];
                                     final unidadeMedida =
                                         item.unidadeMedida?.trim().isNotEmpty ==
@@ -460,7 +473,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
             ),
           ),
         );
-      }
+      },
     );
   }
 

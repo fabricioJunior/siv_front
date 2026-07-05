@@ -19,7 +19,7 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
   @override
   final Function(List<SelectData>)? onChanged;
 
-  final String titulo;
+  final String? titulo;
 
   final bool onlyView;
 
@@ -29,7 +29,7 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
     this.itemsSelecionadosInicial,
     this.tabelasSelecionadasIniciais = const [],
     this.onTabelaDePrecoChanged,
-    this.titulo = 'Tabelas de preço',
+    this.titulo,
     this.onChanged,
     this.onlyView = false,
   });
@@ -161,7 +161,10 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
                     .toList(),
               );
             },
-            titulo: widget.titulo,
+            titulo: widget.titulo ??
+                (widget.modo == TabelasDePrecoSeletorModo.unica
+                    ? 'Tabela de preço'
+                    : 'Tabelas de preço'),
             hintText: 'Digite para buscar uma tabela de preço',
             maxSugestoes: 5,
             chipAvatarBuilder: (context, item) =>

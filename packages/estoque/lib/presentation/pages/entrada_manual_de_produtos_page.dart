@@ -94,7 +94,7 @@ class _EntradaManulDeProdutosPageState
               if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Romaneio criado com sucesso.'),
+                    content: Text('Entrada de produtos realizada com sucesso!'),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -199,9 +199,7 @@ class _EntradaManulDeProdutosPageState
                                   )
                                 : const Icon(Icons.save_outlined),
                             label: Text(
-                              state.salvando
-                                  ? 'Salvando lista...'
-                                  : 'Criar romaneio',
+                              state.salvando ? 'Salvando lista...' : 'Salvar',
                             ),
                           );
                         },

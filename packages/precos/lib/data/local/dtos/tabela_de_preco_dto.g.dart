@@ -21,8 +21,9 @@ const TabelaDePrecoDtoSchema = CollectionSchema(
     r'id': PropertySchema(id: 1, name: r'id', type: IsarType.long),
     r'inativa': PropertySchema(id: 2, name: r'inativa', type: IsarType.bool),
     r'nome': PropertySchema(id: 3, name: r'nome', type: IsarType.string),
+    r'padrao': PropertySchema(id: 4, name: r'padrao', type: IsarType.bool),
     r'terminador': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'terminador',
       type: IsarType.double,
     ),
@@ -63,7 +64,8 @@ void _tabelaDePrecoDtoSerialize(
   writer.writeLong(offsets[1], object.id);
   writer.writeBool(offsets[2], object.inativa);
   writer.writeString(offsets[3], object.nome);
-  writer.writeDouble(offsets[4], object.terminador);
+  writer.writeBool(offsets[4], object.padrao);
+  writer.writeDouble(offsets[5], object.terminador);
 }
 
 TabelaDePrecoDto _tabelaDePrecoDtoDeserialize(
@@ -76,7 +78,8 @@ TabelaDePrecoDto _tabelaDePrecoDtoDeserialize(
     id: reader.readLongOrNull(offsets[1]),
     inativa: reader.readBool(offsets[2]),
     nome: reader.readString(offsets[3]),
-    terminador: reader.readDoubleOrNull(offsets[4]),
+    padrao: reader.readBoolOrNull(offsets[4]) ?? false,
+    terminador: reader.readDoubleOrNull(offsets[5]),
   );
   return object;
 }
@@ -97,6 +100,8 @@ P _tabelaDePrecoDtoDeserializeProp<P>(
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 5:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -535,6 +540,15 @@ extension TabelaDePrecoDtoQueryFilter
   }
 
   QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterFilterCondition>
+  padraoEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'padrao', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterFilterCondition>
   terminadorIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -691,6 +705,20 @@ extension TabelaDePrecoDtoQuerySortBy
   }
 
   QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
+  sortByPadrao() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'padrao', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
+  sortByPadraoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'padrao', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
   sortByTerminador() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'terminador', Sort.asc);
@@ -776,6 +804,20 @@ extension TabelaDePrecoDtoQuerySortThenBy
   }
 
   QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
+  thenByPadrao() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'padrao', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
+  thenByPadraoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'padrao', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QAfterSortBy>
   thenByTerminador() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'terminador', Sort.asc);
@@ -821,6 +863,13 @@ extension TabelaDePrecoDtoQueryWhereDistinct
   }
 
   QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QDistinct>
+  distinctByPadrao() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'padrao');
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, TabelaDePrecoDto, QDistinct>
   distinctByTerminador() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'terminador');
@@ -857,6 +906,12 @@ extension TabelaDePrecoDtoQueryProperty
   QueryBuilder<TabelaDePrecoDto, String, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
+    });
+  }
+
+  QueryBuilder<TabelaDePrecoDto, bool, QQueryOperations> padraoProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'padrao');
     });
   }
 

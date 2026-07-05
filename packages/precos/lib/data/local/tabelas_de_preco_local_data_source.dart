@@ -16,6 +16,7 @@ class TabelasDePrecoLocalDataSource
       inativa: entity.inativa,
       nome: entity.nome,
       terminador: entity.terminador,
+      padrao: entity.padrao,
     );
   }
 

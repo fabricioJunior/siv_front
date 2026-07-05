@@ -11,10 +11,12 @@ class CriarTabelaDePreco {
   Future<TabelaDePreco> call({
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     return _tabelasDePrecoRepository.criarTabelaDePreco(
       nome: nome,
       terminador: terminador,
+      padrao: padrao,
     );
   }
 }

@@ -12,11 +12,13 @@ class AtualizarTabelaDePreco {
     required int id,
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     return _tabelasDePrecoRepository.atualizarTabelaDePreco(
       id: id,
       nome: nome,
       terminador: terminador,
+      padrao: padrao,
     );
   }
 }

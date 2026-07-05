@@ -12,6 +12,7 @@ TabelaDePrecoDto _$TabelaDePrecoDtoFromJson(Map<String, dynamic> json) =>
       nome: json['nome'] as String,
       terminador: (json['terminador'] as num?)?.toDouble(),
       inativa: json['inativa'] as bool,
+      padrao: json['padrao'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TabelaDePrecoDtoToJson(TabelaDePrecoDto instance) =>
@@ -20,4 +21,5 @@ Map<String, dynamic> _$TabelaDePrecoDtoToJson(TabelaDePrecoDto instance) =>
       'nome': instance.nome,
       'terminador': instance.terminador,
       'inativa': instance.inativa,
+      'padrao': instance.padrao,
     };

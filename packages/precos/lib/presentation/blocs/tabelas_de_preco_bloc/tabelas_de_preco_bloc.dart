@@ -31,9 +31,9 @@ class TabelasDePrecoBloc
         nome: event.busca,
         inativa: event.inativa,
       );
-      var tabela = tabelas
-          .where((t) => t.id == event.tabelaInicialId)
-          .firstOrNull;
+      var tabela = event.tabelaInicialId != null
+          ? tabelas.where((t) => t.id == event.tabelaInicialId).firstOrNull
+          : tabelas.where((t) => t.padrao && !t.inativa).firstOrNull;
       emit(
         TabelasDePrecoCarregarSucesso(
           tabelas: tabelas.toList(),

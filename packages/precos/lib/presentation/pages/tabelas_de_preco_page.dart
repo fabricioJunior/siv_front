@@ -4,6 +4,7 @@ import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:precos/models.dart';
 import 'package:precos/presentation.dart';
+import 'package:precos/use_cases.dart';
 
 class TabelasDePrecoPage extends StatelessWidget {
   final bloc = sl<TabelasDePrecoBloc>();
@@ -142,12 +143,27 @@ class TabelasDePrecoPage extends StatelessWidget {
           // ignore: use_build_context_synchronously
           context.read<TabelasDePrecoBloc>().add(TabelasDePrecoIniciou());
         },
-        title: Text(
-          tabela.nome,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            decoration: isInativa ? TextDecoration.lineThrough : null,
-          ),
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                tabela.nome,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  decoration: isInativa ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            if (tabela.padrao) ...[
+              const SizedBox(width: 8),
+              const Chip(
+                label: Text('Padrão'),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,14 +179,33 @@ class TabelasDePrecoPage extends StatelessWidget {
               ),
           ],
         ),
-        trailing: !isInativa
-            ? IconButton(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isInativa && !tabela.padrao)
+              IconButton(
+                icon: const Icon(Icons.star_outline),
+                tooltip: 'Tornar padrão',
+                onPressed: () async {
+                  await sl<AtualizarTabelaDePreco>().call(
+                    id: tabela.id!,
+                    nome: tabela.nome,
+                    terminador: tabela.terminador,
+                    padrao: true,
+                  );
+                  // ignore: use_build_context_synchronously
+                  context.read<TabelasDePrecoBloc>().add(TabelasDePrecoIniciou());
+                },
+              ),
+            if (!isInativa)
+              IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () {
                   _showDeleteConfirmation(context, tabela);
                 },
-              )
-            : null,
+              ),
+          ],
+        ),
       ),
     );
   }

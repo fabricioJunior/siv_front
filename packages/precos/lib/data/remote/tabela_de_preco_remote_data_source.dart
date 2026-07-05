@@ -12,9 +12,13 @@ class TabelaDePrecoRemoteDataSource extends RemoteDataSourceBase
     required int id,
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     var pathParamenters = {'id': id.toString()};
-    var body = {'nome': nome, 'terminador': terminador};
+    var body = <String, dynamic>{'nome': nome, 'terminador': terminador};
+    if (padrao != null) {
+      body['padrao'] = padrao;
+    }
     var response = put(pathParameters: pathParamenters, body: body);
     return response.then((res) => TabelaDePrecoDto.fromJson(res.body));
   }
@@ -23,10 +27,14 @@ class TabelaDePrecoRemoteDataSource extends RemoteDataSourceBase
   Future<TabelaDePreco> createTabelaDePreco({
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     final body = <String, dynamic>{'nome': nome};
     if (terminador != null) {
       body['terminador'] = terminador;
+    }
+    if (padrao != null) {
+      body['padrao'] = padrao;
     }
     var response = post(body: body);
     return response.then((res) => TabelaDePrecoDto.fromJson(res.body));

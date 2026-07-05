@@ -17,11 +17,16 @@ class TabelaDePrecoIniciou extends TabelaDePrecoEvent {
 class TabelaDePrecoEditou extends TabelaDePrecoEvent {
   final String nome;
   final double? terminador;
+  final bool padrao;
 
-  TabelaDePrecoEditou({required this.nome, this.terminador});
+  TabelaDePrecoEditou({
+    required this.nome,
+    this.terminador,
+    this.padrao = false,
+  });
 
   @override
-  List<Object?> get props => [nome, terminador];
+  List<Object?> get props => [nome, terminador, padrao];
 }
 
 class TabelaDePreceSalvou extends TabelaDePrecoEvent {

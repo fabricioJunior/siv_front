@@ -17,11 +17,15 @@ class TabelaDePrecoDto implements TabelaDePreco {
   @override
   final bool inativa;
 
+  @override
+  final bool padrao;
+
   TabelaDePrecoDto({
     this.id,
     required this.nome,
     this.terminador,
     required this.inativa,
+    this.padrao = false,
   });
 
   factory TabelaDePrecoDto.fromJson(Map<String, dynamic> json) =>
@@ -30,7 +34,7 @@ class TabelaDePrecoDto implements TabelaDePreco {
   Map<String, dynamic> toJson() => _$TabelaDePrecoDtoToJson(this);
 
   @override
-  List<Object?> get props => [id, nome, terminador, inativa];
+  List<Object?> get props => [id, nome, terminador, inativa, padrao];
 
   @override
   bool? get stringify => true;

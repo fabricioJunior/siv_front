@@ -63,6 +63,7 @@ class TabelaDePrecoBloc
         tabelaDePrecoStep: TabelaDePrecoStep.editando,
         nome: event.nome,
         terminador: event.terminador,
+        padrao: event.padrao,
       ),
     );
   }
@@ -79,12 +80,14 @@ class TabelaDePrecoBloc
           id: state.id!,
           nome: state.nome!,
           terminador: state.terminador,
+          padrao: state.padrao,
         );
         emit(TabelaDePrecoState.fromModel(tabela, step: TabelaDePrecoStep.salvo));
       } else {
         final tabela = await _criarTabelaDePreco.call(
           nome: state.nome!,
           terminador: state.terminador,
+          padrao: state.padrao,
         );
         emit(TabelaDePrecoState.fromModel(tabela, step: TabelaDePrecoStep.criado));
       }

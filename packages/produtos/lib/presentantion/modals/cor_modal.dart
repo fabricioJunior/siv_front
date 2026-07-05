@@ -33,115 +33,121 @@ class CorModal extends StatelessWidget {
             Navigator.of(context).pop(true);
           }
         },
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          floatingActionButton: BlocBuilder<CorBloc, CorState>(
-            builder: (context, state) {
-              if (state.corStep == CorStep.carregando) {
-                return const FloatingActionButton(
-                  onPressed: null,
-                  child: CircularProgressIndicator.adaptive(),
-                );
-              }
-
-              return FloatingActionButton(
-                child: const Icon(Icons.check),
-                onPressed: () {
-                  if (formKey.currentState?.validate() ?? false) {
-                    context.read<CorBloc>().add(CorSalvou());
-                  }
-                },
-              );
-            },
-          ),
-          body: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: BlocBuilder<CorBloc, CorState>(
-              builder: (context, state) {
-                if (state.corStep == CorStep.carregando) {
-                  return const Center(
-                    child: CircularProgressIndicator.adaptive(),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+              ),
+              child: BlocBuilder<CorBloc, CorState>(
+                builder: (context, state) {
+                  if (state.corStep == CorStep.carregando) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
+                    );
+                  }
+
+                  if (state.corStep == CorStep.falha) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: Text('Erro ao carregar cor')),
+                    );
+                  }
+
+                  // Atualiza o controller quando o estado carrega uma cor
+                  if (state.nome != null && nomeController.text.isEmpty) {
+                    nomeController.text = state.nome!;
+                  }
+
+                  return Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          idCor == null ? 'Nova Cor' : 'Editar Cor',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              'ID',
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              state.id?.toString() ?? 'Novo',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Nome'),
+                        TextFormField(
+                          controller: nomeController,
+                          maxLength: 50,
+                          autofocus: true,
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: Vermelho, Azul, Verde',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Informe o nome da cor';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            context.read<CorBloc>().add(
+                              CorEditou(nome: value),
+                            );
+                          },
+                          onFieldSubmitted: (_) {
+                            if (formKey.currentState?.validate() ?? false) {
+                              context.read<CorBloc>().add(CorSalvou());
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        if (state.corStep == CorStep.falha)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Erro ao salvar cor',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              if (formKey.currentState?.validate() ?? false) {
+                                context.read<CorBloc>().add(CorSalvou());
+                              }
+                            },
+                            icon: const Icon(Icons.check),
+                            label: const Text('Salvar'),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
-                }
-
-                if (state.corStep == CorStep.falha) {
-                  return const Center(child: Text('Erro ao carregar cor'));
-                }
-
-                // Atualiza o controller quando o estado carrega uma cor
-                if (state.nome != null && nomeController.text.isEmpty) {
-                  nomeController.text = state.nome!;
-                }
-
-                return Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        idCor == null ? 'Nova Cor' : 'Editar Cor',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            'ID',
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            state.id?.toString() ?? 'Novo',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Nome'),
-                      TextFormField(
-                        controller: nomeController,
-                        maxLength: 50,
-                        autofocus: true,
-                        textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          hintText: 'Ex: Vermelho, Azul, Verde',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Informe o nome da cor';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          context.read<CorBloc>().add(CorEditou(nome: value));
-                        },
-                        onFieldSubmitted: (_) {
-                          if (formKey.currentState?.validate() ?? false) {
-                            context.read<CorBloc>().add(CorSalvou());
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      if (state.corStep == CorStep.falha)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            'Erro ao salvar cor',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
+                },
+              ),
             ),
           ),
         ),

@@ -15,7 +15,10 @@ class TabelaDePrecoDto implements TabelaDePreco, IsarDto {
   final String nome;
 
   @override
-  List<Object?> get props => [id, inativa, nome];
+  final bool padrao;
+
+  @override
+  List<Object?> get props => [id, inativa, nome, padrao];
 
   @override
   bool? get stringify => true;
@@ -28,6 +31,7 @@ class TabelaDePrecoDto implements TabelaDePreco, IsarDto {
     required this.inativa,
     required this.nome,
     required this.terminador,
+    this.padrao = false,
   });
 
   @override

@@ -161,9 +161,12 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final sugestoes = _filtrarSugestoes(widget.itens);
+    final busca = _buscaController.text.trim();
+    final sugestoes = busca.isEmpty
+        ? _sugestoesPadrao(widget.itens)
+        : _filtrarSugestoes(widget.itens);
     _sugestoesAtuais = sugestoes;
-    _deveExibirSugestoes = _buscaController.text.trim().isNotEmpty;
+    _deveExibirSugestoes = _buscaFocusNode.hasFocus && sugestoes.isNotEmpty;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -421,6 +424,20 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     });
 
     widget.onChanged?.call(_selecionados);
+  }
+
+  static const int _quantidadeSugestoesAoFoco = 4;
+
+  List<T> _sugestoesPadrao(List<T> itens) {
+    final disponiveis = itens.where((item) {
+      final selecionado = _isSelecionado(item);
+      if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    return disponiveis.take(_quantidadeSugestoesAoFoco).toList();
   }
 
   List<T> _filtrarSugestoes(List<T> itens) {

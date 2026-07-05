@@ -16,6 +16,7 @@ class TabelaDePrecoState extends Equatable {
   final int? id;
   final bool inativa;
   final double? terminador;
+  final bool padrao;
 
   const TabelaDePrecoState({
     required this.tabelaDePrecoStep,
@@ -23,6 +24,7 @@ class TabelaDePrecoState extends Equatable {
     this.id,
     this.inativa = false,
     this.terminador,
+    this.padrao = false,
   });
 
   factory TabelaDePrecoState.fromModel(
@@ -35,6 +37,7 @@ class TabelaDePrecoState extends Equatable {
       id: tabela.id,
       inativa: tabela.inativa,
       terminador: tabela.terminador,
+      padrao: tabela.padrao,
     );
   }
 
@@ -44,6 +47,7 @@ class TabelaDePrecoState extends Equatable {
     int? id,
     bool? inativa,
     double? terminador,
+    bool? padrao,
   }) {
     return TabelaDePrecoState(
       tabelaDePrecoStep: tabelaDePrecoStep ?? this.tabelaDePrecoStep,
@@ -51,9 +55,11 @@ class TabelaDePrecoState extends Equatable {
       id: id ?? this.id,
       inativa: inativa ?? this.inativa,
       terminador: terminador ?? this.terminador,
+      padrao: padrao ?? this.padrao,
     );
   }
 
   @override
-  List<Object?> get props => [tabelaDePrecoStep, nome, id, inativa, terminador];
+  List<Object?> get props =>
+      [tabelaDePrecoStep, nome, id, inativa, terminador, padrao];
 }

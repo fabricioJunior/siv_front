@@ -147,12 +147,27 @@ class SelecionarTabelaDePrecoPage extends StatelessWidget {
         onTap: tabela.id == null
             ? null
             : () => Navigator.of(context).pop<int>(tabela.id),
-        title: Text(
-          tabela.nome,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            decoration: isInativa ? TextDecoration.lineThrough : null,
-          ),
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                tabela.nome,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  decoration: isInativa ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            if (tabela.padrao) ...[
+              const SizedBox(width: 8),
+              const Chip(
+                label: Text('Padrão'),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

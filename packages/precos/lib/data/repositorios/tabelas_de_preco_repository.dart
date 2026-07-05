@@ -21,11 +21,13 @@ class TabelasDePrecoRepository implements ITabelasDePrecoRepository {
     required int id,
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     return tabelasDePrecoRemoteDataSource.atualizarTabelaDePreco(
       id: id,
       nome: nome,
       terminador: terminador,
+      padrao: padrao,
     );
   }
 
@@ -33,10 +35,12 @@ class TabelasDePrecoRepository implements ITabelasDePrecoRepository {
   Future<TabelaDePreco> criarTabelaDePreco({
     required String nome,
     double? terminador,
+    bool? padrao,
   }) {
     return tabelasDePrecoRemoteDataSource.createTabelaDePreco(
       nome: nome,
       terminador: terminador,
+      padrao: padrao,
     );
   }
 

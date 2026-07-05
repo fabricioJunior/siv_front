@@ -4,6 +4,7 @@ abstract class ITabelasDePrecoRemoteDataSource {
   Future<TabelaDePreco> createTabelaDePreco({
     required String nome,
     double? terminador,
+    bool? padrao,
   });
   Future<List<TabelaDePreco>> fetchTabelasDePreco({
     String? nome,
@@ -15,5 +16,6 @@ abstract class ITabelasDePrecoRemoteDataSource {
     required int id,
     required String nome,
     double? terminador,
+    bool? padrao,
   });
 }

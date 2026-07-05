@@ -5,6 +5,7 @@ abstract class ITabelasDePrecoRepository {
   Future<TabelaDePreco> criarTabelaDePreco({
     required String nome,
     double? terminador,
+    bool? padrao,
   });
   Future<List<TabelaDePreco>> obterTabelasDePreco({
     String? nome,
@@ -16,6 +17,7 @@ abstract class ITabelasDePrecoRepository {
     required int id,
     required String nome,
     double? terminador,
+    bool? padrao,
   });
 
   Stream<Paginacao<TabelaDePreco>> syncTabelas();

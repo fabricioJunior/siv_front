@@ -51,4 +51,18 @@ class RelatorioRepository implements IRelatorioRepository {
         page: page,
         limit: limit,
       );
+
+  @override
+  Future<List<RelatorioVendasPorFuncionarioItem>> vendasPorFuncionario({
+    required List<int> empresaIds,
+    required List<int> funcionarioIds,
+    required String dataInicial,
+    required String dataFinal,
+  }) =>
+      _remoteDataSource.vendasPorFuncionario(
+        empresaIds: empresaIds,
+        funcionarioIds: funcionarioIds,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
+      );
 }

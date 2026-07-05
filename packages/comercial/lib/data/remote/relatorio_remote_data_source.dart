@@ -70,4 +70,24 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
     return RelatorioClientesAtivosDto.fromJson(
         response.body as Map<String, dynamic>);
   }
+
+  @override
+  Future<List<RelatorioVendasPorFuncionarioItem>> vendasPorFuncionario({
+    required List<int> empresaIds,
+    required List<int> funcionarioIds,
+    required String dataInicial,
+    required String dataFinal,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/faturamento/vendas-por-funcionario'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'funcionarioIds': funcionarioIds.join(','),
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+      },
+    );
+    return RelatorioVendasPorFuncionarioItemDto.listFromJson(
+        response.body as Map<String, dynamic>);
+  }
 }

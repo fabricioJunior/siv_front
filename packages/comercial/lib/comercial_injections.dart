@@ -142,6 +142,9 @@ void _useCases() {
   sl.registerFactory<GetRelatorioClientesAtivos>(
     () => GetRelatorioClientesAtivos(sl()),
   );
+  sl.registerFactory<GetRelatorioVendasPorFuncionario>(
+    () => GetRelatorioVendasPorFuncionario(sl()),
+  );
 }
 
 void _presentation() {
@@ -248,5 +251,8 @@ void _presentation() {
   );
   sl.registerFactory<RelatorioClientesBloc>(
     () => RelatorioClientesBloc(sl()),
+  );
+  sl.registerFactory<RelatorioVendasPorFuncionarioBloc>(
+    () => RelatorioVendasPorFuncionarioBloc(sl()),
   );
 }

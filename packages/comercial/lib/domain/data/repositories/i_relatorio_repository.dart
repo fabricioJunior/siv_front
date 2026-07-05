@@ -22,4 +22,11 @@ abstract class IRelatorioRepository {
     int page = 1,
     int limit = 100,
   });
+
+  Future<List<RelatorioVendasPorFuncionarioItem>> vendasPorFuncionario({
+    required List<int> empresaIds,
+    required List<int> funcionarioIds,
+    required String dataInicial,
+    required String dataFinal,
+  });
 }

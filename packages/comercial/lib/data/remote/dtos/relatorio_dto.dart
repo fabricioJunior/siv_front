@@ -143,6 +143,44 @@ class RelatorioFaturamentoDto implements RelatorioFaturamento {
       );
 }
 
+class RelatorioVendasPorFuncionarioItemDto
+    implements RelatorioVendasPorFuncionarioItem {
+  @override final int funcionarioId;
+  @override final String funcionarioNome;
+  @override final double total;
+  @override final int quantidadeProdutosVendidos;
+  @override final int quantidadeVendas;
+  @override final double ticketMedio;
+
+  const RelatorioVendasPorFuncionarioItemDto({
+    required this.funcionarioId,
+    required this.funcionarioNome,
+    required this.total,
+    required this.quantidadeProdutosVendidos,
+    required this.quantidadeVendas,
+    required this.ticketMedio,
+  });
+
+  factory RelatorioVendasPorFuncionarioItemDto.fromJson(
+          Map<String, dynamic> j) =>
+      RelatorioVendasPorFuncionarioItemDto(
+        funcionarioId: (j['funcionarioId'] as num).toInt(),
+        funcionarioNome: j['funcionarioNome'] as String? ?? '',
+        total: (j['total'] as num).toDouble(),
+        quantidadeProdutosVendidos:
+            (j['quantidadeProdutosVendidos'] as num).toInt(),
+        quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),
+        ticketMedio: (j['ticketMedio'] as num).toDouble(),
+      );
+
+  static List<RelatorioVendasPorFuncionarioItem> listFromJson(
+          Map<String, dynamic> j) =>
+      (j['funcionarios'] as List<dynamic>? ?? [])
+          .map((e) => RelatorioVendasPorFuncionarioItemDto.fromJson(
+              e as Map<String, dynamic>))
+          .toList();
+}
+
 class RelatorioCurvaAbcItemDto implements RelatorioCurvaAbcItem {
   @override final int produtoId;
   @override final String produtoIdExterno;

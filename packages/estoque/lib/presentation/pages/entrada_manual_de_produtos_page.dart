@@ -11,23 +11,23 @@ const String _resultadoRomaneioStatusSucesso = 'sucesso';
 const String _resultadoRomaneioStatusFalha = 'falha';
 const String _resultadoRomaneioStatusParcial = 'parcial';
 
-class EntradaManulDeProdutosPage extends StatefulWidget {
+class EntradaManualDeProdutosPage extends StatefulWidget {
   final SeletorWidget tabelasDePrecoSeletor;
   final SeletorWidget funcionariosSeletor;
 
-  const EntradaManulDeProdutosPage({
+  const EntradaManualDeProdutosPage({
     super.key,
     required this.tabelasDePrecoSeletor,
     required this.funcionariosSeletor,
   });
 
   @override
-  State<EntradaManulDeProdutosPage> createState() =>
-      _EntradaManulDeProdutosPageState();
+  State<EntradaManualDeProdutosPage> createState() =>
+      _EntradaManualDeProdutosPageState();
 }
 
-class _EntradaManulDeProdutosPageState
-    extends State<EntradaManulDeProdutosPage> {
+class _EntradaManualDeProdutosPageState
+    extends State<EntradaManualDeProdutosPage> {
   late final LeitorController _leitorController;
 
   @override

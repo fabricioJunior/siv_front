@@ -31,6 +31,8 @@ export 'presentation/pages/documento_fiscal_page.dart';
 export 'presentation/blocs/relatorio_faturamento_bloc/relatorio_faturamento_bloc.dart';
 export 'presentation/blocs/relatorio_curva_abc_bloc/relatorio_curva_abc_bloc.dart';
 export 'presentation/blocs/relatorio_clientes_bloc/relatorio_clientes_bloc.dart';
+export 'presentation/blocs/relatorio_vendas_por_funcionario_bloc/relatorio_vendas_por_funcionario_bloc.dart';
 export 'presentation/pages/relatorio_faturamento_page.dart';
 export 'presentation/pages/relatorio_curva_abc_page.dart';
 export 'presentation/pages/relatorio_clientes_ativos_page.dart';
+export 'presentation/pages/relatorio_vendas_por_funcionario_page.dart';

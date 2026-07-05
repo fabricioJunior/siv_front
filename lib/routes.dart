@@ -318,6 +318,21 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioClientesAtivosPage(),
     );
   },
+  '/relatorio_vendas_por_funcionario': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_vendas_por_funcionario',
+      child: RelatorioVendasPorFuncionarioPage(
+        funcionariosSeletor:
+            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                FuncionarioSeletor(
+                  modo: FuncionarioSeletorModo.multipla,
+                  onChanged: onChanged,
+                  itemsSelecionadosInicial:
+                      itemsSelecionadosInicial ?? const [],
+                ),
+      ),
+    );
+  },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
@@ -576,7 +591,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/entrada_manual_de_produtos': (context) {
     return _rotaProtegida(
       route: '/entrada_manual_de_produtos',
-      child: EntradaManulDeProdutosPage(
+      child: EntradaManualDeProdutosPage(
         funcionariosSeletor:
             ({itemsSelecionadosInicial, onChanged, onlyView}) =>
                 FuncionarioSeletor(
@@ -724,6 +739,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],
   '/relatorio_clientes_ativos': ['RELFC003'],
+  '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],

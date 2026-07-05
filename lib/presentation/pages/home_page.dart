@@ -229,6 +229,15 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_clientes_ativos',
                   componentesNecessarios: ['RELFC003'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.badge_outlined,
+                  title: 'Vendas por Funcionário',
+                  subtitle:
+                      'Vendas de funcionários selecionados em um período.',
+                  color: Colors.teal,
+                  route: '/relatorio_vendas_por_funcionario',
+                  componentesNecessarios: ['RELFC004'],
+                ),
               ];
 
               final administracao = <_AccessFlowItem>[

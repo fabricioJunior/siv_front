@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:core/bloc.dart';
@@ -69,7 +67,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             title: Row(
               children: [
-                const Expanded(child: Text('Pagamentos realizados')),
+                const Expanded(child: Text('Pagamento realizado')),
                 IconButton(
                   tooltip: 'Ajuda de atalhos',
                   onPressed: () => _abrirAjudaAtalhos(context),
@@ -91,10 +89,15 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
                     ),
-                    const SizedBox(height: 12),
-                    _DetalhePagamentoCard(state: state),
-                    const SizedBox(height: 12),
-                    _SaldoCreditoDevolucaoCard(state: state),
+                    if (state.erro != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        state.erro!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     ...state.linhas.map(
                       (linha) => _LinhaPagamentoCard(
@@ -163,74 +166,6 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   }
 }
 
-class _SaldoCreditoDevolucaoCard extends StatelessWidget {
-  final PagamentosRealizadosState state;
-
-  const _SaldoCreditoDevolucaoCard({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final possuiPessoa = state.pessoaId != null;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Credito de devolucao do cliente',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 10),
-            if (!possuiPessoa)
-              const Text(
-                'Cliente nao informado. Nao foi possivel consultar saldo de credito de devolucao.',
-              )
-            else if (state.carregandoSaldoCreditoDevolucao)
-              const Row(
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Consultando saldo...'),
-                ],
-              )
-            else
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                alignment: WrapAlignment.spaceBetween,
-                children: [
-                  _InfoBox(
-                    titulo: 'Saldo disponivel',
-                    valor: _formatarMoeda(state.saldoCreditoDevolucao),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      final pessoaId = state.pessoaId;
-                      if (pessoaId == null) return;
-                      Navigator.of(context).pushNamed(
-                        '/credito_devolucao_movimentacoes',
-                        arguments: {'pessoaId': pessoaId},
-                      );
-                    },
-                    icon: const Icon(Icons.receipt_long_outlined),
-                    label: const Text('Ver movimentacoes'),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ResumoPagamentoCard extends StatelessWidget {
   final PagamentosRealizadosState state;
   final VoidCallback? onDescontoPressed;
@@ -243,6 +178,8 @@ class _ResumoPagamentoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final possuiPessoa = state.pessoaId != null;
+    final carregandoCredito = state.carregandoSaldoCreditoDevolucao;
 
     return Card(
       child: Padding(
@@ -299,66 +236,54 @@ class _ResumoPagamentoCard extends StatelessWidget {
                   valor: _formatarMoeda(state.valorTroco),
                 ),
                 _InfoBox(
-                  titulo: 'Restante',
+                  titulo: 'Valor restante',
                   valor: _formatarMoeda(state.valorRestante),
                 ),
+                if (possuiPessoa && !carregandoCredito)
+                  _InfoBox(
+                    titulo: 'Crédito de devolução',
+                    valor: _formatarMoeda(state.saldoCreditoDevolucao),
+                  ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DetalhePagamentoCard extends StatelessWidget {
-  final PagamentosRealizadosState state;
-
-  const _DetalhePagamentoCard({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final restante = state.valorRestante;
-    final theme = Theme.of(context);
-    final total = state.valorTotalComDesconto <= 0
-        ? state.valorTotalProdutos
-        : state.valorTotalComDesconto;
-    final pagoLimitado = math.min(state.valorTotalBruto, total);
-    final progresso = total <= 0 ? 1.0 : (pagoLimitado / total).clamp(0.0, 1.0);
-
-    return Card(
-      color: restante.abs() < 0.01
-          ? theme.colorScheme.primaryContainer
-          : theme.colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              restante.abs() < 0.01
-                  ? 'Pagamento completo'
-                  : 'Valor pendente: ${_formatarMoeda(restante)}',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              restante.abs() < 0.01
-                  ? 'O valor informado cobre o total da venda.'
-                  : 'Adicione formas de pagamento até zerar o valor pendente.',
-            ),
-            const SizedBox(height: 10),
-            LinearProgressIndicator(value: progresso),
-            const SizedBox(height: 4),
-            Text(
-              'Progresso do recebimento: ${(progresso * 100).toStringAsFixed(0)}%',
-              style: theme.textTheme.bodySmall,
-            ),
-            if (state.erro != null) ...[
+            if (!possuiPessoa) ...[
               const SizedBox(height: 8),
               Text(
-                state.erro!,
-                style: TextStyle(color: theme.colorScheme.error),
+                'Cliente não informado. Não foi possível consultar saldo de crédito de devolução.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ] else if (carregandoCredito) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Consultando saldo de crédito de devolução...',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    final pessoaId = state.pessoaId;
+                    if (pessoaId == null) return;
+                    Navigator.of(context).pushNamed(
+                      '/credito_devolucao_movimentacoes',
+                      arguments: {'pessoaId': pessoaId},
+                    );
+                  },
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Ver movimentações de crédito'),
+                ),
               ),
             ],
           ],
@@ -603,7 +528,7 @@ Future<void> _abrirDialogoDesconto(
                       items: const [
                         DropdownMenuItem(
                           value: DescontoTipo.valorBruto,
-                          child: Text('Valor bruto'),
+                          child: Text('Valor manual'),
                         ),
                         DropdownMenuItem(
                           value: DescontoTipo.porcentagem,
@@ -611,7 +536,7 @@ Future<void> _abrirDialogoDesconto(
                         ),
                         DropdownMenuItem(
                           value: DescontoTipo.forcaValorTotal,
-                          child: Text('Forca valor total'),
+                          child: Text('Valor total manual'),
                         ),
                       ],
                       onChanged: (value) {

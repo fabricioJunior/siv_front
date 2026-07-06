@@ -8,6 +8,7 @@ class EntradaManualDeProdutosState extends Equatable {
   final SelectData? tabelaDePrecoSelecionada;
   final String? erro;
   final bool salvando;
+  final bool verificandoCaixa;
   final String? listaCompartilhadaHash;
 
   const EntradaManualDeProdutosState({
@@ -16,6 +17,7 @@ class EntradaManualDeProdutosState extends Equatable {
     this.tabelaDePrecoSelecionada,
     this.erro,
     this.salvando = false,
+    this.verificandoCaixa = false,
     this.listaCompartilhadaHash,
   });
 
@@ -30,6 +32,7 @@ class EntradaManualDeProdutosState extends Equatable {
     Object? tabelaDePrecoSelecionada = _sentinela,
     Object? erro = _sentinela,
     bool? salvando,
+    bool? verificandoCaixa,
     Object? listaCompartilhadaHash = _sentinela,
   }) {
     return EntradaManualDeProdutosState(
@@ -42,6 +45,7 @@ class EntradaManualDeProdutosState extends Equatable {
           : tabelaDePrecoSelecionada as SelectData?,
       erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       salvando: salvando ?? this.salvando,
+      verificandoCaixa: verificandoCaixa ?? this.verificandoCaixa,
       listaCompartilhadaHash: identical(listaCompartilhadaHash, _sentinela)
           ? this.listaCompartilhadaHash
           : listaCompartilhadaHash as String?,
@@ -55,6 +59,7 @@ class EntradaManualDeProdutosState extends Equatable {
     tabelaDePrecoSelecionada,
     erro,
     salvando,
+    verificandoCaixa,
     listaCompartilhadaHash,
   ];
 }

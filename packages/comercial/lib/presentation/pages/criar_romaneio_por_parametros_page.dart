@@ -219,7 +219,7 @@ class _SucessoRomaneioView extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Entrada de produtos realizada com sucesso!',
+                        _mensagemSucesso(romaneio?.operacao),
                         style: theme.textTheme.titleMedium,
                       ),
                     ),
@@ -266,5 +266,14 @@ class _SucessoRomaneioView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _mensagemSucesso(TipoOperacao? operacao) {
+    switch (operacao) {
+      case TipoOperacao.venda:
+        return 'Venda realizada com sucesso!';
+      default:
+        return 'Entrada de produtos realizada com sucesso!';
+    }
   }
 }

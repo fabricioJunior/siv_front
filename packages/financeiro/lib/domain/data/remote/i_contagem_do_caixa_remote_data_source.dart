@@ -6,6 +6,8 @@ abstract class IContagemDoCaixaRemoteDataSource {
 
   Future<void> encerrarContagemDoCaixa({required int caixaId});
 
+  Future<void> cancelarContagemDoCaixa({required int caixaId});
+
   Future<ContagemDoCaixa> criarItemDaContagemDoCaixa({
     required int caixaId,
     required ContagemDoCaixa contagemDoCaixa,

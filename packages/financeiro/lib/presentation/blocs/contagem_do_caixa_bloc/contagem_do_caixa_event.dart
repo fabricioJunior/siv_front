@@ -39,3 +39,7 @@ class ContagemDoCaixaItemSalvou extends ContagemDoCaixaEvent {
 }
 
 class ContagemDoCaixaSalvarTodosSolicitado extends ContagemDoCaixaEvent {}
+
+class ContagemDoCaixaCancelamentoSolicitado extends ContagemDoCaixaEvent {
+  const ContagemDoCaixaCancelamentoSolicitado();
+}

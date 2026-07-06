@@ -21,6 +21,11 @@ class ContagemDoCaixaRepository implements IContagemDoCaixaRepository {
   }
 
   @override
+  Future<void> cancelarContagemDoCaixa({required int caixaId}) {
+    return remoteDataSource.cancelarContagemDoCaixa(caixaId: caixaId);
+  }
+
+  @override
   Future<ContagemDoCaixa> salvarItemDaContagemDoCaixa({
     required int caixaId,
     required ContagemDoCaixa contagemDoCaixa,

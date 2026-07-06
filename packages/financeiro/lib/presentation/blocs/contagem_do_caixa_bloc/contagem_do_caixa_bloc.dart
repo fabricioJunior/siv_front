@@ -14,16 +14,41 @@ class ContagemDoCaixaBloc
   final RecuperarItensPendentesParaContagemDoCaixaUseCase
       _recuperarItensPendentes;
   final SalvarItemDaContagemDoCaixa _salvarItem;
+  final CancelarContagemDoCaixa _cancelarContagem;
 
   ContagemDoCaixaBloc(
     this._recuperarContagem,
     this._recuperarItensPendentes,
     this._salvarItem,
+    this._cancelarContagem,
   ) : super(const ContagemDoCaixaState.initial()) {
     on<ContagemDoCaixaIniciou>(_onIniciou);
     on<ContagemDoCaixaItemValorAlterado>(_onItemValorAlterado);
     on<ContagemDoCaixaItemSalvou>(_onItemSalvou);
     on<ContagemDoCaixaSalvarTodosSolicitado>(_onSalvarTodosSolicitado);
+    on<ContagemDoCaixaCancelamentoSolicitado>(_onCancelamentoSolicitado);
+  }
+
+  FutureOr<void> _onCancelamentoSolicitado(
+    ContagemDoCaixaCancelamentoSolicitado event,
+    Emitter<ContagemDoCaixaState> emit,
+  ) async {
+    final caixaId = state.caixaId;
+    if (caixaId == null) return;
+
+    emit(state.copyWith(step: ContagemDoCaixaStep.cancelando, erro: null));
+
+    try {
+      await _cancelarContagem(caixaId: caixaId);
+      emit(state.copyWith(step: ContagemDoCaixaStep.cancelada, erro: null));
+    } catch (_) {
+      emit(
+        state.copyWith(
+          step: ContagemDoCaixaStep.falha,
+          erro: 'Falha ao cancelar a contagem. Tente novamente.',
+        ),
+      );
+    }
   }
 
   FutureOr<void> _onIniciou(
@@ -206,7 +231,10 @@ class ContagemDoCaixaBloc
       );
     }
 
-    if (itensPreenchidos.isEmpty) {
+    // Caixa sem nenhuma movimentação não tem tipo pendente pra preencher —
+    // nesse caso a contagem "zerada" (zero itens) é um estado válido, e não
+    // deve ser bloqueada pela falta de preenchimento.
+    if (itensPreenchidos.isEmpty && state.tiposPendentes.isNotEmpty) {
       emit(
         state.copyWith(
           step: ContagemDoCaixaStep.validacaoInvalida,

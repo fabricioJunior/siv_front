@@ -77,10 +77,22 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     final searchTerm = (event.searchTerm ?? state.termoBuscaRomaneios).trim();
     final filtroBusca = searchTerm.isEmpty ? null : searchTerm;
 
+    final hoje = DateTime.now();
+    final dataInicial = event.dataInicial ??
+        state.dataInicialBuscaRomaneios ??
+        DateTime(hoje.year, hoje.month, hoje.day).subtract(
+          const Duration(days: 7),
+        );
+    final dataFinal = event.dataFinal ??
+        state.dataFinalBuscaRomaneios ??
+        DateTime(hoje.year, hoje.month, hoje.day, 23, 59, 59);
+
     emit(
       state.copyWith(
         carregandoBuscaRomaneios: true,
         termoBuscaRomaneios: searchTerm,
+        dataInicialBuscaRomaneios: dataInicial,
+        dataFinalBuscaRomaneios: dataFinal,
         erroBuscaRomaneios: null,
       ),
     );
@@ -90,6 +102,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         page: 1,
         limit: 50,
         searchTerm: filtroBusca,
+        dataHoraInicial: dataInicial,
+        dataHoraFinal: dataFinal,
       );
       final romaneiosDeVenda = romaneios
           .where(
@@ -103,6 +117,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
           carregandoBuscaRomaneios: false,
           romaneiosBuscaDeVenda: romaneiosDeVenda,
           termoBuscaRomaneios: searchTerm,
+          dataInicialBuscaRomaneios: dataInicial,
+          dataFinalBuscaRomaneios: dataFinal,
           erroBuscaRomaneios: null,
         ),
       );
@@ -111,6 +127,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         state.copyWith(
           carregandoBuscaRomaneios: false,
           termoBuscaRomaneios: searchTerm,
+          dataInicialBuscaRomaneios: dataInicial,
+          dataFinalBuscaRomaneios: dataFinal,
           erroBuscaRomaneios: 'Falha ao buscar romaneios de venda.',
         ),
       );

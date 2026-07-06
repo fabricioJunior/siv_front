@@ -76,4 +76,6 @@ enum ContagemDoCaixaStep {
   salvandoItem,
   validacaoInvalida,
   falha,
+  cancelando,
+  cancelada,
 }

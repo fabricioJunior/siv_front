@@ -48,6 +48,17 @@ class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<void> cancelarContagemDoCaixa({required int caixaId}) async {
+    await post(
+      pathParameters: {
+        'caixaId': caixaId.toString(),
+        'pendente': 'cancelar',
+      },
+      body: const {},
+    );
+  }
+
+  @override
   Future<ContagemDoCaixa> criarItemDaContagemDoCaixa({
     required int caixaId,
     required ContagemDoCaixa contagemDoCaixa,

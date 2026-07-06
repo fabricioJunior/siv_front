@@ -6,6 +6,8 @@ abstract class IContagemDoCaixaRepository {
 
   Future<void> encerrarContagemDoCaixa({required int caixaId});
 
+  Future<void> cancelarContagemDoCaixa({required int caixaId});
+
   Future<ContagemDoCaixa> salvarItemDaContagemDoCaixa({
     required int caixaId,
     required ContagemDoCaixa contagemDoCaixa,

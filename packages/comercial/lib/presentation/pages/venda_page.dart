@@ -539,12 +539,115 @@ class _VendaPageState extends State<VendaPage> {
         .toList(growable: false);
     final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
 
+    final confirmouEmissao = await _abrirConfirmacaoEmissao(
+      context,
+      pagamentoResultado: pagamentoResultado,
+      valorDesconto: valorDesconto,
+    );
+
+    if (confirmouEmissao != true) {
+      return;
+    }
+
     bloc.add(
       VendaFinalizarSolicitada(
         itens: itens,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         valorDesconto: valorDesconto,
       ),
+    );
+  }
+
+  Future<bool?> _abrirConfirmacaoEmissao(
+    BuildContext context, {
+    required Map<String, dynamic> pagamentoResultado,
+    required double valorDesconto,
+  }) {
+    final resumoFormasRaw =
+        pagamentoResultado['resumoFormasDePagamento'] as List<dynamic>? ??
+            const [];
+    final resumoFormas = resumoFormasRaw
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (item) => (
+            nome: item['nome']?.toString() ?? '-',
+            valor: _toDouble(item['valor']) ?? 0,
+          ),
+        )
+        .toList(growable: false);
+    final valorTotalRecebido =
+        _toDouble(pagamentoResultado['valorTotalRecebido']) ?? 0;
+    final valorTroco = _toDouble(pagamentoResultado['valorTroco']) ?? 0;
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmar pagamento e emitir romaneio'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ao confirmar, o romaneio será gerado e o estoque baixado. Confira o pagamento:',
+                    style: Theme.of(dialogContext).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoChip(
+                    icon: Icons.receipt_long_outlined,
+                    label:
+                        'Valor total do pedido: ${_formatarMoeda(_leitorController.valorTotalLido)}',
+                  ),
+                  const SizedBox(height: 12),
+                  ...resumoFormas.map(
+                    (forma) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildInfoChip(
+                        icon: Icons.payments_outlined,
+                        label: '${forma.nome}: ${_formatarMoeda(forma.valor)}',
+                      ),
+                    ),
+                  ),
+                  if (valorDesconto > 0) ...[
+                    const Divider(height: 16),
+                    _buildInfoChip(
+                      icon: Icons.discount_outlined,
+                      label: 'Desconto aplicado: ${_formatarMoeda(valorDesconto)}',
+                    ),
+                    const SizedBox(height: 8),
+                  ] else
+                    const Divider(height: 16),
+                  _buildInfoChip(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'Total recebido: ${_formatarMoeda(valorTotalRecebido)}',
+                  ),
+                  if (valorTroco > 0) ...[
+                    const SizedBox(height: 8),
+                    _buildInfoChip(
+                      icon: Icons.currency_exchange_outlined,
+                      label: 'Troco: ${_formatarMoeda(valorTroco)}',
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Voltar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirmar e emitir'),
+            ),
+          ],
+        );
+      },
     );
   }
 

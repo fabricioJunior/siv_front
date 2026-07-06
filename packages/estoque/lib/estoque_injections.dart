@@ -123,7 +123,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl()));
   sl.registerFactory<EntradaManualDeProdutosBloc>(
-    () => EntradaManualDeProdutosBloc(sl()),
+    () => EntradaManualDeProdutosBloc(sl(), sl(), sl()),
   );
   sl.registerFactory<BalancoBloc>(
     () => BalancoBloc(

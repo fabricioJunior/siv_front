@@ -523,6 +523,42 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
         );
   }
 
+  Future<void> _selecionarPeriodo(
+    BuildContext context,
+    DevolucaoState state,
+  ) async {
+    final agora = DateTime.now();
+    final selecionado = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(agora.year - 2),
+      lastDate: DateTime(agora.year + 1),
+      initialDateRange: state.dataInicialBuscaRomaneios != null &&
+              state.dataFinalBuscaRomaneios != null
+          ? DateTimeRange(
+              start: state.dataInicialBuscaRomaneios!,
+              end: state.dataFinalBuscaRomaneios!,
+            )
+          : null,
+    );
+
+    if (selecionado == null || !context.mounted) return;
+
+    context.read<DevolucaoBloc>().add(
+          DevolucaoBuscaRomaneiosSolicitada(
+            searchTerm: state.termoBuscaRomaneios,
+            dataInicial: selecionado.start,
+            dataFinal: DateTime(
+              selecionado.end.year,
+              selecionado.end.month,
+              selecionado.end.day,
+              23,
+              59,
+              59,
+            ),
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DevolucaoBloc, DevolucaoState>(
@@ -569,7 +605,28 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
                           );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _selecionarPeriodo(context, state),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.date_range, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Período: ${_formatarDataCurta(state.dataInicialBuscaRomaneios)} até ${_formatarDataCurta(state.dataFinalBuscaRomaneios)}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          const Icon(Icons.edit_outlined, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   Expanded(
                     child: state.carregandoBuscaRomaneios
                         ? const Center(child: CircularProgressIndicator())
@@ -599,11 +656,13 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
                                         leading:
                                             const Icon(Icons.receipt_long),
                                         title: Text(
-                                          'Romaneio #${romaneio.id ?? '-'}',
+                                          'Romaneio #${romaneio.id ?? '-'} · ${_formatarDataCurta(romaneio.data)}',
                                         ),
                                         subtitle: Text(
-                                          'Cliente: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}',
+                                          'Cliente: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}\n'
+                                          'Valor: ${_formatarMoedaItem(romaneio.valorBruto)}',
                                         ),
+                                        isThreeLine: true,
                                         onTap: () =>
                                             Navigator.of(context).pop(romaneio),
                                       );
@@ -618,4 +677,16 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
       },
     );
   }
+}
+
+String _formatarDataCurta(DateTime? data) {
+  if (data == null) return '-';
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  return '$dia/$mes/${data.year}';
+}
+
+String _formatarMoedaItem(double? valor) {
+  if (valor == null) return '-';
+  return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
 }

@@ -41,6 +41,7 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
 class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
   late final TabelasDePrecoBloc _tabelasDePrecoBloc;
   Set<int>? _idsExternosSelecionados;
+  bool _notificouSelecaoPadrao = false;
 
   @override
   void initState() {
@@ -81,6 +82,37 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
               'Não foi possível carregar as tabelas de preço.',
               theme.colorScheme.error,
             );
+          }
+
+          // Quando o seletor abre sem seleção explícita, o bloc já resolve a
+          // tabela padrão sozinho (ver TabelasDePrecoBloc). Isso só marca o
+          // chip visualmente — sem avisar o formulário pai via onChanged, o
+          // estado dele nunca sabe que uma tabela foi selecionada (ex:
+          // VendaBloc.podeIniciarLeitura fica preso em false pra sempre).
+          if (!_notificouSelecaoPadrao &&
+              widget.tabelasSelecionadasIniciais.isEmpty &&
+              (widget.itemsSelecionadosInicial?.isEmpty ?? true) &&
+              state.tabelaDePreco != null) {
+            _notificouSelecaoPadrao = true;
+            final tabelaPadrao = state.tabelaDePreco!;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              widget.onTabelaDePrecoChanged?.call([tabelaPadrao]);
+              widget.onChanged?.call([
+                SelectData(
+                  id: tabelaPadrao.id ?? 0,
+                  nome: tabelaPadrao.nome,
+                  data: {
+                    'id': tabelaPadrao.id,
+                    'nome': tabelaPadrao.nome,
+                    'terminador': tabelaPadrao.terminador,
+                    'inativa': tabelaPadrao.inativa,
+                  },
+                ),
+              ]);
+            });
           }
 
           final tabelasAtivas = state.tabelas

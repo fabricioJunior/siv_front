@@ -347,13 +347,24 @@ class _EntradaManualDeProdutosPageState
                       label: const Text('Alterar dados iniciais'),
                     )
                   : FilledButton.icon(
-                      onPressed: state.podeIniciarLeitura
+                      onPressed:
+                          state.podeIniciarLeitura && !state.verificandoCaixa
                           ? () {
                               bloc.add(const EntradaManualLeituraSolicitada());
                             }
                           : null,
-                      icon: const Icon(Icons.play_arrow_outlined),
-                      label: const Text('Iniciar leitura'),
+                      icon: state.verificandoCaixa
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.play_arrow_outlined),
+                      label: Text(
+                        state.verificandoCaixa
+                            ? 'Verificando caixa...'
+                            : 'Iniciar leitura',
+                      ),
                     ),
             ),
           ],

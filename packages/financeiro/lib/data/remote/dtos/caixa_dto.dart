@@ -57,9 +57,11 @@ class CaixaDto implements Caixa {
       valorAbertura:
           double.tryParse(json['valorAbertura']?.toString() ?? '0') ?? 0,
       valorFechamento: (json['valorFechamento'] as num?)?.toDouble(),
-      situacao: situacaoValue == 'fechado'
-          ? SituacaoCaixa.fechado
-          : SituacaoCaixa.aberto,
+      situacao: switch (situacaoValue) {
+        'fechado' => SituacaoCaixa.fechado,
+        'contagem' => SituacaoCaixa.contagem,
+        _ => SituacaoCaixa.aberto,
+      },
     );
   }
 }

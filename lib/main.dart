@@ -430,6 +430,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   void didPop(Route route, Route? previousRoute) {
     super.didPop(route, previousRoute);
     log('Popped route: ${route.settings.name}', name: 'Navigation');
+    _sincronizarAoFinalizarEntradaManual(route.settings);
   }
 
   @override
@@ -438,6 +439,37 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
     log(
       'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
       name: 'Navigation',
+    );
+    _sincronizarAoFinalizarEntradaManual(oldRoute?.settings);
+  }
+
+  // A tela '/criar_romaneio_por_parametros' é compartilhada entre venda e
+  // entrada manual de produtos, então não dá pra identificar só pelo nome da
+  // rota. A entrada manual sempre manda 'operacao' nos argumentos
+  // (entrada_manual_de_produtos_page.dart); a venda não manda. Também termina
+  // de duas formas: um pop simples (botão "Voltar") ou um pushReplacement pra
+  // '/romaneio' (botão "Abrir romaneio criado") — precisa cobrir as duas.
+  void _sincronizarAoFinalizarEntradaManual(RouteSettings? settings) {
+    if (settings?.name != '/criar_romaneio_por_parametros') {
+      return;
+    }
+
+    final argumentos = settings?.arguments;
+    final ehEntradaManual =
+        argumentos is Map && argumentos['operacao'] != null;
+    if (!ehEntradaManual) {
+      return;
+    }
+
+    var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
+    if (usuarioId == null) {
+      return;
+    }
+
+    sl<SyncDataBloc>().add(
+      const SyncDataSolicitouSincronizacao(
+        origem: SyncDataOrigem.entradaDeProdutos,
+      ),
     );
   }
 }

@@ -203,11 +203,22 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         child: FilledButton.tonalIcon(
                           onPressed: carregando || state.caixaId == null
                               ? null
-                              : () {
-                                  Navigator.of(context).pushNamed(
+                              : () async {
+                                  await Navigator.of(context).pushNamed(
                                     '/contagem_do_caixa',
                                     arguments: {'caixaId': state.caixaId},
                                   );
+
+                                  if (!context.mounted ||
+                                      state.caixaId == null) {
+                                    return;
+                                  }
+
+                                  context.read<FluxoDeCaixaBloc>().add(
+                                        FluxoDeCaixaIniciou(
+                                          caixaId: state.caixaId!,
+                                        ),
+                                      );
                                 },
                           icon: const Icon(Icons.calculate_outlined),
                           label: const Text('Contagem do caixa'),

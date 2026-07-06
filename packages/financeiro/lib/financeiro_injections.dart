@@ -174,6 +174,10 @@ void _useCases() {
     () => EncerrarContagemDoCaixa(repository: sl()),
   );
 
+  sl.registerFactory<CancelarContagemDoCaixa>(
+    () => CancelarContagemDoCaixa(repository: sl()),
+  );
+
   sl.registerFactory<AtualizarFormaDePagamento>(
     () => AtualizarFormaDePagamento(repository: sl()),
   );
@@ -225,6 +229,7 @@ void _presentation() {
 
   sl.registerFactory<ContagemDoCaixaBloc>(
     () => ContagemDoCaixaBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

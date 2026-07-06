@@ -21,8 +21,15 @@ class ContagemDoCaixaPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: const Text('Contagem do caixa')),
         body: BlocConsumer<ContagemDoCaixaBloc, ContagemDoCaixaState>(
-          listenWhen: (previous, current) => current.erro != null,
+          listenWhen: (previous, current) =>
+              current.erro != null ||
+              current.step == ContagemDoCaixaStep.cancelada,
           listener: (context, state) {
+            if (state.step == ContagemDoCaixaStep.cancelada) {
+              Navigator.of(context).pop(true);
+              return;
+            }
+
             if (state.step == ContagemDoCaixaStep.falha &&
                 state.itemSendoSalvo == null) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -119,6 +126,37 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
     super.dispose();
   }
 
+  Future<void> _confirmarCancelamento(BuildContext context) async {
+    final bloc = context.read<ContagemDoCaixaBloc>();
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Cancelar contagem'),
+          content: const Text(
+            'Os valores já preenchidos nesta contagem serão descartados e o '
+            'caixa volta a ficar aberto normalmente. Deseja continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Voltar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Cancelar contagem'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou == true) {
+      bloc.add(const ContagemDoCaixaCancelamentoSolicitado());
+    }
+  }
+
   void _syncControllersFromState(ContagemDoCaixaState state) {
     for (final tipo in state.tiposPendentes) {
       _controllers.putIfAbsent(tipo, () => TextEditingController());
@@ -165,6 +203,7 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
       builder: (context, state) {
         _syncControllersFromState(state);
         final salvando = state.step == ContagemDoCaixaStep.salvandoItem;
+        final cancelando = state.step == ContagemDoCaixaStep.cancelando;
         for (final tipo in state.tiposPendentes) {
           _controllers.putIfAbsent(tipo, () => TextEditingController());
         }
@@ -217,7 +256,7 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: salvando
+                onPressed: salvando || cancelando
                     ? null
                     : () {
                         context.read<ContagemDoCaixaBloc>().add(
@@ -231,7 +270,34 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined),
-                label: const Text('Salvar todos os itens preenchidos'),
+                label: Text(
+                  state.tiposPendentes.isEmpty
+                      ? 'Confirmar contagem zerada'
+                      : 'Salvar todos os itens preenchidos',
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: salvando || cancelando
+                    ? null
+                    : () => _confirmarCancelamento(context),
+                icon: cancelando
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cancel_outlined),
+                label: Text(
+                  cancelando ? 'Cancelando contagem...' : 'Cancelar contagem',
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             ),
           ],

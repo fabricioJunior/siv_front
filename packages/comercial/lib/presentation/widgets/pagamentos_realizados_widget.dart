@@ -46,6 +46,17 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             Navigator.of(context).pop({
               'formasDePagamentoRealizadas': state.resultado,
               'desconto': state.valorDescontoAplicado,
+              'resumoFormasDePagamento': state.linhas
+                  .where((linha) => linha.formaDePagamento != null)
+                  .map(
+                    (linha) => {
+                      'nome': linha.formaDePagamento!.nome,
+                      'valor': linha.valor,
+                    },
+                  )
+                  .toList(),
+              'valorTotalRecebido': state.valorLiquido,
+              'valorTroco': state.valorTroco,
             });
           }
         },
@@ -318,40 +329,6 @@ class _LinhaPagamentoCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: formasDePagamentoSeletor(
-                    itemsSelecionadosInicial: formaSelecionada == null
-                        ? const []
-                        : [formaSelecionada],
-                    onChanged: (selecionadas) {
-                      final forma =
-                          selecionadas.isNotEmpty ? selecionadas.first : null;
-                      bloc.add(
-                        PagamentosRealizadosFormaAlterada(
-                          linhaId: linha.id,
-                          formaDePagamento: forma,
-                        ),
-                      );
-                    },
-                    onlyView: false,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: bloc.state.linhas.length == 1
-                      ? null
-                      : () => bloc.add(
-                            PagamentosRealizadosLinhaRemovida(
-                                linhaId: linha.id),
-                          ),
-                  icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Remover forma de pagamento',
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
                   child: TextFormField(
                     key: ValueKey('valor-${linha.id}'),
                     autofocus: autofocusValor,
@@ -420,6 +397,40 @@ class _LinhaPagamentoCard extends StatelessWidget {
                       ),
                     ),
                   ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: formasDePagamentoSeletor(
+                    itemsSelecionadosInicial: formaSelecionada == null
+                        ? const []
+                        : [formaSelecionada],
+                    onChanged: (selecionadas) {
+                      final forma =
+                          selecionadas.isNotEmpty ? selecionadas.first : null;
+                      bloc.add(
+                        PagamentosRealizadosFormaAlterada(
+                          linhaId: linha.id,
+                          formaDePagamento: forma,
+                        ),
+                      );
+                    },
+                    onlyView: false,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: bloc.state.linhas.length == 1
+                      ? null
+                      : () => bloc.add(
+                            PagamentosRealizadosLinhaRemovida(
+                                linhaId: linha.id),
+                          ),
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Remover forma de pagamento',
+                ),
               ],
             ),
             if (linha.ehDinheiro &&

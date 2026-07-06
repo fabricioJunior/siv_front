@@ -9,6 +9,8 @@ class DevolucaoState extends Equatable {
   final List<Romaneio> romaneiosDeVenda;
   final List<Romaneio> romaneiosBuscaDeVenda;
   final String termoBuscaRomaneios;
+  final DateTime? dataInicialBuscaRomaneios;
+  final DateTime? dataFinalBuscaRomaneios;
   final Romaneio? romaneioOriginal;
   final Map<int, double> itensDoRomaneioOriginalPorProduto;
   final String? erro;
@@ -25,6 +27,8 @@ class DevolucaoState extends Equatable {
     this.romaneiosDeVenda = const [],
     this.romaneiosBuscaDeVenda = const [],
     this.termoBuscaRomaneios = '',
+    this.dataInicialBuscaRomaneios,
+    this.dataFinalBuscaRomaneios,
     this.romaneioOriginal,
     this.itensDoRomaneioOriginalPorProduto = const {},
     this.erro,
@@ -45,6 +49,8 @@ class DevolucaoState extends Equatable {
     List<Romaneio>? romaneiosDeVenda,
     List<Romaneio>? romaneiosBuscaDeVenda,
     String? termoBuscaRomaneios,
+    Object? dataInicialBuscaRomaneios = _sentinela,
+    Object? dataFinalBuscaRomaneios = _sentinela,
     Object? romaneioOriginal = _sentinela,
     Map<int, double>? itensDoRomaneioOriginalPorProduto,
     Object? erro = _sentinela,
@@ -64,6 +70,12 @@ class DevolucaoState extends Equatable {
       romaneiosBuscaDeVenda:
         romaneiosBuscaDeVenda ?? this.romaneiosBuscaDeVenda,
       termoBuscaRomaneios: termoBuscaRomaneios ?? this.termoBuscaRomaneios,
+      dataInicialBuscaRomaneios: identical(dataInicialBuscaRomaneios, _sentinela)
+          ? this.dataInicialBuscaRomaneios
+          : dataInicialBuscaRomaneios as DateTime?,
+      dataFinalBuscaRomaneios: identical(dataFinalBuscaRomaneios, _sentinela)
+          ? this.dataFinalBuscaRomaneios
+          : dataFinalBuscaRomaneios as DateTime?,
       romaneioOriginal: identical(romaneioOriginal, _sentinela)
           ? this.romaneioOriginal
           : romaneioOriginal as Romaneio?,
@@ -90,6 +102,8 @@ class DevolucaoState extends Equatable {
         romaneiosDeVenda,
       romaneiosBuscaDeVenda,
       termoBuscaRomaneios,
+      dataInicialBuscaRomaneios,
+      dataFinalBuscaRomaneios,
         romaneioOriginal,
         itensDoRomaneioOriginalPorProduto,
         erro,

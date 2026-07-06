@@ -4,6 +4,9 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
+import 'package:core/sessao.dart';
+import 'package:financeiro/models.dart';
+import 'package:financeiro/use_cases.dart';
 
 part 'entrada_manual_de_produtos_event.dart';
 part 'entrada_manual_de_produtos_state.dart';
@@ -11,9 +14,14 @@ part 'entrada_manual_de_produtos_state.dart';
 class EntradaManualDeProdutosBloc
     extends Bloc<EntradaManualDeProdutosEvent, EntradaManualDeProdutosState> {
   final SalvarListaDeProdutosCompartilhada _salvarListaDeProdutosCompartilhada;
+  final RecuperarCaixaAberto _recuperarCaixaAberto;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
-  EntradaManualDeProdutosBloc(this._salvarListaDeProdutosCompartilhada)
-    : super(const EntradaManualDeProdutosState()) {
+  EntradaManualDeProdutosBloc(
+    this._salvarListaDeProdutosCompartilhada,
+    this._recuperarCaixaAberto,
+    this._acessoGlobalSessao,
+  ) : super(const EntradaManualDeProdutosState()) {
     on<EntradaManualFuncionarioSelecionado>(_onFuncionarioSelecionado);
     on<EntradaManualTabelaDePrecoSelecionada>(_onTabelaDePrecoSelecionada);
     on<EntradaManualLeituraSolicitada>(_onLeituraSolicitada);
@@ -49,14 +57,68 @@ class EntradaManualDeProdutosBloc
   FutureOr<void> _onLeituraSolicitada(
     EntradaManualLeituraSolicitada event,
     Emitter<EntradaManualDeProdutosState> emit,
-  ) {
+  ) async {
     final erro = _validarSelecoes();
     if (erro != null) {
       emit(state.copyWith(erro: erro));
-    } else {
+      return;
+    }
+
+    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+    final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
+    if (empresaId == null || terminalId == null) {
       emit(
-        state.copyWith(step: EntradaManualDeProdutosStep.leitura, erro: null),
+        state.copyWith(
+          erro: 'Sessão sem empresa/terminal definidos. Faça login novamente.',
+        ),
       );
+      return;
+    }
+
+    emit(state.copyWith(verificandoCaixa: true, erro: null));
+
+    try {
+      final caixa = await _recuperarCaixaAberto.call(
+        idEmpresa: empresaId,
+        idTerminal: terminalId,
+      );
+
+      if (caixa == null) {
+        emit(
+          state.copyWith(
+            verificandoCaixa: false,
+            erro: 'Nenhum caixa aberto para este terminal. Abra um caixa antes de continuar.',
+          ),
+        );
+        return;
+      }
+
+      if (caixa.situacao != SituacaoCaixa.aberto) {
+        emit(
+          state.copyWith(
+            verificandoCaixa: false,
+            erro: 'Seu caixa está em contagem e não pode receber novas movimentações. '
+                'Finalize a contagem ou abra outro caixa antes de continuar.',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          verificandoCaixa: false,
+          step: EntradaManualDeProdutosStep.leitura,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          verificandoCaixa: false,
+          erro: 'Falha ao verificar o caixa da sessão. Tente novamente.',
+        ),
+      );
+      addError(e, s);
     }
   }
 

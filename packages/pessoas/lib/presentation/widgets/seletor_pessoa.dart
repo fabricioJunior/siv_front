@@ -98,7 +98,21 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
 
           final pessoasAtivas =
               state.pessoas.where((pessoa) => !pessoa.bloqueado).toList();
+          final pessoasSelecionadas = [
+            ...state.pessoas.where(
+              (pessoa) =>
+                  pessoa.id != null && idsSelecionados.contains(pessoa.id),
+            ),
+            ...pessoasIniciais.where(
+              (pessoaInicial) =>
+                  pessoaInicial.id == null ||
+                  !state.pessoas.any(
+                    (pessoa) => _mesmaPessoa(pessoa, pessoaInicial),
+                  ),
+            ),
+          ];
           final pessoasDisponiveis = [
+            ...pessoasSelecionadas,
             ...pessoasAtivas.where(
               (pessoa) =>
                   pessoa.id == null || !idsSelecionados.contains(pessoa.id),

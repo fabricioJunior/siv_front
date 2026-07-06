@@ -117,6 +117,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   OverlayEntry? _sugestoesOverlayEntry;
   List<T> _sugestoesAtuais = const [];
   bool _deveExibirSugestoes = false;
+  bool _focoParaSugestoes = false;
+  Timer? _ocultarSugestoesTimer;
   double _larguraCampo = 0;
   double _alturaCampo = 0;
 
@@ -130,8 +132,32 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     _buscaController.addListener(() {
       setState(() {});
     });
-    _buscaFocusNode.addListener(() {
-      setState(() {});
+    _buscaFocusNode.addListener(_aoMudarFoco);
+  }
+
+  // O tap numa sugestão pode fazer o campo perder o foco por um instante
+  // antes do onTap do ListTile disparar (foco muda primeiro que o gesto
+  // termina). Por isso a ocultação por perda de foco é adiada: se o foco
+  // voltar (ex: seleção concluída e foco devolvido ao campo) ou o item for
+  // selecionado antes do timer disparar, a sugestão nunca chega a sumir
+  // no meio do toque.
+  void _aoMudarFoco() {
+    if (_buscaFocusNode.hasFocus) {
+      _ocultarSugestoesTimer?.cancel();
+      setState(() {
+        _focoParaSugestoes = true;
+      });
+      return;
+    }
+
+    _ocultarSugestoesTimer?.cancel();
+    _ocultarSugestoesTimer = Timer(const Duration(milliseconds: 200), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _focoParaSugestoes = false;
+      });
     });
   }
 
@@ -150,6 +176,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
 
   @override
   void dispose() {
+    _ocultarSugestoesTimer?.cancel();
     _setDataSubscription?.cancel();
     _removerOverlaySugestoes();
     _buscaController.dispose();
@@ -166,7 +193,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
         ? _sugestoesPadrao(widget.itens)
         : _filtrarSugestoes(widget.itens);
     _sugestoesAtuais = sugestoes;
-    _deveExibirSugestoes = _buscaFocusNode.hasFocus && sugestoes.isNotEmpty;
+    _deveExibirSugestoes = _focoParaSugestoes && sugestoes.isNotEmpty;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -584,18 +611,20 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                         ),
                         itemBuilder: (context, index) {
                           final item = _sugestoesAtuais[index];
-                          return ListTile(
-                            dense: true,
-                            leading: widget.sugestaoLeadingBuilder?.call(
-                              context,
-                              item,
+                          return ExcludeFocus(
+                            child: ListTile(
+                              dense: true,
+                              leading: widget.sugestaoLeadingBuilder?.call(
+                                context,
+                                item,
+                              ),
+                              trailing: widget.sugestaoTrailingBuilder?.call(
+                                context,
+                                item,
+                              ),
+                              title: Text(widget.itemLabel(item)),
+                              onTap: () => _selecionarItem(item),
                             ),
-                            trailing: widget.sugestaoTrailingBuilder?.call(
-                              context,
-                              item,
-                            ),
-                            title: Text(widget.itemLabel(item)),
-                            onTap: () => _selecionarItem(item),
                           );
                         },
                       ),

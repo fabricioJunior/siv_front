@@ -13,5 +13,6 @@ abstract class Caixa {
 
 enum SituacaoCaixa {
   aberto,
+  contagem,
   fechado,
 }

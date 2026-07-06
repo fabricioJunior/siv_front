@@ -160,9 +160,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? caixaIdArg
         : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
 
-    return _rotaProtegida(
-      route: '/suprimentos',
-      child: SuprimentosPage(caixaId: caixaId),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/suprimentos',
+        child: SuprimentosPage(caixaId: caixaId),
+      ),
     );
   },
   '/suprimento': (context) {
@@ -171,9 +173,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? caixaIdArg
         : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
 
-    return _rotaProtegida(
-      route: '/suprimento',
-      child: SuprimentoPage(caixaId: caixaId),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/suprimento',
+        child: SuprimentoPage(caixaId: caixaId),
+      ),
     );
   },
   '/sangrias': (context) {
@@ -182,9 +186,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? caixaIdArg
         : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
 
-    return _rotaProtegida(
-      route: '/sangrias',
-      child: SangriasPage(caixaId: caixaId),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/sangrias',
+        child: SangriasPage(caixaId: caixaId),
+      ),
     );
   },
   '/sangria': (context) {
@@ -193,9 +199,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? caixaIdArg
         : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
 
-    return _rotaProtegida(
-      route: '/sangria',
-      child: SangriaPage(caixaId: caixaId),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/sangria',
+        child: SangriaPage(caixaId: caixaId),
+      ),
     );
   },
   '/contagem_do_caixa': (context) {
@@ -204,9 +212,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         ? caixaIdArg
         : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
 
-    return _rotaProtegida(
-      route: '/contagem_do_caixa',
-      child: ContagemDoCaixaPage(caixaId: caixaId),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/contagem_do_caixa',
+        child: ContagemDoCaixaPage(caixaId: caixaId),
+      ),
     );
   },
   '/administracao': (context) {
@@ -224,50 +234,56 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/venda': (context) {
-    return _rotaProtegida(
-      route: '/venda',
-      child: VendaPage(
-        pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-            SeletorPessoa(
-              titulo: 'Cliente',
-              itemsSelecionadosInicial: itemsSelecionadosInicial,
-              retornarSomenteId: false,
-              onChanged: onChanged,
-              onlyView: onlyView ?? false,
-              eCliente: true,
-            ),
-        vendedoresSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-            FuncionarioSeletor(
-              modo: FuncionarioSeletorModo.unica,
-              tipoFuncionario: TipoFuncionario.vendedor,
-              itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
-              onChanged: onChanged,
-              onlyView: onlyView ?? false,
-              titulo: 'Vendedor',
-            ),
-        tabelasDePrecoSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                TabelasDePrecoSeletor(
-                  titulo: 'Tabela de preço',
-                  modo: TabelasDePrecoSeletorModo.unica,
-                  itemsSelecionadosInicial: itemsSelecionadosInicial,
-                  onChanged: onChanged,
-                  onlyView: onlyView ?? false,
-                ),
-        formasDePagamentoSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                FormasDePagamentoSeletor(
-                  modo: FormasDePagamentoSeletorModo.unica,
-                  itemsSelecionadosInicial: itemsSelecionadosInicial,
-                  onChanged: onChanged,
-                  onlyView: onlyView ?? false,
-                  titulo: 'Forma de pagamento',
-                ),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/venda',
+        child: VendaPage(
+          pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              SeletorPessoa(
+                titulo: 'Cliente',
+                itemsSelecionadosInicial: itemsSelecionadosInicial,
+                retornarSomenteId: false,
+                onChanged: onChanged,
+                onlyView: onlyView ?? false,
+                eCliente: true,
+              ),
+          vendedoresSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FuncionarioSeletor(
+                    modo: FuncionarioSeletorModo.unica,
+                    tipoFuncionario: TipoFuncionario.vendedor,
+                    itemsSelecionadosInicial:
+                        itemsSelecionadosInicial ?? const [],
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Vendedor',
+                  ),
+          tabelasDePrecoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  TabelasDePrecoSeletor(
+                    titulo: 'Tabela de preço',
+                    modo: TabelasDePrecoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                  ),
+          formasDePagamentoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FormasDePagamentoSeletor(
+                    modo: FormasDePagamentoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Forma de pagamento',
+                  ),
+        ),
       ),
     );
   },
   '/devolucao': (context) {
-    return _rotaProtegida(route: '/devolucao', child: const DevolucaoPage());
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(route: '/devolucao', child: const DevolucaoPage()),
+    );
   },
   '/credito_devolucao_movimentacoes': (context) {
     final pessoaIdArg = args(context)['pessoaId'];
@@ -424,10 +440,12 @@ Map<String, Widget Function(BuildContext)> routes = {
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
 
-    return CriarRomaneioPorParametrosPage(
-      hashLista: hashLista,
-      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-      desconto: desconto,
+    return _rotaProtegidaPorCaixaAberto(
+      child: CriarRomaneioPorParametrosPage(
+        hashLista: hashLista,
+        formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        desconto: desconto,
+      ),
     );
   },
 
@@ -589,23 +607,25 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/entrada_manual_de_produtos': (context) {
-    return _rotaProtegida(
-      route: '/entrada_manual_de_produtos',
-      child: EntradaManualDeProdutosPage(
-        funcionariosSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                FuncionarioSeletor(
-                  modo: FuncionarioSeletorModo.unica,
-                  onChanged: onChanged,
-                  itemsSelecionadosInicial:
-                      itemsSelecionadosInicial ?? const [],
-                ),
-        tabelasDePrecoSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                TabelasDePrecoSeletor(
-                  modo: TabelasDePrecoSeletorModo.unica,
-                  onChanged: onChanged,
-                ),
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/entrada_manual_de_produtos',
+        child: EntradaManualDeProdutosPage(
+          funcionariosSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FuncionarioSeletor(
+                    modo: FuncionarioSeletorModo.unica,
+                    onChanged: onChanged,
+                    itemsSelecionadosInicial:
+                        itemsSelecionadosInicial ?? const [],
+                  ),
+          tabelasDePrecoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  TabelasDePrecoSeletor(
+                    modo: TabelasDePrecoSeletorModo.unica,
+                    onChanged: onChanged,
+                  ),
+        ),
       ),
     );
   },
@@ -728,6 +748,15 @@ Widget _rotaProtegida({required String route, required Widget child}) {
   return const _AcessoNegadoPage();
 }
 
+Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
+  final caixaIdDaSessao = sl<IAcessoGlobalSessao>().caixaIdDaSessao;
+  if (caixaIdDaSessao != null) {
+    return child;
+  }
+
+  return const _CaixaFechadoPage();
+}
+
 const Map<String, List<String>> _componentesDaRota = {
   '/comercial': ['PEDFC001', 'ROMFP001'],
   '/venda': ['PEDFC001', 'ROMFP001'],
@@ -801,6 +830,52 @@ class _AcessoNegadoPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CaixaFechadoPage extends StatelessWidget {
+  const _CaixaFechadoPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Caixa fechado')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.point_of_sale_outlined,
+                size: 44,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Esta funcionalidade requer um caixa aberto neste terminal.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushReplacementNamed('/fluxo_de_caixa'),
+                icon: const Icon(Icons.point_of_sale_outlined),
+                label: const Text('Ir para o caixa'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Voltar'),

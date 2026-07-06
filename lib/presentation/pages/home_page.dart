@@ -85,6 +85,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.deepOrange,
                   route: '/venda',
                   precisaDeTerminal: true,
+                  precisaDeCaixaAberto: true,
                   componentesNecessarios: ['PEDFC001'],
                 ),
                 const _AccessFlowItem(
@@ -94,6 +95,7 @@ class _HomePageState extends State<HomePage> {
                       'Seleção do romaneio original e recebimento no caixa.',
                   color: Colors.redAccent,
                   route: '/devolucao',
+                  precisaDeCaixaAberto: true,
                   componentesNecessarios: ['PEDFC001'],
                 ),
                 const _AccessFlowItem(

@@ -254,6 +254,18 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       _apiBaseUrlConfig.atualizar(state.licenciadoSelecionado!.urlApi);
 
       emit(LoginAutenticarEmProgresso(state, idEmpresa: event.empresa?.id));
+
+      // Salva o terminal (ou limpa) ANTES de criar o token: a criação do
+      // token dispara o stream de autenticação ouvido pelo AppBloc, que já
+      // tenta recuperar o terminal da sessão. Se o terminal for salvo depois,
+      // o AppBloc lê o storage antes da gravação e a home volta a pedir
+      // seleção de terminal.
+      if (event.terminal != null) {
+        await _salvarTerminalDaSessao.call(event.terminal!);
+      } else if (event.empresa != null) {
+        await _limparTerminalDaSessao.call();
+      }
+
       final token = await _criarTokenDeAutenticacao(
         usuario: usuario,
         senha: senha,
@@ -262,6 +274,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       final usuarioDaSessao = await _recuperarUsuarioDaSessao.call();
       if (token == null) {
+        if (event.terminal != null || event.empresa != null) {
+          await _limparTerminalDaSessao.call();
+        }
         emit(
           LoginAutenticarFalha(
             state,
@@ -271,11 +286,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           ),
         );
         return;
-      }
-      if (event.terminal != null) {
-        await _salvarTerminalDaSessao.call(event.terminal!);
-      } else if (event.empresa != null) {
-        await _limparTerminalDaSessao.call();
       }
       await _salvarLicenciadoDaSessao.call(state.licenciadoSelecionado!);
       await _salvarCredenciaisDeAutenticacao.call(

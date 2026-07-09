@@ -14,12 +14,18 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final String hashLista;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double desconto;
+  final List<Map<String, dynamic>> descontosItens;
+  final bool incluirCpfNaNota;
+  final String cpfNaNota;
 
   const CriarRomaneioPorParametrosPage({
     super.key,
     required this.hashLista,
     this.formasDePagamentoRealizadas = const [],
     this.desconto = 0,
+    this.descontosItens = const [],
+    this.incluirCpfNaNota = true,
+    this.cpfNaNota = '',
   });
 
   @override
@@ -31,6 +37,9 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             hashLista: hashLista,
             formasDePagamentoRealizadas: formasDePagamentoRealizadas,
             desconto: desconto,
+            descontosItens: descontosItens,
+            incluirCpfNaNota: incluirCpfNaNota,
+            cpfNaNota: cpfNaNota,
           ),
         ),
       child: BlocConsumer<RomaneioCriacaoBloc, RomaneioCriacaoState>(
@@ -65,6 +74,9 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                           formasDePagamentoRealizadas:
                               formasDePagamentoRealizadas,
                           desconto: desconto,
+                          descontosItens: descontosItens,
+                          incluirCpfNaNota: incluirCpfNaNota,
+                          cpfNaNota: cpfNaNota,
                             ),
                           );
                     },

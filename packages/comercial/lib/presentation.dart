@@ -36,3 +36,5 @@ export 'presentation/pages/relatorio_faturamento_page.dart';
 export 'presentation/pages/relatorio_curva_abc_page.dart';
 export 'presentation/pages/relatorio_clientes_ativos_page.dart';
 export 'presentation/pages/relatorio_vendas_por_funcionario_page.dart';
+export 'presentation/blocs/orcamentos_bloc/orcamentos_bloc.dart';
+export 'presentation/pages/orcamentos_page.dart';

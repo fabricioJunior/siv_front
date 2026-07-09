@@ -4,6 +4,7 @@ import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'romaneios_entrada_manual_event.dart';
 part 'romaneios_entrada_manual_state.dart';
@@ -64,7 +65,10 @@ class RomaneiosEntradaManualBloc
       emit(
         state.copyWith(
           step: RomaneiosEntradaManualStep.falha,
-          erro: 'Falha ao carregar romaneios de entrada manual.',
+          erro: mensagemDeErroApi(
+            e,
+            'Falha ao carregar romaneios de entrada manual.',
+          ),
         ),
       );
       addError(e, s);

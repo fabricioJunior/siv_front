@@ -57,6 +57,33 @@ abstract class Romaneio implements Equatable {
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
   List<RomaneioPagamentoRealizado> get formasDePagamentoRealizadas;
+  String? get pessoaDocumento;
+  String? get pessoaContato;
+  String? get pessoaCep;
+  String? get pessoaLogradouro;
+  String? get pessoaNumero;
+  String? get pessoaComplemento;
+  String? get pessoaBairro;
+  String? get pessoaMunicipio;
+  String? get pessoaUf;
+  String? get empresaNome;
+  String? get empresaNomeFantasia;
+  String? get empresaCnpj;
+  String? get operadorNome;
+  String? get operadorUsuario;
+  int? get prazoFrete;
+  String? get observacaoFrete;
+  double? get valorFrete;
+  int? get caixaTerminalId;
+  String? get caixaTerminalNome;
+  bool? get temEntrega;
+  String? get enderecoCep;
+  String? get enderecoLogradouro;
+  String? get enderecoNumero;
+  String? get enderecoComplemento;
+  String? get enderecoBairro;
+  String? get enderecoMunicipio;
+  String? get enderecoUf;
 
   factory Romaneio.create({
     int? id,
@@ -78,6 +105,33 @@ abstract class Romaneio implements Equatable {
     DateTime? criadoEm,
     DateTime? atualizadoEm,
     List<RomaneioPagamentoRealizado>? formasDePagamentoRealizadas,
+    String? pessoaDocumento,
+    String? pessoaContato,
+    String? pessoaCep,
+    String? pessoaLogradouro,
+    String? pessoaNumero,
+    String? pessoaComplemento,
+    String? pessoaBairro,
+    String? pessoaMunicipio,
+    String? pessoaUf,
+    String? empresaNome,
+    String? empresaNomeFantasia,
+    String? empresaCnpj,
+    String? operadorNome,
+    String? operadorUsuario,
+    int? prazoFrete,
+    String? observacaoFrete,
+    double? valorFrete,
+    int? caixaTerminalId,
+    String? caixaTerminalNome,
+    bool? temEntrega,
+    String? enderecoCep,
+    String? enderecoLogradouro,
+    String? enderecoNumero,
+    String? enderecoComplemento,
+    String? enderecoBairro,
+    String? enderecoMunicipio,
+    String? enderecoUf,
   }) = _RomaneioImpl;
 
   @override
@@ -101,6 +155,33 @@ abstract class Romaneio implements Equatable {
         criadoEm,
         atualizadoEm,
         formasDePagamentoRealizadas,
+        pessoaDocumento,
+        pessoaContato,
+        pessoaCep,
+        pessoaLogradouro,
+        pessoaNumero,
+        pessoaComplemento,
+        pessoaBairro,
+        pessoaMunicipio,
+        pessoaUf,
+        empresaNome,
+        empresaNomeFantasia,
+        empresaCnpj,
+        operadorNome,
+        operadorUsuario,
+        prazoFrete,
+        observacaoFrete,
+        valorFrete,
+        caixaTerminalId,
+        caixaTerminalNome,
+        temEntrega,
+        enderecoCep,
+        enderecoLogradouro,
+        enderecoNumero,
+        enderecoComplemento,
+        enderecoBairro,
+        enderecoMunicipio,
+        enderecoUf,
       ];
 
   @override
@@ -146,6 +227,60 @@ class _RomaneioImpl implements Romaneio {
   final DateTime? atualizadoEm;
   @override
   final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
+  @override
+  final String? pessoaDocumento;
+  @override
+  final String? pessoaContato;
+  @override
+  final String? pessoaCep;
+  @override
+  final String? pessoaLogradouro;
+  @override
+  final String? pessoaNumero;
+  @override
+  final String? pessoaComplemento;
+  @override
+  final String? pessoaBairro;
+  @override
+  final String? pessoaMunicipio;
+  @override
+  final String? pessoaUf;
+  @override
+  final String? empresaNome;
+  @override
+  final String? empresaNomeFantasia;
+  @override
+  final String? empresaCnpj;
+  @override
+  final String? operadorNome;
+  @override
+  final String? operadorUsuario;
+  @override
+  final int? prazoFrete;
+  @override
+  final String? observacaoFrete;
+  @override
+  final double? valorFrete;
+  @override
+  final int? caixaTerminalId;
+  @override
+  final String? caixaTerminalNome;
+  @override
+  final bool? temEntrega;
+  @override
+  final String? enderecoCep;
+  @override
+  final String? enderecoLogradouro;
+  @override
+  final String? enderecoNumero;
+  @override
+  final String? enderecoComplemento;
+  @override
+  final String? enderecoBairro;
+  @override
+  final String? enderecoMunicipio;
+  @override
+  final String? enderecoUf;
 
   const _RomaneioImpl({
     this.id,
@@ -167,6 +302,33 @@ class _RomaneioImpl implements Romaneio {
     this.criadoEm,
     this.atualizadoEm,
     List<RomaneioPagamentoRealizado>? formasDePagamentoRealizadas,
+    this.pessoaDocumento,
+    this.pessoaContato,
+    this.pessoaCep,
+    this.pessoaLogradouro,
+    this.pessoaNumero,
+    this.pessoaComplemento,
+    this.pessoaBairro,
+    this.pessoaMunicipio,
+    this.pessoaUf,
+    this.empresaNome,
+    this.empresaNomeFantasia,
+    this.empresaCnpj,
+    this.operadorNome,
+    this.operadorUsuario,
+    this.prazoFrete,
+    this.observacaoFrete,
+    this.valorFrete,
+    this.caixaTerminalId,
+    this.caixaTerminalNome,
+    this.temEntrega,
+    this.enderecoCep,
+    this.enderecoLogradouro,
+    this.enderecoNumero,
+    this.enderecoComplemento,
+    this.enderecoBairro,
+    this.enderecoMunicipio,
+    this.enderecoUf,
   })  : romaneiosDevolucao = romaneiosDevolucao ?? const [],
         formasDePagamentoRealizadas = formasDePagamentoRealizadas ?? const [];
 
@@ -191,6 +353,33 @@ class _RomaneioImpl implements Romaneio {
         criadoEm,
         atualizadoEm,
         formasDePagamentoRealizadas,
+        pessoaDocumento,
+        pessoaContato,
+        pessoaCep,
+        pessoaLogradouro,
+        pessoaNumero,
+        pessoaComplemento,
+        pessoaBairro,
+        pessoaMunicipio,
+        pessoaUf,
+        empresaNome,
+        empresaNomeFantasia,
+        empresaCnpj,
+        operadorNome,
+        operadorUsuario,
+        prazoFrete,
+        observacaoFrete,
+        valorFrete,
+        caixaTerminalId,
+        caixaTerminalNome,
+        temEntrega,
+        enderecoCep,
+        enderecoLogradouro,
+        enderecoNumero,
+        enderecoComplemento,
+        enderecoBairro,
+        enderecoMunicipio,
+        enderecoUf,
       ];
 
   @override
@@ -203,6 +392,8 @@ abstract class RomaneioPagamentoRealizado implements Equatable {
   int get parcela;
   double get valor;
   String? get descricao;
+  String? get vencimento;
+  String? get tipoHistorico;
 
   factory RomaneioPagamentoRealizado.create({
     required int controle,
@@ -210,11 +401,20 @@ abstract class RomaneioPagamentoRealizado implements Equatable {
     required int parcela,
     required double valor,
     String? descricao,
+    String? vencimento,
+    String? tipoHistorico,
   }) = _RomaneioPagamentoRealizadoImpl;
 
   @override
-  List<Object?> get props =>
-      [controle, formaDePagamentoId, parcela, valor, descricao];
+  List<Object?> get props => [
+        controle,
+        formaDePagamentoId,
+        parcela,
+        valor,
+        descricao,
+        vencimento,
+        tipoHistorico,
+      ];
 
   @override
   bool? get stringify => true;
@@ -231,6 +431,10 @@ class _RomaneioPagamentoRealizadoImpl implements RomaneioPagamentoRealizado {
   final double valor;
   @override
   final String? descricao;
+  @override
+  final String? vencimento;
+  @override
+  final String? tipoHistorico;
 
   const _RomaneioPagamentoRealizadoImpl({
     required this.controle,
@@ -238,11 +442,20 @@ class _RomaneioPagamentoRealizadoImpl implements RomaneioPagamentoRealizado {
     required this.parcela,
     required this.valor,
     this.descricao,
+    this.vencimento,
+    this.tipoHistorico,
   });
 
   @override
-  List<Object?> get props =>
-      [controle, formaDePagamentoId, parcela, valor, descricao];
+  List<Object?> get props => [
+        controle,
+        formaDePagamentoId,
+        parcela,
+        valor,
+        descricao,
+        vencimento,
+        tipoHistorico,
+      ];
 
   @override
   bool? get stringify => true;

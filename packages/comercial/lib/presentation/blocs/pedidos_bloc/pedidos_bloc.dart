@@ -4,6 +4,7 @@ import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'pedidos_event.dart';
 part 'pedidos_state.dart';
@@ -35,7 +36,8 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidosStep.falha, erro: 'Falha ao carregar pedidos.'));
+          step: PedidosStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao carregar pedidos.')));
       addError(e, s);
     }
   }

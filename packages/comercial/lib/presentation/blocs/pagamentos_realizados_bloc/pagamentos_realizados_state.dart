@@ -26,8 +26,13 @@ class PagamentosRealizadosState extends Equatable {
   final DescontoTipo? descontoTipo;
   final String descontoValorTexto;
   final double valorDescontoAplicado;
+  final Map<int, DescontoTipo> descontosItensTipo;
+  final Map<int, String> descontosItensValorTexto;
+  final Map<int, double> descontosItensAplicado;
   final String? erro;
   final List<Map<String, dynamic>> resultado;
+  final bool incluirCpfNaNota;
+  final String cpfNaNota;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -41,13 +46,20 @@ class PagamentosRealizadosState extends Equatable {
     this.descontoTipo,
     this.descontoValorTexto = '',
     this.valorDescontoAplicado = 0,
+    this.descontosItensTipo = const {},
+    this.descontosItensValorTexto = const {},
+    this.descontosItensAplicado = const {},
     this.erro,
     this.resultado = const [],
+    this.incluirCpfNaNota = true,
+    this.cpfNaNota = '',
   });
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
+  double get valorDescontoItensTotal =>
+      descontosItensAplicado.values.fold(0, (a, b) => a + b);
   double get valorTotalComDesconto =>
-      (valorTotalProdutos - valorDescontoAplicado)
+      (valorTotalProdutos - valorDescontoAplicado - valorDescontoItensTotal)
           .clamp(0, double.infinity)
           .toDouble();
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
@@ -81,8 +93,13 @@ class PagamentosRealizadosState extends Equatable {
     Object? descontoTipo = _sentinela,
     String? descontoValorTexto,
     double? valorDescontoAplicado,
+    Map<int, DescontoTipo>? descontosItensTipo,
+    Map<int, String>? descontosItensValorTexto,
+    Map<int, double>? descontosItensAplicado,
     Object? erro = _sentinela,
     List<Map<String, dynamic>>? resultado,
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -104,8 +121,15 @@ class PagamentosRealizadosState extends Equatable {
       descontoValorTexto: descontoValorTexto ?? this.descontoValorTexto,
       valorDescontoAplicado:
           valorDescontoAplicado ?? this.valorDescontoAplicado,
+      descontosItensTipo: descontosItensTipo ?? this.descontosItensTipo,
+      descontosItensValorTexto:
+          descontosItensValorTexto ?? this.descontosItensValorTexto,
+      descontosItensAplicado:
+          descontosItensAplicado ?? this.descontosItensAplicado,
       erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       resultado: resultado ?? this.resultado,
+      incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
+      cpfNaNota: cpfNaNota ?? this.cpfNaNota,
     );
   }
 
@@ -122,8 +146,13 @@ class PagamentosRealizadosState extends Equatable {
         descontoTipo,
         descontoValorTexto,
         valorDescontoAplicadoArredondado,
+        descontosItensTipo,
+        descontosItensValorTexto,
+        descontosItensAplicado,
         erro,
         resultado,
+        incluirCpfNaNota,
+        cpfNaNota,
       ];
 }
 

@@ -17,6 +17,9 @@ class ListaDeProdutosCompartilhadaDto extends ListaDeProdutosCompartilhada
     super.funcionarioId,
     super.tabelaPrecoId,
     super.processada,
+    super.clienteNome,
+    super.funcionarioNome,
+    super.tabelaPrecoNome,
   }) : super(origem: OrigemCompartilhadaTipo.values[origemIndex]);
 
   final int origemIndex;

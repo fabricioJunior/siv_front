@@ -25,6 +25,22 @@ class _PessoaPageState extends State<PessoaPage> {
       TextEditingController();
   DateTime? _dataNascimentoSelecionada;
 
+  final TextEditingController _enderecoCepController = TextEditingController();
+  final TextEditingController _enderecoLogradouroController =
+      TextEditingController();
+  final TextEditingController _enderecoNumeroController =
+      TextEditingController();
+  final TextEditingController _enderecoComplementoController =
+      TextEditingController();
+  final TextEditingController _enderecoBairroController =
+      TextEditingController();
+  final TextEditingController _enderecoMunicipioController =
+      TextEditingController();
+  final TextEditingController _enderecoUfController = TextEditingController();
+
+  final GlobalKey<FormState> _formKeyPessoa = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKeyFuncionario = GlobalKey<FormState>();
+
   late final PessoaBloc _bloc;
   int _currentStep = 0;
   bool _camposHidratados = false;
@@ -48,6 +64,13 @@ class _PessoaPageState extends State<PessoaPage> {
     _emailController.dispose();
     _contatoController.dispose();
     _dataNascimentoController.dispose();
+    _enderecoCepController.dispose();
+    _enderecoLogradouroController.dispose();
+    _enderecoNumeroController.dispose();
+    _enderecoComplementoController.dispose();
+    _enderecoBairroController.dispose();
+    _enderecoMunicipioController.dispose();
+    _enderecoUfController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -58,7 +81,23 @@ class _PessoaPageState extends State<PessoaPage> {
 
     return BlocProvider<PessoaBloc>.value(
       value: _bloc,
-      child: BlocListener<PessoaBloc, PessoaState>(
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<PessoaBloc, PessoaState>(
+            listenWhen: (previous, current) =>
+                previous.enderecoBuscandoCep && !current.enderecoBuscandoCep,
+            listener: (context, state) {
+              if (state.enderecoErroCep == null) {
+                _enderecoLogradouroController.text =
+                    state.enderecoLogradouro ?? '';
+                _enderecoBairroController.text = state.enderecoBairro ?? '';
+                _enderecoMunicipioController.text =
+                    state.enderecoMunicipio ?? '';
+                _enderecoUfController.text = state.enderecoUf ?? '';
+              }
+            },
+          ),
+          BlocListener<PessoaBloc, PessoaState>(
         listenWhen: (previous, current) =>
             previous.pessoaStep != current.pessoaStep,
         listener: (context, state) {
@@ -72,9 +111,25 @@ class _PessoaPageState extends State<PessoaPage> {
 
           if (state.pessoaStep == PessoaStep.criada ||
               state.pessoaStep == PessoaStep.salva) {
-            Navigator.of(context).pop(true);
+            if (state.avisoEndereco != null) {
+              _erro(context, state.avisoEndereco!);
+              Future.delayed(const Duration(seconds: 2), () {
+                if (mounted) Navigator.of(context).pop(true);
+              });
+            } else {
+              Navigator.of(context).pop(true);
+            }
+          }
+
+          if (state.pessoaStep == PessoaStep.falha) {
+            _erro(
+              context,
+              state.erro ?? 'Ocorreu um erro. Tente novamente.',
+            );
           }
         },
+          ),
+        ],
         child: Scaffold(
           appBar: AppBar(
             title: Text(
@@ -143,84 +198,231 @@ class _PessoaPageState extends State<PessoaPage> {
 
   Widget _buildStepPessoa(BuildContext context, PessoaState state) {
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            key: const Key('nome_pessoa_text_field'),
-            controller: _nomeController,
-            decoration: const InputDecoration(
-              labelText: 'Nome',
-              border: OutlineInputBorder(),
+      child: Form(
+        key: _formKeyPessoa,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              key: const Key('nome_pessoa_text_field'),
+              controller: _nomeController,
+              decoration: const InputDecoration(
+                labelText: 'Nome *',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Informe o nome da pessoa.';
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 12),
-          CPFInput(
-            controller: _cpfController,
-            valorInicial: state.documento,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 12),
+            CPFInput(
+              controller: _cpfController,
+              valorInicial: state.documento,
             ),
-          ),
-          const SizedBox(height: 12),
-          DateInput(
-            externalController: _dataNascimentoController,
-            dataInicial: state.dataDeNascimento,
-            labelText: 'Data de nascimento',
-            onComplete: (value) {
-              _dataNascimentoSelecionada = value;
-            },
-          ),
-          const SizedBox(height: 12),
-          CelularInput(
-            controller: _contatoController,
-            valorInicial: state.contato,
-            labelText: 'Contato',
-          ),
-          const SizedBox(height: 16),
-          const Text('Tipo de vínculo'),
-          RadioGroup<TipoPessoaSeletor>(
-            groupValue: _valorInicial(state),
-            onChanged: (value) {
-              context.read<PessoaBloc>().add(
-                    PessoaEditou(
-                      eCliente: value == TipoPessoaSeletor.cliente,
-                      eFornecedor: value == TipoPessoaSeletor.fornecedor,
-                      eFuncionario: value == TipoPessoaSeletor.funcionario,
-                    ),
-                  );
-            },
-            child: const Column(
-              children: <Widget>[
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Cliente'),
-                  leading: Radio<TipoPessoaSeletor>(
-                      value: TipoPessoaSeletor.cliente),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Funcionário'),
-                  leading: Radio<TipoPessoaSeletor>(
-                      value: TipoPessoaSeletor.funcionario),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Fornecedor'),
-                  leading: Radio<TipoPessoaSeletor>(
-                      value: TipoPessoaSeletor.fornecedor),
-                ),
-              ],
+            const SizedBox(height: 12),
+            DateInput(
+              externalController: _dataNascimentoController,
+              dataInicial: state.dataDeNascimento,
+              labelText: 'Data de nascimento *',
+              onComplete: (value) {
+                _dataNascimentoSelecionada = value;
+              },
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            CelularInput(
+              controller: _contatoController,
+              valorInicial: state.contato,
+              labelText: 'Celular *',
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'E-mail (opcional)',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                final email = value?.trim() ?? '';
+                if (email.isNotEmpty && !_emailValido(email)) {
+                  return 'Informe um e-mail válido ou deixe em branco.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text('Tipo de vínculo'),
+            RadioGroup<TipoPessoaSeletor>(
+              groupValue: _valorInicial(state),
+              onChanged: (value) {
+                context.read<PessoaBloc>().add(
+                      PessoaEditou(
+                        eCliente: value == TipoPessoaSeletor.cliente,
+                        eFornecedor: value == TipoPessoaSeletor.fornecedor,
+                        eFuncionario: value == TipoPessoaSeletor.funcionario,
+                      ),
+                    );
+              },
+              child: const Column(
+                children: <Widget>[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Cliente'),
+                    leading: Radio<TipoPessoaSeletor>(
+                        value: TipoPessoaSeletor.cliente),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Funcionário'),
+                    leading: Radio<TipoPessoaSeletor>(
+                        value: TipoPessoaSeletor.funcionario),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Fornecedor'),
+                    leading: Radio<TipoPessoaSeletor>(
+                        value: TipoPessoaSeletor.fornecedor),
+                  ),
+                ],
+              ),
+            ),
+            if (_valorInicial(state) == TipoPessoaSeletor.cliente)
+              _buildEnderecoCliente(context, state),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildEnderecoCliente(BuildContext context, PessoaState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 8),
+        const Text(
+          'Endereço (opcional)',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Você pode informar o primeiro endereço agora ou cadastrá-lo depois.',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _enderecoCepController,
+                decoration: InputDecoration(
+                  labelText: 'CEP',
+                  border: const OutlineInputBorder(),
+                  errorText: state.enderecoErroCep,
+                  suffixIcon: state.enderecoBuscandoCep
+                      ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: state.enderecoBuscandoCep
+                  ? null
+                  : () {
+                      context.read<PessoaBloc>().add(
+                            PessoaBuscarCepEndereco(
+                              cep: _enderecoCepController.text.trim(),
+                            ),
+                          );
+                    },
+              child: const Text('Buscar CEP'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _enderecoLogradouroController,
+          decoration: const InputDecoration(
+            labelText: 'Logradouro',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _enderecoNumeroController,
+                decoration: const InputDecoration(
+                  labelText: 'Número',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: _enderecoComplementoController,
+                decoration: const InputDecoration(
+                  labelText: 'Complemento',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _enderecoBairroController,
+          decoration: const InputDecoration(
+            labelText: 'Bairro',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextFormField(
+                controller: _enderecoMunicipioController,
+                decoration: const InputDecoration(
+                  labelText: 'Município',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 1,
+              child: TextFormField(
+                controller: _enderecoUfController,
+                decoration: const InputDecoration(
+                  labelText: 'UF',
+                  border: OutlineInputBorder(),
+                  counterText: '',
+                ),
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 2,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -232,69 +434,78 @@ class _PessoaPageState extends State<PessoaPage> {
     }
 
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButtonFormField<TipoFuncionario>(
-            value: state.tipoFuncionario,
-            decoration: const InputDecoration(
-              labelText: 'Tipo de funcionário',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(
-                value: TipoFuncionario.comprador,
-                child: Text('Comprador'),
-              ),
-              DropdownMenuItem(
-                value: TipoFuncionario.vendedor,
-                child: Text('Vendedor'),
-              ),
-              DropdownMenuItem(
-                value: TipoFuncionario.caixa,
-                child: Text('Caixa'),
-              ),
-              DropdownMenuItem(
-                value: TipoFuncionario.gerente,
-                child: Text('Gerente'),
-              ),
-            ],
-            onChanged: (value) {
-              context
-                  .read<PessoaBloc>()
-                  .add(PessoaEditou(tipoFuncionario: value));
-            },
-          ),
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: () async {
-              await _selecionarEmpresa(context);
-            },
-            child: InputDecorator(
+      child: Form(
+        key: _formKeyFuncionario,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<TipoFuncionario>(
+              value: state.tipoFuncionario,
               decoration: const InputDecoration(
-                labelText: 'Empresa',
+                labelText: 'Tipo de funcionário',
                 border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.search),
               ),
-              child: Text(
-                _textoEmpresaSelecionada(state).isEmpty
-                    ? 'Selecione uma empresa'
-                    : _textoEmpresaSelecionada(state),
+              items: const [
+                DropdownMenuItem(
+                  value: TipoFuncionario.comprador,
+                  child: Text('Comprador'),
+                ),
+                DropdownMenuItem(
+                  value: TipoFuncionario.vendedor,
+                  child: Text('Vendedor'),
+                ),
+                DropdownMenuItem(
+                  value: TipoFuncionario.caixa,
+                  child: Text('Caixa'),
+                ),
+                DropdownMenuItem(
+                  value: TipoFuncionario.gerente,
+                  child: Text('Gerente'),
+                ),
+              ],
+              onChanged: (value) {
+                context
+                    .read<PessoaBloc>()
+                    .add(PessoaEditou(tipoFuncionario: value));
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Selecione o tipo de funcionário.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () async {
+                await _selecionarEmpresa(context);
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Empresa',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.search),
+                ),
+                child: Text(
+                  _textoEmpresaSelecionada(state).isEmpty
+                      ? 'Selecione uma empresa'
+                      : _textoEmpresaSelecionada(state),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Funcionário inativo'),
-            value: state.funcionarioInativo,
-            onChanged: (value) {
-              context
-                  .read<PessoaBloc>()
-                  .add(PessoaEditou(funcionarioInativo: value));
-            },
-          ),
-        ],
+            const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Funcionário inativo'),
+              value: state.funcionarioInativo,
+              onChanged: (value) {
+                context
+                    .read<PessoaBloc>()
+                    .add(PessoaEditou(funcionarioInativo: value));
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -313,14 +524,21 @@ class _PessoaPageState extends State<PessoaPage> {
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Documento'),
+            title: const Text('CPF'),
             subtitle: Text(_cpfController.text.trim().isEmpty
                 ? '-'
                 : _cpfController.text.trim()),
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Contato'),
+            title: const Text('Data de nascimento'),
+            subtitle: Text(_dataNascimentoController.text.trim().isEmpty
+                ? '-'
+                : _dataNascimentoController.text.trim()),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Celular'),
             subtitle: Text(_contatoController.text.trim().isEmpty
                 ? '-'
                 : _contatoController.text.trim()),
@@ -337,6 +555,13 @@ class _PessoaPageState extends State<PessoaPage> {
             title: const Text('Vínculo'),
             subtitle: Text(_descricaoVinculo(state)),
           ),
+          if (_valorInicial(state) == TipoPessoaSeletor.cliente &&
+              _resumoEndereco().isNotEmpty)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Endereço'),
+              subtitle: Text(_resumoEndereco()),
+            ),
           if (state.eFuncionario ?? false) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -368,6 +593,37 @@ class _PessoaPageState extends State<PessoaPage> {
         ],
       ),
     );
+  }
+
+  String _resumoEndereco() {
+    final logradouro = _enderecoLogradouroController.text.trim();
+    final numero = _enderecoNumeroController.text.trim();
+    final bairro = _enderecoBairroController.text.trim();
+    final municipio = _enderecoMunicipioController.text.trim();
+    final uf = _enderecoUfController.text.trim();
+
+    if (logradouro.isEmpty &&
+        numero.isEmpty &&
+        bairro.isEmpty &&
+        municipio.isEmpty &&
+        uf.isEmpty) {
+      return '';
+    }
+
+    final partes = <String>[];
+    final logradouroNumero = [
+      logradouro,
+      if (numero.isNotEmpty) numero,
+    ].join(', ');
+    if (logradouroNumero.isNotEmpty) partes.add(logradouroNumero);
+    if (bairro.isNotEmpty) partes.add(bairro);
+    final municipioUf = [
+      municipio,
+      if (uf.isNotEmpty) uf,
+    ].join('/');
+    if (municipioUf.isNotEmpty) partes.add(municipioUf);
+
+    return partes.join(' - ');
   }
 
   Widget _stepTitle(String texto) {
@@ -444,28 +700,18 @@ class _PessoaPageState extends State<PessoaPage> {
 
   bool _podeAvancar(BuildContext context, PessoaState state, int step) {
     if (step == 0) {
-      if (_nomeController.text.trim().isEmpty) {
-        _erro(context, 'Informe o nome da pessoa.');
-        return false;
-      }
-      if (_cpfController.text.trim().isEmpty) {
-        _erro(context, 'Informe o documento da pessoa.');
+      if (!(_formKeyPessoa.currentState?.validate() ?? false)) {
         return false;
       }
       if (_obterDataNascimentoAtual(state) == null) {
         _erro(context, 'Informe a data de nascimento.');
         return false;
       }
-      if (_contatoController.text.trim().isEmpty) {
-        _erro(context, 'Informe o contato da pessoa.');
-        return false;
-      }
       return true;
     }
 
     if (step == 1 && (state.eFuncionario ?? false)) {
-      if (state.tipoFuncionario == null) {
-        _erro(context, 'Selecione o tipo de funcionário.');
+      if (!(_formKeyFuncionario.currentState?.validate() ?? false)) {
         return false;
       }
       if (state.funcionarioEmpresaId == null) {
@@ -484,6 +730,10 @@ class _PessoaPageState extends State<PessoaPage> {
       return false;
     }
     return true;
+  }
+
+  bool _emailValido(String email) {
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
   }
 
   void _erro(BuildContext context, String mensagem) {
@@ -538,6 +788,13 @@ class _PessoaPageState extends State<PessoaPage> {
     _contatoController.text = state.contato ?? '';
     _dataNascimentoController.text = _formatarData(state.dataDeNascimento);
     _dataNascimentoSelecionada = state.dataDeNascimento;
+    _enderecoCepController.text = state.enderecoCep ?? '';
+    _enderecoLogradouroController.text = state.enderecoLogradouro ?? '';
+    _enderecoNumeroController.text = state.enderecoNumero ?? '';
+    _enderecoComplementoController.text = state.enderecoComplemento ?? '';
+    _enderecoBairroController.text = state.enderecoBairro ?? '';
+    _enderecoMunicipioController.text = state.enderecoMunicipio ?? '';
+    _enderecoUfController.text = state.enderecoUf ?? '';
   }
 
   void _sincronizarDadosPessoaNoBloc(BuildContext context, PessoaState state) {
@@ -548,6 +805,13 @@ class _PessoaPageState extends State<PessoaPage> {
             email: _emailController.text.trim(),
             contato: _contatoController.text.trim(),
             dataDeNascimento: _obterDataNascimentoAtual(state),
+            enderecoCep: _enderecoCepController.text.trim(),
+            enderecoLogradouro: _enderecoLogradouroController.text.trim(),
+            enderecoNumero: _enderecoNumeroController.text.trim(),
+            enderecoComplemento: _enderecoComplementoController.text.trim(),
+            enderecoBairro: _enderecoBairroController.text.trim(),
+            enderecoMunicipio: _enderecoMunicipioController.text.trim(),
+            enderecoUf: _enderecoUfController.text.trim(),
           ),
         );
   }

@@ -5,6 +5,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'romaneios_event.dart';
 part 'romaneios_state.dart';
@@ -56,7 +57,8 @@ class RomaneiosBloc extends Bloc<RomaneiosEvent, RomaneiosState> {
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: RomaneiosStep.falha, erro: 'Falha ao carregar romaneios.'));
+          step: RomaneiosStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao carregar romaneios.')));
       addError(e, s);
     }
   }

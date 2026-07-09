@@ -2,6 +2,8 @@ import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagament
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   final String hashLista;
   final PagamentosRealizadosResumo? resumoInicial;
   final int? pessoaId;
+  final String? cpfClienteInicial;
   final SeletorWidget formasDePagamentoSeletor;
 
   const PagamentosRealizadosWidget({
@@ -17,6 +20,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     required this.hashLista,
     this.resumoInicial,
     this.pessoaId,
+    this.cpfClienteInicial,
     required this.formasDePagamentoSeletor,
   });
 
@@ -29,6 +33,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             hashLista: hashLista,
             resumoInicial: resumoInicial,
             pessoaId: pessoaId,
+            cpfClienteInicial: cpfClienteInicial,
           ),
         ),
       child: BlocConsumer<PagamentosRealizadosBloc, PagamentosRealizadosState>(
@@ -46,6 +51,9 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             Navigator.of(context).pop({
               'formasDePagamentoRealizadas': state.resultado,
               'desconto': state.valorDescontoAplicado,
+              'descontosItens': state.descontosItensAplicado.entries
+                  .map((e) => {'produtoId': e.key, 'valor': e.value})
+                  .toList(),
               'resumoFormasDePagamento': state.linhas
                   .where((linha) => linha.formaDePagamento != null)
                   .map(
@@ -57,6 +65,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                   .toList(),
               'valorTotalRecebido': state.valorLiquido,
               'valorTroco': state.valorTroco,
+              'incluirCpfNaNota': state.incluirCpfNaNota,
+              'cpfNaNota': state.incluirCpfNaNota ? state.cpfNaNota : '',
             });
           }
         },
@@ -100,6 +110,15 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
                     ),
+                    if ((state.resumo?.produtosCompartilhados ?? [])
+                        .isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _ProdutosCard(
+                        state: state,
+                        podeEditar:
+                            state.step == PagamentosRealizadosStep.editando,
+                      ),
+                    ],
                     if (state.erro != null) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -177,7 +196,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   }
 }
 
-class _ResumoPagamentoCard extends StatelessWidget {
+class _ResumoPagamentoCard extends StatefulWidget {
   final PagamentosRealizadosState state;
   final VoidCallback? onDescontoPressed;
 
@@ -187,7 +206,37 @@ class _ResumoPagamentoCard extends StatelessWidget {
   });
 
   @override
+  State<_ResumoPagamentoCard> createState() => _ResumoPagamentoCardState();
+}
+
+class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
+  late final TextEditingController _cpfController;
+
+  @override
+  void initState() {
+    super.initState();
+    _cpfController = TextEditingController(text: widget.state.cpfNaNota);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ResumoPagamentoCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state.cpfNaNota != _cpfController.text &&
+        widget.state.cpfNaNota != oldWidget.state.cpfNaNota) {
+      _cpfController.text = widget.state.cpfNaNota;
+    }
+  }
+
+  @override
+  void dispose() {
+    _cpfController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final onDescontoPressed = widget.onDescontoPressed;
     final theme = Theme.of(context);
     final possuiPessoa = state.pessoaId != null;
     final carregandoCredito = state.carregandoSaldoCreditoDevolucao;
@@ -233,6 +282,10 @@ class _ResumoPagamentoCard extends StatelessWidget {
                 _InfoBox(
                   titulo: 'Desconto',
                   valor: _formatarMoeda(state.valorDescontoAplicado),
+                ),
+                _InfoBox(
+                  titulo: 'Desconto por produto',
+                  valor: _formatarMoeda(state.valorDescontoItensTotal),
                 ),
                 _InfoBox(
                   titulo: 'Total c/ desconto',
@@ -297,6 +350,30 @@ class _ResumoPagamentoCard extends StatelessWidget {
                 ),
               ),
             ],
+            const Divider(height: 24),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: state.incluirCpfNaNota,
+              title: const Text('Incluir CPF do cliente na nota fiscal'),
+              onChanged: (value) {
+                context.read<PagamentosRealizadosBloc>().add(
+                      PagamentosRealizadosIncluirCpfAlterado(
+                        incluirCpfNaNota: value ?? true,
+                      ),
+                    );
+              },
+            ),
+            if (state.incluirCpfNaNota)
+              CPFInput(
+                controller: _cpfController,
+                obrigatorio: false,
+                onChanged: (value) {
+                  context.read<PagamentosRealizadosBloc>().add(
+                        PagamentosRealizadosCpfAlterado(cpfNaNota: value),
+                      );
+                },
+              ),
           ],
         ),
       ),
@@ -442,6 +519,84 @@ class _LinhaPagamentoCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProdutosCard extends StatelessWidget {
+  final PagamentosRealizadosState state;
+  final bool podeEditar;
+
+  const _ProdutosCard({required this.state, required this.podeEditar});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final produtos = state.resumo?.produtosCompartilhados ?? [];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Produtos', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...produtos.map((produto) {
+              final valorTotalItem = produto.quantidade * produto.valorUnitario;
+              final descontoAplicado =
+                  state.descontosItensAplicado[produto.produtoId] ?? 0;
+              final descricao = [
+                produto.nome,
+                if (produto.corNome.isNotEmpty) produto.corNome,
+                if (produto.tamanhoNome.isNotEmpty) produto.tamanhoNome,
+              ].join(' - ');
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(descricao, overflow: TextOverflow.ellipsis),
+                    ),
+                    Expanded(
+                      child: Text('Qtd: ${produto.quantidade}'),
+                    ),
+                    Expanded(
+                      child: Text(_formatarMoeda(produto.valorUnitario)),
+                    ),
+                    Expanded(
+                      child: Text(
+                        descontoAplicado > 0
+                            ? _formatarMoeda(valorTotalItem - descontoAplicado)
+                            : _formatarMoeda(valorTotalItem),
+                        style: descontoAplicado > 0
+                            ? TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              )
+                            : null,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: podeEditar
+                          ? () => _abrirDialogoDescontoItem(
+                                context,
+                                state,
+                                produto,
+                              )
+                          : null,
+                      icon: const Icon(Icons.percent, size: 16),
+                      label: Text(descontoAplicado > 0 ? 'Editar' : 'Desconto'),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -611,6 +766,148 @@ Future<void> _abrirDialogoDesconto(
   if (confirmou == true) {
     bloc.add(
       PagamentosRealizadosDescontoAlterado(
+        tipo: tipoSelecionado,
+        valorTexto: controller.text,
+      ),
+    );
+  }
+}
+
+Future<void> _abrirDialogoDescontoItem(
+  BuildContext context,
+  PagamentosRealizadosState state,
+  ProdutoCompartilhado produto,
+) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+  final valorBase = produto.quantidade * produto.valorUnitario;
+  final tipoAtual = state.descontosItensTipo[produto.produtoId];
+  final valorTextoAtual = state.descontosItensValorTexto[produto.produtoId] ?? '';
+  final valorAplicadoAtual = state.descontosItensAplicado[produto.produtoId] ?? 0;
+
+  var tipoSelecionado = tipoAtual ?? DescontoTipo.valorBruto;
+  final valorInicial = valorTextoAtual.isNotEmpty
+      ? valorTextoAtual
+      : (tipoAtual == DescontoTipo.forcaValorTotal
+          ? (valorBase - valorAplicadoAtual).toStringAsFixed(2)
+          : valorAplicadoAtual.toStringAsFixed(2));
+  final controller = TextEditingController(
+    text: valorAplicadoAtual > 0 ? valorInicial : '',
+  );
+
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          String dica;
+          String label;
+
+          switch (tipoSelecionado) {
+            case DescontoTipo.valorBruto:
+              label = 'Valor do desconto';
+              dica = 'Informe um valor entre 0 e ${_formatarMoeda(valorBase)}.';
+            case DescontoTipo.porcentagem:
+              label = 'Percentual de desconto';
+              dica = 'Informe um percentual entre 0 e 100.';
+            case DescontoTipo.forcaValorTotal:
+              label = 'Novo valor total do item';
+              dica =
+                  'Informe o total final desejado para o item. O desconto sera valor original menos esse total.';
+          }
+
+          return AlertDialog(
+            title: Text('Desconto em ${produto.nome}'),
+            content: SizedBox(
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<DescontoTipo>(
+                      value: tipoSelecionado,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de desconto',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: DescontoTipo.valorBruto,
+                          child: Text('Valor manual'),
+                        ),
+                        DropdownMenuItem(
+                          value: DescontoTipo.porcentagem,
+                          child: Text('Porcentagem'),
+                        ),
+                        DropdownMenuItem(
+                          value: DescontoTipo.forcaValorTotal,
+                          child: Text('Valor total manual'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          tipoSelecionado = value;
+                          controller.clear();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: controller,
+                      autofocus: true,
+                      inputFormatters: [_decimalInputFormatter],
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                      onFieldSubmitted: (_) => Navigator.of(dialogContext).pop(true),
+                      decoration: InputDecoration(
+                        labelText: label,
+                        border: const OutlineInputBorder(),
+                        helperText: dica,
+                        helperMaxLines: 3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              if (valorAplicadoAtual > 0)
+                TextButton(
+                  onPressed: () {
+                    bloc.add(
+                      PagamentosRealizadosDescontoItemAlterado(
+                        produtoId: produto.produtoId,
+                        tipo: null,
+                        valorTexto: '',
+                      ),
+                    );
+                    Navigator.of(dialogContext).pop(false);
+                  },
+                  child: const Text('Remover desconto'),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Aplicar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  if (confirmou == true) {
+    bloc.add(
+      PagamentosRealizadosDescontoItemAlterado(
+        produtoId: produto.produtoId,
         tipo: tipoSelecionado,
         valorTexto: controller.text,
       ),

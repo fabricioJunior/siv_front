@@ -15,6 +15,8 @@ class ConfiguracaoFiscalPage extends StatefulWidget {
 class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
   late final ConfiguracaoFiscalBloc _bloc;
   String? _providerSelecionado;
+  bool _homologacao = false;
+  bool _homologacaoPreenchida = false;
   final Map<String, TextEditingController> _credenciaisControllers = {};
 
   static const _credenciaisWebmania = [
@@ -54,6 +56,10 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
         controller.text = (credentials[campo.$1] as String?) ?? '';
       }
     }
+    if (!_homologacaoPreenchida) {
+      _homologacaoPreenchida = true;
+      _homologacao = webmania['homologacao'] as bool? ?? false;
+    }
   }
 
   void _salvar() {
@@ -68,6 +74,7 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
             for (final campo in _credenciaisWebmania)
               campo.$1: _credenciaisControllers[campo.$1]!.text.trim(),
           },
+          'homologacao': _homologacao,
         },
       };
     }
@@ -165,6 +172,16 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
                                     campo.$1 == 'accessTokenSecret',
                               ),
                             ),
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            value: _homologacao,
+                            title: const Text('Ambiente de homologação (testes)'),
+                            subtitle: const Text(
+                              'Quando ativado, as notas são emitidas em ambiente de testes da Webmania.',
+                            ),
+                            onChanged: (value) =>
+                                setState(() => _homologacao = value),
                           ),
                         ],
                         if (_providerSelecionado == 'noop') ...[

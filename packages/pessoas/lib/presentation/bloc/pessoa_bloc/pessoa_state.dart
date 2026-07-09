@@ -45,6 +45,28 @@ class PessoaState extends Equatable {
 
   final bool funcionarioInativo;
 
+  final String? erro;
+
+  final String? enderecoCep;
+
+  final String? enderecoLogradouro;
+
+  final String? enderecoNumero;
+
+  final String? enderecoComplemento;
+
+  final String? enderecoBairro;
+
+  final String? enderecoMunicipio;
+
+  final String? enderecoUf;
+
+  final bool enderecoBuscandoCep;
+
+  final String? enderecoErroCep;
+
+  final String? avisoEndereco;
+
   const PessoaState({
     this.bloqueado,
     this.contato,
@@ -66,6 +88,17 @@ class PessoaState extends Equatable {
     this.funcionarioEmpresaId,
     this.funcionarioEmpresaNome,
     this.funcionarioInativo = false,
+    this.erro,
+    this.enderecoCep,
+    this.enderecoLogradouro,
+    this.enderecoNumero,
+    this.enderecoComplemento,
+    this.enderecoBairro,
+    this.enderecoMunicipio,
+    this.enderecoUf,
+    this.enderecoBuscandoCep = false,
+    this.enderecoErroCep,
+    this.avisoEndereco,
     required this.pessoaStep,
   });
 
@@ -91,6 +124,17 @@ class PessoaState extends Equatable {
         funcionarioEmpresaId = null,
         funcionarioEmpresaNome = null,
         funcionarioInativo = false,
+        erro = null,
+        enderecoCep = null,
+        enderecoLogradouro = null,
+        enderecoNumero = null,
+        enderecoComplemento = null,
+        enderecoBairro = null,
+        enderecoMunicipio = null,
+        enderecoUf = null,
+        enderecoBuscandoCep = false,
+        enderecoErroCep = null,
+        avisoEndereco = null,
         pessoaStep = step ?? PessoaStep.carregado;
 
   PessoaState copyWith({
@@ -115,6 +159,19 @@ class PessoaState extends Equatable {
     int? funcionarioEmpresaId,
     String? funcionarioEmpresaNome,
     bool? funcionarioInativo,
+    String? erro,
+    String? enderecoCep,
+    String? enderecoLogradouro,
+    String? enderecoNumero,
+    String? enderecoComplemento,
+    String? enderecoBairro,
+    String? enderecoMunicipio,
+    String? enderecoUf,
+    bool? enderecoBuscandoCep,
+    String? enderecoErroCep,
+    String? avisoEndereco,
+    bool limparAvisoEndereco = false,
+    bool limparErroCep = false,
   }) {
     return PessoaState(
       bloqueado: bloqueado ?? this.bloqueado,
@@ -139,6 +196,19 @@ class PessoaState extends Equatable {
       funcionarioEmpresaNome:
           funcionarioEmpresaNome ?? this.funcionarioEmpresaNome,
       funcionarioInativo: funcionarioInativo ?? this.funcionarioInativo,
+      erro: erro ?? this.erro,
+      enderecoCep: enderecoCep ?? this.enderecoCep,
+      enderecoLogradouro: enderecoLogradouro ?? this.enderecoLogradouro,
+      enderecoNumero: enderecoNumero ?? this.enderecoNumero,
+      enderecoComplemento: enderecoComplemento ?? this.enderecoComplemento,
+      enderecoBairro: enderecoBairro ?? this.enderecoBairro,
+      enderecoMunicipio: enderecoMunicipio ?? this.enderecoMunicipio,
+      enderecoUf: enderecoUf ?? this.enderecoUf,
+      enderecoBuscandoCep: enderecoBuscandoCep ?? this.enderecoBuscandoCep,
+      enderecoErroCep:
+          limparErroCep ? null : (enderecoErroCep ?? this.enderecoErroCep),
+      avisoEndereco:
+          limparAvisoEndereco ? null : (avisoEndereco ?? this.avisoEndereco),
     );
   }
 
@@ -163,6 +233,17 @@ class PessoaState extends Equatable {
         funcionarioEmpresaNome,
         funcionarioInativo,
         pessoaStep,
+        erro,
+        enderecoCep,
+        enderecoLogradouro,
+        enderecoNumero,
+        enderecoComplemento,
+        enderecoBairro,
+        enderecoMunicipio,
+        enderecoUf,
+        enderecoBuscandoCep,
+        enderecoErroCep,
+        avisoEndereco,
       ];
 }
 // ...existing code...

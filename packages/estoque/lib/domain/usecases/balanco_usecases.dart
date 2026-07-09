@@ -77,6 +77,16 @@ class CancelarBalancoUseCase {
   }
 }
 
+class ObterBalancoEmAndamentoUseCase {
+  final IBalancoRepository repository;
+
+  ObterBalancoEmAndamentoUseCase({required this.repository});
+
+  Future<Balanco?> call() {
+    return repository.obterBalancoEmAndamento();
+  }
+}
+
 class ObterResumoBalancoUseCase {
   final IBalancoRepository repository;
 

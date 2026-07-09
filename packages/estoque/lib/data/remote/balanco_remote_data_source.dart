@@ -276,6 +276,17 @@ class BalancoRemoteDataSource extends RemoteDataSourceBase
     );
   }
 
+  @override
+  Future<Balanco?> obterBalancoEmAndamento() async {
+    final response = await get(pathParameters: {'path': '/em-andamento'});
+    final data = response.body as Map<String, dynamic>;
+    final balancoJson = data['balanco'] as Map<String, dynamic>?;
+    if (data['emAndamento'] != true || balancoJson == null) {
+      return null;
+    }
+    return _mapDtoToBalanco(BalancoDto.fromJson(balancoJson));
+  }
+
   // ===== MAPPERS =====
 
   Balanco _mapDtoToBalanco(BalancoDto dto) {

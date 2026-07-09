@@ -2,7 +2,7 @@ part of 'venda_bloc.dart';
 
 enum VendaStep { configuracao, leitura }
 
-enum VendaProcesso { finalizarVenda, criarPedido }
+enum VendaProcesso { finalizarVenda, criarPedido, salvarOrcamento }
 
 class VendaState extends Equatable {
   final VendaStep step;
@@ -11,11 +11,18 @@ class VendaState extends Equatable {
   final SelectData? tabelaDePrecoSelecionada;
   final String? erro;
   final bool processando;
+  final bool verificandoCaixa;
   final VendaProcesso? processoAtual;
   final String? listaCompartilhadaHash;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double valorDesconto;
+  final List<Map<String, dynamic>> descontosItens;
+  final bool incluirCpfNaNota;
+  final String cpfNaNota;
   final int? pedidoCriadoId;
+  final String? orcamentoId;
+  final List<ProdutoCompartilhado> orcamentoItensPreCarregados;
+  final int orcamentoSalvoContador;
 
   const VendaState({
     this.step = VendaStep.configuracao,
@@ -24,19 +31,32 @@ class VendaState extends Equatable {
     this.tabelaDePrecoSelecionada,
     this.erro,
     this.processando = false,
+    this.verificandoCaixa = false,
     this.processoAtual,
     this.listaCompartilhadaHash,
     this.formasDePagamentoRealizadas = const [],
     this.valorDesconto = 0,
+    this.descontosItens = const [],
+    this.incluirCpfNaNota = true,
+    this.cpfNaNota = '',
     this.pedidoCriadoId,
+    this.orcamentoId,
+    this.orcamentoItensPreCarregados = const [],
+    this.orcamentoSalvoContador = 0,
   });
 
   bool get leituraIniciada => step == VendaStep.leitura;
   bool get podeIniciarLeitura =>
+      !verificandoCaixa &&
       clienteSelecionado != null &&
       vendedorSelecionado != null &&
       tabelaDePrecoSelecionada != null;
   int? get tabelaDePrecoId => tabelaDePrecoSelecionada?.id;
+  /// Indica que a leitura de produtos ainda não foi iniciada (usuário ainda
+  /// não apertou "Iniciar venda"). Não depende de cliente/vendedor/tabela já
+  /// estarem preenchidos, pois a tabela de preço pode vir pré-selecionada
+  /// automaticamente (ver TabelasDePrecoSeletor).
+  bool get estadoInicial => !leituraIniciada;
 
   VendaState copyWith({
     VendaStep? step,
@@ -45,11 +65,18 @@ class VendaState extends Equatable {
     Object? tabelaDePrecoSelecionada = _sentinela,
     Object? erro = _sentinela,
     bool? processando,
+    bool? verificandoCaixa,
     Object? processoAtual = _sentinela,
     Object? listaCompartilhadaHash = _sentinela,
     Object? formasDePagamentoRealizadas = _sentinela,
     double? valorDesconto,
+    List<Map<String, dynamic>>? descontosItens,
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
     Object? pedidoCriadoId = _sentinela,
+    Object? orcamentoId = _sentinela,
+    List<ProdutoCompartilhado>? orcamentoItensPreCarregados,
+    int? orcamentoSalvoContador,
   }) {
     return VendaState(
       step: step ?? this.step,
@@ -64,6 +91,7 @@ class VendaState extends Equatable {
           : tabelaDePrecoSelecionada as SelectData?,
       erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       processando: processando ?? this.processando,
+      verificandoCaixa: verificandoCaixa ?? this.verificandoCaixa,
       processoAtual: identical(processoAtual, _sentinela)
           ? this.processoAtual
           : processoAtual as VendaProcesso?,
@@ -75,9 +103,19 @@ class VendaState extends Equatable {
               ? this.formasDePagamentoRealizadas
               : formasDePagamentoRealizadas as List<Map<String, dynamic>>,
       valorDesconto: valorDesconto ?? this.valorDesconto,
+      descontosItens: descontosItens ?? this.descontosItens,
+      incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
+      cpfNaNota: cpfNaNota ?? this.cpfNaNota,
       pedidoCriadoId: identical(pedidoCriadoId, _sentinela)
           ? this.pedidoCriadoId
           : pedidoCriadoId as int?,
+      orcamentoId: identical(orcamentoId, _sentinela)
+          ? this.orcamentoId
+          : orcamentoId as String?,
+      orcamentoItensPreCarregados:
+          orcamentoItensPreCarregados ?? this.orcamentoItensPreCarregados,
+      orcamentoSalvoContador:
+          orcamentoSalvoContador ?? this.orcamentoSalvoContador,
     );
   }
 
@@ -89,11 +127,18 @@ class VendaState extends Equatable {
         tabelaDePrecoSelecionada,
         erro,
         processando,
+        verificandoCaixa,
         processoAtual,
         listaCompartilhadaHash,
         formasDePagamentoRealizadas,
         valorDesconto,
+        descontosItens,
+        incluirCpfNaNota,
+        cpfNaNota,
         pedidoCriadoId,
+        orcamentoId,
+        orcamentoItensPreCarregados,
+        orcamentoSalvoContador,
       ];
 }
 

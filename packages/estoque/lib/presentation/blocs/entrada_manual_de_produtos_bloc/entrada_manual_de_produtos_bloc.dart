@@ -5,6 +5,7 @@ import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
+import 'package:estoque/domain/usecases/balanco_usecases.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/use_cases.dart';
 
@@ -15,11 +16,13 @@ class EntradaManualDeProdutosBloc
     extends Bloc<EntradaManualDeProdutosEvent, EntradaManualDeProdutosState> {
   final SalvarListaDeProdutosCompartilhada _salvarListaDeProdutosCompartilhada;
   final RecuperarCaixaAberto _recuperarCaixaAberto;
+  final ObterBalancoEmAndamentoUseCase _obterBalancoEmAndamento;
   final IAcessoGlobalSessao _acessoGlobalSessao;
 
   EntradaManualDeProdutosBloc(
     this._salvarListaDeProdutosCompartilhada,
     this._recuperarCaixaAberto,
+    this._obterBalancoEmAndamento,
     this._acessoGlobalSessao,
   ) : super(const EntradaManualDeProdutosState()) {
     on<EntradaManualFuncionarioSelecionado>(_onFuncionarioSelecionado);
@@ -78,6 +81,17 @@ class EntradaManualDeProdutosBloc
     emit(state.copyWith(verificandoCaixa: true, erro: null));
 
     try {
+      final balancoEmAndamento = await _obterBalancoEmAndamento.call();
+      if (balancoEmAndamento != null) {
+        emit(
+          state.copyWith(
+            verificandoCaixa: false,
+            erro: 'Balanço #${balancoEmAndamento.id} em andamento — operação bloqueada.',
+          ),
+        );
+        return;
+      }
+
       final caixa = await _recuperarCaixaAberto.call(
         idEmpresa: empresaId,
         idTerminal: terminalId,
@@ -115,7 +129,7 @@ class EntradaManualDeProdutosBloc
       emit(
         state.copyWith(
           verificandoCaixa: false,
-          erro: 'Falha ao verificar o caixa da sessão. Tente novamente.',
+          erro: 'Falha ao verificar o caixa e o balanço da sessão. Tente novamente.',
         ),
       );
       addError(e, s);

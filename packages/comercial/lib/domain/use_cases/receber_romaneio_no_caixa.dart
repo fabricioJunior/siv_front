@@ -11,11 +11,17 @@ class ReceberRomaneioNoCaixa {
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
   }) {
     return _repository.receberRomaneioNoCaixa(
       caixaId: caixaId,
       romaneioId: romaneioId,
       formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+      descontosItens: descontosItens,
+      incluirCpfNaNota: incluirCpfNaNota,
+      cpfNaNota: cpfNaNota,
     );
   }
 }

@@ -79,6 +79,9 @@ void _useCases() {
   sl.registerFactory<ObterResumoBalancoUseCase>(
     () => ObterResumoBalancoUseCase(repository: sl()),
   );
+  sl.registerFactory<ObterBalancoEmAndamentoUseCase>(
+    () => ObterBalancoEmAndamentoUseCase(repository: sl()),
+  );
   sl.registerFactory<AdicionarItemAoBalancoUseCase>(
     () => AdicionarItemAoBalancoUseCase(repository: sl()),
   );
@@ -123,7 +126,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl()));
   sl.registerFactory<EntradaManualDeProdutosBloc>(
-    () => EntradaManualDeProdutosBloc(sl(), sl(), sl()),
+    () => EntradaManualDeProdutosBloc(sl(), sl(), sl(), sl()),
   );
   sl.registerFactory<BalancoBloc>(
     () => BalancoBloc(

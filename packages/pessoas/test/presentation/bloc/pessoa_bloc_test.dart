@@ -1,4 +1,5 @@
 import 'package:core/bloc_test.dart';
+import 'package:core/cep.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pessoas/models.dart';
@@ -14,6 +15,17 @@ final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 final SalvarPessoa salvarPessoa = FakeSalvarPessoa();
 final CriarPessoa criarPessoa = MockCriarPessoa();
 final CriarFuncionario criarFuncionario = MockCriarFuncionario();
+final CriarEndereco criarEndereco = FakeCriarEndereco();
+final CepService cepService = CepService();
+
+class FakeCriarEndereco implements CriarEndereco {
+  @override
+  Future<Endereco> call({
+    required int idPessoa,
+    required Endereco endereco,
+  }) async =>
+      endereco;
+}
 
 class FakeSalvarPessoa implements SalvarPessoa {
   @override
@@ -43,6 +55,8 @@ void main() {
       salvarPessoa,
       criarPessoa,
       criarFuncionario,
+      criarEndereco,
+      cepService,
     );
   });
 

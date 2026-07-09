@@ -46,15 +46,28 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final List<Map<String, dynamic>> itens;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double valorDesconto;
+  final List<Map<String, dynamic>> descontosItens;
+  final bool incluirCpfNaNota;
+  final String cpfNaNota;
 
   const VendaFinalizarSolicitada({
     required this.itens,
     required this.formasDePagamentoRealizadas,
     this.valorDesconto = 0,
+    this.descontosItens = const [],
+    this.incluirCpfNaNota = true,
+    this.cpfNaNota = '',
   });
 
   @override
-  List<Object?> get props => [itens, formasDePagamentoRealizadas, valorDesconto];
+  List<Object?> get props => [
+        itens,
+        formasDePagamentoRealizadas,
+        valorDesconto,
+        descontosItens,
+        incluirCpfNaNota,
+        cpfNaNota,
+      ];
 }
 
 class VendaCriarPedidoSolicitado extends VendaEvent {
@@ -74,4 +87,31 @@ class VendaCriarPedidoSolicitado extends VendaEvent {
 
 class VendaResetSolicitado extends VendaEvent {
   const VendaResetSolicitado();
+}
+
+class VendaOrcamentoSalvarSolicitado extends VendaEvent {
+  final List<Map<String, dynamic>> itens;
+
+  const VendaOrcamentoSalvarSolicitado({required this.itens});
+
+  @override
+  List<Object?> get props => [itens];
+}
+
+class VendaOrcamentoCarregarSolicitado extends VendaEvent {
+  final String hash;
+
+  const VendaOrcamentoCarregarSolicitado({required this.hash});
+
+  @override
+  List<Object?> get props => [hash];
+}
+
+class VendaOrcamentoExcluirAposFinalizarSolicitado extends VendaEvent {
+  final String hash;
+
+  const VendaOrcamentoExcluirAposFinalizarSolicitado({required this.hash});
+
+  @override
+  List<Object?> get props => [hash];
 }

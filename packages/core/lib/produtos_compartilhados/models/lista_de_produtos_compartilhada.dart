@@ -11,6 +11,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
   final int? funcionarioId;
   final int? tabelaPrecoId;
   final bool? processada;
+  final String? clienteNome;
+  final String? funcionarioNome;
+  final String? tabelaPrecoNome;
 
   const ListaDeProdutosCompartilhada({
     required this.hash,
@@ -22,6 +25,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
     this.funcionarioId,
     this.tabelaPrecoId,
     this.processada,
+    this.clienteNome,
+    this.funcionarioNome,
+    this.tabelaPrecoNome,
   });
 
   ListaDeProdutosCompartilhada copyWith({
@@ -34,6 +40,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
     int? funcionarioId,
     int? tabelaPrecoId,
     bool? processada,
+    String? clienteNome,
+    String? funcionarioNome,
+    String? tabelaPrecoNome,
   }) {
     return ListaDeProdutosCompartilhada(
       hash: hash ?? this.hash,
@@ -45,6 +54,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
       funcionarioId: funcionarioId ?? this.funcionarioId,
       tabelaPrecoId: tabelaPrecoId ?? this.tabelaPrecoId,
       processada: processada ?? this.processada,
+      clienteNome: clienteNome ?? this.clienteNome,
+      funcionarioNome: funcionarioNome ?? this.funcionarioNome,
+      tabelaPrecoNome: tabelaPrecoNome ?? this.tabelaPrecoNome,
     );
   }
 
@@ -56,6 +68,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
     int? pessoaId,
     int? funcionarioId,
     int? tabelaPrecoId,
+    String? clienteNome,
+    String? funcionarioNome,
+    String? tabelaPrecoNome,
   }) {
     final agora = DateTime.now();
     return ListaDeProdutosCompartilhada(
@@ -67,6 +82,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
       pessoaId: pessoaId,
       funcionarioId: funcionarioId,
       tabelaPrecoId: tabelaPrecoId,
+      clienteNome: clienteNome,
+      funcionarioNome: funcionarioNome,
+      tabelaPrecoNome: tabelaPrecoNome,
     );
   }
 
@@ -80,6 +98,9 @@ class ListaDeProdutosCompartilhada extends Equatable {
         pessoaId,
         funcionarioId,
         tabelaPrecoId,
+        clienteNome,
+        funcionarioNome,
+        tabelaPrecoNome,
       ];
 }
 
@@ -90,4 +111,5 @@ enum OrigemCompartilhadaTipo {
   vendaDevolucao,
   manualEntradaDeProdutos,
   manualSaidaDeProdutos,
+  orcamento,
 }

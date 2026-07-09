@@ -77,7 +77,14 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                 state is FluxoDeCaixaCarregarEmProgresso &&
                     state.caixa == null &&
                     state.caixaId == null;
-            final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto;
+            final contagemJaEncerrada =
+                state.caixa?.contagem?.encerrada == true;
+            final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto ||
+                (state.caixa?.situacao == SituacaoCaixa.contagem);
+            final caixaEmContagem =
+                state.caixa?.situacao == SituacaoCaixa.contagem &&
+                    !contagemJaEncerrada &&
+                    state.caixa?.situacao == SituacaoCaixa.contagem;
             final carregandoAbertura = state is FluxoDeCaixaAbrirEmProgresso;
             final erroRecuperacaoCaixa =
                 state is FluxoDeCaixaCarregarFalha && state.caixa == null
@@ -99,6 +106,32 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                 ),
               );
             }
+
+            // if (caixaEmContagem) {
+            //   return _CaixaEmContagem(
+            //     caixaId: state.caixaId,
+            //     onIrParaContagem: state.caixaId == null
+            //         ? null
+            //         : () async {
+            //             final caixaId = state.caixaId!;
+            //             await Navigator.of(context).pushNamed(
+            //               '/contagem_do_caixa',
+            //               arguments: {'caixaId': caixaId},
+            //             );
+
+            //             if (!context.mounted) {
+            //               return;
+            //             }
+
+            //             context.read<FluxoDeCaixaBloc>().add(
+            //                   FluxoDeCaixaRecuperouCaixaAberto(
+            //                     empresaId: widget.empresaId!,
+            //                     terminalId: widget.terminalId!,
+            //                   ),
+            //                 );
+            //           },
+            //   );
+            // }
 
             if (!caixaAberto) {
               return AberturaDeCaixaPage(
@@ -367,7 +400,12 @@ class _ResumoCaixa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final aberto = caixa.situacao == SituacaoCaixa.aberto;
+    final (rotulo, cor) = switch (caixa.situacao) {
+      SituacaoCaixa.aberto => ('Aberto', Colors.green),
+      SituacaoCaixa.contagem => ('Em contagem', Colors.orange),
+      SituacaoCaixa.fechado => ('Fechado', Colors.grey),
+    };
+
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: ListTile(
@@ -375,10 +413,54 @@ class _ResumoCaixa extends StatelessWidget {
         subtitle:
             Text('Empresa ${caixa.empresaId} | Terminal ${caixa.terminalId}'),
         trailing: Text(
-          aberto ? 'Aberto' : 'Fechado',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: aberto ? Colors.green : Colors.grey,
+          rotulo,
+          style: TextStyle(fontWeight: FontWeight.bold, color: cor),
+        ),
+      ),
+    );
+  }
+}
+
+class _CaixaEmContagem extends StatelessWidget {
+  final int? caixaId;
+  final VoidCallback? onIrParaContagem;
+
+  const _CaixaEmContagem({required this.caixaId, this.onIrParaContagem});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Card(
+          margin: const EdgeInsets.all(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(Icons.calculate_outlined,
+                    size: 44, color: Colors.orange),
+                const SizedBox(height: 12),
+                Text(
+                  'Caixa em contagem',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Este caixa está em processo de contagem e não pode ser aberto novamente. Finalize a contagem para liberar o caixa.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: onIrParaContagem,
+                  icon: const Icon(Icons.calculate_outlined),
+                  label: const Text('Ir para contagem do caixa'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

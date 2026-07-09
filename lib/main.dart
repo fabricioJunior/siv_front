@@ -455,8 +455,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
     }
 
     final argumentos = settings?.arguments;
-    final ehEntradaManual =
-        argumentos is Map && argumentos['operacao'] != null;
+    final ehEntradaManual = argumentos is Map && argumentos['operacao'] != null;
     if (!ehEntradaManual) {
       return;
     }

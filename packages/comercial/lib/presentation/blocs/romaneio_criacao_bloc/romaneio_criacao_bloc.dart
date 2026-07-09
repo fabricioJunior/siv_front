@@ -5,7 +5,10 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
+import 'package:financeiro/models.dart';
+import 'package:financeiro/use_cases.dart';
 
 part 'romaneio_criacao_event.dart';
 part 'romaneio_criacao_state.dart';
@@ -23,6 +26,7 @@ class RomaneioCriacaoBloc
   final AtualizarListaCompartilhada _atualizarListaCompartilhada;
   final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
   final IAcessoGlobalSessao _acessoGlobalSessao;
+  final RecuperarCaixaAberto _recuperarCaixaAberto;
 
   RomaneioCriacaoBloc(
     this._criarRomaneio,
@@ -34,6 +38,7 @@ class RomaneioCriacaoBloc
     this._atualizarListaCompartilhada,
     this._receberRomaneioNoCaixa,
     this._acessoGlobalSessao,
+    this._recuperarCaixaAberto,
   ) : super(const RomaneioCriacaoState.initial()) {
     on<RomaneioCriacaoSolicitada>(_onSolicitada);
   }
@@ -153,10 +158,32 @@ class RomaneioCriacaoBloc
           );
         }
 
+        final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+        final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
+        if (empresaId != null && terminalId != null) {
+          final caixa = await _recuperarCaixaAberto.call(
+            idEmpresa: empresaId,
+            idTerminal: terminalId,
+          );
+
+          final contagemJaEncerrada = caixa?.contagem?.encerrada == true;
+          if (caixa == null ||
+              (caixa.situacao != SituacaoCaixa.aberto &&
+                  !contagemJaEncerrada)) {
+            throw StateError(
+              'Não foi possível receber romaneio: o caixa está em contagem ou fechado. '
+              'Finalize a contagem ou abra outro caixa antes de continuar.',
+            );
+          }
+        }
+
         await _receberRomaneioNoCaixa.call(
           caixaId: caixaId,
           romaneioId: romaneioId,
           formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+          descontosItens: event.descontosItens,
+          incluirCpfNaNota: event.incluirCpfNaNota,
+          cpfNaNota: event.cpfNaNota,
         );
         falhaAoReceberNoCaixa = false;
       }
@@ -181,6 +208,7 @@ class RomaneioCriacaoBloc
           listaCompartilhada: listaCompartilhada,
           produtosCompartilhados: produtosCompartilhados,
           erro: _mensagemFalhaProcessamento(
+            erro: e,
             listaCompartilhada: listaCompartilhada,
             operacao: operacao,
             falhaAoReceberNoCaixa: falhaAoReceberNoCaixa,
@@ -193,6 +221,7 @@ class RomaneioCriacaoBloc
   }
 
   String _mensagemFalhaProcessamento({
+    required Object erro,
     required ListaDeProdutosCompartilhada? listaCompartilhada,
     required TipoOperacao? operacao,
     required bool falhaAoReceberNoCaixa,
@@ -207,7 +236,8 @@ class RomaneioCriacaoBloc
       return 'O romaneio #$romaneioId foi criado, mas o processamento não foi concluído automaticamente. Volte e confira os romaneios pendentes.';
     }
 
-    return 'Falha ao criar o romaneio. Tente novamente.';
+    return mensagemDeErroApi(
+        erro, 'Falha ao criar o romaneio. Tente novamente.');
   }
 
   String? _validar(
@@ -311,6 +341,8 @@ class RomaneioCriacaoBloc
         return TipoOperacao.manual_entrada;
       case OrigemCompartilhadaTipo.manualSaidaDeProdutos:
         return TipoOperacao.manual_saida;
+      case OrigemCompartilhadaTipo.orcamento:
+        return null;
     }
   }
 

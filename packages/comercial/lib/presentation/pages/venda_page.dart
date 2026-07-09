@@ -3,6 +3,7 @@ import 'package:comercial/models.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/leitor_widget.dart';
+import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 
@@ -34,6 +35,7 @@ enum _VendaAcao { finalizar }
 
 class _VendaPageState extends State<VendaPage> {
   late final LeitorController _leitorController;
+  int _ultimoOrcamentoSalvoContador = 0;
 
   @override
   void initState() {
@@ -58,7 +60,8 @@ class _VendaPageState extends State<VendaPage> {
                     current.listaCompartilhadaHash &&
                 current.listaCompartilhadaHash != null) ||
             (previous.pedidoCriadoId != current.pedidoCriadoId &&
-                current.pedidoCriadoId != null),
+                current.pedidoCriadoId != null) ||
+            previous.orcamentoSalvoContador != current.orcamentoSalvoContador,
         listener: (context, state) async {
           final erro = state.erro;
           if (erro != null) {
@@ -70,6 +73,18 @@ class _VendaPageState extends State<VendaPage> {
             );
           }
 
+          if (state.orcamentoSalvoContador != _ultimoOrcamentoSalvoContador) {
+            _ultimoOrcamentoSalvoContador = state.orcamentoSalvoContador;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Orçamento salvo com sucesso.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            _reiniciarFluxo(context);
+            return;
+          }
+
           final listaCompartilhadaHash = state.listaCompartilhadaHash;
           if (listaCompartilhadaHash != null) {
             final result = await Navigator.of(context).pushNamed(
@@ -79,6 +94,9 @@ class _VendaPageState extends State<VendaPage> {
                 'formasDePagamentoRealizadas':
                     state.formasDePagamentoRealizadas,
                 'desconto': state.valorDesconto,
+                'descontosItens': state.descontosItens,
+                'incluirCpfNaNota': state.incluirCpfNaNota,
+                'cpfNaNota': state.cpfNaNota,
               },
             );
 
@@ -100,6 +118,14 @@ class _VendaPageState extends State<VendaPage> {
                   behavior: SnackBarBehavior.floating,
                 ),
               );
+              final orcamentoId = state.orcamentoId;
+              if (orcamentoId != null) {
+                context.read<VendaBloc>().add(
+                      VendaOrcamentoExcluirAposFinalizarSolicitado(
+                        hash: orcamentoId,
+                      ),
+                    );
+              }
               _reiniciarFluxo(context);
               return;
             }
@@ -124,6 +150,14 @@ class _VendaPageState extends State<VendaPage> {
                   behavior: SnackBarBehavior.floating,
                 ),
               );
+              final orcamentoId = state.orcamentoId;
+              if (orcamentoId != null) {
+                context.read<VendaBloc>().add(
+                      VendaOrcamentoExcluirAposFinalizarSolicitado(
+                        hash: orcamentoId,
+                      ),
+                    );
+              }
               _reiniciarFluxo(context);
             }
           }
@@ -178,6 +212,17 @@ class _VendaPageState extends State<VendaPage> {
                               controlarQuantidade: true,
                               campoCodigoHint:
                                   'Bipe ou informe o código do produto',
+                              produtosPreCarregados: state
+                                      .orcamentoItensPreCarregados.isEmpty
+                                  ? null
+                                  : state.orcamentoItensPreCarregados
+                                      .map(
+                                        (item) => ProdutosPreCarregado(
+                                          id: item.produtoId,
+                                          quantidade: item.quantidade,
+                                        ),
+                                      )
+                                      .toList(),
                             ),
                           ] else
                             _buildEstadoInicial(context),
@@ -266,15 +311,35 @@ class _VendaPageState extends State<VendaPage> {
               ),
             ),
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: state.podeIniciarLeitura
-                    ? () => bloc.add(const VendaLeituraSolicitada())
-                    : null,
-                icon: const Icon(Icons.play_arrow_outlined),
-                label: const Text('Iniciar venda'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: state.estadoInicial
+                      ? () => _abrirOrcamentos(context)
+                      : null,
+                  icon: const Icon(Icons.description_outlined),
+                  label: const Text('Orçamentos'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: state.podeIniciarLeitura
+                      ? () => bloc.add(const VendaLeituraSolicitada())
+                      : null,
+                  icon: state.verificandoCaixa
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow_outlined),
+                  label: Text(
+                    state.verificandoCaixa
+                        ? 'Verificando caixa...'
+                        : 'Iniciar venda',
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -371,6 +436,19 @@ class _VendaPageState extends State<VendaPage> {
                           : null,
                       icon: const Icon(Icons.refresh_outlined),
                       label: const Text('Reiniciar contagem'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () => _salvarOrcamento(context)
+                          : null,
+                      icon: state.processoAtual == VendaProcesso.salvarOrcamento
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_outlined),
+                      label: const Text('Salvar orçamento'),
                     ),
                     FilledButton.icon(
                       onPressed: temItens && !state.processando
@@ -516,11 +594,23 @@ class _VendaPageState extends State<VendaPage> {
           hashLista: state.listaCompartilhadaHash ?? '',
           resumoInicial: PagamentosRealizadosResumo(
             listaCompartilhada: null,
-            produtosCompartilhados: const [],
+            produtosCompartilhados: _leitorController.itens
+                .map(
+                  (item) => ProdutoCompartilhado.create(
+                    produtoId: item.id,
+                    quantidade: item.quantidadeLida,
+                    valorUnitario: item.valorUnitario ?? 0,
+                    nome: item.descricao,
+                    corNome: item.cor,
+                    tamanhoNome: item.tamanho,
+                  ),
+                )
+                .toList(),
             quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
             valorTotalProdutos: _leitorController.valorTotalLido,
           ),
           pessoaId: clienteSelecionado?.id,
+          cpfClienteInicial: clienteSelecionado?.data['documento']?.toString(),
           formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
         );
       },
@@ -538,6 +628,15 @@ class _VendaPageState extends State<VendaPage> {
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
     final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
+    final descontosItensRaw =
+        pagamentoResultado['descontosItens'] as List<dynamic>? ?? const [];
+    final descontosItens = descontosItensRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+    final incluirCpfNaNota =
+        pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
+    final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
 
     final confirmouEmissao = await _abrirConfirmacaoEmissao(
       context,
@@ -554,6 +653,9 @@ class _VendaPageState extends State<VendaPage> {
         itens: itens,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         valorDesconto: valorDesconto,
+        descontosItens: descontosItens,
+        incluirCpfNaNota: incluirCpfNaNota,
+        cpfNaNota: cpfNaNota,
       ),
     );
   }
@@ -679,8 +781,37 @@ class _VendaPageState extends State<VendaPage> {
     }
   }
 
+  void _salvarOrcamento(BuildContext context) {
+    final itens = _leitorController.itens
+        .map(
+          (item) => {
+            'produtoId': item.id,
+            'quantidade': item.quantidadeLida,
+            'valorUnitario': item.valorUnitario,
+            'nome': item.descricao,
+            'corNome': item.cor,
+            'tamanhoNome': item.tamanho,
+          },
+        )
+        .toList(growable: false);
+
+    context.read<VendaBloc>().add(VendaOrcamentoSalvarSolicitado(itens: itens));
+  }
+
+  Future<void> _abrirOrcamentos(BuildContext context) async {
+    final bloc = context.read<VendaBloc>();
+    final hashSelecionado = await Navigator.of(context).pushNamed(
+      '/orcamentos',
+    );
+
+    if (hashSelecionado is String && hashSelecionado.isNotEmpty) {
+      bloc.add(VendaOrcamentoCarregarSolicitado(hash: hashSelecionado));
+    }
+  }
+
   void _reiniciarFluxo(BuildContext context) {
     _leitorController.limpar();
+    _ultimoOrcamentoSalvoContador = 0;
     context.read<VendaBloc>().add(const VendaResetSolicitado());
   }
 

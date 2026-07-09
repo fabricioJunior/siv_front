@@ -170,8 +170,7 @@ abstract class RemoteDataSourceBase {
 
       switch (response.statusCode) {
         case 400:
-          errorMessage =
-              'Requisição inválida (Bad Request). Verifique os dados enviados.';
+          errorMessage = 'Requisição inválida (Bad Request).';
           break;
         case 401:
           errorMessage =
@@ -194,15 +193,53 @@ abstract class RemoteDataSourceBase {
               'Serviço indisponível (Service Unavailable). O servidor está temporariamente fora do ar.';
           break;
         default:
-          errorMessage =
-              'Erro inesperado: Código ${response.statusCode}. Mensagem: ${response.body}';
+          errorMessage = 'Erro inesperado: Código ${response.statusCode}.';
       }
+
+      final apiMessage = _extractApiMessage(response);
+      if (apiMessage != null && apiMessage.isNotEmpty) {
+        errorMessage = '$errorMessage $apiMessage';
+      }
+
       log(response.body.toString());
       throw HttpException(
         errorMessage,
         statusCode: response.statusCode,
+        apiMessage: apiMessage,
       );
     }
+  }
+
+  /// Extrai a mensagem retornada pela API no corpo da resposta de erro,
+  /// procurando pelos campos comuns (`message`, `error`, `errors`).
+  /// Retorna `null` se o corpo não existir ou não puder ser interpretado.
+  String? _extractApiMessage(IHttpResponse response) {
+    dynamic body;
+    try {
+      body = response.body;
+    } catch (_) {
+      final raw = response.message;
+      return (raw != null && raw.trim().isNotEmpty) ? raw.trim() : null;
+    }
+
+    if (body == null) return null;
+
+    if (body is Map) {
+      final dynamic raw = body['message'] ?? body['error'] ?? body['errors'];
+      if (raw == null) return null;
+      if (raw is List) {
+        return raw.map((e) => e.toString()).join(' ').trim();
+      }
+      final text = raw.toString().trim();
+      return text.isEmpty ? null : text;
+    }
+
+    if (body is String) {
+      final text = body.trim();
+      return text.isEmpty ? null : text;
+    }
+
+    return null;
   }
 }
 
@@ -210,10 +247,29 @@ class HttpException implements Exception {
   final String message;
   final int statusCode;
 
-  HttpException(this.message, {required this.statusCode});
+  /// Mensagem original retornada pela API no corpo da resposta (quando
+  /// disponível), sem o prefixo genérico do status HTTP. Útil para exibir
+  /// ao usuário o motivo real do erro reportado pelo backend.
+  final String? apiMessage;
+
+  HttpException(this.message, {required this.statusCode, this.apiMessage});
 
   @override
   String toString() => 'HttpException: $message (Status code: $statusCode)';
+}
+
+/// Retorna a mensagem vinda da API (`HttpException.apiMessage`) quando
+/// disponível, ou [fallback] caso contrário. Útil nos blocs para exibir ao
+/// usuário o motivo real do erro reportado pelo backend, sem perder a
+/// mensagem fixa de fallback já existente em cada fluxo.
+String mensagemDeErroApi(Object error, String fallback) {
+  if (error is HttpException) {
+    final apiMessage = error.apiMessage;
+    if (apiMessage != null && apiMessage.trim().isNotEmpty) {
+      return apiMessage;
+    }
+  }
+  return fallback;
 }
 
 abstract class IRemoteDto {

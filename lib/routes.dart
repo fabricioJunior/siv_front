@@ -280,6 +280,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/orcamentos': (context) {
+    return _rotaProtegida(
+      route: '/orcamentos',
+      child: const OrcamentosPage(),
+    );
+  },
   '/devolucao': (context) {
     return _rotaProtegidaPorCaixaAberto(
       child: _rotaProtegida(route: '/devolucao', child: const DevolucaoPage()),
@@ -439,12 +445,24 @@ Map<String, Widget Function(BuildContext)> routes = {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
+    final descontosItensRaw =
+        argumentos['descontosItens'] as List<dynamic>? ?? const [];
+    final descontosItens = descontosItensRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+    final incluirCpfNaNota =
+        argumentos['incluirCpfNaNota'] as bool? ?? true;
+    final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
 
     return _rotaProtegidaPorCaixaAberto(
       child: CriarRomaneioPorParametrosPage(
         hashLista: hashLista,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         desconto: desconto,
+        descontosItens: descontosItens,
+        incluirCpfNaNota: incluirCpfNaNota,
+        cpfNaNota: cpfNaNota,
       ),
     );
   },
@@ -760,6 +778,7 @@ Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
 const Map<String, List<String>> _componentesDaRota = {
   '/comercial': ['PEDFC001', 'ROMFP001'],
   '/venda': ['PEDFC001', 'ROMFP001'],
+  '/orcamentos': ['PEDFC001', 'ROMFP001'],
   '/devolucao': ['PEDFC001', 'ROMFP001'],
   '/credito_devolucao_movimentacoes': ['PEDFC001', 'ROMFP001'],
   '/documentos_fiscais': ['FISFM001'],

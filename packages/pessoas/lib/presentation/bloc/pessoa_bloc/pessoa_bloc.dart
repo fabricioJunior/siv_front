@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:core/bloc.dart';
+import 'package:core/cep.dart';
 import 'package:core/equals.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/uses_cases.dart';
@@ -13,16 +14,21 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
   final SalvarPessoa salvarPessoa;
   final CriarPessoa criarPessoa;
   final CriarFuncionario criarFuncionario;
+  final CriarEndereco criarEndereco;
+  final CepService cepService;
 
   PessoaBloc(
     this.recuperarPessoa,
     this.salvarPessoa,
     this.criarPessoa,
     this.criarFuncionario,
+    this.criarEndereco,
+    this.cepService,
   ) : super(PessoaState(pessoaStep: PessoaStep.inicial)) {
     on<PessoaIniciou>(_onPessoaInicou);
     on<PessoaEditou>(_onPessoaEditou);
     on<PessoaSalvou>(_onPessoaSalvou);
+    on<PessoaBuscarCepEndereco>(_onPessoaBuscarCepEndereco);
   }
 
   FutureOr<void> _onPessoaInicou(
@@ -52,6 +58,12 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         );
       }
     } catch (e, s) {
+      emit(
+        state.copyWith(
+          pessoaStep: PessoaStep.falha,
+          erro: 'Falha ao carregar a pessoa. Tente novamente.',
+        ),
+      );
       addError(e, s);
     }
   }
@@ -79,8 +91,50 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         tipoFuncionario: event.tipoFuncionario,
         funcionarioEmpresaId: event.funcionarioEmpresaId,
         funcionarioInativo: event.funcionarioInativo,
+        enderecoCep: event.enderecoCep,
+        enderecoLogradouro: event.enderecoLogradouro,
+        enderecoNumero: event.enderecoNumero,
+        enderecoComplemento: event.enderecoComplemento,
+        enderecoBairro: event.enderecoBairro,
+        enderecoMunicipio: event.enderecoMunicipio,
+        enderecoUf: event.enderecoUf,
       ),
     );
+  }
+
+  FutureOr<void> _onPessoaBuscarCepEndereco(
+    PessoaBuscarCepEndereco event,
+    Emitter<PessoaState> emit,
+  ) async {
+    if (event.cep.trim().isEmpty) {
+      emit(state.copyWith(
+        enderecoErroCep: 'Digite um CEP válido.',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      enderecoBuscandoCep: true,
+      enderecoCep: event.cep,
+      limparErroCep: true,
+    ));
+
+    try {
+      final endereco = await cepService.recuperaEnderecoPeloCep(event.cep);
+      emit(state.copyWith(
+        enderecoBuscandoCep: false,
+        enderecoLogradouro: endereco.logradouro,
+        enderecoBairro: endereco.bairro,
+        enderecoMunicipio: endereco.localidade,
+        enderecoUf: endereco.uf,
+        limparErroCep: true,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        enderecoBuscandoCep: false,
+        enderecoErroCep: 'CEP não encontrado. Preencha manualmente.',
+      ));
+    }
   }
 
   FutureOr<void> _onPessoaSalvou(
@@ -141,13 +195,54 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
           );
         }
 
+        String? avisoEndereco;
+        if ((state.eCliente ?? false) &&
+            pessoa.id != null &&
+            _enderecoPreenchido(state)) {
+          try {
+            await criarEndereco.call(
+              idPessoa: pessoa.id!,
+              endereco: Endereco.create(
+                principal: true,
+                tipoEndereco: TipoEndereco.residencial,
+                cep: state.enderecoCep ?? '',
+                logradouro: state.enderecoLogradouro ?? '',
+                numero: state.enderecoNumero ?? '',
+                complemento: state.enderecoComplemento ?? '',
+                bairro: state.enderecoBairro ?? '',
+                municipio: state.enderecoMunicipio ?? '',
+                uf: state.enderecoUf ?? '',
+                pais: 'Brasil',
+              ),
+            );
+          } catch (e, s) {
+            avisoEndereco =
+                'Pessoa criada, mas não foi possível salvar o endereço. Cadastre-o depois.';
+            addError(e, s);
+          }
+        }
+
         emit(PessoaState.fromModel(
           pessoa,
           step: PessoaStep.criada,
-        ));
+        ).copyWith(avisoEndereco: avisoEndereco));
       }
     } catch (e, s) {
+      emit(
+        state.copyWith(
+          pessoaStep: PessoaStep.falha,
+          erro: 'Falha ao salvar a pessoa. Verifique os dados e tente novamente.',
+        ),
+      );
       addError(e, s);
     }
+  }
+
+  bool _enderecoPreenchido(PessoaState state) {
+    return (state.enderecoLogradouro ?? '').trim().isNotEmpty &&
+        (state.enderecoNumero ?? '').trim().isNotEmpty &&
+        (state.enderecoBairro ?? '').trim().isNotEmpty &&
+        (state.enderecoMunicipio ?? '').trim().isNotEmpty &&
+        (state.enderecoUf ?? '').trim().isNotEmpty;
   }
 }

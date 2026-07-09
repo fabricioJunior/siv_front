@@ -11,15 +11,18 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final String hashLista;
   final PagamentosRealizadosResumo? resumoInicial;
   final int? pessoaId;
+  final String? cpfClienteInicial;
 
   const PagamentosRealizadosIniciado({
     required this.hashLista,
     this.resumoInicial,
     this.pessoaId,
+    this.cpfClienteInicial,
   });
 
   @override
-  List<Object?> get props => [hashLista, resumoInicial, pessoaId];
+  List<Object?> get props =>
+      [hashLista, resumoInicial, pessoaId, cpfClienteInicial];
 }
 
 class PagamentosRealizadosLinhaAdicionada extends PagamentosRealizadosEvent {
@@ -87,7 +90,44 @@ class PagamentosRealizadosDescontoAlterado extends PagamentosRealizadosEvent {
   List<Object?> get props => [tipo, valorTexto];
 }
 
+class PagamentosRealizadosDescontoItemAlterado
+    extends PagamentosRealizadosEvent {
+  final int produtoId;
+  final DescontoTipo? tipo;
+  final String valorTexto;
+
+  const PagamentosRealizadosDescontoItemAlterado({
+    required this.produtoId,
+    this.tipo,
+    required this.valorTexto,
+  });
+
+  @override
+  List<Object?> get props => [produtoId, tipo, valorTexto];
+}
+
 class PagamentosRealizadosFinalizacaoSolicitada
     extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
+}
+
+class PagamentosRealizadosIncluirCpfAlterado
+    extends PagamentosRealizadosEvent {
+  final bool incluirCpfNaNota;
+
+  const PagamentosRealizadosIncluirCpfAlterado({
+    required this.incluirCpfNaNota,
+  });
+
+  @override
+  List<Object?> get props => [incluirCpfNaNota];
+}
+
+class PagamentosRealizadosCpfAlterado extends PagamentosRealizadosEvent {
+  final String cpfNaNota;
+
+  const PagamentosRealizadosCpfAlterado({required this.cpfNaNota});
+
+  @override
+  List<Object?> get props => [cpfNaNota];
 }

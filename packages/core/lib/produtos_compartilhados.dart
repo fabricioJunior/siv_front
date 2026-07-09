@@ -6,3 +6,4 @@ export 'produtos_compartilhados/models/produto_compartilhado.dart';
 export 'produtos_compartilhados/use_cases/remover_produto_compartilhado.dart';
 export 'produtos_compartilhados/use_cases/salvar_produto_compartilhado.dart';
 export 'produtos_compartilhados/use_cases/atualizar_lista_compartilhada.dart';
+export 'produtos_compartilhados/use_cases/remover_produtos_da_lista_compartilhada.dart';

@@ -47,6 +47,20 @@ class PessoaEditou extends PessoaEvent {
 
   final bool? funcionarioInativo;
 
+  final String? enderecoCep;
+
+  final String? enderecoLogradouro;
+
+  final String? enderecoNumero;
+
+  final String? enderecoComplemento;
+
+  final String? enderecoBairro;
+
+  final String? enderecoMunicipio;
+
+  final String? enderecoUf;
+
   PessoaEditou({
     this.bloqueado,
     this.contato,
@@ -65,7 +79,20 @@ class PessoaEditou extends PessoaEvent {
     this.funcionarioEmpresaId,
     this.funcionarioEmpresaNome,
     this.funcionarioInativo,
+    this.enderecoCep,
+    this.enderecoLogradouro,
+    this.enderecoNumero,
+    this.enderecoComplemento,
+    this.enderecoBairro,
+    this.enderecoMunicipio,
+    this.enderecoUf,
   });
 }
 
 class PessoaSalvou extends PessoaEvent {}
+
+class PessoaBuscarCepEndereco extends PessoaEvent {
+  final String cep;
+
+  PessoaBuscarCepEndereco({required this.cep});
+}

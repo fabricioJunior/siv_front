@@ -28,6 +28,9 @@ class CaixaDto implements Caixa {
   @override
   final SituacaoCaixa situacao;
 
+  @override
+  final ContagemDoCaixaInfo? contagem;
+
   CaixaDto({
     required this.id,
     required this.empresaId,
@@ -38,6 +41,7 @@ class CaixaDto implements Caixa {
     required this.valorAbertura,
     required this.valorFechamento,
     required this.situacao,
+    this.contagem,
   });
 
   factory CaixaDto.fromJson(Map<String, dynamic> json) {
@@ -62,6 +66,13 @@ class CaixaDto implements Caixa {
         'contagem' => SituacaoCaixa.contagem,
         _ => SituacaoCaixa.aberto,
       },
+      contagem: json['contagem'] is Map<String, dynamic>
+          ? ContagemDoCaixaInfo(
+              encerrada:
+                  (json['contagem'] as Map<String, dynamic>)['encerrada'] ==
+                      true,
+            )
+          : null,
     );
   }
 }

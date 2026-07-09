@@ -74,6 +74,10 @@ void coreInjections() {
     () => AtualizarListaCompartilhada(repository: sl()),
   );
 
+  sl.registerFactory<RemoverProdutosDaListaCompartilhada>(
+    () => RemoverProdutosDaListaCompartilhada(repository: sl()),
+  );
+
   sl.registerFactory<IPaginacaoDataSource>(
     () => PaginacaoDataSource(
       getIsar: _getIsar,

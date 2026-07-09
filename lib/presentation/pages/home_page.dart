@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const _AccessFlowItem(
                   icon: Icons.point_of_sale,
-                  title: 'Vendas',
+                  title: 'Histórico de vendas',
                   subtitle: 'Consulta por cliente, funcionário, caixa e data.',
                   color: Colors.green,
                   route: '/vendas',

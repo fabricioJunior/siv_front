@@ -124,4 +124,7 @@ abstract class IBalancoRemoteDataSource {
   });
 
   Future<void> calcularItensDoBalanco({required int balancoId});
+
+  /// Verifica se há balanço em andamento para a empresa da sessão
+  Future<Balanco?> obterBalancoEmAndamento();
 }

@@ -50,6 +50,9 @@ class ListaDeProdutosCompartilhadaLocalDataSource
       pessoaId: entity.pessoaId,
       funcionarioId: entity.funcionarioId,
       tabelaPrecoId: entity.tabelaPrecoId,
+      clienteNome: entity.clienteNome,
+      funcionarioNome: entity.funcionarioNome,
+      tabelaPrecoNome: entity.tabelaPrecoNome,
     );
   }
 }

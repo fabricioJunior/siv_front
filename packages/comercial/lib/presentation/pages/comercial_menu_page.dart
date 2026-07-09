@@ -42,7 +42,7 @@ class ComercialMenuPage extends StatelessWidget {
       ),
       const _ItemData(
         icon: Icons.point_of_sale_outlined,
-        titulo: 'Vendas',
+        titulo: 'Histórico de vendas',
         subtitulo: 'Consulta de vendas por caixa, data/hora e cliente.',
         cor: Colors.teal,
         componente: 'ROMFP001',

@@ -15,11 +15,17 @@ abstract class IRomaneiosRepository {
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarObservacao(int id, String observacao);
   Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId);
+  Future<List<RomaneioItemDevolvido>> recuperarItensDevolvidosRomaneio(
+    int romaneioId,
+  );
   Future<void> adicionarItemRomaneio(int romaneioId, RomaneioItem item);
   Future<void> removerItemRomaneio(int romaneioId, RomaneioItem item);
   Future<void> receberRomaneioNoCaixa({
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
   });
 }

@@ -39,6 +39,60 @@ class RomaneioDto implements Romaneio {
   final DateTime? atualizadoEm;
   @override
   final List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas;
+  @override
+  final String? pessoaDocumento;
+  @override
+  final String? pessoaContato;
+  @override
+  final String? pessoaCep;
+  @override
+  final String? pessoaLogradouro;
+  @override
+  final String? pessoaNumero;
+  @override
+  final String? pessoaComplemento;
+  @override
+  final String? pessoaBairro;
+  @override
+  final String? pessoaMunicipio;
+  @override
+  final String? pessoaUf;
+  @override
+  final String? empresaNome;
+  @override
+  final String? empresaNomeFantasia;
+  @override
+  final String? empresaCnpj;
+  @override
+  final String? operadorNome;
+  @override
+  final String? operadorUsuario;
+  @override
+  final int? prazoFrete;
+  @override
+  final String? observacaoFrete;
+  @override
+  final double? valorFrete;
+  @override
+  final int? caixaTerminalId;
+  @override
+  final String? caixaTerminalNome;
+  @override
+  final bool? temEntrega;
+  @override
+  final String? enderecoCep;
+  @override
+  final String? enderecoLogradouro;
+  @override
+  final String? enderecoNumero;
+  @override
+  final String? enderecoComplemento;
+  @override
+  final String? enderecoBairro;
+  @override
+  final String? enderecoMunicipio;
+  @override
+  final String? enderecoUf;
 
   const RomaneioDto({
     this.id,
@@ -60,6 +114,33 @@ class RomaneioDto implements Romaneio {
     this.criadoEm,
     this.atualizadoEm,
     this.formasDePagamentoRealizadas = const [],
+    this.pessoaDocumento,
+    this.pessoaContato,
+    this.pessoaCep,
+    this.pessoaLogradouro,
+    this.pessoaNumero,
+    this.pessoaComplemento,
+    this.pessoaBairro,
+    this.pessoaMunicipio,
+    this.pessoaUf,
+    this.empresaNome,
+    this.empresaNomeFantasia,
+    this.empresaCnpj,
+    this.operadorNome,
+    this.operadorUsuario,
+    this.prazoFrete,
+    this.observacaoFrete,
+    this.valorFrete,
+    this.caixaTerminalId,
+    this.caixaTerminalNome,
+    this.temEntrega,
+    this.enderecoCep,
+    this.enderecoLogradouro,
+    this.enderecoNumero,
+    this.enderecoComplemento,
+    this.enderecoBairro,
+    this.enderecoMunicipio,
+    this.enderecoUf,
   });
 
   factory RomaneioDto.fromJson(Map<String, dynamic> json) {
@@ -85,6 +166,33 @@ class RomaneioDto implements Romaneio {
       formasDePagamentoRealizadas: _toFormasDePagamentoRealizadas(
         json['formasDePagamentoRealizadas'] ?? json['pagamentos'],
       ),
+      pessoaDocumento: json['pessoaDocumento']?.toString(),
+      pessoaContato: json['pessoaContato']?.toString(),
+      pessoaCep: json['pessoaCep']?.toString(),
+      pessoaLogradouro: json['pessoaLogradouro']?.toString(),
+      pessoaNumero: json['pessoaNumero']?.toString(),
+      pessoaComplemento: json['pessoaComplemento']?.toString(),
+      pessoaBairro: json['pessoaBairro']?.toString(),
+      pessoaMunicipio: json['pessoaMunicipio']?.toString(),
+      pessoaUf: json['pessoaUf']?.toString(),
+      empresaNome: json['empresaNome']?.toString(),
+      empresaNomeFantasia: json['empresaNomeFantasia']?.toString(),
+      empresaCnpj: json['empresaCnpj']?.toString(),
+      operadorNome: json['operadorNome']?.toString(),
+      operadorUsuario: json['operadorUsuario']?.toString(),
+      prazoFrete: _toInt(json['prazoFrete']),
+      observacaoFrete: json['observacaoFrete']?.toString(),
+      valorFrete: _toDouble(json['valorFrete']),
+      caixaTerminalId: _toInt(json['caixaTerminalId']),
+      caixaTerminalNome: json['caixaTerminalNome']?.toString(),
+      temEntrega: json['temEntrega'] as bool?,
+      enderecoCep: json['enderecoCep']?.toString(),
+      enderecoLogradouro: json['enderecoLogradouro']?.toString(),
+      enderecoNumero: json['enderecoNumero']?.toString(),
+      enderecoComplemento: json['enderecoComplemento']?.toString(),
+      enderecoBairro: json['enderecoBairro']?.toString(),
+      enderecoMunicipio: json['enderecoMunicipio']?.toString(),
+      enderecoUf: json['enderecoUf']?.toString(),
     );
   }
 
@@ -109,6 +217,33 @@ class RomaneioDto implements Romaneio {
       criadoEm: romaneio.criadoEm,
       atualizadoEm: romaneio.atualizadoEm,
       formasDePagamentoRealizadas: romaneio.formasDePagamentoRealizadas,
+      pessoaDocumento: romaneio.pessoaDocumento,
+      pessoaContato: romaneio.pessoaContato,
+      pessoaCep: romaneio.pessoaCep,
+      pessoaLogradouro: romaneio.pessoaLogradouro,
+      pessoaNumero: romaneio.pessoaNumero,
+      pessoaComplemento: romaneio.pessoaComplemento,
+      pessoaBairro: romaneio.pessoaBairro,
+      pessoaMunicipio: romaneio.pessoaMunicipio,
+      pessoaUf: romaneio.pessoaUf,
+      empresaNome: romaneio.empresaNome,
+      empresaNomeFantasia: romaneio.empresaNomeFantasia,
+      empresaCnpj: romaneio.empresaCnpj,
+      operadorNome: romaneio.operadorNome,
+      operadorUsuario: romaneio.operadorUsuario,
+      prazoFrete: romaneio.prazoFrete,
+      observacaoFrete: romaneio.observacaoFrete,
+      valorFrete: romaneio.valorFrete,
+      caixaTerminalId: romaneio.caixaTerminalId,
+      caixaTerminalNome: romaneio.caixaTerminalNome,
+      temEntrega: romaneio.temEntrega,
+      enderecoCep: romaneio.enderecoCep,
+      enderecoLogradouro: romaneio.enderecoLogradouro,
+      enderecoNumero: romaneio.enderecoNumero,
+      enderecoComplemento: romaneio.enderecoComplemento,
+      enderecoBairro: romaneio.enderecoBairro,
+      enderecoMunicipio: romaneio.enderecoMunicipio,
+      enderecoUf: romaneio.enderecoUf,
     );
   }
 
@@ -155,6 +290,33 @@ class RomaneioDto implements Romaneio {
         atualizadoEm,
         formasDePagamentoRealizadas,
         desconto,
+        pessoaDocumento,
+        pessoaContato,
+        pessoaCep,
+        pessoaLogradouro,
+        pessoaNumero,
+        pessoaComplemento,
+        pessoaBairro,
+        pessoaMunicipio,
+        pessoaUf,
+        empresaNome,
+        empresaNomeFantasia,
+        empresaCnpj,
+        operadorNome,
+        operadorUsuario,
+        prazoFrete,
+        observacaoFrete,
+        valorFrete,
+        caixaTerminalId,
+        caixaTerminalNome,
+        temEntrega,
+        enderecoCep,
+        enderecoLogradouro,
+        enderecoNumero,
+        enderecoComplemento,
+        enderecoBairro,
+        enderecoMunicipio,
+        enderecoUf,
       ];
 
   @override
@@ -207,6 +369,8 @@ List<RomaneioPagamentoRealizado> _toFormasDePagamentoRealizadas(dynamic value) {
         parcela: _toInt(json['parcela']) ?? _toInt(json['faturaParcela']) ?? 1,
         valor: valor,
         descricao: descricao?.trim().isEmpty == true ? null : descricao?.trim(),
+        vencimento: json['vencimento']?.toString(),
+        tipoHistorico: json['tipoHistorico']?.toString(),
       ),
     );
   }

@@ -4,7 +4,9 @@ import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
+import 'package:estoque/domain/usecases/balanco_usecases.dart';
 
 part 'devolucao_event.dart';
 part 'devolucao_state.dart';
@@ -15,6 +17,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
   final CriarRomaneio _criarRomaneio;
   final AdicionarItemRomaneio _adicionarItemRomaneio;
   final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
+  final ObterBalancoEmAndamentoUseCase _obterBalancoEmAndamento;
   final IAcessoGlobalSessao _acessoGlobalSessao;
 
   DevolucaoBloc(
@@ -23,6 +26,7 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     this._criarRomaneio,
     this._adicionarItemRomaneio,
     this._receberRomaneioNoCaixa,
+    this._obterBalancoEmAndamento,
     this._acessoGlobalSessao,
   ) : super(const DevolucaoState()) {
     on<DevolucaoIniciou>(_onIniciou);
@@ -63,7 +67,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
       emit(
         state.copyWith(
           carregandoRomaneios: false,
-          erro: 'Falha ao carregar romaneios de venda para devolução.',
+          erro: mensagemDeErroApi(
+              e, 'Falha ao carregar romaneios de venda para devolução.'),
         ),
       );
       addError(e, s);
@@ -129,7 +134,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
           termoBuscaRomaneios: searchTerm,
           dataInicialBuscaRomaneios: dataInicial,
           dataFinalBuscaRomaneios: dataFinal,
-          erroBuscaRomaneios: 'Falha ao buscar romaneios de venda.',
+          erroBuscaRomaneios:
+              mensagemDeErroApi(e, 'Falha ao buscar romaneios de venda.'),
         ),
       );
       addError(e, s);
@@ -181,24 +187,55 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
       emit(
         state.copyWith(
           carregandoItensDoOriginal: false,
-          erro: 'Falha ao carregar os itens do romaneio selecionado.',
+          erro: mensagemDeErroApi(
+              e, 'Falha ao carregar os itens do romaneio selecionado.'),
         ),
       );
       addError(e, s);
     }
   }
 
-  void _onLeituraSolicitada(
+  Future<void> _onLeituraSolicitada(
     DevolucaoLeituraSolicitada event,
     Emitter<DevolucaoState> emit,
-  ) {
+  ) async {
     final erro = _validarAntesDaLeitura();
     if (erro != null) {
       emit(state.copyWith(erro: erro));
       return;
     }
 
-    emit(state.copyWith(leituraIniciada: true, erro: null));
+    emit(state.copyWith(processando: true, erro: null));
+
+    try {
+      final balancoEmAndamento = await _obterBalancoEmAndamento.call();
+      if (balancoEmAndamento != null) {
+        emit(
+          state.copyWith(
+            processando: false,
+            erro: 'Balanço #${balancoEmAndamento.id} em andamento — operação bloqueada.',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          processando: false,
+          leituraIniciada: true,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          processando: false,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao verificar o balanço da sessão. Tente novamente.'),
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   void _onEdicaoSolicitada(
@@ -307,7 +344,8 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
           fluxoParcial: romaneioCriadoId != null,
           erro: romaneioCriadoId != null
               ? 'O romaneio de devolução #$romaneioCriadoId foi criado, mas não foi recebido no caixa automaticamente. Conclua o recebimento manualmente.'
-              : 'Falha ao processar a devolução. Tente novamente.',
+              : mensagemDeErroApi(
+                  e, 'Falha ao processar a devolução. Tente novamente.'),
         ),
       );
       addError(e, s);

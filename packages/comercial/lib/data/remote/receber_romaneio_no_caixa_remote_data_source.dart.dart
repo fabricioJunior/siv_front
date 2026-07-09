@@ -15,6 +15,9 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
   }) async {
     final formasDePagamento = formasDePagamentoRealizadas
         .map((forma) => _formaDePagamentoToJson(forma))
@@ -26,6 +29,10 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         'romaneioId': romaneioId,
         if (formasDePagamento.isNotEmpty)
           'formasDePagamento': formasDePagamento,
+        if (descontosItens.isNotEmpty) 'descontosItens': descontosItens,
+        'incluirCpfNaNota': incluirCpfNaNota,
+        if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
+          'cpfNaNota': cpfNaNota.trim(),
       },
     );
   }

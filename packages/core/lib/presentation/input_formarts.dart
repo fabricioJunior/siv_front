@@ -44,16 +44,21 @@ class DateInput extends StatelessWidget {
         initialDate: dataInicial,
         decoration: InputDecoration(
           labelText: labelText,
+          border: const OutlineInputBorder(),
         ),
       ),
     );
   }
 }
 
+bool cpfEhValido(String value) => CPFValidator.isValid(value);
+
 // ignore: must_be_immutable
 class CPFInput extends StatelessWidget {
   final String? valorInicial;
   final bool? bloqueado;
+  final bool obrigatorio;
+  final String? labelText;
   final void Function(String)? onChanged;
   final TextEditingController? controller;
   var maskFormatter = MaskTextInputFormatter(
@@ -67,6 +72,8 @@ class CPFInput extends StatelessWidget {
     this.onChanged,
     super.key,
     this.bloqueado,
+    this.obrigatorio = true,
+    this.labelText,
     this.controller,
   });
   @override
@@ -75,8 +82,9 @@ class CPFInput extends StatelessWidget {
       controller: controller,
       initialValue: controller == null ? valorInicial : null,
       readOnly: bloqueado ?? false,
-      decoration: const InputDecoration(
-        labelText: 'CPF',
+      decoration: InputDecoration(
+        labelText: labelText ?? (obrigatorio ? 'CPF *' : 'CPF'),
+        border: const OutlineInputBorder(),
       ),
       onChanged: onChanged,
       inputFormatters: [
@@ -84,10 +92,9 @@ class CPFInput extends StatelessWidget {
       ],
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Informe o CPF';
+          return obrigatorio ? 'Informe o CPF' : null;
         }
-        var cpfValido = CPFValidator.isValid(value);
-        if (!cpfValido) {
+        if (!cpfEhValido(value)) {
           return 'CPF inválido, verifique os números digitados';
         }
         return null;
@@ -126,6 +133,7 @@ class CelularInput extends StatelessWidget {
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: labelText,
+        border: const OutlineInputBorder(),
       ),
       inputFormatters: [
         maskFormatter,

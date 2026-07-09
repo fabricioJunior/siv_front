@@ -2,6 +2,7 @@ import 'package:comercial/data.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 
 void resolverComercialInjections() {
   _remoteDataSources();
@@ -67,6 +68,16 @@ void _repositories() {
   sl.registerFactory<IRelatorioRepository>(
     () => RelatorioRepository(remoteDataSource: sl()),
   );
+
+  sl.registerFactory<IOrcamentoRepository>(
+    () => OrcamentoRepository(
+      salvarListaDeProdutosCompartilhada: sl(),
+      removerProdutosDaListaCompartilhada: sl(),
+      recuperarListaDeProdutosCompartilhada: sl(),
+      removerListaDeProdutosCompartilhada: sl(),
+      leitorDataDatasource: sl<ILeitorDataDatasource>(),
+    ),
+  );
 }
 
 void _useCases() {
@@ -98,6 +109,9 @@ void _useCases() {
       () => RecuperarRomaneio(repository: sl()));
   sl.registerFactory<RecuperarItensRomaneio>(
     () => RecuperarItensRomaneio(repository: sl()),
+  );
+  sl.registerFactory<RecuperarItensDevolvidosRomaneio>(
+    () => RecuperarItensDevolvidosRomaneio(repository: sl()),
   );
   sl.registerFactory<CriarRomaneio>(() => CriarRomaneio(repository: sl()));
   sl.registerFactory<AtualizarRomaneio>(
@@ -145,6 +159,19 @@ void _useCases() {
   sl.registerFactory<GetRelatorioVendasPorFuncionario>(
     () => GetRelatorioVendasPorFuncionario(sl()),
   );
+
+  sl.registerFactory<SalvarOrcamento>(
+    () => SalvarOrcamento(repository: sl()),
+  );
+  sl.registerFactory<ListarOrcamentos>(
+    () => ListarOrcamentos(repository: sl()),
+  );
+  sl.registerFactory<ExcluirOrcamento>(
+    () => ExcluirOrcamento(repository: sl()),
+  );
+  sl.registerFactory<CarregarOrcamento>(
+    () => CarregarOrcamento(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -190,11 +217,14 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<RomaneioCriacaoBloc>(
     () => RomaneioCriacaoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -211,6 +241,19 @@ void _presentation() {
     () => VendaBloc(
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<OrcamentosBloc>(
+    () => OrcamentosBloc(
+      sl(),
+      sl(),
     ),
   );
 
@@ -223,6 +266,7 @@ void _presentation() {
 
   sl.registerFactory<DevolucaoBloc>(
     () => DevolucaoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

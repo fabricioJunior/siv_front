@@ -1,5 +1,6 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
   final _funcionarioIdController = TextEditingController();
   final _tabelaPrecoIdController = TextEditingController();
   final _observacaoController = TextEditingController();
+  bool _exportandoPdf = false;
 
   @override
   void initState() {
@@ -64,6 +66,27 @@ class _RomaneioPageState extends State<RomaneioPage> {
     }
 
     Navigator.of(context).pop(true);
+  }
+
+  void _verNotaFiscal(int documentoFiscalId) {
+    Navigator.of(context).pushNamed(
+      '/documento_fiscal',
+      arguments: {'id': documentoFiscalId},
+    );
+  }
+
+  Future<void> _exportarPdf(RomaneioState state) async {
+    if (state.romaneio == null) return;
+
+    setState(() => _exportandoPdf = true);
+    await RomaneioPdfExporter.exportar(
+      state.romaneio!,
+      state.itens,
+      state.itensDevolvidos,
+    );
+    if (mounted) {
+      setState(() => _exportandoPdf = false);
+    }
   }
 
   @override
@@ -139,6 +162,21 @@ class _RomaneioPageState extends State<RomaneioPage> {
                         ? 'Visualizar romaneio #${widget.idRomaneio}'
                         : 'Romaneio #${widget.idRomaneio}'),
                 actions: [
+                  if (state.romaneio != null)
+                    _exportandoPdf
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.picture_as_pdf_outlined),
+                            tooltip: 'Exportar PDF',
+                            onPressed: () => _exportarPdf(state),
+                          ),
                   if (somenteVisualizacao)
                     const Padding(
                       padding: EdgeInsets.only(right: 12),
@@ -374,6 +412,15 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     icon: const Icon(Icons.cancel_outlined),
                     label: const Text('Cancelar romaneio'),
                   ),
+                  if (state.documentoFiscalEmitidoId != null) ...[
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          _verNotaFiscal(state.documentoFiscalEmitidoId!),
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: const Text('Ver nota fiscal'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -706,6 +753,15 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     icon: const Icon(Icons.cancel_outlined),
                     label: const Text('Cancelar romaneio'),
                   ),
+                  if (state.documentoFiscalEmitidoId != null) ...[
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          _verNotaFiscal(state.documentoFiscalEmitidoId!),
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: const Text('Ver nota fiscal'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -878,6 +934,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                 'Cor: ${item.corNome ?? '-'}  •  Tamanho: ${item.tamanhoNome ?? '-'}',
                                 style: theme.textTheme.bodySmall,
                               ),
+                              if (item.valorUnitario != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Vlr. unit.: ${_formatarValorMonetario(item.valorUnitario)}'
+                                  '${(item.valorTotalDesconto ?? 0) > 0 ? '  •  Desconto: ${_formatarValorMonetario(item.valorTotalDesconto)}' : ''}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -903,6 +967,19 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
+                              if (item.valorTotalLiquido != null ||
+                                  item.valorTotalBruto != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatarValorMonetario(
+                                    item.valorTotalLiquido ??
+                                        item.valorTotalBruto,
+                                  ),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

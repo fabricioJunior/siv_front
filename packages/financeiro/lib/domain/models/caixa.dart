@@ -9,10 +9,17 @@ abstract class Caixa {
   double? get valorFechamento;
 
   SituacaoCaixa get situacao;
+  ContagemDoCaixaInfo? get contagem;
 }
 
 enum SituacaoCaixa {
   aberto,
   contagem,
   fechado,
+}
+
+class ContagemDoCaixaInfo {
+  final bool encerrada;
+
+  const ContagemDoCaixaInfo({required this.encerrada});
 }

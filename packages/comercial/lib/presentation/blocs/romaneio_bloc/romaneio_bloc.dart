@@ -5,6 +5,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'romaneio_event.dart';
 part 'romaneio_state.dart';
@@ -12,6 +13,7 @@ part 'romaneio_state.dart';
 class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   final RecuperarRomaneio _recuperarRomaneio;
   final RecuperarItensRomaneio _recuperarItensRomaneio;
+  final RecuperarItensDevolvidosRomaneio _recuperarItensDevolvidosRomaneio;
   final CriarRomaneio _criarRomaneio;
   final AtualizarRomaneio _atualizarRomaneio;
   final AtualizarObservacaoRomaneio _atualizarObservacaoRomaneio;
@@ -19,16 +21,19 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       _recuperarListaDeProdutosCompartilhada;
   final AdicionarItemRomaneio _adicionarItemRomaneio;
   final RemoverProdutoCompartilhado _removerProdutoCompartilhado;
+  final ListarDocumentosFiscais _listarDocumentosFiscais;
 
   RomaneioBloc(
     this._recuperarRomaneio,
     this._recuperarItensRomaneio,
+    this._recuperarItensDevolvidosRomaneio,
     this._criarRomaneio,
     this._atualizarRomaneio,
     this._atualizarObservacaoRomaneio,
     this._recuperarListaDeProdutosCompartilhada,
     this._adicionarItemRomaneio,
     this._removerProdutoCompartilhado,
+    this._listarDocumentosFiscais,
   ) : super(const RomaneioState.initial()) {
     on<RomaneioIniciou>(_onIniciou);
     on<RomaneioCampoAlterado>(_onCampoAlterado);
@@ -47,12 +52,22 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       if (event.idRomaneio != null) {
         final romaneio = await _recuperarRomaneio.call(event.idRomaneio!);
         final itens = await _recuperarItensRomaneio.call(event.idRomaneio!);
+        final itensDevolvidos = await _carregarItensDevolvidos(
+          event.idRomaneio!,
+        );
         final pendencia = await _carregarPendenciaDeEnvio(event.idRomaneio!);
+        final documentoFiscalId =
+            await _carregarDocumentoFiscalEmitido(event.idRomaneio!);
         emit(
-          RomaneioState.fromModel(romaneio, itensDoRomaneio: itens).copyWith(
+          RomaneioState.fromModel(
+            romaneio,
+            itensDoRomaneio: itens,
+            itensDevolvidos: itensDevolvidos,
+          ).copyWith(
             possuiPendenciaDeEnvio: pendencia.$1,
             quantidadeItensPendentes: pendencia.$2,
             hashListaPendente: pendencia.$3,
+            documentoFiscalEmitidoId: documentoFiscalId,
           ),
         );
         return;
@@ -61,7 +76,8 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       emit(const RomaneioState.initial().copyWith(step: RomaneioStep.editando));
     } catch (e, s) {
       emit(state.copyWith(
-          step: RomaneioStep.falha, erro: 'Falha ao carregar romaneio.'));
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao carregar romaneio.')));
       addError(e, s);
     }
   }
@@ -105,12 +121,14 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
         RomaneioState.fromModel(
           salvo,
           itensDoRomaneio: state.itens,
+          itensDevolvidos: state.itensDevolvidos,
           step: state.id == null ? RomaneioStep.criado : RomaneioStep.salvo,
         ),
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: RomaneioStep.falha, erro: 'Falha ao salvar romaneio.'));
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar romaneio.')));
       addError(e, s);
     }
   }
@@ -142,12 +160,14 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
         RomaneioState.fromModel(
           romaneio,
           itensDoRomaneio: state.itens,
+          itensDevolvidos: state.itensDevolvidos,
           step: RomaneioStep.observacaoAtualizada,
         ),
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: RomaneioStep.falha, erro: 'Falha ao atualizar observacao.'));
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao atualizar observacao.')));
       addError(e, s);
     }
   }
@@ -187,7 +207,11 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       final pendencia = await _carregarPendenciaDeEnvio(romaneioId);
 
       emit(
-        RomaneioState.fromModel(romaneio, itensDoRomaneio: itens).copyWith(
+        RomaneioState.fromModel(
+          romaneio,
+          itensDoRomaneio: itens,
+          itensDevolvidos: state.itensDevolvidos,
+        ).copyWith(
           step: pendencia.$1
               ? RomaneioStep.envioPendenciaIncompleto
               : RomaneioStep.envioPendenciaConcluido,
@@ -207,10 +231,21 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
           possuiPendenciaDeEnvio: pendencia.$1,
           quantidadeItensPendentes: pendencia.$2,
           hashListaPendente: pendencia.$3,
-          erro: 'Falha ao continuar envio dos itens pendentes.',
+          erro: mensagemDeErroApi(
+              e, 'Falha ao continuar envio dos itens pendentes.'),
         ),
       );
       addError(e, s);
+    }
+  }
+
+  Future<List<RomaneioItemDevolvido>> _carregarItensDevolvidos(
+    int romaneioId,
+  ) async {
+    try {
+      return await _recuperarItensDevolvidosRomaneio.call(romaneioId);
+    } catch (_) {
+      return const [];
     }
   }
 
@@ -231,6 +266,21 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     }
 
     return (false, 0, null);
+  }
+
+  Future<int?> _carregarDocumentoFiscalEmitido(int romaneioId) async {
+    try {
+      final resultado = await _listarDocumentosFiscais.call(
+        romaneioId: romaneioId,
+        status: 'emitida',
+        limit: 1,
+      );
+      final items = resultado['items'] as List<dynamic>? ?? const [];
+      if (items.isEmpty) return null;
+      return (items.first as DocumentoFiscal).id;
+    } catch (_) {
+      return null;
+    }
   }
 
   RomaneioItem _mapearItemPendente(ProdutoCompartilhado produto) {

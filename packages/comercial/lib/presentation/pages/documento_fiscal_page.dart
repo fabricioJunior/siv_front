@@ -92,6 +92,11 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
                   corStatus: _corStatus,
                   fmtDt: _fmtDt,
                   prettyJson: _prettyJson,
+                  onVerRomaneio: () => Navigator.pushNamed(
+                    context,
+                    '/romaneio',
+                    arguments: {'idRomaneio': state.detalhe!.documento.romaneioId},
+                  ),
                 ),
             },
           );
@@ -106,12 +111,14 @@ class _Body extends StatelessWidget {
   final Color Function(String) corStatus;
   final String Function(DateTime?) fmtDt;
   final String Function(dynamic) prettyJson;
+  final VoidCallback onVerRomaneio;
 
   const _Body({
     required this.detalhe,
     required this.corStatus,
     required this.fmtDt,
     required this.prettyJson,
+    required this.onVerRomaneio,
   });
 
   @override
@@ -129,7 +136,31 @@ class _Body extends StatelessWidget {
         // Identificação
         _Secao(titulo: 'Identificação', children: [
           _InfoRow('ID', '#${doc.id}'),
-          _InfoRow('Romaneio', '#${doc.romaneioId}'),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  width: 120,
+                  child: Text('Romaneio',
+                      style: TextStyle(fontSize: 12, color: Colors.black54)),
+                ),
+                Expanded(
+                  child: Text('#${doc.romaneioId}', style: const TextStyle(fontSize: 13)),
+                ),
+                TextButton.icon(
+                  onPressed: onVerRomaneio,
+                  icon: const Icon(Icons.local_shipping_outlined, size: 16),
+                  label: const Text('Ver romaneio'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
+            ),
+          ),
           if (doc.pedidoId != null) _InfoRow('Pedido', '#${doc.pedidoId}'),
           _InfoRow('Cliente', doc.pessoaNome ?? '-'),
           _InfoRow('Tipo', doc.tipoDocumento),

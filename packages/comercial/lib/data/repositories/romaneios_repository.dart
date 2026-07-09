@@ -41,6 +41,13 @@ class RomaneiosRepository implements IRomaneiosRepository {
   }
 
   @override
+  Future<List<RomaneioItemDevolvido>> recuperarItensDevolvidosRomaneio(
+    int romaneioId,
+  ) {
+    return remoteDataSource.recuperarItensDevolvidosRomaneio(romaneioId);
+  }
+
+  @override
   Future<List<Romaneio>> recuperarRomaneios({
     int page = 1,
     int limit = 50,
@@ -71,11 +78,17 @@ class RomaneiosRepository implements IRomaneiosRepository {
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
   }) {
     return caixasRemoteDataSource.receberRomaneio(
       caixaId: caixaId,
       romaneioId: romaneioId,
       formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+      descontosItens: descontosItens,
+      incluirCpfNaNota: incluirCpfNaNota,
+      cpfNaNota: cpfNaNota,
     );
   }
 }

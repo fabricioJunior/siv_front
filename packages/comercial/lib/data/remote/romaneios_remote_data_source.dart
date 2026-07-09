@@ -1,4 +1,5 @@
 import 'package:comercial/data/remote/dtos/romaneio_dto.dart';
+import 'package:comercial/data/remote/dtos/romaneio_item_devolvido_dto.dart';
 import 'package:comercial/data/remote/dtos/romaneio_item_dto.dart';
 import 'package:comercial/domain/data/remote/i_romaneios_remote_data_source.dart';
 import 'package:comercial/models.dart';
@@ -56,6 +57,19 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
     final body = response.body as List<dynamic>? ?? const [];
     return body
         .map((json) => RomaneioItemDto.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<List<RomaneioItemDevolvido>> recuperarItensDevolvidosRomaneio(
+    int romaneioId,
+  ) async {
+    final response =
+        await get(pathParameters: {'id': '$romaneioId/itens-devolvidos'});
+    final body = response.body as List<dynamic>? ?? const [];
+    return body
+        .map((json) =>
+            RomaneioItemDevolvidoDto.fromJson(json as Map<String, dynamic>))
         .toList();
   }
 

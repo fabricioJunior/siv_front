@@ -4,6 +4,7 @@ import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'pedido_event.dart';
 part 'pedido_state.dart';
@@ -55,7 +56,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidoStep.falha, erro: 'Falha ao carregar pedido.'));
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao carregar pedido.')));
       addError(e, s);
     }
   }
@@ -109,7 +111,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       );
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidoStep.falha, erro: 'Falha ao salvar pedido.'));
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar pedido.')));
       addError(e, s);
     }
   }
@@ -127,7 +130,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(PedidoState.fromModel(pedido, step: PedidoStep.conferido));
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidoStep.falha, erro: 'Falha ao conferir pedido.'));
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao conferir pedido.')));
       addError(e, s);
     }
   }
@@ -145,7 +149,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(PedidoState.fromModel(pedido, step: PedidoStep.faturado));
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidoStep.falha, erro: 'Falha ao faturar pedido.'));
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao faturar pedido.')));
       addError(e, s);
     }
   }
@@ -174,7 +179,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(PedidoState.fromModel(pedido, step: PedidoStep.cancelado));
     } catch (e, s) {
       emit(state.copyWith(
-          step: PedidoStep.falha, erro: 'Falha ao cancelar pedido.'));
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao cancelar pedido.')));
       addError(e, s);
     }
   }

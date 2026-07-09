@@ -8,10 +8,12 @@ class RomaneioState extends Equatable {
   final TipoOperacao? operacao;
   final String? observacao;
   final List<RomaneioItem> itens;
+  final List<RomaneioItemDevolvido> itensDevolvidos;
   final Romaneio? romaneio;
   final bool possuiPendenciaDeEnvio;
   final int quantidadeItensPendentes;
   final String? hashListaPendente;
+  final int? documentoFiscalEmitidoId;
   final String? erro;
   final RomaneioStep step;
 
@@ -23,10 +25,12 @@ class RomaneioState extends Equatable {
     this.operacao,
     this.observacao,
     this.itens = const [],
+    this.itensDevolvidos = const [],
     this.romaneio,
     this.possuiPendenciaDeEnvio = false,
     this.quantidadeItensPendentes = 0,
     this.hashListaPendente,
+    this.documentoFiscalEmitidoId,
     this.erro,
     required this.step,
   });
@@ -39,16 +43,19 @@ class RomaneioState extends Equatable {
         operacao = TipoOperacao.venda,
         observacao = '',
         itens = const [],
+        itensDevolvidos = const [],
         romaneio = null,
         possuiPendenciaDeEnvio = false,
         quantidadeItensPendentes = 0,
         hashListaPendente = null,
+        documentoFiscalEmitidoId = null,
         erro = null,
         step = RomaneioStep.inicial;
 
   RomaneioState.fromModel(
     Romaneio model, {
     List<RomaneioItem> itensDoRomaneio = const [],
+    List<RomaneioItemDevolvido> itensDevolvidos = const [],
     RomaneioStep? step,
   })  : id = model.id,
         pessoaId = model.pessoaId,
@@ -57,10 +64,12 @@ class RomaneioState extends Equatable {
         operacao = model.operacao ?? TipoOperacao.venda,
         observacao = model.observacao ?? '',
         itens = itensDoRomaneio,
+        itensDevolvidos = itensDevolvidos,
         romaneio = model,
         possuiPendenciaDeEnvio = false,
         quantidadeItensPendentes = 0,
         hashListaPendente = null,
+        documentoFiscalEmitidoId = null,
         erro = null,
         step = step ?? RomaneioStep.editando;
 
@@ -72,10 +81,12 @@ class RomaneioState extends Equatable {
     TipoOperacao? operacao,
     String? observacao,
     List<RomaneioItem>? itens,
+    List<RomaneioItemDevolvido>? itensDevolvidos,
     Romaneio? romaneio,
     bool? possuiPendenciaDeEnvio,
     int? quantidadeItensPendentes,
     String? hashListaPendente,
+    int? documentoFiscalEmitidoId,
     String? erro,
     RomaneioStep? step,
   }) {
@@ -87,12 +98,15 @@ class RomaneioState extends Equatable {
       operacao: operacao ?? this.operacao,
       observacao: observacao ?? this.observacao,
       itens: itens ?? this.itens,
+      itensDevolvidos: itensDevolvidos ?? this.itensDevolvidos,
       romaneio: romaneio ?? this.romaneio,
       possuiPendenciaDeEnvio:
           possuiPendenciaDeEnvio ?? this.possuiPendenciaDeEnvio,
       quantidadeItensPendentes:
           quantidadeItensPendentes ?? this.quantidadeItensPendentes,
       hashListaPendente: hashListaPendente ?? this.hashListaPendente,
+      documentoFiscalEmitidoId:
+          documentoFiscalEmitidoId ?? this.documentoFiscalEmitidoId,
       erro: erro,
       step: step ?? this.step,
     );
@@ -107,10 +121,12 @@ class RomaneioState extends Equatable {
         operacao,
         observacao,
         itens,
+        itensDevolvidos,
         romaneio,
         possuiPendenciaDeEnvio,
         quantidadeItensPendentes,
         hashListaPendente,
+        documentoFiscalEmitidoId,
         erro,
         step,
       ];

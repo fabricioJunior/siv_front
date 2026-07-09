@@ -4,6 +4,8 @@ import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/presentation.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 
 part 'pagamentos_realizados_event.dart';
@@ -25,7 +27,10 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosValorAlterado>(_onValorAlterado);
     on<PagamentosRealizadosParcelasAlteradas>(_onParcelasAlteradas);
     on<PagamentosRealizadosDescontoAlterado>(_onDescontoAlterado);
+    on<PagamentosRealizadosDescontoItemAlterado>(_onDescontoItemAlterado);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
+    on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
+    on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);
   }
 
   FutureOr<void> _onIniciado(
@@ -40,6 +45,8 @@ class PagamentosRealizadosBloc
         pessoaId: event.pessoaId,
         carregandoSaldoCreditoDevolucao: false,
         saldoCreditoDevolucao: 0,
+        incluirCpfNaNota: true,
+        cpfNaNota: event.cpfClienteInicial ?? '',
       ),
     );
 
@@ -74,7 +81,8 @@ class PagamentosRealizadosBloc
       emit(
         state.copyWith(
           step: PagamentosRealizadosStep.falha,
-          erro: 'Falha ao carregar pagamentos realizados.',
+          erro:
+              mensagemDeErroApi(e, 'Falha ao carregar pagamentos realizados.'),
         ),
       );
       addError(e, s);
@@ -234,6 +242,100 @@ class PagamentosRealizadosBloc
     );
   }
 
+  void _onDescontoItemAlterado(
+    PagamentosRealizadosDescontoItemAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    if (event.tipo == null || event.valorTexto.trim().isEmpty) {
+      final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo)
+        ..remove(event.produtoId);
+      final valorTextoMap =
+          Map<int, String>.from(state.descontosItensValorTexto)
+            ..remove(event.produtoId);
+      final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
+        ..remove(event.produtoId);
+      emit(
+        state.copyWith(
+          descontosItensTipo: tipoMap,
+          descontosItensValorTexto: valorTextoMap,
+          descontosItensAplicado: aplicadoMap,
+          erro: null,
+        ),
+      );
+      return;
+    }
+
+    final produtosEncontrados = state.resumo?.produtosCompartilhados
+            .where((p) => p.produtoId == event.produtoId)
+            .toList() ??
+        const [];
+    final produto =
+        produtosEncontrados.isEmpty ? null : produtosEncontrados.first;
+    if (produto == null) {
+      emit(state.copyWith(erro: 'Produto não encontrado na venda.'));
+      return;
+    }
+
+    final valorBase = produto.quantidade * produto.valorUnitario;
+    final valorInformado = _toDouble(event.valorTexto);
+    if (valorInformado == null) {
+      emit(state.copyWith(erro: 'Informe um valor válido para desconto.'));
+      return;
+    }
+
+    double descontoAplicado;
+    switch (event.tipo!) {
+      case DescontoTipo.valorBruto:
+        if (valorInformado < 0 || valorInformado > valorBase) {
+          emit(
+            state.copyWith(
+              erro:
+                  'O desconto em valor bruto deve estar entre 0 e ${_formatarMoeda(valorBase)}.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorInformado;
+      case DescontoTipo.porcentagem:
+        if (valorInformado < 0 || valorInformado > 100) {
+          emit(
+            state.copyWith(
+              erro: 'O desconto em porcentagem deve estar entre 0 e 100.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorBase * (valorInformado / 100);
+      case DescontoTipo.forcaValorTotal:
+        if (valorInformado < 0 || valorInformado > valorBase) {
+          emit(
+            state.copyWith(
+              erro:
+                  'O valor total forçado deve estar entre 0 e ${_formatarMoeda(valorBase)}.',
+            ),
+          );
+          return;
+        }
+        descontoAplicado = valorBase - valorInformado;
+    }
+
+    final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo)
+      ..[event.produtoId] = event.tipo!;
+    final valorTextoMap = Map<int, String>.from(state.descontosItensValorTexto)
+      ..[event.produtoId] = event.valorTexto;
+    final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
+      ..[event.produtoId] = double.parse(descontoAplicado.toStringAsFixed(2));
+
+    emit(
+      state.copyWith(
+        descontosItensTipo: tipoMap,
+        descontosItensValorTexto: valorTextoMap,
+        descontosItensAplicado: aplicadoMap,
+        erro: null,
+      ),
+    );
+  }
+
   void _onFinalizacaoSolicitada(
     PagamentosRealizadosFinalizacaoSolicitada event,
     Emitter<PagamentosRealizadosState> emit,
@@ -241,6 +343,17 @@ class PagamentosRealizadosBloc
     final resumo = state.resumo;
     if (resumo == null) {
       emit(state.copyWith(erro: 'Resumo da venda não disponível.'));
+      return;
+    }
+
+    if (state.incluirCpfNaNota &&
+        state.cpfNaNota.trim().isNotEmpty &&
+        !cpfEhValido(state.cpfNaNota)) {
+      emit(
+        state.copyWith(
+          erro: 'CPF informado para a nota fiscal é inválido.',
+        ),
+      );
       return;
     }
 
@@ -354,6 +467,25 @@ class PagamentosRealizadosBloc
         resultado: resultado,
       ),
     );
+  }
+
+  void _onIncluirCpfAlterado(
+    PagamentosRealizadosIncluirCpfAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        incluirCpfNaNota: event.incluirCpfNaNota,
+        erro: null,
+      ),
+    );
+  }
+
+  void _onCpfAlterado(
+    PagamentosRealizadosCpfAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    emit(state.copyWith(cpfNaNota: event.cpfNaNota, erro: null));
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {

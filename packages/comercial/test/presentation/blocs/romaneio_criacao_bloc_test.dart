@@ -4,7 +4,37 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc_test.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/sessao.dart';
+import 'package:financeiro/data.dart';
+import 'package:financeiro/models.dart';
+import 'package:financeiro/use_cases.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class StubCaixaRepository implements ICaixaRepository {
+  @override
+  Future<Caixa> abrirCaixa({
+    required int idEmpresa,
+    required int terminalId,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Caixa?> recuperarCaixaAberto({
+    required int idEmpresa,
+    required int terminalId,
+  }) async =>
+      null;
+
+  @override
+  Future<List<ExtratoCaixa>> buscarExtratoCaixa({required int caixaId}) async =>
+      const [];
+
+  @override
+  Future<List<ExtratoCaixa>> buscarExtratoCaixaPorDocumento({
+    required int caixaId,
+    required String documento,
+  }) async =>
+      const [];
+}
 
 class StubCriarRomaneio implements CriarRomaneio {
   final Future<Romaneio> Function(Romaneio romaneio) onCall;
@@ -106,6 +136,9 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
   }) {
     return onCall(
       caixaId: caixaId,
@@ -198,6 +231,7 @@ void main() {
         },
       ),
       const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
+      RecuperarCaixaAberto(repository: StubCaixaRepository()),
     ),
     act: (bloc) =>
         bloc.add(

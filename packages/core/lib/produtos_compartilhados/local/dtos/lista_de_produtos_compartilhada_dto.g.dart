@@ -23,55 +23,70 @@ const ListaDeProdutosCompartilhadaDtoSchema = CollectionSchema(
       name: r'atualizadaEm',
       type: IsarType.dateTime,
     ),
-    r'criadaEm': PropertySchema(
+    r'clienteNome': PropertySchema(
       id: 1,
+      name: r'clienteNome',
+      type: IsarType.string,
+    ),
+    r'criadaEm': PropertySchema(
+      id: 2,
       name: r'criadaEm',
       type: IsarType.dateTime,
     ),
     r'funcionarioId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'funcionarioId',
       type: IsarType.long,
     ),
+    r'funcionarioNome': PropertySchema(
+      id: 4,
+      name: r'funcionarioNome',
+      type: IsarType.string,
+    ),
     r'hash': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'hash',
       type: IsarType.string,
     ),
     r'hashCode': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'idLista': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'idLista',
       type: IsarType.long,
     ),
     r'origemIndex': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'origemIndex',
       type: IsarType.long,
     ),
     r'pessoaId': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'pessoaId',
       type: IsarType.long,
     ),
     r'processada': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'processada',
       type: IsarType.bool,
     ),
     r'stringify': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'stringify',
       type: IsarType.bool,
     ),
     r'tabelaPrecoId': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'tabelaPrecoId',
       type: IsarType.long,
+    ),
+    r'tabelaPrecoNome': PropertySchema(
+      id: 13,
+      name: r'tabelaPrecoNome',
+      type: IsarType.string,
     )
   },
   estimateSize: _listaDeProdutosCompartilhadaDtoEstimateSize,
@@ -94,7 +109,25 @@ int _listaDeProdutosCompartilhadaDtoEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.clienteNome;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.funcionarioNome;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.hash.length * 3;
+  {
+    final value = object.tabelaPrecoNome;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -105,16 +138,19 @@ void _listaDeProdutosCompartilhadaDtoSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.atualizadaEm);
-  writer.writeDateTime(offsets[1], object.criadaEm);
-  writer.writeLong(offsets[2], object.funcionarioId);
-  writer.writeString(offsets[3], object.hash);
-  writer.writeLong(offsets[4], object.hashCode);
-  writer.writeLong(offsets[5], object.idLista);
-  writer.writeLong(offsets[6], object.origemIndex);
-  writer.writeLong(offsets[7], object.pessoaId);
-  writer.writeBool(offsets[8], object.processada);
-  writer.writeBool(offsets[9], object.stringify);
-  writer.writeLong(offsets[10], object.tabelaPrecoId);
+  writer.writeString(offsets[1], object.clienteNome);
+  writer.writeDateTime(offsets[2], object.criadaEm);
+  writer.writeLong(offsets[3], object.funcionarioId);
+  writer.writeString(offsets[4], object.funcionarioNome);
+  writer.writeString(offsets[5], object.hash);
+  writer.writeLong(offsets[6], object.hashCode);
+  writer.writeLong(offsets[7], object.idLista);
+  writer.writeLong(offsets[8], object.origemIndex);
+  writer.writeLong(offsets[9], object.pessoaId);
+  writer.writeBool(offsets[10], object.processada);
+  writer.writeBool(offsets[11], object.stringify);
+  writer.writeLong(offsets[12], object.tabelaPrecoId);
+  writer.writeString(offsets[13], object.tabelaPrecoNome);
 }
 
 ListaDeProdutosCompartilhadaDto _listaDeProdutosCompartilhadaDtoDeserialize(
@@ -125,14 +161,17 @@ ListaDeProdutosCompartilhadaDto _listaDeProdutosCompartilhadaDtoDeserialize(
 ) {
   final object = ListaDeProdutosCompartilhadaDto(
     atualizadaEm: reader.readDateTime(offsets[0]),
-    criadaEm: reader.readDateTime(offsets[1]),
-    funcionarioId: reader.readLongOrNull(offsets[2]),
-    hash: reader.readString(offsets[3]),
-    idLista: reader.readLongOrNull(offsets[5]),
-    origemIndex: reader.readLong(offsets[6]),
-    pessoaId: reader.readLongOrNull(offsets[7]),
-    processada: reader.readBoolOrNull(offsets[8]),
-    tabelaPrecoId: reader.readLongOrNull(offsets[10]),
+    clienteNome: reader.readStringOrNull(offsets[1]),
+    criadaEm: reader.readDateTime(offsets[2]),
+    funcionarioId: reader.readLongOrNull(offsets[3]),
+    funcionarioNome: reader.readStringOrNull(offsets[4]),
+    hash: reader.readString(offsets[5]),
+    idLista: reader.readLongOrNull(offsets[7]),
+    origemIndex: reader.readLong(offsets[8]),
+    pessoaId: reader.readLongOrNull(offsets[9]),
+    processada: reader.readBoolOrNull(offsets[10]),
+    tabelaPrecoId: reader.readLongOrNull(offsets[12]),
+    tabelaPrecoNome: reader.readStringOrNull(offsets[13]),
   );
   return object;
 }
@@ -147,25 +186,31 @@ P _listaDeProdutosCompartilhadaDtoDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
-    case 4:
-      return (reader.readLong(offset)) as P;
-    case 5:
       return (reader.readLongOrNull(offset)) as P;
+    case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
       return (reader.readLongOrNull(offset)) as P;
     case 8:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 10:
       return (reader.readLongOrNull(offset)) as P;
+    case 10:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 11:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 12:
+      return (reader.readLongOrNull(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -325,6 +370,162 @@ extension ListaDeProdutosCompartilhadaDtoQueryFilter on QueryBuilder<
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'clienteNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'clienteNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'clienteNome',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      clienteNomeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'clienteNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      clienteNomeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'clienteNome',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'clienteNome',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> clienteNomeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'clienteNome',
+        value: '',
       ));
     });
   }
@@ -511,6 +712,162 @@ extension ListaDeProdutosCompartilhadaDtoQueryFilter on QueryBuilder<
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'funcionarioNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'funcionarioNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'funcionarioNome',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      funcionarioNomeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'funcionarioNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      funcionarioNomeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'funcionarioNome',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'funcionarioNome',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> funcionarioNomeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'funcionarioNome',
+        value: '',
       ));
     });
   }
@@ -1042,6 +1399,162 @@ extension ListaDeProdutosCompartilhadaDtoQueryFilter on QueryBuilder<
       ));
     });
   }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'tabelaPrecoNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'tabelaPrecoNome',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'tabelaPrecoNome',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      tabelaPrecoNomeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'tabelaPrecoNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+          QAfterFilterCondition>
+      tabelaPrecoNomeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'tabelaPrecoNome',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tabelaPrecoNome',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterFilterCondition> tabelaPrecoNomeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'tabelaPrecoNome',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension ListaDeProdutosCompartilhadaDtoQueryObject on QueryBuilder<
@@ -1071,6 +1584,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortBy on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByClienteNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'clienteNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByClienteNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'clienteNome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QAfterSortBy> sortByCriadaEm() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'criadaEm', Sort.asc);
@@ -1095,6 +1622,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortBy on QueryBuilder<
       QAfterSortBy> sortByFuncionarioIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'funcionarioId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByFuncionarioNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'funcionarioNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByFuncionarioNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'funcionarioNome', Sort.desc);
     });
   }
 
@@ -1209,6 +1750,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortBy on QueryBuilder<
       return query.addSortBy(r'tabelaPrecoId', Sort.desc);
     });
   }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByTabelaPrecoNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tabelaPrecoNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> sortByTabelaPrecoNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tabelaPrecoNome', Sort.desc);
+    });
+  }
 }
 
 extension ListaDeProdutosCompartilhadaDtoQuerySortThenBy on QueryBuilder<
@@ -1226,6 +1781,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortThenBy on QueryBuilder<
       QAfterSortBy> thenByAtualizadaEmDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'atualizadaEm', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByClienteNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'clienteNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByClienteNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'clienteNome', Sort.desc);
     });
   }
 
@@ -1268,6 +1837,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortThenBy on QueryBuilder<
       QAfterSortBy> thenByFuncionarioIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'funcionarioId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByFuncionarioNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'funcionarioNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByFuncionarioNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'funcionarioNome', Sort.desc);
     });
   }
 
@@ -1382,6 +1965,20 @@ extension ListaDeProdutosCompartilhadaDtoQuerySortThenBy on QueryBuilder<
       return query.addSortBy(r'tabelaPrecoId', Sort.desc);
     });
   }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByTabelaPrecoNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tabelaPrecoNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QAfterSortBy> thenByTabelaPrecoNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tabelaPrecoNome', Sort.desc);
+    });
+  }
 }
 
 extension ListaDeProdutosCompartilhadaDtoQueryWhereDistinct on QueryBuilder<
@@ -1396,6 +1993,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QDistinct> distinctByClienteNome({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'clienteNome', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
       QDistinct> distinctByCriadaEm() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'criadaEm');
@@ -1406,6 +2010,14 @@ extension ListaDeProdutosCompartilhadaDtoQueryWhereDistinct on QueryBuilder<
       QDistinct> distinctByFuncionarioId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'funcionarioId');
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QDistinct> distinctByFuncionarioNome({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'funcionarioNome',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -1464,6 +2076,14 @@ extension ListaDeProdutosCompartilhadaDtoQueryWhereDistinct on QueryBuilder<
       return query.addDistinctBy(r'tabelaPrecoId');
     });
   }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, ListaDeProdutosCompartilhadaDto,
+      QDistinct> distinctByTabelaPrecoNome({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tabelaPrecoNome',
+          caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ListaDeProdutosCompartilhadaDtoQueryProperty on QueryBuilder<
@@ -1484,6 +2104,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryProperty on QueryBuilder<
     });
   }
 
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, String?, QQueryOperations>
+      clienteNomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'clienteNome');
+    });
+  }
+
   QueryBuilder<ListaDeProdutosCompartilhadaDto, DateTime, QQueryOperations>
       criadaEmProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -1495,6 +2122,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryProperty on QueryBuilder<
       funcionarioIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'funcionarioId');
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, String?, QQueryOperations>
+      funcionarioNomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'funcionarioNome');
     });
   }
 
@@ -1551,6 +2185,13 @@ extension ListaDeProdutosCompartilhadaDtoQueryProperty on QueryBuilder<
       tabelaPrecoIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tabelaPrecoId');
+    });
+  }
+
+  QueryBuilder<ListaDeProdutosCompartilhadaDto, String?, QQueryOperations>
+      tabelaPrecoNomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tabelaPrecoNome');
     });
   }
 }

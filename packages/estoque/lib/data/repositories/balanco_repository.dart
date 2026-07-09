@@ -222,4 +222,9 @@ class BalancoRepository implements IBalancoRepository {
   Future<void> calcularItensDoBalanco({required int balancoId}) {
     return remoteDataSource.calcularItensDoBalanco(balancoId: balancoId);
   }
+
+  @override
+  Future<Balanco?> obterBalancoEmAndamento() {
+    return remoteDataSource.obterBalancoEmAndamento();
+  }
 }

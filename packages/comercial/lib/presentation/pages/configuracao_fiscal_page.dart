@@ -18,6 +18,7 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
   bool _homologacao = false;
   bool _homologacaoPreenchida = false;
   final Map<String, TextEditingController> _credenciaisControllers = {};
+  final _classeImpostoPadraoController = TextEditingController();
 
   static const _credenciaisWebmania = [
     ('consumerKey', 'Consumer Key'),
@@ -38,6 +39,7 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
   @override
   void dispose() {
     for (final c in _credenciaisControllers.values) c.dispose();
+    _classeImpostoPadraoController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -60,6 +62,10 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
       _homologacaoPreenchida = true;
       _homologacao = webmania['homologacao'] as bool? ?? false;
     }
+    if (_classeImpostoPadraoController.text.isEmpty) {
+      _classeImpostoPadraoController.text =
+          (webmania['classeImpostoPadrao'] as String?) ?? '';
+    }
   }
 
   void _salvar() {
@@ -75,6 +81,7 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
               campo.$1: _credenciaisControllers[campo.$1]!.text.trim(),
           },
           'homologacao': _homologacao,
+          'classeImpostoPadrao': _classeImpostoPadraoController.text.trim(),
         },
       };
     }
@@ -182,6 +189,18 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
                             ),
                             onChanged: (value) =>
                                 setState(() => _homologacao = value),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _classeImpostoPadraoController,
+                            decoration: const InputDecoration(
+                              labelText: 'Classe de imposto padrão (Webmania)',
+                              hintText: 'Ex: REF1000',
+                              helperText:
+                                  'Código da classe de imposto cadastrada no painel Webmania, '
+                                  'usado em todos os produtos na emissão da nota.',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
                         ],
                         if (_providerSelecionado == 'noop') ...[

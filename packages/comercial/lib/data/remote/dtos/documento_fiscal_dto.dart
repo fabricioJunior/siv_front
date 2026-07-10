@@ -34,6 +34,10 @@ class DocumentoFiscalDto extends Equatable implements DocumentoFiscal {
   final DateTime? createdAt;
   @override
   final DateTime? updatedAt;
+  @override
+  final Map<String, dynamic>? payload;
+  @override
+  final dynamic respostaGateway;
 
   const DocumentoFiscalDto({
     required this.id,
@@ -52,6 +56,8 @@ class DocumentoFiscalDto extends Equatable implements DocumentoFiscal {
     this.pessoaNome,
     this.createdAt,
     this.updatedAt,
+    this.payload,
+    this.respostaGateway,
   });
 
   factory DocumentoFiscalDto.fromJson(Map<String, dynamic> json) {
@@ -74,6 +80,8 @@ class DocumentoFiscalDto extends Equatable implements DocumentoFiscal {
       pessoaNome: pessoaNome,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
+      payload: payload is Map<String, dynamic> ? payload : null,
+      respostaGateway: json['respostaGateway'],
     );
   }
 

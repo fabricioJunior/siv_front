@@ -137,9 +137,9 @@ class _Body extends StatelessWidget {
         _StatusBanner(status: doc.status, cor: cor),
         const SizedBox(height: 16),
 
-        // Identificação
-        _Secao(titulo: 'Identificação', children: [
-          _InfoRow('ID', '#${doc.id}'),
+        // Dados da Nota
+        _Secao(titulo: 'Dados da Nota', children: [
+          _InfoRow('Status', doc.status.replaceAll('_', ' ')),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -165,26 +165,28 @@ class _Body extends StatelessWidget {
               ],
             ),
           ),
-          if (doc.pedidoId != null) _InfoRow('Pedido', '#${doc.pedidoId}'),
           _InfoRow('Cliente', doc.pessoaNome ?? '-'),
-          _InfoRow('Tipo', doc.tipoDocumento),
-          _InfoRow('Ação', doc.acao),
-          _InfoRow('Provider', doc.provider.toUpperCase()),
-          _InfoRow('Tentativas', '${doc.tentativas} / ${doc.maxTentativas}'),
-          _InfoRow('Criado em', fmtDt(doc.createdAt)),
-          _InfoRow('Atualizado em', fmtDt(doc.updatedAt)),
+          _InfoRow('Tipo da Nota', doc.tipoNota),
+          _InfoRow('Ambiente', doc.ambienteEmissao),
+          _InfoRow('CPF/CNPJ Emissão', doc.cpfOuCnpjEmissao, copiavel: true),
+          _InfoRow('Valor Total', 'R\$ ${doc.valorTotalNota.toStringAsFixed(2)}'),
+          if (doc.urlDanfe != null)
+            _InfoRow('URL da Nota', doc.urlDanfe!, copiavel: true),
+          if (doc.produtosDaNota.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.only(top: 8, bottom: 4),
+              child: Text('Produtos',
+                  style: TextStyle(fontSize: 12, color: Colors.black54)),
+            ),
+            ...doc.produtosDaNota.map((p) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    '${p.quantidade}x ${p.nome} — R\$ ${p.valor.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                )),
+          ],
         ]),
-
-        // Dados fiscais
-        if (doc.chaveAcesso != null || doc.protocolo != null) ...[
-          const SizedBox(height: 16),
-          _Secao(titulo: 'Dados Fiscais', children: [
-            if (doc.chaveAcesso != null)
-              _InfoRow('Chave de Acesso', doc.chaveAcesso!, copiavel: true),
-            if (doc.protocolo != null)
-              _InfoRow('Protocolo', doc.protocolo!, copiavel: true),
-          ]),
-        ],
 
         // Erro
         if (doc.erroMensagem != null) ...[
@@ -192,18 +194,40 @@ class _Body extends StatelessWidget {
           _SecaoErro(mensagem: doc.erroMensagem!),
         ],
 
-        // Eventos
+        // Dados Técnicos
         const SizedBox(height: 16),
-        _Secao(
+        _SecaoSecundaria(titulo: 'Dados Técnicos', children: [
+          _InfoRow('ID', '#${doc.id}'),
+          if (doc.pedidoId != null) _InfoRow('Pedido', '#${doc.pedidoId}'),
+          _InfoRow('Ação', doc.acao),
+          _InfoRow('Provider', doc.provider.toUpperCase()),
+          _InfoRow('Criado em', fmtDt(doc.createdAt)),
+          _InfoRow('Atualizado em', fmtDt(doc.updatedAt)),
+          if (doc.chaveAcesso != null) ...[
+            const SizedBox(height: 6),
+            _InfoRow('Chave de Acesso', doc.chaveAcesso!, copiavel: true),
+          ],
+          if (doc.protocolo != null)
+            _InfoRow('Protocolo', doc.protocolo!, copiavel: true),
+          if (doc.payload != null) ...[
+            const SizedBox(height: 10),
+            _JsonBloco(label: 'Body da Requisição', valor: prettyJson(doc.payload)),
+          ],
+          if (doc.respostaGateway != null) ...[
+            const SizedBox(height: 10),
+            _JsonBloco(label: 'Resposta do Servidor', valor: prettyJson(doc.respostaGateway)),
+          ],
+        ]),
+
+        // Eventos (secundário)
+        const SizedBox(height: 20),
+        _SecaoSecundaria(
           titulo: 'Histórico de tentativas (${detalhe.eventos.length})',
           children: detalhe.eventos.isEmpty
               ? [const _InfoRow('', 'Nenhuma tentativa registrada')]
               : detalhe.eventos
-                  .asMap()
-                  .entries
-                  .map((entry) => _EventoCard(
-                        evento: entry.value,
-                        autoExpandir: entry.key == 0,
+                  .map((evento) => _EventoCard(
+                        evento: evento,
                         fmtDt: fmtDt,
                         prettyJson: prettyJson,
                       ))
@@ -211,6 +235,74 @@ class _Body extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+extension _DocumentoFiscalExtracao on DocumentoFiscal {
+  Map<String, dynamic>? get _webmania {
+    final wm = payload?['webmania'];
+    return wm is Map<String, dynamic> ? wm : null;
+  }
+
+  Map<String, dynamic>? get _webmaniaPayload {
+    final p = _webmania?['payload'];
+    return p is Map<String, dynamic> ? p : null;
+  }
+
+  Map<String, dynamic>? get _respostaGatewayMap {
+    final r = respostaGateway;
+    return r is Map<String, dynamic> ? r : null;
+  }
+
+  String? get urlDanfe => _respostaGatewayMap?['danfe'] as String?;
+
+  String get cpfOuCnpjEmissao {
+    final destinatario = _webmaniaPayload?['destinatario'];
+    if (destinatario is Map) {
+      final cpf = destinatario['cpf'] as String?;
+      if (cpf != null && cpf.isNotEmpty) return cpf;
+      final cnpj = destinatario['cnpj'] as String?;
+      if (cnpj != null && cnpj.isNotEmpty) return cnpj;
+    }
+    return payload?['pessoaDocumento'] as String? ?? '-';
+  }
+
+  List<({String nome, num quantidade, num valor})> get produtosDaNota {
+    final produtos = _webmaniaPayload?['produtos'];
+    if (produtos is! List) return const [];
+    return produtos.whereType<Map>().map((p) {
+      return (
+        nome: (p['nome'] as String?) ?? '-',
+        quantidade: (p['quantidade'] as num?) ?? 0,
+        valor: (p['total'] as num?) ?? (p['subtotal'] as num?) ?? 0,
+      );
+    }).toList();
+  }
+
+  num get valorTotalNota {
+    final pedido = _webmaniaPayload?['pedido'];
+    if (pedido is Map && pedido['total'] is num) return pedido['total'] as num;
+    return (payload?['valorLiquido'] as num?) ?? 0;
+  }
+
+  String get ambienteEmissao {
+    final tpAmb = _respostaGatewayMap?['log'] is Map
+        ? (_respostaGatewayMap!['log'] as Map)['tpAmb']
+        : null;
+    if (tpAmb == '1') return 'Produção';
+    if (tpAmb == '2') return 'Homologação';
+    final homologacao = _webmania?['homologacao'];
+    if (homologacao is bool) {
+      return homologacao ? 'Homologação (não emitida)' : 'Produção (não emitida)';
+    }
+    return 'Não emitida ainda';
+  }
+
+  String get tipoNota {
+    final modelo = _webmaniaPayload?['modelo'];
+    if (modelo == 1) return 'NF-e';
+    if (modelo == 2) return 'NFC-e';
+    return tipoDocumento;
   }
 }
 
@@ -281,6 +373,33 @@ class _Secao extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SecaoSecundaria extends StatelessWidget {
+  final String titulo;
+  final List<Widget> children;
+  const _SecaoSecundaria({required this.titulo, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: false,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 8),
+        title: Text(
+          titulo,
+          style: TextStyle(
+            fontWeight: FontWeight.normal,
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        children: children,
+      ),
     );
   }
 }
@@ -367,14 +486,12 @@ class _SecaoErro extends StatelessWidget {
 
 class _EventoCard extends StatefulWidget {
   final DocumentoFiscalEvento evento;
-  final bool autoExpandir;
   final String Function(DateTime?) fmtDt;
   final String Function(dynamic) prettyJson;
   const _EventoCard({
     required this.evento,
     required this.fmtDt,
     required this.prettyJson,
-    this.autoExpandir = false,
   });
 
   @override
@@ -382,13 +499,7 @@ class _EventoCard extends StatefulWidget {
 }
 
 class _EventoCardState extends State<_EventoCard> {
-  late bool _expandido;
-
-  @override
-  void initState() {
-    super.initState();
-    _expandido = widget.autoExpandir;
-  }
+  bool _expandido = false;
 
   @override
   Widget build(BuildContext context) {

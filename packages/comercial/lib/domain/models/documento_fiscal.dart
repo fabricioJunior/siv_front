@@ -17,6 +17,8 @@ abstract class DocumentoFiscal implements Equatable {
   String? get pessoaNome;
   DateTime? get createdAt;
   DateTime? get updatedAt;
+  Map<String, dynamic>? get payload;
+  dynamic get respostaGateway;
 }
 
 abstract class DocumentoFiscalFiltros {

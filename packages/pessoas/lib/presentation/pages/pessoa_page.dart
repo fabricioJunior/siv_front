@@ -98,36 +98,36 @@ class _PessoaPageState extends State<PessoaPage> {
             },
           ),
           BlocListener<PessoaBloc, PessoaState>(
-        listenWhen: (previous, current) =>
-            previous.pessoaStep != current.pessoaStep,
-        listener: (context, state) {
-          if (!_camposHidratados &&
-              (state.pessoaStep == PessoaStep.carregado ||
-                  state.pessoaStep == PessoaStep.salva ||
-                  state.pessoaStep == PessoaStep.criada)) {
-            _hidratatCamposComState(state);
-            _camposHidratados = true;
-          }
+            listenWhen: (previous, current) =>
+                previous.pessoaStep != current.pessoaStep,
+            listener: (context, state) {
+              if (!_camposHidratados &&
+                  (state.pessoaStep == PessoaStep.carregado ||
+                      state.pessoaStep == PessoaStep.salva ||
+                      state.pessoaStep == PessoaStep.criada)) {
+                _hidratatCamposComState(state);
+                _camposHidratados = true;
+              }
 
-          if (state.pessoaStep == PessoaStep.criada ||
-              state.pessoaStep == PessoaStep.salva) {
-            if (state.avisoEndereco != null) {
-              _erro(context, state.avisoEndereco!);
-              Future.delayed(const Duration(seconds: 2), () {
-                if (mounted) Navigator.of(context).pop(true);
-              });
-            } else {
-              Navigator.of(context).pop(true);
-            }
-          }
+              if (state.pessoaStep == PessoaStep.criada ||
+                  state.pessoaStep == PessoaStep.salva) {
+                if (state.avisoEndereco != null) {
+                  _erro(context, state.avisoEndereco!);
+                  Future.delayed(const Duration(seconds: 2), () {
+                    if (mounted) Navigator.of(context).pop(true);
+                  });
+                } else {
+                  Navigator.of(context).pop(true);
+                }
+              }
 
-          if (state.pessoaStep == PessoaStep.falha) {
-            _erro(
-              context,
-              state.erro ?? 'Ocorreu um erro. Tente novamente.',
-            );
-          }
-        },
+              if (state.pessoaStep == PessoaStep.falha) {
+                _erro(
+                  context,
+                  state.erro ?? 'Ocorreu um erro. Tente novamente.',
+                );
+              }
+            },
           ),
         ],
         child: Scaffold(

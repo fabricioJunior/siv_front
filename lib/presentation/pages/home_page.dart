@@ -107,6 +107,14 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['ROMFP001'],
                 ),
                 const _AccessFlowItem(
+                  icon: Icons.inventory_outlined,
+                  title: 'Consignações',
+                  subtitle: 'Remessas, movimentações e acerto com o cliente.',
+                  color: Colors.indigo,
+                  route: '/consignacoes',
+                  componentesNecessarios: ['CONFC001'],
+                ),
+                const _AccessFlowItem(
                   icon: Icons.point_of_sale,
                   title: 'Histórico de vendas',
                   subtitle: 'Consulta por cliente, funcionário, caixa e data.',

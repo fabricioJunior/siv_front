@@ -117,14 +117,9 @@ class PagamentoAvulsoPage extends StatelessWidget {
                           onChanged: (value) =>
                               _onCampoAlterado(context, description: value),
                         ),
-                        _campoTextoSomenteLeitura(
-                          context,
-                          label: 'Chave de Idempotência',
-                          value: state.idempotencyKey ?? '',
-                        ),
                         _campoTexto(
                           context,
-                          label: 'Tempo limite (horas)',
+                          label: 'Duração do link (horas)',
                           initialValue: (state.expiracaoHoras ?? 48)
                               .toString(),
                           keyboardType: TextInputType.number,
@@ -169,26 +164,6 @@ class PagamentoAvulsoPage extends StatelessWidget {
                             },
                           ),
                         ),
-                        _campoTextoSomenteLeitura(
-                          context,
-                          label: 'Nome',
-                          value: _textoOuTraco(state.customerNome),
-                        ),
-                        _campoTextoSomenteLeitura(
-                          context,
-                          label: 'Documento',
-                          value: _textoOuTraco(state.customerDocumento),
-                        ),
-                        _campoTextoSomenteLeitura(
-                          context,
-                          label: 'E-mail',
-                          value: _textoOuTraco(state.customerEmail),
-                        ),
-                        _campoTextoSomenteLeitura(
-                          context,
-                          label: 'Telefone',
-                          value: _textoOuTraco(state.customerTelefone),
-                        ),
                       ],
                     ),
                   ),
@@ -231,26 +206,6 @@ class PagamentoAvulsoPage extends StatelessWidget {
           return null;
         },
         onChanged: onChanged,
-      ),
-    );
-  }
-
-  Widget _campoTextoSomenteLeitura(
-    BuildContext context, {
-    required String label,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        child: SelectableText(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
       ),
     );
   }
@@ -385,13 +340,6 @@ class PagamentoAvulsoPage extends StatelessWidget {
     }
 
     return (parsed * 100).round();
-  }
-
-  String _textoOuTraco(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return '-';
-    }
-    return value;
   }
 
   void _onCampoAlterado(

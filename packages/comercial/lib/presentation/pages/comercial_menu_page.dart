@@ -48,6 +48,14 @@ class ComercialMenuPage extends StatelessWidget {
         componente: 'ROMFP001',
         route: '/vendas',
       ),
+      const _ItemData(
+        icon: Icons.inventory_outlined,
+        titulo: 'Consignações',
+        subtitulo: 'Remessas, devoluções e acertos de mercadoria consignada.',
+        cor: Colors.indigo,
+        componente: 'CONFC001',
+        route: '/consignacoes',
+      ),
     ];
 
     // Filtra apenas itens com permissão

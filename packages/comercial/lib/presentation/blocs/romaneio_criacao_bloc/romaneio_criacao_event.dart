@@ -14,6 +14,8 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final int? consignacaoId;
+  final List<int> romaneiosConsignacao;
 
   const RomaneioCriacaoSolicitada({
     required this.hashLista,
@@ -22,6 +24,8 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.consignacaoId,
+    this.romaneiosConsignacao = const [],
   });
 
   @override
@@ -32,5 +36,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,
+        consignacaoId,
+        romaneiosConsignacao,
       ];
 }

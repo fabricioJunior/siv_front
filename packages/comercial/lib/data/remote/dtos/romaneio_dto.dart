@@ -6,6 +6,10 @@ class RomaneioDto implements Romaneio {
   @override
   final List<int> romaneiosDevolucao;
   @override
+  final int? consignacaoId;
+  @override
+  final List<int> romaneiosConsignacao;
+  @override
   final int? pessoaId;
   @override
   final String? pessoaNome;
@@ -97,6 +101,8 @@ class RomaneioDto implements Romaneio {
   const RomaneioDto({
     this.id,
     this.romaneiosDevolucao = const [],
+    this.consignacaoId,
+    this.romaneiosConsignacao = const [],
     this.pessoaId,
     this.pessoaNome,
     this.funcionarioId,
@@ -147,6 +153,8 @@ class RomaneioDto implements Romaneio {
     return RomaneioDto(
       id: _toInt(json['romaneioId'] ?? json['id']),
       romaneiosDevolucao: _toIntList(json['romaneiosDevolucao']),
+      consignacaoId: _toInt(json['consignacaoId']),
+      romaneiosConsignacao: _toIntList(json['romaneiosConsignacao']),
       pessoaId: _toInt(json['pessoaId']),
       pessoaNome: json['pessoaNome']?.toString(),
       funcionarioId: _toInt(json['funcionarioId']),
@@ -200,6 +208,8 @@ class RomaneioDto implements Romaneio {
     return RomaneioDto(
       id: romaneio.id,
       romaneiosDevolucao: romaneio.romaneiosDevolucao,
+      consignacaoId: romaneio.consignacaoId,
+      romaneiosConsignacao: romaneio.romaneiosConsignacao,
       pessoaId: romaneio.pessoaId,
       pessoaNome: romaneio.pessoaNome,
       funcionarioId: romaneio.funcionarioId,
@@ -255,6 +265,9 @@ class RomaneioDto implements Romaneio {
       'operacao': operacao?.toJsonValue(),
       if (romaneiosDevolucao.isNotEmpty)
         'romaneiosDevolucao': romaneiosDevolucao,
+      if (consignacaoId != null) 'consignacaoId': consignacaoId,
+      if (romaneiosConsignacao.isNotEmpty)
+        'romaneiosConsignacao': romaneiosConsignacao,
       'desconto': desconto,
     };
   }
@@ -272,6 +285,8 @@ class RomaneioDto implements Romaneio {
   List<Object?> get props => [
         id,
         romaneiosDevolucao,
+        consignacaoId,
+        romaneiosConsignacao,
         pessoaId,
         pessoaNome,
         funcionarioId,

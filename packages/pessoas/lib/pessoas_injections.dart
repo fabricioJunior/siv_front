@@ -167,6 +167,10 @@ void _usesCases() {
   sl.registerFactory<RecuperarFuncionarios>(
     () => RecuperarFuncionarios(funcionariosRepository: sl()),
   );
+
+  sl.registerFactory<BuscarPessoaExtrato>(
+    () => BuscarPessoaExtrato(repository: sl()),
+  );
 }
 
 void _repositories() {
@@ -187,6 +191,10 @@ void _repositories() {
 
   sl.registerFactory<IFuncionariosRepository>(
     () => FuncionariosRepository(funcionariosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IPessoaExtratoRepository>(
+    () => PessoaExtratoRepository(remoteDataSource: sl()),
   );
 }
 
@@ -210,6 +218,12 @@ void _remoteDataSourcers() {
 
   sl.registerFactory<IFuncionariosRemoteDataSource>(
     () => FuncionariosRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IPessoaExtratoRemoteDataSource>(
+    () => PessoaExtratoRemoteDataSource(
       informacoesParaRequest: sl(),
     ),
   );

@@ -1,6 +1,8 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:autenticacao/models.dart' show TerminalDoUsuario;
+import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:empresas/presentation.dart';
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
@@ -454,6 +456,16 @@ Map<String, Widget Function(BuildContext)> routes = {
     final incluirCpfNaNota =
         argumentos['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
+    final consignacaoIdArg = argumentos['consignacaoId'];
+    final consignacaoId = consignacaoIdArg is int
+        ? consignacaoIdArg
+        : int.tryParse(consignacaoIdArg?.toString() ?? '');
+    final romaneiosConsignacaoRaw =
+        argumentos['romaneiosConsignacao'] as List<dynamic>? ?? const [];
+    final romaneiosConsignacao = romaneiosConsignacaoRaw
+        .map((item) => item is int ? item : int.tryParse(item.toString()))
+        .whereType<int>()
+        .toList(growable: false);
 
     return _rotaProtegidaPorCaixaAberto(
       child: CriarRomaneioPorParametrosPage(
@@ -463,7 +475,127 @@ Map<String, Widget Function(BuildContext)> routes = {
         descontosItens: descontosItens,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
+        consignacaoId: consignacaoId,
+        romaneiosConsignacao: romaneiosConsignacao,
       ),
+    );
+  },
+
+  ///CONSIGNACAO:
+  '/consignacoes': (context) {
+    return _rotaProtegida(
+      route: '/consignacoes',
+      child: const ConsignacoesPage(),
+    );
+  },
+  '/consignacao_abrir': (context) {
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/consignacao_abrir',
+        child: AbrirConsignacaoPage(
+          pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              SeletorPessoa(
+                titulo: 'Cliente',
+                itemsSelecionadosInicial: itemsSelecionadosInicial,
+                retornarSomenteId: false,
+                onChanged: onChanged,
+                onlyView: onlyView ?? false,
+                eCliente: true,
+              ),
+          funcionarioSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FuncionarioSeletor(
+                    modo: FuncionarioSeletorModo.unica,
+                    itemsSelecionadosInicial:
+                        itemsSelecionadosInicial ?? const [],
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Vendedor',
+                  ),
+          tabelaDePrecoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  TabelasDePrecoSeletor(
+                    titulo: 'Tabela de preço',
+                    modo: TabelasDePrecoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                  ),
+        ),
+      ),
+    );
+  },
+  '/consignacao_bipagem': (context) {
+    final argumentos = args(context);
+    final consignacaoIdArg = argumentos['consignacaoId'];
+    final consignacaoId = consignacaoIdArg is int
+        ? consignacaoIdArg
+        : int.tryParse(consignacaoIdArg?.toString() ?? '') ?? 0;
+    final origemNome = argumentos['origem']?.toString();
+    final origem = OrigemCompartilhadaTipo.values.firstWhere(
+      (valor) => valor.name == origemNome,
+      orElse: () => OrigemCompartilhadaTipo.consignacaoSaida,
+    );
+    final romaneiosConsignacaoRaw =
+        argumentos['romaneiosConsignacao'] as List<dynamic>? ?? const [];
+    final romaneiosConsignacao = romaneiosConsignacaoRaw
+        .map((item) => item is int ? item : int.tryParse(item.toString()))
+        .whereType<int>()
+        .toList(growable: false);
+
+    return _rotaProtegida(
+      route: '/consignacao_bipagem',
+      child: ConsignacaoBipagemPage(
+        consignacaoId: consignacaoId,
+        pessoaId: argumentos['pessoaId'],
+        funcionarioId: argumentos['funcionarioId'],
+        tabelaPrecoId: argumentos['tabelaPrecoId'],
+        origem: origem,
+        romaneiosConsignacao: romaneiosConsignacao,
+      ),
+    );
+  },
+  '/consignacao': (context) {
+    final argumentos = args(context);
+    final idArg = argumentos['id'];
+    final id = idArg is int ? idArg : int.tryParse(idArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/consignacao',
+      child: ConsignacaoDetalhePage(id: id),
+    );
+  },
+  '/consignacao_acerto': (context) {
+    final argumentos = args(context);
+    final consignacao = argumentos['consignacao'] as Consignacao;
+
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/consignacao_acerto',
+        child: ConsignacaoAcertoPage(
+          consignacao: consignacao,
+          formasDePagamentoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FormasDePagamentoSeletor(
+                    modo: FormasDePagamentoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Forma de pagamento',
+                  ),
+        ),
+      ),
+    );
+  },
+  '/consignacao_extrato': (context) {
+    final argumentos = args(context);
+    final pessoaIdArg = argumentos['pessoaId'];
+    final pessoaId =
+        pessoaIdArg is int ? pessoaIdArg : int.tryParse(pessoaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/consignacao_extrato',
+      child: ConsignacaoExtratoPage(pessoaId: pessoaId),
     );
   },
 
@@ -781,6 +913,12 @@ const Map<String, List<String>> _componentesDaRota = {
   '/orcamentos': ['PEDFC001', 'ROMFP001'],
   '/devolucao': ['PEDFC001', 'ROMFP001'],
   '/credito_devolucao_movimentacoes': ['PEDFC001', 'ROMFP001'],
+  '/consignacoes': ['CONFC001'],
+  '/consignacao': ['CONFC002'],
+  '/consignacao_abrir': ['CONFP001'],
+  '/consignacao_bipagem': ['CONFP001'],
+  '/consignacao_acerto': ['CONFP005'],
+  '/consignacao_extrato': ['CONFC002'],
   '/documentos_fiscais': ['FISFM001'],
   '/documento_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],

@@ -276,4 +276,91 @@ void main() {
           ),
     ],
   );
+
+  group('consignação', () {
+    final listaConsignacaoSaida = ListaDeProdutosCompartilhada(
+      hash: hashLista,
+      origem: OrigemCompartilhadaTipo.consignacaoSaida,
+      criadaEm: agora,
+      atualizadaEm: agora,
+      pessoaId: 5,
+      funcionarioId: 10,
+      tabelaPrecoId: 20,
+    );
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'cria romaneio de consignacao_saida com consignacaoId e não tenta receber no caixa',
+      build: () => RomaneioCriacaoBloc(
+        StubCriarRomaneio((romaneio) async {
+          expect(romaneio.operacao, TipoOperacao.consignacao_saida);
+          expect(romaneio.consignacaoId, 77);
+          return Romaneio.create(
+            id: 456,
+            funcionarioId: 10,
+            tabelaPrecoId: 20,
+            operacao: TipoOperacao.consignacao_saida,
+            consignacaoId: 77,
+          );
+        }),
+        StubAdicionarItemRomaneio(
+            ({required romaneioId, required item}) async {}),
+        StubRecuperarRomaneio((_) async => Romaneio.create(
+              id: 456,
+              funcionarioId: 10,
+              tabelaPrecoId: 20,
+              operacao: TipoOperacao.consignacao_saida,
+              consignacaoId: 77,
+            )),
+        StubRecuperarListaDeProdutosCompartilhada(
+          onCall: (_) async => listaConsignacaoSaida,
+          onRecuperarProdutos: (_) async => [produto],
+        ),
+        StubRemoverListaDeProdutosCompartilhada((_) async {}),
+        StubRemoverProdutoCompartilhado((_) async {}),
+        StubAtualizarListaCompartilhada((_) async {}),
+        StubReceberRomaneioNoCaixa(
+          ({
+            required caixaId,
+            required romaneioId,
+            required formasDePagamentoRealizadas,
+          }) async {
+            fail('consignação não deve receber no caixa automaticamente');
+          },
+        ),
+        const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
+        RecuperarCaixaAberto(repository: StubCaixaRepository()),
+      ),
+      act: (bloc) => bloc.add(
+        const RomaneioCriacaoSolicitada(
+          hashLista: hashLista,
+          consignacaoId: 77,
+        ),
+      ),
+      expect: () => [
+        isA<RomaneioCriacaoState>().having(
+          (state) => state.step,
+          'step',
+          RomaneioCriacaoStep.processando,
+        ),
+        isA<RomaneioCriacaoState>()
+            .having(
+              (state) => state.step,
+              'step',
+              RomaneioCriacaoStep.processando,
+            )
+            .having((state) => state.totalItensProcessados, 'itens', 1),
+        isA<RomaneioCriacaoState>()
+            .having(
+              (state) => state.step,
+              'step',
+              RomaneioCriacaoStep.sucesso,
+            )
+            .having(
+              (state) => state.romaneio?.operacao,
+              'operacao',
+              TipoOperacao.consignacao_saida,
+            ),
+      ],
+    );
+  });
 }

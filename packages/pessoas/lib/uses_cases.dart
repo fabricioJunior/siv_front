@@ -16,3 +16,4 @@ export 'domain/usecases/salvar_funcionario.dart';
 export 'domain/usecases/excluir_funcionario.dart';
 export 'domain/usecases/recuperar_funcionario.dart';
 export 'domain/usecases/recuperar_funcionarios.dart';
+export 'domain/usecases/buscar_pessoa_extrato.dart';

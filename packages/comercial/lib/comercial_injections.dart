@@ -40,6 +40,10 @@ void _remoteDataSources() {
   sl.registerFactory<IRelatorioRemoteDataSource>(
     () => RelatorioRemoteDataSource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IConsignacoesRemoteDataSource>(
+    () => ConsignacoesRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -77,6 +81,10 @@ void _repositories() {
       removerListaDeProdutosCompartilhada: sl(),
       leitorDataDatasource: sl<ILeitorDataDatasource>(),
     ),
+  );
+
+  sl.registerFactory<IConsignacoesRepository>(
+    () => ConsignacoesRepository(remoteDataSource: sl()),
   );
 }
 
@@ -171,6 +179,28 @@ void _useCases() {
   );
   sl.registerFactory<CarregarOrcamento>(
     () => CarregarOrcamento(repository: sl()),
+  );
+
+  sl.registerFactory<AbrirConsignacao>(
+    () => AbrirConsignacao(repository: sl()),
+  );
+  sl.registerFactory<RecuperarConsignacoes>(
+    () => RecuperarConsignacoes(repository: sl()),
+  );
+  sl.registerFactory<RecuperarConsignacao>(
+    () => RecuperarConsignacao(repository: sl()),
+  );
+  sl.registerFactory<AtualizarConsignacao>(
+    () => AtualizarConsignacao(repository: sl()),
+  );
+  sl.registerFactory<RecalcularConsignacao>(
+    () => RecalcularConsignacao(repository: sl()),
+  );
+  sl.registerFactory<FecharConsignacao>(
+    () => FecharConsignacao(repository: sl()),
+  );
+  sl.registerFactory<CancelarConsignacao>(
+    () => CancelarConsignacao(repository: sl()),
   );
 }
 
@@ -298,5 +328,17 @@ void _presentation() {
   );
   sl.registerFactory<RelatorioVendasPorFuncionarioBloc>(
     () => RelatorioVendasPorFuncionarioBloc(sl()),
+  );
+
+  sl.registerFactory<ConsignacoesBloc>(
+    () => ConsignacoesBloc(sl()),
+  );
+
+  sl.registerFactory<AbrirConsignacaoBloc>(
+    () => AbrirConsignacaoBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ConsignacaoDetalheBloc>(
+    () => ConsignacaoDetalheBloc(sl(), sl(), sl(), sl()),
   );
 }

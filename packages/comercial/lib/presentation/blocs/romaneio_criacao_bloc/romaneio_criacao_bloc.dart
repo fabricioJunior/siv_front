@@ -118,6 +118,8 @@ class RomaneioCriacaoBloc
                 tabelaPrecoId: listaCompartilhada.tabelaPrecoId,
                 operacao: operacao,
                 desconto: event.desconto,
+                consignacaoId: event.consignacaoId,
+                romaneiosConsignacao: event.romaneiosConsignacao,
               ),
             )
           : await _recuperarRomaneio.call(listaCompartilhada.idLista!);
@@ -341,6 +343,10 @@ class RomaneioCriacaoBloc
         return TipoOperacao.manual_entrada;
       case OrigemCompartilhadaTipo.manualSaidaDeProdutos:
         return TipoOperacao.manual_saida;
+      case OrigemCompartilhadaTipo.consignacaoSaida:
+        return TipoOperacao.consignacao_saida;
+      case OrigemCompartilhadaTipo.consignacaoDevolucao:
+        return TipoOperacao.consignacao_devolucao;
       case OrigemCompartilhadaTipo.orcamento:
         return null;
     }

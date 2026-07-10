@@ -4,3 +4,7 @@ export 'data/repositories/enderecos_repository.dart';
 export 'data/remote/enderecos_remote_data_source.dart';
 export 'data/repositories/funcionarios_repository.dart';
 export 'data/remote/funcionarios_remote_data_source.dart';
+export 'data/repositories/pessoa_extrato_repository.dart';
+export 'data/remote/pessoa_extrato_remote_data_source.dart';
+export 'domain/data/data_sourcers/remote/i_pessoa_extrato_remote_data_source.dart';
+export 'domain/data/repositories/i_pessoa_extrato_repository.dart';

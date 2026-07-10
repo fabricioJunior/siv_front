@@ -112,4 +112,6 @@ enum OrigemCompartilhadaTipo {
   manualEntradaDeProdutos,
   manualSaidaDeProdutos,
   orcamento,
+  consignacaoSaida,
+  consignacaoDevolucao,
 }

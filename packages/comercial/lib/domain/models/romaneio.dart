@@ -40,6 +40,8 @@ enum TipoOperacao {
 abstract class Romaneio implements Equatable {
   int? get id;
   List<int> get romaneiosDevolucao;
+  int? get consignacaoId;
+  List<int> get romaneiosConsignacao;
   int? get pessoaId;
   String? get pessoaNome;
   int? get funcionarioId;
@@ -88,6 +90,8 @@ abstract class Romaneio implements Equatable {
   factory Romaneio.create({
     int? id,
     List<int>? romaneiosDevolucao,
+    int? consignacaoId,
+    List<int>? romaneiosConsignacao,
     int? pessoaId,
     String? pessoaNome,
     int? funcionarioId,
@@ -138,6 +142,8 @@ abstract class Romaneio implements Equatable {
   List<Object?> get props => [
         id,
         romaneiosDevolucao,
+        consignacaoId,
+        romaneiosConsignacao,
         pessoaId,
         pessoaNome,
         funcionarioId,
@@ -193,6 +199,10 @@ class _RomaneioImpl implements Romaneio {
   final int? id;
   @override
   final List<int> romaneiosDevolucao;
+  @override
+  final int? consignacaoId;
+  @override
+  final List<int> romaneiosConsignacao;
   @override
   final int? pessoaId;
   @override
@@ -285,6 +295,8 @@ class _RomaneioImpl implements Romaneio {
   const _RomaneioImpl({
     this.id,
     List<int>? romaneiosDevolucao,
+    this.consignacaoId,
+    List<int>? romaneiosConsignacao,
     this.pessoaId,
     this.pessoaNome,
     this.funcionarioId,
@@ -330,12 +342,15 @@ class _RomaneioImpl implements Romaneio {
     this.enderecoMunicipio,
     this.enderecoUf,
   })  : romaneiosDevolucao = romaneiosDevolucao ?? const [],
+        romaneiosConsignacao = romaneiosConsignacao ?? const [],
         formasDePagamentoRealizadas = formasDePagamentoRealizadas ?? const [];
 
   @override
   List<Object?> get props => [
         id,
         romaneiosDevolucao,
+        consignacaoId,
+        romaneiosConsignacao,
         pessoaId,
         pessoaNome,
         funcionarioId,

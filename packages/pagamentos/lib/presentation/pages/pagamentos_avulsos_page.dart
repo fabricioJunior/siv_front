@@ -279,6 +279,8 @@ class _PagamentosAvulsosPageState extends State<PagamentosAvulsosPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text('Forma: ${_providerLabel(item.provider)}'),
+                                if (item.customer.nome.trim().isNotEmpty)
+                                  Text('Cliente: ${item.customer.nome}'),
                                 const SizedBox(height: 4),
                                 if (item.pagoEm != null)
                                   Text(
@@ -287,6 +289,11 @@ class _PagamentosAvulsosPageState extends State<PagamentosAvulsosPage> {
                                 if (item.criadoEm != null)
                                   Text(
                                     'Criado às: ${_formatarDataHora(item.criadoEm ?? item.atualizadoEm)}',
+                                  ),
+                                if (item.expiraEm != null &&
+                                    item.status?.toLowerCase() == 'pending')
+                                  Text(
+                                    'Expira às: ${_formatarDataHora(item.expiraEm)}',
                                   ),
                                 const SizedBox(height: 6),
                                 _statusChip(status),

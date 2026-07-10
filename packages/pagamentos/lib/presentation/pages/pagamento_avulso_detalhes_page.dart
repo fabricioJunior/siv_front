@@ -87,6 +87,7 @@ class _PagamentoAvulsoDetalhesPageState
               _itemInfo('Atualizado em', _formatarData(pagamento.atualizadoEm)),
               _itemInfo('Pago em', _formatarData(pagamento.pagoEm)),
               _itemInfo('Cancelado em', _formatarData(pagamento.canceladoEm)),
+              _itemInfo('Expira em', _formatarData(pagamento.expiraEm)),
               _itemInfo(
                 'Motivo do cancelamento',
                 _textoOuTraco(pagamento.motivoCancelamento ?? ''),

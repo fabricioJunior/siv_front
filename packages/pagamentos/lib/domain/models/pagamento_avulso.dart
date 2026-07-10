@@ -21,6 +21,7 @@ abstract class PagamentoAvulso implements Equatable {
   Map<String, dynamic> get respostaGateway;
   DateTime? get pagoEm;
   DateTime? get canceladoEm;
+  DateTime? get expiraEm;
   String? get motivoCancelamento;
   String? get urlPagamentoAvulsoSiteEmpresa;
   PagamentoAvulsoCustomer get customer;
@@ -47,6 +48,7 @@ abstract class PagamentoAvulso implements Equatable {
     Map<String, dynamic>? respostaGateway,
     DateTime? pagoEm,
     DateTime? canceladoEm,
+    DateTime? expiraEm,
     String? motivoCancelamento,
     String? urlPagamentoAvulsoSiteEmpresa,
   }) = _PagamentoAvulsoImpl;
@@ -143,6 +145,9 @@ class _PagamentoAvulsoImpl implements PagamentoAvulso {
   final DateTime? canceladoEm;
 
   @override
+  final DateTime? expiraEm;
+
+  @override
   final String? motivoCancelamento;
 
   @override
@@ -172,6 +177,7 @@ class _PagamentoAvulsoImpl implements PagamentoAvulso {
     Map<String, dynamic>? respostaGateway,
     this.pagoEm,
     this.canceladoEm,
+    this.expiraEm,
     this.motivoCancelamento,
     required this.customer,
     this.urlPagamentoAvulsoSiteEmpresa,
@@ -200,6 +206,7 @@ class _PagamentoAvulsoImpl implements PagamentoAvulso {
     Map<String, dynamic>? respostaGateway,
     DateTime? pagoEm,
     DateTime? canceladoEm,
+    DateTime? expiraEm,
     String? motivoCancelamento,
     PagamentoAvulsoCustomer? customer,
     String? urlPagamentoAvulsoSiteEmpresa,
@@ -225,6 +232,7 @@ class _PagamentoAvulsoImpl implements PagamentoAvulso {
       respostaGateway: respostaGateway ?? this.respostaGateway,
       pagoEm: pagoEm ?? this.pagoEm,
       canceladoEm: canceladoEm ?? this.canceladoEm,
+      expiraEm: expiraEm ?? this.expiraEm,
       motivoCancelamento: motivoCancelamento ?? this.motivoCancelamento,
       customer: customer ?? this.customer,
       urlPagamentoAvulsoSiteEmpresa:

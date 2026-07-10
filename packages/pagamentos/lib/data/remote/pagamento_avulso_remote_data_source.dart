@@ -42,7 +42,10 @@ class PagamentoAvulsoRemoteDataSource extends RemoteDataSourceBase
       pathParameters: {'path': ''},
       body: pagamento.toDto().toCreateJson(expiracaoHoras: expiracaoHoras),
     );
-    return PagamentoAvulsoDto.fromJson(response.body as Map<String, dynamic>);
+    final body = response.body as Map<String, dynamic>;
+    // POST retorna { pagamento: {...}, gateway: {...} } -- o pagamento em si vem
+    // aninhado, nao no nivel raiz (diferente do GET, que retorna o pagamento direto).
+    return PagamentoAvulsoDto.fromJson(body['pagamento'] as Map<String, dynamic>);
   }
 
   @override

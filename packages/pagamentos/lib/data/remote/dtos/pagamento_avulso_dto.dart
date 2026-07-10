@@ -62,6 +62,9 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
   final DateTime? canceladoEm;
 
   @override
+  final DateTime? expiraEm;
+
+  @override
   final String? motivoCancelamento;
 
   @override
@@ -89,6 +92,7 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
     this.respostaGateway = const {},
     this.pagoEm,
     this.canceladoEm,
+    this.expiraEm,
     this.motivoCancelamento,
     required this.customer,
     this.urlPagamentoAvulsoSiteEmpresa,
@@ -126,6 +130,7 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
           (json['respostaGateway'] as Map<String, dynamic>?) ?? const {},
       pagoEm: _parseDateTime(json['pagoEm']),
       canceladoEm: _parseDateTime(json['canceladoEm']),
+      expiraEm: _parseDateTime(json['expiraEm']),
       motivoCancelamento: json['motivoCancelamento'] as String?,
       customer: PagamentoAvulsoCustomerDto.fromJson(
         customerJson,
@@ -157,6 +162,7 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
       'respostaGateway': respostaGateway,
       'pagoEm': pagoEm?.toIso8601String(),
       'canceladoEm': canceladoEm?.toIso8601String(),
+      'expiraEm': expiraEm?.toIso8601String(),
       'motivoCancelamento': motivoCancelamento,
       'customer': customer.toJson(),
     };
@@ -195,6 +201,7 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
         respostaGateway,
         pagoEm,
         canceladoEm,
+        expiraEm,
         motivoCancelamento,
         customer,
       ];
@@ -274,6 +281,7 @@ extension PagamentoAvulsoToDto on PagamentoAvulso {
       respostaGateway: respostaGateway,
       pagoEm: pagoEm,
       canceladoEm: canceladoEm,
+      expiraEm: expiraEm,
       motivoCancelamento: motivoCancelamento,
       customer: PagamentoAvulsoCustomerDto(
         nome: customer.nome,

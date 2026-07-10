@@ -8,12 +8,38 @@ class PagamentoAvulsoRepository implements IPagamentoAvulsoRepository {
   PagamentoAvulsoRepository({required this.remoteDataSource});
 
   @override
-  Future<List<PagamentoAvulso>> recuperarPagamentosAvulsos() {
-    return remoteDataSource.recuperarPagamentosAvulsos();
+  Future<List<PagamentoAvulso>> recuperarPagamentosAvulsos({
+    String? orderBy,
+    String? orderDir,
+    String? descricao,
+    String? provider,
+  }) {
+    return remoteDataSource.recuperarPagamentosAvulsos(
+      orderBy: orderBy,
+      orderDir: orderDir,
+      descricao: descricao,
+      provider: provider,
+    );
   }
 
   @override
-  Future<PagamentoAvulso> criarPagamentoAvulso(PagamentoAvulso pagamento) {
-    return remoteDataSource.criarPagamentoAvulso(pagamento);
+  Future<PagamentoAvulso> criarPagamentoAvulso(
+    PagamentoAvulso pagamento, {
+    int? expiracaoHoras,
+  }) {
+    return remoteDataSource.criarPagamentoAvulso(
+      pagamento,
+      expiracaoHoras: expiracaoHoras,
+    );
+  }
+
+  @override
+  Future<void> excluirPagamentoAvulso(int id) {
+    return remoteDataSource.excluirPagamentoAvulso(id);
+  }
+
+  @override
+  Future<List<String>> recuperarProvidersDisponiveis() {
+    return remoteDataSource.recuperarProvidersDisponiveis();
   }
 }

@@ -8,11 +8,24 @@ class PagamentoAvulsoRemoteDataSource extends RemoteDataSourceBase
   PagamentoAvulsoRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/v1/pagamentos-avulsos';
+  String get path => '/v1/pagamentos-avulsos{path}';
 
   @override
-  Future<List<PagamentoAvulso>> recuperarPagamentosAvulsos() async {
-    final response = await get();
+  Future<List<PagamentoAvulso>> recuperarPagamentosAvulsos({
+    String? orderBy,
+    String? orderDir,
+    String? descricao,
+    String? provider,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': ''},
+      queryParameters: {
+        if (orderBy != null) 'orderBy': orderBy,
+        if (orderDir != null) 'orderDir': orderDir,
+        if (descricao != null && descricao.isNotEmpty) 'descricao': descricao,
+        if (provider != null && provider.isNotEmpty) 'provider': provider,
+      },
+    );
     return (response.body as List<dynamic>)
         .map(
           (json) => PagamentoAvulsoDto.fromJson(json as Map<String, dynamic>),
@@ -22,9 +35,24 @@ class PagamentoAvulsoRemoteDataSource extends RemoteDataSourceBase
 
   @override
   Future<PagamentoAvulso> criarPagamentoAvulso(
-    PagamentoAvulso pagamento,
-  ) async {
-    final response = await post(body: pagamento.toDto().toCreateJson());
+    PagamentoAvulso pagamento, {
+    int? expiracaoHoras,
+  }) async {
+    final response = await post(
+      pathParameters: {'path': ''},
+      body: pagamento.toDto().toCreateJson(expiracaoHoras: expiracaoHoras),
+    );
     return PagamentoAvulsoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> excluirPagamentoAvulso(int id) async {
+    await delete(pathParameters: {'path': '/$id'});
+  }
+
+  @override
+  Future<List<String>> recuperarProvidersDisponiveis() async {
+    final response = await get(pathParameters: {'path': '/providers'});
+    return (response.body as List<dynamic>).cast<String>();
   }
 }

@@ -162,13 +162,14 @@ class PagamentoAvulsoDto implements PagamentoAvulso {
     };
   }
 
-  Map<String, dynamic> toCreateJson() {
+  Map<String, dynamic> toCreateJson({int? expiracaoHoras}) {
     return {
       'provider': provider,
       'amount': amount,
       'description': description,
       'idempotencyKey': idempotencyKey,
       'customer': customer.toJson(),
+      if (expiracaoHoras != null) 'expiracaoHoras': expiracaoHoras,
     };
   }
 

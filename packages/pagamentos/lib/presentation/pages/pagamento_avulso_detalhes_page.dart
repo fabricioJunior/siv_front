@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pagamentos/domain/models/pagamento_avulso.dart';
+import 'package:pagamentos/use_cases.dart';
 
-class PagamentoAvulsoDetalhesPage extends StatelessWidget {
+class PagamentoAvulsoDetalhesPage extends StatefulWidget {
   final PagamentoAvulso pagamento;
 
   const PagamentoAvulsoDetalhesPage({
@@ -13,10 +15,34 @@ class PagamentoAvulsoDetalhesPage extends StatelessWidget {
   });
 
   @override
+  State<PagamentoAvulsoDetalhesPage> createState() =>
+      _PagamentoAvulsoDetalhesPageState();
+}
+
+class _PagamentoAvulsoDetalhesPageState
+    extends State<PagamentoAvulsoDetalhesPage> {
+  bool _excluindo = false;
+
+  PagamentoAvulso get pagamento => widget.pagamento;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalhes do pagamento avulso'),
+        actions: [
+          IconButton(
+            tooltip: 'Excluir pagamento avulso',
+            onPressed: _excluindo ? null : () => _confirmarExclusao(context),
+            icon: _excluindo
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.delete_outline),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -333,5 +359,54 @@ class PagamentoAvulsoDetalhesPage extends StatelessWidget {
         SelectableText(conteudo),
       ],
     );
+  }
+
+  Future<void> _confirmarExclusao(BuildContext context) async {
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Excluir pagamento avulso'),
+          content: const Text(
+            'Tem certeza que deseja excluir este pagamento avulso? Essa ação não pode ser desfeita.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || !context.mounted) {
+      return;
+    }
+
+    setState(() => _excluindo = true);
+
+    try {
+      final id = pagamento.id;
+      if (id != null) {
+        await sl<ExcluirPagamentoAvulso>().call(id);
+      }
+      if (context.mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        setState(() => _excluindo = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Falha ao excluir o pagamento avulso.'),
+          ),
+        );
+      }
+    }
   }
 }

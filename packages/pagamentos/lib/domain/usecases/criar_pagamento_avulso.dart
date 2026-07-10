@@ -7,7 +7,13 @@ class CriarPagamentoAvulso {
   CriarPagamentoAvulso({required IPagamentoAvulsoRepository repository})
       : _repository = repository;
 
-  Future<PagamentoAvulso> call(PagamentoAvulso pagamento) {
-    return _repository.criarPagamentoAvulso(pagamento);
+  Future<PagamentoAvulso> call(
+    PagamentoAvulso pagamento, {
+    int? expiracaoHoras,
+  }) {
+    return _repository.criarPagamentoAvulso(
+      pagamento,
+      expiracaoHoras: expiracaoHoras,
+    );
   }
 }

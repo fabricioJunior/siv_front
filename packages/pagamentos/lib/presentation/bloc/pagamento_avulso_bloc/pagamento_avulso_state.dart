@@ -9,6 +9,7 @@ class PagamentoAvulsoState extends Equatable {
   final String? customerDocumento;
   final String? customerEmail;
   final String? customerTelefone;
+  final int? expiracaoHoras;
   final PagamentoAvulso? pagamento;
   final String? erro;
   final PagamentoAvulsoStep step;
@@ -22,6 +23,7 @@ class PagamentoAvulsoState extends Equatable {
     this.customerDocumento,
     this.customerEmail,
     this.customerTelefone,
+    this.expiracaoHoras,
     this.pagamento,
     this.erro,
     required this.step,
@@ -36,6 +38,7 @@ class PagamentoAvulsoState extends Equatable {
     String? customerDocumento,
     String? customerEmail,
     String? customerTelefone,
+    int? expiracaoHoras,
     PagamentoAvulso? pagamento,
     String? erro,
     PagamentoAvulsoStep? step,
@@ -49,6 +52,7 @@ class PagamentoAvulsoState extends Equatable {
       customerDocumento: customerDocumento ?? this.customerDocumento,
       customerEmail: customerEmail ?? this.customerEmail,
       customerTelefone: customerTelefone ?? this.customerTelefone,
+      expiracaoHoras: expiracaoHoras ?? this.expiracaoHoras,
       pagamento: pagamento ?? this.pagamento,
       erro: erro,
       step: step ?? this.step,
@@ -65,6 +69,7 @@ class PagamentoAvulsoState extends Equatable {
         customerDocumento,
         customerEmail,
         customerTelefone,
+        expiracaoHoras,
         pagamento,
         erro,
         step,

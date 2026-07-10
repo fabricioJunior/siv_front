@@ -7,7 +7,17 @@ class RecuperarPagamentosAvulsos {
   RecuperarPagamentosAvulsos({required IPagamentoAvulsoRepository repository})
       : _repository = repository;
 
-  Future<List<PagamentoAvulso>> call() {
-    return _repository.recuperarPagamentosAvulsos();
+  Future<List<PagamentoAvulso>> call({
+    String? orderBy,
+    String? orderDir,
+    String? descricao,
+    String? provider,
+  }) {
+    return _repository.recuperarPagamentosAvulsos(
+      orderBy: orderBy,
+      orderDir: orderDir,
+      descricao: descricao,
+      provider: provider,
+    );
   }
 }

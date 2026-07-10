@@ -43,11 +43,24 @@ void _useCases() {
       repository: sl(),
     ),
   );
+
+  sl.registerFactory<ExcluirPagamentoAvulso>(
+    () => ExcluirPagamentoAvulso(
+      repository: sl(),
+    ),
+  );
+
+  sl.registerFactory<RecuperarProvidersPagamentosAvulsos>(
+    () => RecuperarProvidersPagamentosAvulsos(
+      repository: sl(),
+    ),
+  );
 }
 
 void _presentation() {
   sl.registerFactory<PagamentosAvulsosBloc>(
     () => PagamentosAvulsosBloc(
+      sl(),
       sl(),
     ),
   );

@@ -29,6 +29,7 @@ class PagamentoAvulsoBloc
         provider: 'infinitypay',
         amount: 0,
         idempotencyKey: criarIdempotencyKey.call(),
+        expiracaoHoras: 48,
         step: PagamentoAvulsoStep.editando,
       ),
     );
@@ -48,6 +49,7 @@ class PagamentoAvulsoBloc
         customerDocumento: event.customerDocumento,
         customerEmail: event.customerEmail,
         customerTelefone: event.customerTelefone,
+        expiracaoHoras: event.expiracaoHoras,
         step: PagamentoAvulsoStep.editando,
         erro: null,
       ),
@@ -96,7 +98,10 @@ class PagamentoAvulsoBloc
         ),
       );
 
-      final response = await criarPagamentoAvulso.call(pagamento);
+      final response = await criarPagamentoAvulso.call(
+        pagamento,
+        expiracaoHoras: state.expiracaoHoras,
+      );
 
       emit(
         state.copyWith(

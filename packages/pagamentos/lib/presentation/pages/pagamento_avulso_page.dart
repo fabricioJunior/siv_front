@@ -3,6 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pagamentos/presentation/bloc/pagamento_avulso_bloc/pagamento_avulso_bloc.dart';
+import 'package:pagamentos/presentation/pages/pagamento_avulso_detalhes_page.dart';
 
 class PagamentoAvulsoPage extends StatelessWidget {
   static const _providers = ['infinitypay', 'openpix'];
@@ -25,10 +26,14 @@ class PagamentoAvulsoPage extends StatelessWidget {
             );
           }
 
-          if (state.step == PagamentoAvulsoStep.salvo) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Pagamento avulso criado com sucesso.')),
+          if (state.step == PagamentoAvulsoStep.salvo &&
+              state.pagamento != null) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute<void>(
+                builder: (_) => PagamentoAvulsoDetalhesPage(
+                  pagamento: state.pagamento!,
+                ),
+              ),
             );
           }
         },
@@ -116,6 +121,20 @@ class PagamentoAvulsoPage extends StatelessWidget {
                           context,
                           label: 'Chave de Idempotência',
                           value: state.idempotencyKey ?? '',
+                        ),
+                        _campoTexto(
+                          context,
+                          label: 'Tempo limite (horas)',
+                          initialValue: (state.expiracaoHoras ?? 48)
+                              .toString(),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          onChanged: (value) => _onCampoAlterado(
+                            context,
+                            expiracaoHoras: int.tryParse(value),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text('Cliente',
@@ -384,6 +403,7 @@ class PagamentoAvulsoPage extends StatelessWidget {
     String? customerDocumento,
     String? customerEmail,
     String? customerTelefone,
+    int? expiracaoHoras,
   }) {
     context.read<PagamentoAvulsoBloc>().add(
           PagamentoAvulsoCampoAlterado(
@@ -394,6 +414,7 @@ class PagamentoAvulsoPage extends StatelessWidget {
             customerDocumento: customerDocumento,
             customerEmail: customerEmail,
             customerTelefone: customerTelefone,
+            expiracaoHoras: expiracaoHoras,
           ),
         );
   }

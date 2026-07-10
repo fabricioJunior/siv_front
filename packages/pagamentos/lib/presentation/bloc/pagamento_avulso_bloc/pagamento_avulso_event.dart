@@ -13,6 +13,7 @@ class PagamentoAvulsoCampoAlterado extends PagamentoAvulsoEvent {
   final String? customerDocumento;
   final String? customerEmail;
   final String? customerTelefone;
+  final int? expiracaoHoras;
 
   PagamentoAvulsoCampoAlterado({
     this.provider,
@@ -23,6 +24,7 @@ class PagamentoAvulsoCampoAlterado extends PagamentoAvulsoEvent {
     this.customerDocumento,
     this.customerEmail,
     this.customerTelefone,
+    this.expiracaoHoras,
   });
 }
 

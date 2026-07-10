@@ -681,9 +681,10 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
 
 String _formatarDataCurta(DateTime? data) {
   if (data == null) return '-';
-  final dia = data.day.toString().padLeft(2, '0');
-  final mes = data.month.toString().padLeft(2, '0');
-  return '$dia/$mes/${data.year}';
+  final local = data.toLocal();
+  final dia = local.day.toString().padLeft(2, '0');
+  final mes = local.month.toString().padLeft(2, '0');
+  return '$dia/$mes/${local.year}';
 }
 
 String _formatarMoedaItem(double? valor) {

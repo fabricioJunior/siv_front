@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation/data_hora_formatter.dart';
 import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -438,15 +439,8 @@ class _TabelaDePrecoDetalhePageState extends State<TabelaDePrecoDetalhePage> {
     return lista;
   }
 
-  String _formatarDataHora(DateTime? data) {
-    if (data == null) return '';
-    final dia = data.day.toString().padLeft(2, '0');
-    final mes = data.month.toString().padLeft(2, '0');
-    final ano = data.year.toString();
-    final hora = data.hour.toString().padLeft(2, '0');
-    final minuto = data.minute.toString().padLeft(2, '0');
-    return '$dia/$mes/$ano $hora:$minuto';
-  }
+  String _formatarDataHora(DateTime? data) =>
+      data == null ? '' : formatarDataHora(data);
 
   Future<void> _abrirEdicaoPreco(
     BuildContext context,

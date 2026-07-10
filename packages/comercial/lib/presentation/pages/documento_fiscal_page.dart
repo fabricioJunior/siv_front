@@ -42,8 +42,9 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
 
   String _fmtDt(DateTime? dt) {
     if (dt == null) return '-';
-    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final local = dt.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year} '
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 
   String _prettyJson(dynamic value) {
@@ -95,7 +96,10 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
                   onVerRomaneio: () => Navigator.pushNamed(
                     context,
                     '/romaneio',
-                    arguments: {'idRomaneio': state.detalhe!.documento.romaneioId},
+                    arguments: {
+                      'idRomaneio': state.detalhe!.documento.romaneioId,
+                      'permitirEdicao': false,
+                    },
                   ),
                 ),
             },

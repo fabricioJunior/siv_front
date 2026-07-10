@@ -279,8 +279,9 @@ class _VendasPageState extends State<VendasPage> {
 }
 
 String _formatarDataHora(DateTime data) {
+  final local = data.toLocal();
   String dois(int v) => v.toString().padLeft(2, '0');
-  return '${dois(data.day)}/${dois(data.month)}/${data.year} ${dois(data.hour)}:${dois(data.minute)}';
+  return '${dois(local.day)}/${dois(local.month)}/${local.year} ${dois(local.hour)}:${dois(local.minute)}';
 }
 
 String _formatarValor(double? valor) {

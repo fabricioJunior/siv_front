@@ -2,6 +2,7 @@ import 'package:estoque/domain/models/balanco.dart';
 import 'package:estoque/presentation/bloc/balanco/balanco_bloc.dart';
 import 'package:estoque/routes/estoque_routes.dart';
 import 'package:core/bloc.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
 class BalancosPage extends StatefulWidget {
@@ -297,12 +298,5 @@ class BalancoCard extends StatelessWidget {
     );
   }
 
-  String _formatDateTime(DateTime value) {
-    final d = value.day.toString().padLeft(2, '0');
-    final m = value.month.toString().padLeft(2, '0');
-    final y = value.year.toString();
-    final h = value.hour.toString().padLeft(2, '0');
-    final min = value.minute.toString().padLeft(2, '0');
-    return '$d/$m/$y $h:$min';
-  }
+  String _formatDateTime(DateTime value) => formatarDataHora(value);
 }

@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pessoas/models.dart';
@@ -159,9 +160,7 @@ class _PontoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDebito = ponto.tipo == TipoDePonto.debito;
     final dataCriacao = ponto.dtCriacao;
-    final dataTexto = dataCriacao == null
-        ? 'Sem data'
-        : '${dataCriacao.day.toString().padLeft(2, '0')}/${dataCriacao.month.toString().padLeft(2, '0')}/${dataCriacao.year}';
+    final dataTexto = dataCriacao == null ? 'Sem data' : formatarData(dataCriacao);
     final corTipo = isDebito ? Colors.red.shade700 : Colors.green.shade700;
     final corFundo = isDebito ? Colors.red.shade50 : Colors.green.shade50;
     final tipoTexto = isDebito ? 'Débito' : 'Crédito';

@@ -98,12 +98,13 @@ class _SyncPageState extends State<SyncPage> {
 
 String _fmtDt(DateTime? dt) {
   if (dt == null) return '-';
-  final d = dt.day.toString().padLeft(2, '0');
-  final m = dt.month.toString().padLeft(2, '0');
-  final h = dt.hour.toString().padLeft(2, '0');
-  final min = dt.minute.toString().padLeft(2, '0');
-  final s = dt.second.toString().padLeft(2, '0');
-  return '$d/$m/${dt.year} $h:$min:$s';
+  final local = dt.toLocal();
+  final d = local.day.toString().padLeft(2, '0');
+  final m = local.month.toString().padLeft(2, '0');
+  final h = local.hour.toString().padLeft(2, '0');
+  final min = local.minute.toString().padLeft(2, '0');
+  final s = local.second.toString().padLeft(2, '0');
+  return '$d/$m/${local.year} $h:$min:$s';
 }
 
 class _ResumoCard extends StatelessWidget {

@@ -232,11 +232,9 @@ class _DocumentosFiscaisPageState extends State<DocumentosFiscaisPage> {
   }
 }
 
-String _fmtData(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+String _fmtData(DateTime d) => formatarData(d);
 
-String _fmtDataHora(DateTime d) =>
-    '${_fmtData(d)} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+String _fmtDataHora(DateTime d) => formatarDataHora(d);
 
 class _FiltrosExtras extends StatelessWidget {
   const _FiltrosExtras({

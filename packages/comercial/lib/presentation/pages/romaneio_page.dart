@@ -1130,11 +1130,12 @@ class _RomaneioPageState extends State<RomaneioPage> {
 
   String _formatarData(DateTime? data) {
     if (data == null) return 'Data não informada';
-    final dia = data.day.toString().padLeft(2, '0');
-    final mes = data.month.toString().padLeft(2, '0');
-    final ano = data.year.toString();
-    final hora = data.hour.toString().padLeft(2, '0');
-    final minuto = data.minute.toString().padLeft(2, '0');
+    final local = data.toLocal();
+    final dia = local.day.toString().padLeft(2, '0');
+    final mes = local.month.toString().padLeft(2, '0');
+    final ano = local.year.toString();
+    final hora = local.hour.toString().padLeft(2, '0');
+    final minuto = local.minute.toString().padLeft(2, '0');
     return '$dia/$mes/$ano às $hora:$minuto';
   }
 

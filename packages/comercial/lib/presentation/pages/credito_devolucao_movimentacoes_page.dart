@@ -1,6 +1,7 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
 class CreditoDevolucaoMovimentacoesPage extends StatefulWidget {
@@ -218,14 +219,7 @@ class _ResumoChip extends StatelessWidget {
   }
 }
 
-String _formatarData(DateTime data) {
-  final dia = data.day.toString().padLeft(2, '0');
-  final mes = data.month.toString().padLeft(2, '0');
-  final ano = data.year.toString();
-  final hora = data.hour.toString().padLeft(2, '0');
-  final minuto = data.minute.toString().padLeft(2, '0');
-  return '$dia/$mes/$ano $hora:$minuto';
-}
+String _formatarData(DateTime data) => formatarDataHora(data);
 
 String _formatarMoeda(double valor) {
   return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';

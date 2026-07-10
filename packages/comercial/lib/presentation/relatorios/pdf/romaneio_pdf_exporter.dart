@@ -22,9 +22,10 @@ String _fmtQuantidade(double? v) {
 
 String _fmtData(DateTime? data) {
   if (data == null) return '-';
-  final dia = data.day.toString().padLeft(2, '0');
-  final mes = data.month.toString().padLeft(2, '0');
-  final ano = data.year.toString();
+  final local = data.toLocal();
+  final dia = local.day.toString().padLeft(2, '0');
+  final mes = local.month.toString().padLeft(2, '0');
+  final ano = local.year.toString();
   return '$dia/$mes/$ano';
 }
 

@@ -109,6 +109,8 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
           // busca nova roda; só mostra o spinner de tela cheia no carregamento
           // inicial de verdade (nunca carregou nada ainda).
           final estadoExibido = _ultimoSucesso;
+          final buscandoNoServidor =
+              state is PessoasCarregarEmProgresso && estadoExibido != null;
 
           if (estadoExibido == null) {
             if (state is PessoasCarregarFalha) {
@@ -159,58 +161,87 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
             );
           }
 
-          return SeletorGenerico<Pessoa>(
-            toSelectData: _toSelectData,
-            itens: pessoasDisponiveis,
-            itemLabel: (pessoa) => pessoa.nome,
-            itemKey: (pessoa) =>
-                pessoa.id ?? '${pessoa.nome}-${pessoa.documento}',
-            modo: widget.modo == PessoaSeletorModo.unica
-                ? SeletorGenericoModo.unica
-                : SeletorGenericoModo.multipla,
-            selecionadosIniciais: estadoExibido.pessoaSelecionada != null
-                ? [estadoExibido.pessoaSelecionada!]
-                : pessoasIniciais,
-            onChanged: (List<Pessoa> selecionadas) {
-              widget.onPessoaChanged?.call(selecionadas);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SeletorGenerico<Pessoa>(
+                toSelectData: _toSelectData,
+                itens: pessoasDisponiveis,
+                itemLabel: (pessoa) => pessoa.nome,
+                itemKey: (pessoa) =>
+                    pessoa.id ?? '${pessoa.nome}-${pessoa.documento}',
+                modo: widget.modo == PessoaSeletorModo.unica
+                    ? SeletorGenericoModo.unica
+                    : SeletorGenericoModo.multipla,
+                selecionadosIniciais: estadoExibido.pessoaSelecionada != null
+                    ? [estadoExibido.pessoaSelecionada!]
+                    : pessoasIniciais,
+                onChanged: (List<Pessoa> selecionadas) {
+                  widget.onPessoaChanged?.call(selecionadas);
 
-              final dadosSelecionados =
-                  selecionadas.map(_toSelectData).toList(growable: false);
-              widget.onChanged?.call(dadosSelecionados);
+                  final dadosSelecionados =
+                      selecionadas.map(_toSelectData).toList(growable: false);
+                  widget.onChanged?.call(dadosSelecionados);
 
-              final pessoa = selecionadas.firstOrNull;
-              if (widget.onSelecionado != null) {
-                widget.onSelecionado!.call(_toResultadoMapa(pessoa));
-              }
-            },
-            onlyView: widget.onlyView,
-            titulo: _buildTitulo(),
-            hintText: 'Digite para buscar uma pessoa',
-            maxSugestoes: 5,
-            onBuscaChanged: _onBuscaChanged,
-            chipAvatarBuilder: (context, pessoa) =>
-                const Icon(Icons.person_outline, size: 16),
-            sugestaoLeadingBuilder: (context, pessoa) {
-              final colorScheme = Theme.of(context).colorScheme;
-              return CircleAvatar(
-                radius: 14,
-                backgroundColor: colorScheme.tertiaryContainer,
-                child: Icon(
-                  Icons.badge_outlined,
-                  size: 14,
-                  color: colorScheme.onTertiaryContainer,
+                  final pessoa = selecionadas.firstOrNull;
+                  if (widget.onSelecionado != null) {
+                    widget.onSelecionado!.call(_toResultadoMapa(pessoa));
+                  }
+                },
+                onlyView: widget.onlyView,
+                titulo: _buildTitulo(),
+                hintText: 'Digite para buscar uma pessoa',
+                maxSugestoes: 5,
+                onBuscaChanged: _onBuscaChanged,
+                chipAvatarBuilder: (context, pessoa) =>
+                    const Icon(Icons.person_outline, size: 16),
+                sugestaoLeadingBuilder: (context, pessoa) {
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return CircleAvatar(
+                    radius: 14,
+                    backgroundColor: colorScheme.tertiaryContainer,
+                    child: Icon(
+                      Icons.badge_outlined,
+                      size: 14,
+                      color: colorScheme.onTertiaryContainer,
+                    ),
+                  );
+                },
+                sugestaoTrailingBuilder: (context, pessoa) {
+                  final documento = pessoa.documento.trim();
+                  if (documento.isEmpty) return const SizedBox.shrink();
+                  return Text(
+                    documento,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  );
+                },
+                confirmarEmSeparadores: const [',', ';'],
+              ),
+              if (buscandoNoServidor)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Buscando no servidor...',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            },
-            sugestaoTrailingBuilder: (context, pessoa) {
-              final documento = pessoa.documento.trim();
-              if (documento.isEmpty) return const SizedBox.shrink();
-              return Text(
-                documento,
-                style: Theme.of(context).textTheme.bodySmall,
-              );
-            },
-            confirmarEmSeparadores: const [',', ';'],
+            ],
           );
         },
       ),

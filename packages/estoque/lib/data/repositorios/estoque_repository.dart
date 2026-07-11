@@ -38,10 +38,19 @@ class EstoqueRepository implements IEstoqueRepository {
 
     // Só aplica filtro de data incremental quando a sync anterior completou.
     // Se estava incompleta, faz sync completa para garantir consistência.
-    final DateTime? ultimaAtualizacaoInicio =
-        syncAnteriorConcluida ? paginacaoAnterior!.dataAtualizacao : null;
+    //
+    // `atualizadoEm` no backend é gravado em UTC (UTC_TIMESTAMP() nos
+    // triggers de estoque). DateTime.now() é hora LOCAL do device -- num
+    // device em UTC-3 (Brasil), isso fazia o corte da janela de sync ficar
+    // sistematicamente ~3h atrasado em relação ao instante real, excluindo
+    // da sync qualquer mudança de estoque das últimas ~3h (ex: uma venda
+    // que acabou de baixar o saldo). .toUtc() aqui e no fallback abaixo
+    // alinha o cursor com o mesmo referencial de tempo do backend.
+    final DateTime? ultimaAtualizacaoInicio = syncAnteriorConcluida
+        ? paginacaoAnterior!.dataAtualizacao?.toUtc()
+        : null;
     final DateTime? ultimaAtualizacaoFim =
-        syncAnteriorConcluida ? DateTime.now() : null;
+        syncAnteriorConcluida ? DateTime.now().toUtc() : null;
 
     var paginaAtual = page;
 
@@ -63,7 +72,7 @@ class EstoqueRepository implements IEstoqueRepository {
           itensPorPagina: saldo.meta.itemsPerPage,
           itensProcessadosNaPagina: 0,
           totalItens: saldo.meta.totalItems,
-          dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now(),
+          dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now().toUtc(),
           ended: true,
         );
         yield paginacao;

@@ -31,12 +31,16 @@ class EstoqueSaldoRemoteDataSource extends RemoteDataSourceBase
       if (filtro.corIds.isNotEmpty) 'corIds': filtro.corIds.join(','),
       if (filtro.tamanhoIds.isNotEmpty)
         'tamanhoIds': filtro.tamanhoIds.join(','),
+      // .toUtc() defensivo: atualizadoEm no backend é UTC (UTC_TIMESTAMP()
+      // nos triggers de estoque); mandar hora local sem conversão faz o
+      // corte da janela de sync ficar deslocado pelo fuso do device,
+      // excluindo mudanças recentes de estoque da sync incremental.
       if (filtro.ultimaAtualizacaoInicio != null)
         'ultimaAtualizacaoInicio':
-            filtro.ultimaAtualizacaoInicio!.toIso8601String(),
+            filtro.ultimaAtualizacaoInicio!.toUtc().toIso8601String(),
       if (filtro.ultimaAtualizacaoFim != null)
         'ultimaAtualizacaoFim':
-            filtro.ultimaAtualizacaoFim!.toIso8601String(),
+            filtro.ultimaAtualizacaoFim!.toUtc().toIso8601String(),
       'page': filtro.page.toString(),
       'limit': filtro.limit.toString(),
     };

@@ -80,8 +80,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             );
           }
 
-            final ultimoId =
-              state.linhas.isEmpty ? null : state.linhas.last.id;
+          final ultimoId = state.linhas.isEmpty ? null : state.linhas.last.id;
 
           final dialog = AlertDialog(
             insetPadding:
@@ -103,6 +102,15 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if ((state.resumo?.produtosCompartilhados ?? [])
+                        .isNotEmpty) ...[
+                      _ProdutosCard(
+                        state: state,
+                        podeEditar:
+                            state.step == PagamentosRealizadosStep.editando,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     _ResumoPagamentoCard(
                       state: state,
                       onDescontoPressed:
@@ -110,15 +118,6 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
                     ),
-                    if ((state.resumo?.produtosCompartilhados ?? [])
-                        .isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _ProdutosCard(
-                        state: state,
-                        podeEditar:
-                            state.step == PagamentosRealizadosStep.editando,
-                      ),
-                    ],
                     if (state.erro != null) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -180,8 +179,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                   () {
                 if (state.step == PagamentosRealizadosStep.editando) {
                   context.read<PagamentosRealizadosBloc>().add(
-                    const PagamentosRealizadosFinalizacaoSolicitada(),
-                  );
+                        const PagamentosRealizadosFinalizacaoSolicitada(),
+                      );
                 }
               },
             },
@@ -403,78 +402,27 @@ class _LinhaPagamentoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    key: ValueKey('valor-${linha.id}'),
-                    autofocus: autofocusValor,
-                    initialValue: linha.valorTexto,
-                    decoration: const InputDecoration(
-                      labelText: 'Valor recebido',
-                      border: OutlineInputBorder(),
-                    ),
-                    inputFormatters: [_decimalInputFormatter],
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    textInputAction: formaSelecionada != null && linha.aceitaParcelamento
-                        ? TextInputAction.next
-                        : TextInputAction.done,
-                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                    onFieldSubmitted: (_) {
-                      if (formaSelecionada != null && linha.aceitaParcelamento) {
-                        FocusScope.of(context).nextFocus();
-                        return;
-                      }
-                      FocusScope.of(context).unfocus();
-                    },
-                    onChanged: (value) => bloc.add(
-                      PagamentosRealizadosValorAlterado(
-                        linhaId: linha.id,
-                        valorTexto: value,
-                      ),
-                    ),
-                  ),
+            TextFormField(
+              key: ValueKey('valor-${linha.id}'),
+              autofocus: autofocusValor,
+              initialValue: linha.valorTexto,
+              decoration: const InputDecoration(
+                labelText: 'Valor recebido',
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [_decimalInputFormatter],
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              textInputAction: TextInputAction.done,
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+              onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+              onChanged: (value) => bloc.add(
+                PagamentosRealizadosValorAlterado(
+                  linhaId: linha.id,
+                  valorTexto: value,
                 ),
-                const SizedBox(width: 8),
-                if (formaSelecionada != null && linha.aceitaParcelamento)
-                  Expanded(
-                    child: TextFormField(
-                      key: ValueKey('parcelas-${linha.id}'),
-                      initialValue: linha.parcelasTexto,
-                      decoration: InputDecoration(
-                        labelText: 'Parcelas (${linha.parcelasMaximas})',
-                        border: const OutlineInputBorder(),
-                      ),
-                      inputFormatters: [_integerInputFormatter],
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done,
-                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      onChanged: (value) => bloc.add(
-                        PagamentosRealizadosParcelasAlteradas(
-                          linhaId: linha.id,
-                          parcelasTexto: value,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (formaSelecionada != null && linha.aceitaParcelamento)
-                  const SizedBox(width: 8),
-                if (formaSelecionada != null)
-                  Expanded(
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Valor da parcela',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        _formatarMoeda(linha.valorParcela),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -537,13 +485,32 @@ class _ProdutosCard extends StatelessWidget {
     final theme = Theme.of(context);
     final produtos = state.resumo?.produtosCompartilhados ?? [];
 
+    final possuiAlgumDesconto = state.descontosItensAplicado.values.any(
+      (valor) => valor > 0,
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Produtos', style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Produtos', style: theme.textTheme.titleMedium),
+                ),
+                if (possuiAlgumDesconto)
+                  TextButton.icon(
+                    onPressed: podeEditar
+                        ? () => context.read<PagamentosRealizadosBloc>().add(
+                            const PagamentosRealizadosDescontosItensLimpos())
+                        : null,
+                    icon: const Icon(Icons.clear_all),
+                    label: const Text('Limpar todos os descontos'),
+                  ),
+              ],
+            ),
             const SizedBox(height: 8),
             ...produtos.map((produto) {
               final valorTotalItem = produto.quantidade * produto.valorUnitario;
@@ -722,7 +689,8 @@ Future<void> _abrirDialogoDesconto(
                           const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      onFieldSubmitted: (_) => Navigator.of(dialogContext).pop(true),
+                      onFieldSubmitted: (_) =>
+                          Navigator.of(dialogContext).pop(true),
                       decoration: InputDecoration(
                         labelText: label,
                         border: const OutlineInputBorder(),
@@ -781,8 +749,10 @@ Future<void> _abrirDialogoDescontoItem(
   final bloc = context.read<PagamentosRealizadosBloc>();
   final valorBase = produto.quantidade * produto.valorUnitario;
   final tipoAtual = state.descontosItensTipo[produto.produtoId];
-  final valorTextoAtual = state.descontosItensValorTexto[produto.produtoId] ?? '';
-  final valorAplicadoAtual = state.descontosItensAplicado[produto.produtoId] ?? 0;
+  final valorTextoAtual =
+      state.descontosItensValorTexto[produto.produtoId] ?? '';
+  final valorAplicadoAtual =
+      state.descontosItensAplicado[produto.produtoId] ?? 0;
 
   var tipoSelecionado = tipoAtual ?? DescontoTipo.valorBruto;
   final valorInicial = valorTextoAtual.isNotEmpty
@@ -862,7 +832,8 @@ Future<void> _abrirDialogoDescontoItem(
                           const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      onFieldSubmitted: (_) => Navigator.of(dialogContext).pop(true),
+                      onFieldSubmitted: (_) =>
+                          Navigator.of(dialogContext).pop(true),
                       decoration: InputDecoration(
                         labelText: label,
                         border: const OutlineInputBorder(),
@@ -934,12 +905,13 @@ Future<void> _abrirAjudaAtalhos(BuildContext context) {
               SizedBox(height: 8),
               _AtalhoInfo(
                 atalho: 'Ctrl + Enter',
-                descricao: 'Finaliza os pagamentos quando a tela estiver em edicao.',
+                descricao:
+                    'Finaliza os pagamentos quando a tela estiver em edicao.',
               ),
               SizedBox(height: 8),
               _AtalhoInfo(
                 atalho: 'Enter',
-                descricao: 'No campo Valor recebido, avanca para Parcelas quando houver parcelamento.',
+                descricao: 'No campo Valor recebido, fecha o teclado.',
               ),
               SizedBox(height: 8),
               _AtalhoInfo(
@@ -994,10 +966,6 @@ class _AtalhoInfo extends StatelessWidget {
     );
   }
 }
-
-final _integerInputFormatter = FilteringTextInputFormatter.allow(
-  RegExp(r'\d*'),
-);
 
 final _decimalInputFormatter = TextInputFormatter.withFunction(
   (oldValue, newValue) {

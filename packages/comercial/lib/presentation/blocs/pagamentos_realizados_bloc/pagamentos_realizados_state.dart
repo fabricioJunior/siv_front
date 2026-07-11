@@ -58,8 +58,14 @@ class PagamentosRealizadosState extends Equatable {
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
+  // Desconto do romaneio geral (valorDescontoAplicado) é distribuído pelos
+  // produtos assim que aplicado (ver _onDescontoAlterado no bloc) -- o
+  // valor já está embutido em descontosItensAplicado, então não é
+  // subtraído de novo aqui (evitaria contar o mesmo desconto duas vezes).
+  // valorDescontoAplicado fica só como registro/exibição do último valor
+  // "geral" informado.
   double get valorTotalComDesconto =>
-      (valorTotalProdutos - valorDescontoAplicado - valorDescontoItensTotal)
+      (valorTotalProdutos - valorDescontoItensTotal)
           .clamp(0, double.infinity)
           .toDouble();
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;

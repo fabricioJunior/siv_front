@@ -115,7 +115,10 @@ class _FormasDePagamentoSeletorState extends State<FormasDePagamentoSeletor> {
             },
             titulo: widget.titulo,
             hintText: 'Digite para buscar uma forma de pagamento',
-            maxSugestoes: 5,
+            // Lista de formas de pagamento normalmente é curta (poucas
+            // dezenas) e agora o dropdown de sugestões rola de verdade --
+            // 5 escondia opções em telas com muitas formas cadastradas.
+            maxSugestoes: 30,
             chipAvatarBuilder: (_, __) =>
                 const Icon(Icons.payments_outlined, size: 16),
             sugestaoLeadingBuilder: (context, __) {

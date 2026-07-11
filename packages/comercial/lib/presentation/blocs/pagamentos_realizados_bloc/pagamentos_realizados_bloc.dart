@@ -5,6 +5,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/presentation.dart';
+import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 
@@ -28,6 +29,7 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosParcelasAlteradas>(_onParcelasAlteradas);
     on<PagamentosRealizadosDescontoAlterado>(_onDescontoAlterado);
     on<PagamentosRealizadosDescontoItemAlterado>(_onDescontoItemAlterado);
+    on<PagamentosRealizadosDescontosItensLimpos>(_onDescontosItensLimpos);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
     on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
     on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);
@@ -182,6 +184,9 @@ class PagamentosRealizadosBloc
           descontoTipo: null,
           descontoValorTexto: '',
           valorDescontoAplicado: 0,
+          descontosItensTipo: const {},
+          descontosItensValorTexto: const {},
+          descontosItensAplicado: const {},
           erro: null,
         ),
       );
@@ -231,15 +236,84 @@ class PagamentosRealizadosBloc
         descontoAplicado = valorBase - valorInformado;
     }
 
+    descontoAplicado = double.parse(descontoAplicado.toStringAsFixed(2));
+
+    // Desconto do romaneio geral é distribuído proporcionalmente pelo
+    // valor de cada produto (não pela quantidade) -- produto mais caro
+    // absorve fatia maior do desconto. O último item da lista fica com o
+    // resto da divisão (soma - já distribuído) em vez de sua fatia exata,
+    // pra a soma dos descontos por item bater centavo a centavo com o
+    // desconto total aplicado (evita erro de arredondamento por soma).
+    final produtos = state.resumo?.produtosCompartilhados ?? const [];
+    final descontosItens = _distribuirDescontoProporcional(
+      produtos: produtos,
+      descontoTotal: descontoAplicado,
+      valorBase: valorBase,
+    );
+
     emit(
       state.copyWith(
         descontoTipo: event.tipo,
         descontoValorTexto: event.valorTexto,
-        valorDescontoAplicado:
-            double.parse(descontoAplicado.toStringAsFixed(2)),
+        valorDescontoAplicado: descontoAplicado,
+        descontosItensTipo: {
+          for (final produto in produtos)
+            produto.produtoId: DescontoTipo.valorBruto,
+        },
+        descontosItensValorTexto: {
+          for (final entrada in descontosItens.entries)
+            entrada.key: entrada.value.toStringAsFixed(2),
+        },
+        descontosItensAplicado: descontosItens,
         erro: null,
       ),
     );
+  }
+
+  void _onDescontosItensLimpos(
+    PagamentosRealizadosDescontosItensLimpos event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        descontoTipo: null,
+        descontoValorTexto: '',
+        valorDescontoAplicado: 0,
+        descontosItensTipo: const {},
+        descontosItensValorTexto: const {},
+        descontosItensAplicado: const {},
+        erro: null,
+      ),
+    );
+  }
+
+  Map<int, double> _distribuirDescontoProporcional({
+    required List<ProdutoCompartilhado> produtos,
+    required double descontoTotal,
+    required double valorBase,
+  }) {
+    if (produtos.isEmpty || valorBase <= 0 || descontoTotal <= 0) {
+      return const {};
+    }
+
+    final mapa = <int, double>{};
+    var somaDistribuida = 0.0;
+
+    for (var i = 0; i < produtos.length; i++) {
+      final produto = produtos[i];
+      final valorItem = produto.quantidade * produto.valorUnitario;
+
+      final parcela = i == produtos.length - 1
+          ? double.parse((descontoTotal - somaDistribuida).toStringAsFixed(2))
+          : double.parse(
+              (descontoTotal * (valorItem / valorBase)).toStringAsFixed(2),
+            );
+
+      mapa[produto.produtoId] = parcela;
+      somaDistribuida += parcela;
+    }
+
+    return mapa;
   }
 
   void _onDescontoItemAlterado(

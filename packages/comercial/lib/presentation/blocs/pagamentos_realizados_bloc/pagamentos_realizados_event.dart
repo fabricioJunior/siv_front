@@ -106,13 +106,17 @@ class PagamentosRealizadosDescontoItemAlterado
   List<Object?> get props => [produtoId, tipo, valorTexto];
 }
 
+class PagamentosRealizadosDescontosItensLimpos
+    extends PagamentosRealizadosEvent {
+  const PagamentosRealizadosDescontosItensLimpos();
+}
+
 class PagamentosRealizadosFinalizacaoSolicitada
     extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
 }
 
-class PagamentosRealizadosIncluirCpfAlterado
-    extends PagamentosRealizadosEvent {
+class PagamentosRealizadosIncluirCpfAlterado extends PagamentosRealizadosEvent {
   final bool incluirCpfNaNota;
 
   const PagamentosRealizadosIncluirCpfAlterado({

@@ -130,6 +130,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   Timer? _ocultarSugestoesTimer;
   double _larguraCampo = 0;
   double _alturaCampo = 0;
+  bool _abrirSugestoesParaCima = false;
+  double _alturaMaximaSugestoes = 220;
 
   @override
   void initState() {
@@ -478,13 +480,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   }
 
   List<T> _filtrarSugestoes(List<T> itens) {
-    final busca = _buscaController.text.trim().toLowerCase();
+    final busca = _normalizarBusca(_buscaController.text.trim());
     if (busca.isEmpty) {
       return [];
     }
 
     final filtradas = itens.where((item) {
-      final label = widget.itemLabel(item).toLowerCase();
+      final label = _normalizarBusca(widget.itemLabel(item));
       final selecionado = _isSelecionado(item);
 
       if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
@@ -495,8 +497,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     }).toList();
 
     filtradas.sort((a, b) {
-      final aLabel = widget.itemLabel(a).toLowerCase();
-      final bLabel = widget.itemLabel(b).toLowerCase();
+      final aLabel = _normalizarBusca(widget.itemLabel(a));
+      final bLabel = _normalizarBusca(widget.itemLabel(b));
 
       final aStarts = aLabel.startsWith(busca);
       final bStarts = bLabel.startsWith(busca);
@@ -521,13 +523,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
       return sugestoes.first;
     }
 
-    final busca = _buscaController.text.trim().toLowerCase();
+    final busca = _normalizarBusca(_buscaController.text.trim());
     if (busca.isEmpty) {
       return null;
     }
 
     final exata = itens.where((item) {
-      final label = widget.itemLabel(item).toLowerCase();
+      final label = _normalizarBusca(widget.itemLabel(item));
       final selecionado = _isSelecionado(item);
 
       if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
@@ -540,6 +542,24 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     return exata.isNotEmpty ? exata.first : null;
   }
 
+  // Acentos não deveriam importar na busca ("cartao" == "cartão"). Troca
+  // caracteres acentuados comuns do pt-BR pelo equivalente sem acento antes
+  // de comparar -- evitando trazer uma dependência só pra isso.
+  static const _comAcento =
+      'àáâãäåèéêëìíîïòóôõöùúûüçñÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÇÑ';
+  static const _semAcento =
+      'aaaaaaeeeeiiiiooooouuuucnAAAAAAEEEEIIIIOOOOOUUUUCN';
+
+  String _normalizarBusca(String texto) {
+    final buffer = StringBuffer();
+    for (final codeUnit in texto.toLowerCase().runes) {
+      final char = String.fromCharCode(codeUnit);
+      final indice = _comAcento.indexOf(char);
+      buffer.write(indice >= 0 ? _semAcento[indice] : char);
+    }
+    return buffer.toString();
+  }
+
   void _atualizarDimensoesCampo() {
     final renderBox =
         _fieldKey.currentContext?.findRenderObject() as RenderBox?;
@@ -549,9 +569,54 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
 
     final largura = renderBox.size.width;
     final altura = renderBox.size.height;
+    var precisaReconstruir = false;
+
     if (largura != _larguraCampo || altura != _alturaCampo) {
       _larguraCampo = largura;
       _alturaCampo = altura;
+      precisaReconstruir = true;
+    }
+
+    // Sem isso, a sugestão sempre abria pra baixo com altura fixa (220) --
+    // em telas pequenas ou quando o campo está perto do fim da tela (ex:
+    // um seletor dentro de um dialog longo), o dropdown renderizava parte
+    // ou tudo fora da área visível. Como ele é um Overlay de root (não um
+    // widget dentro do scroll do dialog), não tinha como rolar até lá:
+    // algumas opções ficavam simplesmente inalcançáveis. Mede o espaço
+    // disponível acima/abaixo do campo e decide o lado + altura máxima.
+    final overlayBox = Overlay.of(context, rootOverlay: true)
+        .context
+        .findRenderObject() as RenderBox?;
+    if (overlayBox != null) {
+      final posicaoCampo = renderBox.localToGlobal(
+        Offset.zero,
+        ancestor: overlayBox,
+      );
+      final alturaDisponivelTela =
+          overlayBox.size.height - MediaQuery.of(context).viewInsets.bottom;
+
+      const margem = 8.0;
+      const alturaIdeal = 220.0;
+      const alturaMinima = 120.0;
+
+      final espacoAbaixo =
+          alturaDisponivelTela - (posicaoCampo.dy + altura) - margem;
+      final espacoAcima = posicaoCampo.dy - margem;
+
+      final abrirParaCima =
+          espacoAbaixo < alturaMinima && espacoAcima > espacoAbaixo;
+      final espacoEscolhido = abrirParaCima ? espacoAcima : espacoAbaixo;
+      final alturaMaxima = espacoEscolhido.clamp(alturaMinima, alturaIdeal);
+
+      if (abrirParaCima != _abrirSugestoesParaCima ||
+          alturaMaxima != _alturaMaximaSugestoes) {
+        _abrirSugestoesParaCima = abrirParaCima;
+        _alturaMaximaSugestoes = alturaMaxima;
+        precisaReconstruir = true;
+      }
+    }
+
+    if (precisaReconstruir) {
       _sugestoesOverlayEntry?.markNeedsBuild();
     }
   }
@@ -590,7 +655,17 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
           CompositedTransformFollower(
             link: _fieldLayerLink,
             showWhenUnlinked: false,
-            offset: Offset(0, _alturaCampo + 6),
+            // Abre pra baixo por padrão (ancora canto inferior do campo no
+            // canto superior do dropdown); quando não cabe, inverte
+            // (ancora canto superior do campo no canto inferior do
+            // dropdown, abrindo pra cima) -- ver _atualizarDimensoesCampo.
+            targetAnchor: _abrirSugestoesParaCima
+                ? Alignment.topLeft
+                : Alignment.bottomLeft,
+            followerAnchor: _abrirSugestoesParaCima
+                ? Alignment.bottomLeft
+                : Alignment.topLeft,
+            offset: Offset(0, _abrirSugestoesParaCima ? -6 : 6),
             child: Material(
               elevation: 4,
               color: theme.colorScheme.surface,
@@ -600,7 +675,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: 220,
+                  maxHeight: _alturaMaximaSugestoes,
                   minWidth: _larguraCampo,
                   maxWidth: _larguraCampo,
                 ),

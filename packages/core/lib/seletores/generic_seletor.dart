@@ -431,6 +431,17 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     widget.onChanged?.call(_selecionados);
     _removerOverlaySugestoes();
 
+    if (widget.modo == SeletorGenericoModo.unica) {
+      // Seleção única: já escolheu o item, não faz sentido manter o campo
+      // em foco -- isso reabria as sugestões padrão automaticamente (busca
+      // vazia + foco = _sugestoesPadrao), dando a impressão de que
+      // selecionar não fechava/confirmava nada.
+      _buscaFocusNode.unfocus();
+      return;
+    }
+
+    // Seleção múltipla: mantém o foco pra continuar digitando/selecionando
+    // o próximo item sem precisar tocar no campo de novo.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;

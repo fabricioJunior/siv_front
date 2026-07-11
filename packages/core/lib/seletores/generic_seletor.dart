@@ -80,6 +80,14 @@ class SeletorGenerico<T> extends StatefulWidget {
   /// Rótulo do botão de cadastro, exibido quando [onCadastrarPressed] é informado.
   final String cadastrarLabel;
 
+  /// Callback opcional disparado a cada mudança no texto de busca.
+  ///
+  /// [itens] segue sendo filtrado localmente (substring) a cada digitação,
+  /// mas quando a lista completa não está toda carregada no cliente (ex:
+  /// só a primeira página de um cadastro grande), esse callback permite ao
+  /// widget pai buscar mais itens no servidor com o texto digitado.
+  final ValueChanged<String>? onBuscaChanged;
+
   const SeletorGenerico({
     super.key,
     required this.itens,
@@ -99,6 +107,7 @@ class SeletorGenerico<T> extends StatefulWidget {
     this.onlyView = false,
     this.onCadastrarPressed,
     this.cadastrarLabel = 'Cadastrar novo',
+    this.onBuscaChanged,
   });
 
   @override
@@ -131,6 +140,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
 
     _buscaController.addListener(() {
       setState(() {});
+      widget.onBuscaChanged?.call(_buscaController.text);
     });
     _buscaFocusNode.addListener(_aoMudarFoco);
   }

@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation/debouncer.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
@@ -52,10 +53,13 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
 
 class _SeletorPessoaState extends State<SeletorPessoa> {
   late final PessoasBloc _pessoasBloc;
+  late final Debouncer _buscaDebouncer;
+  PessoasCarregarSucesso? _ultimoSucesso;
 
   @override
   void initState() {
     super.initState();
+    _buscaDebouncer = Debouncer(milliseconds: 350);
     _pessoasBloc = sl<PessoasBloc>()
       ..add(PessoasIniciou(
         eCliente: widget.eCliente,
@@ -70,6 +74,22 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
     super.dispose();
   }
 
+  // Só as primeiras pessoas (1 página) ficam pré-carregadas -- sem isso,
+  // digitar o nome de alguém fora dessa página nunca encontra ninguém, por
+  // mais correto que o texto esteja. Reflete no servidor a cada digitação
+  // (com debounce), igual a busca em /selecionar_pessoa já faz.
+  void _onBuscaChanged(String busca) {
+    _buscaDebouncer.run(() {
+      if (!mounted) return;
+      _pessoasBloc.add(PessoasIniciou(
+        busca: busca.trim().isEmpty ? null : busca.trim(),
+        eCliente: widget.eCliente,
+        eFuncionario: widget.eFuncionario,
+        eFornecedor: widget.eFornecedor,
+      ));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -78,16 +98,27 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
       value: _pessoasBloc,
       child: BlocBuilder<PessoasBloc, PessoasState>(
         builder: (context, state) {
-          if (state is PessoasCarregarEmProgresso || state is PessoasInitial) {
-            return const Center(child: CircularProgressIndicator.adaptive());
+          if (state is PessoasCarregarSucesso) {
+            _ultimoSucesso = state;
           }
 
-          if (state is PessoasCarregarFalha) {
-            return _mensagem(
-              context,
-              'Não foi possível carregar as pessoas.',
-              theme.colorScheme.error,
-            );
+          // Rebusca (digitação, com debounce) reemite "em progresso" a cada
+          // vez -- se isso trocasse a tela inteira por um spinner, o campo
+          // de texto seria desmontado a cada letra e perderia o foco.
+          // Mantém a última lista carregada com sucesso visível enquanto a
+          // busca nova roda; só mostra o spinner de tela cheia no carregamento
+          // inicial de verdade (nunca carregou nada ainda).
+          final estadoExibido = _ultimoSucesso;
+
+          if (estadoExibido == null) {
+            if (state is PessoasCarregarFalha) {
+              return _mensagem(
+                context,
+                'Não foi possível carregar as pessoas.',
+                theme.colorScheme.error,
+              );
+            }
+            return const Center(child: CircularProgressIndicator.adaptive());
           }
 
           final pessoasIniciais = _resolverPessoasIniciais();
@@ -96,17 +127,18 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
               .whereType<int>()
               .toSet();
 
-          final pessoasAtivas =
-              state.pessoas.where((pessoa) => !pessoa.bloqueado).toList();
+          final pessoasAtivas = estadoExibido.pessoas
+              .where((pessoa) => !pessoa.bloqueado)
+              .toList();
           final pessoasSelecionadas = [
-            ...state.pessoas.where(
+            ...estadoExibido.pessoas.where(
               (pessoa) =>
                   pessoa.id != null && idsSelecionados.contains(pessoa.id),
             ),
             ...pessoasIniciais.where(
               (pessoaInicial) =>
                   pessoaInicial.id == null ||
-                  !state.pessoas.any(
+                  !estadoExibido.pessoas.any(
                     (pessoa) => _mesmaPessoa(pessoa, pessoaInicial),
                   ),
             ),
@@ -136,8 +168,8 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
             modo: widget.modo == PessoaSeletorModo.unica
                 ? SeletorGenericoModo.unica
                 : SeletorGenericoModo.multipla,
-            selecionadosIniciais: state.pessoaSelecionada != null
-                ? [state.pessoaSelecionada!]
+            selecionadosIniciais: estadoExibido.pessoaSelecionada != null
+                ? [estadoExibido.pessoaSelecionada!]
                 : pessoasIniciais,
             onChanged: (List<Pessoa> selecionadas) {
               widget.onPessoaChanged?.call(selecionadas);
@@ -155,6 +187,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
             titulo: _buildTitulo(),
             hintText: 'Digite para buscar uma pessoa',
             maxSugestoes: 5,
+            onBuscaChanged: _onBuscaChanged,
             chipAvatarBuilder: (context, pessoa) =>
                 const Icon(Icons.person_outline, size: 16),
             sugestaoLeadingBuilder: (context, pessoa) {

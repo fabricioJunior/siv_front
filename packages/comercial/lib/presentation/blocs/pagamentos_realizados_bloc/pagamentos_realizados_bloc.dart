@@ -47,7 +47,7 @@ class PagamentosRealizadosBloc
         pessoaId: event.pessoaId,
         carregandoSaldoCreditoDevolucao: false,
         saldoCreditoDevolucao: 0,
-        incluirCpfNaNota: true,
+        incluirCpfNaNota: false,
         cpfNaNota: event.cpfClienteInicial ?? '',
       ),
     );

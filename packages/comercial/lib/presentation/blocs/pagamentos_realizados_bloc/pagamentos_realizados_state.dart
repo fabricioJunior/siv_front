@@ -51,7 +51,7 @@ class PagamentosRealizadosState extends Equatable {
     this.descontosItensAplicado = const {},
     this.erro,
     this.resultado = const [],
-    this.incluirCpfNaNota = true,
+    this.incluirCpfNaNota = false,
     this.cpfNaNota = '',
   });
 

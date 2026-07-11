@@ -58,51 +58,87 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Criação de romaneio'),
-            ),
-            body: Padding(
-              padding: const EdgeInsets.all(16),
-              child: switch (state.step) {
-                RomaneioCriacaoStep.inicial ||
-                RomaneioCriacaoStep.processando =>
-                  _ProcessandoRomaneioView(
-                    quantidadeItens: state.produtosCompartilhados.length,
-                  ),
-                RomaneioCriacaoStep.falha => _FalhaRomaneioView(
-                    erro: state.erro ?? 'Falha ao criar romaneio.',
-                    romaneioId: state.listaCompartilhada?.idLista,
-                    onTentarNovamente: () {
-                      context.read<RomaneioCriacaoBloc>().add(
-                            RomaneioCriacaoSolicitada(
-                          hashLista: hashLista,
-                          formasDePagamentoRealizadas:
-                              formasDePagamentoRealizadas,
-                          desconto: desconto,
-                          descontosItens: descontosItens,
-                          incluirCpfNaNota: incluirCpfNaNota,
-                          cpfNaNota: cpfNaNota,
-                          consignacaoId: consignacaoId,
-                          romaneiosConsignacao: romaneiosConsignacao,
-                            ),
-                          );
-                    },
-                    onVoltar: () {
-                      final romaneioId = state.listaCompartilhada?.idLista;
-                      Navigator.of(context).pop({
-                        _resultadoRomaneioStatusKey: romaneioId == null
-                            ? _resultadoRomaneioStatusFalha
-                            : _resultadoRomaneioStatusParcial,
-                        _resultadoRomaneioIdKey: romaneioId,
-                      });
-                    },
-                  ),
-                RomaneioCriacaoStep.sucesso => _SucessoRomaneioView(
-                    romaneio: state.romaneio,
-                    quantidadeItens: state.totalItensProcessados,
-                  ),
-              },
+          // Sem isso, sair da tela pelo gesto/botão voltar do sistema (em
+          // vez de um botão "Voltar"/"Tentar novamente" do próprio app)
+          // fazia Navigator.pop() sem resultado nenhum -- a VendaPage, que
+          // só reseta o fluxo quando reconhece o Map de resultado de
+          // sucesso/parcial/falha, nunca via esse reset acontecer e ficava
+          // com os dados da venda anterior. PopScope garante que QUALQUER
+          // forma de sair devolve o mesmo resultado que os botões in-app
+          // já devolviam.
+          Map<String, dynamic>? resultadoParaPop() {
+            return switch (state.step) {
+              RomaneioCriacaoStep.sucesso => {
+                  _resultadoRomaneioStatusKey: _resultadoRomaneioStatusSucesso,
+                  _resultadoRomaneioIdKey: state.romaneio?.id,
+                },
+              RomaneioCriacaoStep.falha => {
+                  _resultadoRomaneioStatusKey:
+                      state.listaCompartilhada?.idLista == null
+                          ? _resultadoRomaneioStatusFalha
+                          : _resultadoRomaneioStatusParcial,
+                  _resultadoRomaneioIdKey: state.listaCompartilhada?.idLista,
+                },
+              _ => null,
+            };
+          }
+
+          final permiteVoltarDireto =
+              state.step == RomaneioCriacaoStep.inicial ||
+                  state.step == RomaneioCriacaoStep.processando;
+
+          return PopScope<Object?>(
+            canPop: permiteVoltarDireto,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              Navigator.of(context).pop(resultadoParaPop());
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('Criação de romaneio'),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16),
+                child: switch (state.step) {
+                  RomaneioCriacaoStep.inicial ||
+                  RomaneioCriacaoStep.processando =>
+                    _ProcessandoRomaneioView(
+                      quantidadeItens: state.produtosCompartilhados.length,
+                    ),
+                  RomaneioCriacaoStep.falha => _FalhaRomaneioView(
+                      erro: state.erro ?? 'Falha ao criar romaneio.',
+                      romaneioId: state.listaCompartilhada?.idLista,
+                      onTentarNovamente: () {
+                        context.read<RomaneioCriacaoBloc>().add(
+                              RomaneioCriacaoSolicitada(
+                                hashLista: hashLista,
+                                formasDePagamentoRealizadas:
+                                    formasDePagamentoRealizadas,
+                                desconto: desconto,
+                                descontosItens: descontosItens,
+                                incluirCpfNaNota: incluirCpfNaNota,
+                                cpfNaNota: cpfNaNota,
+                                consignacaoId: consignacaoId,
+                                romaneiosConsignacao: romaneiosConsignacao,
+                              ),
+                            );
+                      },
+                      onVoltar: () {
+                        final romaneioId = state.listaCompartilhada?.idLista;
+                        Navigator.of(context).pop({
+                          _resultadoRomaneioStatusKey: romaneioId == null
+                              ? _resultadoRomaneioStatusFalha
+                              : _resultadoRomaneioStatusParcial,
+                          _resultadoRomaneioIdKey: romaneioId,
+                        });
+                      },
+                    ),
+                  RomaneioCriacaoStep.sucesso => _SucessoRomaneioView(
+                      romaneio: state.romaneio,
+                      quantidadeItens: state.totalItensProcessados,
+                    ),
+                },
+              ),
             ),
           );
         },

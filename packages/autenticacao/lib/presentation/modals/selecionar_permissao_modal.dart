@@ -1,6 +1,5 @@
-import 'dart:collection';
-
 import 'package:autenticacao/models.dart';
+import 'package:autenticacao/presentation/utils/fluxos_de_permissao.dart';
 import 'package:flutter/material.dart';
 
 class SelecionarPermissaoModal extends StatefulWidget {
@@ -28,47 +27,6 @@ class SelecionarPermissaoModal extends StatefulWidget {
 class _SelecionarPermissaoModalState extends State<SelecionarPermissaoModal> {
   final Set<String> _categoriasExpandidas = <String>{};
 
-  Map<String, List<Permissao>> _classificarPermissoes(List<Permissao> itens) {
-    final grupos = SplayTreeMap<String, List<Permissao>>();
-
-    for (final permissao in itens) {
-      final categoria = _extrairCategoria(permissao.id);
-      grupos.putIfAbsent(categoria, () => <Permissao>[]).add(permissao);
-    }
-
-    for (final lista in grupos.values) {
-      lista.sort((a, b) => a.id.compareTo(b.id));
-    }
-
-    return grupos;
-  }
-
-  String _extrairCategoria(String id) {
-    if (id.length < 3) return 'OUT';
-    return id.substring(0, 3).toUpperCase();
-  }
-
-  String _tituloCategoria(String categoria) {
-    const titulos = <String, String>{
-      'ADM': 'Administração',
-      'BAL': 'Balanços',
-      'CON': 'Consignações',
-      'FCR': 'Faturas a Receber',
-      'FCX': 'Caixa',
-      'FUN': 'Funcionários',
-      'GER': 'Geral',
-      'IMP': 'Importações',
-      'PED': 'Pedidos',
-      'PES': 'Pessoas',
-      'PRD': 'Produtos',
-      'ROM': 'Romaneios',
-      'SYS': 'Sistema',
-      'OUT': 'Outros',
-    };
-
-    return '${titulos[categoria] ?? 'Outros'} ($categoria)';
-  }
-
   void _toggleCategoria(String categoria) {
     setState(() {
       if (_categoriasExpandidas.contains(categoria)) {
@@ -81,7 +39,8 @@ class _SelecionarPermissaoModalState extends State<SelecionarPermissaoModal> {
 
   @override
   Widget build(BuildContext context) {
-    final permissoesClassificadas = _classificarPermissoes(widget.permissoes);
+    final permissoesClassificadas =
+        agruparPermissoesPorFluxo(widget.permissoes);
 
     return Column(
       children: [
@@ -128,7 +87,7 @@ class _SelecionarPermissaoModalState extends State<SelecionarPermissaoModal> {
                       children: [
                         Expanded(
                           child: Text(
-                            _tituloCategoria(entry.key),
+                            entry.key,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium

@@ -1,6 +1,7 @@
 import 'package:autenticacao/domain/models/permissao.dart';
 import 'package:autenticacao/presentation/bloc/grupo_de_acesso_bloc/grupo_de_acesso_bloc.dart';
 import 'package:autenticacao/presentation/modals/selecionar_permissao_modal.dart';
+import 'package:autenticacao/presentation/utils/fluxos_de_permissao.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -257,17 +258,9 @@ class GrupoDeAcessoPage extends StatelessWidget {
                           ],
                         ),
                       ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        primary: false,
-                        controller: scrollController,
-                        itemCount: state.permissoesDoGrupo?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final permissao =
-                              state.permissoesDoGrupo?.elementAt(index);
-
-                          return _permissaoCard(context, permissao!);
-                        },
+                      _permissoesPorFluxo(
+                        context,
+                        state.permissoesDoGrupo ?? const [],
                       ),
                     ],
                   );
@@ -285,6 +278,45 @@ class GrupoDeAcessoPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // Lista de permissões já concedidas ao grupo, agrupada por fluxo de
+  // negócio (Vendas, Romaneios, Caixa, etc -- ver fluxos_de_permissao.dart)
+  // em vez da lista plana e sem ordem que existia antes. Uma permissão
+  // usada por mais de uma tela aparece repetida em cada fluxo
+  // correspondente.
+  Widget _permissoesPorFluxo(
+    BuildContext context,
+    List<Permissao> permissoes,
+  ) {
+    final grupos = agruparPermissoesPorFluxo(permissoes);
+
+    if (grupos.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Text('Nenhuma permissão adicionada a este grupo ainda.'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final entrada in grupos.entries) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              entrada.key,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          ...entrada.value
+              .map((permissao) => _permissaoCard(context, permissao)),
+        ],
+      ],
     );
   }
 

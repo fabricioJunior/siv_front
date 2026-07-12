@@ -12,19 +12,22 @@ class PermissoesDoGrupoAcessoRemoteDataSource extends RemoteDataSourceBase
   String get path => 'v1/componentes-grupos/{id}/itens/{componente}';
 
   @override
-  Future<void> vincularPermissoesGrupoDeAcesso({
+  Future<void> sincronizarPermissoesGrupoDeAcesso({
     required List<Permissao> permissoes,
     required int idGrupoDeAcesso,
   }) async {
     var pathParameters = {
       'id': idGrupoDeAcesso.toString(),
     };
-    for (var permissao in permissoes) {
-      await post(
-        body: {'componenteId': permissao.id},
-        pathParameters: pathParameters,
-      );
-    }
+    // 1 requisição só -- PUT /componentes-grupos/:id/itens faz upsert de
+    // toda a lista e remove o que não estiver nela (full sync), em vez de
+    // 1 POST por permissão adicionada + 1 DELETE por permissão removida.
+    await put(
+      body: permissoes
+          .map((permissao) => {'componenteId': permissao.id})
+          .toList(),
+      pathParameters: pathParameters,
+    );
   }
 
   @override
@@ -40,21 +43,5 @@ class PermissoesDoGrupoAcessoRemoteDataSource extends RemoteDataSourceBase
     return (response.body as List)
         .map((e) => PermissaoDto.fromJson(e))
         .toList();
-  }
-
-  @override
-  Future<void> removerPermissoesGrupoDeAcesso({
-    required List<Permissao> permissoes,
-    required int idGrupoDeAcesso,
-  }) async {
-    for (var permissao in permissoes) {
-      var pathParameters = {
-        'id': idGrupoDeAcesso.toString(),
-        'componente': permissao.id
-      };
-      await delete(
-        pathParameters: pathParameters,
-      );
-    }
   }
 }

@@ -36,14 +36,19 @@ class GruposDeAcessoRepository implements IGruposDeAcessoRepository {
     List<Permissao> permissoesRemovidas,
     List<Permissao> permissoesAdicionadas,
   ) async {
+    // Era 1 requisição HTTP por permissão adicionada + 1 por removida --
+    // lento em grupos com muitas permissões. Reconstrói a lista final
+    // (estado atual - removidas + adicionadas) e sincroniza tudo numa
+    // única requisição (ver sincronizarPermissoesGrupoDeAcesso).
+    final permissoesFinal = [
+      ...grupoDeAcesso.permissoes
+          .where((permissao) => !permissoesRemovidas.contains(permissao)),
+      ...permissoesAdicionadas,
+    ];
+
     await permissoesDoGrupoAcessoRemoteDataSource
-        .vincularPermissoesGrupoDeAcesso(
-      permissoes: permissoesAdicionadas,
-      idGrupoDeAcesso: grupoDeAcesso.id!,
-    );
-    await permissoesDoGrupoAcessoRemoteDataSource
-        .removerPermissoesGrupoDeAcesso(
-      permissoes: permissoesRemovidas,
+        .sincronizarPermissoesGrupoDeAcesso(
+      permissoes: permissoesFinal,
       idGrupoDeAcesso: grupoDeAcesso.id!,
     );
     await gruposDeAcessoRemoteDataSource.putGrupoDeAcesso(

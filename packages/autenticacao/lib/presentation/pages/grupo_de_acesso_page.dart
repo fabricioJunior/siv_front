@@ -40,8 +40,8 @@ class GrupoDeAcessoPage extends StatelessWidget {
             showDialog(
               context: context,
               builder: (_) => AlertDialog(
-                title: const Text('Exclusão Realizada com sucesso!'),
-                content: const Text('Grupo de acesso excluido com sucesso'),
+                title: const Text('Exclusão realizada com sucesso'),
+                content: const Text('Grupo de acesso excluído com sucesso.'),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -55,6 +55,23 @@ class GrupoDeAcessoPage extends StatelessWidget {
               // ignore: use_build_context_synchronously
               Navigator.of(context).pop();
             });
+          }
+
+          // Erro/sucesso de salvar viram snackbar, não substituem a tela
+          // inteira -- o formulário (nome + permissões já escolhidas)
+          // continua visível e editável, o usuário só tenta salvar de
+          // novo. Ver buildWhen abaixo, que mantém o formulário anterior
+          // montado durante GrupoDeAcessoSalvarFalha.
+          if (state is GrupoDeAcessoSalvarFalha) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.mensagem)),
+            );
+          }
+          if (state is GrupoDeAcessoSalvarSucesso) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Grupo de acesso salvo com sucesso.')),
+            );
           }
         },
         child: Scaffold(
@@ -71,15 +88,39 @@ class GrupoDeAcessoPage extends StatelessWidget {
               children: [
                 BlocBuilder<GrupoDeAcessoBloc, GrupoDeAcessoState>(
                   buildWhen: (previous, current) =>
-                      previous is! GrupoDeAcessoEdicaoEmProgresso,
+                      previous is! GrupoDeAcessoEdicaoEmProgresso &&
+                      current is! GrupoDeAcessoSalvarFalha,
                   builder: (context, state) {
                     switch (state.runtimeType) {
                       case const (GrupoDeAcessoCarregarFalha):
-                        return const Text('Erro ao carregar grupo de acesso');
-                      case const (GrupoDeAcessoSalvarFalha):
-                        return const Text('Erro ao salvar grupo de acesso');
+                        final falha = state as GrupoDeAcessoCarregarFalha;
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Column(
+                              children: [
+                                Text(falha.erroMessage),
+                                const SizedBox(height: 12),
+                                FilledButton.icon(
+                                  onPressed: () {
+                                    context.read<GrupoDeAcessoBloc>().add(
+                                          GrupoDeAcessoIniciouEvent(
+                                            idGrupoDeAcesso: idGrupoDeAcesso,
+                                          ),
+                                        );
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Tentar novamente'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
                       case (const (GrupoDeAcessoCarregarEmProgresso)):
-                        return const CircularProgressIndicator.adaptive();
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator.adaptive(),
+                        );
                       default:
                         return Column(
                           children: [
@@ -115,34 +156,26 @@ class GrupoDeAcessoPage extends StatelessWidget {
 
   AlertDialog _confirmarExclusaoAlertDialog(BuildContext context) =>
       AlertDialog(
-        title: const Text(
-            'Confirmação, você realmente deseja excluir o grupo de acesso ?'),
+        title: const Text('Excluir grupo de acesso?'),
         content: const Text(
-            'ATENÇÃO, ação inrreversível e com impacto ao acesso dos usuários com acesso ao grupo de acesso'),
+          'Ação irreversível. Usuários vinculados a este grupo perdem as '
+          'permissões associadas a ele.',
+        ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-            child: Text(
-              'SIM',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.red),
-            ),
-          ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(false);
             },
-            child: Text(
-              'NÃO',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.green),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Excluir'),
           ),
         ],
       );
@@ -155,21 +188,35 @@ class GrupoDeAcessoPage extends StatelessWidget {
           }
           if (state is GrupoDeAcessoSalvarEmProgresso) {
             return const FloatingActionButton(
-              tooltip: 'salvando',
+              tooltip: 'Salvando',
               onPressed: null,
               child: CircularProgressIndicator.adaptive(),
             );
           }
+          final emEdicao = state is GrupoDeAcessoEdicaoEmProgresso;
           return FloatingActionButton(
-            tooltip: 'Edição',
+            tooltip: emEdicao ? 'Salvar' : 'Editar',
             onPressed: () {
+              if (!emEdicao) {
+                // Reabre em modo de edição. Usa o id do STATE (state.id),
+                // não o idGrupoDeAcesso do widget -- esse campo fica null
+                // pra sempre num grupo recém-criado (widget não muda depois
+                // de montado), enquanto o state já tem o id real assim que
+                // o grupo é salvo. Usar o campo do widget aqui reabriria
+                // como "criar outro grupo" em vez de editar o que acabou
+                // de ser salvo.
+                context.read<GrupoDeAcessoBloc>().add(
+                      GrupoDeAcessoIniciouEvent(
+                        idGrupoDeAcesso: state.id ?? idGrupoDeAcesso,
+                      ),
+                    );
+                return;
+              }
               if (formKey.currentState?.validate() ?? false) {
                 context.read<GrupoDeAcessoBloc>().add(GrupoDeAcessoSalvou());
               }
             },
-            child: const Icon(
-              Icons.check,
-            ),
+            child: Icon(emEdicao ? Icons.check : Icons.edit),
           );
         },
       );
@@ -218,8 +265,13 @@ class GrupoDeAcessoPage extends StatelessWidget {
                   );
                 } else if (state is GrupoDeAcessoEdicaoEmProgresso ||
                     state is GrupoDeAcessoSalvarSucesso) {
+                  final permissoesDoGrupo = state.permissoesDoGrupo ?? const [];
+                  final grupoNovoVazio =
+                      idGrupoDeAcesso == null && permissoesDoGrupo.isEmpty;
+
                   return Column(
                     children: [
+                      if (grupoNovoVazio) _seletorDeCargo(blocContext, state),
                       Padding(
                         padding:
                             const EdgeInsetsGeometry.only(left: 16, right: 08),
@@ -260,7 +312,7 @@ class GrupoDeAcessoPage extends StatelessWidget {
                       ),
                       _permissoesPorFluxo(
                         context,
-                        state.permissoesDoGrupo ?? const [],
+                        permissoesDoGrupo,
                       ),
                     ],
                   );
@@ -277,6 +329,58 @@ class GrupoDeAcessoPage extends StatelessWidget {
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+
+  // Templates de cargo (Vendedor/Caixa/Gerente) só aparecem num grupo NOVO
+  // e ainda sem nenhuma permissão -- monta o perfil de uma vez em vez de
+  // escolher item por item. Some assim que a primeira permissão é
+  // adicionada (por template ou manualmente), não interfere depois.
+  Widget _seletorDeCargo(BuildContext context, GrupoDeAcessoState state) {
+    final theme = Theme.of(context);
+    final disponiveis = state.permissoesNaoUtilizadasNoGrupo ?? const [];
+
+    void aplicarCargo(String cargo) {
+      final codigos = componentesDoCargo(cargo).toSet();
+      final bloc = context.read<GrupoDeAcessoBloc>();
+      for (final permissao in disponiveis) {
+        if (codigos.contains(permissao.id)) {
+          bloc.add(GrupoDeAcessoAdionouPermissao(permissao: permissao));
+        }
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Começar com um cargo pronto?',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Escolha um ponto de partida e ajuste depois. Ou adicione as '
+            'permissões manualmente.',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final cargo in cargosPredefinidos)
+                ActionChip(
+                  avatar: const Icon(Icons.badge_outlined, size: 18),
+                  label: Text(cargo),
+                  onPressed: () => aplicarCargo(cargo),
+                ),
+            ],
+          ),
+          const Divider(height: 24),
+        ],
       ),
     );
   }
@@ -339,24 +443,53 @@ class GrupoDeAcessoPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  permissao.descontinuado
-                      ? '${permissao.id} · Descontinuado'
-                      : permissao.id,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: permissao.descontinuado
-                            ? Colors.red
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                Row(
+                  children: [
+                    if (permissao.descontinuado) ...[
+                      Icon(
+                        Icons.block,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.error,
                       ),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      permissao.descontinuado
+                          ? 'Descontinuada · ${permissao.id}'
+                          : permissao.id,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: permissao.descontinuado
+                                ? Theme.of(context).colorScheme.error
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                          ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           IconButton(
             onPressed: () {
-              context
-                  .read<GrupoDeAcessoBloc>()
-                  .add(GrupoDeAcessoRemoveuPermissao(permissao: permissao));
+              final bloc = context.read<GrupoDeAcessoBloc>();
+              bloc.add(GrupoDeAcessoRemoveuPermissao(permissao: permissao));
+              // Remoção é imediata (sem dialog de confirmação, que seria
+              // fricção extra pra uma ação comum) mas reversível por
+              // alguns segundos via o "Desfazer" do snackbar.
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text('"${permissao.nomeExibicao}" removida.'),
+                    action: SnackBarAction(
+                      label: 'Desfazer',
+                      onPressed: () => bloc.add(
+                        GrupoDeAcessoAdionouPermissao(permissao: permissao),
+                      ),
+                    ),
+                  ),
+                );
             },
             icon: Icon(
               Icons.delete,

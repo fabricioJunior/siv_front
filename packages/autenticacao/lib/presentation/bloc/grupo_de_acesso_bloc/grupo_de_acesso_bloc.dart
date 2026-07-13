@@ -33,35 +33,48 @@ class GrupoDeAcessoBloc extends Bloc<GrupoDeAcessoEvent, GrupoDeAcessoState> {
     GrupoDeAcessoIniciouEvent event,
     Emitter<GrupoDeAcessoState> emit,
   ) async {
-    if (event.idGrupoDeAcesso == null) {
-      var permissoes = await _recuperarPermissoes.call();
-      emit(GrupoDeAcessoEdicaoEmProgresso(
-        nome: '',
-        id: null,
-        permissoesNaoUtilizadasNoGrupo: permissoes.toList(),
-      ));
-    } else {
-      emit(GrupoDeAcessoCarregarEmProgresso());
+    try {
+      if (event.idGrupoDeAcesso == null) {
+        var permissoes = await _recuperarPermissoes.call();
+        emit(GrupoDeAcessoEdicaoEmProgresso(
+          nome: '',
+          id: null,
+          permissoesNaoUtilizadasNoGrupo: permissoes.toList(),
+        ));
+      } else {
+        emit(GrupoDeAcessoCarregarEmProgresso());
 
-      var grupoDeAcesso =
-          await _recuperarGrupoDeAcesso.call(event.idGrupoDeAcesso!);
-      var permissoes = await _recuperarPermissoes.call();
-      var permissoesDoGrupo = grupoDeAcesso?.permissoes;
-      var permissoesNaoUtilizadasNoGrupo = permissoes
-          .where(
-              (permissao) => !(permissoesDoGrupo?.contains(permissao) ?? false))
-          .toList();
+        var grupoDeAcesso =
+            await _recuperarGrupoDeAcesso.call(event.idGrupoDeAcesso!);
+        var permissoes = await _recuperarPermissoes.call();
+        var permissoesDoGrupo = grupoDeAcesso?.permissoes;
+        var permissoesNaoUtilizadasNoGrupo = permissoes
+            .where((permissao) =>
+                !(permissoesDoGrupo?.contains(permissao) ?? false))
+            .toList();
 
-      emit(GrupoDeAcessoCarregarSucesso());
+        emit(GrupoDeAcessoCarregarSucesso());
+        emit(
+          GrupoDeAcessoEdicaoEmProgresso(
+            nome: grupoDeAcesso?.nome ?? '',
+            id: event.idGrupoDeAcesso,
+            grupoDeAcesso: grupoDeAcesso,
+            permissoesNaoUtilizadasNoGrupo: permissoesNaoUtilizadasNoGrupo,
+            permissoesDoGrupo: permissoesDoGrupo,
+          ),
+        );
+      }
+    } catch (e, s) {
+      // Antes, um erro aqui (ex: rede) nunca virava
+      // GrupoDeAcessoCarregarFalha -- o bloc simplesmente relançava a
+      // exceção sem emitir nada, deixando a tela travada em "carregando"
+      // pra sempre (o case de falha na página nunca era alcançado).
       emit(
-        GrupoDeAcessoEdicaoEmProgresso(
-          nome: grupoDeAcesso?.nome ?? '',
-          id: event.idGrupoDeAcesso,
-          grupoDeAcesso: grupoDeAcesso,
-          permissoesNaoUtilizadasNoGrupo: permissoesNaoUtilizadasNoGrupo,
-          permissoesDoGrupo: permissoesDoGrupo,
+        GrupoDeAcessoCarregarFalha(
+          erroMessage: 'Não foi possível carregar o grupo de acesso.',
         ),
       );
+      addError(e, s);
     }
   }
 

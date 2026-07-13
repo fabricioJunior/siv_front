@@ -174,3 +174,45 @@ Map<String, List<Permissao>> agruparPermissoesPorFluxo(
 
   return grupos;
 }
+
+/// Templates de cargo pra começar um grupo de acesso novo já com um
+/// conjunto de permissões coerente, em vez de montar item por item.
+/// Definidos como combinação de fluxos (reaproveita [componentesPorFluxo])
+/// -- mais fácil de manter que listar código por código de novo.
+const Map<String, List<String>> _fluxosPorCargo = {
+  'Vendedor': ['Vendas', 'Estoque', 'Pessoas'],
+  'Caixa': ['Vendas', 'Caixa', 'Estoque', 'Pessoas'],
+  'Gerente': [
+    'Vendas',
+    'Romaneios',
+    'Caixa',
+    'Consignações',
+    'Pedidos',
+    'Estoque',
+    'Balanço de estoque',
+    'Produtos',
+    'Etiquetas',
+    'Tabelas de preço',
+    'Formas de pagamento',
+    'Financeiro',
+    'Pagamentos avulsos',
+    'Contas a receber',
+    'Relatórios',
+    'Pessoas',
+    'Funcionários',
+  ],
+};
+
+/// Nomes dos cargos predefinidos, na ordem de exibição.
+const List<String> cargosPredefinidos = ['Vendedor', 'Caixa', 'Gerente'];
+
+/// Códigos de componente que compõem o [cargo] (um dos [cargosPredefinidos]).
+/// Lista vazia se o nome não corresponder a nenhum template conhecido.
+List<String> componentesDoCargo(String cargo) {
+  final fluxos = _fluxosPorCargo[cargo] ?? const [];
+  final codigos = <String>{};
+  for (final fluxo in fluxos) {
+    codigos.addAll(componentesPorFluxo[fluxo] ?? const []);
+  }
+  return codigos.toList();
+}

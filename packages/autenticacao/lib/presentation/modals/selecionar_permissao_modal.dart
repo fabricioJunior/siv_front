@@ -133,24 +133,23 @@ class _SelecionarPermissaoModalState extends State<SelecionarPermissaoModal> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nome amigável (nomeExibicao) é o texto principal --
+                  // antes mostrava a descrição técnica crua do backend
+                  // (ex: "Exclusão lógica de pagamento avulso"). Código
+                  // interno vira detalhe pequeno, só pra quem precisa.
                   Text(
-                    'ID: ${permissao.id}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Nome: ${permissao.nome}',
+                    permissao.nomeExibicao,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     permissao.descontinuado
-                        ? 'Status: Descontinuado'
-                        : 'Status: Ativo',
+                        ? '${permissao.id} · Descontinuado'
+                        : permissao.id,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: permissao.descontinuado
                               ? Colors.red
-                              : Colors.green,
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
                 ],

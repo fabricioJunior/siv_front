@@ -14,10 +14,14 @@ class PermissaoDto implements Permissao {
   @override
   final bool descontinuado;
 
+  @override
+  final String? nomeAmigavel;
+
   PermissaoDto({
     required this.id,
     required this.nome,
     required this.descontinuado,
+    this.nomeAmigavel,
   });
 
   factory PermissaoDto.fromJson(Map<String, dynamic> json) =>
@@ -38,6 +42,7 @@ extension PermissaoExtension on Permissao {
       id: id,
       nome: nome,
       descontinuado: descontinuado,
+      nomeAmigavel: nomeAmigavel,
     );
   }
 }

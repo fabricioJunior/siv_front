@@ -332,26 +332,23 @@ class GrupoDeAcessoPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Nome amigável (nomeExibicao) como texto principal -- ver
+                // mesma mudança no selecionar_permissao_modal.dart.
                 Text(
-                  'ID: ${permissao.id}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Nome: ${permissao.nome}',
+                  permissao.nomeExibicao,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   permissao.descontinuado
-                      ? 'Status: Descontinuado'
-                      : 'Status: Ativo',
+                      ? '${permissao.id} · Descontinuado'
+                      : permissao.id,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color:
-                            permissao.descontinuado ? Colors.red : Colors.green,
+                        color: permissao.descontinuado
+                            ? Colors.red
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                 ),
-                const SizedBox(height: 04),
               ],
             ),
           ),

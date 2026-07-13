@@ -14,10 +14,14 @@ class PermissaoDto implements Permissao, IsarDto {
   @override
   final bool descontinuado;
 
+  @override
+  final String? nomeAmigavel;
+
   PermissaoDto({
     required this.id,
     required this.nome,
     required this.descontinuado,
+    this.nomeAmigavel,
   });
 
   @override
@@ -36,6 +40,7 @@ extension PermissaoToDtoExtension on Permissao {
       id: id,
       nome: nome,
       descontinuado: descontinuado,
+      nomeAmigavel: nomeAmigavel,
     );
   }
 }

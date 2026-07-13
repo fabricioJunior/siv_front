@@ -25,8 +25,13 @@ const PermissaoDtoSchema = CollectionSchema(
     r'hashCode': PropertySchema(id: 1, name: r'hashCode', type: IsarType.long),
     r'id': PropertySchema(id: 2, name: r'id', type: IsarType.string),
     r'nome': PropertySchema(id: 3, name: r'nome', type: IsarType.string),
-    r'stringify': PropertySchema(
+    r'nomeAmigavel': PropertySchema(
       id: 4,
+      name: r'nomeAmigavel',
+      type: IsarType.string,
+    ),
+    r'stringify': PropertySchema(
+      id: 5,
       name: r'stringify',
       type: IsarType.bool,
     ),
@@ -60,6 +65,12 @@ int _permissaoDtoEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.nomeAmigavel;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -73,7 +84,8 @@ void _permissaoDtoSerialize(
   writer.writeLong(offsets[1], object.hashCode);
   writer.writeString(offsets[2], object.id);
   writer.writeString(offsets[3], object.nome);
-  writer.writeBool(offsets[4], object.stringify);
+  writer.writeString(offsets[4], object.nomeAmigavel);
+  writer.writeBool(offsets[5], object.stringify);
 }
 
 PermissaoDto _permissaoDtoDeserialize(
@@ -86,6 +98,7 @@ PermissaoDto _permissaoDtoDeserialize(
     descontinuado: reader.readBool(offsets[0]),
     id: reader.readString(offsets[2]),
     nome: reader.readStringOrNull(offsets[3]),
+    nomeAmigavel: reader.readStringOrNull(offsets[4]),
   );
   return object;
 }
@@ -106,6 +119,8 @@ P _permissaoDtoDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
+      return (reader.readStringOrNull(offset)) as P;
+    case 5:
       return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -640,6 +655,165 @@ extension PermissaoDtoQueryFilter
   }
 
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'nomeAmigavel'),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'nomeAmigavel'),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'nomeAmigavel',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'nomeAmigavel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'nomeAmigavel',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'nomeAmigavel', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
+  nomeAmigavelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'nomeAmigavel', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterFilterCondition>
   stringifyIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -724,6 +898,19 @@ extension PermissaoDtoQuerySortBy
     });
   }
 
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy> sortByNomeAmigavel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nomeAmigavel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy>
+  sortByNomeAmigavelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nomeAmigavel', Sort.desc);
+    });
+  }
+
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy> sortByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -801,6 +988,19 @@ extension PermissaoDtoQuerySortThenBy
     });
   }
 
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy> thenByNomeAmigavel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nomeAmigavel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy>
+  thenByNomeAmigavelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nomeAmigavel', Sort.desc);
+    });
+  }
+
   QueryBuilder<PermissaoDto, PermissaoDto, QAfterSortBy> thenByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -845,6 +1045,14 @@ extension PermissaoDtoQueryWhereDistinct
     });
   }
 
+  QueryBuilder<PermissaoDto, PermissaoDto, QDistinct> distinctByNomeAmigavel({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nomeAmigavel', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<PermissaoDto, PermissaoDto, QDistinct> distinctByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'stringify');
@@ -881,6 +1089,12 @@ extension PermissaoDtoQueryProperty
   QueryBuilder<PermissaoDto, String?, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
+    });
+  }
+
+  QueryBuilder<PermissaoDto, String?, QQueryOperations> nomeAmigavelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nomeAmigavel');
     });
   }
 

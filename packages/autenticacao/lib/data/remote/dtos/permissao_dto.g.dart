@@ -10,6 +10,7 @@ PermissaoDto _$PermissaoDtoFromJson(Map<String, dynamic> json) => PermissaoDto(
       id: json['id'] as String,
       nome: json['nome'] as String?,
       descontinuado: json['descontinuado'] as bool,
+      nomeAmigavel: json['nomeAmigavel'] as String?,
     );
 
 Map<String, dynamic> _$PermissaoDtoToJson(PermissaoDto instance) =>
@@ -17,4 +18,5 @@ Map<String, dynamic> _$PermissaoDtoToJson(PermissaoDto instance) =>
       'id': instance.id,
       'nome': instance.nome,
       'descontinuado': instance.descontinuado,
+      'nomeAmigavel': instance.nomeAmigavel,
     };

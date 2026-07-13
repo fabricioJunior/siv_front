@@ -166,6 +166,7 @@ class MockSalvarUsuario extends _i1.Mock implements _i8.SalvarUsuario {
     String? login,
     String? senha,
     required _i3.TipoUsuario? tipo,
+    required bool? ativo,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -178,6 +179,7 @@ class MockSalvarUsuario extends _i1.Mock implements _i8.SalvarUsuario {
             #login: login,
             #senha: senha,
             #tipo: tipo,
+            #ativo: ativo,
           },
         ),
         returnValue: _i6.Future<_i3.Usuario>.value(_FakeUsuario_1(
@@ -192,6 +194,7 @@ class MockSalvarUsuario extends _i1.Mock implements _i8.SalvarUsuario {
               #login: login,
               #senha: senha,
               #tipo: tipo,
+              #ativo: ativo,
             },
           ),
         )),
@@ -235,19 +238,13 @@ class MockRecuperarUsuarioDaSessao extends _i1.Mock
       ) as _i2.IUsuariosRepository);
 
   @override
-  _i6.Future<_i3.Usuario> call() => (super.noSuchMethod(
+  _i6.Future<_i3.Usuario?> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i6.Future<_i3.Usuario>.value(_FakeUsuario_1(
-          this,
-          Invocation.method(
-            #call,
-            [],
-          ),
-        )),
-      ) as _i6.Future<_i3.Usuario>);
+        returnValue: _i6.Future<_i3.Usuario?>.value(),
+      ) as _i6.Future<_i3.Usuario?>);
 }
 
 /// A class which mocks [RecuperarPermissoes].

@@ -32,4 +32,10 @@ class RomaneioObservacaoAtualizada extends RomaneioEvent {
   RomaneioObservacaoAtualizada({this.observacao});
 }
 
+class RomaneioVendedorAtualizado extends RomaneioEvent {
+  final int funcionarioId;
+
+  RomaneioVendedorAtualizado({required this.funcionarioId});
+}
+
 class RomaneioContinuarEnvioSolicitado extends RomaneioEvent {}

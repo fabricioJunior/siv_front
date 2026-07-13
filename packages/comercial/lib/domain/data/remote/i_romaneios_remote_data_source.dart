@@ -14,6 +14,7 @@ abstract class IRomaneiosRemoteDataSource {
   Future<Romaneio> criarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarObservacao(int id, String observacao);
+  Future<Romaneio> atualizarVendedor(int id, int funcionarioId);
   Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId);
   Future<List<RomaneioItemDevolvido>> recuperarItensDevolvidosRomaneio(
     int romaneioId,

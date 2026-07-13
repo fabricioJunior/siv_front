@@ -29,6 +29,8 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   StreamSubscription<Paginacao>? _tabelasDePrecoSubscription;
   StreamSubscription<Paginacao>? _precosDaReferenciaSubscription;
 
+  SyncDataOrigem? _origemPendenteAposSincronizacaoAtual;
+
   SyncDataBloc(
     this._sincronizarCodigos,
     this._sincronizarEstoque,
@@ -64,6 +66,7 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     }
 
     if (_sincronizacaoEmAndamentoSemErros()) {
+      _origemPendenteAposSincronizacaoAtual = event.origem;
       return;
     }
 
@@ -188,28 +191,29 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
 
     if (event.modulo == SyncModulo.tabelasDePreco) {
-      if (!_resolverModulosPermitidos().contains(
+      if (_resolverModulosPermitidos().contains(
         SyncModulo.precosDaReferencia,
       )) {
-        return;
-      }
-      final moduloPrecos = state.modulos[SyncModulo.precosDaReferencia]!;
-      if (moduloPrecos.status == SyncModuloStatus.aguardando) {
-        emit(
-          state.copyWith(
-            modulos: {
-              ...state.modulos,
-              SyncModulo.precosDaReferencia: moduloPrecos.copyWith(
-                status: SyncModuloStatus.sincronizando,
-                erro: null,
-                atualizadoEm: DateTime.now(),
-              ),
-            },
-          ),
-        );
-        _iniciarSincronizacaoPrecosDaReferencia();
+        final moduloPrecos = state.modulos[SyncModulo.precosDaReferencia]!;
+        if (moduloPrecos.status == SyncModuloStatus.aguardando) {
+          emit(
+            state.copyWith(
+              modulos: {
+                ...state.modulos,
+                SyncModulo.precosDaReferencia: moduloPrecos.copyWith(
+                  status: SyncModuloStatus.sincronizando,
+                  erro: null,
+                  atualizadoEm: DateTime.now(),
+                ),
+              },
+            ),
+          );
+          _iniciarSincronizacaoPrecosDaReferencia();
+        }
       }
     }
+
+    _dispararSincronizacaoPendenteSeTudoFinalizado();
   }
 
   void _onModuloFalhou(
@@ -248,6 +252,18 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
             : null,
       ),
     );
+
+    _dispararSincronizacaoPendenteSeTudoFinalizado();
+  }
+
+  void _dispararSincronizacaoPendenteSeTudoFinalizado() {
+    final origemPendente = _origemPendenteAposSincronizacaoAtual;
+    if (origemPendente == null || state.sincronizando) {
+      return;
+    }
+
+    _origemPendenteAposSincronizacaoAtual = null;
+    add(SyncDataSolicitouSincronizacao(origem: origemPendente));
   }
 
   void _iniciarSincronizacaoCodigos() {

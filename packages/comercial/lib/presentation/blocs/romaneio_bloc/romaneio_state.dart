@@ -141,6 +141,7 @@ enum RomaneioStep {
   criado,
   salvo,
   observacaoAtualizada,
+  vendedorAtualizado,
   envioPendenciaConcluido,
   envioPendenciaIncompleto,
   validacaoInvalida,

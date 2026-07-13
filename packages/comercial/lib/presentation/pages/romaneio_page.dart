@@ -3,8 +3,11 @@ import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
 import 'package:core/seletores.dart';
+import 'package:pessoas/models.dart';
+import 'package:pessoas/pages.dart';
 
 class RomaneioPage extends StatefulWidget {
   final int? idRomaneio;
@@ -107,6 +110,15 @@ class _RomaneioPageState extends State<RomaneioPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Observacao atualizada com sucesso.'),
+              ),
+            );
+            return;
+          }
+
+          if (state.step == RomaneioStep.vendedorAtualizado) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vendedor atualizado com sucesso.'),
               ),
             );
             return;
@@ -762,6 +774,19 @@ class _RomaneioPageState extends State<RomaneioPage> {
                       label: const Text('Ver nota fiscal'),
                     ),
                   ],
+                  PermissaoPorNome(
+                    idComponente: 'ROMFP002',
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: OutlinedButton.icon(
+                        onPressed: _romaneioCancelado(state)
+                            ? null
+                            : () => _editarVendedor(context, state),
+                        icon: const Icon(Icons.badge_outlined),
+                        label: const Text('Editar vendedor'),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -770,6 +795,70 @@ class _RomaneioPageState extends State<RomaneioPage> {
         const SizedBox(height: 16),
         _buildItensRomaneioCard(context, state),
       ],
+    );
+  }
+
+  Future<void> _editarVendedor(
+    BuildContext context,
+    RomaneioState state,
+  ) async {
+    if (state.id == null) return;
+
+    final bloc = context.read<RomaneioBloc>();
+    int? funcionarioSelecionadoId = state.funcionarioId;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Editar vendedor'),
+          content: SizedBox(
+            width: 400,
+            child: FuncionarioSeletor(
+              modo: FuncionarioSeletorModo.unica,
+              tipoFuncionario: TipoFuncionario.vendedor,
+              titulo: 'Vendedor',
+              itemsSelecionadosInicial: state.funcionarioId != null
+                  ? [
+                      SelectData(
+                        id: state.funcionarioId!,
+                        nome: state.romaneio?.funcionarioNome
+                                    ?.trim()
+                                    .isNotEmpty ==
+                                true
+                            ? state.romaneio!.funcionarioNome!
+                            : 'Funcionário #${state.funcionarioId}',
+                        data: {
+                          'id': state.funcionarioId,
+                          'nome': state.romaneio?.funcionarioNome,
+                        },
+                      ),
+                    ]
+                  : const [],
+              onChanged: (selecionados) {
+                funcionarioSelecionadoId =
+                    selecionados.isNotEmpty ? selecionados.first.id : null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final id = funcionarioSelecionadoId;
+                if (id != null) {
+                  bloc.add(RomaneioVendedorAtualizado(funcionarioId: id));
+                }
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
     );
   }
 

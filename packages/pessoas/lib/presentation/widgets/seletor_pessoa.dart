@@ -157,14 +157,6 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
             ),
           ];
 
-          if (pessoasDisponiveis.isEmpty) {
-            return _mensagem(
-              context,
-              'Nenhuma pessoa disponível para seleção.',
-              theme.colorScheme.onSurfaceVariant,
-            );
-          }
-
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -134,6 +134,9 @@ void _useCases() {
   sl.registerFactory<AtualizarObservacaoRomaneio>(
     () => AtualizarObservacaoRomaneio(repository: sl()),
   );
+  sl.registerFactory<AtualizarVendedorRomaneio>(
+    () => AtualizarVendedorRomaneio(repository: sl()),
+  );
 
   sl.registerFactory<ReceberRomaneioNoCaixa>(
     () => ReceberRomaneioNoCaixa(repository: sl()),
@@ -239,6 +242,7 @@ void _presentation() {
 
   sl.registerFactory<RomaneioBloc>(
     () => RomaneioBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

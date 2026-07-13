@@ -4,6 +4,7 @@ export 'domain/use_cases/buscar_saldo_credito_devolucao.dart';
 export 'domain/use_cases/atualizar_observacao_romaneio.dart';
 export 'domain/use_cases/atualizar_pedido.dart';
 export 'domain/use_cases/atualizar_romaneio.dart';
+export 'domain/use_cases/atualizar_vendedor_romaneio.dart';
 export 'domain/use_cases/cancelar_pedido.dart';
 export 'domain/use_cases/carregar_resumo_pagamentos_realizados.dart';
 export 'domain/use_cases/conferir_pedido.dart';

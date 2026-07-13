@@ -21,6 +21,11 @@ class RomaneiosRepository implements IRomaneiosRepository {
   }
 
   @override
+  Future<Romaneio> atualizarVendedor(int id, int funcionarioId) {
+    return remoteDataSource.atualizarVendedor(id, funcionarioId);
+  }
+
+  @override
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio) {
     return remoteDataSource.atualizarRomaneio(romaneio);
   }

@@ -89,7 +89,7 @@ class EstoqueRepository implements IEstoqueRepository {
         itensPorPagina: saldo.meta.itemsPerPage,
         itensProcessadosNaPagina: saldo.meta.itemCount,
         totalItens: saldo.meta.totalItems,
-        dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now(),
+        dataAtualizacao: ultimaAtualizacaoFim ?? DateTime.now().toUtc(),
       );
       yield pagicao;
       await paginacaoDataSource.salvarPaginacao(pagicao);

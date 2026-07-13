@@ -8,6 +8,7 @@ class PessoasIniciou extends PessoasEvent {
   final bool? eCliente;
   final bool? eFornecedor;
   final bool? eFuncionario;
+  final bool? clienteOuFuncionario;
 
   PessoasIniciou({
     this.busca,
@@ -15,6 +16,7 @@ class PessoasIniciou extends PessoasEvent {
     this.eCliente,
     this.eFornecedor,
     this.eFuncionario,
+    this.clienteOuFuncionario,
   });
 }
 

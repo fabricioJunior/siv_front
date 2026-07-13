@@ -15,8 +15,22 @@ final RecuperarPessoa recuperarPessoa = MockRecuperarPessoa();
 final SalvarPessoa salvarPessoa = FakeSalvarPessoa();
 final CriarPessoa criarPessoa = MockCriarPessoa();
 final CriarFuncionario criarFuncionario = MockCriarFuncionario();
+final SalvarFuncionario salvarFuncionario = FakeSalvarFuncionario();
+final RecuperarFuncionarios recuperarFuncionarios =
+    FakeRecuperarFuncionarios();
 final CriarEndereco criarEndereco = FakeCriarEndereco();
 final CepService cepService = CepService();
+
+class FakeSalvarFuncionario implements SalvarFuncionario {
+  @override
+  Future<Funcionario> call({required Funcionario funcionario}) async =>
+      funcionario;
+}
+
+class FakeRecuperarFuncionarios implements RecuperarFuncionarios {
+  @override
+  Future<Iterable<Funcionario>> call() async => const <Funcionario>[];
+}
 
 class FakeCriarEndereco implements CriarEndereco {
   @override
@@ -55,6 +69,8 @@ void main() {
       salvarPessoa,
       criarPessoa,
       criarFuncionario,
+      salvarFuncionario,
+      recuperarFuncionarios,
       criarEndereco,
       cepService,
     );

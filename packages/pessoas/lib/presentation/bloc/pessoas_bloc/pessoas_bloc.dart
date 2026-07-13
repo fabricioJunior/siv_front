@@ -16,6 +16,7 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
   bool? _eClienteAtual;
   bool? _eFornecedorAtual;
   bool? _eFuncionarioAtual;
+  bool? _clienteOuFuncionarioAtual;
 
   PessoasBloc(
     this._recuperarPessoas,
@@ -34,6 +35,7 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
       _eClienteAtual = event.eCliente;
       _eFornecedorAtual = event.eFornecedor;
       _eFuncionarioAtual = event.eFuncionario;
+      _clienteOuFuncionarioAtual = event.clienteOuFuncionario;
 
       emit(PessoasCarregarEmProgresso());
       var pessoas = await _recuperarPessoas.call(
@@ -42,6 +44,7 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
         eCliente: event.eCliente,
         eFornecedor: event.eFornecedor,
         eFuncionario: event.eFuncionario,
+        clienteOuFuncionario: event.clienteOuFuncionario,
       );
       final pessoasList = pessoas.toList();
       var pessoaSelecionada = event.idPessoaSelecionada != null
@@ -79,6 +82,7 @@ class PessoasBloc extends Bloc<PessoasEvent, PessoasState> {
         eCliente: _eClienteAtual,
         eFornecedor: _eFornecedorAtual,
         eFuncionario: _eFuncionarioAtual,
+        clienteOuFuncionario: _clienteOuFuncionarioAtual,
       );
       final novasPessoasList = novasPessoas.toList();
 

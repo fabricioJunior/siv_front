@@ -40,6 +40,7 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     bool? eCliente,
     bool? eFornecedor,
     bool? eFuncionario,
+    bool? clienteOuFuncionario,
   }) async {
     var query = {
       'pagina': pagina.toString(),
@@ -56,6 +57,9 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     }
     if (eFuncionario != null) {
       query['eFuncionario'] = eFuncionario.toString();
+    }
+    if (clienteOuFuncionario != null) {
+      query['clienteOuFuncionario'] = clienteOuFuncionario.toString();
     }
     final response = await get(
       queryParameters: query,

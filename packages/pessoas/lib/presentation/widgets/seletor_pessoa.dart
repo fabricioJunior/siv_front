@@ -22,6 +22,7 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
   final bool? eCliente;
   final bool? eFuncionario;
   final bool? eFornecedor;
+  final bool? clienteOuFuncionario;
 
   @override
   final List<SelectData>? itemsSelecionadosInicial;
@@ -45,6 +46,7 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
     this.eCliente,
     this.eFuncionario,
     this.eFornecedor,
+    this.clienteOuFuncionario,
   });
 
   @override
@@ -65,6 +67,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         eCliente: widget.eCliente,
         eFuncionario: widget.eFuncionario,
         eFornecedor: widget.eFornecedor,
+        clienteOuFuncionario: widget.clienteOuFuncionario,
       ));
   }
 
@@ -86,6 +89,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         eCliente: widget.eCliente,
         eFuncionario: widget.eFuncionario,
         eFornecedor: widget.eFornecedor,
+        clienteOuFuncionario: widget.clienteOuFuncionario,
       ));
     });
   }

@@ -247,7 +247,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                 retornarSomenteId: false,
                 onChanged: onChanged,
                 onlyView: onlyView ?? false,
-                eCliente: true,
+                clienteOuFuncionario: true,
               ),
           vendedoresSeletor:
               ({itemsSelecionadosInicial, onChanged, onlyView}) =>

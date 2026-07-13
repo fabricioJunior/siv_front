@@ -7,6 +7,7 @@ abstract class IPessoasRemoteDataSource {
     bool? eCliente,
     bool? eFornecedor,
     bool? eFuncionario,
+    bool? clienteOuFuncionario,
   });
 
   Future<Pessoa?> getPessoa(int id);

@@ -23,6 +23,7 @@ class PessoasRepository implements IPessoasRepository {
     bool? eCliente,
     bool? eFornecedor,
     bool? eFuncionario,
+    bool? clienteOuFuncionario,
   }) {
     return remoteDataSource.getPessoas(
       pagina: pagina,
@@ -30,6 +31,7 @@ class PessoasRepository implements IPessoasRepository {
       eCliente: eCliente,
       eFornecedor: eFornecedor,
       eFuncionario: eFuncionario,
+      clienteOuFuncionario: clienteOuFuncionario,
     );
   }
 

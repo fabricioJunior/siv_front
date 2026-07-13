@@ -14,6 +14,7 @@ class RecuperarPessoas {
     bool? eCliente,
     bool? eFornecedor,
     bool? eFuncionario,
+    bool? clienteOuFuncionario,
   }) async {
     return await _pessoasRepository.recuperarPessoas(
       pagina: pagina,
@@ -21,6 +22,7 @@ class RecuperarPessoas {
       eCliente: eCliente,
       eFornecedor: eFornecedor,
       eFuncionario: eFuncionario,
+      clienteOuFuncionario: clienteOuFuncionario,
     );
   }
 }

@@ -45,6 +45,8 @@ class PessoaState extends Equatable {
 
   final bool funcionarioInativo;
 
+  final int? funcionarioId;
+
   final String? erro;
 
   final String? enderecoCep;
@@ -88,6 +90,7 @@ class PessoaState extends Equatable {
     this.funcionarioEmpresaId,
     this.funcionarioEmpresaNome,
     this.funcionarioInativo = false,
+    this.funcionarioId,
     this.erro,
     this.enderecoCep,
     this.enderecoLogradouro,
@@ -124,6 +127,7 @@ class PessoaState extends Equatable {
         funcionarioEmpresaId = null,
         funcionarioEmpresaNome = null,
         funcionarioInativo = false,
+        funcionarioId = null,
         erro = null,
         enderecoCep = null,
         enderecoLogradouro = null,
@@ -159,6 +163,7 @@ class PessoaState extends Equatable {
     int? funcionarioEmpresaId,
     String? funcionarioEmpresaNome,
     bool? funcionarioInativo,
+    int? funcionarioId,
     String? erro,
     String? enderecoCep,
     String? enderecoLogradouro,
@@ -196,6 +201,7 @@ class PessoaState extends Equatable {
       funcionarioEmpresaNome:
           funcionarioEmpresaNome ?? this.funcionarioEmpresaNome,
       funcionarioInativo: funcionarioInativo ?? this.funcionarioInativo,
+      funcionarioId: funcionarioId ?? this.funcionarioId,
       erro: erro ?? this.erro,
       enderecoCep: enderecoCep ?? this.enderecoCep,
       enderecoLogradouro: enderecoLogradouro ?? this.enderecoLogradouro,
@@ -232,6 +238,7 @@ class PessoaState extends Equatable {
         funcionarioEmpresaId,
         funcionarioEmpresaNome,
         funcionarioInativo,
+        funcionarioId,
         pessoaStep,
         erro,
         enderecoCep,

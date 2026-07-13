@@ -7,6 +7,7 @@ abstract class IPessoasRepository {
     bool? eCliente,
     bool? eFornecedor,
     bool? eFuncionario,
+    bool? clienteOuFuncionario,
   });
 
   Future<Pessoa?> recuperarPessoa(int id);

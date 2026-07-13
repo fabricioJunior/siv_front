@@ -14,6 +14,8 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
   final SalvarPessoa salvarPessoa;
   final CriarPessoa criarPessoa;
   final CriarFuncionario criarFuncionario;
+  final SalvarFuncionario salvarFuncionario;
+  final RecuperarFuncionarios recuperarFuncionarios;
   final CriarEndereco criarEndereco;
   final CepService cepService;
 
@@ -22,6 +24,8 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
     this.salvarPessoa,
     this.criarPessoa,
     this.criarFuncionario,
+    this.salvarFuncionario,
+    this.recuperarFuncionarios,
     this.criarEndereco,
     this.cepService,
   ) : super(PessoaState(pessoaStep: PessoaStep.inicial)) {
@@ -46,7 +50,32 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
       );
       if (event.idPessoa != null) {
         var pessoa = await recuperarPessoa.call(idPessoa: event.idPessoa!);
-        emit(PessoaState.fromModel(pessoa!));
+        var pessoaState = PessoaState.fromModel(pessoa!);
+
+        if (pessoa.eFuncionario) {
+          try {
+            var funcionarios = await recuperarFuncionarios.call();
+            Funcionario? funcionario;
+            for (final f in funcionarios) {
+              if (f.pessoaId == pessoa.id) {
+                funcionario = f;
+                break;
+              }
+            }
+            if (funcionario != null) {
+              pessoaState = pessoaState.copyWith(
+                funcionarioId: funcionario.id,
+                tipoFuncionario: funcionario.tipo,
+                funcionarioEmpresaId: funcionario.empresaId,
+                funcionarioInativo: funcionario.inativo,
+              );
+            }
+          } catch (e, s) {
+            addError(e, s);
+          }
+        }
+
+        emit(pessoaState);
       } else {
         emit(
           PessoaState(
@@ -153,6 +182,7 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
           documento: state.documento,
           eCliente: state.eCliente,
           eFornecedor: state.eFornecedor,
+          eFuncionario: state.eFuncionario,
           email: state.email,
           nome: state.nome,
           tipoContato: state.tipoContato,
@@ -160,9 +190,54 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
           uf: state.uf,
           dataDeNascimento: state.dataDeNascimento,
         ));
+
+        String? avisoEndereco;
+        int? funcionarioId = state.funcionarioId;
+
+        if ((state.eFuncionario ?? false) && pessoa.id != null) {
+          try {
+            if (state.funcionarioId != null) {
+              var funcionario = await salvarFuncionario.call(
+                funcionario: Funcionario(
+                  criadoEm: null,
+                  atualizadoEm: null,
+                  empresaId: state.funcionarioEmpresaId ?? 0,
+                  id: state.funcionarioId!,
+                  nome: state.nome ?? '',
+                  pessoaId: pessoa.id!,
+                  tipo: state.tipoFuncionario ?? TipoFuncionario.comprador,
+                  inativo: state.funcionarioInativo,
+                ),
+              );
+              funcionarioId = funcionario.id;
+            } else {
+              var funcionario = await criarFuncionario.call(
+                funcionario: Funcionario(
+                  criadoEm: null,
+                  atualizadoEm: null,
+                  empresaId: state.funcionarioEmpresaId ?? 0,
+                  id: 0,
+                  nome: state.nome ?? '',
+                  pessoaId: pessoa.id!,
+                  tipo: state.tipoFuncionario ?? TipoFuncionario.comprador,
+                  inativo: state.funcionarioInativo,
+                ),
+              );
+              funcionarioId = funcionario.id;
+            }
+          } catch (e, s) {
+            avisoEndereco =
+                'Pessoa salva, mas não foi possível salvar os dados de funcionário. Tente novamente.';
+            addError(e, s);
+          }
+        }
+
         emit(PessoaState.fromModel(
           pessoa,
           step: PessoaStep.salva,
+        ).copyWith(
+          funcionarioId: funcionarioId,
+          avisoEndereco: avisoEndereco,
         ));
       } else {
         var pessoa = await criarPessoa.call(

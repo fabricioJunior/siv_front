@@ -16,6 +16,12 @@ void _remoteDataSources() {
     () => ReceberRomaneioNoCaixaRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<ICorrigirFormaDePagamentoRemoteDataSource>(
+    () => CorrigirFormaDePagamentoRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
   sl.registerFactory<ICreditoDevolucaoRemoteDataSource>(
     () => CreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -62,6 +68,7 @@ void _repositories() {
     () => RomaneiosRepository(
       remoteDataSource: sl(),
       caixasRemoteDataSource: sl(),
+      corrigirFormaDePagamentoRemoteDataSource: sl(),
     ),
   );
 
@@ -136,6 +143,9 @@ void _useCases() {
   );
   sl.registerFactory<AtualizarVendedorRomaneio>(
     () => AtualizarVendedorRomaneio(repository: sl()),
+  );
+  sl.registerFactory<CorrigirFormaDePagamentoRomaneio>(
+    () => CorrigirFormaDePagamentoRomaneio(repository: sl()),
   );
 
   sl.registerFactory<ReceberRomaneioNoCaixa>(
@@ -242,6 +252,7 @@ void _presentation() {
 
   sl.registerFactory<RomaneioBloc>(
     () => RomaneioBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

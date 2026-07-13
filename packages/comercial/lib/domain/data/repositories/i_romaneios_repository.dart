@@ -29,4 +29,9 @@ abstract class IRomaneiosRepository {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
   });
+  Future<Romaneio> corrigirFormaDePagamento({
+    required int caixaId,
+    required int romaneioId,
+    required List<Map<String, dynamic>> pagamentos,
+  });
 }

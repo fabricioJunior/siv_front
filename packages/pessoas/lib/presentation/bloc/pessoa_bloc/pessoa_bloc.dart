@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:core/bloc.dart';
 import 'package:core/cep.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/uses_cases.dart';
 
@@ -54,14 +55,17 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
 
         if (pessoa.eFuncionario) {
           try {
-            var funcionarios = await recuperarFuncionarios.call();
-            Funcionario? funcionario;
-            for (final f in funcionarios) {
-              if (f.pessoaId == pessoa.id) {
-                funcionario = f;
-                break;
-              }
-            }
+            // Busca por pessoaId, não pela empresa da sessão atual -- o
+            // funcionário pode estar cadastrado em empresa diferente da que
+            // está ativa no momento (seletor de empresa no form permite
+            // isso). Filtrar client-side pela lista de GET /funcionarios
+            // (que sem pessoaId cai no default de empresaId da sessão) fazia
+            // esse funcionário nunca ser encontrado nesse caso -- daí o save
+            // seguinte tentava CRIAR um funcionário novo (duplicado, com
+            // empresaId ausente) em vez de atualizar, e falhava.
+            var funcionarios =
+                await recuperarFuncionarios.call(pessoaId: pessoa.id);
+            var funcionario = funcionarios.firstOrNull;
             if (funcionario != null) {
               pessoaState = pessoaState.copyWith(
                 funcionarioId: funcionario.id,
@@ -226,8 +230,10 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
               funcionarioId = funcionario.id;
             }
           } catch (e, s) {
-            avisoEndereco =
-                'Pessoa salva, mas não foi possível salvar os dados de funcionário. Tente novamente.';
+            avisoEndereco = mensagemDeErroApi(
+              e,
+              'Pessoa salva, mas não foi possível salvar os dados de funcionário. Tente novamente.',
+            );
             addError(e, s);
           }
         }

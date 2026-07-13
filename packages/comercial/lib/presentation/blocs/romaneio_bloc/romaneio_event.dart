@@ -38,4 +38,10 @@ class RomaneioVendedorAtualizado extends RomaneioEvent {
   RomaneioVendedorAtualizado({required this.funcionarioId});
 }
 
+class RomaneioFormaDePagamentoCorrigida extends RomaneioEvent {
+  final List<Map<String, dynamic>> pagamentos;
+
+  RomaneioFormaDePagamentoCorrigida({required this.pagamentos});
+}
+
 class RomaneioContinuarEnvioSolicitado extends RomaneioEvent {}

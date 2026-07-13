@@ -76,6 +76,7 @@ abstract class Romaneio implements Equatable {
   int? get prazoFrete;
   String? get observacaoFrete;
   double? get valorFrete;
+  int? get caixaId;
   int? get caixaTerminalId;
   String? get caixaTerminalNome;
   bool? get temEntrega;
@@ -126,6 +127,7 @@ abstract class Romaneio implements Equatable {
     int? prazoFrete,
     String? observacaoFrete,
     double? valorFrete,
+    int? caixaId,
     int? caixaTerminalId,
     String? caixaTerminalNome,
     bool? temEntrega,
@@ -178,6 +180,7 @@ abstract class Romaneio implements Equatable {
         prazoFrete,
         observacaoFrete,
         valorFrete,
+        caixaId,
         caixaTerminalId,
         caixaTerminalNome,
         temEntrega,
@@ -272,6 +275,8 @@ class _RomaneioImpl implements Romaneio {
   @override
   final double? valorFrete;
   @override
+  final int? caixaId;
+  @override
   final int? caixaTerminalId;
   @override
   final String? caixaTerminalNome;
@@ -331,6 +336,7 @@ class _RomaneioImpl implements Romaneio {
     this.prazoFrete,
     this.observacaoFrete,
     this.valorFrete,
+    this.caixaId,
     this.caixaTerminalId,
     this.caixaTerminalNome,
     this.temEntrega,
@@ -385,6 +391,7 @@ class _RomaneioImpl implements Romaneio {
         prazoFrete,
         observacaoFrete,
         valorFrete,
+        caixaId,
         caixaTerminalId,
         caixaTerminalNome,
         temEntrega,

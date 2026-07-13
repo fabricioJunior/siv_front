@@ -667,6 +667,24 @@ String _rotuloHistorico(TipoHistoricoExtratoCaixa tipo) {
   switch (tipo) {
     case TipoHistoricoExtratoCaixa.aberturaDeCaixa:
       return 'Abertura de caixa';
+    case TipoHistoricoExtratoCaixa.suprimento:
+      return 'Suprimento';
+    case TipoHistoricoExtratoCaixa.sangria:
+      return 'Sangria';
+    case TipoHistoricoExtratoCaixa.lancamentoDeDespesa:
+      return 'Lançamento de despesa';
+    case TipoHistoricoExtratoCaixa.venda:
+      return 'Venda';
+    case TipoHistoricoExtratoCaixa.devolucao:
+      return 'Devolução';
+    case TipoHistoricoExtratoCaixa.troco:
+      return 'Troco';
+    case TipoHistoricoExtratoCaixa.adiantamento:
+      return 'Adiantamento';
+    case TipoHistoricoExtratoCaixa.fechamentoDeCaixa:
+      return 'Fechamento de caixa';
+    case TipoHistoricoExtratoCaixa.outros:
+      return 'Outros';
   }
 }
 

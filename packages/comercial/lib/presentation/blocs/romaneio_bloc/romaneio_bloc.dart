@@ -6,6 +6,7 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/sessao.dart';
 
 part 'romaneio_event.dart';
 part 'romaneio_state.dart';
@@ -23,6 +24,9 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   final AdicionarItemRomaneio _adicionarItemRomaneio;
   final RemoverProdutoCompartilhado _removerProdutoCompartilhado;
   final ListarDocumentosFiscais _listarDocumentosFiscais;
+  final CorrigirFormaDePagamentoRomaneio _corrigirFormaDePagamentoRomaneio;
+  final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
   RomaneioBloc(
     this._recuperarRomaneio,
@@ -36,12 +40,17 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     this._adicionarItemRomaneio,
     this._removerProdutoCompartilhado,
     this._listarDocumentosFiscais,
+    this._corrigirFormaDePagamentoRomaneio,
+    this._receberRomaneioNoCaixa,
+    this._acessoGlobalSessao,
   ) : super(const RomaneioState.initial()) {
     on<RomaneioIniciou>(_onIniciou);
     on<RomaneioCampoAlterado>(_onCampoAlterado);
     on<RomaneioSalvou>(_onSalvou);
     on<RomaneioObservacaoAtualizada>(_onObservacaoAtualizada);
     on<RomaneioVendedorAtualizado>(_onVendedorAtualizado);
+    on<RomaneioFormaDePagamentoCorrigida>(_onFormaDePagamentoCorrigida);
+    on<RomaneioPagamentoRecebido>(_onPagamentoRecebido);
     on<RomaneioContinuarEnvioSolicitado>(_onContinuarEnvioSolicitado);
   }
 
@@ -199,6 +208,46 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       emit(state.copyWith(
           step: RomaneioStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao atualizar vendedor.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onFormaDePagamentoCorrigida(
+    RomaneioFormaDePagamentoCorrigida event,
+    Emitter<RomaneioState> emit,
+  ) async {
+    final romaneioId = state.id;
+    final caixaId = state.romaneio?.caixaId;
+    if (romaneioId == null || caixaId == null) {
+      emit(
+        state.copyWith(
+          step: RomaneioStep.validacaoInvalida,
+          erro: 'Não é possível corrigir a forma de pagamento deste romaneio.',
+        ),
+      );
+      return;
+    }
+
+    try {
+      emit(state.copyWith(step: RomaneioStep.processando, erro: null));
+      final romaneio = await _corrigirFormaDePagamentoRomaneio.call(
+        caixaId: caixaId,
+        romaneioId: romaneioId,
+        pagamentos: event.pagamentos,
+      );
+      emit(
+        RomaneioState.fromModel(
+          romaneio,
+          itensDoRomaneio: state.itens,
+          itensDevolvidos: state.itensDevolvidos,
+          step: RomaneioStep.formaDePagamentoCorrigida,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao corrigir a forma de pagamento.')));
       addError(e, s);
     }
   }

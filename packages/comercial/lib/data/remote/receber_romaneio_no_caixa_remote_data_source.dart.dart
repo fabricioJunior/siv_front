@@ -1,4 +1,5 @@
 import 'package:comercial/data.dart';
+import 'package:comercial/data/remote/dtos/romaneio_dto.dart';
 import 'package:comercial/models.dart';
 import 'package:core/remote_data_sourcers.dart';
 
@@ -45,5 +46,30 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
       'parcela': forma.parcela,
       'valor': forma.valor,
     };
+  }
+}
+
+class CorrigirFormaDePagamentoRemoteDataSource extends RemoteDataSourceBase
+    implements ICorrigirFormaDePagamentoRemoteDataSource {
+  CorrigirFormaDePagamentoRemoteDataSource(
+      {required super.informacoesParaRequest});
+
+  @override
+  String get path => '/v1/caixas/{caixaId}/receber/romaneio/forma-pagamento';
+
+  @override
+  Future<Romaneio> corrigirFormaDePagamento({
+    required int caixaId,
+    required int romaneioId,
+    required List<Map<String, dynamic>> pagamentos,
+  }) async {
+    final response = await put(
+      pathParameters: {'caixaId': caixaId},
+      body: {
+        'romaneioId': romaneioId,
+        'pagamentos': pagamentos,
+      },
+    );
+    return RomaneioDto.fromJson(response.body as Map<String, dynamic>);
   }
 }

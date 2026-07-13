@@ -164,11 +164,26 @@ class MockRecuperarPessoas extends _i1.Mock implements _i7.RecuperarPessoas {
   }
 
   @override
-  _i5.Future<Iterable<_i2.Pessoa>> call({String? busca}) => (super.noSuchMethod(
+  _i5.Future<Iterable<_i2.Pessoa>> call({
+    String? busca,
+    int pagina = 1,
+    bool? eCliente,
+    bool? eFornecedor,
+    bool? eFuncionario,
+    bool? clienteOuFuncionario,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
-          {#busca: busca},
+          {
+            #busca: busca,
+            #pagina: pagina,
+            #eCliente: eCliente,
+            #eFornecedor: eFornecedor,
+            #eFuncionario: eFuncionario,
+            #clienteOuFuncionario: clienteOuFuncionario,
+          },
         ),
         returnValue: _i5.Future<Iterable<_i2.Pessoa>>.value(<_i2.Pessoa>[]),
       ) as _i5.Future<Iterable<_i2.Pessoa>>);

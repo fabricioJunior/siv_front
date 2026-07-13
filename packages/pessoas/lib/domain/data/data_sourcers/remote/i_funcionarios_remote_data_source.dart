@@ -1,7 +1,7 @@
 import 'package:pessoas/models.dart';
 
 abstract class IFuncionariosRemoteDataSource {
-  Future<List<Funcionario>> getFuncionarios();
+  Future<List<Funcionario>> getFuncionarios({int? pessoaId});
 
   Future<Funcionario?> getFuncionario({
     required int idFuncionario,

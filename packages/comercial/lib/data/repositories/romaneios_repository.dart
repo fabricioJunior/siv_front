@@ -4,10 +4,13 @@ import 'package:comercial/models.dart';
 class RomaneiosRepository implements IRomaneiosRepository {
   final IRomaneiosRemoteDataSource remoteDataSource;
   final IReceberRomaneioNoCaixaRemoteDataSource caixasRemoteDataSource;
+  final ICorrigirFormaDePagamentoRemoteDataSource
+      corrigirFormaDePagamentoRemoteDataSource;
 
   RomaneiosRepository({
     required this.remoteDataSource,
     required this.caixasRemoteDataSource,
+    required this.corrigirFormaDePagamentoRemoteDataSource,
   });
 
   @override
@@ -94,6 +97,19 @@ class RomaneiosRepository implements IRomaneiosRepository {
       descontosItens: descontosItens,
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
+    );
+  }
+
+  @override
+  Future<Romaneio> corrigirFormaDePagamento({
+    required int caixaId,
+    required int romaneioId,
+    required List<Map<String, dynamic>> pagamentos,
+  }) {
+    return corrigirFormaDePagamentoRemoteDataSource.corrigirFormaDePagamento(
+      caixaId: caixaId,
+      romaneioId: romaneioId,
+      pagamentos: pagamentos,
     );
   }
 }

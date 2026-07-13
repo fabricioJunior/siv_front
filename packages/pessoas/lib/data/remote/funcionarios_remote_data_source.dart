@@ -23,8 +23,12 @@ class FuncionariosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<Funcionario>> getFuncionarios() async {
-    final response = await get();
+  Future<List<Funcionario>> getFuncionarios({int? pessoaId}) async {
+    final response = await get(
+      queryParameters: pessoaId != null
+          ? {'pessoaId': pessoaId.toString()}
+          : null,
+    );
 
     return (response.body as List<dynamic>)
         .map((json) => Funcionario.fromJson(json as Map<String, dynamic>))

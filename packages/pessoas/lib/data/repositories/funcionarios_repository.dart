@@ -17,8 +17,8 @@ class FuncionariosRepository implements IFuncionariosRepository {
   }
 
   @override
-  Future<List<Funcionario>> recuperarFuncionarios() {
-    return _funcionariosRemoteDataSource.getFuncionarios();
+  Future<List<Funcionario>> recuperarFuncionarios({int? pessoaId}) {
+    return _funcionariosRemoteDataSource.getFuncionarios(pessoaId: pessoaId);
   }
 
   @override

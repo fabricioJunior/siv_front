@@ -29,7 +29,8 @@ class FakeSalvarFuncionario implements SalvarFuncionario {
 
 class FakeRecuperarFuncionarios implements RecuperarFuncionarios {
   @override
-  Future<Iterable<Funcionario>> call() async => const <Funcionario>[];
+  Future<Iterable<Funcionario>> call({int? pessoaId}) async =>
+      const <Funcionario>[];
 }
 
 class FakeCriarEndereco implements CriarEndereco {

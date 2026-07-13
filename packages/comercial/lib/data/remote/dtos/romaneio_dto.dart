@@ -78,6 +78,8 @@ class RomaneioDto implements Romaneio {
   @override
   final double? valorFrete;
   @override
+  final int? caixaId;
+  @override
   final int? caixaTerminalId;
   @override
   final String? caixaTerminalNome;
@@ -137,6 +139,7 @@ class RomaneioDto implements Romaneio {
     this.prazoFrete,
     this.observacaoFrete,
     this.valorFrete,
+    this.caixaId,
     this.caixaTerminalId,
     this.caixaTerminalNome,
     this.temEntrega,
@@ -191,6 +194,7 @@ class RomaneioDto implements Romaneio {
       prazoFrete: _toInt(json['prazoFrete']),
       observacaoFrete: json['observacaoFrete']?.toString(),
       valorFrete: _toDouble(json['valorFrete']),
+      caixaId: _toInt(json['caixaId']),
       caixaTerminalId: _toInt(json['caixaTerminalId']),
       caixaTerminalNome: json['caixaTerminalNome']?.toString(),
       temEntrega: json['temEntrega'] as bool?,
@@ -244,6 +248,7 @@ class RomaneioDto implements Romaneio {
       prazoFrete: romaneio.prazoFrete,
       observacaoFrete: romaneio.observacaoFrete,
       valorFrete: romaneio.valorFrete,
+      caixaId: romaneio.caixaId,
       caixaTerminalId: romaneio.caixaTerminalId,
       caixaTerminalNome: romaneio.caixaTerminalNome,
       temEntrega: romaneio.temEntrega,
@@ -322,6 +327,7 @@ class RomaneioDto implements Romaneio {
         prazoFrete,
         observacaoFrete,
         valorFrete,
+        caixaId,
         caixaTerminalId,
         caixaTerminalNome,
         temEntrega,

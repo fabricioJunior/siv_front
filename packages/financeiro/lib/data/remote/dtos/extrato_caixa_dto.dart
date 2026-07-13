@@ -128,8 +128,26 @@ class ExtratoCaixaDto implements ExtratoCaixa {
   }
 
   static TipoHistoricoExtratoCaixa _tipoHistoricoFromJson(String value) {
-    switch (value.trim().toLowerCase()) {
-      case 'abertura de caixa':
+    switch (_normalizar(value)) {
+      case 'suprimento':
+        return TipoHistoricoExtratoCaixa.suprimento;
+      case 'sangria':
+        return TipoHistoricoExtratoCaixa.sangria;
+      case 'lancamento_de_despesa':
+        return TipoHistoricoExtratoCaixa.lancamentoDeDespesa;
+      case 'venda':
+        return TipoHistoricoExtratoCaixa.venda;
+      case 'devolucao':
+        return TipoHistoricoExtratoCaixa.devolucao;
+      case 'troco':
+        return TipoHistoricoExtratoCaixa.troco;
+      case 'adiantamento':
+        return TipoHistoricoExtratoCaixa.adiantamento;
+      case 'fechamento_de_caixa':
+        return TipoHistoricoExtratoCaixa.fechamentoDeCaixa;
+      case 'outros':
+        return TipoHistoricoExtratoCaixa.outros;
+      case 'abertura_de_caixa':
       default:
         return TipoHistoricoExtratoCaixa.aberturaDeCaixa;
     }

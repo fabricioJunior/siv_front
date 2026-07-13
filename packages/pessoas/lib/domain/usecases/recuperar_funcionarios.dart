@@ -8,7 +8,7 @@ class RecuperarFuncionarios {
     required IFuncionariosRepository funcionariosRepository,
   }) : _funcionariosRepository = funcionariosRepository;
 
-  Future<Iterable<Funcionario>> call() {
-    return _funcionariosRepository.recuperarFuncionarios();
+  Future<Iterable<Funcionario>> call({int? pessoaId}) {
+    return _funcionariosRepository.recuperarFuncionarios(pessoaId: pessoaId);
   }
 }

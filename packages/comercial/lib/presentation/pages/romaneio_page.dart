@@ -6,6 +6,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
 import 'package:core/seletores.dart';
+import 'package:financeiro/pages.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/pages.dart';
 
@@ -119,6 +120,16 @@ class _RomaneioPageState extends State<RomaneioPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Vendedor atualizado com sucesso.'),
+              ),
+            );
+            return;
+          }
+
+          if (state.step == RomaneioStep.formaDePagamentoCorrigida) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('Forma de pagamento corrigida com sucesso.'),
               ),
             );
             return;
@@ -775,7 +786,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     ),
                   ],
                   PermissaoPorNome(
-                    idComponente: 'ROMFP002',
+                    idComponente: 'ROMFP004',
                     child: Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: OutlinedButton.icon(
@@ -787,6 +798,22 @@ class _RomaneioPageState extends State<RomaneioPage> {
                       ),
                     ),
                   ),
+                  if (state.romaneio?.formasDePagamentoRealizadas
+                          .isNotEmpty ==
+                      true)
+                    PermissaoPorNome(
+                      idComponente: 'FCXFP002',
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: OutlinedButton.icon(
+                          onPressed: _romaneioCancelado(state)
+                              ? null
+                              : () => _editarFormasDePagamento(context, state),
+                          icon: const Icon(Icons.credit_card_outlined),
+                          label: const Text('Editar formas de pagamento'),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -857,6 +884,122 @@ class _RomaneioPageState extends State<RomaneioPage> {
               child: const Text('Confirmar'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  static const _tiposDocumentoBloqueadosParaEdicao = {
+    'Adiantamento',
+    'Crédito de devolução',
+    'Troco',
+  };
+
+  bool _pagamentoEditavel(RomaneioPagamentoRealizado pagamento) {
+    final descricao = pagamento.descricao?.trim();
+    return descricao == null ||
+        !_tiposDocumentoBloqueadosParaEdicao.contains(descricao);
+  }
+
+  Future<void> _editarFormasDePagamento(
+    BuildContext context,
+    RomaneioState state,
+  ) async {
+    if (state.id == null) return;
+
+    final bloc = context.read<RomaneioBloc>();
+    final pagamentosEditaveis = (state.romaneio?.formasDePagamentoRealizadas ??
+            const <RomaneioPagamentoRealizado>[])
+        .where(_pagamentoEditavel)
+        .toList(growable: false);
+
+    if (pagamentosEditaveis.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nenhuma forma de pagamento deste romaneio pode ser editada.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final formaSelecionadaPorDocumento = <int, int?>{
+      for (final pagamento in pagamentosEditaveis) pagamento.controle: null,
+    };
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Editar formas de pagamento'),
+              content: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final pagamento in pagamentosEditaveis) ...[
+                        Text(
+                          '${_descricaoPagamento(pagamento)} — '
+                          '${_formatarValorMonetario(pagamento.valor)}',
+                          style: Theme.of(dialogContext).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        FormasDePagamentoSeletor(
+                          modo: FormasDePagamentoSeletorModo.unica,
+                          titulo: 'Nova forma de pagamento',
+                          onChanged: (selecionados) {
+                            setDialogState(() {
+                              formaSelecionadaPorDocumento[
+                                  pagamento.controle] = selecionados.isNotEmpty
+                                  ? selecionados.first.id
+                                  : null;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final pagamentosCorrigidos = formaSelecionadaPorDocumento
+                        .entries
+                        .where((entry) => entry.value != null)
+                        .map((entry) => {
+                              'documento': entry.key,
+                              'formaDePagamentoId': entry.value,
+                            })
+                        .toList(growable: false);
+
+                    if (pagamentosCorrigidos.isEmpty) {
+                      Navigator.of(dialogContext).pop();
+                      return;
+                    }
+
+                    bloc.add(
+                      RomaneioFormaDePagamentoCorrigida(
+                        pagamentos: pagamentosCorrigidos,
+                      ),
+                    );
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Confirmar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

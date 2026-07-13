@@ -1,7 +1,7 @@
 import 'package:pessoas/models.dart';
 
 abstract class IFuncionariosRepository {
-  Future<List<Funcionario>> recuperarFuncionarios();
+  Future<List<Funcionario>> recuperarFuncionarios({int? pessoaId});
 
   Future<Funcionario?> recuperarFuncionario({
     required int idFuncionario,

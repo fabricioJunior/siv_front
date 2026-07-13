@@ -10,3 +10,11 @@ abstract class IReceberRomaneioNoCaixaRemoteDataSource {
     String cpfNaNota = '',
   });
 }
+
+abstract class ICorrigirFormaDePagamentoRemoteDataSource {
+  Future<Romaneio> corrigirFormaDePagamento({
+    required int caixaId,
+    required int romaneioId,
+    required List<Map<String, dynamic>> pagamentos,
+  });
+}

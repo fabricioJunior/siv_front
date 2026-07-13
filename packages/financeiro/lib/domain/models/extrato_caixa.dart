@@ -33,6 +33,15 @@ enum TipoDocumentoExtratoCaixa {
 
 enum TipoHistoricoExtratoCaixa {
   aberturaDeCaixa,
+  suprimento,
+  sangria,
+  lancamentoDeDespesa,
+  venda,
+  devolucao,
+  troco,
+  adiantamento,
+  fechamentoDeCaixa,
+  outros,
 }
 
 enum TipoMovimentoExtratoCaixa {

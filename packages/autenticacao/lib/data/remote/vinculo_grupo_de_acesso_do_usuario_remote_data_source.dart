@@ -40,10 +40,15 @@ class VinculorGrupoDeAcessoDoUsuarioRemoteDataSource
     var pathParamenters = {
       'id': idUser,
     };
+    // Corpo esperado pelo backend é AdicionarUsuarioGrupoDto {empresaId,
+    // grupoId} -- antes mandava uma chave literal "{empresaId/grupoId}"
+    // com o valor "1/5" (string), que não batia com nenhum campo do DTO e
+    // sempre voltava 400 "empresaId should not be empty".
     var result = await post(
       pathParameters: pathParamenters,
       body: {
-        '{empresaId/grupoId}': '$idEmpresa/$idGrupoDeAcesso',
+        'empresaId': idEmpresa,
+        'grupoId': idGrupoDeAcesso,
       },
     );
 

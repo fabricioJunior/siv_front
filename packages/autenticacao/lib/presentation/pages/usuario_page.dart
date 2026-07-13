@@ -180,11 +180,78 @@ class UsuarioPage extends StatelessWidget {
       );
 
   Widget _usuarioInfos(BuildContext context, Usuario? usuario, bool readOnly) {
+    return _UsuarioFormulario(
+      usuario: usuario,
+      readOnly: readOnly,
+      formKey: formKey,
+    );
+  }
+}
+
+// Controllers de texto precisam ser criados 1 vez só e reaproveitados --
+// antes eram recriados via TextEditingController.fromValue(...) direto no
+// build(), sempre a partir de `usuario` (o Usuario carregado, nunca o
+// buffer de edição do bloc). Pra usuário novo, `usuario` é sempre null, e
+// qualquer rebuild criava um controller vazio, apagando o que já tinha
+// sido digitado -- exatamente o bug relatado ao trocar o tipo do usuário.
+class _UsuarioFormulario extends StatefulWidget {
+  final Usuario? usuario;
+  final bool readOnly;
+  final GlobalKey<FormState> formKey;
+
+  const _UsuarioFormulario({
+    required this.usuario,
+    required this.readOnly,
+    required this.formKey,
+  });
+
+  @override
+  State<_UsuarioFormulario> createState() => _UsuarioFormularioState();
+}
+
+class _UsuarioFormularioState extends State<_UsuarioFormulario> {
+  late final TextEditingController _nomeController;
+  late final TextEditingController _loginController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nomeController = TextEditingController(text: widget.usuario?.nome ?? '');
+    _loginController = TextEditingController(text: widget.usuario?.login ?? '');
+  }
+
+  @override
+  void didUpdateWidget(covariant _UsuarioFormulario oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Só sincroniza a partir do Usuario carregado/salvo quando ele
+    // realmente mudou (ex: terminou de carregar, ou salvou com sucesso) --
+    // nunca durante a digitação, já que trocar outro campo (tipo, ativo)
+    // não muda `usuario`.
+    if (oldWidget.usuario?.nome != widget.usuario?.nome) {
+      _nomeController.text = widget.usuario?.nome ?? _nomeController.text;
+    }
+    if (oldWidget.usuario?.login != widget.usuario?.login) {
+      _loginController.text = widget.usuario?.login ?? _loginController.text;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _loginController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final usuario = widget.usuario;
+    final readOnly = widget.readOnly;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: formKey,
+          key: widget.formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -196,9 +263,7 @@ class UsuarioPage extends StatelessWidget {
                 decoration: InputDecoration(
                   prefixText: '${usuario?.id.toString()}  ',
                 ),
-                controller: TextEditingController.fromValue(
-                  usuario == null ? null : TextEditingValue(text: usuario.nome),
-                ),
+                controller: _nomeController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Informe um nome de usuário';
@@ -217,11 +282,7 @@ class UsuarioPage extends StatelessWidget {
                 readOnly: readOnly || usuario != null,
                 key: const Key('usuario_page_nome_text_field'),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
-                controller: TextEditingController.fromValue(
-                  usuario == null
-                      ? null
-                      : TextEditingValue(text: usuario.login),
-                ),
+                controller: _loginController,
                 onChanged: (value) {
                   context.read<UsuarioBloc>().add(UsuarioEditou(login: value));
                 },
@@ -246,8 +307,8 @@ class UsuarioPage extends StatelessWidget {
                 },
                 validator: (value) {
                   final state = context.read<UsuarioBloc>().state;
-                  final inativandoUsuarioExistente = usuario != null &&
-                      state is UsuarioEditarEmProgresso;
+                  final inativandoUsuarioExistente =
+                      usuario != null && state is UsuarioEditarEmProgresso;
 
                   if (inativandoUsuarioExistente) {
                     return null;
@@ -336,7 +397,7 @@ class UsuarioPage extends StatelessWidget {
                   bool ativo = state is UsuarioEditarEmProgresso
                       ? state.ativo
                       : (usuario?.ativo ?? true);
-                        
+
                   return SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     value: isSysadmin ? true : ativo,

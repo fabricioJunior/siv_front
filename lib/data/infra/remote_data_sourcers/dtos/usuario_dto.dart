@@ -21,7 +21,7 @@ class UsuarioDto implements Usuario {
   final TipoUsuario tipo;
 
   @override
-  @JsonKey(name: 'situacao', fromJson:  _situacaoFromJson)
+  @JsonKey(name: 'situacao', fromJson: _situacaoFromJson)
   final bool ativo;
 
   UsuarioDto({
@@ -47,8 +47,7 @@ class UsuarioDto implements Usuario {
   @override
   @JsonKey(includeFromJson: false)
   final String? senha;
-  
- 
+
   static bool _situacaoFromJson(String json) {
     switch (json) {
       case 'ativo':
@@ -64,7 +63,7 @@ class UsuarioDto implements Usuario {
   static String _tipoUsuarioToJson(TipoUsuario tipo) {
     switch (tipo) {
       case TipoUsuario.administrador:
-        return 'adminstrador';
+        return 'administrador';
       case TipoUsuario.padrao:
         return 'padrao';
       case TipoUsuario.sysadmin:
@@ -74,7 +73,7 @@ class UsuarioDto implements Usuario {
 
   static TipoUsuario _tipoUsuarioFromJson(String json) {
     switch (json) {
-      case 'adminstrador':
+      case 'administrador':
         return TipoUsuario.administrador;
       case 'padrao':
         return TipoUsuario.padrao;

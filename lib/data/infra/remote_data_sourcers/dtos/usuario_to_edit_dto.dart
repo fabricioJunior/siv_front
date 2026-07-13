@@ -36,7 +36,7 @@ class UsarioToEditDto {
   static String _tipoUsuarioToJson(TipoUsuario tipo) {
     switch (tipo) {
       case TipoUsuario.administrador:
-        return 'adminstrador';
+        return 'administrador';
       case TipoUsuario.padrao:
         return 'padrao';
       case TipoUsuario.sysadmin:
@@ -46,7 +46,7 @@ class UsarioToEditDto {
 
   static TipoUsuario _tipoUsuarioFromJson(String json) {
     switch (json) {
-      case 'adminstrador':
+      case 'administrador':
         return TipoUsuario.administrador;
       case 'padrao':
         return TipoUsuario.padrao;

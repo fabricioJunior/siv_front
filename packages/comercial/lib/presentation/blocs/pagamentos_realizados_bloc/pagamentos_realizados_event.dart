@@ -142,3 +142,15 @@ class PagamentosRealizadosCpfAlterado extends PagamentosRealizadosEvent {
   @override
   List<Object?> get props => [cpfNaNota];
 }
+
+class PagamentosRealizadosPontuarFidelidadeAlterado
+    extends PagamentosRealizadosEvent {
+  final bool pontuarFidelidade;
+
+  const PagamentosRealizadosPontuarFidelidadeAlterado({
+    required this.pontuarFidelidade,
+  });
+
+  @override
+  List<Object?> get props => [pontuarFidelidade];
+}

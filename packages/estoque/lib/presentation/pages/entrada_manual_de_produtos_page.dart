@@ -11,14 +11,18 @@ const String _resultadoRomaneioStatusSucesso = 'sucesso';
 const String _resultadoRomaneioStatusFalha = 'falha';
 const String _resultadoRomaneioStatusParcial = 'parcial';
 
+enum ModoMovimentacaoManual { entrada, saida }
+
 class EntradaManualDeProdutosPage extends StatefulWidget {
   final SeletorWidget tabelasDePrecoSeletor;
   final SeletorWidget funcionariosSeletor;
+  final ModoMovimentacaoManual modo;
 
   const EntradaManualDeProdutosPage({
     super.key,
     required this.tabelasDePrecoSeletor,
     required this.funcionariosSeletor,
+    this.modo = ModoMovimentacaoManual.entrada,
   });
 
   @override
@@ -29,6 +33,10 @@ class EntradaManualDeProdutosPage extends StatefulWidget {
 class _EntradaManualDeProdutosPageState
     extends State<EntradaManualDeProdutosPage> {
   late final LeitorController _leitorController;
+
+  bool get _ehSaida => widget.modo == ModoMovimentacaoManual.saida;
+  String get _operacao =>
+      _ehSaida ? 'transferencia_saida' : 'transferencia_entrada';
 
   @override
   void initState() {
@@ -75,7 +83,7 @@ class _EntradaManualDeProdutosPageState
                 arguments: {
                   'funcionarioId': state.funcionarioSelecionado?.id,
                   'tabelaPrecoId': state.tabelaDePrecoSelecionada?.id,
-                  'operacao': 'transferencia_entrada',
+                  'operacao': _operacao,
                   'listaCompartilhadaHash': listaCompartilhadaHash,
                 },
               );
@@ -93,8 +101,12 @@ class _EntradaManualDeProdutosPageState
 
               if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Entrada de produtos realizada com sucesso!'),
+                  SnackBar(
+                    content: Text(
+                      _ehSaida
+                          ? 'Saída de produtos realizada com sucesso!'
+                          : 'Entrada de produtos realizada com sucesso!',
+                    ),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -156,7 +168,13 @@ class _EntradaManualDeProdutosPageState
             },
             builder: (context, state) {
               return Scaffold(
-                appBar: AppBar(title: const Text('Entrada Manual de Produtos')),
+                appBar: AppBar(
+                  title: Text(
+                    _ehSaida
+                        ? 'Saída Manual de Produtos'
+                        : 'Entrada Manual de Produtos',
+                  ),
+                ),
                 floatingActionButton: state.leituraIniciada
                     ? AnimatedBuilder(
                         animation: _leitorController,
@@ -186,6 +204,7 @@ class _EntradaManualDeProdutosPageState
                                         .add(
                                           EntradaManualSalvarSolicitado(
                                             itens: itens,
+                                            operacao: _operacao,
                                           ),
                                         );
                                   },
@@ -385,9 +404,27 @@ class _EntradaManualDeProdutosPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Leitura em andamento',
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Leitura em andamento',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                AnimatedBuilder(
+                  animation: _leitorController,
+                  builder: (context, _) {
+                    return TextButton.icon(
+                      onPressed: _leitorController.itens.isEmpty
+                          ? null
+                          : () => _confirmarReinicioDaLeitura(context),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Reiniciar leitura'),
+                    );
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -440,6 +477,35 @@ class _EntradaManualDeProdutosPageState
         ),
       ),
     );
+  }
+
+  Future<void> _confirmarReinicioDaLeitura(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Reiniciar leitura'),
+          content: Text(
+            'Isso vai limpar os ${_leitorController.quantidadeItensDistintos} '
+            'itens já bipados nesta leitura. Deseja continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Reiniciar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true) {
+      _leitorController.limpar();
+    }
   }
 
   Widget _buildEstadoInicial(BuildContext context) {

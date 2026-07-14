@@ -14,6 +14,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
   final int? consignacaoId;
   final List<int> romaneiosConsignacao;
 
@@ -24,6 +25,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
     this.consignacaoId,
     this.romaneiosConsignacao = const [],
   });
@@ -36,6 +38,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,
+        pontuarFidelidade,
         consignacaoId,
         romaneiosConsignacao,
       ];

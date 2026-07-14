@@ -17,6 +17,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
   final int? consignacaoId;
   final List<int> romaneiosConsignacao;
 
@@ -28,6 +29,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
     this.consignacaoId,
     this.romaneiosConsignacao = const [],
   });
@@ -44,6 +46,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             descontosItens: descontosItens,
             incluirCpfNaNota: incluirCpfNaNota,
             cpfNaNota: cpfNaNota,
+            pontuarFidelidade: pontuarFidelidade,
             consignacaoId: consignacaoId,
             romaneiosConsignacao: romaneiosConsignacao,
           ),
@@ -118,6 +121,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                                 descontosItens: descontosItens,
                                 incluirCpfNaNota: incluirCpfNaNota,
                                 cpfNaNota: cpfNaNota,
+                                pontuarFidelidade: pontuarFidelidade,
                                 consignacaoId: consignacaoId,
                                 romaneiosConsignacao: romaneiosConsignacao,
                               ),
@@ -328,6 +332,8 @@ class _SucessoRomaneioView extends StatelessWidget {
     switch (operacao) {
       case TipoOperacao.venda:
         return 'Venda realizada com sucesso!';
+      case TipoOperacao.manual_saida:
+        return 'Saída de produtos realizada com sucesso!';
       default:
         return 'Entrada de produtos realizada com sucesso!';
     }

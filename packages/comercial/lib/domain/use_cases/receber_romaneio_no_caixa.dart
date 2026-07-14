@@ -15,6 +15,7 @@ class ReceberRomaneioNoCaixa {
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   }) {
     return _repository.receberRomaneioNoCaixa(
       caixaId: caixaId,
@@ -24,6 +25,7 @@ class ReceberRomaneioNoCaixa {
       descontosItens: descontosItens,
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
+      pontuarFidelidade: pontuarFidelidade,
     );
   }
 }

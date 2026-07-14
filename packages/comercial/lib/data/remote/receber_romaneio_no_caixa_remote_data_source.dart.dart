@@ -20,6 +20,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   }) async {
     final formasDePagamento = formasDePagamentoRealizadas
         .map((forma) => _formaDePagamentoToJson(forma))
@@ -41,6 +42,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         'incluirCpfNaNota': incluirCpfNaNota,
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
           'cpfNaNota': cpfNaNota.trim(),
+        if (pontuarFidelidade) 'pontuarFidelidade': pontuarFidelidade,
       },
     );
   }

@@ -90,6 +90,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   }) {
     return caixasRemoteDataSource.receberRomaneio(
       caixaId: caixaId,
@@ -99,6 +100,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
       descontosItens: descontosItens,
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
+      pontuarFidelidade: pontuarFidelidade,
     );
   }
 

@@ -283,10 +283,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/orcamentos': (context) {
-    return _rotaProtegida(
-      route: '/orcamentos',
-      child: const OrcamentosPage(),
-    );
+    return _rotaProtegida(route: '/orcamentos', child: const OrcamentosPage());
   },
   '/devolucao': (context) {
     return _rotaProtegidaPorCaixaAberto(
@@ -453,9 +450,9 @@ Map<String, Widget Function(BuildContext)> routes = {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
-    final incluirCpfNaNota =
-        argumentos['incluirCpfNaNota'] as bool? ?? true;
+    final incluirCpfNaNota = argumentos['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
+    final pontuarFidelidade = argumentos['pontuarFidelidade'] as bool? ?? false;
     final consignacaoIdArg = argumentos['consignacaoId'];
     final consignacaoId = consignacaoIdArg is int
         ? consignacaoIdArg
@@ -475,6 +472,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         descontosItens: descontosItens,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
+        pontuarFidelidade: pontuarFidelidade,
         consignacaoId: consignacaoId,
         romaneiosConsignacao: romaneiosConsignacao,
       ),
@@ -558,7 +556,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consignacao': (context) {
     final argumentos = args(context);
     final idArg = argumentos['id'];
-    final id = idArg is int ? idArg : int.tryParse(idArg?.toString() ?? '') ?? 0;
+    final id = idArg is int
+        ? idArg
+        : int.tryParse(idArg?.toString() ?? '') ?? 0;
 
     return _rotaProtegida(
       route: '/consignacao',
@@ -590,8 +590,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consignacao_extrato': (context) {
     final argumentos = args(context);
     final pessoaIdArg = argumentos['pessoaId'];
-    final pessoaId =
-        pessoaIdArg is int ? pessoaIdArg : int.tryParse(pessoaIdArg?.toString() ?? '') ?? 0;
+    final pessoaId = pessoaIdArg is int
+        ? pessoaIdArg
+        : int.tryParse(pessoaIdArg?.toString() ?? '') ?? 0;
 
     return _rotaProtegida(
       route: '/consignacao_extrato',
@@ -779,6 +780,30 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/saida_manual_de_produtos': (context) {
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/saida_manual_de_produtos',
+        child: EntradaManualDeProdutosPage(
+          modo: ModoMovimentacaoManual.saida,
+          funcionariosSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FuncionarioSeletor(
+                    modo: FuncionarioSeletorModo.unica,
+                    onChanged: onChanged,
+                    itemsSelecionadosInicial:
+                        itemsSelecionadosInicial ?? const [],
+                  ),
+          tabelasDePrecoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  TabelasDePrecoSeletor(
+                    modo: TabelasDePrecoSeletorModo.unica,
+                    onChanged: onChanged,
+                  ),
+        ),
+      ),
+    );
+  },
 
   // Balanço:
   '/balancos': (context) {
@@ -940,6 +965,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/criar_lote_balanco': ['PRDFL001'],
   '/detalhes_lote_balanco': ['PRDFL001'],
   '/entrada_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
+  '/saida_manual_de_produtos': ['ROMFP001', 'ROMFP002'],
   '/pessoas': ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],
   '/menu_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],
   '/selecionar_produtos': ['PRDFM003', 'PRDFM001', 'PRDFM004', 'PRDFM006'],

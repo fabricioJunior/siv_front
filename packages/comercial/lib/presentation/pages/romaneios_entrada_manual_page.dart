@@ -105,7 +105,7 @@ class _RomaneiosEntradaManualPageState
     return BlocProvider<RomaneiosEntradaManualBloc>.value(
       value: _bloc,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Entrada Manual')),
+        appBar: AppBar(title: const Text('Movimentações Manuais')),
         body: RefreshIndicator(
           onRefresh: () async {
             _bloc.add(
@@ -190,14 +190,14 @@ class _RomaneiosEntradaManualPageState
                       icon: Icons.input,
                       titulo: buscaAtiva
                           ? 'Nenhum resultado para a busca'
-                          : 'Nenhuma entrada manual encontrada',
+                          : 'Nenhuma movimentação manual encontrada',
                       descricao: 'Ajuste os filtros para encontrar romaneios.',
                     )
                   else ...[
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
-                        'Lista de entradas manuais',
+                        'Lista de movimentações manuais',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
@@ -277,7 +277,7 @@ class _EntradaManualHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Consulta de entrada manual',
+                      'Consulta de movimentações manuais',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimaryContainer,
@@ -285,7 +285,7 @@ class _EntradaManualHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Filtre por período e funcionário para consultar entradas manuais realizadas.',
+                      'Filtre por período e funcionário para consultar entradas e saídas manuais realizadas.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onPrimaryContainer
                                 .withValues(alpha: 0.90),
@@ -400,6 +400,8 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final data = romaneio.criadoEm ?? romaneio.data;
+    final ehSaida = romaneio.operacao == TipoOperacao.manual_saida;
+    final corTipo = ehSaida ? Colors.deepOrange : colorScheme.primary;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -416,7 +418,7 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
                 width: 5,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: colorScheme.primary,
+                  color: corTipo,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -425,11 +427,27 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Romaneio #${romaneio.id ?? '-'}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Romaneio #${romaneio.id ?? '-'}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
+                        ),
+                        Chip(
+                          label: Text(ehSaida ? 'Saída' : 'Entrada'),
+                          labelStyle: TextStyle(color: corTipo, fontSize: 12),
+                          backgroundColor: corTipo.withValues(alpha: 0.10),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide.none,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(

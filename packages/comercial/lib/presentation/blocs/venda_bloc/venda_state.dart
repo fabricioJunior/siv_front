@@ -19,6 +19,7 @@ class VendaState extends Equatable {
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
   final int? pedidoCriadoId;
   final String? orcamentoId;
   final List<ProdutoCompartilhado> orcamentoItensPreCarregados;
@@ -39,6 +40,7 @@ class VendaState extends Equatable {
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
     this.pedidoCriadoId,
     this.orcamentoId,
     this.orcamentoItensPreCarregados = const [],
@@ -73,6 +75,7 @@ class VendaState extends Equatable {
     List<Map<String, dynamic>>? descontosItens,
     bool? incluirCpfNaNota,
     String? cpfNaNota,
+    bool? pontuarFidelidade,
     Object? pedidoCriadoId = _sentinela,
     Object? orcamentoId = _sentinela,
     List<ProdutoCompartilhado>? orcamentoItensPreCarregados,
@@ -106,6 +109,7 @@ class VendaState extends Equatable {
       descontosItens: descontosItens ?? this.descontosItens,
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
+      pontuarFidelidade: pontuarFidelidade ?? this.pontuarFidelidade,
       pedidoCriadoId: identical(pedidoCriadoId, _sentinela)
           ? this.pedidoCriadoId
           : pedidoCriadoId as int?,
@@ -135,6 +139,7 @@ class VendaState extends Equatable {
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,
+        pontuarFidelidade,
         pedidoCriadoId,
         orcamentoId,
         orcamentoItensPreCarregados,

@@ -16,10 +16,12 @@ class PagamentosRealizadosBloc
     extends Bloc<PagamentosRealizadosEvent, PagamentosRealizadosState> {
   final CarregarResumoPagamentosRealizados _carregarResumo;
   final BuscarSaldoCreditoDevolucao _buscarSaldoCreditoDevolucao;
+  final VerificarElegibilidadeFidelidade _verificarElegibilidadeFidelidade;
 
   PagamentosRealizadosBloc(
     this._carregarResumo,
     this._buscarSaldoCreditoDevolucao,
+    this._verificarElegibilidadeFidelidade,
   ) : super(const PagamentosRealizadosState()) {
     on<PagamentosRealizadosIniciado>(_onIniciado);
     on<PagamentosRealizadosLinhaAdicionada>(_onLinhaAdicionada);
@@ -33,6 +35,9 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
     on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
     on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);
+    on<PagamentosRealizadosPontuarFidelidadeAlterado>(
+      _onPontuarFidelidadeAlterado,
+    );
   }
 
   FutureOr<void> _onIniciado(
@@ -49,6 +54,9 @@ class PagamentosRealizadosBloc
         saldoCreditoDevolucao: 0,
         incluirCpfNaNota: false,
         cpfNaNota: event.cpfClienteInicial ?? '',
+        pontuarFidelidade: false,
+        clienteElegivelFidelidade: false,
+        carregandoElegibilidadeFidelidade: false,
       ),
     );
 
@@ -78,6 +86,7 @@ class PagamentosRealizadosBloc
           erro: null,
           resultado: const [],
           carregandoSaldoCreditoDevolucao: pessoaId != null,
+          carregandoElegibilidadeFidelidade: pessoaId != null,
           descontoTipo: descontosItensSeed.isNotEmpty
               ? DescontoTipo.valorBruto
               : null,
@@ -106,6 +115,28 @@ class PagamentosRealizadosBloc
             carregandoSaldoCreditoDevolucao: false,
           ),
         );
+
+        try {
+          final elegivel = await _verificarElegibilidadeFidelidade.call(
+            pessoaId: pessoaId,
+          );
+          emit(
+            state.copyWith(
+              clienteElegivelFidelidade: elegivel,
+              carregandoElegibilidadeFidelidade: false,
+              pontuarFidelidade: elegivel && state.pontuarFidelidade,
+            ),
+          );
+        } catch (e, s) {
+          emit(
+            state.copyWith(
+              clienteElegivelFidelidade: false,
+              carregandoElegibilidadeFidelidade: false,
+              pontuarFidelidade: false,
+            ),
+          );
+          addError(e, s);
+        }
       }
     } catch (e, s) {
       emit(
@@ -588,6 +619,20 @@ class PagamentosRealizadosBloc
     Emitter<PagamentosRealizadosState> emit,
   ) {
     emit(state.copyWith(cpfNaNota: event.cpfNaNota, erro: null));
+  }
+
+  void _onPontuarFidelidadeAlterado(
+    PagamentosRealizadosPontuarFidelidadeAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    if (!state.clienteElegivelFidelidade) return;
+
+    emit(
+      state.copyWith(
+        pontuarFidelidade: event.pontuarFidelidade,
+        erro: null,
+      ),
+    );
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {

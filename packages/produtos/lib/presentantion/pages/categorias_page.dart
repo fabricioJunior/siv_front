@@ -145,11 +145,22 @@ class CategoriasPage extends StatelessWidget {
           categoria.nome,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(
-          categoria.inativa ? 'Inativa' : 'Ativa',
-          style: TextStyle(
-            color: categoria.inativa ? Colors.grey : Colors.teal,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              categoria.inativa ? 'Inativa' : 'Ativa',
+              style: TextStyle(
+                color: categoria.inativa ? Colors.grey : Colors.teal,
+              ),
+            ),
+            if (categoria.ncm != null && categoria.ncm!.trim().isNotEmpty)
+              Text(
+                'NCM: ${categoria.ncm}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+          ],
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),

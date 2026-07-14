@@ -16,6 +16,14 @@ class GerenciaEstoqueMenuPage extends StatelessWidget {
         route: '/entrada_manual_de_produtos',
       ),
       const _ItemData(
+        icon: Icons.output,
+        titulo: 'Saída manual de produto',
+        subtitulo: 'Registro manual de saída de itens do estoque.',
+        cor: Colors.deepOrange,
+        componente: 'ROMFP001',
+        route: '/saida_manual_de_produtos',
+      ),
+      const _ItemData(
         icon: Icons.inventory_2_outlined,
         titulo: 'Consulta de estoque',
         subtitulo: 'Saldo, filtros e acompanhamento do estoque.',
@@ -25,7 +33,7 @@ class GerenciaEstoqueMenuPage extends StatelessWidget {
       ),
       const _ItemData(
         icon: Icons.history,
-        titulo: 'Histórico de entradas manuais',
+        titulo: 'Histórico de movimentações manuais',
         subtitulo: 'Consulta por funcionário, quantidade e data.',
         cor: Colors.brown,
         componente: 'ROMFP001',

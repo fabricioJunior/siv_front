@@ -51,12 +51,14 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   final double? desconto;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
 
   RomaneioPagamentoRecebido({
     required this.formasDePagamentoRealizadas,
     this.desconto,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
   });
 }
 

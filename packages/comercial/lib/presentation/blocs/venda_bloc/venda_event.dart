@@ -49,6 +49,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
 
   const VendaFinalizarSolicitada({
     required this.itens,
@@ -57,6 +58,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
   });
 
   @override
@@ -67,6 +69,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,
+        pontuarFidelidade,
       ];
 }
 

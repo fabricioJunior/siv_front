@@ -97,6 +97,7 @@ class _VendaPageState extends State<VendaPage> {
                 'descontosItens': state.descontosItens,
                 'incluirCpfNaNota': state.incluirCpfNaNota,
                 'cpfNaNota': state.cpfNaNota,
+                'pontuarFidelidade': state.pontuarFidelidade,
               },
             );
 
@@ -612,6 +613,7 @@ class _VendaPageState extends State<VendaPage> {
           pessoaId: clienteSelecionado?.id,
           cpfClienteInicial: clienteSelecionado?.data['documento']?.toString(),
           formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
+          exibirCheckboxFidelidade: true,
         );
       },
     );
@@ -637,6 +639,8 @@ class _VendaPageState extends State<VendaPage> {
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
+    final pontuarFidelidade =
+        pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
 
     final confirmouEmissao = await _abrirConfirmacaoEmissao(
       context,
@@ -656,6 +660,7 @@ class _VendaPageState extends State<VendaPage> {
         descontosItens: descontosItens,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
+        pontuarFidelidade: pontuarFidelidade,
       ),
     );
   }

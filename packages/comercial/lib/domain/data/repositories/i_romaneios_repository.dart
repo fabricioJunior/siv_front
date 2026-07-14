@@ -29,6 +29,7 @@ abstract class IRomaneiosRepository {
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   });
   Future<Romaneio> corrigirFormaDePagamento({
     required int caixaId,

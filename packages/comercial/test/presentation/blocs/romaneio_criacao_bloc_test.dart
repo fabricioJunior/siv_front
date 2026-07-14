@@ -140,6 +140,7 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   }) {
     return onCall(
       caixaId: caixaId,

@@ -283,6 +283,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
         desconto: event.desconto,
         incluirCpfNaNota: event.incluirCpfNaNota,
         cpfNaNota: event.cpfNaNota,
+        pontuarFidelidade: event.pontuarFidelidade,
       );
 
       final romaneio = await _recuperarRomaneio.call(romaneioId);

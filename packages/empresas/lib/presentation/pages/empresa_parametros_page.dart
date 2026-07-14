@@ -202,6 +202,7 @@ class EmpresaParametrosPage extends StatelessWidget {
       'Integração OpenPix',
       'Observações Padrão',
       'Prazos',
+      'Fidelidade',
       'Outros',
     ];
 
@@ -221,6 +222,11 @@ class EmpresaParametrosPage extends StatelessWidget {
   }
 
   String _tituloDaSecao(String chave) {
+    if (chave == 'VL_PONTO_FIDELIDADE' ||
+        chave == 'QT_DIAS_VALIDADE_PONTO_FIDELIDADE') {
+      return 'Fidelidade';
+    }
+
     if (chave.startsWith('INTEGRACAO_INFINITY_PAY_')) {
       return 'Integração Infinity Pay';
     }

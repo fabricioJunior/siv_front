@@ -20,6 +20,13 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   // ou zerar. Só relevante quando o pagamento é de um romaneio já existente
   // (ver romaneio_page.dart); fica 0 nos outros usos (criação de venda nova).
   final double descontoJaAplicadoNoRomaneio;
+  // Pontuação de fidelidade só se aplica à venda -- em consignação a pessoa
+  // vinculada ao romaneio é o consignatário (pode nem ser cadastrado como
+  // cliente), e as demais operações que reusam este diálogo (devolução,
+  // transferência, entrada manual) não representam uma compra do cliente.
+  // Sem esse flag o checkbox apareceria em telas onde o valor marcado nunca
+  // chega ao backend (nenhuma delas envia pontuarFidelidade no recebimento).
+  final bool exibirCheckboxFidelidade;
 
   const PagamentosRealizadosWidget({
     super.key,
@@ -29,6 +36,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.cpfClienteInicial,
     required this.formasDePagamentoSeletor,
     this.descontoJaAplicadoNoRomaneio = 0,
+    this.exibirCheckboxFidelidade = false,
   });
 
   @override
@@ -75,6 +83,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               'valorTroco': state.valorTroco,
               'incluirCpfNaNota': state.incluirCpfNaNota,
               'cpfNaNota': state.incluirCpfNaNota ? state.cpfNaNota : '',
+              'pontuarFidelidade':
+                  state.clienteElegivelFidelidade && state.pontuarFidelidade,
             });
           }
         },
@@ -125,6 +135,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                           state.step == PagamentosRealizadosStep.editando
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
+                      exibirCheckboxFidelidade: exibirCheckboxFidelidade,
                     ),
                     if (state.erro != null) ...[
                       const SizedBox(height: 8),
@@ -206,10 +217,12 @@ class PagamentosRealizadosWidget extends StatelessWidget {
 class _ResumoPagamentoCard extends StatefulWidget {
   final PagamentosRealizadosState state;
   final VoidCallback? onDescontoPressed;
+  final bool exibirCheckboxFidelidade;
 
   const _ResumoPagamentoCard({
     required this.state,
     required this.onDescontoPressed,
+    this.exibirCheckboxFidelidade = false,
   });
 
   @override
@@ -380,6 +393,30 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                         PagamentosRealizadosCpfAlterado(cpfNaNota: value),
                       );
                 },
+              ),
+            if (widget.exibirCheckboxFidelidade)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: state.pontuarFidelidade,
+                title: const Text('Pontuar fidelidade'),
+                subtitle: !state.clienteElegivelFidelidade
+                    ? Text(
+                        state.carregandoElegibilidadeFidelidade
+                            ? 'Consultando elegibilidade do cliente...'
+                            : 'Cliente sem cadastro no portal de pontos.',
+                        style: theme.textTheme.bodySmall,
+                      )
+                    : null,
+                onChanged: state.clienteElegivelFidelidade
+                    ? (value) {
+                        context.read<PagamentosRealizadosBloc>().add(
+                              PagamentosRealizadosPontuarFidelidadeAlterado(
+                                pontuarFidelidade: value ?? false,
+                              ),
+                            );
+                      }
+                    : null,
               ),
           ],
         ),

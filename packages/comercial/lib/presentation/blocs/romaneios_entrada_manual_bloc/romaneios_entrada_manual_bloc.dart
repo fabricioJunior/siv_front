@@ -50,7 +50,10 @@ class RomaneiosEntradaManualBloc
         searchTerm: filtroBusca,
         dataHoraInicial: dataHoraInicial,
         dataHoraFinal: dataHoraFinal,
-        operacoes: const [TipoOperacao.manual_entrada],
+        operacoes: const [
+          TipoOperacao.manual_entrada,
+          TipoOperacao.manual_saida,
+        ],
       );
 
       emit(

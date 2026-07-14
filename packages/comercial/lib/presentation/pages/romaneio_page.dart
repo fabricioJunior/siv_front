@@ -955,6 +955,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
+    final pontuarFidelidade =
+        pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
 
     bloc.add(
       RomaneioPagamentoRecebido(
@@ -962,6 +964,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
         desconto: descontoTotal,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
+        pontuarFidelidade: pontuarFidelidade,
       ),
     );
   }

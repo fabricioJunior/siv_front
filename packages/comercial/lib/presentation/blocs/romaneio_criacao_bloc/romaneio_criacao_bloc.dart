@@ -161,6 +161,7 @@ class RomaneioCriacaoBloc
 
       if (operacao == TipoOperacao.transferencia_entrada ||
           operacao == TipoOperacao.manual_entrada ||
+          operacao == TipoOperacao.manual_saida ||
           operacao == TipoOperacao.venda ||
           operacao == TipoOperacao.venda_devolucao) {
         falhaAoReceberNoCaixa = true;
@@ -202,6 +203,7 @@ class RomaneioCriacaoBloc
           formasDePagamentoRealizadas: formasDePagamentoRealizadas,
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
+          pontuarFidelidade: event.pontuarFidelidade,
         );
         falhaAoReceberNoCaixa = false;
       }

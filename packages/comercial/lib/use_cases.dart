@@ -40,3 +40,4 @@ export 'domain/use_cases/atualizar_consignacao.dart';
 export 'domain/use_cases/recalcular_consignacao.dart';
 export 'domain/use_cases/fechar_consignacao.dart';
 export 'domain/use_cases/cancelar_consignacao.dart';
+export 'domain/use_cases/verificar_elegibilidade_fidelidade.dart';

@@ -33,6 +33,9 @@ class PagamentosRealizadosState extends Equatable {
   final List<Map<String, dynamic>> resultado;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
+  final bool pontuarFidelidade;
+  final bool clienteElegivelFidelidade;
+  final bool carregandoElegibilidadeFidelidade;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -53,6 +56,9 @@ class PagamentosRealizadosState extends Equatable {
     this.resultado = const [],
     this.incluirCpfNaNota = false,
     this.cpfNaNota = '',
+    this.pontuarFidelidade = false,
+    this.clienteElegivelFidelidade = false,
+    this.carregandoElegibilidadeFidelidade = false,
   });
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
@@ -106,6 +112,9 @@ class PagamentosRealizadosState extends Equatable {
     List<Map<String, dynamic>>? resultado,
     bool? incluirCpfNaNota,
     String? cpfNaNota,
+    bool? pontuarFidelidade,
+    bool? clienteElegivelFidelidade,
+    bool? carregandoElegibilidadeFidelidade,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -136,6 +145,11 @@ class PagamentosRealizadosState extends Equatable {
       resultado: resultado ?? this.resultado,
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
+      pontuarFidelidade: pontuarFidelidade ?? this.pontuarFidelidade,
+      clienteElegivelFidelidade:
+          clienteElegivelFidelidade ?? this.clienteElegivelFidelidade,
+      carregandoElegibilidadeFidelidade: carregandoElegibilidadeFidelidade ??
+          this.carregandoElegibilidadeFidelidade,
     );
   }
 
@@ -159,6 +173,9 @@ class PagamentosRealizadosState extends Equatable {
         resultado,
         incluirCpfNaNota,
         cpfNaNota,
+        pontuarFidelidade,
+        clienteElegivelFidelidade,
+        carregandoElegibilidadeFidelidade,
       ];
 }
 

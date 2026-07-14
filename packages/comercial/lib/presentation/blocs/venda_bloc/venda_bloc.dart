@@ -221,6 +221,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
               .toList(growable: false),
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
+          pontuarFidelidade: event.pontuarFidelidade,
           erro: null,
         ),
       );

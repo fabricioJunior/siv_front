@@ -50,6 +50,10 @@ void _remoteDataSources() {
   sl.registerFactory<IConsignacoesRemoteDataSource>(
     () => ConsignacoesRemoteDataSource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IFidelidadeRemoteDataSource>(
+    () => FidelidadeRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -93,6 +97,10 @@ void _repositories() {
   sl.registerFactory<IConsignacoesRepository>(
     () => ConsignacoesRepository(remoteDataSource: sl()),
   );
+
+  sl.registerFactory<IFidelidadeRepository>(
+    () => FidelidadeRepository(remoteDataSource: sl()),
+  );
 }
 
 void _useCases() {
@@ -115,6 +123,10 @@ void _useCases() {
 
   sl.registerFactory<BuscarSaldoCreditoDevolucao>(
     () => BuscarSaldoCreditoDevolucao(repository: sl()),
+  );
+
+  sl.registerFactory<VerificarElegibilidadeFidelidade>(
+    () => VerificarElegibilidadeFidelidade(repository: sl()),
   );
 
   sl.registerFactory<RecuperarRomaneios>(
@@ -306,6 +318,7 @@ void _presentation() {
 
   sl.registerFactory<PagamentosRealizadosBloc>(
     () => PagamentosRealizadosBloc(
+      sl(),
       sl(),
       sl(),
     ),

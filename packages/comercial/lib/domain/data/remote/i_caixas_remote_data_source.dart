@@ -9,6 +9,7 @@ abstract class IReceberRomaneioNoCaixaRemoteDataSource {
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
+    bool pontuarFidelidade = false,
   });
 }
 

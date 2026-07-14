@@ -312,7 +312,8 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
       emit(
         state.copyWith(
           pessoaStep: PessoaStep.falha,
-          erro: 'Falha ao salvar a pessoa. Verifique os dados e tente novamente.',
+          erro:
+              'Falha ao salvar a pessoa. Verifique os dados e tente novamente.',
         ),
       );
       addError(e, s);

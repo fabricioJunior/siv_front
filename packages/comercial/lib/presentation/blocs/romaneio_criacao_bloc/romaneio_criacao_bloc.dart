@@ -109,6 +109,17 @@ class RomaneioCriacaoBloc
           totalItensProcessados: itens.length,
         ),
       );
+      // Soma a partir de descontosItens (não de event.desconto) -- o widget
+      // de pagamento distribui o desconto "geral" digitado nos itens antes
+      // de retornar o resultado (ver comentário em pagamentos_realizados_
+      // state.dart:61-66), e event.desconto só registra o último valor
+      // "geral" informado (fica 0 se o usuário só usou desconto por item
+      // explícito). Somar aqui cobre os dois casos igual.
+      final descontoTotal = event.descontosItens.fold<double>(
+        0,
+        (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
+      );
+
       bool precisaCriarRomaneio = listaCompartilhada!.idLista == null;
       final criado = precisaCriarRomaneio
           ? await _criarRomaneio.call(
@@ -117,7 +128,7 @@ class RomaneioCriacaoBloc
                 funcionarioId: listaCompartilhada.funcionarioId,
                 tabelaPrecoId: listaCompartilhada.tabelaPrecoId,
                 operacao: operacao,
-                desconto: event.desconto,
+                desconto: descontoTotal,
                 consignacaoId: event.consignacaoId,
                 romaneiosConsignacao: event.romaneiosConsignacao,
               ),
@@ -179,11 +190,16 @@ class RomaneioCriacaoBloc
           }
         }
 
+        // Não reenvia descontosItens aqui -- o desconto já foi persistido
+        // no romaneio na criação acima (desconto: descontoTotal), e o
+        // backend usa romaneio.desconto como base automática ao receber
+        // (receber.service.ts). Mandar os dois juntos soma o desconto em
+        // dobro, dando troco maior que o devido (bug real identificado em
+        // vendas de produção com desconto + pagamento em dinheiro).
         await _receberRomaneioNoCaixa.call(
           caixaId: caixaId,
           romaneioId: romaneioId,
           formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-          descontosItens: event.descontosItens,
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
         );

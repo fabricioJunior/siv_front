@@ -246,10 +246,92 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     } catch (e, s) {
       emit(state.copyWith(
           step: RomaneioStep.falha,
-          erro: mensagemDeErroApi(
-              e, 'Falha ao corrigir a forma de pagamento.')));
+          erro:
+              mensagemDeErroApi(e, 'Falha ao corrigir a forma de pagamento.')));
       addError(e, s);
     }
+  }
+
+  FutureOr<void> _onPagamentoRecebido(
+    RomaneioPagamentoRecebido event,
+    Emitter<RomaneioState> emit,
+  ) async {
+    final romaneioId = state.id;
+    if (romaneioId == null) return;
+
+    final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
+    if (caixaId == null) {
+      emit(
+        state.copyWith(
+          step: RomaneioStep.validacaoInvalida,
+          erro: 'Não há caixa aberto na sessão para receber o pagamento.',
+        ),
+      );
+      return;
+    }
+
+    final formasDePagamentoRealizadas = _extrairFormasDePagamentoRealizadas(
+      event.formasDePagamentoRealizadas,
+    );
+
+    try {
+      emit(state.copyWith(step: RomaneioStep.processando, erro: null));
+      await _receberRomaneioNoCaixa.call(
+        caixaId: caixaId,
+        romaneioId: romaneioId,
+        formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        desconto: event.desconto,
+        incluirCpfNaNota: event.incluirCpfNaNota,
+        cpfNaNota: event.cpfNaNota,
+      );
+
+      final romaneio = await _recuperarRomaneio.call(romaneioId);
+      emit(
+        RomaneioState.fromModel(
+          romaneio,
+          itensDoRomaneio: state.itens,
+          itensDevolvidos: state.itensDevolvidos,
+          step: RomaneioStep.pagamentoRecebido,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao receber o pagamento.')));
+      addError(e, s);
+    }
+  }
+
+  List<RomaneioPagamentoRealizado> _extrairFormasDePagamentoRealizadas(
+    List<Map<String, dynamic>> formas,
+  ) {
+    return formas
+        .map((item) {
+          final formaDePagamentoId = int.tryParse(
+            item['formaDePagamentoId']?.toString() ?? '',
+          );
+          final valor = double.tryParse(item['valor']?.toString() ?? '');
+          final parcela = int.tryParse(item['parcela']?.toString() ?? '') ?? 1;
+          final controle =
+              int.tryParse(item['controle']?.toString() ?? '') ?? 0;
+
+          if (formaDePagamentoId == null || formaDePagamentoId <= 0) {
+            return null;
+          }
+
+          if (valor == null || valor <= 0) {
+            return null;
+          }
+
+          return RomaneioPagamentoRealizado.create(
+            controle: controle > 0 ? controle : 1,
+            formaDePagamentoId: formaDePagamentoId,
+            parcela: parcela > 0 ? parcela : 1,
+            valor: valor,
+          );
+        })
+        .whereType<RomaneioPagamentoRealizado>()
+        .toList(growable: false);
   }
 
   FutureOr<void> _onContinuarEnvioSolicitado(

@@ -44,4 +44,20 @@ class RomaneioFormaDePagamentoCorrigida extends RomaneioEvent {
   RomaneioFormaDePagamentoCorrigida({required this.pagamentos});
 }
 
+class RomaneioPagamentoRecebido extends RomaneioEvent {
+  final List<Map<String, dynamic>> formasDePagamentoRealizadas;
+  // Substitui (não soma) o desconto já persistido no romaneio -- ver
+  // comentário em romaneio_page.dart:_irParaPagamento.
+  final double? desconto;
+  final bool incluirCpfNaNota;
+  final String cpfNaNota;
+
+  RomaneioPagamentoRecebido({
+    required this.formasDePagamentoRealizadas,
+    this.desconto,
+    this.incluirCpfNaNota = true,
+    this.cpfNaNota = '',
+  });
+}
+
 class RomaneioContinuarEnvioSolicitado extends RomaneioEvent {}

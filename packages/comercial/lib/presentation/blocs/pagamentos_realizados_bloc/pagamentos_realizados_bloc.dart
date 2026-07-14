@@ -56,6 +56,18 @@ class PagamentosRealizadosBloc
       final resumo =
           event.resumoInicial ?? await _carregarResumo.call(event.hashLista);
       final pessoaId = event.pessoaId ?? resumo.listaCompartilhada?.pessoaId;
+
+      // Pré-carrega o desconto já persistido no romaneio (fora deste
+      // diálogo, ver romaneio_page.dart) como se já tivesse sido aplicado
+      // aqui -- reaproveita os botões "Editar desconto"/"Remover desconto"
+      // já existentes pra corrigir ou zerar esse valor, em vez de criar UI
+      // nova. Mesma distribuição proporcional usada em _onDescontoAlterado.
+      final descontosItensSeed = _distribuirDescontoProporcional(
+        produtos: resumo.produtosCompartilhados,
+        descontoTotal: event.descontoJaAplicadoNoRomaneio,
+        valorBase: resumo.valorTotalProdutos,
+      );
+
       emit(
         state.copyWith(
           step: PagamentosRealizadosStep.editando,
@@ -66,6 +78,22 @@ class PagamentosRealizadosBloc
           erro: null,
           resultado: const [],
           carregandoSaldoCreditoDevolucao: pessoaId != null,
+          descontoTipo: descontosItensSeed.isNotEmpty
+              ? DescontoTipo.valorBruto
+              : null,
+          descontoValorTexto: descontosItensSeed.isNotEmpty
+              ? event.descontoJaAplicadoNoRomaneio.toStringAsFixed(2)
+              : '',
+          valorDescontoAplicado: event.descontoJaAplicadoNoRomaneio,
+          descontosItensTipo: {
+            for (final produto in resumo.produtosCompartilhados)
+              produto.produtoId: DescontoTipo.valorBruto,
+          },
+          descontosItensValorTexto: {
+            for (final entrada in descontosItensSeed.entries)
+              entrada.key: entrada.value.toStringAsFixed(2),
+          },
+          descontosItensAplicado: descontosItensSeed,
         ),
       );
 

@@ -25,11 +25,97 @@ class FluxoDeCaixaPage extends StatefulWidget {
 
 class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
   final _documentoController = TextEditingController();
+  // Conjunto vazio == "todos" (sem filtro), igual ao dropdown anterior.
+  final Set<TipoDocumentoExtratoCaixa> _filtrosTipoDocumento = {};
+  final Set<TipoHistoricoExtratoCaixa> _filtrosTipoHistorico = {};
 
   @override
   void dispose() {
     _documentoController.dispose();
     super.dispose();
+  }
+
+  List<ExtratoCaixa> _aplicarFiltros(List<ExtratoCaixa> extratos) {
+    return extratos.where((item) {
+      if (_filtrosTipoDocumento.isNotEmpty &&
+          !_filtrosTipoDocumento.contains(item.tipoDocumento)) {
+        return false;
+      }
+      if (_filtrosTipoHistorico.isNotEmpty &&
+          !_filtrosTipoHistorico.contains(item.tipoHistorico)) {
+        return false;
+      }
+      return true;
+    }).toList(growable: false);
+  }
+
+  Future<void> _abrirSelecaoMultipla<T>({
+    required String titulo,
+    required List<T> opcoes,
+    required Set<T> selecionados,
+    required String Function(T) rotulo,
+    required void Function(Set<T>) onConfirmar,
+  }) async {
+    final selecaoTemporaria = Set<T>.of(selecionados);
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: Text(titulo),
+              content: SizedBox(
+                width: 360,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final opcao in opcoes)
+                        CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                          value: selecaoTemporaria.contains(opcao),
+                          title: Text(rotulo(opcao)),
+                          onChanged: (marcado) {
+                            setDialogState(() {
+                              if (marcado ?? false) {
+                                selecaoTemporaria.add(opcao);
+                              } else {
+                                selecaoTemporaria.remove(opcao);
+                              }
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setDialogState(selecaoTemporaria.clear);
+                  },
+                  child: const Text('Limpar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    onConfirmar(selecaoTemporaria);
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Aplicar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -331,33 +417,100 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
-                if (state.extratos.isNotEmpty)
+                if (state.extratos.isNotEmpty) ...[
                   _ResumoMovimentacoesExtrato(
                     totalEntradas: state.totalEntradas,
                     totalSaidas: state.totalSaidas,
                     saldo: state.saldo,
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _abrirSelecaoMultipla<
+                                TipoDocumentoExtratoCaixa>(
+                              titulo: 'Tipo da forma de pagamento',
+                              opcoes: TipoDocumentoExtratoCaixa.values,
+                              selecionados: _filtrosTipoDocumento,
+                              rotulo: _rotuloTipoDocumento,
+                              onConfirmar: (selecionados) {
+                                setState(() {
+                                  _filtrosTipoDocumento
+                                    ..clear()
+                                    ..addAll(selecionados);
+                                });
+                              },
+                            ),
+                            icon: const Icon(Icons.filter_alt_outlined),
+                            label: Text(
+                              _filtrosTipoDocumento.isEmpty
+                                  ? 'Tipo da forma de pagamento'
+                                  : 'Tipo da forma de pagamento (${_filtrosTipoDocumento.length})',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _abrirSelecaoMultipla<
+                                TipoHistoricoExtratoCaixa>(
+                              titulo: 'Forma de pagamento',
+                              opcoes: TipoHistoricoExtratoCaixa.values,
+                              selecionados: _filtrosTipoHistorico,
+                              rotulo: _rotuloHistorico,
+                              onConfirmar: (selecionados) {
+                                setState(() {
+                                  _filtrosTipoHistorico
+                                    ..clear()
+                                    ..addAll(selecionados);
+                                });
+                              },
+                            ),
+                            icon: const Icon(Icons.filter_alt_outlined),
+                            label: Text(
+                              _filtrosTipoHistorico.isEmpty
+                                  ? 'Forma de pagamento'
+                                  : 'Forma de pagamento (${_filtrosTipoHistorico.length})',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 Expanded(
-                  child: state.extratos.isEmpty
-                      ? const Center(
+                  child: Builder(
+                    builder: (context) {
+                      final extratosFiltrados =
+                          _aplicarFiltros(state.extratos);
+                      if (extratosFiltrados.isEmpty) {
+                        return Center(
                           child: Padding(
-                            padding: EdgeInsets.all(24),
+                            padding: const EdgeInsets.all(24),
                             child: Text(
-                              'Nenhum lançamento no extrato.',
+                              state.extratos.isEmpty
+                                  ? 'Nenhum lançamento no extrato.'
+                                  : 'Nenhum lançamento encontrado para os filtros selecionados.',
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                          itemCount: state.extratos.length,
-                          itemBuilder: (context, index) {
-                            final item = state.extratos[index];
-                            return _ExtratoTile(item: item);
-                          },
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                        ),
+                        );
+                      }
+                      return ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                        itemCount: extratosFiltrados.length,
+                        itemBuilder: (context, index) {
+                          final item = extratosFiltrados[index];
+                          return _ExtratoTile(item: item);
+                        },
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      );
+                    },
+                  ),
                 ),
               ],
             );

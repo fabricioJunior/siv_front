@@ -25,6 +25,7 @@ abstract class IRomaneiosRepository {
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    double? desconto,
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',

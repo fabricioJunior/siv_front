@@ -4,6 +4,7 @@ import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/produtos_compartilhados.dart';
 import 'package:flutter/material.dart';
 import 'package:core/seletores.dart';
 import 'package:financeiro/pages.dart';
@@ -130,6 +131,15 @@ class _RomaneioPageState extends State<RomaneioPage> {
               const SnackBar(
                 content:
                     Text('Forma de pagamento corrigida com sucesso.'),
+              ),
+            );
+            return;
+          }
+
+          if (state.step == RomaneioStep.pagamentoRecebido) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Pagamento recebido com sucesso.'),
               ),
             );
             return;
@@ -505,6 +515,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
     final romaneio = state.romaneio;
     final observacao = (state.observacao ?? '').trim();
     final pagamentos = romaneio?.formasDePagamentoRealizadas ?? const [];
+    final processandoAcao = state.step == RomaneioStep.processando;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -767,10 +778,27 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     context,
                     'Ações do romaneio',
                     Icons.bolt_outlined,
+                    trailing: processandoAcao
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 12),
+                  if (_romaneioAbertoParaPagamento(state)) ...[
+                    FilledButton.icon(
+                      onPressed: processandoAcao
+                          ? null
+                          : () => _irParaPagamento(context, state),
+                      icon: const Icon(Icons.payments_outlined),
+                      label: const Text('Ir para pagamento'),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   OutlinedButton.icon(
-                    onPressed: _romaneioCancelado(state)
+                    onPressed: processandoAcao || _romaneioCancelado(state)
                         ? null
                         : () => _cancelarRomaneio(state.id),
                     icon: const Icon(Icons.cancel_outlined),
@@ -790,7 +818,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: OutlinedButton.icon(
-                        onPressed: _romaneioCancelado(state)
+                        onPressed: processandoAcao || _romaneioCancelado(state)
                             ? null
                             : () => _editarVendedor(context, state),
                         icon: const Icon(Icons.badge_outlined),
@@ -806,9 +834,11 @@ class _RomaneioPageState extends State<RomaneioPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: OutlinedButton.icon(
-                          onPressed: _romaneioCancelado(state)
-                              ? null
-                              : () => _editarFormasDePagamento(context, state),
+                          onPressed:
+                              processandoAcao || _romaneioCancelado(state)
+                                  ? null
+                                  : () =>
+                                      _editarFormasDePagamento(context, state),
                           icon: const Icon(Icons.credit_card_outlined),
                           label: const Text('Editar formas de pagamento'),
                         ),
@@ -823,6 +853,123 @@ class _RomaneioPageState extends State<RomaneioPage> {
         _buildItensRomaneioCard(context, state),
       ],
     );
+  }
+
+  static const _operacoesComPagamento = {
+    TipoOperacao.venda,
+    TipoOperacao.venda_devolucao,
+    TipoOperacao.transferencia_entrada,
+    TipoOperacao.manual_entrada,
+  };
+
+  bool _romaneioAbertoParaPagamento(RomaneioState state) {
+    final situacao = state.romaneio?.situacao?.trim().toLowerCase();
+    return situacao == 'em_andamento' &&
+        _operacoesComPagamento.contains(state.romaneio?.operacao);
+  }
+
+  Future<void> _irParaPagamento(
+    BuildContext context,
+    RomaneioState state,
+  ) async {
+    if (state.id == null) return;
+
+    final bloc = context.read<RomaneioBloc>();
+    // Alvo é o valor BRUTO (não valorLiquido, que pode não refletir um
+    // desconto já persistido -- ex: aplicado na criação, antes de existirem
+    // itens). O desconto já existente é pré-carregado no diálogo abaixo
+    // (descontoJaAplicadoNoRomaneio), que o reduz do alvo do jeito certo.
+    final valorEsperado = state.romaneio?.valorBruto ?? 0;
+    final produtosCompartilhados = state.itens
+        .where((item) => item.produtoId != null)
+        .map(
+          (item) => ProdutoCompartilhado.create(
+            produtoId: item.produtoId!,
+            quantidade: (item.quantidade ?? 1).round(),
+            valorUnitario: item.valorUnitario ?? 0,
+            nome: item.referenciaNome ?? '',
+            corNome: item.corNome ?? '',
+            tamanhoNome: item.tamanhoNome ?? '',
+          ),
+        )
+        .toList(growable: false);
+
+    final pagamentoResultado = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PagamentosRealizadosWidget(
+          hashLista: 'romaneio-${state.id}',
+          resumoInicial: PagamentosRealizadosResumo(
+            listaCompartilhada: null,
+            produtosCompartilhados: produtosCompartilhados,
+            quantidadeTotalProdutos: produtosCompartilhados.fold<int>(
+              0,
+              (soma, produto) => soma + produto.quantidade,
+            ),
+            valorTotalProdutos: valorEsperado,
+          ),
+          pessoaId: state.pessoaId,
+          descontoJaAplicadoNoRomaneio: state.romaneio?.desconto ?? 0,
+          formasDePagamentoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FormasDePagamentoSeletor(
+                    modo: FormasDePagamentoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Forma de pagamento',
+                  ),
+        );
+      },
+    );
+
+    if (pagamentoResultado == null || !context.mounted) return;
+
+    final formasDePagamentoRaw =
+        pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
+            const [];
+    final formasDePagamentoRealizadas = formasDePagamentoRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+
+    // O diálogo já foi pré-carregado com o desconto que existia no romaneio
+    // (descontoJaAplicadoNoRomaneio, acima) via seeding no
+    // PagamentosRealizadosBloc -- então `descontosItens` aqui já representa
+    // o total CORRETO e final (igual ao que já tinha, se o usuário não mexeu
+    // em nada; editado ou zerado, se usou "Editar desconto"/"Remover
+    // desconto"). Manda esse total como `desconto` (nível romaneio), que o
+    // backend REESCREVE em vez de somar ao valor persistido
+    // (`descontoGlobalAplicado = romaneioDto.desconto` em
+    // receber.service.ts) -- sempre substituindo, nunca duplicando.
+    final descontosItensRaw =
+        pagamentoResultado['descontosItens'] as List<dynamic>? ?? const [];
+    final descontoTotal = descontosItensRaw
+        .whereType<Map<String, dynamic>>()
+        .fold<double>(
+          0,
+          (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
+        );
+
+    final incluirCpfNaNota =
+        pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
+    final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
+
+    bloc.add(
+      RomaneioPagamentoRecebido(
+        formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        desconto: descontoTotal,
+        incluirCpfNaNota: incluirCpfNaNota,
+        cpfNaNota: cpfNaNota,
+      ),
+    );
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   Future<void> _editarVendedor(
@@ -1229,8 +1376,9 @@ class _RomaneioPageState extends State<RomaneioPage> {
   Widget _buildTituloSecao(
     BuildContext context,
     String titulo,
-    IconData icone,
-  ) {
+    IconData icone, {
+    Widget? trailing,
+  }) {
     final theme = Theme.of(context);
 
     return Row(
@@ -1243,6 +1391,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (trailing != null) ...[
+          const SizedBox(width: 12),
+          trailing,
+        ],
       ],
     );
   }

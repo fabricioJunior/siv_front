@@ -143,6 +143,7 @@ enum RomaneioStep {
   observacaoAtualizada,
   vendedorAtualizado,
   formaDePagamentoCorrigida,
+  pagamentoRecebido,
   envioPendenciaConcluido,
   envioPendenciaIncompleto,
   validacaoInvalida,

@@ -14,6 +14,12 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   final int? pessoaId;
   final String? cpfClienteInicial;
   final SeletorWidget formasDePagamentoSeletor;
+  // Desconto já persistido no romaneio (fora deste diálogo) -- usado só pra
+  // pré-carregar o desconto do diálogo com esse valor, reaproveitando os
+  // botões "Editar desconto"/"Remover desconto" já existentes pra corrigir
+  // ou zerar. Só relevante quando o pagamento é de um romaneio já existente
+  // (ver romaneio_page.dart); fica 0 nos outros usos (criação de venda nova).
+  final double descontoJaAplicadoNoRomaneio;
 
   const PagamentosRealizadosWidget({
     super.key,
@@ -22,6 +28,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.pessoaId,
     this.cpfClienteInicial,
     required this.formasDePagamentoSeletor,
+    this.descontoJaAplicadoNoRomaneio = 0,
   });
 
   @override
@@ -34,6 +41,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             resumoInicial: resumoInicial,
             pessoaId: pessoaId,
             cpfClienteInicial: cpfClienteInicial,
+            descontoJaAplicadoNoRomaneio: descontoJaAplicadoNoRomaneio,
           ),
         ),
       child: BlocConsumer<PagamentosRealizadosBloc, PagamentosRealizadosState>(

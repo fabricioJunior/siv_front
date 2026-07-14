@@ -12,17 +12,24 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final PagamentosRealizadosResumo? resumoInicial;
   final int? pessoaId;
   final String? cpfClienteInicial;
+  final double descontoJaAplicadoNoRomaneio;
 
   const PagamentosRealizadosIniciado({
     required this.hashLista,
     this.resumoInicial,
     this.pessoaId,
     this.cpfClienteInicial,
+    this.descontoJaAplicadoNoRomaneio = 0,
   });
 
   @override
-  List<Object?> get props =>
-      [hashLista, resumoInicial, pessoaId, cpfClienteInicial];
+  List<Object?> get props => [
+        hashLista,
+        resumoInicial,
+        pessoaId,
+        cpfClienteInicial,
+        descontoJaAplicadoNoRomaneio,
+      ];
 }
 
 class PagamentosRealizadosLinhaAdicionada extends PagamentosRealizadosEvent {

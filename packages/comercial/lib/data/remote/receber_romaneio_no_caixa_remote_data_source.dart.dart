@@ -16,6 +16,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     required int caixaId,
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    double? desconto,
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
@@ -30,6 +31,12 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         'romaneioId': romaneioId,
         if (formasDePagamento.isNotEmpty)
           'formasDePagamento': formasDePagamento,
+        // `desconto` (nível romaneio) SUBSTITUI o valor persistido no
+        // backend (receber.service.ts: descontoGlobalAplicado =
+        // romaneioDto.desconto quando informado, em vez de somar). Não
+        // enviar junto com `descontosItens` representando o mesmo valor --
+        // contaria em dobro.
+        if (desconto != null) 'desconto': desconto,
         if (descontosItens.isNotEmpty) 'descontosItens': descontosItens,
         'incluirCpfNaNota': incluirCpfNaNota,
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)

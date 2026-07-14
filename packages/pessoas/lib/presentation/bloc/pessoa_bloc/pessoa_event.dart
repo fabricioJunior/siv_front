@@ -96,3 +96,9 @@ class PessoaBuscarCepEndereco extends PessoaEvent {
 
   PessoaBuscarCepEndereco({required this.cep});
 }
+
+class PessoaVerificarDocumentoSolicitado extends PessoaEvent {
+  final String documento;
+
+  PessoaVerificarDocumentoSolicitado({required this.documento});
+}

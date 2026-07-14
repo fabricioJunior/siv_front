@@ -74,6 +74,7 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     var pathParameters = {'id': '$documento/documento'};
     final response = await get(pathParameters: pathParameters);
 
+    if (response.body == null) return null;
     return PessoaDto.fromJson(response.body);
   }
 

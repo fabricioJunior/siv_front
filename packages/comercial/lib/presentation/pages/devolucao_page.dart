@@ -2,6 +2,8 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
+import 'package:core/leitor/data_source/leitor_busca_restrita_data_source.dart';
+import 'package:core/leitor/data_source/leitor_restrito_data_source.dart';
 import 'package:core/leitor/leitor_widget.dart';
 import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
@@ -87,8 +89,22 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                       const SizedBox(height: 12),
                       LeitorWidget(
                         controller: _leitorController,
-                        dataSource: sl(),
-                        buscaDataSource: sl(),
+                        // Bipagem e "Busca manual" restritas aos produtos do
+                        // romaneio original -- produto fora do romaneio vira
+                        // "não encontrado"/some da busca em vez de só ser
+                        // barrado tardiamente em _validarItensDevolucao.
+                        dataSource: LeitorRestritoDataSource(
+                          origem: sl(),
+                          produtosPermitidos:
+                              state.itensDoRomaneioOriginalPorProduto.keys
+                                  .toSet(),
+                        ),
+                        buscaDataSource: LeitorBuscaRestritaDataSource(
+                          origem: sl(),
+                          produtosPermitidos:
+                              state.itensDoRomaneioOriginalPorProduto.keys
+                                  .toSet(),
+                        ),
                         tabelaDePrecoId: state.romaneioOriginal?.tabelaPrecoId,
                         controlarQuantidade: true,
                         aceitarApenasProdutosComPreco: false,

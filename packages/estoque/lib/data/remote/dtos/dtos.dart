@@ -14,3 +14,4 @@ export 'encerrar_balanco_dto.dart';
 export 'cancelar_balanco_dto.dart';
 export 'update_balanco_lote_dto.dart';
 export 'cancelar_balanco_lote_dto.dart';
+export 'historico_estoque_dto.dart';

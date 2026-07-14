@@ -221,7 +221,24 @@ class _PessoaPageState extends State<PessoaPage> {
             CPFInput(
               controller: _cpfController,
               valorInicial: state.documento,
+              onChanged: (value) => _aoAlterarCpf(context, value),
             ),
+            if (state.verificandoDocumento)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Verificando CPF...',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              )
+            else if (state.avisoDocumentoDuplicado != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  state.avisoDocumentoDuplicado!,
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade700),
+                ),
+              ),
             const SizedBox(height: 12),
             DateInput(
               externalController: _dataNascimentoController,
@@ -734,6 +751,15 @@ class _PessoaPageState extends State<PessoaPage> {
 
   bool _emailValido(String email) {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+  }
+
+  void _aoAlterarCpf(BuildContext context, String value) {
+    final digitos = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitos.length == 11 && cpfEhValido(digitos)) {
+      context.read<PessoaBloc>().add(
+            PessoaVerificarDocumentoSolicitado(documento: digitos),
+          );
+    }
   }
 
   void _erro(BuildContext context, String mensagem) {

@@ -3,12 +3,16 @@ import 'package:core/isar_anotacoes.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:estoque/data/remote/estoque_saldo_remote_data_source.dart';
 import 'package:estoque/data/remote/balanco_remote_data_source.dart';
+import 'package:estoque/data/remote/historico_estoque_remote_data_source.dart';
 import 'package:estoque/data/repositorios/estoque_repository.dart';
+import 'package:estoque/data/repositorios/historico_estoque_repository.dart';
 import 'package:estoque/data/repositories/balanco_repository.dart';
 import 'package:estoque/domain/data/datasourcers/i_produtos_estoque_local_datasource.dart';
 import 'package:estoque/domain/data/remote/i_estoque_saldo_remote_data_source.dart';
 import 'package:estoque/domain/data/remote/i_balanco_remote_data_source.dart';
+import 'package:estoque/domain/data/remote/i_historico_estoque_remote_data_source.dart';
 import 'package:estoque/domain/data/repositorios/i_estoque_repository.dart';
+import 'package:estoque/domain/data/repositorios/i_historico_estoque_repository.dart';
 import 'package:estoque/domain/repositories/i_balanco_repository.dart';
 import 'package:estoque/presentation.dart';
 import 'package:estoque/use_cases.dart';
@@ -33,6 +37,9 @@ void _dataSources() {
   sl.registerFactory<IBalancoRemoteDataSource>(
     () => BalancoRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IHistoricoEstoqueRemoteDataSource>(
+    () => HistoricoEstoqueRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositorios() {
@@ -46,6 +53,9 @@ void _repositorios() {
   sl.registerFactory<IBalancoRepository>(
     () => BalancoRepository(remoteDataSource: sl()),
   );
+  sl.registerFactory<IHistoricoEstoqueRepository>(
+    () => HistoricoEstoqueRepository(historicoEstoqueRemoteDataSource: sl()),
+  );
 }
 
 void _useCases() {
@@ -55,6 +65,10 @@ void _useCases() {
 
   sl.registerFactory<SincronizarEstoque>(
     () => SincronizarEstoque(estoqueRepository: sl()),
+  );
+
+  sl.registerFactory<RecuperarHistoricoDeEstoque>(
+    () => RecuperarHistoricoDeEstoque(historicoEstoqueRepository: sl()),
   );
 
   // Balanço Use Cases
@@ -125,6 +139,7 @@ void _useCases() {
 
 void _presentation() {
   sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl()));
+  sl.registerFactory<HistoricoEstoqueBloc>(() => HistoricoEstoqueBloc(sl()));
   sl.registerFactory<EntradaManualDeProdutosBloc>(
     () => EntradaManualDeProdutosBloc(sl(), sl(), sl(), sl()),
   );

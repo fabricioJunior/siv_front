@@ -69,6 +69,10 @@ class PessoaState extends Equatable {
 
   final String? avisoEndereco;
 
+  final bool verificandoDocumento;
+
+  final String? avisoDocumentoDuplicado;
+
   const PessoaState({
     this.bloqueado,
     this.contato,
@@ -102,6 +106,8 @@ class PessoaState extends Equatable {
     this.enderecoBuscandoCep = false,
     this.enderecoErroCep,
     this.avisoEndereco,
+    this.verificandoDocumento = false,
+    this.avisoDocumentoDuplicado,
     required this.pessoaStep,
   });
 
@@ -139,6 +145,8 @@ class PessoaState extends Equatable {
         enderecoBuscandoCep = false,
         enderecoErroCep = null,
         avisoEndereco = null,
+        verificandoDocumento = false,
+        avisoDocumentoDuplicado = null,
         pessoaStep = step ?? PessoaStep.carregado;
 
   PessoaState copyWith({
@@ -177,6 +185,9 @@ class PessoaState extends Equatable {
     String? avisoEndereco,
     bool limparAvisoEndereco = false,
     bool limparErroCep = false,
+    bool? verificandoDocumento,
+    String? avisoDocumentoDuplicado,
+    bool limparAvisoDocumentoDuplicado = false,
   }) {
     return PessoaState(
       bloqueado: bloqueado ?? this.bloqueado,
@@ -215,6 +226,10 @@ class PessoaState extends Equatable {
           limparErroCep ? null : (enderecoErroCep ?? this.enderecoErroCep),
       avisoEndereco:
           limparAvisoEndereco ? null : (avisoEndereco ?? this.avisoEndereco),
+      verificandoDocumento: verificandoDocumento ?? this.verificandoDocumento,
+      avisoDocumentoDuplicado: limparAvisoDocumentoDuplicado
+          ? null
+          : (avisoDocumentoDuplicado ?? this.avisoDocumentoDuplicado),
     );
   }
 
@@ -251,6 +266,8 @@ class PessoaState extends Equatable {
         enderecoBuscandoCep,
         enderecoErroCep,
         avisoEndereco,
+        verificandoDocumento,
+        avisoDocumentoDuplicado,
       ];
 }
 // ...existing code...

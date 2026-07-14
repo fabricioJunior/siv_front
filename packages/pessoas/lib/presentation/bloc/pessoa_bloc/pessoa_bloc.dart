@@ -19,6 +19,7 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
   final RecuperarFuncionarios recuperarFuncionarios;
   final CriarEndereco criarEndereco;
   final CepService cepService;
+  final RecuperarPessoaPeloDocumento recuperarPessoaPeloDocumento;
 
   PessoaBloc(
     this.recuperarPessoa,
@@ -29,11 +30,54 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
     this.recuperarFuncionarios,
     this.criarEndereco,
     this.cepService,
+    this.recuperarPessoaPeloDocumento,
   ) : super(PessoaState(pessoaStep: PessoaStep.inicial)) {
     on<PessoaIniciou>(_onPessoaInicou);
     on<PessoaEditou>(_onPessoaEditou);
     on<PessoaSalvou>(_onPessoaSalvou);
     on<PessoaBuscarCepEndereco>(_onPessoaBuscarCepEndereco);
+    on<PessoaVerificarDocumentoSolicitado>(_onVerificarDocumentoSolicitado);
+  }
+
+  Future<void> _onVerificarDocumentoSolicitado(
+    PessoaVerificarDocumentoSolicitado event,
+    Emitter<PessoaState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        verificandoDocumento: true,
+        limparAvisoDocumentoDuplicado: true,
+      ),
+    );
+
+    try {
+      final pessoaEncontrada = await recuperarPessoaPeloDocumento.call(
+        documento: event.documento,
+      );
+
+      final ehOutraPessoa =
+          pessoaEncontrada != null && pessoaEncontrada.id != state.id;
+
+      emit(
+        state.copyWith(
+          verificandoDocumento: false,
+          avisoDocumentoDuplicado: ehOutraPessoa
+              ? 'Já existe um cliente cadastrado com esse CPF: ${pessoaEncontrada.nome}.'
+              : null,
+          limparAvisoDocumentoDuplicado: !ehOutraPessoa,
+        ),
+      );
+    } catch (e, s) {
+      // Falha na consulta (rede, 500, etc) nunca deve travar o cadastro --
+      // só encerra o "verificando" e segue sem aviso nenhum, silenciosamente.
+      emit(
+        state.copyWith(
+          verificandoDocumento: false,
+          limparAvisoDocumentoDuplicado: true,
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onPessoaInicou(
@@ -312,8 +356,10 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
       emit(
         state.copyWith(
           pessoaStep: PessoaStep.falha,
-          erro:
-              'Falha ao salvar a pessoa. Verifique os dados e tente novamente.',
+          erro: mensagemDeErroApi(
+            e,
+            'Falha ao salvar a pessoa. Verifique os dados e tente novamente.',
+          ),
         ),
       );
       addError(e, s);

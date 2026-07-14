@@ -228,7 +228,22 @@ abstract class RemoteDataSourceBase {
       final dynamic raw = body['message'] ?? body['error'] ?? body['errors'];
       if (raw == null) return null;
       if (raw is List) {
-        return raw.map((e) => e.toString()).join(' ').trim();
+        // Erros de validação de DTO (class-validator) chegam como
+        // [{ campo: ["mensagem"] }] em vez de string simples -- sem isso,
+        // Map.toString() produz algo ilegível tipo "{documento: [Documento
+        // já vinculado a outra pessoa]}" na tela.
+        return raw
+            .map((e) {
+              if (e is Map) {
+                return e.values
+                    .expand((v) => v is List ? v : [v])
+                    .map((v) => v.toString())
+                    .join(' ');
+              }
+              return e.toString();
+            })
+            .join(' ')
+            .trim();
       }
       final text = raw.toString().trim();
       return text.isEmpty ? null : text;

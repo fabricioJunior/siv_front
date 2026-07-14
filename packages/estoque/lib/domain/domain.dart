@@ -6,3 +6,6 @@ export 'repositories/i_balanco_repository.dart';
 export 'usecases/recuperar_saldo_do_estoque.dart';
 export 'usecases/sincronizar_estoque.dart';
 export 'usecases/balanco_usecases.dart';
+export 'data/remote/i_historico_estoque_remote_data_source.dart';
+export 'data/repositorios/i_historico_estoque_repository.dart';
+export 'usecases/recuperar_historico_de_estoque.dart';

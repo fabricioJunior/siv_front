@@ -32,6 +32,14 @@ class GerenciaEstoqueMenuPage extends StatelessWidget {
         route: '/estoque',
       ),
       const _ItemData(
+        icon: Icons.timeline,
+        titulo: 'Histórico de estoque',
+        subtitulo: 'Movimentações de produto com saldo por momento.',
+        cor: Colors.deepPurple,
+        componente: 'PRDFL001',
+        route: '/historico_estoque',
+      ),
+      const _ItemData(
         icon: Icons.history,
         titulo: 'Histórico de movimentações manuais',
         subtitulo: 'Consulta por funcionário, quantidade e data.',

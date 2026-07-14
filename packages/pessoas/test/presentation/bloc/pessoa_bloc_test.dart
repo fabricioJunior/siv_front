@@ -20,6 +20,8 @@ final RecuperarFuncionarios recuperarFuncionarios =
     FakeRecuperarFuncionarios();
 final CriarEndereco criarEndereco = FakeCriarEndereco();
 final CepService cepService = CepService();
+final RecuperarPessoaPeloDocumento recuperarPessoaPeloDocumento =
+    MockRecuperarPessoaPeloDocumento();
 
 class FakeSalvarFuncionario implements SalvarFuncionario {
   @override
@@ -74,6 +76,7 @@ void main() {
       recuperarFuncionarios,
       criarEndereco,
       cepService,
+      recuperarPessoaPeloDocumento,
     );
   });
 

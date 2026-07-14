@@ -67,7 +67,15 @@ class ContagemDoCaixaItemDto implements ContagemDoCaixaItem {
         .replaceAll('ù', 'u')
         .replaceAll('û', 'u')
         .replaceAll('ü', 'u')
-        .replaceAll('ç', 'c');
+        .replaceAll('ç', 'c')
+        // Remove espaços/barras/pontuação -- o enum local usa camelCase sem
+        // separadores (ex: "creditoDeDevolucao", "tedDoc"), mas os labels que
+        // vêm do backend têm espaço/barra ("Crédito de devolução", "TED/DOC").
+        // Sem isso a comparação nunca batia pra esses tipos e o firstWhere
+        // caía silenciosamente no orElse (dinheiro), fazendo pagamentos em
+        // crédito de devolução serem contados como dinheiro físico na
+        // contagem de caixa -- travando o fechamento.
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
   }
 
   @override

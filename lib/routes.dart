@@ -1,9 +1,12 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:autenticacao/models.dart' show TerminalDoUsuario;
+import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
+import 'package:core/seletores.dart' show SelectData;
 import 'package:empresas/presentation.dart';
+import 'package:empresas/use_cases.dart' show RecuperarTerminais;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
 import 'package:core/injecoes.dart';
@@ -757,6 +760,41 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/historico_estoque': (context) {
+    return _rotaProtegida(
+      route: '/historico_estoque',
+      child: HistoricoEstoquePage(
+        seletorReferencia: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            ReferenciaSeletor(
+              modo: ReferenciaSeletorModo.unica,
+              onChanged: onChanged,
+            ),
+        seletorFuncionario: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            FuncionarioSeletor(
+              modo: FuncionarioSeletorModo.unica,
+              onChanged: onChanged,
+              itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
+            ),
+        obterUsuarios: () async {
+          final usuarios = await sl<RecuperarUsuarios>().call();
+          return usuarios
+              .map((u) => SelectData(id: u.id, nome: u.nome, data: const {}))
+              .toList();
+        },
+        obterCaixas: () async {
+          final empresaId = sl<IAcessoGlobalSessao>().empresaIdDaSessao;
+          if (empresaId == null) return const [];
+          final terminais = await sl<RecuperarTerminais>().call(
+            empresaId: empresaId,
+          );
+          return terminais
+              .where((t) => t.id != null)
+              .map((t) => SelectData(id: t.id!, nome: t.nome, data: const {}))
+              .toList();
+        },
+      ),
+    );
+  },
   '/entrada_manual_de_produtos': (context) {
     return _rotaProtegidaPorCaixaAberto(
       child: _rotaProtegida(
@@ -958,6 +996,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cancelar_romaneio': ['ROMFP001'],
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
+  '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
   '/criar_balanco': ['PRDFL001'],
   '/detalhes_balanco': ['PRDFL001'],

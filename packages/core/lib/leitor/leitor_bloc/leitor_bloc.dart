@@ -13,16 +13,19 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
   final ILeitorDataDatasource _dataSource;
   final int? _tabelaDePrecoId;
   final bool _aceitarApenasProdutosComPreco;
+  final String Function(String descricao)? _mensagemQuantidadeIndisponivel;
 
   LeitorBloc({
     required ILeitorDataDatasource dataSource,
     bool controlarQuantidade = false,
     int? tabelaDePrecoId,
     bool aceitarApenasProdutosComPreco = false,
+    String Function(String descricao)? mensagemQuantidadeIndisponivel,
     LeitorState? estadoInicial,
   })  : _dataSource = dataSource,
         _tabelaDePrecoId = tabelaDePrecoId,
         _aceitarApenasProdutosComPreco = aceitarApenasProdutosComPreco,
+        _mensagemQuantidadeIndisponivel = mensagemQuantidadeIndisponivel,
         super(
           (estadoInicial ??
                   LeitorState.initial(
@@ -266,7 +269,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           processando: false,
           ultimoCodigoInformado: codigo,
           ultimoCodigoLidoValido: false,
-          erro:
+          erro: _mensagemQuantidadeIndisponivel?.call(leitorData.descricao) ??
               'Quantidade excede o estoque disponível para ${leitorData.descricao}.',
           aviso: null,
           avisoTipo: null,

@@ -95,21 +95,22 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                         // barrado tardiamente em _validarItensDevolucao.
                         dataSource: LeitorRestritoDataSource(
                           origem: sl(),
-                          produtosPermitidos:
-                              state.itensDoRomaneioOriginalPorProduto.keys
-                                  .toSet(),
+                          saldosDisponiveis:
+                              state.itensDoRomaneioOriginalPorProduto,
                         ),
                         buscaDataSource: LeitorBuscaRestritaDataSource(
                           origem: sl(),
-                          produtosPermitidos:
-                              state.itensDoRomaneioOriginalPorProduto.keys
-                                  .toSet(),
+                          saldosDisponiveis:
+                              state.itensDoRomaneioOriginalPorProduto,
                         ),
                         tabelaDePrecoId: state.romaneioOriginal?.tabelaPrecoId,
                         controlarQuantidade: true,
                         aceitarApenasProdutosComPreco: false,
                         campoCodigoHint:
                             'Bipe ou informe o código do produto para devolução',
+                        rotuloQuantidadeDisponivel: 'Disponível no romaneio',
+                        mensagemQuantidadeIndisponivel: (_) =>
+                            'Produto não disponível no romaneio.',
                       ),
                     ] else
                       _buildEstadoInicial(),

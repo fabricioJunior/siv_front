@@ -26,6 +26,8 @@ class LeitorWidget extends StatefulWidget {
   final int? tabelaDePrecoId;
   final bool aceitarApenasProdutosComPreco;
   final ILeitorBuscaDataDatasource? buscaDataSource;
+  final String rotuloQuantidadeDisponivel;
+  final String Function(String descricao)? mensagemQuantidadeIndisponivel;
 
   const LeitorWidget({
     super.key,
@@ -43,6 +45,8 @@ class LeitorWidget extends StatefulWidget {
     this.tabelaDePrecoId,
     this.aceitarApenasProdutosComPreco = false,
     this.buscaDataSource,
+    this.rotuloQuantidadeDisponivel = 'Estoque',
+    this.mensagemQuantidadeIndisponivel,
   });
 
   @override
@@ -150,6 +154,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       controlarQuantidade: widget.controlarQuantidade,
       tabelaDePrecoId: widget.tabelaDePrecoId,
       aceitarApenasProdutosComPreco: widget.aceitarApenasProdutosComPreco,
+      mensagemQuantidadeIndisponivel: widget.mensagemQuantidadeIndisponivel,
       estadoInicial: estadoInicial,
     );
   }
@@ -290,6 +295,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
         buscaDataSource: buscaDataSource,
         tabelaDePrecoId: widget.tabelaDePrecoId,
         modoRemocao: _modoRemocao,
+        rotuloQuantidadeDisponivel: widget.rotuloQuantidadeDisponivel,
       ),
     );
 
@@ -674,7 +680,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                         .titleMedium,
                                   ),
                                   subtitle: Text(
-                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  Estoque: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',
+                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  ${widget.rotuloQuantidadeDisponivel}: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',
                                     style:
                                         Theme.of(context).textTheme.bodyMedium,
                                   ),
@@ -789,11 +795,13 @@ class _BuscaProdutoDialog extends StatefulWidget {
   final ILeitorBuscaDataDatasource buscaDataSource;
   final int? tabelaDePrecoId;
   final bool modoRemocao;
+  final String rotuloQuantidadeDisponivel;
 
   const _BuscaProdutoDialog({
     required this.buscaDataSource,
     this.tabelaDePrecoId,
     required this.modoRemocao,
+    this.rotuloQuantidadeDisponivel = 'Estoque',
   });
 
   @override
@@ -988,7 +996,7 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                                       if (cor.isNotEmpty) 'Cor: $cor',
                                       if (tamanho.isNotEmpty) 'Tam: $tamanho',
                                       'Cód: ${produto.codigoDeBarras}',
-                                      'Estoque: ${produto.quantidade}',
+                                      '${widget.rotuloQuantidadeDisponivel}: ${produto.quantidade}',
                                     ].join('  •  ');
                                     return ListTile(
                                       title: Text(produto.descricao),

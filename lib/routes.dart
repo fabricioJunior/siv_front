@@ -224,6 +224,41 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/recibo_fechamento_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegida(
+      route: '/recibo_fechamento_caixa',
+      child: ReciboFechamentoCaixaPage(caixaId: caixaId),
+    );
+  },
+  '/historico_de_caixas': (context) {
+    return _rotaProtegida(
+      route: '/historico_de_caixas',
+      child: HistoricoDeCaixasPage(
+        obterTerminais: () async {
+          final empresaId = sl<IAcessoGlobalSessao>().empresaIdDaSessao;
+          if (empresaId == null) return const [];
+          final terminais = await sl<RecuperarTerminais>().call(
+            empresaId: empresaId,
+          );
+          return terminais
+              .where((t) => t.id != null)
+              .map((t) => SelectData(id: t.id!, nome: t.nome, data: const {}))
+              .toList();
+        },
+        obterUsuarios: () async {
+          final usuarios = await sl<RecuperarUsuarios>().call();
+          return usuarios
+              .map((u) => SelectData(id: u.id, nome: u.nome, data: const {}))
+              .toList();
+        },
+      ),
+    );
+  },
   '/administracao': (context) {
     return _rotaProtegida(
       route: '/administracao',
@@ -972,6 +1007,8 @@ Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
 }
 
 const Map<String, List<String>> _componentesDaRota = {
+  '/recibo_fechamento_caixa': ['FCXFP010'],
+  '/historico_de_caixas': ['FCXFP008'],
   '/comercial': ['PEDFC001', 'ROMFP001'],
   '/venda': ['PEDFC001', 'ROMFP001'],
   '/orcamentos': ['PEDFC001', 'ROMFP001'],

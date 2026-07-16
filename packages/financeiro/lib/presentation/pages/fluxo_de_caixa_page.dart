@@ -387,11 +387,30 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                                         return;
                                       }
 
-                                      context.read<FluxoDeCaixaBloc>().add(
-                                            FluxoDeCaixaFechouCaixa(
-                                              caixaId: caixaId,
-                                            ),
-                                          );
+                                      final bloc =
+                                          context.read<FluxoDeCaixaBloc>();
+                                      bloc.add(
+                                        FluxoDeCaixaFechouCaixa(
+                                          caixaId: caixaId,
+                                        ),
+                                      );
+
+                                      final resultado = await bloc.stream
+                                          .firstWhere(
+                                        (s) =>
+                                            s is FluxoDeCaixaFecharSucesso ||
+                                            s is FluxoDeCaixaFecharFalha,
+                                      );
+
+                                      if (!context.mounted) return;
+
+                                      if (resultado
+                                          is FluxoDeCaixaFecharSucesso) {
+                                        await Navigator.of(context).pushNamed(
+                                          '/recibo_fechamento_caixa',
+                                          arguments: {'caixaId': caixaId},
+                                        );
+                                      }
                                     },
                               icon: const Icon(Icons.lock_outline),
                               label: const Text('Fechar caixa'),

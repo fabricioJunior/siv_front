@@ -222,6 +222,11 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
+      final limitesCaracteres = <String, int>{
+        for (final elemento in etiqueta.elementos)
+          if (elemento.limiteCaracteres != null) elemento.nome: elemento.limiteCaracteres!,
+      };
+
       final novosItens = <EtiquetaImpressaoItem>[];
       final combinacoesSemCodigo = <String>[];
       final requisicoes = <_RequisicaoEtiqueta>[];
@@ -284,31 +289,47 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
-      for (var i = 0; i < requisicoes.length; i++) {
-        final requisicao = requisicoes[i];
-        final via = viasOrdenadas[i % viasOrdenadas.length];
+      // "Vias" sao COLUNAS de uma mesma linha fisica impressa (MesclaEtiquetas junta N vias
+      // consecutivas num unico ^XA/^XZ = 1 linha/adesivo). Cada coluna deve mostrar um item
+      // DIFERENTE da fila -- por isso agrupa as requisicoes em blocos do tamanho de
+      // viasOrdenadas.length, e dentro de cada bloco casa requisicao[j] com via[j] (posicao =
+      // coluna). Ex: etiqueta de 2 vias, 5 itens (X1..X5) -> blocos [X1,X2] [X3,X4] [X5] = 2
+      // linhas completas + 1 linha final com o item que sobrou (coluna 2 fica em branco, ja que
+      // o bloco final tem só 1 item -- nao duplica o ultimo item pra preencher a coluna vazia).
+      //
+      // Bug anterior: pra cada requisicao gerava TODAS as vias com os MESMOS dados (mesma
+      // requisicao repetida em todas as colunas) -- "X e Y" saia "X e X" numa linha e "Y e Y" em
+      // outra, em vez de "X e Y" numa linha so.
+      for (var inicio = 0; inicio < requisicoes.length; inicio += viasOrdenadas.length) {
+        final bloco = requisicoes.skip(inicio).take(viasOrdenadas.length).toList(growable: false);
 
-        final zplProcessado = _processarEtiquetaParaImpressao(
-          templateZpl: via.zpl,
-          titulo: state.tituloEmpresaSessao,
-          cor: requisicao.cor,
-          tamanho: requisicao.tamanho,
-          codigoBarras: requisicao.codigoBarras,
-          preco: precoDaReferencia.valor,
-          descricao: referencia.nome,
-        );
+        for (var coluna = 0; coluna < bloco.length; coluna++) {
+          final requisicao = bloco[coluna];
+          final via = viasOrdenadas[coluna];
 
-        novosItens.add(
-          EtiquetaImpressaoItem.create(
-            descricao:
-                '${referencia.nome} | Cor: ${requisicao.cor} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
-            zpl: zplProcessado,
-            referencia: referencia.nome,
+          final zplProcessado = _processarEtiquetaParaImpressao(
+            templateZpl: via.zpl,
+            titulo: state.tituloEmpresaSessao,
             cor: requisicao.cor,
             tamanho: requisicao.tamanho,
-            viaOrdem: via.ordem,
-          ),
-        );
+            codigoBarras: requisicao.codigoBarras,
+            preco: precoDaReferencia.valor,
+            descricao: referencia.nome,
+            limitesCaracteres: limitesCaracteres,
+          );
+
+          novosItens.add(
+            EtiquetaImpressaoItem.create(
+              descricao:
+                  '${referencia.nome} | Cor: ${requisicao.cor} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
+              zpl: zplProcessado,
+              referencia: referencia.nome,
+              cor: requisicao.cor,
+              tamanho: requisicao.tamanho,
+              viaOrdem: via.ordem,
+            ),
+          );
+        }
       }
 
       emit(

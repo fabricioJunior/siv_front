@@ -17,6 +17,11 @@ class ReferenciaSeletor extends StatefulWidget implements ISeletor {
   @override
   final Function(List<SelectData>)? onChanged;
   final String titulo;
+  // Controla se a opcao "Cadastrar referencia" aparece no seletor. So faz sentido em telas onde
+  // criar uma referencia nova no meio do fluxo e util (ex: cadastro de produto); em telas de
+  // FILTRO (historico de estoque, filtrar produtos por referencia) ou selecao pontual pra imprimir
+  // etiqueta de algo que ja existe, nao faz sentido oferecer criar uma referencia vazia ali.
+  final bool permitirCadastro;
 
   const ReferenciaSeletor({
     super.key,
@@ -26,6 +31,7 @@ class ReferenciaSeletor extends StatefulWidget implements ISeletor {
     this.onReferenciaChanged,
     this.onChanged,
     this.titulo = 'Referências',
+    this.permitirCadastro = true,
   });
 
   @override
@@ -156,20 +162,22 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
               );
             },
             cadastrarLabel: 'Cadastrar referência',
-            onCadastrarPressed: () async {
-              final salvou = await ReferenciaCadastroModal.show(
-                context: context,
-              );
-              if (salvou == true) {
-                _referenciasBloc.add(
-                  ReferenciasIniciou(
-                    inativo: false,
-                    idsReferenciasSelecionadasIniciais:
-                        widget.idReferenciasSelecionadasIniciais,
-                  ),
-                );
-              }
-            },
+            onCadastrarPressed: widget.permitirCadastro
+                ? () async {
+                    final salvou = await ReferenciaCadastroModal.show(
+                      context: context,
+                    );
+                    if (salvou == true) {
+                      _referenciasBloc.add(
+                        ReferenciasIniciou(
+                          inativo: false,
+                          idsReferenciasSelecionadasIniciais:
+                              widget.idReferenciasSelecionadasIniciais,
+                        ),
+                      );
+                    }
+                  }
+                : null,
           );
         },
       ),

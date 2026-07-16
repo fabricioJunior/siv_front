@@ -183,6 +183,7 @@ class _SelecionarProdutosPageState extends State<SelecionarProdutosPage> {
                     ReferenciaSeletor(
                       modo: ReferenciaSeletorModo.multipla,
                       titulo: 'Filtrar por referência',
+                      permitirCadastro: false,
                       onReferenciaChanged: (selecionadas) {
                         setState(() {
                           _referenciasSelecionadas = selecionadas

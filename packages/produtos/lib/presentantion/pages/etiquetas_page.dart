@@ -20,6 +20,7 @@ class EtiquetasPage extends StatelessWidget {
           builder: (context, state) {
             final carregando =
                 state is EtiquetasCriarEmProgresso ||
+                state is EtiquetasEditarEmProgresso ||
                 state is EtiquetasExcluirEmProgresso;
             return FloatingActionButton(
               onPressed: carregando
@@ -120,6 +121,24 @@ class EtiquetasPage extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Falha ao criar etiqueta.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+
+            if (state is EtiquetasEditarSucesso) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Etiqueta salva com sucesso.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+
+            if (state is EtiquetasEditarFalha) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Falha ao salvar etiqueta.'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -229,8 +248,20 @@ class EtiquetasPage extends StatelessWidget {
                               return;
                             }
 
+                            final etiquetaId = etiqueta.id;
+                            if (etiquetaId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Etiqueta sem identificador, nao e possivel salvar.'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              return;
+                            }
+
                             context.read<EtiquetasBloc>().add(
-                              EtiquetasCriarSolicitado(
+                              EtiquetasEditarSolicitado(
+                                id: etiquetaId,
                                 nome: nome,
                                 altura: altura,
                                 largura: largura,
@@ -300,6 +331,10 @@ class EtiquetasPage extends StatelessWidget {
             tipoElemento: TipoElementoEtiquetaX.fromValue(item['tipoElemento']),
             x: _toDouble(item['x']) ?? 0,
             y: _toDouble(item['y']) ?? 0,
+            texto: item['texto']?.toString(),
+            limiteCaracteres: _toInt(item['limiteCaracteres']),
+            tamanhoFonteMm: _toDouble(item['tamanhoFonteMm']),
+            alturaCodigoBarrasMm: _toDouble(item['alturaCodigoBarrasMm']),
           ),
         )
         .where((item) => item.nome.isNotEmpty)
@@ -349,10 +384,39 @@ class EtiquetasPage extends StatelessWidget {
       'dpi': etiqueta.dpi.valor.toString(),
     };
 
+    final nomesTextoFixo = <String>[];
+
     for (final elemento in etiqueta.elementos) {
       overrides['${elemento.nome}Xmm'] = elemento.x.toString();
       overrides['${elemento.nome}Ymm'] = elemento.y.toString();
-      overrides[elemento.nome] = '{${elemento.nome}}';
+
+      if (elemento.limiteCaracteres != null) {
+        overrides['${elemento.nome}LimiteCaracteres'] =
+            elemento.limiteCaracteres.toString();
+      }
+
+      // Chaves usadas pelo editor pra reconstruir tamanho de fonte/altura de codigo de barras
+      // (TipoCampoEtiquetaX.chaveTamanhoFonte/chaveAlturaCodigo -- "${nome}TamanhoFonteMm" /
+      // "${nome}AlturaMm"). Sem isso, o valor salvo nunca voltava e a etiqueta sempre reabria
+      // com o tamanho padrao do campo.
+      if (elemento.tamanhoFonteMm != null) {
+        overrides['${elemento.nome}TamanhoFonteMm'] = elemento.tamanhoFonteMm.toString();
+      }
+      if (elemento.alturaCodigoBarrasMm != null) {
+        overrides['${elemento.nome}AlturaMm'] = elemento.alturaCodigoBarrasMm.toString();
+      }
+
+      if (elemento.texto != null) {
+        // Texto Fixo: conteudo literal, nao um placeholder a resolver com dado do produto.
+        overrides[elemento.nome] = elemento.texto!;
+        nomesTextoFixo.add(elemento.nome);
+      } else {
+        overrides[elemento.nome] = '{${elemento.nome}}';
+      }
+    }
+
+    if (nomesTextoFixo.isNotEmpty) {
+      overrides['textoFixoNomes'] = nomesTextoFixo.join(',');
     }
 
     return overrides;

@@ -135,6 +135,7 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                           );
                         },
                         titulo: 'Referencia',
+                        permitirCadastro: false,
                       ),
                     ],
                   ),
@@ -292,8 +293,21 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                           border: OutlineInputBorder(),
                                         ),
                                         onChanged: (value) {
-                                          final parsed =
-                                              int.tryParse(value.trim()) ?? 0;
+                                          // Campo vazio = usuario apagando pra digitar outro
+                                          // numero (edicao em andamento), nao "quero zero" --
+                                          // "quero zero" so conta quando ele efetivamente digita
+                                          // 0. Sem essa checagem, apagar o texto disparava
+                                          // quantidade=0 e removia o item da pilha no meio da
+                                          // edicao (bug reportado).
+                                          if (value.trim().isEmpty) {
+                                            return;
+                                          }
+
+                                          final parsed = int.tryParse(value.trim());
+                                          if (parsed == null) {
+                                            return;
+                                          }
+
                                           bloc.add(
                                             ImpressaoEtiquetasPilhaQuantidadeAlterada(
                                               referencia: grupo.referencia,

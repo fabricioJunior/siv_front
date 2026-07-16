@@ -11,12 +11,18 @@ part 'etiquetas_state.dart';
 class EtiquetasBloc extends Bloc<EtiquetasEvent, EtiquetasState> {
   final RecuperarEtiquetas _recuperarEtiquetas;
   final CriarEtiqueta _criarEtiqueta;
+  final EditarEtiqueta _editarEtiqueta;
   final ExcluirEtiqueta _excluirEtiqueta;
 
-  EtiquetasBloc(this._recuperarEtiquetas, this._criarEtiqueta, this._excluirEtiqueta)
-    : super(const EtiquetasInitial()) {
+  EtiquetasBloc(
+    this._recuperarEtiquetas,
+    this._criarEtiqueta,
+    this._editarEtiqueta,
+    this._excluirEtiqueta,
+  ) : super(const EtiquetasInitial()) {
     on<EtiquetasIniciou>(_onEtiquetasIniciou);
     on<EtiquetasCriarSolicitado>(_onEtiquetasCriarSolicitado);
+    on<EtiquetasEditarSolicitado>(_onEtiquetasEditarSolicitado);
     on<EtiquetasExcluirSolicitado>(_onEtiquetasExcluirSolicitado);
   }
 
@@ -56,6 +62,33 @@ class EtiquetasBloc extends Bloc<EtiquetasEvent, EtiquetasState> {
       );
     } catch (e, s) {
       emit(EtiquetasCriarFalha(etiquetas: state.etiquetas));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onEtiquetasEditarSolicitado(
+    EtiquetasEditarSolicitado event,
+    Emitter<EtiquetasState> emit,
+  ) async {
+    try {
+      emit(EtiquetasEditarEmProgresso(etiquetas: state.etiquetas));
+      final etiqueta = await _editarEtiqueta(
+        id: event.id,
+        nome: event.nome,
+        altura: event.altura,
+        largura: event.largura,
+        dpi: event.dpi,
+        elementos: event.elementos,
+        vias: event.vias,
+      );
+
+      final etiquetasAtualizadas = state.etiquetas
+          .map((item) => item.id == etiqueta.id ? etiqueta : item)
+          .toList(growable: false);
+
+      emit(EtiquetasEditarSucesso(etiquetas: etiquetasAtualizadas));
+    } catch (e, s) {
+      emit(EtiquetasEditarFalha(etiquetas: state.etiquetas));
       addError(e, s);
     }
   }

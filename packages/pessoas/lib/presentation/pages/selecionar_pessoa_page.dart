@@ -41,7 +41,7 @@ class _SelecionarPessoaPageState extends State<SelecionarPessoaPage> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: SearchBar(
-                hintText: 'Buscar por nome ou documento',
+                hintText: 'Buscar por nome, CPF/CNPJ ou ID',
                 leading: const Icon(Icons.search),
                 onChanged: (value) {
                   _debouncer.run(() {

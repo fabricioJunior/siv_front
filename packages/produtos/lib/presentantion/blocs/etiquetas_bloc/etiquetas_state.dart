@@ -37,6 +37,18 @@ class EtiquetasCriarFalha extends EtiquetasState {
   const EtiquetasCriarFalha({required super.etiquetas});
 }
 
+class EtiquetasEditarEmProgresso extends EtiquetasState {
+  const EtiquetasEditarEmProgresso({required super.etiquetas});
+}
+
+class EtiquetasEditarSucesso extends EtiquetasState {
+  const EtiquetasEditarSucesso({required super.etiquetas});
+}
+
+class EtiquetasEditarFalha extends EtiquetasState {
+  const EtiquetasEditarFalha({required super.etiquetas});
+}
+
 class EtiquetasExcluirEmProgresso extends EtiquetasState {
   const EtiquetasExcluirEmProgresso({required super.etiquetas});
 }

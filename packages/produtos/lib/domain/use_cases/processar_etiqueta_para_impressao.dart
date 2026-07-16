@@ -7,14 +7,19 @@ class ProcessarEtiquetaParaImpressao {
     required String codigoBarras,
     required double preco,
     required String descricao,
+    // Limite de caracteres por campo dinamico (chave = nome do campo: titulo/cor/tamanho/
+    // descricao/preco), configurado na edicao da etiqueta. Quando o dado real do produto for
+    // maior que o limite, imprime so os N primeiros caracteres. codigoBarras nao trunca (quebraria
+    // o EAN) mesmo se vier um limite configurado por engano.
+    Map<String, int>? limitesCaracteres,
   }) {
-    final tituloNormalizado = _removerAcentos(titulo);
-    final corNormalizada = _removerAcentos(cor);
-    final tamanhoNormalizado = _removerAcentos(tamanho);
+    final tituloNormalizado = _truncar(_removerAcentos(titulo), limitesCaracteres?['titulo']);
+    final corNormalizada = _truncar(_removerAcentos(cor), limitesCaracteres?['cor']);
+    final tamanhoNormalizado = _truncar(_removerAcentos(tamanho), limitesCaracteres?['tamanho']);
     final codigoBarrasNormalizado = _removerAcentos(codigoBarras);
-    final descricaoNormalizada = _removerAcentos(descricao);
+    final descricaoNormalizada = _truncar(_removerAcentos(descricao), limitesCaracteres?['descricao']);
     final precoFormatado = preco.toStringAsFixed(2).replaceAll('.', ',');
-    final precoNormalizado = _removerAcentos(precoFormatado);
+    final precoNormalizado = _truncar(_removerAcentos(precoFormatado), limitesCaracteres?['preco']);
 
     return templateZpl
         .replaceAll('{titulo}', tituloNormalizado)
@@ -23,6 +28,13 @@ class ProcessarEtiquetaParaImpressao {
         .replaceAll('{codigoBarras}', codigoBarrasNormalizado)
         .replaceAll('{preco}', precoNormalizado)
         .replaceAll('{descricao}', descricaoNormalizada);
+  }
+
+  String _truncar(String valor, int? limite) {
+    if (limite == null || limite <= 0 || valor.length <= limite) {
+      return valor;
+    }
+    return valor.substring(0, limite);
   }
 
   String _removerAcentos(String valor) {

@@ -35,4 +35,25 @@ class EtiquetasRepository implements IEtiquetasRepository {
       vias: vias,
     );
   }
+
+  @override
+  Future<Etiqueta> editarEtiqueta({
+    required int id,
+    required String nome,
+    required double altura,
+    required double largura,
+    required EtiquetaDpi dpi,
+    required List<EtiquetaElemento> elementos,
+    required List<EtiquetaVia> vias,
+  }) {
+    return etiquetasRemoteDataSource.editarEtiqueta(
+      id: id,
+      nome: nome,
+      altura: altura,
+      largura: largura,
+      dpi: dpi,
+      elementos: elementos,
+      vias: vias,
+    );
+  }
 }

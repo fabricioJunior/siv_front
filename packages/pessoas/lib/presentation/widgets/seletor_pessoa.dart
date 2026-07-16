@@ -187,7 +187,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                 },
                 onlyView: widget.onlyView,
                 titulo: _buildTitulo(),
-                hintText: 'Digite para buscar uma pessoa',
+                hintText: 'Busque por nome, CPF/CNPJ ou ID',
                 maxSugestoes: 5,
                 onBuscaChanged: _onBuscaChanged,
                 chipAvatarBuilder: (context, pessoa) =>

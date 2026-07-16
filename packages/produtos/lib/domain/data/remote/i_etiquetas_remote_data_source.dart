@@ -13,4 +13,14 @@ abstract class IEtiquetasRemoteDataSource {
     required List<EtiquetaElemento> elementos,
     required List<EtiquetaVia> vias,
   });
+
+  Future<Etiqueta> editarEtiqueta({
+    required int id,
+    required String nome,
+    required double altura,
+    required double largura,
+    required EtiquetaDpi dpi,
+    required List<EtiquetaElemento> elementos,
+    required List<EtiquetaVia> vias,
+  });
 }

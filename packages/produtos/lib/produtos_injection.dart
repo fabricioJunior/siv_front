@@ -304,6 +304,10 @@ void _usesCases() {
     () => CriarEtiqueta(etiquetasRepository: sl()),
   );
 
+  sl.registerFactory<EditarEtiqueta>(
+    () => EditarEtiqueta(etiquetasRepository: sl()),
+  );
+
   sl.registerFactory<ExcluirEtiqueta>(
     () => ExcluirEtiqueta(etiquetasRepository: sl()),
   );
@@ -382,7 +386,7 @@ void _presentantion() {
 
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 
-  sl.registerFactory<EtiquetasBloc>(() => EtiquetasBloc(sl(), sl(), sl()));
+  sl.registerFactory<EtiquetasBloc>(() => EtiquetasBloc(sl(), sl(), sl(), sl()));
 
   sl.registerFactory<ProdutosDaReferenciaBloc>(
     () => ProdutosDaReferenciaBloc(sl()),

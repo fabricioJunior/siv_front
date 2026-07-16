@@ -33,16 +33,32 @@ abstract class EtiquetaElemento implements Equatable {
   TipoElementoEtiqueta get tipoElemento;
   double get x;
   double get y;
+  // Conteudo literal do "Texto Fixo" -- presente so quando o elemento e texto digitado pelo
+  // usuario, nao resolvido a partir de dado do produto em tempo de impressao.
+  String? get texto;
+  // Limite de caracteres pra campos DINAMICOS (titulo/preco/tamanho/descricao/cor) -- quando o
+  // dado do produto resolvido em tempo de impressao for maior, so os N primeiros caracteres sao
+  // impressos. Nao se aplica a Texto Fixo nem codigoBarras.
+  int? get limiteCaracteres;
+  // Tamanho da fonte (mm) pra elementos de texto, ou altura do codigo de barras (mm) pra
+  // elementos de codigoBarras.
+  double? get tamanhoFonteMm;
+  double? get alturaCodigoBarrasMm;
 
   factory EtiquetaElemento.create({
     required String nome,
     required TipoElementoEtiqueta tipoElemento,
     required double x,
     required double y,
+    String? texto,
+    int? limiteCaracteres,
+    double? tamanhoFonteMm,
+    double? alturaCodigoBarrasMm,
   }) = _EtiquetaElementoImpl;
 
   @override
-  List<Object?> get props => [nome, tipoElemento, x, y];
+  List<Object?> get props =>
+      [nome, tipoElemento, x, y, texto, limiteCaracteres, tamanhoFonteMm, alturaCodigoBarrasMm];
 
   @override
   bool? get stringify => true;
@@ -139,11 +155,27 @@ class _EtiquetaElementoImpl implements EtiquetaElemento {
   @override
   final double y;
 
+  @override
+  final String? texto;
+
+  @override
+  final int? limiteCaracteres;
+
+  @override
+  final double? tamanhoFonteMm;
+
+  @override
+  final double? alturaCodigoBarrasMm;
+
   _EtiquetaElementoImpl({
     required this.nome,
     required this.tipoElemento,
     required this.x,
     required this.y,
+    this.texto,
+    this.limiteCaracteres,
+    this.tamanhoFonteMm,
+    this.alturaCodigoBarrasMm,
   });
 
   _EtiquetaElementoImpl copyWith({
@@ -151,17 +183,26 @@ class _EtiquetaElementoImpl implements EtiquetaElemento {
     TipoElementoEtiqueta? tipoElemento,
     double? x,
     double? y,
+    String? texto,
+    int? limiteCaracteres,
+    double? tamanhoFonteMm,
+    double? alturaCodigoBarrasMm,
   }) {
     return _EtiquetaElementoImpl(
       nome: nome ?? this.nome,
       tipoElemento: tipoElemento ?? this.tipoElemento,
       x: x ?? this.x,
       y: y ?? this.y,
+      texto: texto ?? this.texto,
+      limiteCaracteres: limiteCaracteres ?? this.limiteCaracteres,
+      tamanhoFonteMm: tamanhoFonteMm ?? this.tamanhoFonteMm,
+      alturaCodigoBarrasMm: alturaCodigoBarrasMm ?? this.alturaCodigoBarrasMm,
     );
   }
 
   @override
-  List<Object?> get props => [nome, tipoElemento, x, y];
+  List<Object?> get props =>
+      [nome, tipoElemento, x, y, texto, limiteCaracteres, tamanhoFonteMm, alturaCodigoBarrasMm];
 
   @override
   bool? get stringify => true;
@@ -293,6 +334,10 @@ extension EtiquetaElementoCopyWith on EtiquetaElemento {
     TipoElementoEtiqueta? tipoElemento,
     double? x,
     double? y,
+    String? texto,
+    int? limiteCaracteres,
+    double? tamanhoFonteMm,
+    double? alturaCodigoBarrasMm,
   }) {
     if (this is _EtiquetaElementoImpl) {
       return (this as _EtiquetaElementoImpl).copyWith(
@@ -300,6 +345,10 @@ extension EtiquetaElementoCopyWith on EtiquetaElemento {
         tipoElemento: tipoElemento,
         x: x,
         y: y,
+        texto: texto,
+        limiteCaracteres: limiteCaracteres,
+        tamanhoFonteMm: tamanhoFonteMm,
+        alturaCodigoBarrasMm: alturaCodigoBarrasMm,
       );
     }
 
@@ -308,6 +357,10 @@ extension EtiquetaElementoCopyWith on EtiquetaElemento {
       tipoElemento: tipoElemento ?? this.tipoElemento,
       x: x ?? this.x,
       y: y ?? this.y,
+      texto: texto ?? this.texto,
+      limiteCaracteres: limiteCaracteres ?? this.limiteCaracteres,
+      tamanhoFonteMm: tamanhoFonteMm ?? this.tamanhoFonteMm,
+      alturaCodigoBarrasMm: alturaCodigoBarrasMm ?? this.alturaCodigoBarrasMm,
     );
   }
 }

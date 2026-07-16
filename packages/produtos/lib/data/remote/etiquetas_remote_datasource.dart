@@ -43,32 +43,110 @@ class EtiquetasRemoteDatasource extends RemoteDataSourceBase
     required List<EtiquetaVia> vias,
   }) async {
     final response = await post(
-      body: {
-        'nome': nome,
-        'altura': altura,
-        'largura': largura,
-        'dpi': dpi.valor,
-        'elementos': elementos
-            .map(
-              (item) => {
-                'x': item.x,
-                'y': item.y,
-                'nome': item.nome,
-                'tipoElemento': item.tipoElemento.valor,
-              },
-            )
-            .toList(growable: false),
-        'vias': vias
-            .map(
-              (item) => {
-                'ordem': item.ordem,
-                'zpl': item.zpl,
-              },
-            )
-            .toList(growable: false),
-      },
+      body: _buildBody(
+        nome: nome,
+        altura: altura,
+        largura: largura,
+        dpi: dpi,
+        elementos: elementos,
+        vias: vias,
+      ),
     );
 
+    return _fromResponseOuPadrao(
+      response,
+      nome: nome,
+      altura: altura,
+      largura: largura,
+      dpi: dpi,
+      elementos: elementos,
+      vias: vias,
+    );
+  }
+
+  @override
+  Future<Etiqueta> editarEtiqueta({
+    required int id,
+    required String nome,
+    required double altura,
+    required double largura,
+    required EtiquetaDpi dpi,
+    required List<EtiquetaElemento> elementos,
+    required List<EtiquetaVia> vias,
+  }) async {
+    final response = await put(
+      pathParameters: {'id': id.toString()},
+      body: _buildBody(
+        nome: nome,
+        altura: altura,
+        largura: largura,
+        dpi: dpi,
+        elementos: elementos,
+        vias: vias,
+      ),
+    );
+
+    return _fromResponseOuPadrao(
+      response,
+      id: id,
+      nome: nome,
+      altura: altura,
+      largura: largura,
+      dpi: dpi,
+      elementos: elementos,
+      vias: vias,
+    );
+  }
+
+  Map<String, dynamic> _buildBody({
+    required String nome,
+    required double altura,
+    required double largura,
+    required EtiquetaDpi dpi,
+    required List<EtiquetaElemento> elementos,
+    required List<EtiquetaVia> vias,
+  }) {
+    return {
+      'nome': nome,
+      'altura': altura,
+      'largura': largura,
+      'dpi': dpi.valor,
+      'elementos': elementos
+          .map(
+            (item) => {
+              'x': item.x,
+              'y': item.y,
+              'nome': item.nome,
+              'tipoElemento': item.tipoElemento.valor,
+              if (item.texto != null) 'texto': item.texto,
+              if (item.limiteCaracteres != null) 'limiteCaracteres': item.limiteCaracteres,
+              if (item.tamanhoFonteMm != null) 'tamanhoFonteMm': item.tamanhoFonteMm,
+              if (item.alturaCodigoBarrasMm != null)
+                'alturaCodigoBarrasMm': item.alturaCodigoBarrasMm,
+            },
+          )
+          .toList(growable: false),
+      'vias': vias
+          .map(
+            (item) => {
+              'ordem': item.ordem,
+              'zpl': item.zpl,
+            },
+          )
+          .toList(growable: false),
+    };
+  }
+
+  Etiqueta _fromResponseOuPadrao(
+    IHttpResponse response, {
+    int? id,
+    required String nome,
+    required double altura,
+    required double largura,
+    required EtiquetaDpi dpi,
+    required List<EtiquetaElemento> elementos,
+    required List<EtiquetaVia> vias,
+  }) {
     final body = response.body;
     if (body is Map<String, dynamic>) {
       return _fromMap(
@@ -83,6 +161,7 @@ class EtiquetasRemoteDatasource extends RemoteDataSourceBase
     }
 
     return Etiqueta.create(
+      id: id,
       nome: nome,
       altura: altura,
       largura: largura,
@@ -113,6 +192,10 @@ class EtiquetasRemoteDatasource extends RemoteDataSourceBase
                   tipoElemento: TipoElementoEtiquetaX.fromValue(item['tipoElemento']),
                   x: (item['x'] as num?)?.toDouble() ?? 0,
                   y: (item['y'] as num?)?.toDouble() ?? 0,
+                  texto: (item['texto'] as String?),
+                  limiteCaracteres: (item['limiteCaracteres'] as num?)?.toInt(),
+                  tamanhoFonteMm: (item['tamanhoFonteMm'] as num?)?.toDouble(),
+                  alturaCodigoBarrasMm: (item['alturaCodigoBarrasMm'] as num?)?.toDouble(),
                 ),
               )
               .toList(growable: false)

@@ -36,18 +36,13 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
   late final TextEditingController _alturaController;
   late final TextEditingController _quantidadeViasController;
   late final TextEditingController _gapController;
+  late final TextEditingController _nomeController;
+
+  String _nomeEtiqueta = 'Etiqueta personalizada';
 
   final List<ElementoEtiquetaPreview> _elementos = [];
 
   int get _dotsPorMm => _dpiSelecionado.dotsPorMm;
-
-  String get _nomeEtiqueta {
-    final valor = widget.overrides?['nomeEtiqueta'];
-    if (valor == null || valor.trim().isEmpty) {
-      return 'Etiqueta personalizada';
-    }
-    return valor.trim();
-  }
 
   double get _larguraTotalImpressaoMm {
     if (_quantidadeVias <= 1) {
@@ -75,6 +70,7 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     _gapController = TextEditingController(
       text: _gapEntreViasMm.toStringAsFixed(1),
     );
+    _nomeController = TextEditingController(text: _nomeEtiqueta);
   }
 
   @override
@@ -96,10 +92,15 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     _alturaController.dispose();
     _quantidadeViasController.dispose();
     _gapController.dispose();
+    _nomeController.dispose();
     super.dispose();
   }
 
   void _aplicarOverrides() {
+    final nomeOverride = widget.overrides?['nomeEtiqueta'];
+    if (nomeOverride != null && nomeOverride.trim().isNotEmpty) {
+      _nomeEtiqueta = nomeOverride.trim();
+    }
     _dpiSelecionado = _overrideDpi('dpi', _dpiSelecionado);
     _larguraEtiquetaMm = _overrideDouble('larguraEtiquetaMm', _larguraEtiquetaMm, 20, 300);
     _alturaEtiquetaMm = _overrideDouble('alturaEtiquetaMm', _alturaEtiquetaMm, 20, 300);
@@ -147,6 +148,27 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
             2,
             _alturaEtiquetaMm,
           ),
+          limiteCaracteres: _overrideIntOpcional(campo.chaveLimiteCaracteres),
+        ),
+      );
+    }
+
+    // Texto Fixo nao pertence a TipoCampoEtiqueta (nome livre, gerado dinamicamente) -- reconstroi
+    // a partir da lista de nomes salva em overrides['textoFixoNomes'], usando as mesmas chaves
+    // convencionais ("${nome}Xmm" etc) ja usadas pelos campos fixos acima.
+    final nomesTextoFixo = (widget.overrides?['textoFixoNomes'] ?? '')
+        .split(',')
+        .map((nome) => nome.trim())
+        .where((nome) => nome.isNotEmpty);
+
+    for (final nome in nomesTextoFixo) {
+      elementos.add(
+        ElementoEtiquetaPreview.textoFixo(
+          nome: nome,
+          texto: _valorTexto(nome, ''),
+          xMm: _overrideDouble('${nome}Xmm', 1, 0, _larguraEtiquetaMm),
+          yMm: _overrideDouble('${nome}Ymm', 1, 0, _alturaEtiquetaMm),
+          tamanhoFonteMm: _overrideDouble('${nome}TamanhoFonteMm', 2, 1, 20),
         ),
       );
     }
@@ -154,11 +176,30 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     return elementos;
   }
 
+  String _proximoNomeTextoFixo() {
+    final regexTextoFixo = RegExp(r'^textoFixo_(\d+)$');
+    var maiorIndice = 0;
+
+    for (final elemento in _elementos) {
+      final match = regexTextoFixo.firstMatch(elemento.nome);
+      if (match == null) {
+        continue;
+      }
+      final indice = int.tryParse(match.group(1) ?? '') ?? 0;
+      if (indice > maiorIndice) {
+        maiorIndice = indice;
+      }
+    }
+
+    return 'textoFixo_${maiorIndice + 1}';
+  }
+
   void _sincronizarControles() {
     _larguraController.text = _larguraEtiquetaMm.toStringAsFixed(1);
     _alturaController.text = _alturaEtiquetaMm.toStringAsFixed(1);
     _quantidadeViasController.text = _quantidadeVias.toString();
     _gapController.text = _gapEntreViasMm.toStringAsFixed(1);
+    _nomeController.text = _nomeEtiqueta;
   }
 
   void _debouncedSetState(VoidCallback action) {
@@ -190,6 +231,14 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     }
 
     return parsed.clamp(min, max);
+  }
+
+  int? _overrideIntOpcional(String chave) {
+    final raw = widget.overrides?[chave];
+    if (raw == null || raw.trim().isEmpty) {
+      return null;
+    }
+    return int.tryParse(raw.trim());
   }
 
   EtiquetaDpi _overrideDpi(String chave, EtiquetaDpi atual) {
@@ -349,9 +398,11 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
           continue;
         }
 
-        final conteudoTexto = usarIdentificadores
+        // Texto Fixo nao tem dado de produto pra resolver depois -- o texto digitado E o
+        // conteudo final, sempre, mesmo quando usarIdentificadores=true (ZPL salvo no backend).
+        final conteudoTexto = usarIdentificadores && !elemento.fixo
             ? '{${elemento.nome}}'
-            : elemento.textoExemplo;
+            : _truncar(elemento.textoExemplo, elemento.limiteCaracteres);
 
         comandos.add(
           ZplText(
@@ -373,6 +424,13 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
       ),
       commands: comandos,
     );
+  }
+
+  String _truncar(String valor, int? limite) {
+    if (limite == null || limite <= 0 || valor.length <= limite) {
+      return valor;
+    }
+    return valor.substring(0, limite);
   }
 
   String _normalizarEan12(String input) {
@@ -403,7 +461,7 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     }
 
     return {
-      'nome': _nomeEtiqueta,
+      'nome': _nomeEtiqueta.trim().isEmpty ? 'Etiqueta personalizada' : _nomeEtiqueta.trim(),
       'altura': _alturaEtiquetaMm,
       'largura': _larguraEtiquetaMm,
       'dpi': _dpiSelecionado.valor,
@@ -417,6 +475,12 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
               'tipoElemento': elemento.tipoElemento.valor,
               'x': elemento.xMm,
               'y': elemento.yMm,
+              if (elemento.fixo) 'texto': elemento.textoExemplo,
+              if (elemento.limiteCaracteres != null)
+                'limiteCaracteres': elemento.limiteCaracteres,
+              // Faltava persistir isso -- editor sempre reabria com tamanho padrao do campo.
+              'tamanhoFonteMm': elemento.tamanhoFonteMm,
+              'alturaCodigoBarrasMm': elemento.alturaCodigoBarrasMm,
             },
           )
           .toList(growable: false),
@@ -550,6 +614,8 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     );
   }
 
+  static const _opcaoTextoFixo = 'Texto Fixo';
+
   Future<void> _adicionarCampo() async {
     final disponiveis = TipoCampoEtiqueta.values
         .where(
@@ -557,33 +623,32 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
         )
         .toList(growable: false);
 
-    if (disponiveis.isEmpty) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Todos os campos permitidos ja foram adicionados.'),
-          behavior: SnackBarBehavior.floating,
+    // Texto Fixo nao entra no filtro de "ja adicionado" -- e um componente repetivel (varios
+    // textos fixos na mesma etiqueta), diferente dos campos de TipoCampoEtiqueta (unicos).
+    final opcoes = [
+      const EtiquetaCampoOpcaoModal(
+        nome: _opcaoTextoFixo,
+        descricao: 'Texto livre digitado por voce, fixo na etiqueta.',
+      ),
+      ...disponiveis.map(
+        (campo) => EtiquetaCampoOpcaoModal(
+          nome: campo.nome,
+          descricao: campo.descricao,
         ),
-      );
-      return;
-    }
+      ),
+    ];
 
     final nomeSelecionado = await showEtiquetaAddFieldModal(
       context,
-      opcoes: disponiveis
-          .map(
-            (campo) => EtiquetaCampoOpcaoModal(
-              nome: campo.nome,
-              descricao: campo.descricao,
-            ),
-          )
-          .toList(growable: false),
+      opcoes: opcoes,
     );
 
     if (nomeSelecionado == null) {
+      return;
+    }
+
+    if (nomeSelecionado == _opcaoTextoFixo) {
+      _adicionarTextoFixo();
       return;
     }
 
@@ -635,6 +700,27 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
     );
   }
 
+  void _adicionarTextoFixo() {
+    final nome = _proximoNomeTextoFixo();
+
+    setState(() {
+      _elementos.add(
+        ElementoEtiquetaPreview.textoFixo(nome: nome, texto: ''),
+      );
+    });
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Texto fixo adicionado. Digite o texto e ajuste a posicao.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Widget _buildPreviewPanel(ZplGenerator generator) {
     return Card(
       child: Padding(
@@ -673,6 +759,19 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
           shrinkWrap: isNested,
           physics: isNested ? const NeverScrollableScrollPhysics() : null,
           children: [
+            TextFormField(
+              controller: _nomeController,
+              decoration: const InputDecoration(
+                labelText: 'Nome da etiqueta',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _nomeEtiqueta = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
             DropdownButtonFormField<EtiquetaDpi>(
               value: _dpiSelecionado,
               decoration: const InputDecoration(
@@ -795,7 +894,7 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
               children: [
                 Expanded(
                   child: Text(
-                    '${elemento.nome} (${elemento.tipoElemento.valor})',
+                    elemento.fixo ? 'Texto fixo' : '${elemento.nome} (${elemento.tipoElemento.valor})',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -813,9 +912,9 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
             TextFormField(
               key: ValueKey('valor_${elemento.nome}'),
               initialValue: elemento.textoExemplo,
-              decoration: const InputDecoration(
-                labelText: 'Valor de exemplo',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: elemento.fixo ? 'Texto' : 'Valor de exemplo',
+                border: const OutlineInputBorder(),
               ),
               onChanged: (valor) {
                 _debouncedSetState(() {
@@ -880,6 +979,28 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
                   });
                 },
               ),
+            if (elemento.suportaLimiteCaracteres) ...[
+              const SizedBox(height: 8),
+              TextFormField(
+                key: ValueKey('limite_${elemento.nome}'),
+                initialValue: elemento.limiteCaracteres?.toString() ?? '',
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  labelText: 'Limite de caracteres (opcional)',
+                  helperText:
+                      'Se o dado do produto for maior, imprime so os N primeiros caracteres.',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (valor) {
+                  _debouncedSetState(() {
+                    elemento.limiteCaracteres = valor.trim().isEmpty
+                        ? null
+                        : int.tryParse(valor.trim());
+                  });
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -1029,6 +1150,8 @@ class ElementoEtiquetaPreview {
     required this.yMm,
     required this.tamanhoFonteMm,
     required this.alturaCodigoBarrasMm,
+    this.fixo = false,
+    this.limiteCaracteres,
   });
 
   factory ElementoEtiquetaPreview.fromCampo(
@@ -1038,6 +1161,7 @@ class ElementoEtiquetaPreview {
     double? yMm,
     double? tamanhoFonteMm,
     double? alturaCodigoBarrasMm,
+    int? limiteCaracteres,
   }) {
     return ElementoEtiquetaPreview(
       nome: campo.nome,
@@ -1047,16 +1171,44 @@ class ElementoEtiquetaPreview {
       yMm: yMm ?? campo.yPadraoMm,
       tamanhoFonteMm: tamanhoFonteMm ?? campo.tamanhoFontePadraoMm,
       alturaCodigoBarrasMm: alturaCodigoBarrasMm ?? campo.alturaCodigoPadraoMm,
+      limiteCaracteres: limiteCaracteres,
+    );
+  }
+
+  // Texto Fixo: elemento de nome livre (nao vem de TipoCampoEtiqueta), cujo `textoExemplo` e o
+  // conteudo LITERAL final -- nunca vira placeholder {nome} na geracao do ZPL salvo.
+  factory ElementoEtiquetaPreview.textoFixo({
+    required String nome,
+    required String texto,
+    double xMm = 1,
+    double yMm = 1,
+    double tamanhoFonteMm = 2,
+  }) {
+    return ElementoEtiquetaPreview(
+      nome: nome,
+      tipoElemento: TipoElemento.texto,
+      textoExemplo: texto,
+      xMm: xMm,
+      yMm: yMm,
+      tamanhoFonteMm: tamanhoFonteMm,
+      alturaCodigoBarrasMm: 6.25,
+      fixo: true,
     );
   }
 
   final String nome;
   final TipoElemento tipoElemento;
+  final bool fixo;
   String textoExemplo;
   double xMm;
   double yMm;
   double tamanhoFonteMm;
   double alturaCodigoBarrasMm;
+  // So se aplica a campos DINAMICOS de texto (nao fixo, nao codigoBarras) -- limite de
+  // caracteres impresso a partir do dado real do produto, resolvido em tempo de impressao.
+  int? limiteCaracteres;
+
+  bool get suportaLimiteCaracteres => !fixo && tipoElemento == TipoElemento.texto;
 }
 
 enum TipoCampoEtiqueta {
@@ -1140,6 +1292,7 @@ extension TipoCampoEtiquetaX on TipoCampoEtiqueta {
   String get chaveY => '${nome}Ymm';
   String get chaveTamanhoFonte => '${nome}TamanhoFonteMm';
   String get chaveAlturaCodigo => '${nome}AlturaMm';
+  String get chaveLimiteCaracteres => '${nome}LimiteCaracteres';
 }
 
 enum TipoElemento {

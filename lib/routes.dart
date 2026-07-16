@@ -768,6 +768,7 @@ Map<String, Widget Function(BuildContext)> routes = {
             ReferenciaSeletor(
               modo: ReferenciaSeletorModo.unica,
               onChanged: onChanged,
+              permitirCadastro: false,
             ),
         seletorFuncionario: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
             FuncionarioSeletor(

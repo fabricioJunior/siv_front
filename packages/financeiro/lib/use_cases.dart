@@ -20,3 +20,5 @@ export 'domain/use_cases/cancelar_contagem_do_caixa.dart';
 export 'domain/use_cases/recuperar_contagem_do_caixa.dart';
 export 'domain/use_cases/recuperar_itens_pendentes_para_contagem.dart';
 export 'domain/use_cases/salvar_item_da_contagem_do_caixa.dart';
+export 'domain/use_cases/recuperar_recibo_fechamento_caixa.dart';
+export 'domain/use_cases/recuperar_historico_de_caixas.dart';

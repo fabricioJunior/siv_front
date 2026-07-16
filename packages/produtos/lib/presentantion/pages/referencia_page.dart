@@ -418,31 +418,47 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                   'Produtos da referência',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton.icon(
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pushNamed(
-                                            '/produto',
-                                            arguments: {
-                                              'referenciaId':
-                                                  state.referencia?.id,
-                                            },
-                                          )
-                                          .then((_) {
-                                            // ignore: use_build_context_synchronously
-                                            context.read<ReferenciaBloc>().add(
-                                              ReferenciaIniciou(
-                                                idReferencia:
-                                                    widget.idReferencia,
-                                              ),
-                                            );
-                                          });
-                                    },
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('Cadastrar novo produto'),
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        Navigator.of(context).pushNamed(
+                                          '/codigos_de_barras_da_referencia',
+                                          arguments: {
+                                            'referenciaId': state.referencia?.id,
+                                          },
+                                        );
+                                      },
+                                      icon: const Icon(Icons.barcode_reader),
+                                      label: const Text('Ver códigos de barras'),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pushNamed(
+                                              '/produto',
+                                              arguments: {
+                                                'referenciaId':
+                                                    state.referencia?.id,
+                                              },
+                                            )
+                                            .then((_) {
+                                              // ignore: use_build_context_synchronously
+                                              context
+                                                  .read<ReferenciaBloc>()
+                                                  .add(
+                                                    ReferenciaIniciou(
+                                                      idReferencia:
+                                                          widget.idReferencia,
+                                                    ),
+                                                  );
+                                            });
+                                      },
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Cadastrar novo produto'),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

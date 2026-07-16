@@ -114,6 +114,7 @@ class EstoqueRelatorioPdfExporter {
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
+        maxPages: 1000,
         build: (ctx) => [
           _cabecalho(
             'Relatório — Valor Total do Estoque',

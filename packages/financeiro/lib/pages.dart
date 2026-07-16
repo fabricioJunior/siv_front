@@ -11,3 +11,5 @@ export 'presentation/pages/sangrias_page.dart';
 export 'presentation/pages/sangria_page.dart';
 export 'presentation/pages/contagem_do_caixa_page.dart';
 export 'presentation/widgets/formas_de_pagamento_seletor.dart';
+export 'presentation/pages/recibo_fechamento_caixa_page.dart';
+export 'presentation/pages/historico_de_caixas_page.dart';

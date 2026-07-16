@@ -58,6 +58,40 @@ String _labelTipoDocumento(TipoContagemDoCaixaItem tipo) {
   }
 }
 
+pw.Widget _tabelaMovimentacao(
+  List<MovimentacaoRecibo> itens,
+  String vazioLabel,
+) {
+  return pw.Table(
+    border: _bordaFina,
+    columnWidths: const {
+      0: pw.FlexColumnWidth(1),
+      1: pw.FlexColumnWidth(1.5),
+      2: pw.FlexColumnWidth(2),
+      3: pw.FlexColumnWidth(1.5),
+      4: pw.FlexColumnWidth(1),
+    },
+    children: [
+      _linhaCabecalhoTabela(
+        ['Valor', 'Data/Hora', 'Descrição', 'Operador', 'Situação'],
+      ),
+      if (itens.isEmpty)
+        _linhaDadosTabela(['-', '-', vazioLabel, '-', '-'])
+      else
+        for (final item in itens)
+          _linhaDadosTabela([
+            _fmtMoeda(item.valor),
+            _fmtDataHora(item.dataHora),
+            _naoVazio(item.descricao, item.origem),
+            _naoVazio(item.operadorNome, '${item.operadorId}'),
+            item.cancelado
+                ? 'Cancelada${item.motivoCancelamento?.trim().isNotEmpty == true ? ': ${item.motivoCancelamento}' : ''}'
+                : 'Ativa',
+          ]),
+    ],
+  );
+}
+
 final _bordaFina = pw.TableBorder.all(color: PdfColors.grey600, width: 0.5);
 
 pw.Widget _titulo() => pw.Center(
@@ -193,7 +227,7 @@ class ReciboFechamentoCaixaPdfExporter {
           _tabelaFaturamento('Faturamento do caixa', recibo.faturamentoCaixa),
           _tituloSecao('Faturamento do dia'),
           _tabelaFaturamento('Faturamento do dia', recibo.faturamentoDia),
-          _tituloSecao('Faturamento do mês'),
+          _tituloSecao('Faturamento do mês (até o fechamento)'),
           pw.Text(
             _fmtMoeda(recibo.faturamentoMes.total),
             style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
@@ -218,34 +252,9 @@ class ReciboFechamentoCaixaPdfExporter {
             ],
           ),
           _tituloSecao('Sangrias'),
-          pw.Table(
-            border: _bordaFina,
-            columnWidths: const {
-              0: pw.FlexColumnWidth(1),
-              1: pw.FlexColumnWidth(1.5),
-              2: pw.FlexColumnWidth(2),
-              3: pw.FlexColumnWidth(1.5),
-              4: pw.FlexColumnWidth(1),
-            },
-            children: [
-              _linhaCabecalhoTabela(
-                ['Valor', 'Data/Hora', 'Descrição', 'Operador', 'Situação'],
-              ),
-              if (recibo.sangrias.isEmpty)
-                _linhaDadosTabela(['-', '-', 'Nenhuma sangria', '-', '-'])
-              else
-                for (final sangria in recibo.sangrias)
-                  _linhaDadosTabela([
-                    _fmtMoeda(sangria.valor),
-                    _fmtDataHora(sangria.dataHora),
-                    _naoVazio(sangria.descricao, sangria.origem),
-                    _naoVazio(sangria.operadorNome, '${sangria.operadorId}'),
-                    sangria.cancelado
-                        ? 'Cancelada${sangria.motivoCancelamento?.trim().isNotEmpty == true ? ': ${sangria.motivoCancelamento}' : ''}'
-                        : 'Ativa',
-                  ]),
-            ],
-          ),
+          _tabelaMovimentacao(recibo.sangrias, 'Nenhuma sangria'),
+          _tituloSecao('Suprimentos'),
+          _tabelaMovimentacao(recibo.suprimentos, 'Nenhum suprimento'),
           pw.SizedBox(height: 30),
           pw.Divider(color: PdfColors.grey700, thickness: 0.7),
           pw.Center(

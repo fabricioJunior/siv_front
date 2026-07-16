@@ -18,6 +18,9 @@ import 'package:produtos/domain/data/remote/i_referencias_pendentes_ncm_remote_d
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
+import 'package:produtos/data/remote/codigos_de_barras_da_referencia_remote_data_source.dart';
+import 'package:produtos/data/repositorios/codigos_de_barras_da_referencia_repository.dart';
+import 'package:produtos/domain/data/remote/i_codigos_de_barras_da_referencia_remote_data_source.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
@@ -105,6 +108,12 @@ void _data() {
   sl.registerFactory<ICodigosLocalDataSource>(
     () => CodigosLocalDataSource(getIsar: _getIsar),
   );
+
+  sl.registerFactory<ICodigosDeBarrasDaReferenciaRemoteDataSource>(
+    () => CodigosDeBarrasDaReferenciaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositores() {
@@ -159,6 +168,10 @@ void _repositores() {
 
   sl.registerFactory<IReferenciasPendentesNcmRepository>(
     () => ReferenciasPendentesNcmRepository(dataSource: sl()),
+  );
+
+  sl.registerFactory<ICodigosDeBarrasDaReferenciaRepository>(
+    () => CodigosDeBarrasDaReferenciaRepository(remoteDataSource: sl()),
   );
 }
 
@@ -355,6 +368,10 @@ void _usesCases() {
   sl.registerFactory<AtualizarNcmEmMassa>(
     () => AtualizarNcmEmMassa(repository: sl()),
   );
+
+  sl.registerFactory<RecuperarCodigosDeBarrasDaReferencia>(
+    () => RecuperarCodigosDeBarrasDaReferencia(repository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -416,6 +433,10 @@ void _presentantion() {
 
   sl.registerFactory<ReferenciasPendentesNcmBloc>(
     () => ReferenciasPendentesNcmBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<CodigosDeBarrasDaReferenciaBloc>(
+    () => CodigosDeBarrasDaReferenciaBloc(sl(), sl()),
   );
 }
 

@@ -22,7 +22,8 @@ abstract class ReciboFechamentoCaixa implements Equatable {
   FaturamentoMesRecibo get faturamentoMes;
 
   List<ValorContadoRecibo> get valoresContados;
-  List<SangriaRecibo> get sangrias;
+  List<MovimentacaoRecibo> get sangrias;
+  List<MovimentacaoRecibo> get suprimentos;
 
   @override
   List<Object?> get props => [
@@ -44,6 +45,7 @@ abstract class ReciboFechamentoCaixa implements Equatable {
         faturamentoMes,
         valoresContados,
         sangrias,
+        suprimentos,
       ];
 
   @override
@@ -85,7 +87,7 @@ abstract class ValorContadoRecibo implements Equatable {
   bool? get stringify => true;
 }
 
-abstract class SangriaRecibo implements Equatable {
+abstract class MovimentacaoRecibo implements Equatable {
   int get id;
   double get valor;
   String get origem;

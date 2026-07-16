@@ -52,6 +52,18 @@ void _remoteDataSources() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<IReciboFechamentoCaixaRemoteDataSource>(
+    () => ReciboFechamentoCaixaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IHistoricoDeCaixasRemoteDataSource>(
+    () => HistoricoDeCaixasRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -89,6 +101,18 @@ void _repositories() {
   sl.registerFactory<IContagemDoCaixaRepository>(
     () => ContagemDoCaixaRepository(
       remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IReciboFechamentoCaixaRepository>(
+    () => ReciboFechamentoCaixaRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IHistoricoDeCaixasRepository>(
+    () => HistoricoDeCaixasRepository(
+      historicoDeCaixasRemoteDataSource: sl(),
     ),
   );
 }
@@ -181,6 +205,14 @@ void _useCases() {
   sl.registerFactory<AtualizarFormaDePagamento>(
     () => AtualizarFormaDePagamento(repository: sl()),
   );
+
+  sl.registerFactory<RecuperarReciboFechamentoCaixa>(
+    () => RecuperarReciboFechamentoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarHistoricoDeCaixas>(
+    () => RecuperarHistoricoDeCaixas(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -253,6 +285,18 @@ void _presentation() {
     () => FormaDePagamentoBloc(
       sl(),
       sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<ReciboFechamentoCaixaBloc>(
+    () => ReciboFechamentoCaixaBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<HistoricoDeCaixasBloc>(
+    () => HistoricoDeCaixasBloc(
       sl(),
     ),
   );

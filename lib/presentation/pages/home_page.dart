@@ -98,14 +98,7 @@ class _HomePageState extends State<HomePage> {
                   precisaDeCaixaAberto: true,
                   componentesNecessarios: ['PEDFC001'],
                 ),
-                const _AccessFlowItem(
-                  icon: Icons.local_shipping,
-                  title: 'Romaneios',
-                  subtitle: 'Montagem, ajuste, expedição e observações.',
-                  color: Colors.deepOrange,
-                  route: '/romaneios',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
+
                 const _AccessFlowItem(
                   icon: Icons.inventory_outlined,
                   title: 'Consignações',
@@ -114,31 +107,7 @@ class _HomePageState extends State<HomePage> {
                   route: '/consignacoes',
                   componentesNecessarios: ['CONFC001'],
                 ),
-                const _AccessFlowItem(
-                  icon: Icons.point_of_sale,
-                  title: 'Histórico de vendas',
-                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
-                  color: Colors.green,
-                  route: '/vendas',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.input,
-                  title: 'Entradas Manuais',
-                  subtitle: 'Consulta por funcionário, quantidade e data.',
-                  color: Colors.teal,
-                  route: '/romaneios_entrada_manual',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.warehouse_outlined,
-                  title: 'Gerência de Estoque',
-                  subtitle:
-                      'Entrada manual, consulta, histórico e balanço.',
-                  color: Colors.indigo,
-                  route: '/gerencia_estoque',
-                  componentesNecessarios: ['ROMFP001', 'PRDFL001'],
-                ),
+
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
                   title: 'Documentos Fiscais',
@@ -202,12 +171,12 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['PRDFL001'],
                 ),
                 const _AccessFlowItem(
-                  icon: Icons.fact_check_outlined,
-                  title: 'Balanço',
-                  subtitle: 'Seleção de itens, contagem por lote e fechamento.',
-                  color: Colors.blue,
-                  route: '/balancos',
-                  componentesNecessarios: ['PRDFL001'],
+                  icon: Icons.warehouse_outlined,
+                  title: 'Gerência de Estoque',
+                  subtitle: 'Entrada manual, consulta, histórico e balanço.',
+                  color: Colors.indigo,
+                  route: '/gerencia_estoque',
+                  componentesNecessarios: ['ROMFP001', 'PRDFL001'],
                 ),
               ];
 
@@ -221,6 +190,7 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_faturamento',
                   componentesNecessarios: ['RELFC001'],
                 ),
+
                 const _AccessFlowItem(
                   icon: Icons.bar_chart,
                   title: 'Curva ABC',
@@ -248,6 +218,23 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_vendas_por_funcionario',
                   componentesNecessarios: ['RELFC004'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.point_of_sale,
+                  title: 'Histórico de vendas',
+                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
+                  color: Colors.green,
+                  route: '/vendas',
+                  componentesNecessarios: ['ROMFP001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.history,
+                  title: 'Histórico de Caixas',
+                  subtitle:
+                      'Caixas abertos, em contagem e fechados por período.',
+                  color: Colors.brown,
+                  route: '/historico_de_caixas',
+                  componentesNecessarios: ['FCXFP008'],
+                ),
               ];
 
               final administracao = <_AccessFlowItem>[
@@ -273,14 +260,6 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Acompanhe e execute a atualização de dados.',
                   color: Colors.lightBlue,
                   route: '/sincronizacao',
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.qr_code_2_outlined,
-                  title: 'Etiquetas',
-                  subtitle: 'Criação, pré-visualização e geração de etiquetas.',
-                  color: Colors.green,
-                  route: '/etiquetas',
-                  componentesNecessarios: ['PRDFM003'],
                 ),
               ];
 

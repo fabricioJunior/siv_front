@@ -20,3 +20,7 @@ export 'presentation/pages/sangria_page.dart';
 export 'presentation/blocs/contagem_do_caixa_bloc/contagem_do_caixa_bloc.dart';
 export 'presentation/pages/contagem_do_caixa_page.dart';
 export 'presentation/widgets/formas_de_pagamento_seletor.dart';
+export 'presentation/blocs/recibo_fechamento_caixa_bloc/recibo_fechamento_caixa_bloc.dart';
+export 'presentation/pages/recibo_fechamento_caixa_page.dart';
+export 'presentation/blocs/historico_de_caixas_bloc/historico_de_caixas_bloc.dart';
+export 'presentation/pages/historico_de_caixas_page.dart';

@@ -117,7 +117,17 @@ class _ReciboFechamentoCaixaPageState extends State<ReciboFechamentoCaixaPage> {
                 const SizedBox(height: 12),
                 _CardValoresContados(valoresContados: recibo.valoresContados),
                 const SizedBox(height: 12),
-                _CardSangrias(sangrias: recibo.sangrias),
+                _CardMovimentacao(
+                  titulo: 'Sangrias',
+                  vazioLabel: 'Nenhuma sangria registrada neste caixa.',
+                  itens: recibo.sangrias,
+                ),
+                const SizedBox(height: 12),
+                _CardMovimentacao(
+                  titulo: 'Suprimentos',
+                  vazioLabel: 'Nenhum suprimento registrado neste caixa.',
+                  itens: recibo.suprimentos,
+                ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -238,7 +248,7 @@ class _CardFaturamentoMes extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Faturamento do mês',
+              'Faturamento do mês (até o fechamento)',
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
@@ -296,10 +306,16 @@ class _CardValoresContados extends StatelessWidget {
   }
 }
 
-class _CardSangrias extends StatelessWidget {
-  final List<SangriaRecibo> sangrias;
+class _CardMovimentacao extends StatelessWidget {
+  final String titulo;
+  final String vazioLabel;
+  final List<MovimentacaoRecibo> itens;
 
-  const _CardSangrias({required this.sangrias});
+  const _CardMovimentacao({
+    required this.titulo,
+    required this.vazioLabel,
+    required this.itens,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -311,15 +327,15 @@ class _CardSangrias extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Sangrias',
+              titulo,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
-            if (sangrias.isEmpty)
-              const Text('Nenhuma sangria registrada neste caixa.')
+            if (itens.isEmpty)
+              Text(vazioLabel)
             else
-              ...sangrias.map((sangria) => _ItemSangria(sangria: sangria)),
+              ...itens.map((item) => _ItemMovimentacao(movimentacao: item)),
           ],
         ),
       ),
@@ -327,14 +343,14 @@ class _CardSangrias extends StatelessWidget {
   }
 }
 
-class _ItemSangria extends StatelessWidget {
-  final SangriaRecibo sangria;
+class _ItemMovimentacao extends StatelessWidget {
+  final MovimentacaoRecibo movimentacao;
 
-  const _ItemSangria({required this.sangria});
+  const _ItemMovimentacao({required this.movimentacao});
 
   @override
   Widget build(BuildContext context) {
-    final cancelada = sangria.cancelado;
+    final cancelada = movimentacao.cancelado;
     return Opacity(
       opacity: cancelada ? 0.5 : 1,
       child: Padding(
@@ -347,9 +363,9 @@ class _ItemSangria extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    sangria.descricao?.trim().isNotEmpty == true
-                        ? sangria.descricao!.trim()
-                        : sangria.origem,
+                    movimentacao.descricao?.trim().isNotEmpty == true
+                        ? movimentacao.descricao!.trim()
+                        : movimentacao.origem,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       decoration:
@@ -357,12 +373,12 @@ class _ItemSangria extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${_fmtDataHora(sangria.dataHora)} · ${sangria.operadorNome ?? 'Operador ${sangria.operadorId}'}',
+                    '${_fmtDataHora(movimentacao.dataHora)} · ${movimentacao.operadorNome ?? 'Operador ${movimentacao.operadorId}'}',
                     style: theme(context).textTheme.bodySmall,
                   ),
                   if (cancelada)
                     Text(
-                      'Cancelada${sangria.motivoCancelamento?.trim().isNotEmpty == true ? ': ${sangria.motivoCancelamento}' : ''}',
+                      'Cancelada${movimentacao.motivoCancelamento?.trim().isNotEmpty == true ? ': ${movimentacao.motivoCancelamento}' : ''}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                         fontSize: 12,
@@ -372,7 +388,7 @@ class _ItemSangria extends StatelessWidget {
               ),
             ),
             Text(
-              _fmtMoeda(sangria.valor),
+              _fmtMoeda(movimentacao.valor),
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 decoration: cancelada ? TextDecoration.lineThrough : null,

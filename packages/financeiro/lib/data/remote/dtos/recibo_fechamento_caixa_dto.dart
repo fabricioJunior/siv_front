@@ -55,7 +55,10 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
   final List<ValorContadoRecibo> valoresContados;
 
   @override
-  final List<SangriaRecibo> sangrias;
+  final List<MovimentacaoRecibo> sangrias;
+
+  @override
+  final List<MovimentacaoRecibo> suprimentos;
 
   const ReciboFechamentoCaixaDto({
     required this.caixaId,
@@ -76,6 +79,7 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
     required this.faturamentoMes,
     required this.valoresContados,
     required this.sangrias,
+    required this.suprimentos,
   });
 
   factory ReciboFechamentoCaixaDto.fromJson(Map<String, dynamic> json) {
@@ -120,7 +124,14 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
           .toList(),
       sangrias: ((json['sangrias'] as List?) ?? const [])
           .map(
-            (item) => _SangriaReciboDto.fromJson(item as Map<String, dynamic>),
+            (item) =>
+                _MovimentacaoReciboDto.fromJson(item as Map<String, dynamic>),
+          )
+          .toList(),
+      suprimentos: ((json['suprimentos'] as List?) ?? const [])
+          .map(
+            (item) =>
+                _MovimentacaoReciboDto.fromJson(item as Map<String, dynamic>),
           )
           .toList(),
     );
@@ -152,6 +163,7 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
         faturamentoMes,
         valoresContados,
         sangrias,
+        suprimentos,
       ];
 
   @override
@@ -262,7 +274,7 @@ class _ValorContadoReciboDto implements ValorContadoRecibo {
   bool? get stringify => true;
 }
 
-class _SangriaReciboDto implements SangriaRecibo {
+class _MovimentacaoReciboDto implements MovimentacaoRecibo {
   @override
   final int id;
 
@@ -290,7 +302,7 @@ class _SangriaReciboDto implements SangriaRecibo {
   @override
   final String? motivoCancelamento;
 
-  const _SangriaReciboDto({
+  const _MovimentacaoReciboDto({
     required this.id,
     required this.valor,
     required this.origem,
@@ -302,8 +314,8 @@ class _SangriaReciboDto implements SangriaRecibo {
     required this.motivoCancelamento,
   });
 
-  factory _SangriaReciboDto.fromJson(Map<String, dynamic> json) {
-    return _SangriaReciboDto(
+  factory _MovimentacaoReciboDto.fromJson(Map<String, dynamic> json) {
+    return _MovimentacaoReciboDto(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       valor: ReciboFechamentoCaixaDto._parseDouble(json['valor']) ?? 0,
       origem: json['origem']?.toString() ?? '',

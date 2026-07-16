@@ -669,6 +669,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);
   },
+  '/codigos_de_barras_da_referencia': (context) {
+    return CodigosDeBarrasDaReferenciaPage(
+      referenciaId: args(context)['referenciaId'],
+    );
+  },
   '/produtos': (context) {
     return ProdutosPage();
   },

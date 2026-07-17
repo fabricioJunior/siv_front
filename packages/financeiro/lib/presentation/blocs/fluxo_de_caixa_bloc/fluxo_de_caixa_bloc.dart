@@ -64,7 +64,8 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
         return;
       }
 
-      final extratos = await _buscarExtratoCaixa.call(caixaId: caixa.id);
+      final extratos =
+          _ordenarPorMaisRecente(await _buscarExtratoCaixa.call(caixaId: caixa.id));
       final totais = _calcularTotais(extratos);
 
       emit(
@@ -108,7 +109,8 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
         ),
       );
 
-      final extratos = await _buscarExtratoCaixa.call(caixaId: event.caixaId);
+      final extratos = _ordenarPorMaisRecente(
+          await _buscarExtratoCaixa.call(caixaId: event.caixaId));
       final totais = _calcularTotais(extratos);
 
       emit(
@@ -157,7 +159,8 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
         terminalId: event.terminalId,
       );
 
-      final extratos = await _buscarExtratoCaixa.call(caixaId: caixa.id);
+      final extratos =
+          _ordenarPorMaisRecente(await _buscarExtratoCaixa.call(caixaId: caixa.id));
       final totais = _calcularTotais(extratos);
 
       emit(
@@ -207,12 +210,14 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
       );
 
       final documento = event.documento.trim();
-      final extratos = documento.isEmpty
-          ? await _buscarExtratoCaixa.call(caixaId: caixaId)
-          : await _buscarExtratoCaixaPorDocumento.call(
-              caixaId: caixaId,
-              documento: documento,
-            );
+      final extratos = _ordenarPorMaisRecente(
+        documento.isEmpty
+            ? await _buscarExtratoCaixa.call(caixaId: caixaId)
+            : await _buscarExtratoCaixaPorDocumento.call(
+                caixaId: caixaId,
+                documento: documento,
+              ),
+      );
       final totais = _calcularTotais(extratos);
 
       emit(
@@ -281,6 +286,11 @@ class FluxoDeCaixaBloc extends Bloc<FluxoDeCaixaEvent, FluxoDeCaixaState> {
       );
       addError(e, s);
     }
+  }
+
+  List<ExtratoCaixa> _ordenarPorMaisRecente(List<ExtratoCaixa> extratos) {
+    return List<ExtratoCaixa>.of(extratos)
+      ..sort((a, b) => b.data.compareTo(a.data));
   }
 
   ({double totalEntradas, double totalSaidas, double saldo}) _calcularTotais(

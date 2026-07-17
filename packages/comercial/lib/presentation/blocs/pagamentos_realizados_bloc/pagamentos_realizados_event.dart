@@ -13,6 +13,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final int? pessoaId;
   final String? cpfClienteInicial;
   final double descontoJaAplicadoNoRomaneio;
+  final double taxaEntregaJaAplicadaNoRomaneio;
   final bool clienteGenerico;
 
   const PagamentosRealizadosIniciado({
@@ -21,6 +22,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.pessoaId,
     this.cpfClienteInicial,
     this.descontoJaAplicadoNoRomaneio = 0,
+    this.taxaEntregaJaAplicadaNoRomaneio = 0,
     this.clienteGenerico = false,
   });
 
@@ -31,6 +33,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         pessoaId,
         cpfClienteInicial,
         descontoJaAplicadoNoRomaneio,
+        taxaEntregaJaAplicadaNoRomaneio,
         clienteGenerico,
       ];
 }
@@ -98,6 +101,16 @@ class PagamentosRealizadosDescontoAlterado extends PagamentosRealizadosEvent {
 
   @override
   List<Object?> get props => [tipo, valorTexto];
+}
+
+class PagamentosRealizadosTaxaEntregaAlterada
+    extends PagamentosRealizadosEvent {
+  final String valorTexto;
+
+  const PagamentosRealizadosTaxaEntregaAlterada({required this.valorTexto});
+
+  @override
+  List<Object?> get props => [valorTexto];
 }
 
 class PagamentosRealizadosDescontoItemAlterado

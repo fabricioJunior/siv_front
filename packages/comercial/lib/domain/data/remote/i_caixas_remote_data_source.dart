@@ -6,6 +6,7 @@ abstract class IReceberRomaneioNoCaixaRemoteDataSource {
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
     double? desconto,
+    double? valorTaxaEntrega,
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',

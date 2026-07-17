@@ -26,6 +26,8 @@ class PagamentosRealizadosState extends Equatable {
   final DescontoTipo? descontoTipo;
   final String descontoValorTexto;
   final double valorDescontoAplicado;
+  final String taxaEntregaValorTexto;
+  final double valorTaxaEntregaAplicado;
   final Map<int, DescontoTipo> descontosItensTipo;
   final Map<int, String> descontosItensValorTexto;
   final Map<int, double> descontosItensAplicado;
@@ -50,6 +52,8 @@ class PagamentosRealizadosState extends Equatable {
     this.descontoTipo,
     this.descontoValorTexto = '',
     this.valorDescontoAplicado = 0,
+    this.taxaEntregaValorTexto = '',
+    this.valorTaxaEntregaAplicado = 0,
     this.descontosItensTipo = const {},
     this.descontosItensValorTexto = const {},
     this.descontosItensAplicado = const {},
@@ -76,19 +80,25 @@ class PagamentosRealizadosState extends Equatable {
       (valorTotalProdutos - valorDescontoItensTotal)
           .clamp(0, double.infinity)
           .toDouble();
+  // Taxa de entrega é somada FORA do desconto -- nunca sofre desconto,
+  // mesma regra do frete FOB no backend.
+  double get valorTotalAPagar =>
+      valorTotalComDesconto + valorTaxaEntregaAplicado;
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
   double get valorTotalBruto =>
       linhas.fold<double>(0, (soma, linha) => soma + linha.valor);
   double get valorTroco =>
-      _possuiDinheiro && valorTotalBruto > valorTotalComDesconto
-          ? valorTotalBruto - valorTotalComDesconto
+      _possuiDinheiro && valorTotalBruto > valorTotalAPagar
+          ? valorTotalBruto - valorTotalAPagar
           : 0;
   double get valorLiquido => valorTotalBruto - valorTroco;
-  double get valorRestante => (valorTotalComDesconto - valorLiquido)
+  double get valorRestante => (valorTotalAPagar - valorLiquido)
       .clamp(0, double.infinity)
       .toDouble();
   double get valorDescontoAplicadoArredondado =>
       double.parse(valorDescontoAplicado.toStringAsFixed(2));
+  double get valorTaxaEntregaAplicadoArredondado =>
+      double.parse(valorTaxaEntregaAplicado.toStringAsFixed(2));
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
   bool get podeFinalizar =>
       step == PagamentosRealizadosStep.editando && linhas.isNotEmpty;
@@ -107,6 +117,8 @@ class PagamentosRealizadosState extends Equatable {
     Object? descontoTipo = _sentinela,
     String? descontoValorTexto,
     double? valorDescontoAplicado,
+    String? taxaEntregaValorTexto,
+    double? valorTaxaEntregaAplicado,
     Map<int, DescontoTipo>? descontosItensTipo,
     Map<int, String>? descontosItensValorTexto,
     Map<int, double>? descontosItensAplicado,
@@ -139,6 +151,10 @@ class PagamentosRealizadosState extends Equatable {
       descontoValorTexto: descontoValorTexto ?? this.descontoValorTexto,
       valorDescontoAplicado:
           valorDescontoAplicado ?? this.valorDescontoAplicado,
+      taxaEntregaValorTexto:
+          taxaEntregaValorTexto ?? this.taxaEntregaValorTexto,
+      valorTaxaEntregaAplicado:
+          valorTaxaEntregaAplicado ?? this.valorTaxaEntregaAplicado,
       descontosItensTipo: descontosItensTipo ?? this.descontosItensTipo,
       descontosItensValorTexto:
           descontosItensValorTexto ?? this.descontosItensValorTexto,
@@ -170,6 +186,8 @@ class PagamentosRealizadosState extends Equatable {
         descontoTipo,
         descontoValorTexto,
         valorDescontoAplicadoArredondado,
+        taxaEntregaValorTexto,
+        valorTaxaEntregaAplicadoArredondado,
         descontosItensTipo,
         descontosItensValorTexto,
         descontosItensAplicado,

@@ -49,6 +49,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   // Substitui (não soma) o desconto já persistido no romaneio -- ver
   // comentário em romaneio_page.dart:_irParaPagamento.
   final double? desconto;
+  final double? valorTaxaEntrega;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -56,6 +57,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   RomaneioPagamentoRecebido({
     required this.formasDePagamentoRealizadas,
     this.desconto,
+    this.valorTaxaEntrega,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,

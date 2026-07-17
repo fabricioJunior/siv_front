@@ -5,6 +5,11 @@ import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
+String _formatarValor(double? valor) {
+  final numero = (valor ?? 0).toStringAsFixed(2).replaceAll('.', ',');
+  return 'R\$ $numero';
+}
+
 class RomaneiosPage extends StatefulWidget {
   const RomaneiosPage({super.key});
 
@@ -468,6 +473,12 @@ class _RomaneioCard extends StatelessWidget {
                     icon: Icons.inventory_2_outlined,
                     label: romaneio.situacao ?? 'Sem situação',
                   ),
+                  if ((romaneio.valorTaxaEntrega ?? 0) > 0)
+                    _ResumoChip(
+                      icon: Icons.local_shipping_outlined,
+                      label:
+                          'Taxa de entrega: ${_formatarValor(romaneio.valorTaxaEntrega)}',
+                    ),
                 ],
               ),
               const SizedBox(height: 12),

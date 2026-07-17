@@ -262,6 +262,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false),
           valorDesconto: event.valorDesconto,
+          valorTaxaEntrega: event.valorTaxaEntrega,
           descontosItens: event.descontosItens
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false),

@@ -21,6 +21,10 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   // ou zerar. Só relevante quando o pagamento é de um romaneio já existente
   // (ver romaneio_page.dart); fica 0 nos outros usos (criação de venda nova).
   final double descontoJaAplicadoNoRomaneio;
+  // Mesma lógica do desconto acima, mas para a taxa de entrega já persistida
+  // no romaneio -- pré-carrega o diálogo pra não perder o valor ao reabrir o
+  // pagamento de um romaneio que já tinha taxa de entrega aplicada.
+  final double taxaEntregaJaAplicadaNoRomaneio;
   // Pontuação de fidelidade só se aplica à venda -- em consignação a pessoa
   // vinculada ao romaneio é o consignatário (pode nem ser cadastrado como
   // cliente), e as demais operações que reusam este diálogo (devolução,
@@ -38,6 +42,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.clienteGenerico = false,
     required this.formasDePagamentoSeletor,
     this.descontoJaAplicadoNoRomaneio = 0,
+    this.taxaEntregaJaAplicadaNoRomaneio = 0,
     this.exibirCheckboxFidelidade = false,
   });
 
@@ -53,6 +58,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             cpfClienteInicial: cpfClienteInicial,
             clienteGenerico: clienteGenerico,
             descontoJaAplicadoNoRomaneio: descontoJaAplicadoNoRomaneio,
+            taxaEntregaJaAplicadaNoRomaneio: taxaEntregaJaAplicadaNoRomaneio,
           ),
         ),
       child: BlocConsumer<PagamentosRealizadosBloc, PagamentosRealizadosState>(
@@ -73,6 +79,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               'descontosItens': state.descontosItensAplicado.entries
                   .map((e) => {'produtoId': e.key, 'valor': e.value})
                   .toList(),
+              'valorTaxaEntrega': state.valorTaxaEntregaAplicado,
               'resumoFormasDePagamento': state.linhas
                   .where((linha) => linha.formaDePagamento != null)
                   .map(
@@ -137,6 +144,10 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                       onDescontoPressed:
                           state.step == PagamentosRealizadosStep.editando
                               ? () => _abrirDialogoDesconto(context, state)
+                              : null,
+                      onTaxaEntregaPressed:
+                          state.step == PagamentosRealizadosStep.editando
+                              ? () => _abrirDialogoTaxaEntrega(context, state)
                               : null,
                       exibirCheckboxFidelidade: exibirCheckboxFidelidade,
                     ),
@@ -220,11 +231,13 @@ class PagamentosRealizadosWidget extends StatelessWidget {
 class _ResumoPagamentoCard extends StatefulWidget {
   final PagamentosRealizadosState state;
   final VoidCallback? onDescontoPressed;
+  final VoidCallback? onTaxaEntregaPressed;
   final bool exibirCheckboxFidelidade;
 
   const _ResumoPagamentoCard({
     required this.state,
     required this.onDescontoPressed,
+    required this.onTaxaEntregaPressed,
     this.exibirCheckboxFidelidade = false,
   });
 
@@ -260,6 +273,7 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   Widget build(BuildContext context) {
     final state = widget.state;
     final onDescontoPressed = widget.onDescontoPressed;
+    final onTaxaEntregaPressed = widget.onTaxaEntregaPressed;
     final theme = Theme.of(context);
     final possuiPessoa = state.pessoaId != null;
     final carregandoCredito = state.carregandoSaldoCreditoDevolucao;
@@ -285,6 +299,15 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                     state.valorDescontoAplicado > 0
                         ? 'Editar desconto'
                         : 'Adicionar desconto',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: onTaxaEntregaPressed,
+                  icon: const Icon(Icons.local_shipping_outlined),
+                  label: Text(
+                    state.valorTaxaEntregaAplicado > 0
+                        ? 'Editar taxa de entrega'
+                        : 'Adicionar taxa de entrega',
                   ),
                 ),
               ],
@@ -314,6 +337,11 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                   titulo: 'Total c/ desconto',
                   valor: _formatarMoeda(state.valorTotalComDesconto),
                 ),
+                if (state.valorTaxaEntregaAplicado > 0)
+                  _InfoBox(
+                    titulo: 'Taxa de entrega',
+                    valor: _formatarMoeda(state.valorTaxaEntregaAplicado),
+                  ),
                 _InfoBox(
                   titulo: 'Pago bruto',
                   valor: _formatarMoeda(state.valorTotalBruto),
@@ -790,6 +818,74 @@ Future<void> _abrirDialogoDesconto(
         tipo: tipoSelecionado,
         valorTexto: controller.text,
       ),
+    );
+  }
+}
+
+Future<void> _abrirDialogoTaxaEntrega(
+  BuildContext context,
+  PagamentosRealizadosState state,
+) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+  final controller = TextEditingController(
+    text: state.valorTaxaEntregaAplicado > 0
+        ? state.taxaEntregaValorTexto
+        : '',
+  );
+
+  final confirmou = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Taxa de entrega'),
+        content: SizedBox(
+          width: 420,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            inputFormatters: [_decimalInputFormatter],
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.done,
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            onFieldSubmitted: (_) => Navigator.of(dialogContext).pop(true),
+            decoration: const InputDecoration(
+              labelText: 'Valor pago pelo cliente',
+              border: OutlineInputBorder(),
+              helperText:
+                  'Valor da entrega pago pelo cliente. Entra no fluxo de caixa, não sofre desconto e não entra na nota fiscal.',
+              helperMaxLines: 3,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          if (state.valorTaxaEntregaAplicado > 0)
+            TextButton(
+              onPressed: () {
+                bloc.add(
+                  const PagamentosRealizadosTaxaEntregaAlterada(
+                    valorTexto: '',
+                  ),
+                );
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('Remover taxa de entrega'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Aplicar'),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmou == true) {
+    bloc.add(
+      PagamentosRealizadosTaxaEntregaAlterada(valorTexto: controller.text),
     );
   }
 }

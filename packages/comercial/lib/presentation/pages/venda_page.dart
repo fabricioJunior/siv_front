@@ -643,6 +643,8 @@ class _VendaPageState extends State<VendaPage> {
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade =
         pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
+    final valorTaxaEntrega =
+        _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
 
     final confirmouEmissao = await _abrirConfirmacaoEmissao(
       context,
@@ -659,6 +661,7 @@ class _VendaPageState extends State<VendaPage> {
         itens: itens,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         valorDesconto: valorDesconto,
+        valorTaxaEntrega: valorTaxaEntrega,
         descontosItens: descontosItens,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,

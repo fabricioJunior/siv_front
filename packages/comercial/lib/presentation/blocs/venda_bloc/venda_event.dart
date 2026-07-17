@@ -50,6 +50,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final List<Map<String, dynamic>> itens;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double valorDesconto;
+  final double valorTaxaEntrega;
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
@@ -59,6 +60,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
     required this.itens,
     required this.formasDePagamentoRealizadas,
     this.valorDesconto = 0,
+    this.valorTaxaEntrega = 0,
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
@@ -70,6 +72,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
         itens,
         formasDePagamentoRealizadas,
         valorDesconto,
+        valorTaxaEntrega,
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,

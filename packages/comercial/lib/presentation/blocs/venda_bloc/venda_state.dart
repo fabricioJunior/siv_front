@@ -16,6 +16,7 @@ class VendaState extends Equatable {
   final String? listaCompartilhadaHash;
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double valorDesconto;
+  final double valorTaxaEntrega;
   final List<Map<String, dynamic>> descontosItens;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
@@ -37,6 +38,7 @@ class VendaState extends Equatable {
     this.listaCompartilhadaHash,
     this.formasDePagamentoRealizadas = const [],
     this.valorDesconto = 0,
+    this.valorTaxaEntrega = 0,
     this.descontosItens = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
@@ -72,6 +74,7 @@ class VendaState extends Equatable {
     Object? listaCompartilhadaHash = _sentinela,
     Object? formasDePagamentoRealizadas = _sentinela,
     double? valorDesconto,
+    double? valorTaxaEntrega,
     List<Map<String, dynamic>>? descontosItens,
     bool? incluirCpfNaNota,
     String? cpfNaNota,
@@ -106,6 +109,7 @@ class VendaState extends Equatable {
               ? this.formasDePagamentoRealizadas
               : formasDePagamentoRealizadas as List<Map<String, dynamic>>,
       valorDesconto: valorDesconto ?? this.valorDesconto,
+      valorTaxaEntrega: valorTaxaEntrega ?? this.valorTaxaEntrega,
       descontosItens: descontosItens ?? this.descontosItens,
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
@@ -136,6 +140,7 @@ class VendaState extends Equatable {
         listaCompartilhadaHash,
         formasDePagamentoRealizadas,
         valorDesconto,
+        valorTaxaEntrega,
         descontosItens,
         incluirCpfNaNota,
         cpfNaNota,

@@ -53,6 +53,7 @@ abstract class Romaneio implements Equatable {
   double? get quantidade;
   double? get valorBruto;
   double? get desconto;
+  double? get valorTaxaEntrega;
   double? get valorLiquido;
   String? get observacao;
   DateTime? get data;
@@ -104,6 +105,7 @@ abstract class Romaneio implements Equatable {
     double? quantidade,
     double? valorBruto,
     double? desconto,
+    double? valorTaxaEntrega,
     double? valorLiquido,
     String? observacao,
     DateTime? data,
@@ -157,6 +159,7 @@ abstract class Romaneio implements Equatable {
         quantidade,
         valorBruto,
         desconto,
+        valorTaxaEntrega,
         valorLiquido,
         observacao,
         data,
@@ -228,6 +231,8 @@ class _RomaneioImpl implements Romaneio {
   final double? valorBruto;
   @override
   final double? desconto;
+  @override
+  final double? valorTaxaEntrega;
   @override
   final double? valorLiquido;
   @override
@@ -313,6 +318,7 @@ class _RomaneioImpl implements Romaneio {
     this.quantidade,
     this.valorBruto,
     this.desconto,
+    this.valorTaxaEntrega,
     this.valorLiquido,
     this.observacao,
     this.data,
@@ -368,6 +374,7 @@ class _RomaneioImpl implements Romaneio {
         quantidade,
         valorBruto,
         desconto,
+        valorTaxaEntrega,
         valorLiquido,
         observacao,
         data,

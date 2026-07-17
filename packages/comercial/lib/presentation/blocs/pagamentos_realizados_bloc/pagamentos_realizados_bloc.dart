@@ -30,6 +30,7 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosValorAlterado>(_onValorAlterado);
     on<PagamentosRealizadosParcelasAlteradas>(_onParcelasAlteradas);
     on<PagamentosRealizadosDescontoAlterado>(_onDescontoAlterado);
+    on<PagamentosRealizadosTaxaEntregaAlterada>(_onTaxaEntregaAlterada);
     on<PagamentosRealizadosDescontoItemAlterado>(_onDescontoItemAlterado);
     on<PagamentosRealizadosDescontosItensLimpos>(_onDescontosItensLimpos);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
@@ -95,6 +96,10 @@ class PagamentosRealizadosBloc
               ? event.descontoJaAplicadoNoRomaneio.toStringAsFixed(2)
               : '',
           valorDescontoAplicado: event.descontoJaAplicadoNoRomaneio,
+          taxaEntregaValorTexto: event.taxaEntregaJaAplicadaNoRomaneio > 0
+              ? event.taxaEntregaJaAplicadaNoRomaneio.toStringAsFixed(2)
+              : '',
+          valorTaxaEntregaAplicado: event.taxaEntregaJaAplicadaNoRomaneio,
           descontosItensTipo: {
             for (final produto in resumo.produtosCompartilhados)
               produto.produtoId: DescontoTipo.valorBruto,
@@ -325,6 +330,39 @@ class PagamentosRealizadosBloc
             entrada.key: entrada.value.toStringAsFixed(2),
         },
         descontosItensAplicado: descontosItens,
+        erro: null,
+      ),
+    );
+  }
+
+  void _onTaxaEntregaAlterada(
+    PagamentosRealizadosTaxaEntregaAlterada event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    if (event.valorTexto.trim().isEmpty) {
+      emit(
+        state.copyWith(
+          taxaEntregaValorTexto: '',
+          valorTaxaEntregaAplicado: 0,
+          erro: null,
+        ),
+      );
+      return;
+    }
+
+    final valorInformado = _toDouble(event.valorTexto);
+    if (valorInformado == null || valorInformado < 0) {
+      emit(
+        state.copyWith(erro: 'Informe um valor válido para taxa de entrega.'),
+      );
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        taxaEntregaValorTexto: event.valorTexto,
+        valorTaxaEntregaAplicado:
+            double.parse(valorInformado.toStringAsFixed(2)),
         erro: null,
       ),
     );
@@ -573,17 +611,17 @@ class PagamentosRealizadosBloc
     }
 
     final possuiDinheiro = linhasValidadas.any((linha) => linha.ehDinheiro);
-    final totalComDesconto = state.valorTotalComDesconto;
-    final troco = possuiDinheiro && totalBruto > totalComDesconto
-        ? totalBruto - totalComDesconto
+    final totalAPagar = state.valorTotalAPagar;
+    final troco = possuiDinheiro && totalBruto > totalAPagar
+        ? totalBruto - totalAPagar
         : 0.0;
     final totalLiquido = totalBruto - troco;
 
-    if ((totalLiquido - totalComDesconto).abs() > 0.01) {
+    if ((totalLiquido - totalAPagar).abs() > 0.01) {
       emit(
         state.copyWith(
           erro:
-              'O total dos pagamentos deve ser igual ao valor pendente de ${_formatarMoeda(totalComDesconto)}.',
+              'O total dos pagamentos deve ser igual ao valor pendente de ${_formatarMoeda(totalAPagar)}.',
         ),
       );
       return;

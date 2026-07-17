@@ -504,6 +504,25 @@ class _VendaCard extends StatelessWidget {
                             color: colorScheme.outline,
                           ),
                     ),
+                    if ((venda.valorTaxaEntrega ?? 0) > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.local_shipping_outlined,
+                              size: 14, color: colorScheme.outline),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Taxa de entrega: '
+                            '${_formatarValor(venda.valorTaxaEntrega)}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: colorScheme.outline),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

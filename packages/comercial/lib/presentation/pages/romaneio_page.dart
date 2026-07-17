@@ -911,6 +911,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
           ),
           pessoaId: state.pessoaId,
           descontoJaAplicadoNoRomaneio: state.romaneio?.desconto ?? 0,
+          taxaEntregaJaAplicadaNoRomaneio:
+              state.romaneio?.valorTaxaEntrega ?? 0,
           formasDePagamentoSeletor:
               ({itemsSelecionadosInicial, onChanged, onlyView}) =>
                   FormasDePagamentoSeletor(
@@ -957,11 +959,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade =
         pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
+    final valorTaxaEntrega =
+        _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
 
     bloc.add(
       RomaneioPagamentoRecebido(
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         desconto: descontoTotal,
+        valorTaxaEntrega: valorTaxaEntrega,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,

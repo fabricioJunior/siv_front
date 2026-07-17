@@ -17,6 +17,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     required int romaneioId,
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
     double? desconto,
+    double? valorTaxaEntrega,
     List<Map<String, dynamic>> descontosItens = const [],
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
@@ -38,6 +39,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         // enviar junto com `descontosItens` representando o mesmo valor --
         // contaria em dobro.
         if (desconto != null) 'desconto': desconto,
+        if (valorTaxaEntrega != null) 'valorTaxaEntrega': valorTaxaEntrega,
         if (descontosItens.isNotEmpty) 'descontosItens': descontosItens,
         'incluirCpfNaNota': incluirCpfNaNota,
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)

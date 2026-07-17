@@ -3,6 +3,10 @@ import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/seletores.dart';
+import 'package:core/sessao.dart';
+import 'package:financeiro/domain/use_cases/recuperar_caixa_aberto.dart';
+import 'package:financeiro/presentation/widgets/seletor_caixa.dart';
 import 'package:flutter/material.dart';
 
 class VendasPage extends StatefulWidget {
@@ -16,20 +20,49 @@ class _VendasPageState extends State<VendasPage> {
   late final VendasBloc _vendasBloc;
   final Debouncer _buscaDebouncer = Debouncer(milliseconds: 350);
   final TextEditingController _buscaController = TextEditingController();
-  final TextEditingController _caixaController = TextEditingController();
   final FocusNode _buscaFocusNode = FocusNode();
+  List<SelectData>? _caixaSelecionadoInicial;
 
   @override
   void initState() {
     super.initState();
     _vendasBloc = sl<VendasBloc>()..add(VendasIniciou());
+    _carregarCaixaAberto();
+  }
+
+  Future<void> _carregarCaixaAberto() async {
+    final sessao = sl<IAcessoGlobalSessao>();
+    final empresaId = sessao.empresaIdDaSessao;
+    final terminalId = sessao.terminalIdDaSessao;
+    if (empresaId == null || terminalId == null) return;
+
+    try {
+      final caixaAberto = await sl<RecuperarCaixaAberto>().call(
+        idEmpresa: empresaId,
+        idTerminal: terminalId,
+      );
+      if (caixaAberto == null || !mounted) return;
+
+      final selecionado = [
+        SelectData(
+          id: caixaAberto.id,
+          nome: 'Caixa #${caixaAberto.id}',
+          data: const {},
+        ),
+      ];
+      setState(() => _caixaSelecionadoInicial = selecionado);
+      _vendasBloc.add(
+        VendasIniciou(caixaId: caixaAberto.id, caixaIdInformado: true),
+      );
+    } catch (_) {
+      // Sem caixa aberto no momento -- mantém filtro sem caixa selecionado.
+    }
   }
 
   @override
   void dispose() {
     _buscaDebouncer.cancel();
     _buscaController.dispose();
-    _caixaController.dispose();
     _buscaFocusNode.dispose();
     _vendasBloc.close();
     super.dispose();
@@ -48,19 +81,6 @@ class _VendasPageState extends State<VendasPage> {
     _buscaController.clear();
     setState(() {});
     _vendasBloc.add(VendasIniciou(searchTerm: ''));
-  }
-
-  void _aplicarCaixa() {
-    final texto = _caixaController.text.trim();
-    final caixaId = texto.isEmpty ? null : int.tryParse(texto);
-    _vendasBloc.add(
-      VendasIniciou(caixaId: caixaId, caixaIdInformado: true),
-    );
-  }
-
-  void _limparCaixa() {
-    _caixaController.clear();
-    _vendasBloc.add(VendasIniciou(caixaIdInformado: true));
   }
 
   Future<void> _selecionarDataHoraInicial() async {
@@ -160,38 +180,18 @@ class _VendasPageState extends State<VendasPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _caixaController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _aplicarCaixa(),
-                          decoration: InputDecoration(
-                            hintText: 'ID do caixa',
-                            prefixIcon: const Icon(Icons.point_of_sale_outlined),
-                            suffixIcon: state.caixaId == null
-                                ? null
-                                : IconButton(
-                                    onPressed: _limparCaixa,
-                                    icon: const Icon(Icons.close),
-                                    tooltip: 'Limpar filtro de caixa',
-                                  ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            isDense: true,
-                          ),
+                  SeletorCaixa(
+                    titulo: 'Caixa',
+                    itemsSelecionadosInicial: _caixaSelecionadoInicial,
+                    onChanged: (selecionados) {
+                      final caixaId = selecionados.firstOrNull?.id;
+                      _vendasBloc.add(
+                        VendasIniciou(
+                          caixaId: caixaId,
+                          caixaIdInformado: true,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        onPressed: _aplicarCaixa,
-                        icon: const Icon(Icons.filter_alt_outlined),
-                        tooltip: 'Filtrar por caixa',
-                      ),
-                    ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   Wrap(

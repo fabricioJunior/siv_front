@@ -24,3 +24,5 @@ export 'presentation/blocs/recibo_fechamento_caixa_bloc/recibo_fechamento_caixa_
 export 'presentation/pages/recibo_fechamento_caixa_page.dart';
 export 'presentation/blocs/historico_de_caixas_bloc/historico_de_caixas_bloc.dart';
 export 'presentation/pages/historico_de_caixas_page.dart';
+export 'presentation/pages/selecionar_caixa_page.dart';
+export 'presentation/widgets/seletor_caixa.dart';

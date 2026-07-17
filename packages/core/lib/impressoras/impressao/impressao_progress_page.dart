@@ -1,6 +1,7 @@
 import 'package:core/impressoras/impressao/impressao_progress_cubit.dart';
 import 'package:core/impressoras/impressao/item_de_impressao.dart';
 import 'package:core/impressoras/printers/i_printers_service.dart';
+import 'package:core/impressoras/printers/impressora_preferida_local_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -20,6 +21,8 @@ class ImpressaoProgressPage extends StatelessWidget {
 		return BlocProvider(
 			create: (_) => ImpressaoProgressCubit(
 				printersService: GetIt.instance<IPrintersService>(),
+				impressoraPreferidaLocalDataSource:
+						GetIt.instance<IImpressoraPreferidaLocalDataSource>(),
 				itens: itens,
 				quantidadeDeVias: quantidadeDeVias,
 			),

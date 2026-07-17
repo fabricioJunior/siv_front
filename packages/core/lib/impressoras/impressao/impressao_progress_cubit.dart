@@ -1,5 +1,6 @@
 import 'package:core/impressoras/impressao/item_de_impressao.dart';
 import 'package:core/impressoras/printers/i_printers_service.dart';
+import 'package:core/impressoras/printers/impressora_preferida_local_data_source.dart';
 import 'package:core/impressoras/zpl/mescla_etiquetas.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,15 +9,20 @@ part 'impressao_progress_state.dart';
 
 class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
   final IPrintersService _printersService;
+  final IImpressoraPreferidaLocalDataSource _impressoraPreferidaLocalDataSource;
   final MesclaEtiquetas _mesclaEtiquetas = MesclaEtiquetas();
   final List<ItemDeImpressao> _itens;
   final int _quantidadeDeVias;
 
   ImpressaoProgressCubit({
     required IPrintersService printersService,
+    required IImpressoraPreferidaLocalDataSource
+        impressoraPreferidaLocalDataSource,
     required List<ItemDeImpressao> itens,
     required int quantidadeDeVias,
   })  : _printersService = printersService,
+        _impressoraPreferidaLocalDataSource =
+            impressoraPreferidaLocalDataSource,
         _itens = itens,
         _quantidadeDeVias = quantidadeDeVias <= 0 ? 1 : quantidadeDeVias,
         super(const ImpressaoProgressState()) {
@@ -41,6 +47,7 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
           totalEtiquetas: _itens.length,
         ),
       );
+      _selecionarImpressoraPreferida(impressoras);
     } catch (_) {
       emit(
         state.copyWith(
@@ -51,8 +58,31 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
     }
   }
 
+  // Pre-seleciona a ultima impressora usada (se ainda estiver disponivel na
+  // lista atual) assim que a lista de impressoras carrega -- roda apos o
+  // emit acima pra nao bloquear a tela enquanto le o arquivo local.
+  Future<void> _selecionarImpressoraPreferida(
+    List<Impressora> impressoras,
+  ) async {
+    final nomePreferido =
+        await _impressoraPreferidaLocalDataSource.obterUltimaImpressora();
+    if (nomePreferido == null || isClosed) return;
+
+    final impressoraPreferida = impressoras
+        .where((impressora) =>
+            impressora.name == nomePreferido && impressora.isAvailable)
+        .toList();
+    if (impressoraPreferida.isEmpty || isClosed) return;
+    if (state.status != ImpressaoProgressStatus.aguardandoConfirmacao) return;
+
+    emit(state.copyWith(impressoraSelecionada: () => impressoraPreferida.first));
+  }
+
   void selecionarImpressora(Impressora impressora) {
     emit(state.copyWith(impressoraSelecionada: () => impressora));
+    _impressoraPreferidaLocalDataSource.salvarUltimaImpressora(
+      impressora.name,
+    );
   }
 
   Future<void> confirmarImpressao() async {
@@ -98,7 +128,10 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
         return;
       }
 
-     
+      _impressoraPreferidaLocalDataSource.salvarUltimaImpressora(
+        impressora.name,
+      );
+
       emit(
         state.copyWith(
           progressoAtual: _itens.length,

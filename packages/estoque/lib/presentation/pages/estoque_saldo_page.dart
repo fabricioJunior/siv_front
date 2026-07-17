@@ -49,6 +49,9 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   DateTime? _atualizadoEmFim;
   SelectData? _tabelaDePrecoSelecionada;
   bool _gerandoRelatorio = false;
+  bool _filtrosExpandidos = false;
+  CampoOrdenacaoEstoque? _ordenarPor;
+  DirecaoOrdenacaoEstoque _ordenarDirecao = DirecaoOrdenacaoEstoque.asc;
 
   @override
   void initState() {
@@ -76,8 +79,33 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         disponibilidadeEstoque: _disponibilidadeEstoque,
         atualizadoEmInicio: _atualizadoEmInicio,
         atualizadoEmFim: _atualizadoEmFim,
+        ordenarPor: _ordenarPor,
+        ordenarDirecao: _ordenarDirecao,
       ),
     );
+  }
+
+  int get _quantidadeFiltrosAtivos {
+    var total = 0;
+    if (_disponibilidadeEstoque != FiltroDisponibilidadeEstoque.todos) total++;
+    if (_atualizadoEmInicio != null || _atualizadoEmFim != null) total++;
+    if (_corIds.isNotEmpty) total++;
+    if (_tamanhoIds.isNotEmpty) total++;
+    if (_tabelaDePrecoSelecionada != null) total++;
+    return total;
+  }
+
+  String _rotuloCampoOrdenacao(CampoOrdenacaoEstoque campo) {
+    switch (campo) {
+      case CampoOrdenacaoEstoque.nome:
+        return 'Nome';
+      case CampoOrdenacaoEstoque.saldo:
+        return 'Saldo';
+      case CampoOrdenacaoEstoque.referenciaIdExterno:
+        return 'Referência';
+      case CampoOrdenacaoEstoque.atualizadoEm:
+        return 'Atualizado em';
+    }
   }
 
   Future<void> _selecionarPeriodoAtualizacao() async {
@@ -186,131 +214,35 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       onChanged: (_) => _debouncer.run(_recarregar),
                       onSubmitted: (_) => _recarregar(),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        ChoiceChip(
-                          label: const Text('Todos'),
-                          selected:
-                              _disponibilidadeEstoque ==
-                              FiltroDisponibilidadeEstoque.todos,
-                          onSelected: (_) {
-                            setState(() {
-                              _disponibilidadeEstoque =
-                                  FiltroDisponibilidadeEstoque.todos;
-                            });
-                            _recarregar();
-                          },
-                        ),
-                        ChoiceChip(
-                          label: const Text('Com estoque'),
-                          selected:
-                              _disponibilidadeEstoque ==
-                              FiltroDisponibilidadeEstoque.comEstoque,
-                          onSelected: (_) {
-                            setState(() {
-                              _disponibilidadeEstoque =
-                                  FiltroDisponibilidadeEstoque.comEstoque;
-                            });
-                            _recarregar();
-                          },
-                        ),
-                        ChoiceChip(
-                          label: const Text('Sem estoque'),
-                          selected:
-                              _disponibilidadeEstoque ==
-                              FiltroDisponibilidadeEstoque.semEstoque,
-                          onSelected: (_) {
-                            setState(() {
-                              _disponibilidadeEstoque =
-                                  FiltroDisponibilidadeEstoque.semEstoque;
-                            });
-                            _recarregar();
-                          },
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: _selecionarPeriodoAtualizacao,
-                          icon: const Icon(Icons.calendar_today_outlined),
-                          label: Text(
-                            _atualizadoEmInicio == null ||
-                                    _atualizadoEmFim == null
-                                ? 'Atualizado em (intervalo)'
-                                : 'Atualizado: ${_formatDateOnly(_atualizadoEmInicio!)} - ${_formatDateOnly(_atualizadoEmFim!)}',
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => setState(
+                              () => _filtrosExpandidos = !_filtrosExpandidos,
+                            ),
+                            icon: Badge(
+                              isLabelVisible: _quantidadeFiltrosAtivos > 0,
+                              label: Text('$_quantidadeFiltrosAtivos'),
+                              child: const Icon(Icons.filter_list),
+                            ),
+                            label: Text(
+                              _filtrosExpandidos
+                                  ? 'Ocultar filtros'
+                                  : 'Filtros',
+                            ),
                           ),
                         ),
-                        if (_atualizadoEmInicio != null ||
-                            _atualizadoEmFim != null)
-                          TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _atualizadoEmInicio = null;
-                                _atualizadoEmFim = null;
-                              });
-                              _recarregar();
-                            },
-                            icon: const Icon(Icons.close),
-                            label: const Text('Limpar data'),
-                          ),
+                        const SizedBox(width: 8),
+                        _buildOrdenacao(context),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    ...[
-                      widget.seletorCores.call(
-                        onChanged: (dados) {
-                          _corIds = dados.map((e) => e.id).toList();
-                          _recarregar();
-                        },
-                      ),
+                    if (_filtrosExpandidos) ...[
                       const SizedBox(height: 12),
+                      _buildPainelFiltros(context),
                     ],
-                    ...[
-                      widget.seletorTamanhos.call(
-                        onChanged: (dados) {
-                          _tamanhoIds = dados.map((e) => e.id).toList();
-                          _recarregar();
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    ...[
-                      widget.seletorTabelaPreco.call(
-                        onChanged: (dados) {
-                          setState(() {
-                            _tabelaDePrecoSelecionada = dados.isEmpty
-                                ? null
-                                : dados.first;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          onPressed:
-                              _tabelaDePrecoSelecionada == null ||
-                                  _gerandoRelatorio
-                              ? null
-                              : _gerarRelatorioValorEstoque,
-                          icon: _gerandoRelatorio
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.picture_as_pdf_outlined),
-                          label: Text(
-                            _gerandoRelatorio
-                                ? 'Gerando relatório...'
-                                : 'Gerar relatório de valor do estoque',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                    const SizedBox(height: 8),
                     Expanded(
                       child: BlocBuilder<EstoqueSaldoBloc, EstoqueSaldoState>(
                         builder: (context, state) {
@@ -474,6 +406,182 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildOrdenacao(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PopupMenuButton<CampoOrdenacaoEstoque>(
+          tooltip: 'Ordenar por',
+          initialValue: _ordenarPor,
+          onSelected: (campo) {
+            setState(() => _ordenarPor = campo);
+            _recarregar();
+          },
+          itemBuilder: (context) => CampoOrdenacaoEstoque.values
+              .map(
+                (campo) => PopupMenuItem(
+                  value: campo,
+                  child: Text(_rotuloCampoOrdenacao(campo)),
+                ),
+              )
+              .toList(),
+          child: Chip(
+            label: Text(
+              _ordenarPor == null
+                  ? 'Ordenar'
+                  : _rotuloCampoOrdenacao(_ordenarPor!),
+            ),
+            avatar: const Icon(Icons.sort, size: 18),
+          ),
+        ),
+        if (_ordenarPor != null)
+          IconButton(
+            tooltip: _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
+                ? 'Crescente'
+                : 'Decrescente',
+            icon: Icon(
+              _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
+            ),
+            onPressed: () {
+              setState(() {
+                _ordenarDirecao = _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
+                    ? DirecaoOrdenacaoEstoque.desc
+                    : DirecaoOrdenacaoEstoque.asc;
+              });
+              _recarregar();
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPainelFiltros(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Todos'),
+                  selected:
+                      _disponibilidadeEstoque ==
+                      FiltroDisponibilidadeEstoque.todos,
+                  onSelected: (_) {
+                    setState(() {
+                      _disponibilidadeEstoque =
+                          FiltroDisponibilidadeEstoque.todos;
+                    });
+                    _recarregar();
+                  },
+                ),
+                ChoiceChip(
+                  label: const Text('Com estoque'),
+                  selected:
+                      _disponibilidadeEstoque ==
+                      FiltroDisponibilidadeEstoque.comEstoque,
+                  onSelected: (_) {
+                    setState(() {
+                      _disponibilidadeEstoque =
+                          FiltroDisponibilidadeEstoque.comEstoque;
+                    });
+                    _recarregar();
+                  },
+                ),
+                ChoiceChip(
+                  label: const Text('Sem estoque'),
+                  selected:
+                      _disponibilidadeEstoque ==
+                      FiltroDisponibilidadeEstoque.semEstoque,
+                  onSelected: (_) {
+                    setState(() {
+                      _disponibilidadeEstoque =
+                          FiltroDisponibilidadeEstoque.semEstoque;
+                    });
+                    _recarregar();
+                  },
+                ),
+                OutlinedButton.icon(
+                  onPressed: _selecionarPeriodoAtualizacao,
+                  icon: const Icon(Icons.calendar_today_outlined),
+                  label: Text(
+                    _atualizadoEmInicio == null || _atualizadoEmFim == null
+                        ? 'Atualizado em (intervalo)'
+                        : 'Atualizado: ${_formatDateOnly(_atualizadoEmInicio!)} - ${_formatDateOnly(_atualizadoEmFim!)}',
+                  ),
+                ),
+                if (_atualizadoEmInicio != null || _atualizadoEmFim != null)
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _atualizadoEmInicio = null;
+                        _atualizadoEmFim = null;
+                      });
+                      _recarregar();
+                    },
+                    icon: const Icon(Icons.close),
+                    label: const Text('Limpar data'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            widget.seletorCores.call(
+              onChanged: (dados) {
+                _corIds = dados.map((e) => e.id).toList();
+                _recarregar();
+              },
+            ),
+            const SizedBox(height: 12),
+            widget.seletorTamanhos.call(
+              onChanged: (dados) {
+                _tamanhoIds = dados.map((e) => e.id).toList();
+                _recarregar();
+              },
+            ),
+            const SizedBox(height: 12),
+            widget.seletorTabelaPreco.call(
+              onChanged: (dados) {
+                setState(() {
+                  _tabelaDePrecoSelecionada = dados.isEmpty
+                      ? null
+                      : dados.first;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: _tabelaDePrecoSelecionada == null || _gerandoRelatorio
+                    ? null
+                    : _gerarRelatorioValorEstoque,
+                icon: _gerandoRelatorio
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.picture_as_pdf_outlined),
+                label: Text(
+                  _gerandoRelatorio
+                      ? 'Gerando relatório...'
+                      : 'Gerar relatório de valor do estoque',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

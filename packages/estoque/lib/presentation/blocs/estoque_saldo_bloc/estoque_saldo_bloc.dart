@@ -35,6 +35,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: event.atualizadoEmFim,
       corIds: event.corIds,
       tamanhoIds: event.tamanhoIds,
+      ordenarPor: event.ordenarPor,
+      ordenarDirecao: event.ordenarDirecao,
     );
 
     emit(
@@ -47,6 +49,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         disponibilidadeEstoque: event.disponibilidadeEstoque,
         atualizadoEmInicio: event.atualizadoEmInicio,
         atualizadoEmFim: event.atualizadoEmFim,
+        ordenarPor: event.ordenarPor,
+        ordenarDirecao: event.ordenarDirecao,
         corIdsSelecionadas: event.corIds,
         tamanhoIdsSelecionados: event.tamanhoIds,
         page: 1,
@@ -127,6 +131,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: state.atualizadoEmFim,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
+      ordenarPor: state.ordenarPor,
+      ordenarDirecao: state.ordenarDirecao,
     );
 
     emit(
@@ -200,6 +206,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: state.atualizadoEmFim,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
+      ordenarPor: state.ordenarPor,
+      ordenarDirecao: state.ordenarDirecao,
     );
     final saldo = await _recuperarSaldoDoEstoque(filtro: filtro);
     return saldo.items;
@@ -226,6 +234,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     required DateTime? atualizadoEmFim,
     required List<int> corIds,
     required List<int> tamanhoIds,
+    CampoOrdenacaoEstoque? ordenarPor,
+    DirecaoOrdenacaoEstoque ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
   }) {
     return FiltroProdutoDoEstoque(
       page: page,
@@ -237,6 +247,8 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       tamanhoIds: tamanhoIds,
       produtoIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
       referenciaIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
+      ordenarPor: ordenarPor,
+      ordenarDirecao: ordenarDirecao,
     );
   }
 

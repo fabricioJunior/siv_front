@@ -13,6 +13,8 @@ class EstoqueSaldoState extends Equatable {
   final FiltroDisponibilidadeEstoque disponibilidadeEstoque;
   final DateTime? atualizadoEmInicio;
   final DateTime? atualizadoEmFim;
+  final CampoOrdenacaoEstoque? ordenarPor;
+  final DirecaoOrdenacaoEstoque ordenarDirecao;
   final List<int> corIdsSelecionadas;
   final List<int> tamanhoIdsSelecionados;
   final bool sincronizando;
@@ -29,6 +31,8 @@ class EstoqueSaldoState extends Equatable {
     this.disponibilidadeEstoque = FiltroDisponibilidadeEstoque.todos,
     this.atualizadoEmInicio,
     this.atualizadoEmFim,
+    this.ordenarPor,
+    this.ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
     this.corIdsSelecionadas = const [],
     this.tamanhoIdsSelecionados = const [],
     this.sincronizando = false,
@@ -48,6 +52,8 @@ class EstoqueSaldoState extends Equatable {
     FiltroDisponibilidadeEstoque? disponibilidadeEstoque,
     Object? atualizadoEmInicio = _sentinelaErro,
     Object? atualizadoEmFim = _sentinelaErro,
+    Object? ordenarPor = _sentinelaErro,
+    DirecaoOrdenacaoEstoque? ordenarDirecao,
     List<int>? corIdsSelecionadas,
     List<int>? tamanhoIdsSelecionados,
     bool? sincronizando,
@@ -69,6 +75,10 @@ class EstoqueSaldoState extends Equatable {
       atualizadoEmFim: identical(atualizadoEmFim, _sentinelaErro)
           ? this.atualizadoEmFim
           : atualizadoEmFim as DateTime?,
+      ordenarPor: identical(ordenarPor, _sentinelaErro)
+          ? this.ordenarPor
+          : ordenarPor as CampoOrdenacaoEstoque?,
+      ordenarDirecao: ordenarDirecao ?? this.ordenarDirecao,
       corIdsSelecionadas: corIdsSelecionadas ?? this.corIdsSelecionadas,
       tamanhoIdsSelecionados:
           tamanhoIdsSelecionados ?? this.tamanhoIdsSelecionados,
@@ -89,6 +99,8 @@ class EstoqueSaldoState extends Equatable {
     disponibilidadeEstoque,
     atualizadoEmInicio,
     atualizadoEmFim,
+    ordenarPor,
+    ordenarDirecao,
     corIdsSelecionadas,
     tamanhoIdsSelecionados,
     sincronizando,

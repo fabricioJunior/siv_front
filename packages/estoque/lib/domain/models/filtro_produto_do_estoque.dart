@@ -2,6 +2,10 @@ import 'package:core/equals.dart';
 
 enum FiltroDisponibilidadeEstoque { todos, comEstoque, semEstoque }
 
+enum CampoOrdenacaoEstoque { nome, saldo, referenciaIdExterno, atualizadoEm }
+
+enum DirecaoOrdenacaoEstoque { asc, desc }
+
 class FiltroProdutoDoEstoque extends Equatable {
   final List<int> empresaIds;
   final List<int> referenciaIds;
@@ -17,6 +21,8 @@ class FiltroProdutoDoEstoque extends Equatable {
   final DateTime? atualizadoEmFim;
   final DateTime? ultimaAtualizacaoInicio;
   final DateTime? ultimaAtualizacaoFim;
+  final CampoOrdenacaoEstoque? ordenarPor;
+  final DirecaoOrdenacaoEstoque ordenarDirecao;
 
   const FiltroProdutoDoEstoque({
     this.empresaIds = const [],
@@ -33,6 +39,8 @@ class FiltroProdutoDoEstoque extends Equatable {
     this.atualizadoEmFim,
     this.ultimaAtualizacaoFim,
     this.ultimaAtualizacaoInicio,
+    this.ordenarPor,
+    this.ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
   });
 
   FiltroProdutoDoEstoque copyWith({
@@ -50,6 +58,8 @@ class FiltroProdutoDoEstoque extends Equatable {
     DateTime? atualizadoEmFim,
     DateTime? ultimaAtualizacaoInicio,
     DateTime? ultimaAtualizacaoFim,
+    Object? ordenarPor = _sentinela,
+    DirecaoOrdenacaoEstoque? ordenarDirecao,
   }) {
     return FiltroProdutoDoEstoque(
       empresaIds: empresaIds ?? this.empresaIds,
@@ -68,6 +78,10 @@ class FiltroProdutoDoEstoque extends Equatable {
       ultimaAtualizacaoInicio:
           ultimaAtualizacaoInicio ?? this.ultimaAtualizacaoInicio,
       ultimaAtualizacaoFim: ultimaAtualizacaoFim ?? this.ultimaAtualizacaoFim,
+      ordenarPor: identical(ordenarPor, _sentinela)
+          ? this.ordenarPor
+          : ordenarPor as CampoOrdenacaoEstoque?,
+      ordenarDirecao: ordenarDirecao ?? this.ordenarDirecao,
     );
   }
 
@@ -87,5 +101,9 @@ class FiltroProdutoDoEstoque extends Equatable {
     atualizadoEmFim,
     ultimaAtualizacaoInicio,
     ultimaAtualizacaoFim,
+    ordenarPor,
+    ordenarDirecao,
   ];
 }
+
+const Object _sentinela = Object();

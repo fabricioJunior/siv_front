@@ -79,7 +79,7 @@ class ProdutosEstoqueLocalDatasource
     }).toList();
 
     final filtradosDeduplicados = _deduplicarProdutos(filtrados)
-      ..sort(_ordenarProdutoParaSaldo);
+      ..sort(_comparadorParaFiltro(filtro));
 
     final totalItems = filtradosDeduplicados.length;
     final totalPages = totalItems == 0
@@ -194,6 +194,35 @@ bool _estaNoIntervaloDeDatas(
   }
 
   return true;
+}
+
+int Function(ProdutoDoEstoque, ProdutoDoEstoque) _comparadorParaFiltro(
+  FiltroProdutoDoEstoque filtro,
+) {
+  final campo = filtro.ordenarPor;
+  if (campo == null) return _ordenarProdutoParaSaldo;
+
+  int Function(ProdutoDoEstoque, ProdutoDoEstoque) base;
+  switch (campo) {
+    case CampoOrdenacaoEstoque.nome:
+      base = (a, b) => a.nome.compareTo(b.nome);
+      break;
+    case CampoOrdenacaoEstoque.saldo:
+      base = (a, b) => a.saldo.compareTo(b.saldo);
+      break;
+    case CampoOrdenacaoEstoque.referenciaIdExterno:
+      base = (a, b) =>
+          (a.referenciaIdExterno ?? '').compareTo(b.referenciaIdExterno ?? '');
+      break;
+    case CampoOrdenacaoEstoque.atualizadoEm:
+      base = (a, b) => (a.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0))
+          .compareTo(b.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0));
+      break;
+  }
+
+  return filtro.ordenarDirecao == DirecaoOrdenacaoEstoque.desc
+      ? (a, b) => base(b, a)
+      : base;
 }
 
 int _ordenarProdutoParaSaldo(ProdutoDoEstoque a, ProdutoDoEstoque b) {

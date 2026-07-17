@@ -8,6 +8,7 @@ part of 'pessoa_dto.dart';
 
 PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
       bloqueado: json['bloqueado'] as bool,
+      generica: json['generica'] as bool? ?? false,
       contato: json['contato'] as String?,
       documento: json['documento'] as String,
       eCliente: json['cliente'] as bool,
@@ -27,6 +28,7 @@ PessoaDto _$PessoaDtoFromJson(Map<String, dynamic> json) => PessoaDto(
 
 Map<String, dynamic> _$PessoaDtoToJson(PessoaDto instance) => <String, dynamic>{
       'bloqueado': instance.bloqueado,
+      'generica': instance.generica,
       'contato': instance.contato,
       'documento': instance.documento,
       'cliente': instance.eCliente,

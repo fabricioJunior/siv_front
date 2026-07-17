@@ -17,6 +17,7 @@ abstract class Pessoa implements Equatable {
   bool get eFornecedor;
   bool get eFuncionario;
   bool get bloqueado;
+  bool get generica;
 
   factory Pessoa.create({
     int? id,
@@ -33,6 +34,7 @@ abstract class Pessoa implements Equatable {
     required bool eFornecedor,
     required bool eFuncionario,
     required bool bloqueado,
+    required bool generica,
   }) = _PessoaImpl;
 
   @override
@@ -50,6 +52,7 @@ abstract class Pessoa implements Equatable {
         eFornecedor,
         eFuncionario,
         bloqueado,
+        generica,
       ];
 
   @override
@@ -85,6 +88,8 @@ class _PessoaImpl implements Pessoa {
   final bool eFuncionario;
   @override
   final bool bloqueado;
+  @override
+  final bool generica;
 
   _PessoaImpl({
     this.id,
@@ -101,6 +106,7 @@ class _PessoaImpl implements Pessoa {
     required this.eFornecedor,
     required this.eFuncionario,
     required this.bloqueado,
+    this.generica = false,
   });
 
   _PessoaImpl copyWith({
@@ -118,6 +124,7 @@ class _PessoaImpl implements Pessoa {
     bool? eFornecedor,
     bool? eFuncionario,
     bool? bloqueado,
+    bool? generica,
   }) {
     return _PessoaImpl(
       id: id ?? this.id,
@@ -134,6 +141,7 @@ class _PessoaImpl implements Pessoa {
       eFornecedor: eFornecedor ?? this.eFornecedor,
       eFuncionario: eFuncionario ?? this.eFuncionario,
       bloqueado: bloqueado ?? this.bloqueado,
+      generica: generica ?? this.generica,
     );
   }
 
@@ -152,6 +160,7 @@ class _PessoaImpl implements Pessoa {
         eFornecedor,
         eFuncionario,
         bloqueado,
+        generica,
       ];
 
   @override
@@ -174,6 +183,7 @@ extension PessoaCopyWith on Pessoa {
     bool? eFornecedor,
     bool? eFuncionario,
     bool? bloqueado,
+    bool? generica,
   }) {
     if (this is _PessoaImpl) {
       return (this as _PessoaImpl).copyWith(
@@ -191,6 +201,7 @@ extension PessoaCopyWith on Pessoa {
         eFornecedor: eFornecedor,
         eFuncionario: eFuncionario,
         bloqueado: bloqueado,
+        generica: generica,
       );
     }
     return Pessoa.create(
@@ -208,6 +219,7 @@ extension PessoaCopyWith on Pessoa {
       eFornecedor: eFornecedor ?? this.eFornecedor,
       eFuncionario: eFuncionario ?? this.eFuncionario,
       bloqueado: bloqueado ?? this.bloqueado,
+      generica: generica ?? this.generica,
     );
   }
 }

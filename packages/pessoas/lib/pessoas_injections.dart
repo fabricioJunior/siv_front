@@ -117,6 +117,12 @@ void _usesCases() {
     ),
   );
 
+  sl.registerFactory<RecuperarClienteNaoCadastrado>(
+    () => RecuperarClienteNaoCadastrado(
+      pessoasRepository: sl(),
+    ),
+  );
+
   sl.registerFactory<CriarPontos>(
     () => CriarPontos(
       pontosRepository: sl(),

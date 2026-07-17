@@ -14,6 +14,8 @@ abstract class IPessoasRemoteDataSource {
 
   Future<Pessoa?> recuperarPessoaPorDocumento(String documento);
 
+  Future<Pessoa> recuperarClienteNaoCadastrado();
+
   Future<Pessoa> atualizarPessoa(Pessoa pessoa);
 
   Future<Pessoa> criarPessoa({

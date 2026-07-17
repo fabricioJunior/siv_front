@@ -14,6 +14,8 @@ abstract class IPessoasRepository {
 
   Future<Pessoa?> recuperarPessoaPeloDocumento(String documento);
 
+  Future<Pessoa> recuperarClienteNaoCadastrado();
+
   Future<Pessoa> salvarPessoa(Pessoa pessoa);
 
   Future<Pessoa> novaPessoa({

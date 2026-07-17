@@ -79,6 +79,14 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Pessoa> recuperarClienteNaoCadastrado() async {
+    var pathParameters = {'id': 'cliente-nao-cadastrado'};
+    final response = await get(pathParameters: pathParameters);
+
+    return PessoaDto.fromJson(response.body);
+  }
+
+  @override
   Future<Pessoa> criarPessoa({
     required bool bloqueado,
     required String? contato,

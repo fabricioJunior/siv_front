@@ -15,6 +15,7 @@ Pessoa fakePessoa({
   bool eFornecedor = false,
   bool eFuncionario = false,
   bool bloqueado = false,
+  bool generica = false,
 }) {
   return Pessoa.create(
     id: id,
@@ -31,6 +32,7 @@ Pessoa fakePessoa({
     inscricaoEstadual: inscricaoEstadual,
     uf: uf,
     dataDeNascimento: dataDeNascimento,
+    generica: generica,
   );
 }
 

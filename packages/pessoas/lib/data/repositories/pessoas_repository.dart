@@ -17,6 +17,11 @@ class PessoasRepository implements IPessoasRepository {
   }
 
   @override
+  Future<Pessoa> recuperarClienteNaoCadastrado() {
+    return remoteDataSource.recuperarClienteNaoCadastrado();
+  }
+
+  @override
   Future<Iterable<Pessoa>> recuperarPessoas({
     int pagina = 1,
     String? busca,

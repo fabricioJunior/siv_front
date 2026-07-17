@@ -8,6 +8,10 @@ class PessoaDto implements Pessoa {
   final bool bloqueado;
 
   @override
+  @JsonKey(defaultValue: false)
+  final bool generica;
+
+  @override
   final String? contato;
 
   @override
@@ -59,6 +63,7 @@ class PessoaDto implements Pessoa {
 
   PessoaDto({
     required this.bloqueado,
+    this.generica = false,
     required this.contato,
     required this.documento,
     required this.eCliente,
@@ -95,10 +100,12 @@ class PessoaDto implements Pessoa {
     bool? eFuncionario,
     bool? bloqueado,
     DateTime? nascimento,
+    bool? generica,
   }) {
     return PessoaDto(
       id: id ?? this.id,
       bloqueado: bloqueado ?? this.bloqueado,
+      generica: generica ?? this.generica,
       contato: contato ?? this.contato,
       documento: documento ?? this.documento,
       eCliente: eCliente ?? this.eCliente,
@@ -129,6 +136,7 @@ class PessoaDto implements Pessoa {
         eFornecedor,
         eFuncionario,
         bloqueado,
+        generica,
       ];
 
   @override
@@ -138,6 +146,7 @@ class PessoaDto implements Pessoa {
 extension ToDto on Pessoa {
   PessoaDto toDto() => PessoaDto(
       bloqueado: bloqueado,
+      generica: generica,
       contato: contato,
       documento: documento,
       eCliente: eCliente,

@@ -13,6 +13,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final int? pessoaId;
   final String? cpfClienteInicial;
   final double descontoJaAplicadoNoRomaneio;
+  final bool clienteGenerico;
 
   const PagamentosRealizadosIniciado({
     required this.hashLista,
@@ -20,6 +21,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.pessoaId,
     this.cpfClienteInicial,
     this.descontoJaAplicadoNoRomaneio = 0,
+    this.clienteGenerico = false,
   });
 
   @override
@@ -29,6 +31,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         pessoaId,
         cpfClienteInicial,
         descontoJaAplicadoNoRomaneio,
+        clienteGenerico,
       ];
 }
 

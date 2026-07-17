@@ -13,6 +13,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   final PagamentosRealizadosResumo? resumoInicial;
   final int? pessoaId;
   final String? cpfClienteInicial;
+  final bool clienteGenerico;
   final SeletorWidget formasDePagamentoSeletor;
   // Desconto já persistido no romaneio (fora deste diálogo) -- usado só pra
   // pré-carregar o desconto do diálogo com esse valor, reaproveitando os
@@ -34,6 +35,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.resumoInicial,
     this.pessoaId,
     this.cpfClienteInicial,
+    this.clienteGenerico = false,
     required this.formasDePagamentoSeletor,
     this.descontoJaAplicadoNoRomaneio = 0,
     this.exibirCheckboxFidelidade = false,
@@ -49,6 +51,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             resumoInicial: resumoInicial,
             pessoaId: pessoaId,
             cpfClienteInicial: cpfClienteInicial,
+            clienteGenerico: clienteGenerico,
             descontoJaAplicadoNoRomaneio: descontoJaAplicadoNoRomaneio,
           ),
         ),
@@ -374,17 +377,22 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
-              value: state.incluirCpfNaNota,
+              value: !state.clienteGenerico && state.incluirCpfNaNota,
               title: const Text('Incluir CPF do cliente na nota fiscal'),
-              onChanged: (value) {
-                context.read<PagamentosRealizadosBloc>().add(
-                      PagamentosRealizadosIncluirCpfAlterado(
-                        incluirCpfNaNota: value ?? true,
-                      ),
-                    );
-              },
+              subtitle: state.clienteGenerico
+                  ? const Text('Não disponível para cliente não cadastrado.')
+                  : null,
+              onChanged: state.clienteGenerico
+                  ? null
+                  : (value) {
+                      context.read<PagamentosRealizadosBloc>().add(
+                            PagamentosRealizadosIncluirCpfAlterado(
+                              incluirCpfNaNota: value ?? true,
+                            ),
+                          );
+                    },
             ),
-            if (state.incluirCpfNaNota)
+            if (!state.clienteGenerico && state.incluirCpfNaNota)
               CPFInput(
                 controller: _cpfController,
                 obrigatorio: false,

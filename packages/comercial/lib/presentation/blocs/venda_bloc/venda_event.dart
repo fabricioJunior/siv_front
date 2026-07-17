@@ -16,6 +16,10 @@ class VendaClienteSelecionado extends VendaEvent {
   List<Object?> get props => [clienteSelecionado];
 }
 
+class VendaClienteNaoCadastradoSolicitado extends VendaEvent {
+  const VendaClienteNaoCadastradoSolicitado();
+}
+
 class VendaVendedorSelecionado extends VendaEvent {
   final SelectData? vendedorSelecionado;
 

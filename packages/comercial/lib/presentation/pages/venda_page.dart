@@ -52,7 +52,8 @@ class _VendaPageState extends State<VendaPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<VendaBloc>(
-      create: (_) => sl<VendaBloc>(),
+      create: (_) => sl<VendaBloc>()
+        ..add(const VendaClienteNaoCadastradoSolicitado()),
       child: BlocConsumer<VendaBloc, VendaState>(
         listenWhen: (previous, current) =>
             (previous.erro != current.erro && current.erro != null) ||
@@ -612,6 +613,7 @@ class _VendaPageState extends State<VendaPage> {
           ),
           pessoaId: clienteSelecionado?.id,
           cpfClienteInicial: clienteSelecionado?.data['documento']?.toString(),
+          clienteGenerico: clienteSelecionado?.data['generica'] == true,
           formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
           exibirCheckboxFidelidade: true,
         );

@@ -53,10 +53,11 @@ class PagamentosRealizadosBloc
         carregandoSaldoCreditoDevolucao: false,
         saldoCreditoDevolucao: 0,
         incluirCpfNaNota: false,
-        cpfNaNota: event.cpfClienteInicial ?? '',
+        cpfNaNota: event.clienteGenerico ? '' : (event.cpfClienteInicial ?? ''),
         pontuarFidelidade: false,
         clienteElegivelFidelidade: false,
         carregandoElegibilidadeFidelidade: false,
+        clienteGenerico: event.clienteGenerico,
       ),
     );
 

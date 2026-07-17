@@ -36,6 +36,7 @@ class PagamentosRealizadosState extends Equatable {
   final bool pontuarFidelidade;
   final bool clienteElegivelFidelidade;
   final bool carregandoElegibilidadeFidelidade;
+  final bool clienteGenerico;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -59,6 +60,7 @@ class PagamentosRealizadosState extends Equatable {
     this.pontuarFidelidade = false,
     this.clienteElegivelFidelidade = false,
     this.carregandoElegibilidadeFidelidade = false,
+    this.clienteGenerico = false,
   });
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
@@ -115,6 +117,7 @@ class PagamentosRealizadosState extends Equatable {
     bool? pontuarFidelidade,
     bool? clienteElegivelFidelidade,
     bool? carregandoElegibilidadeFidelidade,
+    bool? clienteGenerico,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -150,6 +153,7 @@ class PagamentosRealizadosState extends Equatable {
           clienteElegivelFidelidade ?? this.clienteElegivelFidelidade,
       carregandoElegibilidadeFidelidade: carregandoElegibilidadeFidelidade ??
           this.carregandoElegibilidadeFidelidade,
+      clienteGenerico: clienteGenerico ?? this.clienteGenerico,
     );
   }
 
@@ -176,6 +180,7 @@ class PagamentosRealizadosState extends Equatable {
         pontuarFidelidade,
         clienteElegivelFidelidade,
         carregandoElegibilidadeFidelidade,
+        clienteGenerico,
       ];
 }
 

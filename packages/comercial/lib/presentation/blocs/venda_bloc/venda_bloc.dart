@@ -11,6 +11,8 @@ import 'package:core/sessao.dart';
 import 'package:estoque/domain/usecases/balanco_usecases.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/use_cases.dart';
+import 'package:pessoas/domain/usecases/recuperar_cliente_nao_cadastrado.dart';
+import 'package:pessoas/domain/models/pessoa.dart';
 
 part 'venda_event.dart';
 part 'venda_state.dart';
@@ -24,6 +26,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   final RecuperarCaixaAberto _recuperarCaixaAberto;
   final ObterBalancoEmAndamentoUseCase _obterBalancoEmAndamento;
   final IAcessoGlobalSessao _acessoGlobalSessao;
+  final RecuperarClienteNaoCadastrado _recuperarClienteNaoCadastrado;
 
   VendaBloc(
     this._salvarListaDeProdutosCompartilhada,
@@ -34,8 +37,12 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     this._recuperarCaixaAberto,
     this._obterBalancoEmAndamento,
     this._acessoGlobalSessao,
+    this._recuperarClienteNaoCadastrado,
   ) : super(const VendaState()) {
     on<VendaClienteSelecionado>(_onClienteSelecionado);
+    on<VendaClienteNaoCadastradoSolicitado>(
+      _onClienteNaoCadastradoSolicitado,
+    );
     on<VendaVendedorSelecionado>(_onVendedorSelecionado);
     on<VendaTabelaDePrecoSelecionada>(_onTabelaDePrecoSelecionada);
     on<VendaLeituraSolicitada>(_onLeituraSolicitada);
@@ -56,6 +63,45 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   ) {
     emit(
       state.copyWith(clienteSelecionado: event.clienteSelecionado, erro: null),
+    );
+  }
+
+  // Pré-seleciona a pessoa placebo "Cliente não cadastrado" ao entrar na
+  // tela (ou reiniciar o fluxo), pra vendas físicas sem cliente real
+  // satisfazerem _validarSelecoes() sem exigir ação extra do operador. Só
+  // preenche se o operador ainda não tiver escolhido/trocado o cliente, pra
+  // não sobrescrever uma seleção manual já feita nem o cliente carregado de
+  // um orçamento.
+  FutureOr<void> _onClienteNaoCadastradoSolicitado(
+    VendaClienteNaoCadastradoSolicitado event,
+    Emitter<VendaState> emit,
+  ) async {
+    if (state.clienteSelecionado != null) return;
+
+    try {
+      final pessoa = await _recuperarClienteNaoCadastrado();
+      if (state.clienteSelecionado != null) return;
+
+      emit(
+        state.copyWith(clienteSelecionado: _pessoaToSelectData(pessoa)),
+      );
+    } catch (e, s) {
+      addError(e, s);
+    }
+  }
+
+  SelectData _pessoaToSelectData(Pessoa pessoa) {
+    return SelectData(
+      id: pessoa.id ?? 0,
+      nome: pessoa.nome,
+      data: {
+        'id': pessoa.id,
+        'nome': pessoa.nome,
+        'documento': pessoa.documento,
+        'email': pessoa.email,
+        'telefone': pessoa.contato,
+        'generica': pessoa.generica,
+      },
     );
   }
 

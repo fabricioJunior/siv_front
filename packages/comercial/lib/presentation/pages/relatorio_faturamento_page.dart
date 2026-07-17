@@ -20,14 +20,11 @@ String _fmtData(String iso) {
   return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : iso;
 }
 
-(String, String) _mesAtual() {
+(String, String) _hoje() {
   final now = DateTime.now();
-  final ultimo = DateTime(now.year, now.month + 1, 0).day;
-  final m = now.month.toString().padLeft(2, '0');
-  return (
-    '${now.year}-$m-01',
-    '${now.year}-$m-${ultimo.toString().padLeft(2, '0')}',
-  );
+  final iso =
+      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  return (iso, iso);
 }
 
 class RelatorioFaturamentoPage extends StatefulWidget {
@@ -47,7 +44,7 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
   @override
   void initState() {
     super.initState();
-    final (ini, fim) = _mesAtual();
+    final (ini, fim) = _hoje();
     _dataInicial = ini;
     _dataFinal = fim;
     _bloc = sl<RelatorioFaturamentoBloc>()
@@ -218,6 +215,11 @@ class _FiltroCard extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  _chipPeriodo(context, 'Hoje', () {
+                    final hoje = _isoDate(DateTime.now());
+                    onPeriodoRapido(hoje, hoje);
+                  }),
+                  const SizedBox(width: 8),
                   _chipPeriodo(context, 'Este mês', () {
                     final now = DateTime.now();
                     final ultimo = DateTime(now.year, now.month + 1, 0).day;

@@ -3,6 +3,7 @@ import 'package:autenticacao/presentation/bloc/grupos_de_acesso_bloc/grupos_de_a
 import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 
 class VinculosGrupoDeAcessoComUsuarioPage extends StatelessWidget {
@@ -205,23 +206,32 @@ class _EmpresasModal extends StatelessWidget {
   const _EmpresasModal({required this.empresas});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text('Selecione a empresa para o vínculo:'),
-        Expanded(
-            child: ListView.builder(
-          itemCount: empresas.length,
-          itemBuilder: (context, index) {
-            var empresa = empresas[index];
-            return ListTile(
-              title: Text(empresa.nome),
-              onTap: () {
-                Navigator.of(context).pop(empresa);
-              },
-            );
-          },
-        )),
-      ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SeletorGenerico<Empresa>(
+            itens: empresas,
+            itemLabel: (empresa) => empresa.nome,
+            itemKey: (empresa) => empresa.id,
+            toSelectData: (empresa) => SelectData(
+              id: empresa.id,
+              nome: empresa.nome,
+              data: const {},
+            ),
+            titulo: 'Selecione a empresa para o vínculo',
+            hintText: 'Digite para buscar a empresa',
+            onChanged: (selecionadas) {
+              if (selecionadas.isEmpty) {
+                return;
+              }
+              Navigator.of(context).pop(selecionadas.first);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -312,34 +322,29 @@ class _GruposDeAcessoModal extends StatelessWidget {
                       );
                     }
 
-                    return ListView.separated(
-                      itemCount: state.grupos.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        var grupo = state.grupos[index];
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              child: Icon(
-                                Icons.group_work_outlined,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            title: Text(grupo.nome),
-                            subtitle: Text('ID: ${grupo.id}'),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.of(context).pop(grupo);
-                            },
-                          ),
-                        );
+                    return SeletorGenerico<GrupoDeAcesso>(
+                      itens: state.grupos,
+                      itemLabel: (grupo) => grupo.nome,
+                      itemKey: (grupo) => grupo.id,
+                      toSelectData: (grupo) => SelectData(
+                        id: grupo.id ?? 0,
+                        nome: grupo.nome,
+                        data: const {},
+                      ),
+                      titulo: 'Grupo de acesso',
+                      hintText: 'Digite para buscar o grupo de acesso',
+                      sugestaoLeadingBuilder: (context, _) => CircleAvatar(
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.group_work_outlined,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      onChanged: (selecionados) {
+                        if (selecionados.isEmpty) {
+                          return;
+                        }
+                        Navigator.of(context).pop(selecionados.first);
                       },
                     );
                   }

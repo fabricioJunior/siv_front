@@ -182,15 +182,17 @@ class RelatorioVendasPorFuncionarioItemDto
 }
 
 class RelatorioCurvaAbcItemDto implements RelatorioCurvaAbcItem {
-  @override final int produtoId;
-  @override final String produtoIdExterno;
-  @override final int referenciaId;
-  @override final String referenciaIdExterno;
-  @override final String referenciaNome;
-  @override final int corId;
-  @override final String corNome;
-  @override final int tamanhoId;
-  @override final String tamanhoNome;
+  @override final int? produtoId;
+  @override final String? produtoIdExterno;
+  @override final int? referenciaId;
+  @override final String? referenciaIdExterno;
+  @override final String? referenciaNome;
+  @override final int? corId;
+  @override final String? corNome;
+  @override final int? tamanhoId;
+  @override final String? tamanhoNome;
+  @override final int? categoriaId;
+  @override final String? categoriaNome;
   @override final int quantidadeVendida;
   @override final double valorTotalVendido;
   @override final double percentualParticipacao;
@@ -198,15 +200,17 @@ class RelatorioCurvaAbcItemDto implements RelatorioCurvaAbcItem {
   @override final String classeAbc;
 
   const RelatorioCurvaAbcItemDto({
-    required this.produtoId,
-    required this.produtoIdExterno,
-    required this.referenciaId,
-    required this.referenciaIdExterno,
-    required this.referenciaNome,
-    required this.corId,
-    required this.corNome,
-    required this.tamanhoId,
-    required this.tamanhoNome,
+    this.produtoId,
+    this.produtoIdExterno,
+    this.referenciaId,
+    this.referenciaIdExterno,
+    this.referenciaNome,
+    this.corId,
+    this.corNome,
+    this.tamanhoId,
+    this.tamanhoNome,
+    this.categoriaId,
+    this.categoriaNome,
     required this.quantidadeVendida,
     required this.valorTotalVendido,
     required this.percentualParticipacao,
@@ -216,15 +220,17 @@ class RelatorioCurvaAbcItemDto implements RelatorioCurvaAbcItem {
 
   factory RelatorioCurvaAbcItemDto.fromJson(Map<String, dynamic> j) =>
       RelatorioCurvaAbcItemDto(
-        produtoId: (j['produtoId'] as num).toInt(),
-        produtoIdExterno: j['produtoIdExterno'] as String? ?? '',
-        referenciaId: (j['referenciaId'] as num).toInt(),
-        referenciaIdExterno: j['referenciaIdExterno'] as String? ?? '',
-        referenciaNome: j['referenciaNome'] as String? ?? '',
-        corId: (j['corId'] as num).toInt(),
-        corNome: j['corNome'] as String? ?? '',
-        tamanhoId: (j['tamanhoId'] as num).toInt(),
-        tamanhoNome: j['tamanhoNome'] as String? ?? '',
+        produtoId: (j['produtoId'] as num?)?.toInt(),
+        produtoIdExterno: j['produtoIdExterno'] as String?,
+        referenciaId: (j['referenciaId'] as num?)?.toInt(),
+        referenciaIdExterno: j['referenciaIdExterno'] as String?,
+        referenciaNome: j['referenciaNome'] as String?,
+        corId: (j['corId'] as num?)?.toInt(),
+        corNome: j['corNome'] as String?,
+        tamanhoId: (j['tamanhoId'] as num?)?.toInt(),
+        tamanhoNome: j['tamanhoNome'] as String?,
+        categoriaId: (j['categoriaId'] as num?)?.toInt(),
+        categoriaNome: j['categoriaNome'] as String?,
         quantidadeVendida: (j['quantidadeVendida'] as num).toInt(),
         valorTotalVendido: (j['valorTotalVendido'] as num).toDouble(),
         percentualParticipacao:

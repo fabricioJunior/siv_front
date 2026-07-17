@@ -8,8 +8,10 @@ class RelatorioCurvaAbcState {
   final String? erro;
   final String dataInicial;
   final String dataFinal;
+  final String? busca;
   final int page;
   final int totalPages;
+  final String agruparPor;
 
   const RelatorioCurvaAbcState({
     required this.step,
@@ -17,8 +19,10 @@ class RelatorioCurvaAbcState {
     this.erro,
     required this.dataInicial,
     required this.dataFinal,
+    this.busca,
     required this.page,
     required this.totalPages,
+    this.agruparPor = 'produto',
   });
 
   factory RelatorioCurvaAbcState.initial() {
@@ -38,8 +42,11 @@ class RelatorioCurvaAbcState {
     String? erro,
     String? dataInicial,
     String? dataFinal,
+    String? busca,
+    bool limparBusca = false,
     int? page,
     int? totalPages,
+    String? agruparPor,
   }) =>
       RelatorioCurvaAbcState(
         step: step ?? this.step,
@@ -47,8 +54,10 @@ class RelatorioCurvaAbcState {
         erro: erro,
         dataInicial: dataInicial ?? this.dataInicial,
         dataFinal: dataFinal ?? this.dataFinal,
+        busca: limparBusca ? null : (busca ?? this.busca),
         page: page ?? this.page,
         totalPages: totalPages ?? this.totalPages,
+        agruparPor: agruparPor ?? this.agruparPor,
       );
 }
 

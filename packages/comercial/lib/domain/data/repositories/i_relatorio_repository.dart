@@ -11,8 +11,10 @@ abstract class IRelatorioRepository {
     required List<int> empresaIds,
     required String dataInicial,
     required String dataFinal,
+    String? busca,
     int page = 1,
     int limit = 100,
+    String agruparPor = 'produto',
   });
 
   Future<RelatorioClientesAtivos> clientesAtivos({

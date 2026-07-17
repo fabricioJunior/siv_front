@@ -263,9 +263,9 @@ class RelatorioPdfExporter {
                             : PdfColors.red50,
                   ),
                   children: [
-                    item.referenciaNome,
-                    item.corNome,
-                    item.tamanhoNome,
+                    item.referenciaNome ?? item.categoriaNome ?? '-',
+                    item.corNome ?? '-',
+                    item.tamanhoNome ?? '-',
                     _fmtMoeda(item.valorTotalVendido),
                     '${item.quantidadeVendida}',
                     '${item.percentualParticipacao.toStringAsFixed(2)}%',

@@ -29,13 +29,18 @@ class RelatorioCurvaAbcBloc
         step: RelatorioCurvaAbcStep.carregando,
         dataInicial: event.dataInicial,
         dataFinal: event.dataFinal,
+        busca: event.busca,
+        limparBusca: event.busca == null,
         page: event.page,
+        agruparPor: event.agruparPor,
       ));
       final dados = await _useCase.call(
         empresaIds: [empresaId],
         dataInicial: event.dataInicial,
         dataFinal: event.dataFinal,
+        busca: event.busca,
         page: event.page,
+        agruparPor: event.agruparPor,
       );
       emit(state.copyWith(
         step: RelatorioCurvaAbcStep.sucesso,

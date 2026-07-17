@@ -50,15 +50,17 @@ abstract class RelatorioVendasPorFuncionarioItem {
 }
 
 abstract class RelatorioCurvaAbcItem {
-  int get produtoId;
-  String get produtoIdExterno;
-  int get referenciaId;
-  String get referenciaIdExterno;
-  String get referenciaNome;
-  int get corId;
-  String get corNome;
-  int get tamanhoId;
-  String get tamanhoNome;
+  int? get produtoId;
+  String? get produtoIdExterno;
+  int? get referenciaId;
+  String? get referenciaIdExterno;
+  String? get referenciaNome;
+  int? get corId;
+  String? get corNome;
+  int? get tamanhoId;
+  String? get tamanhoNome;
+  int? get categoriaId;
+  String? get categoriaNome;
   int get quantidadeVendida;
   double get valorTotalVendido;
   double get percentualParticipacao;

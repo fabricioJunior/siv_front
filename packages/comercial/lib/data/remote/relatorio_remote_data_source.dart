@@ -33,8 +33,10 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
     required List<int> empresaIds,
     required String dataInicial,
     required String dataFinal,
+    String? busca,
     int page = 1,
     int limit = 100,
+    String agruparPor = 'produto',
   }) async {
     final response = await get(
       pathParameters: {'path': '/produtos/curva-abc'},
@@ -44,6 +46,8 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
         'dataFinal': dataFinal,
         'page': '$page',
         'limit': '$limit',
+        'agruparPor': agruparPor,
+        if (busca != null && busca.isNotEmpty) 'busca': busca,
       },
     );
     return RelatorioCurvaAbcDto.fromJson(response.body as Map<String, dynamic>);

@@ -2,6 +2,10 @@ import 'package:core/imagens/cache_imagem_service.dart';
 import 'package:core/impressoras/printers/i_printers_service.dart';
 import 'package:core/impressoras/printers/impressora_preferida_local_data_source.dart';
 import 'package:core/impressoras/printers/printers_service.dart';
+import 'package:core/impressoras/printers/repositories/i_impressora_preferida_repository.dart';
+import 'package:core/impressoras/printers/repositories/impressora_preferida_repository.dart';
+import 'package:core/impressoras/printers/use_cases/obter_impressora_preferida.dart';
+import 'package:core/impressoras/printers/use_cases/salvar_impressora_preferida.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
 import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/isar_database_instance.dart';
@@ -39,6 +43,18 @@ void coreInjections() {
 
   sl.registerLazySingleton<IImpressoraPreferidaLocalDataSource>(
     () => ImpressoraPreferidaLocalDataSource(),
+  );
+
+  sl.registerLazySingleton<IImpressoraPreferidaRepository>(
+    () => ImpressoraPreferidaRepository(localDataSource: sl()),
+  );
+
+  sl.registerFactory<ObterImpressoraPreferida>(
+    () => ObterImpressoraPreferida(repository: sl()),
+  );
+
+  sl.registerFactory<SalvarImpressoraPreferida>(
+    () => SalvarImpressoraPreferida(repository: sl()),
   );
 
   sl.registerLazySingleton<CepService>(() => CepService());

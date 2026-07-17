@@ -1,5 +1,6 @@
 import 'package:core/impressoras/printers/i_printers_service.dart';
-import 'package:core/impressoras/printers/impressora_preferida_local_data_source.dart';
+import 'package:core/impressoras/printers/use_cases/obter_impressora_preferida.dart';
+import 'package:core/impressoras/printers/use_cases/salvar_impressora_preferida.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation/debouncer.dart';
 import 'package:core/impressoras/zpl/etiqueta_preview_add_field_modal.dart';
@@ -526,8 +527,7 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
 
       final sucesso = await printersService.printZpl(impressoraSelecionada, zpl);
       if (sucesso) {
-        sl<IImpressoraPreferidaLocalDataSource>()
-            .salvarUltimaImpressora(impressoraSelecionada.name);
+        sl<SalvarImpressoraPreferida>().call(impressoraSelecionada.name);
       }
       if (!mounted) {
         return;
@@ -564,8 +564,7 @@ class _EtiquetaPreviewPageState extends State<EtiquetaPreviewPage> {
   }
 
   Future<Impressora?> _selecionarImpressora(List<Impressora> impressoras) async {
-    final nomePreferido = await sl<IImpressoraPreferidaLocalDataSource>()
-        .obterUltimaImpressora();
+    final nomePreferido = await sl<ObterImpressoraPreferida>().call();
     final preferida = nomePreferido == null
         ? null
         : impressoras

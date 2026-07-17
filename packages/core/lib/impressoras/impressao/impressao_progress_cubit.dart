@@ -1,6 +1,7 @@
 import 'package:core/impressoras/impressao/item_de_impressao.dart';
 import 'package:core/impressoras/printers/i_printers_service.dart';
-import 'package:core/impressoras/printers/impressora_preferida_local_data_source.dart';
+import 'package:core/impressoras/printers/use_cases/obter_impressora_preferida.dart';
+import 'package:core/impressoras/printers/use_cases/salvar_impressora_preferida.dart';
 import 'package:core/impressoras/zpl/mescla_etiquetas.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,20 +10,21 @@ part 'impressao_progress_state.dart';
 
 class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
   final IPrintersService _printersService;
-  final IImpressoraPreferidaLocalDataSource _impressoraPreferidaLocalDataSource;
+  final ObterImpressoraPreferida _obterImpressoraPreferida;
+  final SalvarImpressoraPreferida _salvarImpressoraPreferida;
   final MesclaEtiquetas _mesclaEtiquetas = MesclaEtiquetas();
   final List<ItemDeImpressao> _itens;
   final int _quantidadeDeVias;
 
   ImpressaoProgressCubit({
     required IPrintersService printersService,
-    required IImpressoraPreferidaLocalDataSource
-        impressoraPreferidaLocalDataSource,
+    required ObterImpressoraPreferida obterImpressoraPreferida,
+    required SalvarImpressoraPreferida salvarImpressoraPreferida,
     required List<ItemDeImpressao> itens,
     required int quantidadeDeVias,
   })  : _printersService = printersService,
-        _impressoraPreferidaLocalDataSource =
-            impressoraPreferidaLocalDataSource,
+        _obterImpressoraPreferida = obterImpressoraPreferida,
+        _salvarImpressoraPreferida = salvarImpressoraPreferida,
         _itens = itens,
         _quantidadeDeVias = quantidadeDeVias <= 0 ? 1 : quantidadeDeVias,
         super(const ImpressaoProgressState()) {
@@ -64,8 +66,7 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
   Future<void> _selecionarImpressoraPreferida(
     List<Impressora> impressoras,
   ) async {
-    final nomePreferido =
-        await _impressoraPreferidaLocalDataSource.obterUltimaImpressora();
+    final nomePreferido = await _obterImpressoraPreferida.call();
     if (nomePreferido == null || isClosed) return;
 
     final impressoraPreferida = impressoras
@@ -80,9 +81,7 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
 
   void selecionarImpressora(Impressora impressora) {
     emit(state.copyWith(impressoraSelecionada: () => impressora));
-    _impressoraPreferidaLocalDataSource.salvarUltimaImpressora(
-      impressora.name,
-    );
+    _salvarImpressoraPreferida.call(impressora.name);
   }
 
   Future<void> confirmarImpressao() async {
@@ -128,9 +127,7 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
         return;
       }
 
-      _impressoraPreferidaLocalDataSource.salvarUltimaImpressora(
-        impressora.name,
-      );
+      _salvarImpressoraPreferida.call(impressora.name);
 
       emit(
         state.copyWith(

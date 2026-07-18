@@ -83,11 +83,13 @@ class _RomaneioPageState extends State<RomaneioPage> {
   }
 
   void _imprimirNotaFiscal(DocumentoFiscal documentoFiscal) {
+    final adaptado = comAvisoServidor(() => NotaFiscalPdfExporter.gerarBytes(documentoFiscal));
     imprimirDocumentoPdf(
       context,
       titulo: 'Imprimir nota fiscal',
       nomeDocumento: 'Nota Fiscal #${documentoFiscal.id}',
-      gerarBytes: () => NotaFiscalPdfExporter.gerarBytes(documentoFiscal),
+      gerarBytes: adaptado.gerarBytes,
+      obterAvisoServidor: adaptado.obterAvisoServidor,
     );
   }
 

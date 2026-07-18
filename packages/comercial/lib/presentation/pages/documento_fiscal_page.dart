@@ -155,12 +155,16 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 12),
         if (doc.status != 'falha')
           FilledButton.icon(
-            onPressed: () => imprimirDocumentoPdf(
-              context,
-              titulo: 'Imprimir nota fiscal',
-              nomeDocumento: 'Nota Fiscal #${doc.id}',
-              gerarBytes: () => NotaFiscalPdfExporter.gerarBytes(doc),
-            ),
+            onPressed: () {
+              final adaptado = comAvisoServidor(() => NotaFiscalPdfExporter.gerarBytes(doc));
+              imprimirDocumentoPdf(
+                context,
+                titulo: 'Imprimir nota fiscal',
+                nomeDocumento: 'Nota Fiscal #${doc.id}',
+                gerarBytes: adaptado.gerarBytes,
+                obterAvisoServidor: adaptado.obterAvisoServidor,
+              );
+            },
             icon: const Icon(Icons.print_outlined),
             label: const Text('Imprimir Nota Fiscal'),
           )

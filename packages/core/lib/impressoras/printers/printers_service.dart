@@ -45,30 +45,27 @@ class PrintersService implements IPrintersService {
     }
   }
 
+  // Nao engole excecao aqui -- o antigo catch+log(e)+return false so mandava o erro real pro
+  // console (invisivel em build de release), deixando quem chama sem nenhuma pista do que
+  // aconteceu. Deixa propagar pra quem chama decidir como mostrar pro usuario.
   @override
   Future<bool> printPdf(
     Impressora printer,
     Uint8List pdfBytes, {
     String docName = 'Documento',
   }) async {
-    try {
-      final tempDir = await path_provider.getTemporaryDirectory();
-      final nomeSanitizado = docName.replaceAll(RegExp(r'[^\w\-]'), '_');
-      final arquivo = File(
-        '${tempDir.path}/${nomeSanitizado}_${DateTime.now().millisecondsSinceEpoch}.pdf',
-      );
-      await arquivo.writeAsBytes(pdfBytes);
+    final tempDir = await path_provider.getTemporaryDirectory();
+    final nomeSanitizado = docName.replaceAll(RegExp(r'[^\w\-]'), '_');
+    final arquivo = File(
+      '${tempDir.path}/${nomeSanitizado}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+    await arquivo.writeAsBytes(pdfBytes);
 
-      final printingFfi = PrintingFfi.instance;
-      final success = await printingFfi.printPdf(
-        printer.name,
-        arquivo.path,
-        docName: docName,
-      );
-      return success;
-    } catch (e) {
-      log('Error printing PDF: $e');
-      return false;
-    }
+    final printingFfi = PrintingFfi.instance;
+    return printingFfi.printPdf(
+      printer.name,
+      arquivo.path,
+      docName: docName,
+    );
   }
 }

@@ -66,15 +66,21 @@ const _formasPagamentoWebmania = {
 /// que faz o backend buscar o PDF direto no gateway fiscal (ex: Web Mania,
 /// GET /danfe/{chave}/ autenticado com as credenciais do provider -- nunca
 /// expostas ao app). Se a chamada falhar (nota nao emitida, gateway fora do
-/// ar etc), monta um layout proprio simplificado (fallback).
+/// ar, erro de rede/servidor etc), monta um layout proprio simplificado
+/// (fallback) -- pra impressao nunca ficar bloqueada por indisponibilidade
+/// do gateway fiscal -- mas devolve o erro original em [erroServidor] pra
+/// quem chama poder avisar o usuario que o layout impresso nao e o oficial.
 class NotaFiscalPdfExporter {
   NotaFiscalPdfExporter._();
 
-  static Future<Uint8List> gerarBytes(DocumentoFiscal documento) async {
+  static Future<({Uint8List bytes, Object? erroServidor})> gerarBytes(
+    DocumentoFiscal documento,
+  ) async {
     try {
-      return await sl<IIntegracaoFiscalRepository>().baixarDanfe(documento.id);
-    } catch (_) {
-      return _gerarFallback(documento);
+      final bytes = await sl<IIntegracaoFiscalRepository>().baixarDanfe(documento.id);
+      return (bytes: bytes, erroServidor: null);
+    } catch (erro) {
+      return (bytes: await _gerarFallback(documento), erroServidor: erro);
     }
   }
 

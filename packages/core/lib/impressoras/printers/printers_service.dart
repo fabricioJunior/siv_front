@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/impressoras/printers/i_printers_service.dart';
+import 'package:core/services/mac_thermal_print_service.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:printing_ffi/printing_ffi.dart';
 
@@ -60,6 +61,14 @@ class PrintersService implements IPrintersService {
       '${tempDir.path}/${nomeSanitizado}_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
     await arquivo.writeAsBytes(pdfBytes);
+
+    // No macOS a impressora termica (Bematech MP-4200 HS, compartilhada via
+    // SMB) nao tem driver nativo funcional -- o spool do sistema manda
+    // comandos crus pro papel em vez do conteudo. Usa o script externo que
+    // converte o PDF pra ESC/POS e imprime direto na fila CUPS.
+    if (Platform.isMacOS) {
+      return MacThermalPrintService.printPdf(arquivo.path);
+    }
 
     final printingFfi = PrintingFfi.instance;
     return printingFfi.printPdf(

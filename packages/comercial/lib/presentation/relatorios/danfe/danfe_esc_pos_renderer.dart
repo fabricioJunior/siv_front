@@ -20,12 +20,19 @@ enum DanfeLarguraPapel {
 class DanfeEscPosRenderer {
   DanfeEscPosRenderer._();
 
+  /// Margem de seguranca (em colunas) subtraida da largura nominal do
+  /// papel -- a largura util real de impressao costuma ser menor que a
+  /// nominal (depende de fonte/driver de cada impressora), o que corta os
+  /// ultimos caracteres de linhas que preenchem a coluna inteira (ex: valor
+  /// alinhado a direita como "R$ 85,50" saindo cortado como "R$ 85").
+  static const _margemSeguranca = 2;
+
   static Uint8List render(
     DanfeLayoutData dados, {
     DanfeLarguraPapel largura = DanfeLarguraPapel.mm80,
   }) {
     final builder = EscPosBuilder();
-    final colunas = largura.colunas;
+    final colunas = largura.colunas - _margemSeguranca;
 
     for (final node in construirDanfeNodes(dados)) {
       switch (node) {

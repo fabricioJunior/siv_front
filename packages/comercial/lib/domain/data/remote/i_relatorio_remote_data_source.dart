@@ -7,6 +7,13 @@ abstract class IRelatorioRemoteDataSource {
     required String dataFinal,
   });
 
+  Future<RelatorioFaturamentoComparativo> faturamentoComparativo({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    required String agruparPor,
+  });
+
   Future<RelatorioCurvaAbc> curvaAbc({
     required List<int> empresaIds,
     required String dataInicial,
@@ -15,6 +22,8 @@ abstract class IRelatorioRemoteDataSource {
     int page = 1,
     int limit = 100,
     String agruparPor = 'produto',
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
   });
 
   Future<RelatorioClientesAtivos> clientesAtivos({

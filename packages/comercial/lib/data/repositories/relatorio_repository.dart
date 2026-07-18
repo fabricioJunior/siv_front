@@ -21,6 +21,20 @@ class RelatorioRepository implements IRelatorioRepository {
       );
 
   @override
+  Future<RelatorioFaturamentoComparativo> faturamentoComparativo({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    required String agruparPor,
+  }) =>
+      _remoteDataSource.faturamentoComparativo(
+        empresaIds: empresaIds,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
+        agruparPor: agruparPor,
+      );
+
+  @override
   Future<RelatorioCurvaAbc> curvaAbc({
     required List<int> empresaIds,
     required String dataInicial,
@@ -29,6 +43,8 @@ class RelatorioRepository implements IRelatorioRepository {
     int page = 1,
     int limit = 100,
     String agruparPor = 'produto',
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
   }) =>
       _remoteDataSource.curvaAbc(
         empresaIds: empresaIds,
@@ -38,6 +54,8 @@ class RelatorioRepository implements IRelatorioRepository {
         page: page,
         limit: limit,
         agruparPor: agruparPor,
+        referenciaIds: referenciaIds,
+        categoriaIds: categoriaIds,
       );
 
   @override

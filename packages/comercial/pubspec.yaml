@@ -19,6 +19,9 @@ dependencies:
     path: ../estoque
   pessoas:
     path: ../pessoas
+  produtos:
+    path: ../produtos
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,8 @@ enum EstoqueSaldoStep { inicial, carregando, carregandoMais, carregado, falha }
 class EstoqueSaldoState extends Equatable {
   final EstoqueSaldoStep step;
   final List<ProdutoDoEstoque> itens;
+  final List<ProdutoDoEstoquePorReferencia> itensAgrupados;
+  final bool visualizarPorReferencia;
   final int page;
   final int limit;
   final int totalPages;
@@ -23,6 +25,8 @@ class EstoqueSaldoState extends Equatable {
   const EstoqueSaldoState({
     this.step = EstoqueSaldoStep.inicial,
     this.itens = const [],
+    this.itensAgrupados = const [],
+    this.visualizarPorReferencia = false,
     this.page = 1,
     this.limit = 20,
     this.totalPages = 0,
@@ -44,6 +48,8 @@ class EstoqueSaldoState extends Equatable {
   EstoqueSaldoState copyWith({
     EstoqueSaldoStep? step,
     List<ProdutoDoEstoque>? itens,
+    List<ProdutoDoEstoquePorReferencia>? itensAgrupados,
+    bool? visualizarPorReferencia,
     int? page,
     int? limit,
     int? totalPages,
@@ -62,6 +68,9 @@ class EstoqueSaldoState extends Equatable {
     return EstoqueSaldoState(
       step: step ?? this.step,
       itens: itens ?? this.itens,
+      itensAgrupados: itensAgrupados ?? this.itensAgrupados,
+      visualizarPorReferencia:
+          visualizarPorReferencia ?? this.visualizarPorReferencia,
       page: page ?? this.page,
       limit: limit ?? this.limit,
       totalPages: totalPages ?? this.totalPages,
@@ -91,6 +100,8 @@ class EstoqueSaldoState extends Equatable {
   List<Object?> get props => [
     step,
     itens,
+    itensAgrupados,
+    visualizarPorReferencia,
     page,
     limit,
     totalPages,

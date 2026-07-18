@@ -13,6 +13,7 @@ class EstoqueSaldoIniciou extends EstoqueSaldoEvent {
   final DateTime? atualizadoEmFim;
   final CampoOrdenacaoEstoque? ordenarPor;
   final DirecaoOrdenacaoEstoque ordenarDirecao;
+  final bool visualizarPorReferencia;
   final int limit;
 
   const EstoqueSaldoIniciou({
@@ -24,6 +25,7 @@ class EstoqueSaldoIniciou extends EstoqueSaldoEvent {
     this.atualizadoEmFim,
     this.ordenarPor,
     this.ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
+    this.visualizarPorReferencia = false,
     this.limit = 20,
   });
 }

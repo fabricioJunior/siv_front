@@ -61,7 +61,9 @@ void main() {
         destinatario: {'cpf': '12345678900', 'nome_completo': 'Fulano de Tal'},
       );
 
-      final dados = construirDanfeLayoutData(doc);
+      final romaneio = Romaneio.create(incluirCpfNaNota: true);
+
+      final dados = construirDanfeLayoutData(doc, romaneio: romaneio);
 
       expect(dados.consumidor.identificado, isTrue);
       expect(dados.consumidor.nome, 'Fulano de Tal');
@@ -70,11 +72,37 @@ void main() {
 
     test('sem destinatario -> consumidor nao identificado', () {
       final doc = _documento();
+      final romaneio = Romaneio.create(incluirCpfNaNota: true);
+
+      final dados = construirDanfeLayoutData(doc, romaneio: romaneio);
+
+      expect(dados.consumidor.identificado, isFalse);
+      expect(dados.consumidor.documento, isNull);
+    });
+
+    test('cpf nao solicitado na nota -> consumidor nao identificado mesmo com nome', () {
+      final doc = _documento(
+        pessoaNome: 'Fulano de Tal',
+        destinatario: {'cpf': '12345678900', 'nome_completo': 'Fulano de Tal'},
+      );
+      final romaneio = Romaneio.create(incluirCpfNaNota: false);
+
+      final dados = construirDanfeLayoutData(doc, romaneio: romaneio);
+
+      expect(dados.consumidor.identificado, isFalse);
+      expect(dados.consumidor.nome, isNull);
+      expect(dados.consumidor.documento, isNull);
+    });
+
+    test('sem romaneio -> consumidor nao identificado mesmo com nome/cpf', () {
+      final doc = _documento(
+        pessoaNome: 'Fulano de Tal',
+        destinatario: {'cpf': '12345678900', 'nome_completo': 'Fulano de Tal'},
+      );
 
       final dados = construirDanfeLayoutData(doc);
 
       expect(dados.consumidor.identificado, isFalse);
-      expect(dados.consumidor.documento, isNull);
     });
 
     test('item com desconto (subtotal > total) calcula desconto do item', () {

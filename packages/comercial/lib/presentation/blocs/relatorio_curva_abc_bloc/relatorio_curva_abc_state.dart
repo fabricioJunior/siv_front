@@ -12,6 +12,8 @@ class RelatorioCurvaAbcState {
   final int page;
   final int totalPages;
   final String agruparPor;
+  final List<int> referenciaIds;
+  final List<int> categoriaIds;
 
   const RelatorioCurvaAbcState({
     required this.step,
@@ -23,6 +25,8 @@ class RelatorioCurvaAbcState {
     required this.page,
     required this.totalPages,
     this.agruparPor = 'produto',
+    this.referenciaIds = const [],
+    this.categoriaIds = const [],
   });
 
   factory RelatorioCurvaAbcState.initial() {
@@ -47,6 +51,8 @@ class RelatorioCurvaAbcState {
     int? page,
     int? totalPages,
     String? agruparPor,
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
   }) =>
       RelatorioCurvaAbcState(
         step: step ?? this.step,
@@ -58,6 +64,8 @@ class RelatorioCurvaAbcState {
         page: page ?? this.page,
         totalPages: totalPages ?? this.totalPages,
         agruparPor: agruparPor ?? this.agruparPor,
+        referenciaIds: referenciaIds ?? this.referenciaIds,
+        categoriaIds: categoriaIds ?? this.categoriaIds,
       );
 }
 

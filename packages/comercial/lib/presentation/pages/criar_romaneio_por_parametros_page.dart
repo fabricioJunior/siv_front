@@ -308,8 +308,12 @@ class _SucessoRomaneioView extends StatelessWidget {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
-              final adaptado =
-                  comAvisoServidor(() => NotaFiscalPdfExporter.gerarBytes(documentoFiscal!));
+              final adaptado = comAvisoServidor(
+                () => NotaFiscalPdfExporter.gerarBytes(
+                  documentoFiscal!,
+                  romaneio: romaneio,
+                ),
+              );
               imprimirDocumentoPdf(
                 context,
                 titulo: 'Imprimir nota fiscal',

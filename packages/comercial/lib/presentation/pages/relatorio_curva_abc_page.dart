@@ -4,6 +4,8 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/models.dart';
+import 'package:produtos/presentation.dart';
 
 String _fmtMoeda(double v) {
   final s = v.toStringAsFixed(2);
@@ -47,6 +49,8 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
   late String _dataFinal;
   String _agruparPor = 'produto';
   bool _exportandoPdf = false;
+  List<int> _referenciaIdsSelecionados = [];
+  List<int> _categoriaIdsSelecionados = [];
   final _buscaController = TextEditingController();
   final _debouncer = Debouncer(milliseconds: 380);
 
@@ -77,6 +81,8 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
         busca: busca.isEmpty ? null : busca,
         page: 1,
         agruparPor: _agruparPor,
+        referenciaIds: _referenciaIdsSelecionados,
+        categoriaIds: _categoriaIdsSelecionados,
       ));
     });
   }
@@ -107,12 +113,38 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
       busca: busca.isEmpty ? null : busca,
       page: page,
       agruparPor: _agruparPor,
+      referenciaIds: _referenciaIdsSelecionados,
+      categoriaIds: _categoriaIdsSelecionados,
     ));
   }
 
   void _onAgruparPorAlterado(String valor) {
     if (_agruparPor == valor) return;
-    setState(() => _agruparPor = valor);
+    setState(() {
+      _agruparPor = valor;
+      _referenciaIdsSelecionados = [];
+      _categoriaIdsSelecionados = [];
+    });
+    _aplicar(page: 1);
+  }
+
+  void _onReferenciaSelecionada(List<Referencia> referencias) {
+    setState(() {
+      _referenciaIdsSelecionados = referencias
+          .map((r) => r.id)
+          .whereType<int>()
+          .toList();
+    });
+    _aplicar(page: 1);
+  }
+
+  void _onCategoriaSelecionada(List<Categoria> categorias) {
+    setState(() {
+      _categoriaIdsSelecionados = categorias
+          .map((c) => c.id)
+          .whereType<int>()
+          .toList();
+    });
     _aplicar(page: 1);
   }
 
@@ -282,6 +314,24 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
                                 _onAgruparPorAlterado(selecao.first),
                           ),
                         ),
+                        if (_agruparPor == 'produto') ...[
+                          const SizedBox(height: 10),
+                          ReferenciaSeletor(
+                            key: const ValueKey('referencia-seletor-curva-abc'),
+                            modo: ReferenciaSeletorModo.multipla,
+                            titulo: 'Filtrar por referência',
+                            permitirCadastro: false,
+                            onReferenciaChanged: _onReferenciaSelecionada,
+                          ),
+                        ] else if (_agruparPor == 'referencia') ...[
+                          const SizedBox(height: 10),
+                          CategoriaSeletor(
+                            key: const ValueKey('categoria-seletor-curva-abc'),
+                            modo: CategoriaSeletorModo.multipla,
+                            titulo: 'Filtrar por categoria',
+                            onCategoriaChanged: _onCategoriaSelecionada,
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         TextField(
                           controller: _buscaController,

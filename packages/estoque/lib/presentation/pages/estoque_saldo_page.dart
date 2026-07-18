@@ -7,6 +7,8 @@ import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
+import 'package:estoque/domain/models/produto_do_estoque.dart';
+import 'package:estoque/domain/models/produto_do_estoque_por_referencia.dart';
 import 'package:estoque/presentation.dart';
 import 'package:estoque/presentation/relatorios/pdf/estoque_relatorio_pdf_exporter.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +52,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   SelectData? _tabelaDePrecoSelecionada;
   bool _gerandoRelatorio = false;
   bool _filtrosExpandidos = false;
+  bool _visualizarPorReferencia = false;
   CampoOrdenacaoEstoque? _ordenarPor;
   DirecaoOrdenacaoEstoque _ordenarDirecao = DirecaoOrdenacaoEstoque.asc;
 
@@ -81,8 +84,16 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         atualizadoEmFim: _atualizadoEmFim,
         ordenarPor: _ordenarPor,
         ordenarDirecao: _ordenarDirecao,
+        visualizarPorReferencia: _visualizarPorReferencia,
       ),
     );
+  }
+
+  void _reiniciarListaERecarregar() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+    _recarregar();
   }
 
   int get _quantidadeFiltrosAtivos {
@@ -134,13 +145,22 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
 
     setState(() => _gerandoRelatorio = true);
     try {
-      final itens = await _bloc.carregarTodosOsItensParaRelatorio();
       final precos = await widget.obterPrecosDaTabela(tabelaSelecionada.id);
-      await EstoqueRelatorioPdfExporter.exportarValorEstoque(
-        itens: itens,
-        precos: precos,
-        tabelaDePrecoNome: tabelaSelecionada.nome,
-      );
+      if (_visualizarPorReferencia) {
+        final itens = await _bloc.carregarTodosOsItensAgrupadosParaRelatorio();
+        await EstoqueRelatorioPdfExporter.exportarValorEstoquePorReferencia(
+          itens: itens,
+          precos: precos,
+          tabelaDePrecoNome: tabelaSelecionada.nome,
+        );
+      } else {
+        final itens = await _bloc.carregarTodosOsItensParaRelatorio();
+        await EstoqueRelatorioPdfExporter.exportarValorEstoque(
+          itens: itens,
+          precos: precos,
+          tabelaDePrecoNome: tabelaSelecionada.nome,
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,7 +220,25 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         return BlocProvider<EstoqueSaldoBloc>.value(
           value: _bloc,
           child: Scaffold(
-            appBar: AppBar(title: const Text('Saldo de Estoque')),
+            appBar: AppBar(
+              title: const Text('Saldo de Estoque'),
+              actions: [
+                IconButton(
+                  tooltip: 'Gerar relatório de valor do estoque',
+                  onPressed:
+                      _tabelaDePrecoSelecionada == null || _gerandoRelatorio
+                      ? null
+                      : _gerarRelatorioValorEstoque,
+                  icon: _gerandoRelatorio
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.picture_as_pdf_outlined),
+                ),
+              ],
+            ),
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -238,6 +276,31 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                         _buildOrdenacao(context),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(
+                            value: false,
+                            label: Text('Por produto'),
+                            icon: Icon(Icons.checkroom_outlined, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: true,
+                            label: Text('Por referência'),
+                            icon: Icon(Icons.style_outlined, size: 16),
+                          ),
+                        ],
+                        selected: {_visualizarPorReferencia},
+                        onSelectionChanged: (selecao) {
+                          setState(
+                            () => _visualizarPorReferencia = selecao.first,
+                          );
+                          _reiniciarListaERecarregar();
+                        },
+                      ),
+                    ),
                     if (_filtrosExpandidos) ...[
                       const SizedBox(height: 12),
                       _buildPainelFiltros(context),
@@ -246,15 +309,19 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                     Expanded(
                       child: BlocBuilder<EstoqueSaldoBloc, EstoqueSaldoState>(
                         builder: (context, state) {
+                          final totalCarregado = state.visualizarPorReferencia
+                              ? state.itensAgrupados.length
+                              : state.itens.length;
+
                           if (state.step == EstoqueSaldoStep.carregando &&
-                              state.itens.isEmpty) {
+                              totalCarregado == 0) {
                             return const Center(
                               child: CircularProgressIndicator.adaptive(),
                             );
                           }
 
                           if (state.step == EstoqueSaldoStep.falha &&
-                              state.itens.isEmpty) {
+                              totalCarregado == 0) {
                             return Center(
                               child: Text(
                                 state.erro ?? 'Erro ao carregar estoque.',
@@ -262,7 +329,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                             );
                           }
 
-                          if (state.itens.isEmpty) {
+                          if (totalCarregado == 0) {
                             if (state.sincronizando) {
                               return Center(
                                 child: _buildSincronizando(context),
@@ -279,10 +346,15 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                           final exibirLoaderFinal =
                               state.step == EstoqueSaldoStep.carregandoMais;
 
-                          final quantidadeTotal = state.itens.fold<double>(
-                            0,
-                            (soma, item) => soma + item.saldo,
-                          );
+                          final quantidadeTotal = state.visualizarPorReferencia
+                              ? state.itensAgrupados.fold<double>(
+                                  0,
+                                  (soma, item) => soma + item.saldoTotal,
+                                )
+                              : state.itens.fold<double>(
+                                  0,
+                                  (soma, item) => soma + item.saldo,
+                                );
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,8 +374,10 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                     children: [
                                       _buildResumo(
                                         context,
-                                        label: 'Produtos carregados',
-                                        valor: '${state.itens.length}',
+                                        label: state.visualizarPorReferencia
+                                            ? 'Referências carregadas'
+                                            : 'Produtos carregados',
+                                        valor: '$totalCarregado',
                                       ),
                                       _buildResumo(
                                         context,
@@ -337,12 +411,12 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                 child: ListView.separated(
                                   controller: _scrollController,
                                   itemCount:
-                                      state.itens.length +
+                                      totalCarregado +
                                       (exibirLoaderFinal ? 1 : 0),
                                   separatorBuilder: (context, index) =>
                                       const SizedBox(height: 8),
                                   itemBuilder: (context, index) {
-                                    if (index >= state.itens.length) {
+                                    if (index >= totalCarregado) {
                                       return const Padding(
                                         padding: EdgeInsets.symmetric(
                                           vertical: 12,
@@ -354,43 +428,15 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                                       );
                                     }
 
-                                    final item = state.itens[index];
-                                    final unidadeMedida =
-                                        item.unidadeMedida?.trim().isNotEmpty ==
-                                            true
-                                        ? item.unidadeMedida!
-                                        : '-';
-                                    return Card(
-                                      child: ListTile(
-                                        title: Text(item.nome),
-                                        subtitle: Text(
-                                          'Referência: ${item.referenciaId}  |  Produto: ${item.produtoIdExterno}\nCor: ${item.corNome}  •  Tam: ${item.tamanhoNome}  •  UM: $unidadeMedida',
-                                        ),
-                                        trailing: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              item.saldo.round().toString(),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Atualizado: ${_formatDate(item.atualizadoEm)}',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
+                                    return state.visualizarPorReferencia
+                                        ? _buildLinhaReferencia(
+                                            context,
+                                            state.itensAgrupados[index],
+                                          )
+                                        : _buildLinhaProduto(
+                                            context,
+                                            state.itens[index],
+                                          );
                                   },
                                 ),
                               ),
@@ -409,6 +455,66 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     );
   }
 
+  Widget _buildLinhaProduto(BuildContext context, ProdutoDoEstoque item) {
+    final unidadeMedida = item.unidadeMedida?.trim().isNotEmpty == true
+        ? item.unidadeMedida!
+        : '-';
+    return Card(
+      child: ListTile(
+        title: Text(item.nome),
+        subtitle: Text(
+          'Referência: ${item.referenciaId}  |  Produto: ${item.produtoIdExterno}\nCor: ${item.corNome}  •  Tam: ${item.tamanhoNome}  •  UM: $unidadeMedida',
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              item.saldo.round().toString(),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              'Atualizado: ${_formatDate(item.atualizadoEm)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLinhaReferencia(
+    BuildContext context,
+    ProdutoDoEstoquePorReferencia item,
+  ) {
+    return Card(
+      child: ListTile(
+        title: Text(item.nome),
+        subtitle: Text(
+          'Referência: ${item.referenciaIdExterno ?? item.referenciaId}  |  Variações: ${item.quantidadeVariacoes}',
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              item.saldoTotal.round().toString(),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              'Atualizado: ${_formatDate(item.atualizadoEm)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildOrdenacao(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -418,7 +524,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
           initialValue: _ordenarPor,
           onSelected: (campo) {
             setState(() => _ordenarPor = campo);
-            _recarregar();
+            _reiniciarListaERecarregar();
           },
           itemBuilder: (context) => CampoOrdenacaoEstoque.values
               .map(
@@ -453,7 +559,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                     ? DirecaoOrdenacaoEstoque.desc
                     : DirecaoOrdenacaoEstoque.asc;
               });
-              _recarregar();
+              _reiniciarListaERecarregar();
             },
           ),
       ],
@@ -557,27 +663,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       : dados.first;
                 });
               },
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: _tabelaDePrecoSelecionada == null || _gerandoRelatorio
-                    ? null
-                    : _gerarRelatorioValorEstoque,
-                icon: _gerandoRelatorio
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.picture_as_pdf_outlined),
-                label: Text(
-                  _gerandoRelatorio
-                      ? 'Gerando relatório...'
-                      : 'Gerar relatório de valor do estoque',
-                ),
-              ),
             ),
           ],
         ),

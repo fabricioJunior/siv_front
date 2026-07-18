@@ -83,8 +83,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
     );
   }
 
-  void _imprimirNotaFiscal(DocumentoFiscal documentoFiscal) {
-    final adaptado = comAvisoServidor(() => NotaFiscalPdfExporter.gerarBytes(documentoFiscal));
+  void _imprimirNotaFiscal(DocumentoFiscal documentoFiscal, Romaneio? romaneio) {
+    final adaptado = comAvisoServidor(
+      () => NotaFiscalPdfExporter.gerarBytes(documentoFiscal, romaneio: romaneio),
+    );
     imprimirDocumentoPdf(
       context,
       titulo: 'Imprimir nota fiscal',
@@ -565,8 +567,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: () =>
-                          _imprimirNotaFiscal(state.documentoFiscal!),
+                      onPressed: () => _imprimirNotaFiscal(
+                        state.documentoFiscal!,
+                        state.romaneio,
+                      ),
                       icon: const Icon(Icons.print_outlined),
                       label: const Text('Imprimir Nota Fiscal'),
                     ),
@@ -946,8 +950,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: () =>
-                          _imprimirNotaFiscal(state.documentoFiscal!),
+                      onPressed: () => _imprimirNotaFiscal(
+                        state.documentoFiscal!,
+                        state.romaneio,
+                      ),
                       icon: const Icon(Icons.print_outlined),
                       label: const Text('Imprimir Nota Fiscal'),
                     ),

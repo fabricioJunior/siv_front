@@ -55,7 +55,10 @@ DanfeLayoutData construirDanfeLayoutData(
   final pedido = webmaniaPayload?['pedido'];
   final destinatario = webmaniaPayload?['destinatario'];
   final numeroSerie = _numeroSerie(documento.chaveAcesso);
-  final ehNfce = documento.tipoDocumento.toLowerCase().contains('nfce');
+  final modelo = webmaniaPayload?['modelo'];
+  final ehNfce = modelo != null
+      ? modelo == 2
+      : documento.tipoDocumento.toLowerCase().contains('nfce');
 
   return DanfeLayoutData(
     empresa: DanfeEmpresa(
@@ -82,14 +85,19 @@ DanfeLayoutData construirDanfeLayoutData(
     // Troco nao vai no payload webMania (filtrado antes de montar o pedido) --
     // vem de `Romaneio.troco` (novo campo em `RomaneioImpressaoDto` no apollo-api).
     troco: romaneio?.troco,
-    consumidor: DanfeConsumidor(
-      nome: documento.pessoaNome,
-      documento: destinatario is Map
-          ? ((destinatario['cnpj'] as String?)?.isNotEmpty == true
-              ? destinatario['cnpj'] as String?
-              : destinatario['cpf'] as String?)
-          : null,
-    ),
+    // CPF/CNPJ so foi solicitado na venda quando `romaneio.incluirCpfNaNota`
+    // for true (setado no encerramento do romaneio, no caixa). Sem romaneio
+    // nao ha como confirmar a regra, entao trata como nao identificado.
+    consumidor: romaneio?.incluirCpfNaNota == true
+        ? DanfeConsumidor(
+            nome: documento.pessoaNome,
+            documento: destinatario is Map
+                ? ((destinatario['cnpj'] as String?)?.isNotEmpty == true
+                    ? destinatario['cnpj'] as String?
+                    : destinatario['cpf'] as String?)
+                : null,
+          )
+        : const DanfeConsumidor(),
     tributosAproximados: null, // Sem fonte de dado hoje (webMania nao devolve, payload nao guarda).
     autorizacao: DanfeAutorizacao(
       chaveAcesso: documento.chaveAcesso,

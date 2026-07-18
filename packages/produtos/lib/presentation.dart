@@ -56,6 +56,7 @@ export 'package:produtos/presentantion/pages/referencias_pendentes_ncm_page.dart
 export 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 export 'package:produtos/presentantion/widgets/cor_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
+export 'package:produtos/presentantion/widgets/categoria_seletor.dart';
 export 'package:produtos/presentantion/widgets/etiqueta_seletor.dart';
 export 'package:produtos/presentantion/widgets/produtos_da_referencia_tabela_widget.dart';
 export 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';

@@ -1,8 +1,14 @@
+import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_faturamento_bloc/relatorio_faturamento_bloc.dart';
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+
+// Comparativo só é buscado/exibido quando o intervalo selecionado
+// ultrapassa 30 dias (equivalente a mais de 1 mês corrido).
+const int _diasMinimoParaComparativo = 30;
 
 String _fmtMoeda(double v) {
   final s = v.toStringAsFixed(2);
@@ -39,6 +45,7 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
   late final RelatorioFaturamentoBloc _bloc;
   late String _dataInicial;
   late String _dataFinal;
+  String _agruparPor = 'mes';
   bool _exportandoPdf = false;
 
   @override
@@ -50,6 +57,27 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
     _bloc = sl<RelatorioFaturamentoBloc>()
       ..add(RelatorioFaturamentoCarregar(
           dataInicial: ini, dataFinal: fim));
+  }
+
+  bool get _intervaloElegivelParaComparativo {
+    final ini = DateTime.tryParse(_dataInicial);
+    final fim = DateTime.tryParse(_dataFinal);
+    if (ini == null || fim == null) return false;
+    return fim.difference(ini).inDays > _diasMinimoParaComparativo;
+  }
+
+  void _dispararComparativoSeElegivel() {
+    if (!_intervaloElegivelParaComparativo) return;
+    _bloc.add(RelatorioFaturamentoComparativoCarregar(
+      dataInicial: _dataInicial,
+      dataFinal: _dataFinal,
+      agruparPor: _agruparPor,
+    ));
+  }
+
+  void _onAgruparPorAlterado(String valor) {
+    setState(() => _agruparPor = valor);
+    _dispararComparativoSeElegivel();
   }
 
   @override
@@ -81,6 +109,7 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
   void _aplicarFiltro() {
     _bloc.add(RelatorioFaturamentoCarregar(
         dataInicial: _dataInicial, dataFinal: _dataFinal));
+    _dispararComparativoSeElegivel();
   }
 
   @override
@@ -135,6 +164,7 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
                     });
                     _bloc.add(RelatorioFaturamentoCarregar(
                         dataInicial: ini, dataFinal: fim));
+                    _dispararComparativoSeElegivel();
                   },
                 ),
                 const SizedBox(height: 16),
@@ -161,6 +191,15 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
                 else if (state.dados != null) ...[
                   _HeaderKpi(relatorio: state.dados!),
                   const SizedBox(height: 16),
+                  if (_intervaloElegivelParaComparativo) ...[
+                    _ComparativoCard(
+                      step: state.comparativoStep,
+                      dados: state.comparativoDados,
+                      agruparPor: _agruparPor,
+                      onAgruparPorAlterado: _onAgruparPorAlterado,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   ...state.dados!.empresas.map((emp) =>
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -407,6 +446,178 @@ class _Kpi extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
         ],
+      ),
+    );
+  }
+}
+
+String _fmtPeriodo(String periodo, String agruparPor) {
+  final p = periodo.split('-');
+  if (agruparPor == 'mes' && p.length == 2) {
+    const meses = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+    ];
+    final mesIdx = int.tryParse(p[1]);
+    if (mesIdx == null || mesIdx < 1 || mesIdx > 12) return periodo;
+    final anoCurto = p[0].length == 4 ? p[0].substring(2) : p[0];
+    return '${meses[mesIdx - 1]}/$anoCurto';
+  }
+  if (agruparPor == 'dia' && p.length == 3) {
+    return '${p[2]}/${p[1]}';
+  }
+  return periodo;
+}
+
+class _ComparativoCard extends StatelessWidget {
+  final RelatorioFaturamentoComparativoStep step;
+  final RelatorioFaturamentoComparativo? dados;
+  final String agruparPor;
+  final void Function(String) onAgruparPorAlterado;
+
+  const _ComparativoCard({
+    required this.step,
+    required this.dados,
+    required this.agruparPor,
+    required this.onAgruparPorAlterado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Comparativo',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'mes', label: Text('Mês')),
+                    ButtonSegment(value: 'dia', label: Text('Dia')),
+                  ],
+                  selected: {agruparPor},
+                  onSelectionChanged: (selecao) =>
+                      onAgruparPorAlterado(selecao.first),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (step == RelatorioFaturamentoComparativoStep.carregando)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator.adaptive()),
+              )
+            else if (step == RelatorioFaturamentoComparativoStep.falha)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                    child: Text('Falha ao carregar o comparativo.')),
+              )
+            else if (dados == null || dados!.pontos.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: Text('Sem dados para o período.')),
+              )
+            else
+              _ComparativoBarChart(pontos: dados!.pontos, agruparPor: agruparPor),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ComparativoBarChart extends StatelessWidget {
+  final List<RelatorioFaturamentoComparativoPonto> pontos;
+  final String agruparPor;
+
+  const _ComparativoBarChart(
+      {required this.pontos, required this.agruparPor});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxY = pontos.fold<double>(
+        0, (acc, p) => p.faturamento > acc ? p.faturamento : acc);
+    return SizedBox(
+      height: 220,
+      child: BarChart(
+        BarChartData(
+          maxY: maxY == 0 ? 1 : maxY * 1.15,
+          alignment: BarChartAlignment.spaceAround,
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final ponto = pontos[group.x.toInt()];
+                return BarTooltipItem(
+                  '${_fmtPeriodo(ponto.periodo, agruparPor)}\n${_fmtMoeda(ponto.faturamento)}',
+                  const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                );
+              },
+            ),
+          ),
+          titlesData: FlTitlesData(
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 28,
+                getTitlesWidget: (value, meta) {
+                  final idx = value.toInt();
+                  if (idx < 0 || idx >= pontos.length) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _fmtPeriodo(pontos[idx].periodo, agruparPor),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          barGroups: [
+            for (var i = 0; i < pontos.length; i++)
+              BarChartGroupData(
+                x: i,
+                barRods: [
+                  BarChartRodData(
+                    toY: pontos[i].faturamento,
+                    color: const Color(0xFF2E7D32),
+                    width: 16,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

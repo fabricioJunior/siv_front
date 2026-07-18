@@ -10,3 +10,14 @@ class RelatorioFaturamentoCarregar extends RelatorioFaturamentoEvent {
     required this.dataFinal,
   });
 }
+
+class RelatorioFaturamentoComparativoCarregar extends RelatorioFaturamentoEvent {
+  final String dataInicial;
+  final String dataFinal;
+  final String agruparPor;
+  RelatorioFaturamentoComparativoCarregar({
+    required this.dataInicial,
+    required this.dataFinal,
+    required this.agruparPor,
+  });
+}

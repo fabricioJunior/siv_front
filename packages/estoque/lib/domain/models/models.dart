@@ -1,4 +1,5 @@
 export 'produto_do_estoque.dart';
+export 'produto_do_estoque_por_referencia.dart';
 export 'paginacao_do_estoque.dart';
 export 'filtro_produto_do_estoque.dart';
 export 'saldo_do_estoque.dart';

@@ -63,6 +63,10 @@ void _useCases() {
     () => RecuperarSaldoDoEstoque(estoqueRepository: sl()),
   );
 
+  sl.registerFactory<AgruparSaldoPorReferencia>(
+    () => AgruparSaldoPorReferencia(),
+  );
+
   sl.registerFactory<SincronizarEstoque>(
     () => SincronizarEstoque(estoqueRepository: sl()),
   );
@@ -138,7 +142,7 @@ void _useCases() {
 }
 
 void _presentation() {
-  sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl()));
+  sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl(), sl()));
   sl.registerFactory<HistoricoEstoqueBloc>(() => HistoricoEstoqueBloc(sl()));
   sl.registerFactory<EntradaManualDeProdutosBloc>(
     () => EntradaManualDeProdutosBloc(sl(), sl(), sl(), sl()),

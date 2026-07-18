@@ -38,6 +38,10 @@ class RomaneioDto implements Romaneio {
   @override
   final double? troco;
   @override
+  final bool? incluirCpfNaNota;
+  @override
+  final String? cpfNaNota;
+  @override
   final String? observacao;
   @override
   final DateTime? data;
@@ -123,6 +127,8 @@ class RomaneioDto implements Romaneio {
     this.valorTaxaEntrega,
     this.valorLiquido,
     this.troco,
+    this.incluirCpfNaNota,
+    this.cpfNaNota,
     this.observacao,
     this.data,
     this.criadoEm,
@@ -178,6 +184,8 @@ class RomaneioDto implements Romaneio {
       valorTaxaEntrega: _toDouble(json['valorTaxaEntrega']),
       valorLiquido: _toDouble(json['valorLiquido']),
       troco: _toDouble(json['troco']),
+      incluirCpfNaNota: json['incluirCpfNaNota'] as bool?,
+      cpfNaNota: json['cpfNaNota']?.toString(),
       observacao: json['observacao']?.toString(),
       data: _toDate(json['data']),
       criadoEm: _toDate(json['criadoEm']),
@@ -236,6 +244,8 @@ class RomaneioDto implements Romaneio {
       valorTaxaEntrega: romaneio.valorTaxaEntrega,
       valorLiquido: romaneio.valorLiquido,
       troco: romaneio.troco,
+      incluirCpfNaNota: romaneio.incluirCpfNaNota,
+      cpfNaNota: romaneio.cpfNaNota,
       observacao: romaneio.observacao,
       data: romaneio.data,
       criadoEm: romaneio.criadoEm,
@@ -316,6 +326,8 @@ class RomaneioDto implements Romaneio {
         valorTaxaEntrega,
         valorLiquido,
         troco,
+        incluirCpfNaNota,
+        cpfNaNota,
         observacao,
         data,
         criadoEm,

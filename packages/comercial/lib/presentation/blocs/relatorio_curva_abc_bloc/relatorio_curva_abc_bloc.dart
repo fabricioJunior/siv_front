@@ -33,6 +33,8 @@ class RelatorioCurvaAbcBloc
         limparBusca: event.busca == null,
         page: event.page,
         agruparPor: event.agruparPor,
+        referenciaIds: event.referenciaIds ?? const [],
+        categoriaIds: event.categoriaIds ?? const [],
       ));
       final dados = await _useCase.call(
         empresaIds: [empresaId],
@@ -41,6 +43,8 @@ class RelatorioCurvaAbcBloc
         busca: event.busca,
         page: event.page,
         agruparPor: event.agruparPor,
+        referenciaIds: event.referenciaIds,
+        categoriaIds: event.categoriaIds,
       );
       emit(state.copyWith(
         step: RelatorioCurvaAbcStep.sucesso,

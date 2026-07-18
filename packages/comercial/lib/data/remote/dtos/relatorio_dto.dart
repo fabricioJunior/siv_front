@@ -143,6 +143,43 @@ class RelatorioFaturamentoDto implements RelatorioFaturamento {
       );
 }
 
+class RelatorioFaturamentoComparativoPontoDto
+    implements RelatorioFaturamentoComparativoPonto {
+  @override final String periodo;
+  @override final double faturamento;
+  @override final int quantidadeVendas;
+
+  const RelatorioFaturamentoComparativoPontoDto({
+    required this.periodo,
+    required this.faturamento,
+    required this.quantidadeVendas,
+  });
+
+  factory RelatorioFaturamentoComparativoPontoDto.fromJson(
+          Map<String, dynamic> j) =>
+      RelatorioFaturamentoComparativoPontoDto(
+        periodo: j['periodo'] as String? ?? '',
+        faturamento: (j['faturamento'] as num).toDouble(),
+        quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),
+      );
+}
+
+class RelatorioFaturamentoComparativoDto
+    implements RelatorioFaturamentoComparativo {
+  @override final List<RelatorioFaturamentoComparativoPonto> pontos;
+
+  const RelatorioFaturamentoComparativoDto({required this.pontos});
+
+  factory RelatorioFaturamentoComparativoDto.fromJson(
+          Map<String, dynamic> j) =>
+      RelatorioFaturamentoComparativoDto(
+        pontos: (j['pontos'] as List<dynamic>? ?? [])
+            .map((e) => RelatorioFaturamentoComparativoPontoDto.fromJson(
+                e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 class RelatorioVendasPorFuncionarioItemDto
     implements RelatorioVendasPorFuncionarioItem {
   @override final int funcionarioId;

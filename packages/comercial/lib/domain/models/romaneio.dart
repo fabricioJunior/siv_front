@@ -59,6 +59,11 @@ abstract class Romaneio implements Equatable {
   /// troco na venda, o romaneio nao e venda encerrada, ou a linha de troco
   /// foi cancelada.
   double? get troco;
+  /// Se o CPF/CNPJ do cliente foi solicitado e incluido na nota fiscal no
+  /// encerramento do romaneio (fluxo de recebimento no caixa).
+  bool? get incluirCpfNaNota;
+  /// CPF/CNPJ efetivamente enviado na nota, quando [incluirCpfNaNota] e true.
+  String? get cpfNaNota;
   String? get observacao;
   DateTime? get data;
   DateTime? get criadoEm;
@@ -112,6 +117,8 @@ abstract class Romaneio implements Equatable {
     double? valorTaxaEntrega,
     double? valorLiquido,
     double? troco,
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
     String? observacao,
     DateTime? data,
     DateTime? criadoEm,
@@ -167,6 +174,8 @@ abstract class Romaneio implements Equatable {
         valorTaxaEntrega,
         valorLiquido,
         troco,
+        incluirCpfNaNota,
+        cpfNaNota,
         observacao,
         data,
         criadoEm,
@@ -243,6 +252,10 @@ class _RomaneioImpl implements Romaneio {
   final double? valorLiquido;
   @override
   final double? troco;
+  @override
+  final bool? incluirCpfNaNota;
+  @override
+  final String? cpfNaNota;
   @override
   final String? observacao;
   @override
@@ -329,6 +342,8 @@ class _RomaneioImpl implements Romaneio {
     this.valorTaxaEntrega,
     this.valorLiquido,
     this.troco,
+    this.incluirCpfNaNota,
+    this.cpfNaNota,
     this.observacao,
     this.data,
     this.criadoEm,
@@ -386,6 +401,8 @@ class _RomaneioImpl implements Romaneio {
         valorTaxaEntrega,
         valorLiquido,
         troco,
+        incluirCpfNaNota,
+        cpfNaNota,
         observacao,
         data,
         criadoEm,

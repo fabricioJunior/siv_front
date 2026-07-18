@@ -40,6 +40,16 @@ abstract class RelatorioFaturamento {
   List<RelatorioFaturamentoEmpresa> get empresas;
 }
 
+abstract class RelatorioFaturamentoComparativoPonto {
+  String get periodo;
+  double get faturamento;
+  int get quantidadeVendas;
+}
+
+abstract class RelatorioFaturamentoComparativo {
+  List<RelatorioFaturamentoComparativoPonto> get pontos;
+}
+
 abstract class RelatorioVendasPorFuncionarioItem {
   int get funcionarioId;
   String get funcionarioNome;

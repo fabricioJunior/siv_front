@@ -17,6 +17,7 @@ dependencies:
   financeiro:
     path: ../financeiro
   json_annotation: ^4.9.0
+  bloc_concurrency: ^0.3.0
 
 dev_dependencies:
   flutter_test:

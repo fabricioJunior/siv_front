@@ -183,6 +183,9 @@ void _useCases() {
   sl.registerFactory<GetRelatorioFaturamento>(
     () => GetRelatorioFaturamento(sl()),
   );
+  sl.registerFactory<GetRelatorioFaturamentoComparativo>(
+    () => GetRelatorioFaturamentoComparativo(sl()),
+  );
   sl.registerFactory<GetRelatorioCurvaAbc>(
     () => GetRelatorioCurvaAbc(sl()),
   );
@@ -350,7 +353,7 @@ void _presentation() {
   );
 
   sl.registerFactory<RelatorioFaturamentoBloc>(
-    () => RelatorioFaturamentoBloc(sl()),
+    () => RelatorioFaturamentoBloc(sl(), sl()),
   );
   sl.registerFactory<RelatorioCurvaAbcBloc>(
     () => RelatorioCurvaAbcBloc(sl()),

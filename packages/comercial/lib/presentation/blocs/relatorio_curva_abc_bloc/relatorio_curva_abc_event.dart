@@ -8,6 +8,8 @@ class RelatorioCurvaAbcCarregar extends RelatorioCurvaAbcEvent {
   final String? busca;
   final int page;
   final String agruparPor;
+  final List<int>? referenciaIds;
+  final List<int>? categoriaIds;
 
   RelatorioCurvaAbcCarregar({
     required this.dataInicial,
@@ -15,5 +17,7 @@ class RelatorioCurvaAbcCarregar extends RelatorioCurvaAbcEvent {
     this.busca,
     this.page = 1,
     this.agruparPor = 'produto',
+    this.referenciaIds,
+    this.categoriaIds,
   });
 }

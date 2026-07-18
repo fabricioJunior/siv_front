@@ -29,6 +29,26 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<RelatorioFaturamentoComparativo> faturamentoComparativo({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    required String agruparPor,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/faturamento/comparativo'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        'agruparPor': agruparPor,
+      },
+    );
+    return RelatorioFaturamentoComparativoDto.fromJson(
+        response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<RelatorioCurvaAbc> curvaAbc({
     required List<int> empresaIds,
     required String dataInicial,
@@ -37,6 +57,8 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
     int page = 1,
     int limit = 100,
     String agruparPor = 'produto',
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
   }) async {
     final response = await get(
       pathParameters: {'path': '/produtos/curva-abc'},
@@ -48,6 +70,10 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
         'limit': '$limit',
         'agruparPor': agruparPor,
         if (busca != null && busca.isNotEmpty) 'busca': busca,
+        if (referenciaIds != null && referenciaIds.isNotEmpty)
+          'referenciaIds': referenciaIds.join(','),
+        if (categoriaIds != null && categoriaIds.isNotEmpty)
+          'categoriaIds': categoriaIds.join(','),
       },
     );
     return RelatorioCurvaAbcDto.fromJson(response.body as Map<String, dynamic>);

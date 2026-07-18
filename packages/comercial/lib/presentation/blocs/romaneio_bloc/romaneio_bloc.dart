@@ -68,8 +68,8 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
           event.idRomaneio!,
         );
         final pendencia = await _carregarPendenciaDeEnvio(event.idRomaneio!);
-        final documentoFiscalId =
-            await _carregarDocumentoFiscalEmitido(event.idRomaneio!);
+        final documentoFiscal =
+            await _carregarUltimoDocumentoFiscal(event.idRomaneio!);
         emit(
           RomaneioState.fromModel(
             romaneio,
@@ -79,7 +79,9 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
             possuiPendenciaDeEnvio: pendencia.$1,
             quantidadeItensPendentes: pendencia.$2,
             hashListaPendente: pendencia.$3,
-            documentoFiscalEmitidoId: documentoFiscalId,
+            documentoFiscalEmitidoId:
+                documentoFiscal?.status == 'emitida' ? documentoFiscal!.id : null,
+            documentoFiscal: documentoFiscal,
           ),
         );
         return;
@@ -432,16 +434,19 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     return (false, 0, null);
   }
 
-  Future<int?> _carregarDocumentoFiscalEmitido(int romaneioId) async {
+  // Busca o documento fiscal mais recente do romaneio (qualquer status) --
+  // permite distinguir entre "nota emitida" (mostra "Imprimir Nota
+  // Fiscal"/"Ver nota fiscal") e "falha na emissao" (mostra "Imprimir
+  // Romaneio" no lugar, ja que nao ha DANFE gerada).
+  Future<DocumentoFiscal?> _carregarUltimoDocumentoFiscal(int romaneioId) async {
     try {
       final resultado = await _listarDocumentosFiscais.call(
         romaneioId: romaneioId,
-        status: 'emitida',
         limit: 1,
       );
       final items = resultado['items'] as List<dynamic>? ?? const [];
       if (items.isEmpty) return null;
-      return (items.first as DocumentoFiscal).id;
+      return items.first as DocumentoFiscal;
     } catch (_) {
       return null;
     }

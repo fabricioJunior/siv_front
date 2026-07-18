@@ -1,7 +1,14 @@
 import 'dart:convert';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/documento_fiscal_extensoes.dart';
+import 'package:comercial/domain/models/romaneio.dart';
+import 'package:comercial/domain/models/romaneio_item.dart';
+import 'package:comercial/domain/models/romaneio_item_devolvido.dart';
 import 'package:comercial/presentation/blocs/documento_fiscal_detalhe_bloc/documento_fiscal_detalhe_bloc.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
+import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
+import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +108,10 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
                       'permitirEdicao': false,
                     },
                   ),
+                  romaneioParaImpressao: state.romaneioParaImpressao,
+                  itensParaImpressao: state.itensParaImpressao,
+                  itensDevolvidosParaImpressao:
+                      state.itensDevolvidosParaImpressao,
                 ),
             },
           );
@@ -116,6 +127,9 @@ class _Body extends StatelessWidget {
   final String Function(DateTime?) fmtDt;
   final String Function(dynamic) prettyJson;
   final VoidCallback onVerRomaneio;
+  final Romaneio? romaneioParaImpressao;
+  final List<RomaneioItem> itensParaImpressao;
+  final List<RomaneioItemDevolvido> itensDevolvidosParaImpressao;
 
   const _Body({
     required this.detalhe,
@@ -123,6 +137,9 @@ class _Body extends StatelessWidget {
     required this.fmtDt,
     required this.prettyJson,
     required this.onVerRomaneio,
+    this.romaneioParaImpressao,
+    this.itensParaImpressao = const [],
+    this.itensDevolvidosParaImpressao = const [],
   });
 
   @override
@@ -135,6 +152,33 @@ class _Body extends StatelessWidget {
       children: [
         // Status banner
         _StatusBanner(status: doc.status, cor: cor),
+        const SizedBox(height: 12),
+        if (doc.status != 'falha')
+          FilledButton.icon(
+            onPressed: () => imprimirDocumentoPdf(
+              context,
+              titulo: 'Imprimir nota fiscal',
+              nomeDocumento: 'Nota Fiscal #${doc.id}',
+              gerarBytes: () => NotaFiscalPdfExporter.gerarBytes(doc),
+            ),
+            icon: const Icon(Icons.print_outlined),
+            label: const Text('Imprimir Nota Fiscal'),
+          )
+        else if (romaneioParaImpressao != null)
+          FilledButton.icon(
+            onPressed: () => imprimirDocumentoPdf(
+              context,
+              titulo: 'Imprimir romaneio',
+              nomeDocumento: 'Romaneio #${doc.romaneioId}',
+              gerarBytes: () => RomaneioPdfExporter.gerarBytes(
+                romaneioParaImpressao!,
+                itensParaImpressao,
+                itensDevolvidosParaImpressao,
+              ),
+            ),
+            icon: const Icon(Icons.print_outlined),
+            label: const Text('Imprimir Romaneio'),
+          ),
         const SizedBox(height: 16),
 
         // Dados da Nota
@@ -253,8 +297,6 @@ extension _DocumentoFiscalExtracao on DocumentoFiscal {
     final r = respostaGateway;
     return r is Map<String, dynamic> ? r : null;
   }
-
-  String? get urlDanfe => _respostaGatewayMap?['danfe'] as String?;
 
   String get cpfOuCnpjEmissao {
     final destinatario = _webmaniaPayload?['destinatario'];

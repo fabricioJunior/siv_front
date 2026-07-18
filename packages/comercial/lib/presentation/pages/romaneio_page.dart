@@ -1,6 +1,8 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
+import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
@@ -77,6 +79,29 @@ class _RomaneioPageState extends State<RomaneioPage> {
     Navigator.of(context).pushNamed(
       '/documento_fiscal',
       arguments: {'id': documentoFiscalId},
+    );
+  }
+
+  void _imprimirNotaFiscal(DocumentoFiscal documentoFiscal) {
+    imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir nota fiscal',
+      nomeDocumento: 'Nota Fiscal #${documentoFiscal.id}',
+      gerarBytes: () => NotaFiscalPdfExporter.gerarBytes(documentoFiscal),
+    );
+  }
+
+  void _imprimirRomaneio(RomaneioState state) {
+    if (state.romaneio == null) return;
+    imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir romaneio',
+      nomeDocumento: 'Romaneio #${state.id}',
+      gerarBytes: () => RomaneioPdfExporter.gerarBytes(
+        state.romaneio!,
+        state.itens,
+        state.itensDevolvidos,
+      ),
     );
   }
 
@@ -453,6 +478,20 @@ class _RomaneioPageState extends State<RomaneioPage> {
                       icon: const Icon(Icons.receipt_long_outlined),
                       label: const Text('Ver nota fiscal'),
                     ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _imprimirNotaFiscal(state.documentoFiscal!),
+                      icon: const Icon(Icons.print_outlined),
+                      label: const Text('Imprimir Nota Fiscal'),
+                    ),
+                  ] else if (state.documentoFiscalFalhou) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _imprimirRomaneio(state),
+                      icon: const Icon(Icons.print_outlined),
+                      label: const Text('Imprimir Romaneio'),
+                    ),
                   ],
                 ],
               ),
@@ -811,6 +850,20 @@ class _RomaneioPageState extends State<RomaneioPage> {
                           _verNotaFiscal(state.documentoFiscalEmitidoId!),
                       icon: const Icon(Icons.receipt_long_outlined),
                       label: const Text('Ver nota fiscal'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _imprimirNotaFiscal(state.documentoFiscal!),
+                      icon: const Icon(Icons.print_outlined),
+                      label: const Text('Imprimir Nota Fiscal'),
+                    ),
+                  ] else if (state.documentoFiscalFalhou) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _imprimirRomaneio(state),
+                      icon: const Icon(Icons.print_outlined),
+                      label: const Text('Imprimir Romaneio'),
                     ),
                   ],
                   PermissaoPorNome(

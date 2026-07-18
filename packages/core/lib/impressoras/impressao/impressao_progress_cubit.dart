@@ -1,5 +1,6 @@
 import 'package:core/impressoras/impressao/item_de_impressao.dart';
 import 'package:core/impressoras/printers/i_printers_service.dart';
+import 'package:core/impressoras/printers/tipo_impressora.dart';
 import 'package:core/impressoras/printers/use_cases/obter_impressora_preferida.dart';
 import 'package:core/impressoras/printers/use_cases/salvar_impressora_preferida.dart';
 import 'package:core/impressoras/zpl/mescla_etiquetas.dart';
@@ -66,7 +67,8 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
   Future<void> _selecionarImpressoraPreferida(
     List<Impressora> impressoras,
   ) async {
-    final nomePreferido = await _obterImpressoraPreferida.call();
+    final nomePreferido =
+        await _obterImpressoraPreferida.call(tipo: TipoImpressora.etiqueta);
     if (nomePreferido == null || isClosed) return;
 
     final impressoraPreferida = impressoras
@@ -81,7 +83,10 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
 
   void selecionarImpressora(Impressora impressora) {
     emit(state.copyWith(impressoraSelecionada: () => impressora));
-    _salvarImpressoraPreferida.call(impressora.name);
+    _salvarImpressoraPreferida.call(
+      tipo: TipoImpressora.etiqueta,
+      nomeImpressora: impressora.name,
+    );
   }
 
   Future<void> confirmarImpressao() async {
@@ -127,7 +132,10 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
         return;
       }
 
-      _salvarImpressoraPreferida.call(impressora.name);
+      _salvarImpressoraPreferida.call(
+        tipo: TipoImpressora.etiqueta,
+        nomeImpressora: impressora.name,
+      );
 
       emit(
         state.copyWith(

@@ -1,5 +1,8 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
+import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
+import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -140,6 +143,8 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                   RomaneioCriacaoStep.sucesso => _SucessoRomaneioView(
                       romaneio: state.romaneio,
                       quantidadeItens: state.totalItensProcessados,
+                      documentoFiscal: state.documentoFiscal,
+                      itensCriados: state.itensCriados,
                     ),
                 },
               ),
@@ -252,10 +257,14 @@ class _FalhaRomaneioView extends StatelessWidget {
 class _SucessoRomaneioView extends StatelessWidget {
   final Romaneio? romaneio;
   final int quantidadeItens;
+  final DocumentoFiscal? documentoFiscal;
+  final List<RomaneioItem> itensCriados;
 
   const _SucessoRomaneioView({
     required this.romaneio,
     required this.quantidadeItens,
+    this.documentoFiscal,
+    this.itensCriados = const [],
   });
 
   @override
@@ -295,6 +304,35 @@ class _SucessoRomaneioView extends StatelessWidget {
             ),
           ),
         ),
+        if (documentoFiscal?.status == 'emitida') ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => imprimirDocumentoPdf(
+              context,
+              titulo: 'Imprimir nota fiscal',
+              nomeDocumento: 'Nota Fiscal #${documentoFiscal!.id}',
+              gerarBytes: () => NotaFiscalPdfExporter.gerarBytes(documentoFiscal!),
+            ),
+            icon: const Icon(Icons.print_outlined),
+            label: const Text('Imprimir Nota Fiscal'),
+          ),
+        ] else if (documentoFiscal?.status == 'falha' && romaneio != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => imprimirDocumentoPdf(
+              context,
+              titulo: 'Imprimir romaneio',
+              nomeDocumento: 'Romaneio #${romaneio!.id}',
+              gerarBytes: () => RomaneioPdfExporter.gerarBytes(
+                romaneio!,
+                itensCriados,
+                const [],
+              ),
+            ),
+            icon: const Icon(Icons.print_outlined),
+            label: const Text('Imprimir Romaneio'),
+          ),
+        ],
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: romaneio?.id == null

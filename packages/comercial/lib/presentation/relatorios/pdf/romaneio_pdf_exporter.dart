@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/domain/models/romaneio.dart';
 import 'package:comercial/domain/models/romaneio_item.dart';
 import 'package:comercial/domain/models/romaneio_item_devolvido.dart';
@@ -124,6 +126,20 @@ class RomaneioPdfExporter {
   RomaneioPdfExporter._();
 
   static Future<void> exportar(
+    Romaneio romaneio,
+    List<RomaneioItem> itens,
+    List<RomaneioItemDevolvido> itensDevolvidos,
+  ) async {
+    await PdfService.compartilhar(
+      await gerarBytes(romaneio, itens, itensDevolvidos),
+      'romaneio_${romaneio.id ?? ''}.pdf',
+    );
+  }
+
+  /// Gera os bytes do PDF do romaneio, usado tanto para compartilhar
+  /// ([exportar]) quanto para enviar direto a uma impressora termica
+  /// (fallback quando a nota fiscal falhou ao emitir).
+  static Future<Uint8List> gerarBytes(
     Romaneio romaneio,
     List<RomaneioItem> itens,
     List<RomaneioItemDevolvido> itensDevolvidos,
@@ -348,9 +364,6 @@ class RomaneioPdfExporter {
       ),
     );
 
-    await PdfService.compartilhar(
-      await doc.save(),
-      'romaneio_${romaneio.id ?? ''}.pdf',
-    );
+    return doc.save();
   }
 }

@@ -293,6 +293,7 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
     ),
   );
 
@@ -345,7 +346,7 @@ void _presentation() {
     () => DocumentosFiscaisBloc(sl(), sl()),
   );
   sl.registerFactory<DocumentoFiscalDetalheBloc>(
-    () => DocumentoFiscalDetalheBloc(sl()),
+    () => DocumentoFiscalDetalheBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<RelatorioFaturamentoBloc>(

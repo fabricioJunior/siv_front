@@ -27,6 +27,7 @@ class RomaneioCriacaoBloc
   final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarCaixaAberto _recuperarCaixaAberto;
+  final ListarDocumentosFiscais _listarDocumentosFiscais;
 
   RomaneioCriacaoBloc(
     this._criarRomaneio,
@@ -39,6 +40,7 @@ class RomaneioCriacaoBloc
     this._receberRomaneioNoCaixa,
     this._acessoGlobalSessao,
     this._recuperarCaixaAberto,
+    this._listarDocumentosFiscais,
   ) : super(const RomaneioCriacaoState.initial()) {
     on<RomaneioCriacaoSolicitada>(_onSolicitada);
   }
@@ -209,6 +211,7 @@ class RomaneioCriacaoBloc
       }
 
       final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
+      final documentoFiscal = await _carregarUltimoDocumentoFiscal(romaneioId);
       emit(
         state.copyWith(
           step: RomaneioCriacaoStep.sucesso,
@@ -218,6 +221,8 @@ class RomaneioCriacaoBloc
           romaneio: romaneioAtualizado,
           erro: null,
           totalItensProcessados: itens.length,
+          documentoFiscal: documentoFiscal,
+          itensCriados: itens,
         ),
       );
     } catch (e, s) {
@@ -379,6 +384,20 @@ class RomaneioCriacaoBloc
       await _removerListaDeProdutosCompartilhada(hashLista);
     } catch (e, s) {
       addError(e, s);
+    }
+  }
+
+  Future<DocumentoFiscal?> _carregarUltimoDocumentoFiscal(int romaneioId) async {
+    try {
+      final resultado = await _listarDocumentosFiscais.call(
+        romaneioId: romaneioId,
+        limit: 1,
+      );
+      final items = resultado['items'] as List<dynamic>? ?? const [];
+      if (items.isEmpty) return null;
+      return items.first as DocumentoFiscal;
+    } catch (_) {
+      return null;
     }
   }
 

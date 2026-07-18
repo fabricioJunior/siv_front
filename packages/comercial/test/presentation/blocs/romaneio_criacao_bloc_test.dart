@@ -1,3 +1,4 @@
+import 'package:comercial/data.dart';
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
@@ -34,6 +35,43 @@ class StubCaixaRepository implements ICaixaRepository {
     required String documento,
   }) async =>
       const [];
+}
+
+class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
+  @override
+  Future<List<String>> listarProviders() async => const [];
+
+  @override
+  Future<EmpresaIntegracaoFiscal?> getConfiguracao() async => null;
+
+  @override
+  Future<EmpresaIntegracaoFiscal> salvarConfiguracao({
+    required String provider,
+    required bool ativo,
+    Map<String, dynamic>? configuracao,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> listarDocumentos({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+    int page = 1,
+    int limit = 25,
+  }) async =>
+      {'items': const <DocumentoFiscal>[]};
+
+  @override
+  Future<DocumentoFiscal> reprocessar(int id) async => throw UnimplementedError();
+
+  @override
+  Future<DocumentoFiscalDetalhe> getDetalhe(int id) async =>
+      throw UnimplementedError();
 }
 
 class StubCriarRomaneio implements CriarRomaneio {
@@ -235,6 +273,7 @@ void main() {
       ),
       const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
       RecuperarCaixaAberto(repository: StubCaixaRepository()),
+      ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
     ),
     act: (bloc) =>
         bloc.add(
@@ -332,6 +371,7 @@ void main() {
         ),
         const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
         RecuperarCaixaAberto(repository: StubCaixaRepository()),
+        ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
       ),
       act: (bloc) => bloc.add(
         const RomaneioCriacaoSolicitada(

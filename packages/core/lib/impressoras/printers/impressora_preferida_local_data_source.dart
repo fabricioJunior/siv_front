@@ -1,28 +1,29 @@
 import 'dart:io';
 
+import 'package:core/impressoras/printers/tipo_impressora.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 abstract class IImpressoraPreferidaLocalDataSource {
-  Future<String?> obterUltimaImpressora();
-  Future<void> salvarUltimaImpressora(String nomeImpressora);
+  Future<String?> obterUltimaImpressora(TipoImpressora tipo);
+  Future<void> salvarUltimaImpressora(TipoImpressora tipo, String nomeImpressora);
 }
-
-const String _nomeArquivo = 'impressora_preferida.txt';
 
 // Persistencia simples em arquivo (mesmo padrao usado em
 // DispositivoLocalDataSource) -- um unico valor (nome da ultima impressora
-// usada) nao justifica uma collection Isar dedicada.
+// usada) nao justifica uma collection Isar dedicada. Um arquivo por
+// TipoImpressora, pois etiqueta e documento (nota fiscal/romaneio) podem
+// usar impressoras fisicas diferentes.
 class ImpressoraPreferidaLocalDataSource
     implements IImpressoraPreferidaLocalDataSource {
-  Future<File> _arquivo() async {
+  Future<File> _arquivo(TipoImpressora tipo) async {
     final docsDir = await path_provider.getApplicationDocumentsDirectory();
-    return File('${docsDir.path}/$_nomeArquivo');
+    return File('${docsDir.path}/${tipo.nomeArquivoPreferencia}');
   }
 
   @override
-  Future<String?> obterUltimaImpressora() async {
+  Future<String?> obterUltimaImpressora(TipoImpressora tipo) async {
     try {
-      final arquivo = await _arquivo();
+      final arquivo = await _arquivo(tipo);
       if (!arquivo.existsSync()) {
         return null;
       }
@@ -34,9 +35,12 @@ class ImpressoraPreferidaLocalDataSource
   }
 
   @override
-  Future<void> salvarUltimaImpressora(String nomeImpressora) async {
+  Future<void> salvarUltimaImpressora(
+    TipoImpressora tipo,
+    String nomeImpressora,
+  ) async {
     try {
-      final arquivo = await _arquivo();
+      final arquivo = await _arquivo(tipo);
       await arquivo.writeAsString(nomeImpressora);
     } catch (_) {
       // Falha ao persistir preferencia nao deve interromper a impressao.

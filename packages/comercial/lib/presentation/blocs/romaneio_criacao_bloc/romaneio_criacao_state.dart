@@ -10,6 +10,13 @@ class RomaneioCriacaoState extends Equatable {
   final Romaneio? romaneio;
   final String? erro;
   final int totalItensProcessados;
+  // Ultimo documento fiscal do romaneio recem criado, se houver (qualquer
+  // status) -- usado pela tela de sucesso pra decidir entre "Imprimir Nota
+  // Fiscal" (emitida) e "Imprimir Romaneio" (falha na emissao).
+  final DocumentoFiscal? documentoFiscal;
+  // Itens efetivamente enviados ao romaneio, usados como fallback de
+  // impressao do romaneio quando nao ha nota fiscal emitida.
+  final List<RomaneioItem> itensCriados;
 
   const RomaneioCriacaoState({
     required this.step,
@@ -19,6 +26,8 @@ class RomaneioCriacaoState extends Equatable {
     this.romaneio,
     this.erro,
     this.totalItensProcessados = 0,
+    this.documentoFiscal,
+    this.itensCriados = const [],
   });
 
   const RomaneioCriacaoState.initial()
@@ -28,7 +37,9 @@ class RomaneioCriacaoState extends Equatable {
         produtosCompartilhados = const [],
         romaneio = null,
         erro = null,
-        totalItensProcessados = 0;
+        totalItensProcessados = 0,
+        documentoFiscal = null,
+        itensCriados = const [];
 
   RomaneioCriacaoState copyWith({
     RomaneioCriacaoStep? step,
@@ -38,6 +49,8 @@ class RomaneioCriacaoState extends Equatable {
     Romaneio? romaneio,
     String? erro,
     int? totalItensProcessados,
+    DocumentoFiscal? documentoFiscal,
+    List<RomaneioItem>? itensCriados,
   }) {
     return RomaneioCriacaoState(
       step: step ?? this.step,
@@ -49,6 +62,8 @@ class RomaneioCriacaoState extends Equatable {
       erro: erro ?? this.erro,
       totalItensProcessados:
           totalItensProcessados ?? this.totalItensProcessados,
+      documentoFiscal: documentoFiscal ?? this.documentoFiscal,
+      itensCriados: itensCriados ?? this.itensCriados,
     );
   }
 
@@ -61,5 +76,7 @@ class RomaneioCriacaoState extends Equatable {
         romaneio,
         erro,
         totalItensProcessados,
+        documentoFiscal,
+        itensCriados,
       ];
 }

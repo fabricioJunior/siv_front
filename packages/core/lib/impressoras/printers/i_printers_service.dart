@@ -1,6 +1,13 @@
+import 'dart:typed_data';
+
 abstract class IPrintersService {
   List<Impressora> getAvailablePrinters();
   Future<bool> printZpl(Impressora printer, String zplCommands);
+  Future<bool> printPdf(
+    Impressora printer,
+    Uint8List pdfBytes, {
+    String docName = 'Documento',
+  });
 }
 
 class Impressora {

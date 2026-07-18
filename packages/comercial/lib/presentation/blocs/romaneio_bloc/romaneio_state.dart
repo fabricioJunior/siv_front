@@ -14,8 +14,14 @@ class RomaneioState extends Equatable {
   final int quantidadeItensPendentes;
   final String? hashListaPendente;
   final int? documentoFiscalEmitidoId;
+  // Ultimo documento fiscal do romaneio, seja qual for o status -- usado
+  // pra decidir entre "Imprimir Nota Fiscal" (emitida) e "Imprimir
+  // Romaneio" (falha na emissao, sem DANFE pra imprimir).
+  final DocumentoFiscal? documentoFiscal;
   final String? erro;
   final RomaneioStep step;
+
+  bool get documentoFiscalFalhou => documentoFiscal?.status == 'falha';
 
   const RomaneioState({
     this.id,
@@ -31,6 +37,7 @@ class RomaneioState extends Equatable {
     this.quantidadeItensPendentes = 0,
     this.hashListaPendente,
     this.documentoFiscalEmitidoId,
+    this.documentoFiscal,
     this.erro,
     required this.step,
   });
@@ -49,6 +56,7 @@ class RomaneioState extends Equatable {
         quantidadeItensPendentes = 0,
         hashListaPendente = null,
         documentoFiscalEmitidoId = null,
+        documentoFiscal = null,
         erro = null,
         step = RomaneioStep.inicial;
 
@@ -70,6 +78,7 @@ class RomaneioState extends Equatable {
         quantidadeItensPendentes = 0,
         hashListaPendente = null,
         documentoFiscalEmitidoId = null,
+        documentoFiscal = null,
         erro = null,
         step = step ?? RomaneioStep.editando;
 
@@ -87,6 +96,7 @@ class RomaneioState extends Equatable {
     int? quantidadeItensPendentes,
     String? hashListaPendente,
     int? documentoFiscalEmitidoId,
+    DocumentoFiscal? documentoFiscal,
     String? erro,
     RomaneioStep? step,
   }) {
@@ -107,6 +117,7 @@ class RomaneioState extends Equatable {
       hashListaPendente: hashListaPendente ?? this.hashListaPendente,
       documentoFiscalEmitidoId:
           documentoFiscalEmitidoId ?? this.documentoFiscalEmitidoId,
+      documentoFiscal: documentoFiscal ?? this.documentoFiscal,
       erro: erro,
       step: step ?? this.step,
     );
@@ -127,6 +138,7 @@ class RomaneioState extends Equatable {
         quantidadeItensPendentes,
         hashListaPendente,
         documentoFiscalEmitidoId,
+        documentoFiscal,
         erro,
         step,
       ];

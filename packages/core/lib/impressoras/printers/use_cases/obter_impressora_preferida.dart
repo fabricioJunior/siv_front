@@ -1,4 +1,5 @@
 import 'package:core/impressoras/printers/repositories/i_impressora_preferida_repository.dart';
+import 'package:core/impressoras/printers/tipo_impressora.dart';
 
 class ObterImpressoraPreferida {
   final IImpressoraPreferidaRepository _repository;
@@ -6,7 +7,7 @@ class ObterImpressoraPreferida {
   ObterImpressoraPreferida({required IImpressoraPreferidaRepository repository})
       : _repository = repository;
 
-  Future<String?> call() {
-    return _repository.obterUltimaImpressora();
+  Future<String?> call({required TipoImpressora tipo}) {
+    return _repository.obterUltimaImpressora(tipo);
   }
 }

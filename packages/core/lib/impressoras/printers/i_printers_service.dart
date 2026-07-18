@@ -8,6 +8,15 @@ abstract class IPrintersService {
     Uint8List pdfBytes, {
     String docName = 'Documento',
   });
+
+  /// Envia bytes crus (ex: comandos ESC/POS) direto pra impressora, sem
+  /// passar por spool de PDF -- usado por impressoras termicas que aceitam
+  /// impressao raw (mais rapida e sem depender de driver PDF).
+  Future<bool> printRawBytes(
+    Impressora printer,
+    Uint8List bytes, {
+    String docName = 'Documento',
+  });
 }
 
 class Impressora {

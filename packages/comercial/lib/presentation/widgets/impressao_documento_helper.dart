@@ -20,6 +20,44 @@ Future<void> imprimirDocumentoPdf(
   required Future<Uint8List> Function() gerarBytes,
   required String nomeDocumento,
   Object? Function()? obterAvisoServidor,
+}) =>
+    _imprimirDocumento(
+      context,
+      titulo: titulo,
+      gerarBytes: gerarBytes,
+      nomeDocumento: nomeDocumento,
+      obterAvisoServidor: obterAvisoServidor,
+      enviar: (impressora, bytes, docName) =>
+          sl<IPrintersService>().printPdf(impressora, bytes, docName: docName),
+    );
+
+/// Mesmo fluxo de [imprimirDocumentoPdf], mas envia bytes crus (ex: ESC/POS)
+/// direto pra impressora em vez de spool de PDF -- pra impressoras termicas
+/// que aceitam impressao raw (ex: `NotaFiscalEscPosExporter`).
+Future<void> imprimirDocumentoRaw(
+  BuildContext context, {
+  required String titulo,
+  required Future<Uint8List> Function() gerarBytes,
+  required String nomeDocumento,
+  Object? Function()? obterAvisoServidor,
+}) =>
+    _imprimirDocumento(
+      context,
+      titulo: titulo,
+      gerarBytes: gerarBytes,
+      nomeDocumento: nomeDocumento,
+      obterAvisoServidor: obterAvisoServidor,
+      enviar: (impressora, bytes, docName) =>
+          sl<IPrintersService>().printRawBytes(impressora, bytes, docName: docName),
+    );
+
+Future<void> _imprimirDocumento(
+  BuildContext context, {
+  required String titulo,
+  required Future<Uint8List> Function() gerarBytes,
+  required String nomeDocumento,
+  required Future<bool> Function(Impressora impressora, Uint8List bytes, String docName) enviar,
+  Object? Function()? obterAvisoServidor,
 }) async {
   final impressoras = sl<IPrintersService>()
       .getAvailablePrinters()
@@ -72,11 +110,7 @@ Future<void> imprimirDocumentoPdf(
 
   try {
     final bytes = await gerarBytes();
-    final sucesso = await sl<IPrintersService>().printPdf(
-      impressoraSelecionada,
-      bytes,
-      docName: nomeDocumento,
-    );
+    final sucesso = await enviar(impressoraSelecionada, bytes, nomeDocumento);
 
     final avisoServidor = obterAvisoServidor?.call();
 
@@ -138,7 +172,7 @@ Future<void> imprimirDocumentoPdf(
 
 /// Adapta um gerador de PDF que retorna `(bytes, erroServidor)` (ex:
 /// [NotaFiscalPdfExporter.gerarBytes]) pro par `gerarBytes`/
-/// `obterAvisoServidor` esperado por [imprimirDocumentoPdf].
+/// `obterAvisoServidor` esperado por [imprimirDocumentoPdf]/[imprimirDocumentoRaw].
 ({
   Future<Uint8List> Function() gerarBytes,
   Object? Function() obterAvisoServidor,

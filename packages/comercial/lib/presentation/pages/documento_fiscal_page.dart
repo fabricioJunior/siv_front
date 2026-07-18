@@ -156,7 +156,9 @@ class _Body extends StatelessWidget {
         if (doc.status != 'falha')
           FilledButton.icon(
             onPressed: () {
-              final adaptado = comAvisoServidor(() => NotaFiscalPdfExporter.gerarBytes(doc));
+              final adaptado = comAvisoServidor(
+                () => NotaFiscalPdfExporter.gerarBytes(doc, romaneio: romaneioParaImpressao),
+              );
               imprimirDocumentoPdf(
                 context,
                 titulo: 'Imprimir nota fiscal',

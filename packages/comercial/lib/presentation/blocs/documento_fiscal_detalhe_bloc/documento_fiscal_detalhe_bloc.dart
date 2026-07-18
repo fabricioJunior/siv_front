@@ -37,24 +37,23 @@ class DocumentoFiscalDetalheBloc
       emit(state.copyWith(step: DocumentoFiscalDetalheStep.carregando));
       final detalhe = await _getDetalhe.call(event.id);
 
-      // Quando a emissao falhou, nao ha DANFE pra imprimir -- carrega os
-      // dados do romaneio pra permitir imprimir o romaneio como fallback
-      // (ver documento_fiscal_page.dart).
+      // Dados do romaneio sao usados tanto para reimprimir o romaneio (quando
+      // a emissao falhou e nao ha DANFE) quanto para preencher o cabecalho
+      // (empresa) do layout local de DANFE -- por isso carrega sempre, nao
+      // so no caso de falha.
       Romaneio? romaneio;
       List<RomaneioItem> itens = const [];
       List<RomaneioItemDevolvido> itensDevolvidos = const [];
-      if (detalhe.documento.status == 'falha') {
-        try {
-          romaneio = await _recuperarRomaneio.call(detalhe.documento.romaneioId);
-          itens = await _recuperarItensRomaneio.call(detalhe.documento.romaneioId);
-          itensDevolvidos = await _recuperarItensDevolvidosRomaneio.call(
-            detalhe.documento.romaneioId,
-          );
-        } catch (_) {
-          // Falha ao carregar dados do romaneio nao deve impedir a
-          // visualizacao do documento fiscal -- so oculta o botao de
-          // imprimir romaneio.
-        }
+      try {
+        romaneio = await _recuperarRomaneio.call(detalhe.documento.romaneioId);
+        itens = await _recuperarItensRomaneio.call(detalhe.documento.romaneioId);
+        itensDevolvidos = await _recuperarItensDevolvidosRomaneio.call(
+          detalhe.documento.romaneioId,
+        );
+      } catch (_) {
+        // Falha ao carregar dados do romaneio nao deve impedir a
+        // visualizacao do documento fiscal -- so oculta o botao de
+        // imprimir romaneio e faz o header do DANFE local usar fallback.
       }
 
       emit(state.copyWith(

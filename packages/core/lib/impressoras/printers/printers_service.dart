@@ -68,4 +68,18 @@ class PrintersService implements IPrintersService {
       docName: docName,
     );
   }
+
+  @override
+  Future<bool> printRawBytes(
+    Impressora printer,
+    Uint8List bytes, {
+    String docName = 'Documento',
+  }) {
+    final printingFfi = PrintingFfi.instance;
+    return printingFfi.rawDataToPrinter(
+      printer.name,
+      bytes,
+      docName: docName,
+    );
+  }
 }

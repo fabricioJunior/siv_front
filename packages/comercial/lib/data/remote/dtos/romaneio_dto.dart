@@ -36,6 +36,8 @@ class RomaneioDto implements Romaneio {
   @override
   final double? valorLiquido;
   @override
+  final double? troco;
+  @override
   final String? observacao;
   @override
   final DateTime? data;
@@ -120,6 +122,7 @@ class RomaneioDto implements Romaneio {
     this.desconto,
     this.valorTaxaEntrega,
     this.valorLiquido,
+    this.troco,
     this.observacao,
     this.data,
     this.criadoEm,
@@ -174,6 +177,7 @@ class RomaneioDto implements Romaneio {
       desconto: _toDouble(json['desconto']) ?? _toDouble(json['valorDesconto']),
       valorTaxaEntrega: _toDouble(json['valorTaxaEntrega']),
       valorLiquido: _toDouble(json['valorLiquido']),
+      troco: _toDouble(json['troco']),
       observacao: json['observacao']?.toString(),
       data: _toDate(json['data']),
       criadoEm: _toDate(json['criadoEm']),
@@ -231,6 +235,7 @@ class RomaneioDto implements Romaneio {
       desconto: romaneio.desconto,
       valorTaxaEntrega: romaneio.valorTaxaEntrega,
       valorLiquido: romaneio.valorLiquido,
+      troco: romaneio.troco,
       observacao: romaneio.observacao,
       data: romaneio.data,
       criadoEm: romaneio.criadoEm,
@@ -310,6 +315,7 @@ class RomaneioDto implements Romaneio {
         desconto,
         valorTaxaEntrega,
         valorLiquido,
+        troco,
         observacao,
         data,
         criadoEm,

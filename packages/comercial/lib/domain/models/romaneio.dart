@@ -55,6 +55,10 @@ abstract class Romaneio implements Equatable {
   double? get desconto;
   double? get valorTaxaEntrega;
   double? get valorLiquido;
+  /// Valor devolvido ao cliente (sempre positivo). `null` quando nao ha
+  /// troco na venda, o romaneio nao e venda encerrada, ou a linha de troco
+  /// foi cancelada.
+  double? get troco;
   String? get observacao;
   DateTime? get data;
   DateTime? get criadoEm;
@@ -107,6 +111,7 @@ abstract class Romaneio implements Equatable {
     double? desconto,
     double? valorTaxaEntrega,
     double? valorLiquido,
+    double? troco,
     String? observacao,
     DateTime? data,
     DateTime? criadoEm,
@@ -161,6 +166,7 @@ abstract class Romaneio implements Equatable {
         desconto,
         valorTaxaEntrega,
         valorLiquido,
+        troco,
         observacao,
         data,
         criadoEm,
@@ -235,6 +241,8 @@ class _RomaneioImpl implements Romaneio {
   final double? valorTaxaEntrega;
   @override
   final double? valorLiquido;
+  @override
+  final double? troco;
   @override
   final String? observacao;
   @override
@@ -320,6 +328,7 @@ class _RomaneioImpl implements Romaneio {
     this.desconto,
     this.valorTaxaEntrega,
     this.valorLiquido,
+    this.troco,
     this.observacao,
     this.data,
     this.criadoEm,
@@ -376,6 +385,7 @@ class _RomaneioImpl implements Romaneio {
         desconto,
         valorTaxaEntrega,
         valorLiquido,
+        troco,
         observacao,
         data,
         criadoEm,

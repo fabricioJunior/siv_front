@@ -109,14 +109,6 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 const _AccessFlowItem(
-                  icon: Icons.receipt_outlined,
-                  title: 'Documentos Fiscais',
-                  subtitle: 'Notas emitidas, pendentes e com falha.',
-                  color: Colors.indigo,
-                  route: '/documentos_fiscais',
-                  componentesNecessarios: ['FISFM001'],
-                ),
-                const _AccessFlowItem(
                   icon: Icons.payment,
                   title: 'Pagamentos',
                   subtitle: 'Recebimentos avulsos e controle rápido.',
@@ -201,6 +193,14 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['RELFC002'],
                 ),
                 const _AccessFlowItem(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Romaneios',
+                  subtitle: 'Visualizar todos os romaneios do sistema.',
+                  color: Colors.deepOrange,
+                  route: '/romaneios',
+                  componentesNecessarios: ['ROMFP001'],
+                ),
+                const _AccessFlowItem(
                   icon: Icons.people_outline,
                   title: 'Clientes Ativos',
                   subtitle:
@@ -217,6 +217,15 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.teal,
                   route: '/relatorio_vendas_por_funcionario',
                   componentesNecessarios: ['RELFC004'],
+                ),
+
+                const _AccessFlowItem(
+                  icon: Icons.receipt_outlined,
+                  title: 'Documentos Fiscais',
+                  subtitle: 'Notas emitidas, pendentes e com falha.',
+                  color: Colors.indigo,
+                  route: '/documentos_fiscais',
+                  componentesNecessarios: ['FISFM001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.point_of_sale,

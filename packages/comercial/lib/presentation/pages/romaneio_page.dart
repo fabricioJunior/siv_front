@@ -1,5 +1,6 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
@@ -10,7 +11,7 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:flutter/material.dart';
 import 'package:core/seletores.dart';
 import 'package:financeiro/pages.dart';
-import 'package:pessoas/models.dart';
+import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
 
 class RomaneioPage extends StatefulWidget {
@@ -105,6 +106,81 @@ class _RomaneioPageState extends State<RomaneioPage> {
         state.itensDevolvidos,
       ),
     );
+  }
+
+  Future<void> _imprimirNotaEntrega(RomaneioState state) async {
+    final romaneio = state.romaneio;
+    final pessoaId = state.pessoaId;
+    if (romaneio == null || pessoaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Romaneio sem cliente associado.'),
+        ),
+      );
+      return;
+    }
+
+    final enderecoSelecionado = await Navigator.of(context).pushNamed(
+      '/selecionar_endereco',
+      arguments: {
+        'idPessoa': pessoaId,
+        'titulo': 'Endereço de entrega',
+      },
+    ) as Map<String, dynamic>?;
+
+    if (enderecoSelecionado == null || !mounted) return;
+
+    await imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir nota de entrega',
+      nomeDocumento: 'Nota de Entrega - Romaneio #${state.id}',
+      gerarBytes: () async {
+        final resultado = await NotaEntregaPdfExporter.gerarBytes(
+          romaneio: romaneio,
+          itens: state.itens,
+          enderecoFormatado: _formatarEnderecoSelecionado(enderecoSelecionado),
+          documentoFiscal: state.documentoFiscal,
+          documentoFiscalFalhou: state.documentoFiscalFalhou,
+        );
+        return resultado.bytes;
+      },
+    );
+  }
+
+  String _formatarEnderecoSelecionado(Map<String, dynamic> endereco) {
+    final numero = (endereco['numero'] as String? ?? '').trim();
+    final complemento = (endereco['complemento'] as String? ?? '').trim();
+    final logradouro = (endereco['logradouro'] as String? ?? '').trim();
+    final linha1Buffer = StringBuffer(logradouro);
+    if (numero.isNotEmpty) linha1Buffer.write(', $numero');
+    if (complemento.isNotEmpty) linha1Buffer.write(' - $complemento');
+
+    final bairro = (endereco['bairro'] as String? ?? '').trim();
+    final municipio = (endereco['municipio'] as String? ?? '').trim();
+    final uf = (endereco['uf'] as String? ?? '').trim();
+    final cep = (endereco['cep'] as String? ?? '').trim();
+
+    final linha2Buffer = StringBuffer();
+    if (bairro.isNotEmpty) linha2Buffer.write(bairro);
+    if (municipio.isNotEmpty || uf.isNotEmpty) {
+      if (linha2Buffer.isNotEmpty) linha2Buffer.write(' - ');
+      linha2Buffer.write([
+        if (municipio.isNotEmpty) municipio,
+        if (uf.isNotEmpty) uf,
+      ].join('/'));
+    }
+    if (cep.isNotEmpty) {
+      if (linha2Buffer.isNotEmpty) {
+        linha2Buffer.write('  CEP: $cep');
+      } else {
+        linha2Buffer.write('CEP: $cep');
+      }
+    }
+
+    return [
+      linha1Buffer.toString(),
+      if (linha2Buffer.isNotEmpty) linha2Buffer.toString(),
+    ].join('\n');
   }
 
   Future<void> _exportarPdf(RomaneioState state) async {
@@ -471,6 +547,13 @@ class _RomaneioPageState extends State<RomaneioPage> {
                         : () => _cancelarRomaneio(state.id),
                     icon: const Icon(Icons.cancel_outlined),
                     label: const Text('Cancelar romaneio'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed:
+                        carregando ? null : () => _imprimirNotaEntrega(state),
+                    icon: const Icon(Icons.local_shipping_outlined),
+                    label: const Text('Imprimir Nota de Entrega'),
                   ),
                   if (state.documentoFiscalEmitidoId != null) ...[
                     const SizedBox(height: 8),
@@ -844,6 +927,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
                         : () => _cancelarRomaneio(state.id),
                     icon: const Icon(Icons.cancel_outlined),
                     label: const Text('Cancelar romaneio'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: processandoAcao
+                        ? null
+                        : () => _imprimirNotaEntrega(state),
+                    icon: const Icon(Icons.local_shipping_outlined),
+                    label: const Text('Imprimir Nota de Entrega'),
                   ),
                   if (state.documentoFiscalEmitidoId != null) ...[
                     const SizedBox(height: 8),

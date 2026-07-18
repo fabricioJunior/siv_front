@@ -103,6 +103,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/enderecos_page': (context) {
     return EnderecosPage(idPessoa: args(context)['idPessoa']);
   },
+  '/selecionar_endereco': (context) {
+    return SelecionarEnderecoPage(
+      idPessoa: args(context)['idPessoa'],
+      titulo: args(context)['titulo'],
+    );
+  },
   '/selecionar_pessoa': (context) {
     final retorno = args(context)['retornarSomenteId'];
     final retornarSomenteId = retorno == true || retorno == 'true';

@@ -10,9 +10,25 @@ import 'package:core/pdf_widgets.dart' as pw;
 class DanfePdfRenderer {
   DanfePdfRenderer._();
 
+  /// Formato padrao pra bobina 80mm com margem direita maior que a
+  /// [PdfPageFormat.roll80] padrao do pacote `pdf` (5mm) -- a area
+  /// imprimivel real de impressoras termicas costuma ser menor que a
+  /// largura nominal do papel, o que corta os ultimos caracteres de linhas
+  /// que preenchem a largura inteira (ex: valor alinhado a direita). Mesmo
+  /// problema corrigido no renderer ESC/POS via `_margemSeguranca`
+  /// (`danfe_esc_pos_renderer.dart`).
+  static const PdfPageFormat roll80Seguro = PdfPageFormat(
+    80 * PdfPageFormat.mm,
+    double.infinity,
+    marginLeft: 5 * PdfPageFormat.mm,
+    marginTop: 5 * PdfPageFormat.mm,
+    marginBottom: 5 * PdfPageFormat.mm,
+    marginRight: 8.3 * PdfPageFormat.mm,
+  );
+
   static Future<Uint8List> render(
     DanfeLayoutData dados, {
-    PdfPageFormat pageFormat = PdfPageFormat.roll80,
+    PdfPageFormat pageFormat = roll80Seguro,
   }) async {
     final doc = pw.Document();
     final nodes = construirDanfeNodes(dados);

@@ -20,7 +20,7 @@ class NotaFiscalPdfExporter {
   static Future<({Uint8List bytes, Object? erroServidor})> gerarBytes(
     DocumentoFiscal documento, {
     Romaneio? romaneio,
-    PdfPageFormat pageFormat = PdfPageFormat.roll80,
+    PdfPageFormat pageFormat = DanfePdfRenderer.roll80Seguro,
   }) async {
     final dados = construirDanfeLayoutData(documento, romaneio: romaneio);
     final bytes = await DanfePdfRenderer.render(dados, pageFormat: pageFormat);

@@ -17,7 +17,10 @@ class MacThermalPrintService {
   /// `true` se o script terminou com exit code 0.
   static Future<bool> printPdf(String pdfPath) async {
     try {
-      final resultado = await Process.run(_scriptPath, [pdfPath]);
+      final resultado = await Process.run(
+        _scriptPath,
+        [pdfPath, '--width', '576'],
+      );
       if (resultado.exitCode != 0) {
         log('MacThermalPrintService: falha ao imprimir "$pdfPath" '
             '(exit ${resultado.exitCode}): ${resultado.stderr}');

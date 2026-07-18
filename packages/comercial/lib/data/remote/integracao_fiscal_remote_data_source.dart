@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/data/remote/dtos/documento_fiscal_dto.dart';
 import 'package:comercial/domain/data/remote/i_integracao_fiscal_remote_data_source.dart';
 import 'package:comercial/domain/models/documento_fiscal.dart';
@@ -97,5 +99,10 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
     return DocumentoFiscalDetalheDto.fromJson(
       response.body as Map<String, dynamic>,
     );
+  }
+
+  @override
+  Future<Uint8List> baixarDanfe(int id) {
+    return getBytes(pathParameters: {'path': '/$id/danfe'});
   }
 }

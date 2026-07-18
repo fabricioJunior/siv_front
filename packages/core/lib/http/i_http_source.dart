@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/http/i_http_response.dart';
 
@@ -7,6 +8,11 @@ abstract class IHttpSource {
     required dynamic body,
     required Uri uri,
   });
+
+  /// GET que retorna os bytes crus da resposta, sem tentar decodificar como
+  /// JSON (usado para conteudo binario, ex: PDF de DANFE). Lanca
+  /// [HttpException] se o status nao for 2xx.
+  Future<Uint8List> getBytes({required Uri uri});
   Future<IHttpResponse> put({
     required dynamic body,
     required Uri uri,

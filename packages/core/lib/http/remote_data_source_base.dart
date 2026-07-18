@@ -31,6 +31,17 @@ abstract class RemoteDataSourceBase {
     return libResponse;
   }
 
+  Future<Uint8List> getBytes({
+    Map<String, String>? queryParameters,
+    Map<String, dynamic>? pathParameters,
+  }) async {
+    var uri = _wrapUri(
+      queryParameters: queryParameters,
+    );
+    uri = _insertPath(uri, pathParameters);
+    return httpClient.getBytes(uri: uri);
+  }
+
   Future<IHttpResponse> post({
     required dynamic body,
     Map<String, String>? queryParameters,

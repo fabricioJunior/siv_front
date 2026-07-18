@@ -53,6 +53,18 @@ class HttpSource implements IHttpSource {
   }
 
   @override
+  Future<Uint8List> getBytes({required Uri uri}) async {
+    var response = await client.get(uri);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException(
+        'Erro ${response.statusCode} ao baixar conteúdo de $uri',
+        uri: uri,
+      );
+    }
+    return response.bodyBytes;
+  }
+
+  @override
   Future<IHttpResponse> post({
     required dynamic body,
     required Uri uri,

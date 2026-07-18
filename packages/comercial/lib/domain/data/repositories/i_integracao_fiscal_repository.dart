@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/domain/models/documento_fiscal.dart';
 
 abstract class IIntegracaoFiscalRepository {
@@ -21,4 +23,5 @@ abstract class IIntegracaoFiscalRepository {
   });
   Future<DocumentoFiscal> reprocessar(int id);
   Future<DocumentoFiscalDetalhe> getDetalhe(int id);
+  Future<Uint8List> baixarDanfe(int id);
 }

@@ -1,5 +1,6 @@
+import 'dart:typed_data';
+
 import 'package:comercial/data.dart';
-import 'package:comercial/domain/data/repositories/i_integracao_fiscal_repository.dart';
 import 'package:comercial/domain/models/documento_fiscal.dart';
 
 class IntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
@@ -58,4 +59,7 @@ class IntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   @override
   Future<DocumentoFiscalDetalhe> getDetalhe(int id) =>
       remoteDataSource.getDetalhe(id);
+
+  @override
+  Future<Uint8List> baixarDanfe(int id) => remoteDataSource.baixarDanfe(id);
 }

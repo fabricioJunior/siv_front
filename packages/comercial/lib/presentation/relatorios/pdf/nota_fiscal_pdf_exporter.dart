@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 
+import 'package:comercial/domain/data/repositories/i_integracao_fiscal_repository.dart';
 import 'package:comercial/domain/models/documento_fiscal.dart';
-import 'package:comercial/domain/models/documento_fiscal_extensoes.dart';
-import 'package:core/pdf.dart' show PdfPageFormat, PdfColors, PdfService;
+import 'package:core/injecoes.dart';
+import 'package:core/pdf.dart' show PdfPageFormat, PdfColors;
 import 'package:core/pdf_widgets.dart' as pw;
 
 String _fmtMoeda(num? v) {
@@ -61,21 +62,20 @@ const _formasPagamentoWebmania = {
 /// Gera/obtem o PDF da nota fiscal (DANFE) para impressao em impressora
 /// termica 80mm.
 ///
-/// Estrategia: tenta baixar a DANFE ja pronta a partir de
-/// [DocumentoFiscal.urlDanfe] (gerada pelo gateway fiscal, ex: Web Mania).
-/// Se a URL nao existir ou o download falhar (rede, formato invalido etc),
-/// monta um layout proprio simplificado (fallback), no estilo do romaneio.
+/// Estrategia: baixa a DANFE ja pronta via [IIntegracaoFiscalRepository.baixarDanfe],
+/// que faz o backend buscar o PDF direto no gateway fiscal (ex: Web Mania,
+/// GET /danfe/{chave}/ autenticado com as credenciais do provider -- nunca
+/// expostas ao app). Se a chamada falhar (nota nao emitida, gateway fora do
+/// ar etc), monta um layout proprio simplificado (fallback).
 class NotaFiscalPdfExporter {
   NotaFiscalPdfExporter._();
 
   static Future<Uint8List> gerarBytes(DocumentoFiscal documento) async {
-    final url = documento.urlDanfe;
-    if (url != null) {
-      final baixado = await PdfService.baixarPdf(url);
-      if (baixado != null) return baixado;
+    try {
+      return await sl<IIntegracaoFiscalRepository>().baixarDanfe(documento.id);
+    } catch (_) {
+      return _gerarFallback(documento);
     }
-
-    return _gerarFallback(documento);
   }
 
   static Future<Uint8List> _gerarFallback(DocumentoFiscal documento) async {

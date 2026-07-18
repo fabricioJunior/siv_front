@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/domain/models/documento_fiscal.dart';
 
 abstract class IIntegracaoFiscalRemoteDataSource {
@@ -21,4 +23,8 @@ abstract class IIntegracaoFiscalRemoteDataSource {
   });
   Future<DocumentoFiscal> reprocessar(int id);
   Future<DocumentoFiscalDetalhe> getDetalhe(int id);
+
+  /// Baixa o PDF da DANFE pronta direto do backend, que faz o proxy
+  /// autenticado pro gateway fiscal (credenciais nunca chegam no app).
+  Future<Uint8List> baixarDanfe(int id);
 }

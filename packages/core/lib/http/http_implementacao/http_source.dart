@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+import 'dart:io' hide HttpException;
 import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:path/path.dart' as p;
@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:core/http/http_implementacao/http_response.dart';
 import 'package:image/image.dart' as img;
 import 'package:core/http/i_http_response.dart';
+import 'package:core/http/remote_data_source_base.dart' show HttpException;
 import 'package:http/http.dart' as lib;
 import 'package:http_parser/http_parser.dart';
 
@@ -58,10 +59,42 @@ class HttpSource implements IHttpSource {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw HttpException(
         'Erro ${response.statusCode} ao baixar conteúdo de $uri',
-        uri: uri,
+        statusCode: response.statusCode,
+        apiMessage: _extractApiMessageDeBytes(response.bodyBytes),
       );
     }
     return response.bodyBytes;
+  }
+
+  /// Extrai a mensagem de erro do corpo de uma resposta binaria que falhou
+  /// (ex: erro JSON do backend numa rota que normalmente devolve PDF) --
+  /// mesma logica de `RemoteDataSourceBase._extractApiMessage`, mas
+  /// operando direto sobre bytes (getBytes nao decodifica o corpo como
+  /// JSON no caminho de sucesso, pra nao corromper binario).
+  String? _extractApiMessageDeBytes(Uint8List bytes) {
+    if (bytes.isEmpty) return null;
+    String texto;
+    try {
+      texto = utf8.decode(bytes);
+    } catch (_) {
+      return null;
+    }
+
+    dynamic body;
+    try {
+      body = jsonDecode(texto);
+    } catch (_) {
+      return texto.trim().isEmpty ? null : texto.trim();
+    }
+
+    if (body is Map) {
+      final dynamic raw = body['message'] ?? body['error'] ?? body['errors'];
+      if (raw == null) return null;
+      final resultado = raw is List ? raw.join(' ') : raw.toString();
+      return resultado.trim().isEmpty ? null : resultado.trim();
+    }
+
+    return null;
   }
 
   @override

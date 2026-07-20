@@ -1,6 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart';
@@ -174,8 +175,10 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
 
     if (resultado == null) return;
 
-    final ncmSugerido =
-        resultado.subCategoria?.ncm ?? resultado.categoria.ncm;
+    final candidatoNcm = resultado.subCategoria?.ncm ?? resultado.categoria.ncm;
+    final ncmSugerido = (candidatoNcm != null && candidatoNcm.trim().length == 8)
+        ? candidatoNcm
+        : null;
 
     setState(() {
       _categoriaSelecionada = resultado.categoria;
@@ -402,13 +405,24 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _ncmController,
-                              maxLength: 30,
+                              maxLength: 8,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                               decoration: const InputDecoration(
                                 labelText: 'NCM',
                                 hintText: 'Ex: 6101.20.00',
                                 border: OutlineInputBorder(),
                                 counterText: '',
                               ),
+                              validator: (value) {
+                                final texto = value?.trim() ?? '';
+                                if (texto.isEmpty) return null;
+                                if (texto.length != 8) {
+                                  return 'NCM deve conter exatamente 8 números.';
+                                }
+                                return null;
+                              },
                             ),
                             const SizedBox(height: 8),
                             Row(

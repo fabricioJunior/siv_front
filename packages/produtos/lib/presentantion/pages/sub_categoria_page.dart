@@ -1,6 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:produtos/presentation.dart';
 
 class SubCategoriaPage extends StatelessWidget {
@@ -159,13 +160,24 @@ class SubCategoriaPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: ncmController,
-                                maxLength: 30,
+                                maxLength: 8,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 textInputAction: TextInputAction.done,
                                 decoration: const InputDecoration(
                                   hintText: 'Ex: 6101.20.00',
                                   border: OutlineInputBorder(),
                                   counterText: '',
                                 ),
+                                validator: (value) {
+                                  final texto = value?.trim() ?? '';
+                                  if (texto.isEmpty) return null;
+                                  if (texto.length != 8) {
+                                    return 'NCM deve conter exatamente 8 números.';
+                                  }
+                                  return null;
+                                },
                                 onChanged: (value) {
                                   context.read<SubCategoriaBloc>().add(
                                     SubCategoriaEditou(

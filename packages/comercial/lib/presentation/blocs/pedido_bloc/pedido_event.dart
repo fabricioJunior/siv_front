@@ -36,6 +36,18 @@ class PedidoCampoAlterado extends PedidoEvent {
   });
 }
 
+class PedidoModalidadeEntregaAlterada extends PedidoEvent {
+  final String modalidadeEntrega;
+
+  PedidoModalidadeEntregaAlterada(this.modalidadeEntrega);
+}
+
+class PedidoEnderecoEntregaAlterado extends PedidoEvent {
+  final int? enderecoEntregaId;
+
+  PedidoEnderecoEntregaAlterado(this.enderecoEntregaId);
+}
+
 class PedidoSalvou extends PedidoEvent {}
 
 class PedidoConferiu extends PedidoEvent {}
@@ -46,4 +58,76 @@ class PedidoCancelou extends PedidoEvent {
   final String motivoCancelamento;
 
   PedidoCancelou(this.motivoCancelamento);
+}
+
+class PedidoPagamentoAdicionou extends PedidoEvent {
+  final String tipo;
+  final int? pagamentoAvulsoId;
+  final String? formaPagamento;
+  final double valorEsperado;
+
+  PedidoPagamentoAdicionou({
+    required this.tipo,
+    this.pagamentoAvulsoId,
+    this.formaPagamento,
+    required this.valorEsperado,
+  });
+}
+
+class PedidoPagamentoConfirmou extends PedidoEvent {
+  final int pagamentoId;
+  final double valorConfirmado;
+
+  PedidoPagamentoConfirmou({
+    required this.pagamentoId,
+    required this.valorConfirmado,
+  });
+}
+
+class PedidoEntregadorChamou extends PedidoEvent {}
+
+class PedidoEntregaConfirmou extends PedidoEvent {}
+
+class PedidoTaxaEntregaCriou extends PedidoEvent {
+  final double valorTaxaEntrega;
+  final int enderecoEntregaId;
+
+  PedidoTaxaEntregaCriou({
+    required this.valorTaxaEntrega,
+    required this.enderecoEntregaId,
+  });
+}
+
+class PedidoItemAdicionou extends PedidoEvent {
+  final int produtoId;
+  final double quantidade;
+
+  PedidoItemAdicionou({
+    required this.produtoId,
+    required this.quantidade,
+  });
+}
+
+class PedidoItemRemoveu extends PedidoEvent {
+  final int produtoId;
+  final int sequencia;
+  final double quantidade;
+
+  PedidoItemRemoveu({
+    required this.produtoId,
+    required this.sequencia,
+    required this.quantidade,
+  });
+}
+
+class PedidoItemConferiu extends PedidoEvent {
+  final int produtoId;
+  final int sequencia;
+  final double quantidade;
+
+  PedidoItemConferiu({
+    required this.produtoId,
+    required this.sequencia,
+    required this.quantidade,
+  });
 }

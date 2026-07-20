@@ -107,6 +107,7 @@ class SelecionarEnderecoPage extends StatelessWidget {
 
   Map<String, String> _mapearEndereco(Endereco endereco) {
     return <String, String>{
+      'id': endereco.id?.toString() ?? '',
       'logradouro': endereco.logradouro,
       'numero': endereco.numero,
       'complemento': endereco.complemento,

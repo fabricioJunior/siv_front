@@ -173,7 +173,10 @@ class _VendaPageState extends State<VendaPage> {
               ),
             );
 
-            _reiniciarFluxo(context);
+            Navigator.of(context).pushNamed(
+              '/pedido',
+              arguments: {'idPedido': pedidoCriadoId},
+            );
           }
         },
         builder: (context, state) {
@@ -451,6 +454,19 @@ class _VendaPageState extends State<VendaPage> {
                             )
                           : const Icon(Icons.save_outlined),
                       label: const Text('Salvar orçamento'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: temItens && !state.processando
+                          ? () => _salvarComoPedido(context)
+                          : null,
+                      icon: state.processoAtual == VendaProcesso.criarPedido
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.assignment_outlined),
+                      label: const Text('Salvar como pedido'),
                     ),
                     FilledButton.icon(
                       onPressed: temItens && !state.processando
@@ -806,6 +822,29 @@ class _VendaPageState extends State<VendaPage> {
         .toList(growable: false);
 
     context.read<VendaBloc>().add(VendaOrcamentoSalvarSolicitado(itens: itens));
+  }
+
+  void _salvarComoPedido(BuildContext context) {
+    final itens = _leitorController.itens
+        .map(
+          (item) => {
+            'produtoId': item.id,
+            'quantidade': item.quantidadeLida,
+            'valorUnitario': item.valorUnitario,
+            'nome': item.descricao,
+            'corNome': item.cor,
+            'tamanhoNome': item.tamanho,
+          },
+        )
+        .toList(growable: false);
+
+    context.read<VendaBloc>().add(
+          VendaCriarPedidoSolicitado(
+            itens: itens,
+            quantidadeProdutos: _leitorController.quantidadeTotalLida,
+            valorTotal: _leitorController.valorTotalLido,
+          ),
+        );
   }
 
   Future<void> _abrirOrcamentos(BuildContext context) async {

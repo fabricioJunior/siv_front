@@ -35,6 +35,10 @@ void _remoteDataSources() {
     () => PedidosRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IPedidoItemRemoteDataSource>(
+    () => PedidoItemRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IRomaneiosRemoteDataSource>(
     () => RomaneiosRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -58,7 +62,10 @@ void _remoteDataSources() {
 
 void _repositories() {
   sl.registerFactory<IPedidosRepository>(
-    () => PedidosRepository(remoteDataSource: sl()),
+    () => PedidosRepository(
+      remoteDataSource: sl(),
+      pedidoItemRemoteDataSource: sl(),
+    ),
   );
 
   sl.registerFactory<ICreditoDevolucaoRepository>(
@@ -112,6 +119,39 @@ void _useCases() {
   sl.registerFactory<ConferirPedido>(() => ConferirPedido(repository: sl()));
   sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
   sl.registerFactory<CancelarPedido>(() => CancelarPedido(repository: sl()));
+  sl.registerFactory<AdicionarPagamentoPedido>(
+    () => AdicionarPagamentoPedido(repository: sl()),
+  );
+  sl.registerFactory<ListarPagamentosPedido>(
+    () => ListarPagamentosPedido(repository: sl()),
+  );
+  sl.registerFactory<ConfirmarPagamentoPedido>(
+    () => ConfirmarPagamentoPedido(repository: sl()),
+  );
+  sl.registerFactory<ChamarEntregadorPedido>(
+    () => ChamarEntregadorPedido(repository: sl()),
+  );
+  sl.registerFactory<ConfirmarEntregaPedido>(
+    () => ConfirmarEntregaPedido(repository: sl()),
+  );
+  sl.registerFactory<CriarTaxaEntregaPedido>(
+    () => CriarTaxaEntregaPedido(repository: sl()),
+  );
+  sl.registerFactory<ListarEventosPedido>(
+    () => ListarEventosPedido(repository: sl()),
+  );
+  sl.registerFactory<ListarItensPedido>(
+    () => ListarItensPedido(repository: sl()),
+  );
+  sl.registerFactory<AdicionarItemPedido>(
+    () => AdicionarItemPedido(repository: sl()),
+  );
+  sl.registerFactory<RemoverItemPedido>(
+    () => RemoverItemPedido(repository: sl()),
+  );
+  sl.registerFactory<ConferirItemPedido>(
+    () => ConferirItemPedido(repository: sl()),
+  );
 
   sl.registerFactory<CarregarResumoPagamentosRealizados>(
     () => CarregarResumoPagamentosRealizados(recuperarLista: sl()),
@@ -247,6 +287,18 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      sl(),
     ),
   );
 
@@ -302,6 +354,7 @@ void _presentation() {
 
   sl.registerFactory<VendaBloc>(
     () => VendaBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

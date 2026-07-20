@@ -33,6 +33,26 @@ class PedidoDto implements Pedido {
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
+  @override
+  final String? modalidadeEntrega;
+  @override
+  final int? enderecoEntregaId;
+  @override
+  final String? situacaoPagamento;
+  @override
+  final String? situacaoEntrega;
+  @override
+  final int? pedidoOrigemId;
+  @override
+  final double? valorTaxaEntrega;
+  @override
+  final String? pessoaNome;
+  @override
+  final String? funcionarioNome;
+  @override
+  final String? tabelaPrecoNome;
+  @override
+  final double? valorTotal;
 
   const PedidoDto({
     this.id,
@@ -51,6 +71,16 @@ class PedidoDto implements Pedido {
     this.motivoCancelamento,
     this.criadoEm,
     this.atualizadoEm,
+    this.modalidadeEntrega,
+    this.enderecoEntregaId,
+    this.situacaoPagamento,
+    this.situacaoEntrega,
+    this.pedidoOrigemId,
+    this.valorTaxaEntrega,
+    this.pessoaNome,
+    this.funcionarioNome,
+    this.tabelaPrecoNome,
+    this.valorTotal,
   });
 
   factory PedidoDto.fromJson(Map<String, dynamic> json) {
@@ -71,6 +101,16 @@ class PedidoDto implements Pedido {
       motivoCancelamento: json['motivoCancelamento']?.toString(),
       criadoEm: _toDate(json['criadoEm']),
       atualizadoEm: _toDate(json['atualizadoEm']),
+      modalidadeEntrega: json['modalidadeEntrega']?.toString(),
+      enderecoEntregaId: _toInt(json['enderecoEntregaId']),
+      situacaoPagamento: json['situacaoPagamento']?.toString(),
+      situacaoEntrega: json['situacaoEntrega']?.toString(),
+      pedidoOrigemId: _toInt(json['pedidoOrigemId']),
+      valorTaxaEntrega: _toDouble(json['valorTaxaEntrega']),
+      pessoaNome: json['pessoaNome']?.toString(),
+      funcionarioNome: json['funcionarioNome']?.toString(),
+      tabelaPrecoNome: json['tabelaPrecoNome']?.toString(),
+      valorTotal: _toDouble(json['valorTotal']),
     );
   }
 
@@ -92,6 +132,16 @@ class PedidoDto implements Pedido {
       motivoCancelamento: pedido.motivoCancelamento,
       criadoEm: pedido.criadoEm,
       atualizadoEm: pedido.atualizadoEm,
+      modalidadeEntrega: pedido.modalidadeEntrega,
+      enderecoEntregaId: pedido.enderecoEntregaId,
+      situacaoPagamento: pedido.situacaoPagamento,
+      situacaoEntrega: pedido.situacaoEntrega,
+      pedidoOrigemId: pedido.pedidoOrigemId,
+      valorTaxaEntrega: pedido.valorTaxaEntrega,
+      pessoaNome: pedido.pessoaNome,
+      funcionarioNome: pedido.funcionarioNome,
+      tabelaPrecoNome: pedido.tabelaPrecoNome,
+      valorTotal: pedido.valorTotal,
     );
   }
 
@@ -108,6 +158,8 @@ class PedidoDto implements Pedido {
       'tipo': tipo,
       'fiscal': fiscal ?? false,
       'observacao': observacao ?? '',
+      'modalidadeEntrega': modalidadeEntrega ?? 'retirada',
+      if (enderecoEntregaId != null) 'enderecoEntregaId': enderecoEntregaId,
     };
   }
 
@@ -123,6 +175,8 @@ class PedidoDto implements Pedido {
       'previsaoDeEntrega': _toDateOnly(previsaoDeEntrega),
       'fiscal': fiscal,
       'observacao': observacao,
+      'modalidadeEntrega': modalidadeEntrega,
+      if (enderecoEntregaId != null) 'enderecoEntregaId': enderecoEntregaId,
     };
   }
 
@@ -144,6 +198,16 @@ class PedidoDto implements Pedido {
         motivoCancelamento,
         criadoEm,
         atualizadoEm,
+        modalidadeEntrega,
+        enderecoEntregaId,
+        situacaoPagamento,
+        situacaoEntrega,
+        pedidoOrigemId,
+        valorTaxaEntrega,
+        pessoaNome,
+        funcionarioNome,
+        tabelaPrecoNome,
+        valorTotal,
       ];
 
   @override
@@ -151,6 +215,12 @@ class PedidoDto implements Pedido {
 }
 
 int? _toInt(dynamic value) => int.tryParse(value?.toString() ?? '');
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+}
 
 DateTime? _toDate(dynamic value) {
   if (value == null) return null;

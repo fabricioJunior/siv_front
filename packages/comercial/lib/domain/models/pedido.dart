@@ -17,6 +17,16 @@ abstract class Pedido implements Equatable {
   String? get motivoCancelamento;
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
+  String? get modalidadeEntrega;
+  int? get enderecoEntregaId;
+  String? get situacaoPagamento;
+  String? get situacaoEntrega;
+  int? get pedidoOrigemId;
+  double? get valorTaxaEntrega;
+  String? get pessoaNome;
+  String? get funcionarioNome;
+  String? get tabelaPrecoNome;
+  double? get valorTotal;
 
   factory Pedido.create({
     int? id,
@@ -35,6 +45,16 @@ abstract class Pedido implements Equatable {
     String? motivoCancelamento,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
+    String? modalidadeEntrega,
+    int? enderecoEntregaId,
+    String? situacaoPagamento,
+    String? situacaoEntrega,
+    int? pedidoOrigemId,
+    double? valorTaxaEntrega,
+    String? pessoaNome,
+    String? funcionarioNome,
+    String? tabelaPrecoNome,
+    double? valorTotal,
   }) = _PedidoImpl;
 
   @override
@@ -55,6 +75,16 @@ abstract class Pedido implements Equatable {
         motivoCancelamento,
         criadoEm,
         atualizadoEm,
+        modalidadeEntrega,
+        enderecoEntregaId,
+        situacaoPagamento,
+        situacaoEntrega,
+        pedidoOrigemId,
+        valorTaxaEntrega,
+        pessoaNome,
+        funcionarioNome,
+        tabelaPrecoNome,
+        valorTotal,
       ];
 
   @override
@@ -94,6 +124,26 @@ class _PedidoImpl implements Pedido {
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
+  @override
+  final String? modalidadeEntrega;
+  @override
+  final int? enderecoEntregaId;
+  @override
+  final String? situacaoPagamento;
+  @override
+  final String? situacaoEntrega;
+  @override
+  final int? pedidoOrigemId;
+  @override
+  final double? valorTaxaEntrega;
+  @override
+  final String? pessoaNome;
+  @override
+  final String? funcionarioNome;
+  @override
+  final String? tabelaPrecoNome;
+  @override
+  final double? valorTotal;
 
   const _PedidoImpl({
     this.id,
@@ -112,6 +162,16 @@ class _PedidoImpl implements Pedido {
     this.motivoCancelamento,
     this.criadoEm,
     this.atualizadoEm,
+    this.modalidadeEntrega,
+    this.enderecoEntregaId,
+    this.situacaoPagamento,
+    this.situacaoEntrega,
+    this.pedidoOrigemId,
+    this.valorTaxaEntrega,
+    this.pessoaNome,
+    this.funcionarioNome,
+    this.tabelaPrecoNome,
+    this.valorTotal,
   });
 
   @override
@@ -132,6 +192,16 @@ class _PedidoImpl implements Pedido {
         motivoCancelamento,
         criadoEm,
         atualizadoEm,
+        modalidadeEntrega,
+        enderecoEntregaId,
+        situacaoPagamento,
+        situacaoEntrega,
+        pedidoOrigemId,
+        valorTaxaEntrega,
+        pessoaNome,
+        funcionarioNome,
+        tabelaPrecoNome,
+        valorTotal,
       ];
 
   @override

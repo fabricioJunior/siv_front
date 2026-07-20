@@ -20,6 +20,7 @@ part 'venda_state.dart';
 class VendaBloc extends Bloc<VendaEvent, VendaState> {
   final SalvarListaDeProdutosCompartilhada _salvarListaDeProdutosCompartilhada;
   final CriarPedido _criarPedido;
+  final AdicionarItemPedido _adicionarItemPedido;
   final SalvarOrcamento _salvarOrcamento;
   final CarregarOrcamento _carregarOrcamento;
   final ExcluirOrcamento _excluirOrcamento;
@@ -31,6 +32,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   VendaBloc(
     this._salvarListaDeProdutosCompartilhada,
     this._criarPedido,
+    this._adicionarItemPedido,
     this._salvarOrcamento,
     this._carregarOrcamento,
     this._excluirOrcamento,
@@ -156,7 +158,8 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         emit(
           state.copyWith(
             verificandoCaixa: false,
-            erro: 'Balanço #${balancoEmAndamento.id} em andamento — operação bloqueada.',
+            erro:
+                'Balanço #${balancoEmAndamento.id} em andamento — operação bloqueada.',
           ),
         );
         return;
@@ -171,7 +174,8 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         emit(
           state.copyWith(
             verificandoCaixa: false,
-            erro: 'Nenhum caixa aberto para este terminal. Abra um caixa antes de continuar.',
+            erro:
+                'Nenhum caixa aberto para este terminal. Abra um caixa antes de continuar.',
           ),
         );
         return;
@@ -182,7 +186,8 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         emit(
           state.copyWith(
             verificandoCaixa: false,
-            erro: 'Seu caixa está em contagem e não pode receber novas movimentações. '
+            erro:
+                'Seu caixa está em contagem e não pode receber novas movimentações. '
                 'Finalize a contagem ou abra outro caixa antes de continuar.',
           ),
         );
@@ -200,7 +205,8 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
       emit(
         state.copyWith(
           verificandoCaixa: false,
-          erro: 'Falha ao verificar o caixa e o balanço da sessão. Tente novamente.',
+          erro:
+              'Falha ao verificar o caixa e o balanço da sessão. Tente novamente.',
         ),
       );
       addError(e, s);
@@ -295,6 +301,16 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
       return;
     }
 
+    if (state.clienteSelecionado?.data['generica'] == true) {
+      emit(
+        state.copyWith(
+          erro: 'Pedido exige cliente cadastrado. Selecione um cliente '
+              'diferente do genérico.',
+        ),
+      );
+      return;
+    }
+
     final produtos = _mapearProdutos(event.itens);
     if (produtos.isEmpty) {
       emit(
@@ -314,7 +330,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     );
 
     try {
-      final lista = await _salvarListaDeProdutosCompartilhada(
+      await _salvarListaDeProdutosCompartilhada(
         listaCompartilhada: ListaDeProdutosCompartilhada.criar(
           origem: OrigemCompartilhadaTipo.venda,
           pessoaId: state.clienteSelecionado?.id,
@@ -329,8 +345,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         ..write(' Itens: ${event.quantidadeProdutos}.')
         ..write(
           ' Valor total: R\$ ${event.valorTotal.toStringAsFixed(2).replaceAll('.', ',')}.',
-        )
-        ..write(' Lista local: ${lista.hash}.');
+        );
 
       final pedido = await _criarPedido(
         Pedido.create(
@@ -348,11 +363,22 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         ),
       );
 
+      final pedidoId = pedido.id;
+      if (pedidoId != null) {
+        for (final produto in produtos) {
+          await _adicionarItemPedido(
+            pedidoId,
+            produtoId: produto.produtoId,
+            quantidade: produto.quantidade.toDouble(),
+          );
+        }
+      }
+
       emit(
         state.copyWith(
           processando: false,
           processoAtual: null,
-          pedidoCriadoId: pedido.id,
+          pedidoCriadoId: pedidoId,
           erro: null,
         ),
       );

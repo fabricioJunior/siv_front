@@ -1,8 +1,92 @@
+import 'package:comercial/models.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/remote_data_sourcers.dart' show mensagemDeErroApi;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+/// Tenta imprimir automaticamente a [documentoFiscal] recem emitida, SE ja
+/// houver uma impressora padrao salva para [TipoImpressora.documento] --
+/// caso contrario, nao faz nada (silencioso, usuario usa os botoes manuais
+/// ja existentes). Best-effort: nunca bloqueia o fluxo da tela que chamou.
+Future<void> tentarImprimirNotaFiscalAutomaticamente(
+  BuildContext context, {
+  required DocumentoFiscal documentoFiscal,
+  required Romaneio? romaneio,
+}) async {
+  final nomePreferida =
+      await sl<ObterImpressoraPreferida>().call(tipo: TipoImpressora.documento);
+  if (nomePreferida == null || !context.mounted) return;
+
+  final impressoras = sl<IPrintersService>()
+      .getAvailablePrinters()
+      .where((impressora) => impressora.isAvailable);
+
+  Impressora? impressora;
+  for (final candidata in impressoras) {
+    if (candidata.name == nomePreferida) {
+      impressora = candidata;
+      break;
+    }
+  }
+
+  if (impressora == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Impressão automática da nota fiscal falhou: impressora '
+          '"$nomePreferida" indisponível.',
+        ),
+      ),
+    );
+    return;
+  }
+
+  try {
+    final resultado = await NotaFiscalPdfExporter.gerarBytes(
+      documentoFiscal,
+      romaneio: romaneio,
+    );
+    final sucesso = await sl<IPrintersService>().printPdf(
+      impressora,
+      resultado.bytes,
+      docName: 'Nota Fiscal #${documentoFiscal.id}',
+    );
+
+    if (!context.mounted) return;
+
+    if (!sucesso) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Falha ao imprimir automaticamente a nota fiscal em '
+            '${impressora.name}.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Nota fiscal impressa automaticamente em ${impressora.name}.',
+        ),
+      ),
+    );
+  } catch (erro) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Falha ao imprimir automaticamente a nota fiscal: '
+          '${mensagemDeErroApi(erro, '$erro')}',
+        ),
+      ),
+    );
+  }
+}
 
 /// Fluxo reutilizavel de impressao de documentos (nota fiscal, romaneio)
 /// em impressora termica: seleciona a impressora (pre-marcada com a

@@ -1,4 +1,5 @@
 import 'package:core/bloc.dart';
+import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -99,6 +100,20 @@ class _ConfiguracaoDispositivoView extends StatelessWidget {
                 color: Colors.deepPurple,
                 copiavel: true,
               ),
+              const SizedBox(height: 24),
+              const _ImpressoraPreferidaCard(
+                titulo: 'Impressora para documentos',
+                icon: Icons.receipt_long_outlined,
+                color: Colors.blueGrey,
+                tipo: TipoImpressora.documento,
+              ),
+              const SizedBox(height: 12),
+              const _ImpressoraPreferidaCard(
+                titulo: 'Impressora para etiquetas',
+                icon: Icons.label_outline,
+                color: Colors.orange,
+                tipo: TipoImpressora.etiqueta,
+              ),
               const SizedBox(height: 32),
               _ApagarDadosButton(isApagando: isApagando),
             ],
@@ -186,6 +201,102 @@ class _InfoCard extends StatelessWidget {
                   );
                 },
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImpressoraPreferidaCard extends StatefulWidget {
+  final String titulo;
+  final IconData icon;
+  final Color color;
+  final TipoImpressora tipo;
+
+  const _ImpressoraPreferidaCard({
+    required this.titulo,
+    required this.icon,
+    required this.color,
+    required this.tipo,
+  });
+
+  @override
+  State<_ImpressoraPreferidaCard> createState() =>
+      _ImpressoraPreferidaCardState();
+}
+
+class _ImpressoraPreferidaCardState extends State<_ImpressoraPreferidaCard> {
+  Impressora? _selecionada;
+  bool _salvando = false;
+
+  Future<void> _salvar() async {
+    final impressora = _selecionada;
+    if (impressora == null) return;
+
+    setState(() => _salvando = true);
+    await sl<SalvarImpressoraPreferida>().call(
+      tipo: widget.tipo,
+      nomeImpressora: impressora.name,
+    );
+    if (!mounted) return;
+    setState(() => _salvando = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Impressora "${impressora.name}" salva como padrão.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: widget.color.withValues(alpha: 0.12),
+                  child: Icon(widget.icon, color: widget.color, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    widget.titulo,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SeletorImpressora(
+              tipo: widget.tipo,
+              onChanged: (impressora) => _selecionada = impressora,
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: _salvando ? null : _salvar,
+                child: _salvando
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Salvar'),
+              ),
+            ),
           ],
         ),
       ),

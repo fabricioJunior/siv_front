@@ -7,5 +7,6 @@ class FaturarPedido {
     required IPedidosRepository repository,
   }) : _repository = repository;
 
-  Future<void> call(int id) => _repository.faturarPedido(id);
+  Future<void> call(int id, {required int caixaId}) =>
+      _repository.faturarPedido(id, caixaId: caixaId);
 }

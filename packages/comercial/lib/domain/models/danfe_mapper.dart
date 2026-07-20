@@ -77,6 +77,7 @@ DanfeLayoutData construirDanfeLayoutData(
       numero: numeroSerie?.numero,
       serie: numeroSerie?.serie,
       dataEmissao: documento.updatedAt,
+      dataVenda: romaneio?.criadoEm,
       ehNfce: ehNfce,
     ),
     itens: _itens(webmaniaPayload),

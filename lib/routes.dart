@@ -125,7 +125,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pagamento_avulso': (context) {
     return _rotaProtegida(
       route: '/pagamento_avulso',
-      child: PagamentoAvulsoPage(),
+      child: PagamentoAvulsoPage(
+        retornarAoSalvar: args(context)['retornarAoSalvar'] == true,
+      ),
     );
   },
   '/formas_de_pagamento': (context) {
@@ -404,6 +406,13 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pedido': (context) {
     return PedidoPage(
       idPedido: args(context)['idPedido'],
+      pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          SeletorPessoa(
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            retornarSomenteId: false,
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+          ),
       funcionarioSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
           FuncionarioSeletor(
             modo: FuncionarioSeletorModo.unica,

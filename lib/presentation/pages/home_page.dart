@@ -89,6 +89,14 @@ class _HomePageState extends State<HomePage> {
                   componentesNecessarios: ['PEDFC001'],
                 ),
                 const _AccessFlowItem(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Pedidos',
+                  subtitle: 'Retirada ou entrega com pagamento pendente.',
+                  color: Colors.indigoAccent,
+                  route: '/pedidos',
+                  componentesNecessarios: ['PEDFC001'],
+                ),
+                const _AccessFlowItem(
                   icon: Icons.sync_alt,
                   title: 'Troca e devolução',
                   subtitle:

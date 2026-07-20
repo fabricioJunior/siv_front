@@ -221,6 +221,88 @@ class _PedidoCard extends StatelessWidget {
         _ => pedido.situacao ?? '-',
       };
 
+  String _formatarValorMonetario(double? valor) {
+    if (valor == null) return '-';
+    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
+  String _formatarDataHora(DateTime? data) {
+    if (data == null) return '-';
+    final local = data.toLocal();
+    final dia = local.day.toString().padLeft(2, '0');
+    final mes = local.month.toString().padLeft(2, '0');
+    final ano = local.year.toString();
+    final hora = local.hour.toString().padLeft(2, '0');
+    final minuto = local.minute.toString().padLeft(2, '0');
+    return '$dia/$mes/$ano às $hora:$minuto';
+  }
+
+  Widget _buildBadgeSecundario(String label, Color cor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: cor,
+        ),
+      ),
+    );
+  }
+
+  String _labelSituacaoPagamento(String? situacao) {
+    switch (situacao) {
+      case 'pendente':
+        return 'Pendente';
+      case 'parcial':
+        return 'Parcial';
+      case 'pago':
+        return 'Pago';
+      default:
+        return situacao ?? '-';
+    }
+  }
+
+  Color _corSituacaoPagamento(String? situacao) {
+    switch (situacao) {
+      case 'pago':
+        return Colors.green;
+      case 'parcial':
+        return Colors.orange;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
+  String _labelSituacaoEntrega(String? situacao) {
+    switch (situacao) {
+      case 'aguardando_chamada':
+        return 'Aguardando chamada';
+      case 'chamado':
+        return 'Chamado';
+      case 'entregue':
+        return 'Entregue';
+      default:
+        return situacao ?? '-';
+    }
+  }
+
+  Color _corSituacaoEntrega(String? situacao) {
+    switch (situacao) {
+      case 'entregue':
+        return Colors.green;
+      case 'chamado':
+        return Colors.orange;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cor = _cor;
@@ -278,12 +360,68 @@ class _PedidoCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
+                              pedido.pessoaNome ??
+                                  (pedido.pessoaId != null
+                                      ? 'Pessoa #${pedido.pessoaId}'
+                                      : '-'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
                               'Tipo: ${pedido.tipo ?? '-'}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.black54,
                               ),
                             ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Vendedor: ${pedido.funcionarioNome ?? (pedido.funcionarioId != null ? 'Funcionário #${pedido.funcionarioId}' : '-')}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _formatarDataHora(pedido.criadoEm),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            if (pedido.situacaoPagamento != null ||
+                                pedido.situacaoEntrega != null) ...[
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: [
+                                  if (pedido.situacaoPagamento != null)
+                                    _buildBadgeSecundario(
+                                      'Pagto: ${_labelSituacaoPagamento(pedido.situacaoPagamento)}',
+                                      _corSituacaoPagamento(
+                                        pedido.situacaoPagamento,
+                                      ),
+                                    ),
+                                  if (pedido.modalidadeEntrega == 'entrega' &&
+                                      pedido.situacaoEntrega != null)
+                                    _buildBadgeSecundario(
+                                      'Entrega: ${_labelSituacaoEntrega(pedido.situacaoEntrega)}',
+                                      _corSituacaoEntrega(
+                                        pedido.situacaoEntrega,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -292,6 +430,16 @@ class _PedidoCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          if (pedido.valorTotal != null) ...[
+                            Text(
+                              _formatarValorMonetario(pedido.valorTotal),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                          ],
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),

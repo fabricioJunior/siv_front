@@ -1,5 +1,6 @@
 export 'domain/data/remote/i_caixas_remote_data_source.dart';
 export 'domain/data/remote/i_credito_devolucao_remote_data_source.dart';
+export 'domain/data/remote/i_pedido_item_remote_data_source.dart';
 export 'domain/data/remote/i_pedidos_remote_data_source.dart';
 export 'domain/data/remote/i_romaneios_remote_data_source.dart';
 export 'domain/data/remote/i_saldo_total_credito_devolucao_remote_data_source.dart';
@@ -9,6 +10,7 @@ export 'domain/data/repositories/i_romaneios_repository.dart';
 
 export 'data/remote/credito_devolucao_remote_data_source.dart';
 export 'data/remote/receber_romaneio_no_caixa_remote_data_source.dart.dart';
+export 'data/remote/pedido_item_remote_data_source.dart';
 export 'data/remote/pedidos_remote_data_source.dart';
 export 'data/remote/romaneios_remote_data_source.dart';
 export 'data/remote/saldo_total_credito_devolucao_remote_data_source.dart';

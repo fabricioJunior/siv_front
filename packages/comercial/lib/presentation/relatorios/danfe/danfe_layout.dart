@@ -13,6 +13,7 @@ class DanfeTexto extends DanfeNode {
   final String texto;
   final DanfeAlinhamento alinhamento;
   final bool negrito;
+
   /// Escala relativa ao tamanho normal (1.0). Usado so pra titulos.
   final double escala;
 
@@ -53,13 +54,14 @@ class DanfeQrCode extends DanfeNode {
 class DanfeTextos {
   DanfeTextos._();
 
-  static const naoPermiteCredito = 'Não permite aproveitamento de crédito de ICMS';
+  static const naoPermiteCredito =
+      'Não permite aproveitamento de crédito de ICMS';
   static const consumidorNaoIdentificado = 'CONSUMIDOR NÃO IDENTIFICADO';
   static const cabecalhoItens = 'CÓDIGO / DESCRIÇÃO';
   static const valorProdutos = 'VALOR TOTAL DOS PRODUTOS';
   static const descontoLabel = 'DESCONTO';
   static const acrescimoLabel = 'ACRÉSCIMO';
-  static const valorAPagar = 'VALOR A PAGAR';
+  static const valoresPagos = 'VALORES PAGOS';
   static const formaPagamentoTitulo = 'FORMA DE PAGAMENTO';
   static const trocoLabel = 'TROCO';
   static const tributosLabel = 'Valor aproximado dos tributos';
@@ -106,7 +108,8 @@ List<DanfeNode> construirDanfeNodes(DanfeLayoutData dados) => [
       ..._pagamentos(dados.pagamentos, dados.troco),
       if (dados.tributosAproximados != null) ...[
         const DanfeSeparador(),
-        DanfeLinhaDupla(DanfeTextos.tributosLabel, _fmtMoeda(dados.tributosAproximados)),
+        DanfeLinhaDupla(
+            DanfeTextos.tributosLabel, _fmtMoeda(dados.tributosAproximados)),
       ],
       const DanfeSeparador(),
       ..._consumidor(dados.consumidor),
@@ -129,31 +132,42 @@ List<DanfeNode> _cabecalho(DanfeLayoutData dados) {
       negrito: true,
       escala: 1.2,
     ),
-    if (empresa.nomeFantasia != null && empresa.razaoSocial != empresa.nomeFantasia)
+    if (empresa.nomeFantasia != null &&
+        empresa.razaoSocial != empresa.nomeFantasia)
       DanfeTexto(empresa.razaoSocial, alinhamento: DanfeAlinhamento.centro),
     if (empresa.cnpj != null)
       DanfeTexto('CNPJ: ${empresa.cnpj}', alinhamento: DanfeAlinhamento.centro),
     if (empresa.inscricaoEstadual != null)
-      DanfeTexto('IE: ${empresa.inscricaoEstadual}', alinhamento: DanfeAlinhamento.centro),
+      DanfeTexto('IE: ${empresa.inscricaoEstadual}',
+          alinhamento: DanfeAlinhamento.centro),
     if (empresa.endereco != null)
       DanfeTexto(empresa.endereco!, alinhamento: DanfeAlinhamento.centro),
     if (empresa.telefone != null)
-      DanfeTexto('Tel: ${empresa.telefone}', alinhamento: DanfeAlinhamento.centro),
+      DanfeTexto('Tel: ${empresa.telefone}',
+          alinhamento: DanfeAlinhamento.centro),
     const DanfeEspaco(),
-    DanfeTexto(id.tipoDocumento, alinhamento: DanfeAlinhamento.centro, negrito: true),
+    DanfeTexto(id.tipoDocumento,
+        alinhamento: DanfeAlinhamento.centro, negrito: true),
     if (id.ehNfce)
-      DanfeTexto(DanfeTextos.naoPermiteCredito, alinhamento: DanfeAlinhamento.centro),
+      DanfeTexto(DanfeTextos.naoPermiteCredito,
+          alinhamento: DanfeAlinhamento.centro),
     if (id.numero != null)
       DanfeTexto(
         '${id.tipoDocumento} nº ${id.numero} - Série ${id.serie}',
         alinhamento: DanfeAlinhamento.centro,
       ),
-    DanfeTexto('Emissão: ${_fmtDt(id.dataEmissao)}', alinhamento: DanfeAlinhamento.centro),
+    DanfeTexto('Emissão: ${_fmtDt(id.dataEmissao)}',
+        alinhamento: DanfeAlinhamento.centro),
+    if (id.dataVenda != null)
+      DanfeTexto('Venda: ${_fmtDt(id.dataVenda)}',
+          alinhamento: DanfeAlinhamento.centro),
   ];
 }
 
 List<DanfeNode> _tabelaProdutos(List<DanfeItem> itens) {
-  final nodes = <DanfeNode>[DanfeTexto(DanfeTextos.cabecalhoItens, negrito: true)];
+  final nodes = <DanfeNode>[
+    DanfeTexto(DanfeTextos.cabecalhoItens, negrito: true)
+  ];
   for (final item in itens) {
     final codigo = item.codigo != null ? '${item.codigo} - ' : '';
     nodes.add(DanfeTexto('$codigo${item.descricao}'));
@@ -162,7 +176,8 @@ List<DanfeNode> _tabelaProdutos(List<DanfeItem> itens) {
       _fmtMoeda(item.valorTotal),
     ));
     if (item.desconto != null && item.desconto! > 0) {
-      nodes.add(DanfeLinhaDupla('Desconto do item', '-${_fmtMoeda(item.desconto)}'));
+      nodes.add(
+          DanfeLinhaDupla('Desconto do item', '-${_fmtMoeda(item.desconto)}'));
     }
   }
   return nodes;
@@ -171,18 +186,23 @@ List<DanfeNode> _tabelaProdutos(List<DanfeItem> itens) {
 List<DanfeNode> _totais(DanfeTotais totais) => [
       DanfeLinhaDupla(DanfeTextos.valorProdutos, _fmtMoeda(totais.subtotal)),
       if (totais.descontos > 0)
-        DanfeLinhaDupla(DanfeTextos.descontoLabel, '-${_fmtMoeda(totais.descontos)}'),
+        DanfeLinhaDupla(
+            DanfeTextos.descontoLabel, '-${_fmtMoeda(totais.descontos)}'),
       if (totais.acrescimos > 0)
-        DanfeLinhaDupla(DanfeTextos.acrescimoLabel, _fmtMoeda(totais.acrescimos)),
-      DanfeLinhaDupla(DanfeTextos.valorAPagar, _fmtMoeda(totais.total), negrito: true),
+        DanfeLinhaDupla(
+            DanfeTextos.acrescimoLabel, _fmtMoeda(totais.acrescimos)),
+      DanfeLinhaDupla(DanfeTextos.valoresPagos, _fmtMoeda(totais.total),
+          negrito: true),
     ];
 
 List<DanfeNode> _pagamentos(List<DanfePagamento> pagamentos, num? troco) {
   if (pagamentos.isEmpty) return const [];
   return [
     DanfeTexto(DanfeTextos.formaPagamentoTitulo, negrito: true),
-    for (final pagamento in pagamentos) DanfeLinhaDupla(pagamento.forma, _fmtMoeda(pagamento.valor)),
-    if (troco != null && troco > 0) DanfeLinhaDupla(DanfeTextos.trocoLabel, _fmtMoeda(troco)),
+    for (final pagamento in pagamentos)
+      DanfeLinhaDupla(pagamento.forma, _fmtMoeda(pagamento.valor)),
+    if (troco != null && troco > 0)
+      DanfeLinhaDupla(DanfeTextos.trocoLabel, _fmtMoeda(troco)),
   ];
 }
 
@@ -193,20 +213,23 @@ List<DanfeNode> _consumidor(DanfeConsumidor consumidor) => [
             : DanfeTextos.consumidorNaoIdentificado,
         negrito: true,
       ),
-      if (consumidor.documento != null) DanfeTexto('CPF/CNPJ: ${consumidor.documento}'),
+      if (consumidor.documento != null)
+        DanfeTexto('CPF/CNPJ: ${consumidor.documento}'),
     ];
 
 List<DanfeNode> _autorizacao(DanfeLayoutData dados) {
   final auth = dados.autorizacao;
   return [
-    if (auth.protocolo != null) DanfeTexto('Protocolo de autorização: ${auth.protocolo}'),
+    if (auth.protocolo != null)
+      DanfeTexto('Protocolo de autorização: ${auth.protocolo}'),
     if (auth.dataAutorizacao != null)
       DanfeTexto('Data de autorização: ${_fmtDt(auth.dataAutorizacao)}'),
     if (auth.chaveAcesso != null) ...[
       const DanfeEspaco(),
       DanfeTexto(DanfeTextos.chaveAcessoTitulo, negrito: true),
       DanfeTexto(auth.chaveAcesso!),
-      DanfeTexto(DanfeTextos.consulteAutenticidade, alinhamento: DanfeAlinhamento.centro),
+      DanfeTexto(DanfeTextos.consulteAutenticidade,
+          alinhamento: DanfeAlinhamento.centro),
     ],
   ];
 }

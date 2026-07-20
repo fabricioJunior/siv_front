@@ -55,11 +55,20 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
           ),
         ),
       child: BlocConsumer<RomaneioCriacaoBloc, RomaneioCriacaoState>(
-        listenWhen: (previous, current) => previous.erro != current.erro,
+        listenWhen: (previous, current) =>
+            previous.erro != current.erro || previous.step != current.step,
         listener: (context, state) {
           if (state.step == RomaneioCriacaoStep.falha && state.erro != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.erro!)),
+            );
+          }
+          if (state.step == RomaneioCriacaoStep.sucesso &&
+              state.documentoFiscal?.status == 'emitida') {
+            tentarImprimirNotaFiscalAutomaticamente(
+              context,
+              documentoFiscal: state.documentoFiscal!,
+              romaneio: state.romaneio,
             );
           }
         },

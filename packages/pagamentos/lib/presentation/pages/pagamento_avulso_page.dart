@@ -9,8 +9,9 @@ class PagamentoAvulsoPage extends StatelessWidget {
   static const _providers = ['infinitypay', 'openpix'];
 
   final _formKey = GlobalKey<FormState>();
+  final bool retornarAoSalvar;
 
-  PagamentoAvulsoPage({super.key});
+  PagamentoAvulsoPage({super.key, this.retornarAoSalvar = false});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,14 @@ class PagamentoAvulsoPage extends StatelessWidget {
 
           if (state.step == PagamentoAvulsoStep.salvo &&
               state.pagamento != null) {
+            if (retornarAoSalvar) {
+              Navigator.of(context).pop({
+                'id': state.pagamento?.id,
+                'amount': state.pagamento?.amount,
+              });
+              return;
+            }
+
             Navigator.of(context).pushReplacement(
               MaterialPageRoute<void>(
                 builder: (_) => PagamentoAvulsoDetalhesPage(

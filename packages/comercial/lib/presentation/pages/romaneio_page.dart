@@ -247,6 +247,13 @@ class _RomaneioPageState extends State<RomaneioPage> {
                 content: Text('Pagamento recebido com sucesso.'),
               ),
             );
+            if (state.documentoFiscal?.status == 'emitida') {
+              tentarImprimirNotaFiscalAutomaticamente(
+                context,
+                documentoFiscal: state.documentoFiscal!,
+                romaneio: state.romaneio,
+              );
+            }
             return;
           }
 

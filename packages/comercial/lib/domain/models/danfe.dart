@@ -54,6 +54,9 @@ class DanfeIdentificacao {
   final String? numero;
   final String? serie;
   final DateTime? dataEmissao;
+  /// Data/hora em que a venda (romaneio) foi realizada -- pode divergir da
+  /// [dataEmissao] quando o documento fiscal e reprocessado depois da venda.
+  final DateTime? dataVenda;
   final bool ehNfce;
 
   const DanfeIdentificacao({
@@ -61,6 +64,7 @@ class DanfeIdentificacao {
     this.numero,
     this.serie,
     this.dataEmissao,
+    this.dataVenda,
     this.ehNfce = true,
   });
 }

@@ -180,7 +180,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ];
 
-              final relatorios = <_AccessFlowItem>[
+              final relatoriosVendas = <_AccessFlowItem>[
                 const _AccessFlowItem(
                   icon: Icons.trending_up,
                   title: 'Faturamento e Ticket',
@@ -190,32 +190,13 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_faturamento',
                   componentesNecessarios: ['RELFC001'],
                 ),
-
                 const _AccessFlowItem(
-                  icon: Icons.bar_chart,
-                  title: 'Curva ABC',
-                  subtitle:
-                      'Classificação de produtos por participação no faturamento.',
-                  color: Colors.indigo,
-                  route: '/relatorio_curva_abc',
-                  componentesNecessarios: ['RELFC002'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.receipt_long_outlined,
-                  title: 'Romaneios',
-                  subtitle: 'Visualizar todos os romaneios do sistema.',
-                  color: Colors.deepOrange,
-                  route: '/romaneios',
+                  icon: Icons.point_of_sale,
+                  title: 'Histórico de vendas',
+                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
+                  color: Colors.green,
+                  route: '/vendas',
                   componentesNecessarios: ['ROMFP001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.people_outline,
-                  title: 'Clientes Ativos',
-                  subtitle:
-                      'Clientes com compra recente no período selecionado.',
-                  color: Colors.purple,
-                  route: '/relatorio_clientes_ativos',
-                  componentesNecessarios: ['RELFC003'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.badge_outlined,
@@ -226,7 +207,39 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_vendas_por_funcionario',
                   componentesNecessarios: ['RELFC004'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.bar_chart,
+                  title: 'Curva ABC',
+                  subtitle:
+                      'Classificação de produtos por participação no faturamento.',
+                  color: Colors.indigo,
+                  route: '/relatorio_curva_abc',
+                  componentesNecessarios: ['RELFC002'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.people_outline,
+                  title: 'Clientes Ativos',
+                  subtitle:
+                      'Clientes com compra recente no período selecionado.',
+                  color: Colors.purple,
+                  route: '/relatorio_clientes_ativos',
+                  componentesNecessarios: ['RELFC003'],
+                ),
+              ];
 
+              final relatoriosMovimentacoes = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Movimentações do sistema',
+                  subtitle:
+                      'Todas as operações de produto (venda, devolução, transferência, compra e consignação).',
+                  color: Colors.deepOrange,
+                  route: '/romaneios',
+                  componentesNecessarios: ['ROMFP001'],
+                ),
+              ];
+
+              final relatoriosFiscal = <_AccessFlowItem>[
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
                   title: 'Documentos Fiscais',
@@ -235,14 +248,9 @@ class _HomePageState extends State<HomePage> {
                   route: '/documentos_fiscais',
                   componentesNecessarios: ['FISFM001'],
                 ),
-                const _AccessFlowItem(
-                  icon: Icons.point_of_sale,
-                  title: 'Histórico de vendas',
-                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
-                  color: Colors.green,
-                  route: '/vendas',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
+              ];
+
+              final relatoriosCaixa = <_AccessFlowItem>[
                 const _AccessFlowItem(
                   icon: Icons.history,
                   title: 'Histórico de Caixas',
@@ -326,13 +334,40 @@ class _HomePageState extends State<HomePage> {
                               'Organize os cadastros principais do sistema.',
                           items: _permitidos(cadastros),
                         ),
-                        if (_permitidos(relatorios).isNotEmpty) ...[
+                        if (_permitidos(relatoriosVendas).isNotEmpty) ...[
                           const SizedBox(height: 20),
                           _AccessSection(
-                            title: 'Relatórios',
+                            title: 'Relatórios de Vendas',
                             subtitle:
-                                'Indicadores de vendas, produtos e clientes.',
-                            items: _permitidos(relatorios),
+                                'Faturamento, ticket médio, curva ABC e histórico.',
+                            items: _permitidos(relatoriosVendas),
+                          ),
+                        ],
+                        if (_permitidos(
+                          relatoriosMovimentacoes,
+                        ).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Movimentações',
+                            subtitle:
+                                'Auditoria de romaneios — todas as operações de produto.',
+                            items: _permitidos(relatoriosMovimentacoes),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosFiscal).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios Fiscais',
+                            subtitle: 'Notas emitidas, pendentes e com falha.',
+                            items: _permitidos(relatoriosFiscal),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosCaixa).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios de Caixa',
+                            subtitle: 'Acompanhamento de caixas por período.',
+                            items: _permitidos(relatoriosCaixa),
                           ),
                         ],
                         if (_permitidos(administracao).isNotEmpty) ...[

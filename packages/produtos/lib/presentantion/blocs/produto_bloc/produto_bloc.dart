@@ -15,7 +15,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
   final CriarProduto _criarProduto;
   final AtualizarProduto _atualizarProduto;
   final CriarCodigoDeBarras _criarCodigoDeBarras;
-  final SalvarCodigoDeBarras _salvarCodigoDeBarras;
+  final CriarProdutosEmLote _criarProdutosEmLote;
 
   ProdutoBloc(
     this._recuperarCores,
@@ -23,7 +23,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
     this._criarProduto,
     this._atualizarProduto,
     this._criarCodigoDeBarras,
-    this._salvarCodigoDeBarras,
+    this._criarProdutosEmLote,
   ) : super(const ProdutoState(produtoStep: ProdutoStep.inicial)) {
     on<ProdutoIniciou>(_onProdutoIniciou);
     on<ProdutoEditou>(_onProdutoEditou);
@@ -216,29 +216,30 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         state.copyWith(produtoStep: ProdutoStep.carregando, erroMensagem: null),
       );
 
-      Produto? ultimoCriado;
-
+      // Geração/leitura do código de barras é só local (sem I/O) -- monta a lista inteira antes
+      // e manda em UMA requisição (PUT /produtos em lote), em vez de 1 GET+POST+POST por
+      // combinação sequencial (era o gargalo de lentidão reportado no cadastro de produtos).
+      final itens = <NovoProdutoCombinacao>[];
       for (final combinacao in event.combinacoes) {
         final codigoInformado = combinacao.codigoDeBarras?.trim();
         final codigoDeBarras = event.criarCodigoDeBarrasAutomaticamente
             ? await _criarCodigoDeBarras.call()
             : codigoInformado;
 
-        ultimoCriado = await _criarProduto.call(
-          referenciaId: event.referenciaId,
-          corId: combinacao.corId,
-          tamanhoId: combinacao.tamanhoId,
+        itens.add(
+          NovoProdutoCombinacao(
+            referenciaId: event.referenciaId,
+            corId: combinacao.corId,
+            tamanhoId: combinacao.tamanhoId,
+            codigoDeBarras: (codigoDeBarras?.isNotEmpty ?? false)
+                ? codigoDeBarras
+                : null,
+          ),
         );
-
-        if (codigoDeBarras != null &&
-            codigoDeBarras.isNotEmpty &&
-            ultimoCriado.id != null) {
-          await _salvarCodigoDeBarras.call(
-            produtoId: ultimoCriado.id!,
-            codigoDeBarras: codigoDeBarras,
-          );
-        }
       }
+
+      final criados = await _criarProdutosEmLote.call(itens);
+      final ultimoCriado = criados.isEmpty ? null : criados.last;
 
       if (ultimoCriado == null) {
         emit(

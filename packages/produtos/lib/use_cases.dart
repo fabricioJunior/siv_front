@@ -34,6 +34,7 @@ export 'domain/use_cases/recuperar_referencia.dart';
 export 'domain/use_cases/recuperar_referencias.dart';
 
 export 'domain/use_cases/criar_produto.dart';
+export 'domain/use_cases/criar_produtos_em_lote.dart';
 export 'domain/use_cases/criar_codigo_de_barras.dart';
 export 'domain/use_cases/atualizar_produto.dart';
 export 'domain/use_cases/excluir_produto.dart';

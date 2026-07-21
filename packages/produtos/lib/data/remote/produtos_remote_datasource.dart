@@ -31,6 +31,31 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<List<Produto>> createProdutos(List<NovoProdutoCombinacao> itens) async {
+    final response = await put(
+      body: itens
+          .map(
+            (item) => {
+              'referenciaId': item.referenciaId,
+              if (item.idExterno != null && item.idExterno!.isNotEmpty)
+                'idExterno': item.idExterno,
+              'corId': item.corId,
+              'tamanhoId': item.tamanhoId,
+              if (item.codigoDeBarras != null && item.codigoDeBarras!.isNotEmpty)
+                'codigoBarras': [
+                  {'tipo': 'EAN13', 'codigo': item.codigoDeBarras},
+                ],
+            },
+          )
+          .toList(),
+    );
+
+    return (response.body as List)
+        .map((item) => ProdutoDto.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
   Future<Produto> atualizarProduto({
     required int id,
     required int referenciaId,

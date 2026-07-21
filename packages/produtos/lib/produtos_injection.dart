@@ -299,6 +299,10 @@ void _usesCases() {
     () => CriarProduto(produtosRepository: sl()),
   );
 
+  sl.registerFactory<CriarProdutosEmLote>(
+    () => CriarProdutosEmLote(produtosRepository: sl()),
+  );
+
   sl.registerFactory<CriarCodigoDeBarras>(() => CriarCodigoDeBarras());
 
   sl.registerFactory<RecuperarCodigoDeBarrasDoProduto>(

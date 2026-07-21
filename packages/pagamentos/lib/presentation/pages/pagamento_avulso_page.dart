@@ -6,7 +6,7 @@ import 'package:pagamentos/presentation/bloc/pagamento_avulso_bloc/pagamento_avu
 import 'package:pagamentos/presentation/pages/pagamento_avulso_detalhes_page.dart';
 
 class PagamentoAvulsoPage extends StatelessWidget {
-  static const _providers = ['infinitypay', 'openpix'];
+  static const _providers = ['infinitypay', 'openpix', 'mercadopago'];
 
   final _formKey = GlobalKey<FormState>();
   final bool retornarAoSalvar;
@@ -320,12 +320,20 @@ class PagamentoAvulsoPage extends StatelessWidget {
       return Icons.all_inclusive;
     }
 
+    if (provider == 'mercadopago') {
+      return Icons.account_balance_wallet;
+    }
+
     return Icons.pix;
   }
 
   String _providerLabel(String provider) {
     if (provider == 'infinitypay') {
       return 'InfinityPay';
+    }
+
+    if (provider == 'mercadopago') {
+      return 'Mercado Pago';
     }
 
     return 'OpenPix';

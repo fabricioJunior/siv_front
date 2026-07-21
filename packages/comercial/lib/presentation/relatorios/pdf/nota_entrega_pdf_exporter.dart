@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/pedido_item.dart';
 import 'package:comercial/domain/models/romaneio.dart';
 import 'package:comercial/domain/models/romaneio_item.dart';
 import 'package:comercial/presentation/relatorios/danfe/danfe_pdf_renderer.dart';
@@ -50,6 +51,53 @@ class NotaEntregaPdfExporter {
           )
           .toList(growable: false),
       dadosFiscais: _dadosFiscais(documentoFiscal, documentoFiscalFalhou),
+    );
+
+    final bytes =
+        await NotaEntregaPdfRenderer.render(dados, pageFormat: pageFormat);
+    return (bytes: bytes, erroServidor: null);
+  }
+
+  /// Mesmo documento, mas gerado a partir de um Pedido ainda em andamento --
+  /// não depende de romaneio/faturamento (que só existe depois de faturado),
+  /// já que a entrega física acontece ANTES disso: o entregador precisa da
+  /// nota de entrega pra sair com o pacote, não depois de confirmar a
+  /// entrega. Sem documento fiscal nesse ponto (pedido não faturado ainda),
+  /// por isso não recebe `documentoFiscal` -- os campos fiscais só existem
+  /// no PDF do romaneio já encerrado.
+  static Future<({Uint8List bytes, Object? erroServidor})> gerarBytesParaPedido({
+    required int numeroPedido,
+    required String? pessoaNome,
+    required DateTime? dataPedido,
+    required String empresaNome,
+    String? empresaCnpj,
+    required String enderecoFormatado,
+    required List<PedidoItem> itens,
+    PdfPageFormat pageFormat = DanfePdfRenderer.roll80Seguro,
+  }) async {
+    final dados = NotaEntregaLayoutData(
+      enderecoFormatado: enderecoFormatado,
+      nomeCliente: (pessoaNome?.trim().isNotEmpty ?? false)
+          ? pessoaNome!.trim().toUpperCase()
+          : 'CLIENTE NÃO IDENTIFICADO',
+      dataCompra: dataPedido,
+      numeroRomaneio: numeroPedido,
+      rotuloNumero: 'Pedido',
+      empresaNome: empresaNome,
+      empresaCnpj: empresaCnpj,
+      itens: itens
+          .where((item) => (item.solicitado ?? 0) != 0)
+          .map(
+            (item) => NotaEntregaItem(
+              descricao: (item.referenciaNome?.trim().isNotEmpty ?? false)
+                  ? item.referenciaNome!.trim()
+                  : 'Produto #${item.produtoId ?? '-'}',
+              valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
+                  (item.solicitado ?? 0),
+            ),
+          )
+          .toList(growable: false),
+      dadosFiscais: null,
     );
 
     final bytes =

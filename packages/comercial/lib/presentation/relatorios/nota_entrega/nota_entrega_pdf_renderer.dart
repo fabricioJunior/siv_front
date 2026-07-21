@@ -34,6 +34,11 @@ class NotaEntregaLayoutData {
   final String nomeCliente;
   final DateTime? dataCompra;
   final int? numeroRomaneio;
+  // Rótulo da linha de identificação do documento (ex: "Romaneio", "Pedido") --
+  // a nota de entrega pode ser gerada tanto a partir de um romaneio (venda já
+  // faturada) quanto de um pedido ainda em andamento (entrega precisa sair
+  // antes do faturamento), então o rótulo não pode ficar fixo em "Romaneio".
+  final String rotuloNumero;
   final String empresaNome;
   final String? empresaCnpj;
   final List<NotaEntregaItem> itens;
@@ -48,6 +53,7 @@ class NotaEntregaLayoutData {
     required this.nomeCliente,
     this.dataCompra,
     this.numeroRomaneio,
+    this.rotuloNumero = 'Romaneio',
     required this.empresaNome,
     this.empresaCnpj,
     this.itens = const [],
@@ -103,7 +109,7 @@ class NotaEntregaPdfRenderer {
             pw.Divider(thickness: 0.7),
             pw.SizedBox(height: 4),
             pw.Text(
-              'Romaneio: #${dados.numeroRomaneio ?? '-'}',
+              '${dados.rotuloNumero}: #${dados.numeroRomaneio ?? '-'}',
               style: const pw.TextStyle(fontSize: 9),
             ),
             pw.Text(

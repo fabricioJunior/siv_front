@@ -15,6 +15,9 @@ class FormasDePagamentoBloc
   FormasDePagamentoBloc(this._recuperarFormasDePagamento)
       : super(const FormasDePagamentoInitial()) {
     on<FormasDePagamentoIniciou>(_onIniciou);
+    on<FormasDePagamentoFiltroTipoOperacaoAlterado>(
+      _onFiltroTipoOperacaoAlterado,
+    );
   }
 
   FutureOr<void> _onIniciou(
@@ -25,6 +28,7 @@ class FormasDePagamentoBloc
       emit(
         FormasDePagamentoCarregarEmProgresso(
           formasDePagamento: state.formasDePagamento,
+          tipoOperacaoFiltro: state.tipoOperacaoFiltro,
         ),
       );
 
@@ -35,15 +39,29 @@ class FormasDePagamentoBloc
       emit(
         FormasDePagamentoCarregarSucesso(
           formasDePagamento: formas,
+          tipoOperacaoFiltro: state.tipoOperacaoFiltro,
         ),
       );
     } catch (e, s) {
       emit(
         FormasDePagamentoCarregarFalha(
           formasDePagamento: state.formasDePagamento,
+          tipoOperacaoFiltro: state.tipoOperacaoFiltro,
         ),
       );
       addError(e, s);
     }
+  }
+
+  FutureOr<void> _onFiltroTipoOperacaoAlterado(
+    FormasDePagamentoFiltroTipoOperacaoAlterado event,
+    Emitter<FormasDePagamentoState> emit,
+  ) {
+    emit(
+      FormasDePagamentoCarregarSucesso(
+        formasDePagamento: state.formasDePagamento,
+        tipoOperacaoFiltro: event.tipoOperacao,
+      ),
+    );
   }
 }

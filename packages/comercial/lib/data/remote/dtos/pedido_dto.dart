@@ -53,6 +53,14 @@ class PedidoDto implements Pedido {
   final String? tabelaPrecoNome;
   @override
   final double? valorTotal;
+  @override
+  final String? origem;
+  @override
+  final int? romaneioId;
+  @override
+  final String? empresaNome;
+  @override
+  final String? empresaCnpj;
 
   const PedidoDto({
     this.id,
@@ -81,6 +89,10 @@ class PedidoDto implements Pedido {
     this.funcionarioNome,
     this.tabelaPrecoNome,
     this.valorTotal,
+    this.origem,
+    this.romaneioId,
+    this.empresaNome,
+    this.empresaCnpj,
   });
 
   factory PedidoDto.fromJson(Map<String, dynamic> json) {
@@ -111,6 +123,10 @@ class PedidoDto implements Pedido {
       funcionarioNome: json['funcionarioNome']?.toString(),
       tabelaPrecoNome: json['tabelaPrecoNome']?.toString(),
       valorTotal: _toDouble(json['valorTotal']),
+      origem: json['origem']?.toString(),
+      romaneioId: _toInt(json['romaneioId']),
+      empresaNome: json['empresaNome']?.toString(),
+      empresaCnpj: json['empresaCnpj']?.toString(),
     );
   }
 
@@ -142,6 +158,10 @@ class PedidoDto implements Pedido {
       funcionarioNome: pedido.funcionarioNome,
       tabelaPrecoNome: pedido.tabelaPrecoNome,
       valorTotal: pedido.valorTotal,
+      origem: pedido.origem,
+      romaneioId: pedido.romaneioId,
+      empresaNome: pedido.empresaNome,
+      empresaCnpj: pedido.empresaCnpj,
     );
   }
 
@@ -208,6 +228,10 @@ class PedidoDto implements Pedido {
         funcionarioNome,
         tabelaPrecoNome,
         valorTotal,
+        origem,
+        romaneioId,
+        empresaNome,
+        empresaCnpj,
       ];
 
   @override

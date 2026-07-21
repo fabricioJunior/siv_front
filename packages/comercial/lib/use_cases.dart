@@ -21,6 +21,7 @@ export 'domain/use_cases/recuperar_romaneio.dart';
 export 'domain/use_cases/recuperar_romaneios.dart';
 export 'domain/use_cases/remover_item_romaneio.dart';
 export 'domain/use_cases/adicionar_pagamento_pedido.dart';
+export 'domain/use_cases/remover_pagamento_pedido.dart';
 export 'domain/use_cases/listar_pagamentos_pedido.dart';
 export 'domain/use_cases/confirmar_pagamento_pedido.dart';
 export 'domain/use_cases/chamar_entregador_pedido.dart';

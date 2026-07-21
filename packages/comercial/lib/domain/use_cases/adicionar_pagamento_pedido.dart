@@ -9,17 +9,15 @@ class AdicionarPagamentoPedido {
 
   Future<PedidoPagamento> call(
     int id, {
-    required String tipo,
-    int? pagamentoAvulsoId,
-    String? formaPagamento,
+    required int formaDePagamentoId,
     required double valorEsperado,
+    double? taxaAplicada,
   }) {
     return _repository.adicionarPagamento(
       id,
-      tipo: tipo,
-      pagamentoAvulsoId: pagamentoAvulsoId,
-      formaPagamento: formaPagamento,
+      formaDePagamentoId: formaDePagamentoId,
       valorEsperado: valorEsperado,
+      taxaAplicada: taxaAplicada,
     );
   }
 }

@@ -20,6 +20,7 @@ class PedidoCampoAlterado extends PedidoEvent {
   final String? tipo;
   final bool? fiscal;
   final String? observacao;
+  final String? valorTaxaEntrega;
 
   PedidoCampoAlterado({
     this.pessoaId,
@@ -33,6 +34,7 @@ class PedidoCampoAlterado extends PedidoEvent {
     this.tipo,
     this.fiscal,
     this.observacao,
+    this.valorTaxaEntrega,
   });
 }
 
@@ -44,8 +46,12 @@ class PedidoModalidadeEntregaAlterada extends PedidoEvent {
 
 class PedidoEnderecoEntregaAlterado extends PedidoEvent {
   final int? enderecoEntregaId;
+  final String? enderecoEntregaResumo;
 
-  PedidoEnderecoEntregaAlterado(this.enderecoEntregaId);
+  PedidoEnderecoEntregaAlterado(
+    this.enderecoEntregaId, {
+    this.enderecoEntregaResumo,
+  });
 }
 
 class PedidoSalvou extends PedidoEvent {}
@@ -61,16 +67,14 @@ class PedidoCancelou extends PedidoEvent {
 }
 
 class PedidoPagamentoAdicionou extends PedidoEvent {
-  final String tipo;
-  final int? pagamentoAvulsoId;
-  final String? formaPagamento;
+  final int formaDePagamentoId;
   final double valorEsperado;
+  final double? taxaAplicada;
 
   PedidoPagamentoAdicionou({
-    required this.tipo,
-    this.pagamentoAvulsoId,
-    this.formaPagamento,
+    required this.formaDePagamentoId,
     required this.valorEsperado,
+    this.taxaAplicada,
   });
 }
 
@@ -82,6 +86,12 @@ class PedidoPagamentoConfirmou extends PedidoEvent {
     required this.pagamentoId,
     required this.valorConfirmado,
   });
+}
+
+class PedidoPagamentoRemoveu extends PedidoEvent {
+  final int pagamentoId;
+
+  PedidoPagamentoRemoveu({required this.pagamentoId});
 }
 
 class PedidoEntregadorChamou extends PedidoEvent {}

@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,8 +20,13 @@ class FormaDePagamentoPage extends StatefulWidget {
   ];
 
   final int? idFormaDePagamento;
+  final Future<List<String>> Function()? obterProviders;
 
-  const FormaDePagamentoPage({super.key, this.idFormaDePagamento});
+  const FormaDePagamentoPage({
+    super.key,
+    this.idFormaDePagamento,
+    this.obterProviders,
+  });
 
   @override
   State<FormaDePagamentoPage> createState() => _FormaDePagamentoPageState();
@@ -31,6 +37,15 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
   final _descricaoController = TextEditingController();
   final _inicioController = TextEditingController();
   final _parcelasController = TextEditingController();
+  List<String> _providers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.obterProviders?.call().then((providers) {
+      if (mounted) setState(() => _providers = providers);
+    });
+  }
 
   @override
   void dispose() {
@@ -200,6 +215,65 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
                             parcelas: int.tryParse(value) ?? 0,
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<TipoOperacaoFormaPagamento>(
+                          initialValue: state.tipoOperacao,
+                          decoration: const InputDecoration(
+                            labelText: 'Tipo de operacao',
+                          ),
+                          items: TipoOperacaoFormaPagamento.values
+                              .map(
+                                (tipoOperacao) => DropdownMenuItem(
+                                  value: tipoOperacao,
+                                  child: Text(
+                                    tipoOperacao ==
+                                            TipoOperacaoFormaPagamento.online
+                                        ? 'Online'
+                                        : 'Manual',
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            _onCampoAlterado(
+                              context,
+                              tipoOperacao: value,
+                              limparProvider:
+                                  value == TipoOperacaoFormaPagamento.manual,
+                            );
+                          },
+                        ),
+                        if (state.tipoOperacao ==
+                            TipoOperacaoFormaPagamento.online) ...[
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _providers.contains(state.provider)
+                                ? state.provider
+                                : null,
+                            decoration: const InputDecoration(
+                              labelText: 'Integracao',
+                            ),
+                            items: _providers
+                                .map(
+                                  (provider) => DropdownMenuItem<String>(
+                                    value: provider,
+                                    child: Text(provider),
+                                  ),
+                                )
+                                .toList(),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Selecione a integracao';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => _onCampoAlterado(
+                              context,
+                              provider: value,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         SwitchListTile.adaptive(
                           contentPadding: EdgeInsets.zero,
@@ -259,6 +333,9 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
     int? parcelas,
     String? tipo,
     bool? inativa,
+    TipoOperacaoFormaPagamento? tipoOperacao,
+    String? provider,
+    bool limparProvider = false,
   }) {
     context.read<FormaDePagamentoBloc>().add(
           FormaDePagamentoCampoAlterado(
@@ -267,6 +344,9 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
             parcelas: parcelas,
             tipo: tipo,
             inativa: inativa,
+            tipoOperacao: tipoOperacao,
+            provider: provider,
+            limparProvider: limparProvider,
           ),
         );
   }

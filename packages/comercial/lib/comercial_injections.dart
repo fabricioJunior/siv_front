@@ -122,6 +122,9 @@ void _useCases() {
   sl.registerFactory<AdicionarPagamentoPedido>(
     () => AdicionarPagamentoPedido(repository: sl()),
   );
+  sl.registerFactory<RemoverPagamentoPedido>(
+    () => RemoverPagamentoPedido(repository: sl()),
+  );
   sl.registerFactory<ListarPagamentosPedido>(
     () => ListarPagamentosPedido(repository: sl()),
   );
@@ -281,6 +284,9 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

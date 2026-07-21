@@ -285,7 +285,8 @@ class _HistoricoDeCaixasPageState extends State<HistoricoDeCaixasPage> {
                 ),
               ),
               Expanded(
-                child: BlocBuilder<HistoricoDeCaixasBloc, HistoricoDeCaixasState>(
+                child:
+                    BlocBuilder<HistoricoDeCaixasBloc, HistoricoDeCaixasState>(
                   builder: (context, state) {
                     if (state.step == HistoricoDeCaixasStep.carregando &&
                         state.itens.isEmpty) {
@@ -367,10 +368,10 @@ class _CaixaDoHistoricoCard extends StatelessWidget {
   const _CaixaDoHistoricoCard({required this.caixa, required this.onTap});
 
   (String, Color) get _situacaoInfo => switch (caixa.situacao) {
-    SituacaoCaixa.aberto => ('Aberto', Colors.green),
-    SituacaoCaixa.contagem => ('Em contagem', Colors.amber.shade800),
-    SituacaoCaixa.fechado => ('Fechado', Colors.blueGrey),
-  };
+        SituacaoCaixa.aberto => ('Aberto', Colors.green),
+        SituacaoCaixa.contagem => ('Em contagem', Colors.amber.shade800),
+        SituacaoCaixa.fechado => ('Fechado', Colors.blueGrey),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -395,8 +396,8 @@ class _CaixaDoHistoricoCard extends StatelessWidget {
                     child: Text(
                       'Caixa #${caixa.id}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                   Container(
@@ -411,9 +412,9 @@ class _CaixaDoHistoricoCard extends StatelessWidget {
                     child: Text(
                       situacaoLabel,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: situacaoCor,
-                        fontWeight: FontWeight.w700,
-                      ),
+                            color: situacaoCor,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                 ],

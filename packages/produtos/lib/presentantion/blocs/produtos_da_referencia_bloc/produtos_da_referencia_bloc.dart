@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:estoque/models.dart';
+import 'package:estoque/use_cases.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/use_cases.dart';
 
@@ -11,8 +13,9 @@ part 'produtos_da_referencia_state.dart';
 class ProdutosDaReferenciaBloc
     extends Bloc<ProdutosDaReferenciaEvent, ProdutosDaReferenciaState> {
   final RecuperarProdutos _recuperarProdutos;
+  final RecuperarSaldoDoEstoque _recuperarSaldoDoEstoque;
 
-  ProdutosDaReferenciaBloc(this._recuperarProdutos)
+  ProdutosDaReferenciaBloc(this._recuperarProdutos, this._recuperarSaldoDoEstoque)
     : super(const ProdutosDaReferenciaInitial()) {
     on<ProdutosDaReferenciaIniciou>(_onIniciou);
   }
@@ -61,12 +64,32 @@ class ProdutosDaReferenciaBloc
         mapaCorProdutos[key] = produto;
       }
 
+      Map<String, double> mapaCorTamanhoParaSaldo = {};
+      bool saldoIndisponivel = false;
+      try {
+        final saldo = await _recuperarSaldoDoEstoque.sincronizarPagina(
+          filtro: FiltroProdutoDoEstoque(
+            referenciaIds: [event.referenciaId],
+            limit: 10000,
+          ),
+        );
+        for (final produtoDoEstoque in saldo.items) {
+          final key = '${produtoDoEstoque.corId}_${produtoDoEstoque.tamanhoId}';
+          mapaCorTamanhoParaSaldo[key] = produtoDoEstoque.saldo;
+        }
+      } catch (e, s) {
+        saldoIndisponivel = true;
+        addError(e, s);
+      }
+
       emit(
         ProdutosDaReferenciaCarregarSucesso(
           produtos: produtos,
           tamanhos: tamanhos,
           cores: cores,
           mapaCorTamanhoParaProduto: mapaCorProdutos,
+          mapaCorTamanhoParaSaldo: mapaCorTamanhoParaSaldo,
+          saldoIndisponivel: saldoIndisponivel,
         ),
       );
     } catch (e, s) {

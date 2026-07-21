@@ -12,6 +12,7 @@ import 'package:estoque/presentation.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
+import 'package:financeiro/models.dart' show TipoOperacaoFormaPagamento;
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,8 @@ import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
 import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:pagamentos/pages.dart';
+import 'package:pagamentos/use_cases.dart'
+    show RecuperarProvidersPagamentosAvulsos;
 import 'package:precos/presentation.dart';
 import 'package:precos/use_cases.dart' show RecuperarPrecosDasReferencias;
 import 'package:produtos/presentation.dart';
@@ -139,6 +142,8 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/forma_de_pagamento': (context) {
     return FormaDePagamentoPage(
       idFormaDePagamento: args(context)['idFormaDePagamento'],
+      obterProviders: () =>
+          sl<RecuperarProvidersPagamentosAvulsos>().call(),
     );
   },
   '/financeiro': (context) {
@@ -323,6 +328,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                     onChanged: onChanged,
                     onlyView: onlyView ?? false,
                     titulo: 'Forma de pagamento',
+                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
                   ),
         ),
       ),
@@ -635,6 +641,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                     onChanged: onChanged,
                     onlyView: onlyView ?? false,
                     titulo: 'Forma de pagamento',
+                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
                   ),
         ),
       ),

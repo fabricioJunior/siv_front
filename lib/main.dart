@@ -58,6 +58,8 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return BlocListener<AppBloc, AppState>(
           bloc: sl<AppBloc>(),
+          listenWhen: (previous, current) =>
+              previous.statusAutenticacao != current.statusAutenticacao,
           listener: (context, state) {
             if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
               if (routeToTest != null) {

@@ -72,6 +72,9 @@ class FormaDePagamentoBloc
         parcelas: event.parcelas,
         tipo: event.tipo,
         inativa: event.inativa,
+        tipoOperacao: event.tipoOperacao,
+        provider: event.provider,
+        limparProvider: event.limparProvider,
         step: FormaDePagamentoStep.editando,
         erro: null,
       ),
@@ -108,6 +111,18 @@ class FormaDePagamentoBloc
         return;
       }
 
+      final provider = state.provider?.trim();
+      if (state.tipoOperacao == TipoOperacaoFormaPagamento.online &&
+          (provider == null || provider.isEmpty)) {
+        emit(
+          state.copyWith(
+            step: FormaDePagamentoStep.validacaoInvalida,
+            erro: 'Selecione a integracao para forma de pagamento online.',
+          ),
+        );
+        return;
+      }
+
       emit(state.copyWith(step: FormaDePagamentoStep.salvando, erro: null));
 
       final forma = FormaDePagamento.create(
@@ -119,6 +134,10 @@ class FormaDePagamentoBloc
         parcelas: parcelas,
         tipo: tipo,
         inativa: state.inativa ?? false,
+        tipoOperacao: state.tipoOperacao,
+        provider: state.tipoOperacao == TipoOperacaoFormaPagamento.online
+            ? provider
+            : null,
       );
 
       final salvo = state.id == null

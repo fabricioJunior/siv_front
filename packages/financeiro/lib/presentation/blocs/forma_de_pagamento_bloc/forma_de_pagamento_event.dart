@@ -14,6 +14,9 @@ class FormaDePagamentoCampoAlterado extends FormaDePagamentoEvent {
   final int? parcelas;
   final String? tipo;
   final bool? inativa;
+  final TipoOperacaoFormaPagamento? tipoOperacao;
+  final String? provider;
+  final bool limparProvider;
 
   FormaDePagamentoCampoAlterado({
     this.descricao,
@@ -21,6 +24,9 @@ class FormaDePagamentoCampoAlterado extends FormaDePagamentoEvent {
     this.parcelas,
     this.tipo,
     this.inativa,
+    this.tipoOperacao,
+    this.provider,
+    this.limparProvider = false,
   });
 }
 

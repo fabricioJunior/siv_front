@@ -1,9 +1,12 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
+import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
+import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,8 +43,10 @@ class _PedidoPageState extends State<PedidoPage> {
   final _funcionarioIdController = TextEditingController();
   final _tabelaPrecoIdController = TextEditingController();
   final _observacaoController = TextEditingController();
+  final _valorTaxaEntregaController = TextEditingController();
 
   String? _enderecoEntregaResumo;
+  bool _criandoPagamento = false;
 
   @override
   void initState() {
@@ -54,6 +59,7 @@ class _PedidoPageState extends State<PedidoPage> {
     _funcionarioIdController.dispose();
     _tabelaPrecoIdController.dispose();
     _observacaoController.dispose();
+    _valorTaxaEntregaController.dispose();
     super.dispose();
   }
 
@@ -114,62 +120,70 @@ class _PedidoPageState extends State<PedidoPage> {
     final id = int.tryParse('${selecionado['id']}');
     if (id == null) return;
 
+    final resumo =
+        '${selecionado['logradouro'] ?? ''}, ${selecionado['numero'] ?? ''}'
+        ' - ${selecionado['bairro'] ?? ''}';
+
     setState(() {
-      _enderecoEntregaResumo =
-          '${selecionado['logradouro'] ?? ''}, ${selecionado['numero'] ?? ''}'
-          ' - ${selecionado['bairro'] ?? ''}';
+      _enderecoEntregaResumo = resumo;
     });
 
-    context.read<PedidoBloc>().add(PedidoEnderecoEntregaAlterado(id));
+    context.read<PedidoBloc>().add(
+          PedidoEnderecoEntregaAlterado(id, enderecoEntregaResumo: resumo),
+        );
+  }
+
+  double _valorRestantePagamento(PedidoState state) {
+    final somaLancada = state.pagamentos.fold<double>(
+      0,
+      (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
+    );
+    final restante = state.valorTotalItens - somaLancada;
+    return restante > 0 ? restante : 0;
   }
 
   Future<void> _abrirDialogAdicionarPagamento(BuildContext context) async {
     final bloc = context.read<PedidoBloc>();
     final state = bloc.state;
-    final tipo = await showDialog<String>(
+
+    final tipoEscolhido = await showDialog<TipoOperacaoFormaPagamento>(
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: const Text('Forma de pagamento'),
+          title: const Text('Como será o pagamento?'),
           children: [
             SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'manual'),
-              child: const Text('Manual (dinheiro, cartão, pix manual)'),
+              onPressed: () => Navigator.pop(
+                context,
+                TipoOperacaoFormaPagamento.manual,
+              ),
+              child: const ListTile(
+                leading: Icon(Icons.local_shipping_outlined),
+                title: Text('Pagamento no Ato da Entrega'),
+                subtitle: Text(
+                  'Dinheiro, cartão ou transferência recebidos presencialmente.',
+                ),
+              ),
             ),
             SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'controlado'),
-              child: const Text('Controlado (link de pagamento / gateway)'),
+              onPressed: () => Navigator.pop(
+                context,
+                TipoOperacaoFormaPagamento.online,
+              ),
+              child: const ListTile(
+                leading: Icon(Icons.qr_code_2_outlined),
+                title: Text('Pagamento Online'),
+                subtitle: Text('Cobrança via integração de pagamento.'),
+              ),
             ),
           ],
         );
       },
     );
 
-    if (tipo == null || !mounted) return;
+    if (tipoEscolhido == null || !mounted) return;
 
-    if (tipo == 'manual') {
-      await _abrirPagamentoManualCompartilhado(context, bloc, state);
-      return;
-    }
-
-    await _abrirFluxoPagamentoControlado(context, bloc);
-  }
-
-  // Reaproveita o mesmo diálogo de pagamento usado na venda/romaneio
-  // (PagamentosRealizadosWidget), em vez de um formulário simples só com
-  // dropdown + valor. O resultado do diálogo (`resumoFormasDePagamento`) traz
-  // apenas {nome, valor} por forma selecionada -- não expõe o `tipo` bruto da
-  // forma de pagamento (ex.: 'dinheiro', 'cartao_credito'). Por isso o nome é
-  // mapeado por heurística (palavras-chave) para o enum manual do pedido em
-  // `_mapearFormaPagamentoManual`. `formasDePagamentoRealizadas` (que tem
-  // `formaDePagamentoId`) foi descartado aqui porque exigiria uma consulta
-  // extra id->tipo, fora do escopo desta tela.
-  Future<void> _abrirPagamentoManualCompartilhado(
-    BuildContext context,
-    PedidoBloc bloc,
-    PedidoState state,
-  ) async {
-    final valorEsperado = state.valorTotalItens;
+    final valorRestante = _valorRestantePagamento(state);
     final produtosCompartilhados = state.itens
         .where((item) => item.produtoId != null)
         .map(
@@ -177,14 +191,14 @@ class _PedidoPageState extends State<PedidoPage> {
             produtoId: item.produtoId!,
             quantidade: (item.solicitado ?? 1).round(),
             valorUnitario: item.valorUnitario ?? 0,
-            nome: '',
-            corNome: '',
-            tamanhoNome: '',
+            nome: item.referenciaNome ?? '',
+            corNome: item.corNome ?? '',
+            tamanhoNome: item.tamanhoNome ?? '',
           ),
         )
         .toList(growable: false);
 
-    final pagamentoResultado = await showDialog<Map<String, dynamic>>(
+    final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -197,85 +211,132 @@ class _PedidoPageState extends State<PedidoPage> {
               0,
               (soma, produto) => soma + produto.quantidade,
             ),
-            valorTotalProdutos: valorEsperado,
+            valorTotalProdutos: valorRestante,
           ),
           pessoaId: int.tryParse(state.pessoaId ?? ''),
-          formasDePagamentoSeletor: (
-                  {itemsSelecionadosInicial, onChanged, onlyView}) =>
-              FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
-            titulo: 'Forma de pagamento',
-          ),
+          permitirTaxaEntrega: false,
+          formasDePagamentoSeletor:
+              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  FormasDePagamentoSeletor(
+                    modo: FormasDePagamentoSeletorModo.unica,
+                    itemsSelecionadosInicial: itemsSelecionadosInicial,
+                    onChanged: onChanged,
+                    onlyView: onlyView ?? false,
+                    titulo: 'Forma de pagamento',
+                    tipoOperacaoFiltro: tipoEscolhido,
+                  ),
         );
       },
     );
 
-    if (pagamentoResultado == null || !mounted) return;
+    if (resultado == null || !mounted) return;
 
-    final resumoFormasRaw =
-        pagamentoResultado['resumoFormasDePagamento'] as List<dynamic>? ??
-            const [];
+    final linhas =
+        (resultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
+                const [])
+            .whereType<Map<String, dynamic>>()
+            .toList(growable: false);
 
-    for (final item in resumoFormasRaw) {
-      if (item is! Map) continue;
-      final nome = item['nome']?.toString() ?? '';
-      final valor = _toDouble(item['valor']) ?? 0;
-      if (valor <= 0) continue;
+    if (linhas.isEmpty) return;
 
+    if (tipoEscolhido == TipoOperacaoFormaPagamento.online) {
+      final totalOnline = linhas.fold<double>(
+        0,
+        (soma, linha) => soma + (_toDouble(linha['valor']) ?? 0),
+      );
+
+      if (!mounted) return;
+      final confirmouOnline = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Pagamento online'),
+            content: Text(
+              'Você realmente deseja criar um pagamento online de '
+              'R\$ ${totalOnline.toStringAsFixed(2)}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirmouOnline != true || !mounted) return;
+    }
+
+    final linhasValidas = linhas
+        .map((linha) {
+          final formaDePagamentoId = int.tryParse(
+            '${linha['formaDePagamentoId']}',
+          );
+          final valor = _toDouble(linha['valor']);
+          return (formaDePagamentoId: formaDePagamentoId, valor: valor);
+        })
+        .where((linha) => linha.formaDePagamentoId != null && (linha.valor ?? 0) > 0)
+        .toList(growable: false);
+
+    if (linhasValidas.isEmpty) return;
+
+    setState(() => _criandoPagamento = true);
+
+    for (final linha in linhasValidas) {
       bloc.add(
         PedidoPagamentoAdicionou(
-          tipo: 'manual',
-          formaPagamento: _mapearFormaPagamentoManual(nome),
-          valorEsperado: valor,
+          formaDePagamentoId: linha.formaDePagamentoId!,
+          valorEsperado: linha.valor!,
         ),
       );
     }
   }
 
-  String _mapearFormaPagamentoManual(String nomeForma) {
-    final nome = nomeForma.trim().toLowerCase();
-    if (nome.contains('pix')) return 'pix_manual';
-    if (nome.contains('débito') || nome.contains('debito')) {
-      return 'cartao_debito';
-    }
-    if (nome.contains('crédito') || nome.contains('credito')) {
-      return 'cartao_credito';
-    }
-    return 'dinheiro';
+  Future<void> _removerPagamento(
+    BuildContext context,
+    PedidoPagamento pagamento,
+  ) async {
+    final ehOnline = pagamento.tipo == 'controlado';
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Remover pagamento'),
+          content: Text(
+            ehOnline
+                ? 'Remover esse pagamento? A cobrança online será cancelada '
+                    'e o link deixará de funcionar.'
+                : 'Remover esse pagamento?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Remover'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || !mounted || pagamento.id == null) return;
+
+    context.read<PedidoBloc>().add(
+          PedidoPagamentoRemoveu(pagamentoId: pagamento.id!),
+        );
   }
 
   double? _toDouble(dynamic value) {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
-  }
-
-  Future<void> _abrirFluxoPagamentoControlado(
-    BuildContext context,
-    PedidoBloc bloc,
-  ) async {
-    final resultado = await Navigator.of(context).pushNamed(
-      '/pagamento_avulso',
-      arguments: {'retornarAoSalvar': true},
-    ) as Map<String, dynamic>?;
-
-    if (resultado == null || !mounted) return;
-
-    final pagamentoAvulsoId = int.tryParse('${resultado['id']}');
-    final amountCentavos = int.tryParse('${resultado['amount']}') ?? 0;
-
-    if (pagamentoAvulsoId == null) return;
-
-    bloc.add(
-      PedidoPagamentoAdicionou(
-        tipo: 'controlado',
-        pagamentoAvulsoId: pagamentoAvulsoId,
-        valorEsperado: amountCentavos / 100,
-      ),
-    );
   }
 
   Future<void> _confirmarPagamentoManual(
@@ -331,6 +392,42 @@ class _PedidoPageState extends State<PedidoPage> {
             valorConfirmado: valor,
           ),
         );
+  }
+
+  Future<void> _imprimirNotaEntregaDoPedido(
+    BuildContext context,
+    PedidoState state,
+  ) async {
+    final enderecoResumo = _enderecoEntregaResumo ?? state.enderecoEntregaResumo;
+    if (enderecoResumo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione o endereço de entrega antes de imprimir.'),
+        ),
+      );
+      return;
+    }
+
+    final numeroPedido = state.id ?? widget.idPedido;
+    if (numeroPedido == null) return;
+
+    await imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir nota de entrega',
+      nomeDocumento: 'Nota de Entrega - Pedido #$numeroPedido',
+      gerarBytes: () async {
+        final resultado = await NotaEntregaPdfExporter.gerarBytesParaPedido(
+          numeroPedido: numeroPedido,
+          pessoaNome: state.pedido?.pessoaNome,
+          dataPedido: state.pedido?.criadoEm,
+          empresaNome: state.pedido?.empresaNome ?? 'Empresa não identificada',
+          empresaCnpj: state.pedido?.empresaCnpj,
+          enderecoFormatado: enderecoResumo,
+          itens: state.itens,
+        );
+        return resultado.bytes;
+      },
+    );
   }
 
   Future<void> _abrirConverterEmEntrega(BuildContext context) async {
@@ -402,21 +499,6 @@ class _PedidoPageState extends State<PedidoPage> {
     final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
     if (normalized.isEmpty) return null;
     return double.tryParse(normalized);
-  }
-
-  String _labelFormaPagamento(String forma) {
-    switch (forma) {
-      case 'dinheiro':
-        return 'Dinheiro';
-      case 'cartao_credito':
-        return 'Cartão de crédito';
-      case 'cartao_debito':
-        return 'Cartão de débito';
-      case 'pix_manual':
-        return 'Pix manual';
-      default:
-        return forma;
-    }
   }
 
   String _labelTipo(String tipo) {
@@ -493,8 +575,16 @@ class _PedidoPageState extends State<PedidoPage> {
           }
 
           if (state.step == PedidoStep.pagamentoAdicionado) {
+            setState(() => _criandoPagamento = false);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Pagamento adicionado.')),
+            );
+            return;
+          }
+
+          if (state.step == PedidoStep.pagamentoRemovido) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Pagamento removido.')),
             );
             return;
           }
@@ -533,6 +623,9 @@ class _PedidoPageState extends State<PedidoPage> {
 
           if (state.step == PedidoStep.validacaoInvalida ||
               state.step == PedidoStep.falha) {
+            if (_criandoPagamento) {
+              setState(() => _criandoPagamento = false);
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.erro ?? 'Falha ao processar pedido.'),
@@ -1008,7 +1101,25 @@ class _PedidoPageState extends State<PedidoPage> {
                   state.enderecoEntregaId == null
                       ? 'Selecionar endereço de entrega'
                       : (_enderecoEntregaResumo ??
+                          state.enderecoEntregaResumo ??
                           'Endereço #${state.enderecoEntregaId}'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _valorTaxaEntregaController,
+                readOnly: carregando,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'Valor da taxa de entrega (R\$)',
+                ),
+                onChanged: (value) => _onCampoAlterado(
+                  context,
+                  valorTaxaEntrega: value,
                 ),
               ),
             ],
@@ -1363,6 +1474,8 @@ class _PedidoPageState extends State<PedidoPage> {
   }
 
   Widget _buildPagamentosCard(BuildContext context, PedidoState state) {
+    final valorRestante = _valorRestantePagamento(state);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1379,65 +1492,139 @@ class _PedidoPageState extends State<PedidoPage> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () => _abrirDialogAdicionarPagamento(context),
+                  onPressed: _criandoPagamento
+                      ? null
+                      : () => _abrirDialogAdicionarPagamento(context),
                   icon: const Icon(Icons.add),
                   label: const Text('Adicionar'),
                 ),
               ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Valor restante: R\$ ${valorRestante.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: valorRestante > 0 ? Colors.orange : Colors.green,
+                  ),
             ),
             const SizedBox(height: 8),
             if (state.pagamentos.isEmpty)
               const Text('Nenhum pagamento adicionado ainda.')
             else
               ...state.pagamentos.map(
-                (pagamento) => _buildPagamentoItem(context, pagamento),
+                (pagamento) => _buildPagamentoItem(
+                  context,
+                  pagamento,
+                  state.formasDePagamentoPorId,
+                ),
               ),
+            if (_criandoPagamento) ...[
+              const SizedBox(height: 8),
+              const Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Criando pagamento...'),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPagamentoItem(BuildContext context, PedidoPagamento pagamento) {
+  Widget _buildPagamentoItem(
+    BuildContext context,
+    PedidoPagamento pagamento,
+    Map<int, String> formasDePagamentoPorId,
+  ) {
     final confirmado = pagamento.confirmadoEm != null;
-    final label = pagamento.tipo == 'controlado'
+    final ehOnline = pagamento.tipo == 'controlado';
+    final label = ehOnline
         ? (confirmado
-            ? 'Confirmado (gateway)'
-            : 'Aguardando confirmação automática')
+            ? 'Confirmado (pagamento online)'
+            : 'Aguardando confirmação do pagamento online')
         : (confirmado ? 'Confirmado' : 'Aguardando confirmação manual');
+    final nomeForma = formasDePagamentoPorId[pagamento.formaDePagamentoId] ??
+        'Forma #${pagamento.formaDePagamentoId ?? '-'}';
+    final cobranca = pagamento.cobranca;
+    final linkCobranca = cobranca?.urlDePagamento ?? cobranca?.chavePixCopiaECola;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pagamento.tipo == 'controlado'
-                      ? 'Controlado'
-                      : _labelFormaPagamento(pagamento.formaPagamento ?? ''),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nomeForma,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      'Esperado: R\$ ${(pagamento.valorEsperado ?? 0).toStringAsFixed(2)}'
+                      '${pagamento.valorConfirmado != null ? ' · Confirmado: R\$ ${pagamento.valorConfirmado!.toStringAsFixed(2)}' : ''}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: confirmado ? Colors.green : Colors.orange,
+                          ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Esperado: R\$ ${(pagamento.valorEsperado ?? 0).toStringAsFixed(2)}'
-                  '${pagamento.valorConfirmado != null ? ' · Confirmado: R\$ ${pagamento.valorConfirmado!.toStringAsFixed(2)}' : ''}',
-                  style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (!confirmado && !ehOnline)
+                TextButton(
+                  onPressed: () =>
+                      _confirmarPagamentoManual(context, pagamento),
+                  child: const Text('Confirmar'),
                 ),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: confirmado ? Colors.green : Colors.orange,
-                      ),
+              if (!confirmado)
+                IconButton(
+                  tooltip: 'Remover pagamento',
+                  onPressed: () => _removerPagamento(context, pagamento),
+                  icon: const Icon(Icons.delete_outline),
                 ),
-              ],
-            ),
+            ],
           ),
-          if (!confirmado && pagamento.tipo == 'manual')
-            TextButton(
-              onPressed: () => _confirmarPagamentoManual(context, pagamento),
-              child: const Text('Confirmar'),
+          if (!confirmado && ehOnline && linkCobranca != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Envie ao cliente (R\$ ${(pagamento.valorEsperado ?? 0).toStringAsFixed(2)}):',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableText(
+                    linkCobranca,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
         ],
       ),
@@ -1450,6 +1637,9 @@ class _PedidoPageState extends State<PedidoPage> {
     bool carregando,
   ) {
     final podeFechar = state.podeFechar;
+    // Pedido de origem "atendente_humano" (único canal existente hoje) dispensa a etapa de
+    // conferência -- backend já libera faturar sem exigir situacao="conferido" pra essa origem.
+    final exigeConferencia = state.pedido?.origem != 'atendente_humano';
 
     return Card(
       child: Padding(
@@ -1467,17 +1657,18 @@ class _PedidoPageState extends State<PedidoPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton.icon(
-                  onPressed: carregando
-                      ? null
-                      : () {
-                          context.read<PedidoBloc>().add(
-                                PedidoConferiu(),
-                              );
-                        },
-                  icon: const Icon(Icons.fact_check),
-                  label: const Text('Conferir'),
-                ),
+                if (exigeConferencia)
+                  FilledButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () {
+                            context.read<PedidoBloc>().add(
+                                  PedidoConferiu(),
+                                );
+                          },
+                    icon: const Icon(Icons.fact_check),
+                    label: const Text('Conferir'),
+                  ),
                 Tooltip(
                   message: podeFechar ? '' : state.motivoNaoPodeFechar,
                   child: FilledButton.icon(
@@ -1492,6 +1683,28 @@ class _PedidoPageState extends State<PedidoPage> {
                     label: const Text('Faturar'),
                   ),
                 ),
+                if (state.modalidadeEntrega == 'entrega')
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () => _imprimirNotaEntregaDoPedido(context, state),
+                    icon: const Icon(Icons.local_shipping_outlined),
+                    label: const Text('Imprimir nota de entrega'),
+                  ),
+                if (state.pedido?.romaneioId != null)
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () => Navigator.of(context).pushNamed(
+                              '/romaneio',
+                              arguments: {
+                                'idRomaneio': state.pedido!.romaneioId,
+                                'permitirEdicao': false,
+                              },
+                            ),
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Ver romaneio'),
+                  ),
                 if (state.modalidadeEntrega == 'entrega' &&
                     state.pedido?.situacaoEntrega == 'aguardando_chamada')
                   OutlinedButton.icon(
@@ -1602,7 +1815,7 @@ class _PedidoPageState extends State<PedidoPage> {
                   ),
                 if (evento.criadoEm != null)
                   Text(
-                    '${evento.criadoEm}',
+                    _formatarDataHoraEvento(evento.criadoEm),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
               ],
@@ -1613,10 +1826,35 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
+  String _formatarDataHoraEvento(DateTime? data) {
+    if (data == null) return '-';
+    final local = data.toLocal();
+    final dia = local.day.toString().padLeft(2, '0');
+    final mes = local.month.toString().padLeft(2, '0');
+    final ano = local.year.toString();
+    final hora = local.hour.toString().padLeft(2, '0');
+    final minuto = local.minute.toString().padLeft(2, '0');
+    return '$dia/$mes/$ano às $hora:$minuto';
+  }
+
   IconData _iconeEvento(String? tipo) {
     switch (tipo) {
       case 'criado':
         return Icons.add_circle_outline;
+      case 'atualizado':
+        return Icons.edit_outlined;
+      case 'conferido':
+        return Icons.fact_check_outlined;
+      case 'item_adicionado':
+        return Icons.add_shopping_cart_outlined;
+      case 'item_removido':
+        return Icons.remove_shopping_cart_outlined;
+      case 'item_conferido':
+        return Icons.checklist_outlined;
+      case 'pagamento_adicionado':
+        return Icons.add_card_outlined;
+      case 'pagamento_removido':
+        return Icons.money_off_outlined;
       case 'pagamento_confirmado':
         return Icons.payments_outlined;
       case 'nota_emitida':
@@ -1638,6 +1876,20 @@ class _PedidoPageState extends State<PedidoPage> {
     switch (tipo) {
       case 'criado':
         return 'Pedido criado';
+      case 'atualizado':
+        return 'Pedido atualizado';
+      case 'conferido':
+        return 'Pedido conferido';
+      case 'item_adicionado':
+        return 'Item adicionado';
+      case 'item_removido':
+        return 'Item removido';
+      case 'item_conferido':
+        return 'Itens conferidos';
+      case 'pagamento_adicionado':
+        return 'Pagamento adicionado';
+      case 'pagamento_removido':
+        return 'Pagamento removido';
       case 'pagamento_confirmado':
         return 'Pagamento confirmado';
       case 'nota_emitida':
@@ -1796,6 +2048,10 @@ class _PedidoPageState extends State<PedidoPage> {
     _sincronizarController(_funcionarioIdController, state.funcionarioId ?? '');
     _sincronizarController(_tabelaPrecoIdController, state.tabelaPrecoId ?? '');
     _sincronizarController(_observacaoController, state.observacao ?? '');
+    _sincronizarController(
+      _valorTaxaEntregaController,
+      state.valorTaxaEntrega ?? '',
+    );
   }
 
   void _sincronizarController(TextEditingController controller, String value) {
@@ -1820,6 +2076,7 @@ class _PedidoPageState extends State<PedidoPage> {
     String? tipo,
     bool? fiscal,
     String? observacao,
+    String? valorTaxaEntrega,
   }) {
     context.read<PedidoBloc>().add(
           PedidoCampoAlterado(
@@ -1834,6 +2091,7 @@ class _PedidoPageState extends State<PedidoPage> {
             tipo: tipo,
             fiscal: fiscal,
             observacao: observacao,
+            valorTaxaEntrega: valorTaxaEntrega,
           ),
         );
   }

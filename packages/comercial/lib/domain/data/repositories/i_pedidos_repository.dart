@@ -11,10 +11,9 @@ abstract class IPedidosRepository {
 
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
-    required String tipo,
-    int? pagamentoAvulsoId,
-    String? formaPagamento,
+    required int formaDePagamentoId,
     required double valorEsperado,
+    double? taxaAplicada,
   });
   Future<List<PedidoPagamento>> listarPagamentos(int id);
   Future<PedidoPagamento> confirmarPagamento(
@@ -22,6 +21,7 @@ abstract class IPedidosRepository {
     int pagamentoId, {
     required double valorConfirmado,
   });
+  Future<void> removerPagamento(int id, int pagamentoId);
   Future<void> chamarEntregador(int id);
   Future<void> confirmarEntrega(int id);
   Future<Pedido> criarTaxaEntrega(

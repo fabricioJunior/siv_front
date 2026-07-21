@@ -78,18 +78,16 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
-    required String tipo,
-    int? pagamentoAvulsoId,
-    String? formaPagamento,
+    required int formaDePagamentoId,
     required double valorEsperado,
+    double? taxaAplicada,
   }) async {
     final response = await post(
       pathParameters: {'id': '$id/pagamentos'},
       body: {
-        'tipo': tipo,
-        if (pagamentoAvulsoId != null) 'pagamentoAvulsoId': pagamentoAvulsoId,
-        if (formaPagamento != null) 'formaPagamento': formaPagamento,
+        'formaDePagamentoId': formaDePagamentoId,
         'valorEsperado': valorEsperado,
+        if (taxaAplicada != null) 'taxaAplicada': taxaAplicada,
       },
     );
     return PedidoPagamentoDto.fromJson(response.body as Map<String, dynamic>);
@@ -116,6 +114,11 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
       body: {'valorConfirmado': valorConfirmado},
     );
     return PedidoPagamentoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> removerPagamento(int id, int pagamentoId) async {
+    await delete(pathParameters: {'id': '$id/pagamentos/$pagamentoId'});
   }
 
   @override

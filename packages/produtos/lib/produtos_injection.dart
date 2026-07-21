@@ -406,7 +406,7 @@ void _presentantion() {
   sl.registerFactory<EtiquetasBloc>(() => EtiquetasBloc(sl(), sl(), sl(), sl()));
 
   sl.registerFactory<ProdutosDaReferenciaBloc>(
-    () => ProdutosDaReferenciaBloc(sl()),
+    () => ProdutosDaReferenciaBloc(sl(), sl()),
   );
 
   sl.registerFactory<ImpressaoEtiquetasBloc>(

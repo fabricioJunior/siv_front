@@ -10,6 +10,7 @@ import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:flutter/material.dart';
 import 'package:core/seletores.dart';
+import 'package:financeiro/models.dart' show TipoOperacaoFormaPagamento;
 import 'package:financeiro/pages.dart';
 import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
@@ -1080,6 +1081,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     onChanged: onChanged,
                     onlyView: onlyView ?? false,
                     titulo: 'Forma de pagamento',
+                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
                   ),
         );
       },
@@ -1266,6 +1268,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                         FormasDePagamentoSeletor(
                           modo: FormasDePagamentoSeletorModo.unica,
                           titulo: 'Nova forma de pagamento',
+                          tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
                           onChanged: (selecionados) {
                             setDialogState(() {
                               formaSelecionadaPorDocumento[

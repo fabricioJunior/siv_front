@@ -13,13 +13,17 @@ class PedidoState extends Equatable {
   final String? tipo;
   final bool? fiscal;
   final String? observacao;
+  final String? valorTaxaEntrega;
   final String modalidadeEntrega;
   final int? enderecoEntregaId;
+  final String? enderecoEntregaResumo;
   final Pedido? pedido;
   final List<PedidoPagamento> pagamentos;
   final List<PedidoEvento> eventos;
   final List<PedidoItem> itens;
   final int? pedidoTaxaEntregaCriadoId;
+  final PedidoPagamento? ultimoPagamentoAdicionado;
+  final Map<int, String> formasDePagamentoPorId;
   final String? erro;
   final PedidoStep step;
 
@@ -36,13 +40,17 @@ class PedidoState extends Equatable {
     this.tipo,
     this.fiscal,
     this.observacao,
+    this.valorTaxaEntrega,
     this.modalidadeEntrega = 'retirada',
     this.enderecoEntregaId,
+    this.enderecoEntregaResumo,
     this.pedido,
     this.pagamentos = const [],
     this.eventos = const [],
     this.itens = const [],
     this.pedidoTaxaEntregaCriadoId,
+    this.ultimoPagamentoAdicionado,
+    this.formasDePagamentoPorId = const {},
     this.erro,
     required this.step,
   });
@@ -60,13 +68,17 @@ class PedidoState extends Equatable {
         tipo = 'venda',
         fiscal = false,
         observacao = '',
+        valorTaxaEntrega = null,
         modalidadeEntrega = 'retirada',
         enderecoEntregaId = null,
+        enderecoEntregaResumo = null,
         pedido = null,
         pagamentos = const [],
         eventos = const [],
         itens = const [],
         pedidoTaxaEntregaCriadoId = null,
+        ultimoPagamentoAdicionado = null,
+        formasDePagamentoPorId = const {},
         erro = null,
         step = PedidoStep.inicial;
 
@@ -76,6 +88,8 @@ class PedidoState extends Equatable {
     List<PedidoPagamento>? pagamentos,
     List<PedidoEvento>? eventos,
     List<PedidoItem>? itens,
+    Map<int, String>? formasDePagamentoPorId,
+    String? enderecoEntregaResumo,
   })  : id = model.id,
         pessoaId = (model.pessoaId ?? '').toString(),
         funcionarioId = (model.funcionarioId ?? '').toString(),
@@ -88,13 +102,17 @@ class PedidoState extends Equatable {
         tipo = model.tipo ?? 'venda',
         fiscal = model.fiscal ?? false,
         observacao = model.observacao ?? '',
+        valorTaxaEntrega = model.valorTaxaEntrega?.toStringAsFixed(2),
         modalidadeEntrega = model.modalidadeEntrega ?? 'retirada',
         enderecoEntregaId = model.enderecoEntregaId,
+        enderecoEntregaResumo = enderecoEntregaResumo,
         pedido = model,
         pagamentos = pagamentos ?? const [],
         eventos = eventos ?? const [],
         itens = itens ?? const [],
         pedidoTaxaEntregaCriadoId = null,
+        ultimoPagamentoAdicionado = null,
+        formasDePagamentoPorId = formasDePagamentoPorId ?? const {},
         erro = null,
         step = step ?? PedidoStep.editando;
 
@@ -111,14 +129,19 @@ class PedidoState extends Equatable {
     String? tipo,
     bool? fiscal,
     String? observacao,
+    String? valorTaxaEntrega,
     String? modalidadeEntrega,
     int? enderecoEntregaId,
     bool limparEnderecoEntregaId = false,
+    String? enderecoEntregaResumo,
     Pedido? pedido,
     List<PedidoPagamento>? pagamentos,
     List<PedidoEvento>? eventos,
     List<PedidoItem>? itens,
     int? pedidoTaxaEntregaCriadoId,
+    PedidoPagamento? ultimoPagamentoAdicionado,
+    bool limparUltimoPagamentoAdicionado = false,
+    Map<int, String>? formasDePagamentoPorId,
     String? erro,
     PedidoStep? step,
   }) {
@@ -136,16 +159,25 @@ class PedidoState extends Equatable {
       tipo: tipo ?? this.tipo,
       fiscal: fiscal ?? this.fiscal,
       observacao: observacao ?? this.observacao,
+      valorTaxaEntrega: valorTaxaEntrega ?? this.valorTaxaEntrega,
       modalidadeEntrega: modalidadeEntrega ?? this.modalidadeEntrega,
       enderecoEntregaId: limparEnderecoEntregaId
           ? null
           : (enderecoEntregaId ?? this.enderecoEntregaId),
+      enderecoEntregaResumo: limparEnderecoEntregaId
+          ? null
+          : (enderecoEntregaResumo ?? this.enderecoEntregaResumo),
       pedido: pedido ?? this.pedido,
       pagamentos: pagamentos ?? this.pagamentos,
       eventos: eventos ?? this.eventos,
       itens: itens ?? this.itens,
       pedidoTaxaEntregaCriadoId:
           pedidoTaxaEntregaCriadoId ?? this.pedidoTaxaEntregaCriadoId,
+      ultimoPagamentoAdicionado: limparUltimoPagamentoAdicionado
+          ? null
+          : (ultimoPagamentoAdicionado ?? this.ultimoPagamentoAdicionado),
+      formasDePagamentoPorId:
+          formasDePagamentoPorId ?? this.formasDePagamentoPorId,
       erro: erro,
       step: step ?? this.step,
     );
@@ -198,13 +230,17 @@ class PedidoState extends Equatable {
         tipo,
         fiscal,
         observacao,
+        valorTaxaEntrega,
         modalidadeEntrega,
         enderecoEntregaId,
+        enderecoEntregaResumo,
         pedido,
         pagamentos,
         eventos,
         itens,
         pedidoTaxaEntregaCriadoId,
+        ultimoPagamentoAdicionado,
+        formasDePagamentoPorId,
         erro,
         step,
       ];
@@ -227,6 +263,7 @@ enum PedidoStep {
   faturado,
   cancelado,
   pagamentoAdicionado,
+  pagamentoRemovido,
   pagamentoConfirmado,
   entregadorChamado,
   entregaConfirmada,

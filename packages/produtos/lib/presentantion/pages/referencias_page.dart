@@ -16,6 +16,7 @@ class ReferenciasPage extends StatefulWidget {
 class _ReferenciasPageState extends State<ReferenciasPage> {
   final bloc = sl<ReferenciasBloc>();
   final debouncer = Debouncer(milliseconds: 400);
+  String _buscaAtual = '';
 
   String _formatarData(DateTime? data) {
     if (data == null) return '-';
@@ -76,6 +77,7 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
                           autoFocus: false,
                           hintText: 'Buscar referencia por nome',
                           onChanged: (value) {
+                            _buscaAtual = value;
                             debouncer.run(() {
                               bloc.add(
                                 ReferenciasIniciou(
@@ -86,6 +88,7 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
                             });
                           },
                           onSubmitted: (value) {
+                            _buscaAtual = value;
                             bloc.add(
                               ReferenciasIniciou(
                                 busca: value,
@@ -197,8 +200,12 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
             ),
           );
 
-          // ignore: use_build_context_synchronously
-          context.read<ReferenciasBloc>().add(ReferenciasIniciou());
+          bloc.add(
+            ReferenciasIniciou(
+              busca: _buscaAtual,
+              ordenacao: bloc.state.ordenacao,
+            ),
+          );
         },
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primary,

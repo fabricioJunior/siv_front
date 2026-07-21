@@ -32,6 +32,13 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   // Sem esse flag o checkbox apareceria em telas onde o valor marcado nunca
   // chega ao backend (nenhuma delas envia pontuarFidelidade no recebimento).
   final bool exibirCheckboxFidelidade;
+  // Taxa de entrega só faz sentido em telas que de fato usam esse valor
+  // depois (romaneio/venda, que enviam valorTaxaEntrega no recebimento). No
+  // pagamento do pedido não existe esse aproveitamento -- lá a taxa de
+  // entrega tem fluxo próprio (converter em entrega -> pedido-complemento) --
+  // então esse botão fica escondido pra não deixar o operador digitar um
+  // valor que é descartado silenciosamente.
+  final bool permitirTaxaEntrega;
 
   const PagamentosRealizadosWidget({
     super.key,
@@ -44,6 +51,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.descontoJaAplicadoNoRomaneio = 0,
     this.taxaEntregaJaAplicadaNoRomaneio = 0,
     this.exibirCheckboxFidelidade = false,
+    this.permitirTaxaEntrega = true,
   });
 
   @override
@@ -146,7 +154,9 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
                       onTaxaEntregaPressed:
-                          state.step == PagamentosRealizadosStep.editando
+                          permitirTaxaEntrega &&
+                                  state.step ==
+                                      PagamentosRealizadosStep.editando
                               ? () => _abrirDialogoTaxaEntrega(context, state)
                               : null,
                       exibirCheckboxFidelidade: exibirCheckboxFidelidade,
@@ -301,15 +311,16 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                         : 'Adicionar desconto',
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: onTaxaEntregaPressed,
-                  icon: const Icon(Icons.local_shipping_outlined),
-                  label: Text(
-                    state.valorTaxaEntregaAplicado > 0
-                        ? 'Editar taxa de entrega'
-                        : 'Adicionar taxa de entrega',
+                if (widget.onTaxaEntregaPressed != null)
+                  TextButton.icon(
+                    onPressed: onTaxaEntregaPressed,
+                    icon: const Icon(Icons.local_shipping_outlined),
+                    label: Text(
+                      state.valorTaxaEntregaAplicado > 0
+                          ? 'Editar taxa de entrega'
+                          : 'Adicionar taxa de entrega',
+                    ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 12),

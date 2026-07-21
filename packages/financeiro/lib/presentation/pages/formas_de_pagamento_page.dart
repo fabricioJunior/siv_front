@@ -67,6 +67,49 @@ class FormasDePagamentoPage extends StatelessWidget {
                         bloc.add(FormasDePagamentoIniciou(busca: value));
                       },
                     ),
+                    const SizedBox(height: 8),
+                    BlocBuilder<FormasDePagamentoBloc, FormasDePagamentoState>(
+                      builder: (context, state) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Todas'),
+                                selected: state.tipoOperacaoFiltro == null,
+                                onSelected: (_) => bloc.add(
+                                  FormasDePagamentoFiltroTipoOperacaoAlterado(
+                                    null,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                                label: const Text('Manual'),
+                                selected: state.tipoOperacaoFiltro ==
+                                    TipoOperacaoFormaPagamento.manual,
+                                onSelected: (_) => bloc.add(
+                                  FormasDePagamentoFiltroTipoOperacaoAlterado(
+                                    TipoOperacaoFormaPagamento.manual,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                                label: const Text('Online'),
+                                selected: state.tipoOperacaoFiltro ==
+                                    TipoOperacaoFormaPagamento.online,
+                                onSelected: (_) => bloc.add(
+                                  FormasDePagamentoFiltroTipoOperacaoAlterado(
+                                    TipoOperacaoFormaPagamento.online,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -94,13 +137,15 @@ class FormasDePagamentoPage extends StatelessWidget {
                       );
                     }
 
-                    final itens = state.formasDePagamento;
+                    final itens = state.formasDePagamentoFiltradas;
                     if (itens.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Padding(
-                          padding: EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(24),
                           child: Text(
-                            'Nenhuma forma de pagamento cadastrada.',
+                            state.tipoOperacaoFiltro == null
+                                ? 'Nenhuma forma de pagamento cadastrada.'
+                                : 'Nenhuma forma de pagamento desse tipo.',
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -155,6 +200,36 @@ class _FormaDePagamentoCard extends StatelessWidget {
           children: [
             Text('Tipo: ${item.tipo}'),
             Text('Inicio: ${item.inicio} | Parcelas: ${item.parcelas}'),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                Chip(
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  avatar: Icon(
+                    item.tipoOperacao == TipoOperacaoFormaPagamento.online
+                        ? Icons.qr_code_2_outlined
+                        : Icons.local_shipping_outlined,
+                    size: 16,
+                  ),
+                  label: Text(
+                    item.tipoOperacao == TipoOperacaoFormaPagamento.online
+                        ? 'Online'
+                        : 'Manual',
+                  ),
+                ),
+                if (item.tipoOperacao == TipoOperacaoFormaPagamento.online &&
+                    item.provider != null)
+                  Chip(
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    label: Text(item.provider!),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
               item.inativa ? 'Inativa' : 'Ativa',
               style: TextStyle(

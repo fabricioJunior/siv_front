@@ -106,6 +106,8 @@ class _ProdutosDaReferenciaTabelaWidgetState
                     state.cores,
                     state.tamanhos,
                     state.mapaCorTamanhoParaProduto,
+                    state.mapaCorTamanhoParaSaldo,
+                    state.saldoIndisponivel,
                   );
                 },
               ),
@@ -121,12 +123,21 @@ class _ProdutosDaReferenciaTabelaWidgetState
     List<Cor> cores,
     List<Tamanho> tamanhos,
     Map<String, Produto> mapaCorTamanhoParaProduto,
+    Map<String, double> mapaCorTamanhoParaSaldo,
+    bool saldoIndisponivel,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildDisponiveisListas(cores, tamanhos),
+        if (saldoIndisponivel) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Não foi possível carregar o saldo de estoque. Exibindo "-".',
+            style: TextStyle(color: Colors.orange),
+          ),
+        ],
         const SizedBox(height: 12),
         Scrollbar(
           controller: _horizontalController,
@@ -150,6 +161,8 @@ class _ProdutosDaReferenciaTabelaWidgetState
                   cores,
                   tamanhos,
                   mapaCorTamanhoParaProduto,
+                  mapaCorTamanhoParaSaldo,
+                  saldoIndisponivel,
                   context,
                 ),
               ),
@@ -269,6 +282,8 @@ class _ProdutosDaReferenciaTabelaWidgetState
     List<Cor> cores,
     List<Tamanho> tamanhos,
     Map<String, Produto> mapaCorTamanhoParaProduto,
+    Map<String, double> mapaCorTamanhoParaSaldo,
+    bool saldoIndisponivel,
     BuildContext context,
   ) {
     return cores.map((cor) {
@@ -281,7 +296,11 @@ class _ProdutosDaReferenciaTabelaWidgetState
             return DataCell(
               Center(
                 child: existe
-                    ? const Text('0')
+                    ? Text(
+                        saldoIndisponivel
+                            ? '-'
+                            : _formatarSaldo(mapaCorTamanhoParaSaldo[chave]),
+                      )
                     : _buildeActionProdutoInesistente(
                         existe,
                         context,
@@ -294,6 +313,14 @@ class _ProdutosDaReferenciaTabelaWidgetState
         ],
       );
     }).toList();
+  }
+
+  String _formatarSaldo(double? saldo) {
+    if (saldo == null) return '-';
+    if (saldo == saldo.truncateToDouble()) {
+      return saldo.toInt().toString();
+    }
+    return saldo.toStringAsFixed(2).replaceAll('.', ',');
   }
 
   Widget _buildeActionProdutoInesistente(

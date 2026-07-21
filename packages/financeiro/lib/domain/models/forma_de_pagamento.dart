@@ -1,5 +1,22 @@
 import 'package:core/equals.dart';
 
+enum TipoOperacaoFormaPagamento {
+  manual,
+  online;
+
+  static TipoOperacaoFormaPagamento fromString(String? value) {
+    switch (value) {
+      case 'online':
+        return TipoOperacaoFormaPagamento.online;
+      case 'manual':
+      default:
+        return TipoOperacaoFormaPagamento.manual;
+    }
+  }
+
+  String get value => name;
+}
+
 abstract class FormaDePagamento implements Equatable {
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
@@ -9,6 +26,8 @@ abstract class FormaDePagamento implements Equatable {
   int get parcelas;
   String get tipo;
   bool get inativa;
+  TipoOperacaoFormaPagamento get tipoOperacao;
+  String? get provider;
 
   factory FormaDePagamento.create({
     DateTime? criadoEm,
@@ -19,6 +38,8 @@ abstract class FormaDePagamento implements Equatable {
     required int parcelas,
     required String tipo,
     required bool inativa,
+    TipoOperacaoFormaPagamento tipoOperacao,
+    String? provider,
   }) = _FormaDePagamentoImpl;
 
   @override
@@ -31,6 +52,8 @@ abstract class FormaDePagamento implements Equatable {
         parcelas,
         tipo,
         inativa,
+        tipoOperacao,
+        provider,
       ];
 
   @override
@@ -62,6 +85,12 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
   @override
   final bool inativa;
 
+  @override
+  final TipoOperacaoFormaPagamento tipoOperacao;
+
+  @override
+  final String? provider;
+
   const _FormaDePagamentoImpl({
     this.criadoEm,
     this.atualizadoEm,
@@ -71,6 +100,8 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
     required this.parcelas,
     required this.tipo,
     this.inativa = false,
+    this.tipoOperacao = TipoOperacaoFormaPagamento.manual,
+    this.provider,
   });
 
   @override
@@ -83,6 +114,8 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
         parcelas,
         tipo,
         inativa,
+        tipoOperacao,
+        provider,
       ];
 
   @override

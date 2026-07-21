@@ -5,12 +5,16 @@ abstract class ProdutosDaReferenciaState extends Equatable {
   final List<Tamanho> tamanhos;
   final List<Cor> cores;
   final Map<String, Produto> mapaCorTamanhoParaProduto;
+  final Map<String, double> mapaCorTamanhoParaSaldo;
+  final bool saldoIndisponivel;
 
   const ProdutosDaReferenciaState({
     this.produtos = const [],
     this.tamanhos = const [],
     this.cores = const [],
     this.mapaCorTamanhoParaProduto = const {},
+    this.mapaCorTamanhoParaSaldo = const {},
+    this.saldoIndisponivel = false,
   });
 
   @override
@@ -19,6 +23,8 @@ abstract class ProdutosDaReferenciaState extends Equatable {
     tamanhos,
     cores,
     mapaCorTamanhoParaProduto,
+    mapaCorTamanhoParaSaldo,
+    saldoIndisponivel,
   ];
 }
 
@@ -37,6 +43,8 @@ class ProdutosDaReferenciaCarregarSucesso extends ProdutosDaReferenciaState {
     required super.tamanhos,
     required super.cores,
     required super.mapaCorTamanhoParaProduto,
+    super.mapaCorTamanhoParaSaldo,
+    super.saldoIndisponivel,
   });
 }
 

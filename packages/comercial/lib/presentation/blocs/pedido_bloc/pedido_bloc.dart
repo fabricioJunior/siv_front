@@ -6,6 +6,8 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
+import 'package:financeiro/use_cases.dart' show RecuperarFormasDePagamento;
+import 'package:pessoas/uses_cases.dart' show RecuperarEnderecosDaPessoa;
 
 part 'pedido_event.dart';
 part 'pedido_state.dart';
@@ -18,6 +20,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final FaturarPedido _faturarPedido;
   final CancelarPedido _cancelarPedido;
   final AdicionarPagamentoPedido _adicionarPagamentoPedido;
+  final RemoverPagamentoPedido _removerPagamentoPedido;
   final ListarPagamentosPedido _listarPagamentosPedido;
   final ConfirmarPagamentoPedido _confirmarPagamentoPedido;
   final ChamarEntregadorPedido _chamarEntregadorPedido;
@@ -29,6 +32,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final RemoverItemPedido _removerItemPedido;
   final ConferirItemPedido _conferirItemPedido;
   final IAcessoGlobalSessao _acessoGlobalSessao;
+  final RecuperarFormasDePagamento _recuperarFormasDePagamento;
+  final RecuperarEnderecosDaPessoa _recuperarEnderecosDaPessoa;
 
   PedidoBloc(
     this._recuperarPedido,
@@ -38,6 +43,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._faturarPedido,
     this._cancelarPedido,
     this._adicionarPagamentoPedido,
+    this._removerPagamentoPedido,
     this._listarPagamentosPedido,
     this._confirmarPagamentoPedido,
     this._chamarEntregadorPedido,
@@ -49,6 +55,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._removerItemPedido,
     this._conferirItemPedido,
     this._acessoGlobalSessao,
+    this._recuperarFormasDePagamento,
+    this._recuperarEnderecosDaPessoa,
   ) : super(const PedidoState.initial()) {
     on<PedidoIniciou>(_onIniciou);
     on<PedidoCampoAlterado>(_onCampoAlterado);
@@ -59,6 +67,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoFaturou>(_onFaturou);
     on<PedidoCancelou>(_onCancelou);
     on<PedidoPagamentoAdicionou>(_onPagamentoAdicionou);
+    on<PedidoPagamentoRemoveu>(_onPagamentoRemoveu);
     on<PedidoPagamentoConfirmou>(_onPagamentoConfirmou);
     on<PedidoEntregadorChamou>(_onEntregadorChamou);
     on<PedidoEntregaConfirmou>(_onEntregaConfirmou);
@@ -75,15 +84,23 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     try {
       emit(state.copyWith(step: PedidoStep.carregando, erro: null));
 
+      final formasDePagamentoPorId = await _carregarFormasDePagamentoPorId();
+
       if (event.idPedido != null) {
         final pedido = await _recuperarPedido.call(event.idPedido!);
         final dependencias = await _carregarDependencias(pedido.id!);
+        final enderecoEntregaResumo = await _carregarEnderecoEntregaResumo(
+          pessoaId: pedido.pessoaId,
+          enderecoEntregaId: pedido.enderecoEntregaId,
+        );
         emit(
           PedidoState.fromModel(
             pedido,
             pagamentos: dependencias.$1,
             eventos: dependencias.$2,
             itens: dependencias.$3,
+            formasDePagamentoPorId: formasDePagamentoPorId,
+            enderecoEntregaResumo: enderecoEntregaResumo,
           ),
         );
         return;
@@ -94,6 +111,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
           dataBasePagamento: _dateOnly(DateTime.now()),
           previsaoDeFaturamento: _dateOnly(DateTime.now()),
           previsaoDeEntrega: _dateOnly(DateTime.now()),
+          formasDePagamentoPorId: formasDePagamentoPorId,
           step: PedidoStep.editando,
         ),
       );
@@ -122,6 +140,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
         tipo: event.tipo,
         fiscal: event.fiscal,
         observacao: event.observacao,
+        valorTaxaEntrega: event.valorTaxaEntrega,
         step: PedidoStep.editando,
         erro: null,
       ),
@@ -150,6 +169,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       state.copyWith(
         enderecoEntregaId: event.enderecoEntregaId,
         limparEnderecoEntregaId: event.enderecoEntregaId == null,
+        enderecoEntregaResumo: event.enderecoEntregaResumo,
         step: PedidoStep.editando,
         erro: null,
       ),
@@ -291,18 +311,39 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
 
     try {
       emit(state.copyWith(step: PedidoStep.processando, erro: null));
-      await _adicionarPagamentoPedido.call(
+      final pagamento = await _adicionarPagamentoPedido.call(
         state.id!,
-        tipo: event.tipo,
-        pagamentoAvulsoId: event.pagamentoAvulsoId,
-        formaPagamento: event.formaPagamento,
+        formaDePagamentoId: event.formaDePagamentoId,
         valorEsperado: event.valorEsperado,
+        taxaAplicada: event.taxaAplicada,
       );
-      await _recarregarComDependencias(emit, PedidoStep.pagamentoAdicionado);
+      await _recarregarComDependencias(
+        emit,
+        PedidoStep.pagamentoAdicionado,
+        ultimoPagamentoAdicionado: pagamento,
+      );
     } catch (e, s) {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao adicionar pagamento.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onPagamentoRemoveu(
+    PedidoPagamentoRemoveu event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _removerPagamentoPedido.call(state.id!, event.pagamentoId);
+      await _recarregarComDependencias(emit, PedidoStep.pagamentoRemovido);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao remover pagamento.')));
       addError(e, s);
     }
   }
@@ -465,8 +506,9 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
 
   Future<void> _recarregarComDependencias(
     Emitter<PedidoState> emit,
-    PedidoStep step,
-  ) async {
+    PedidoStep step, {
+    PedidoPagamento? ultimoPagamentoAdicionado,
+  }) async {
     final pedido = await _recuperarPedido.call(state.id!);
     final dependencias = await _carregarDependencias(pedido.id!);
     emit(
@@ -476,7 +518,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
         pagamentos: dependencias.$1,
         eventos: dependencias.$2,
         itens: dependencias.$3,
-      ),
+      ).copyWith(ultimoPagamentoAdicionado: ultimoPagamentoAdicionado),
     );
   }
 
@@ -497,6 +539,46 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       return await _listarItensPedido.call(id);
     } catch (_) {
       return const <PedidoItem>[];
+    }
+  }
+
+  Future<String?> _carregarEnderecoEntregaResumo({
+    int? pessoaId,
+    int? enderecoEntregaId,
+  }) async {
+    if (pessoaId == null || enderecoEntregaId == null) return null;
+
+    try {
+      final enderecos = await _recuperarEnderecosDaPessoa.call(
+        idPessoa: pessoaId,
+      );
+      final encontrados = enderecos.where(
+        (endereco) => endereco.id == enderecoEntregaId,
+      );
+      if (encontrados.isEmpty) return null;
+      final endereco = encontrados.first;
+
+      final numero = endereco.numero.trim();
+      final complemento = endereco.complemento.trim();
+      final linha1 = StringBuffer(endereco.logradouro.trim());
+      if (numero.isNotEmpty) linha1.write(', $numero');
+      if (complemento.isNotEmpty) linha1.write(' - $complemento');
+
+      return '$linha1 - ${endereco.bairro.trim()}';
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<int, String>> _carregarFormasDePagamentoPorId() async {
+    try {
+      final formas = await _recuperarFormasDePagamento.call();
+      return {
+        for (final forma in formas)
+          if (forma.id != null) forma.id!: forma.descricao,
+      };
+    } catch (_) {
+      return const {};
     }
   }
 
@@ -550,6 +632,11 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       motivoCancelamento: state.pedido?.motivoCancelamento,
       modalidadeEntrega: state.modalidadeEntrega,
       enderecoEntregaId: state.enderecoEntregaId,
+      valorTaxaEntrega: state.modalidadeEntrega == 'entrega'
+          ? double.tryParse(
+              (state.valorTaxaEntrega ?? '').replaceAll(',', '.'),
+            )
+          : null,
     );
   }
 

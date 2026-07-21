@@ -25,6 +25,12 @@ class FormaDePagamentoDto implements FormaDePagamento {
   @override
   final bool inativa;
 
+  @override
+  final TipoOperacaoFormaPagamento tipoOperacao;
+
+  @override
+  final String? provider;
+
   const FormaDePagamentoDto({
     this.criadoEm,
     this.atualizadoEm,
@@ -34,6 +40,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
     required this.parcelas,
     required this.tipo,
     this.inativa = false,
+    this.tipoOperacao = TipoOperacaoFormaPagamento.manual,
+    this.provider,
   });
 
   factory FormaDePagamentoDto.fromJson(Map<String, dynamic> json) {
@@ -46,6 +54,9 @@ class FormaDePagamentoDto implements FormaDePagamento {
       parcelas: (json['parcelas'] as num?)?.toInt() ?? 0,
       tipo: (json['tipo'] as String?) ?? 'Dinheiro',
       inativa: json['inativa'] as bool? ?? false,
+      tipoOperacao:
+          TipoOperacaoFormaPagamento.fromString(json['tipoOperacao'] as String?),
+      provider: json['provider'] as String?,
     );
   }
 
@@ -59,6 +70,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       parcelas: forma.parcelas,
       tipo: forma.tipo,
       inativa: forma.inativa,
+      tipoOperacao: forma.tipoOperacao,
+      provider: forma.provider,
     );
   }
 
@@ -72,6 +85,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'parcelas': parcelas,
       'tipo': tipo,
       'inativa': inativa,
+      'tipoOperacao': tipoOperacao.value,
+      'provider': provider,
     };
   }
 
@@ -81,6 +96,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'inicio': inicio,
       'parcelas': parcelas,
       'tipo': tipo,
+      'tipoOperacao': tipoOperacao.value,
+      if (provider != null) 'provider': provider,
     };
   }
 
@@ -91,6 +108,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'parcelas': parcelas,
       'tipo': tipo,
       'inativa': inativa,
+      'tipoOperacao': tipoOperacao.value,
+      if (provider != null) 'provider': provider,
     };
   }
 
@@ -104,6 +123,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
         parcelas,
         tipo,
         inativa,
+        tipoOperacao,
+        provider,
       ];
 
   @override

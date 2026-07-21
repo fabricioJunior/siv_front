@@ -57,17 +57,15 @@ class PedidosRepository implements IPedidosRepository {
   @override
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
-    required String tipo,
-    int? pagamentoAvulsoId,
-    String? formaPagamento,
+    required int formaDePagamentoId,
     required double valorEsperado,
+    double? taxaAplicada,
   }) {
     return remoteDataSource.adicionarPagamento(
       id,
-      tipo: tipo,
-      pagamentoAvulsoId: pagamentoAvulsoId,
-      formaPagamento: formaPagamento,
+      formaDePagamentoId: formaDePagamentoId,
       valorEsperado: valorEsperado,
+      taxaAplicada: taxaAplicada,
     );
   }
 
@@ -87,6 +85,11 @@ class PedidosRepository implements IPedidosRepository {
       pagamentoId,
       valorConfirmado: valorConfirmado,
     );
+  }
+
+  @override
+  Future<void> removerPagamento(int id, int pagamentoId) {
+    return remoteDataSource.removerPagamento(id, pagamentoId);
   }
 
   @override

@@ -377,6 +377,9 @@ class _PagamentosAvulsosPageState extends State<PagamentosAvulsosPage> {
     if (provider == 'openpix') {
       return 'OpenPix';
     }
+    if (provider == 'mercadopago') {
+      return 'Mercado Pago';
+    }
     return provider;
   }
 

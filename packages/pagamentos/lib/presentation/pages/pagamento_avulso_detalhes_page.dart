@@ -262,6 +262,9 @@ class _PagamentoAvulsoDetalhesPageState
     if (provider == 'openpix') {
       return 'OpenPix';
     }
+    if (provider == 'mercadopago') {
+      return 'Mercado Pago';
+    }
     return provider;
   }
 

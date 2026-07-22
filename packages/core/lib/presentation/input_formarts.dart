@@ -53,6 +53,25 @@ class DateInput extends StatelessWidget {
 
 bool cpfEhValido(String value) => CPFValidator.isValid(value);
 
+/// Formata CPF (11 dígitos) ou CNPJ (14 dígitos) para exibição.
+/// Se não tiver 11 nem 14 dígitos, retorna o valor original sem alteração.
+String formatarDocumento(String? valor) {
+  final digitos = (valor ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+  if (digitos.length == 11) {
+    return MaskTextInputFormatter(
+      mask: '###.###.###-##',
+      filter: {"#": RegExp(r'[0-9]')},
+    ).maskText(digitos);
+  }
+  if (digitos.length == 14) {
+    return MaskTextInputFormatter(
+      mask: '##.###.###/####-##',
+      filter: {"#": RegExp(r'[0-9]')},
+    ).maskText(digitos);
+  }
+  return valor ?? '';
+}
+
 // ignore: must_be_immutable
 class CPFInput extends StatelessWidget {
   final String? valorInicial;

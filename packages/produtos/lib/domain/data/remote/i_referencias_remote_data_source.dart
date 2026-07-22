@@ -3,6 +3,8 @@ import 'package:produtos/models.dart';
 abstract class IReferenciasRemoteDataSource {
   Future<Referencia> fetchReferencia({required int id});
 
+  Future<int> fetchProximoId();
+
   Future<Referencia> createReferencia({
     required int id,
     required String nome,

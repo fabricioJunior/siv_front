@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/domain/models/pessoa.dart';
@@ -90,7 +91,7 @@ class _SelecionarPessoaPageState extends State<SelecionarPessoaPage> {
                         child: ListTile(
                           onTap: () => _selecionarPessoa(context, pessoa),
                           title: Text(pessoa.nome),
-                          subtitle: Text(pessoa.documento),
+                          subtitle: Text(formatarDocumento(pessoa.documento)),
                           trailing: const Icon(Icons.chevron_right),
                         ),
                       );

@@ -56,15 +56,19 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
 
   List<Pedido> _filtrar(List<Pedido> pedidos, String busca) {
     final filtro = busca.trim().toLowerCase();
-    if (filtro.isEmpty) return pedidos;
+    final lista = filtro.isEmpty
+        ? List<Pedido>.from(pedidos)
+        : pedidos.where((pedido) {
+            final id = (pedido.id ?? 0).toString();
+            final pessoa = (pedido.pessoaId ?? 0).toString();
+            final situacao = (pedido.situacao ?? '').toLowerCase();
+            return id.contains(filtro) ||
+                pessoa.contains(filtro) ||
+                situacao.contains(filtro);
+          }).toList();
 
-    return pedidos.where((pedido) {
-      final id = (pedido.id ?? 0).toString();
-      final pessoa = (pedido.pessoaId ?? 0).toString();
-      final situacao = (pedido.situacao ?? '').toLowerCase();
-      return id.contains(filtro) ||
-          pessoa.contains(filtro) ||
-          situacao.contains(filtro);
-    }).toList();
+    lista.sort((a, b) => (b.criadoEm ?? DateTime(0))
+        .compareTo(a.criadoEm ?? DateTime(0)));
+    return lista;
   }
 }

@@ -405,12 +405,20 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: () {
-            context.read<ReferenciaCadastroBloc>().add(
-              ReferenciaCadastroGerarId(),
-            );
-          },
-          icon: const Icon(Icons.auto_awesome),
+          onPressed: state.gerandoId
+              ? null
+              : () {
+                  context.read<ReferenciaCadastroBloc>().add(
+                    ReferenciaCadastroGerarId(),
+                  );
+                },
+          icon: state.gerandoId
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.auto_awesome),
           label: const Text('Gerar automaticamente'),
         ),
       ],

@@ -3,6 +3,8 @@ import 'package:produtos/models.dart';
 abstract class IReferenciasRepository {
   Future<Referencia> obterReferencia({required int id});
 
+  Future<int> obterProximoId();
+
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,

@@ -809,7 +809,7 @@ class _PessoaPageState extends State<PessoaPage> {
 
   void _hidratatCamposComState(PessoaState state) {
     _nomeController.text = state.nome ?? '';
-    _cpfController.text = state.documento ?? '';
+    _cpfController.text = formatarDocumento(state.documento);
     _emailController.text = state.email ?? '';
     _contatoController.text = state.contato ?? '';
     _dataNascimentoController.text = _formatarData(state.dataDeNascimento);
@@ -827,7 +827,7 @@ class _PessoaPageState extends State<PessoaPage> {
     context.read<PessoaBloc>().add(
           PessoaEditou(
             nome: _nomeController.text.trim(),
-            documento: _cpfController.text.trim(),
+            documento: _cpfController.text.replaceAll(RegExp(r'[^0-9]'), ''),
             email: _emailController.text.trim(),
             contato: _contatoController.text.trim(),
             dataDeNascimento: _obterDataNascimentoAtual(state),

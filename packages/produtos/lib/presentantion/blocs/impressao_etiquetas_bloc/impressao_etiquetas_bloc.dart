@@ -135,7 +135,7 @@ class ImpressaoEtiquetasBloc
       final cores = mapaCores.values.toList()
         ..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
       final tamanhos = mapaTamanhos.values.toList()
-        ..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
+        ..sort((a, b) => _compararTamanhos(a.nome, b.nome));
 
       emit(
         state.copyWith(
@@ -621,6 +621,44 @@ class ImpressaoEtiquetasBloc
 
     return resultado;
   }
+}
+
+const _ordemTamanhosConhecidos = [
+  'PP',
+  'P',
+  'M',
+  'G',
+  'GG',
+  'XG',
+  'XGG',
+  'EG',
+  'EGG',
+  'EXG',
+];
+
+int _compararTamanhos(String nomeA, String nomeB) {
+  final rankA = _rankTamanho(nomeA);
+  final rankB = _rankTamanho(nomeB);
+  if (rankA != rankB) {
+    return rankA.compareTo(rankB);
+  }
+  return nomeA.toLowerCase().compareTo(nomeB.toLowerCase());
+}
+
+double _rankTamanho(String nome) {
+  final normalizado = nome.trim().toUpperCase();
+
+  final numero = num.tryParse(normalizado);
+  if (numero != null) {
+    return _ordemTamanhosConhecidos.length + numero;
+  }
+
+  final indiceConhecido = _ordemTamanhosConhecidos.indexOf(normalizado);
+  if (indiceConhecido != -1) {
+    return indiceConhecido.toDouble();
+  }
+
+  return double.infinity;
 }
 
 class _RequisicaoEtiqueta {

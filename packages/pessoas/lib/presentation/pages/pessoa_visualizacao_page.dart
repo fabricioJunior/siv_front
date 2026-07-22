@@ -67,7 +67,8 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
                 const SizedBox(height: 8),
                 _buildLinha('ID', state.id?.toString() ?? '-'),
                 _buildLinha('Nome', _valorOuTraco(state.nome)),
-                _buildLinha('Documento', _valorOuTraco(state.documento)),
+                _buildLinha(
+                    'Documento', _valorOuTraco(formatarDocumento(state.documento))),
                 _buildLinha('Data de nascimento',
                     _formatarData(state.dataDeNascimento)),
                 _buildLinha('Contato', _valorOuTraco(state.contato)),

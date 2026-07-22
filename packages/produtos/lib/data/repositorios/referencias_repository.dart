@@ -13,6 +13,11 @@ class ReferenciasRepository implements IReferenciasRepository {
   }
 
   @override
+  Future<int> obterProximoId() {
+    return referenciasRemoteDataSource.fetchProximoId();
+  }
+
+  @override
   Future<Referencia> atualizarReferencia({
     required int id,
     required String nome,

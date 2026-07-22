@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/use_cases.dart';
 
@@ -14,11 +15,13 @@ class ReferenciaCadastroBloc
   final RecuperarCategorias _recuperarCategorias;
   final RecuperarSubCategorias _recuperarSubCategorias;
   final CriarReferencia _criarReferencia;
+  final RecuperarProximoIdReferencia _recuperarProximoId;
 
   ReferenciaCadastroBloc(
     this._recuperarCategorias,
     this._recuperarSubCategorias,
     this._criarReferencia,
+    this._recuperarProximoId,
   ) : super(const ReferenciaCadastroState()) {
     on<ReferenciaCadastroIniciou>(_onIniciou);
     on<ReferenciaCadastroCategoriaSelecionada>(_onCategoriaSelecionada);
@@ -126,10 +129,26 @@ class ReferenciaCadastroBloc
     ReferenciaCadastroGerarId event,
     Emitter<ReferenciaCadastroState> emit,
   ) async {
-    final categoriaId = state.categoria?.id;
-    final subCategoriaId = state.subCategoria?.id;
-    final idGerado = _generateId(categoriaId, subCategoriaId);
-    emit(state.copyWith(referenciaId: () => idGerado, mensagem: null));
+    emit(state.copyWith(gerandoId: true, mensagem: null));
+    try {
+      final idGerado = await _recuperarProximoId.call();
+      emit(
+        state.copyWith(
+          referenciaId: () => idGerado,
+          gerandoId: false,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          gerandoId: false,
+          mensagem: e is HttpException
+              ? (e.apiMessage ?? e.message)
+              : 'Falha ao gerar ID',
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onGerarNome(
@@ -219,17 +238,28 @@ class ReferenciaCadastroBloc
           emit(state.copyWith(mensagem: 'Informe o nome da referencia'));
           return;
         }
-        await _criarReferencia.call(
-          categoriaId: state.categoria!.id!,
-          subCategoriaId: state.subCategoria?.id,
-          id: state.referenciaId!,
-          nome: state.nome!.trim(),
-          unidadeMedida: _sanitizeOptional(state.unidadeMedida),
-          descricao: _sanitizeOptional(state.descricao),
-          composicao: _sanitizeOptional(state.composicao),
-          cuidados: _sanitizeOptional(state.cuidados),
-        );
-        emit(state.copyWith(step: ReferenciaCadastroStep.resumo));
+        try {
+          await _criarReferencia.call(
+            categoriaId: state.categoria!.id!,
+            subCategoriaId: state.subCategoria?.id,
+            id: state.referenciaId!,
+            nome: state.nome!.trim(),
+            unidadeMedida: _sanitizeOptional(state.unidadeMedida),
+            descricao: _sanitizeOptional(state.descricao),
+            composicao: _sanitizeOptional(state.composicao),
+            cuidados: _sanitizeOptional(state.cuidados),
+          );
+          emit(state.copyWith(step: ReferenciaCadastroStep.resumo));
+        } catch (e, s) {
+          emit(
+            state.copyWith(
+              mensagem: e is HttpException
+                  ? (e.apiMessage ?? e.message)
+                  : 'Falha ao cadastrar referência',
+            ),
+          );
+          addError(e, s);
+        }
         return;
       case ReferenciaCadastroStep.resumo:
         return;
@@ -286,13 +316,6 @@ class ReferenciaCadastroBloc
       return null;
     }
     return trimmed;
-  }
-
-  int _generateId(int? categoriaId, int? subCategoriaId) {
-    final base = (categoriaId ?? 0) * 100000000;
-    final sub = (subCategoriaId ?? 0) * 100000;
-    final suffix = DateTime.now().millisecondsSinceEpoch % 100000;
-    return base + sub + suffix;
   }
 
   String _generateNome(Categoria categoria, SubCategoria? subCategoria) {

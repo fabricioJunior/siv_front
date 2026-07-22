@@ -8,6 +8,8 @@ abstract class IProdutosRepository {
     required int tamanhoId,
   });
 
+  Future<List<Produto>> criarProdutos(List<NovoProdutoCombinacao> itens);
+
   Future<Produto> atualizarProduto({
     required int id,
     required int referenciaId,

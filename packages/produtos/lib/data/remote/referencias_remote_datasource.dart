@@ -18,6 +18,13 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<int> fetchProximoId() async {
+    final response = await get(pathParameters: {'id': 'proximo-id'});
+    final body = response.body as Map<String, dynamic>;
+    return body['id'] as int;
+  }
+
+  @override
   Future<Referencia> createReferencia({
     required int id,
     required String nome,

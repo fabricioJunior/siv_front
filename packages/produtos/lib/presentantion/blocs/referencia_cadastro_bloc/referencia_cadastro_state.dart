@@ -16,6 +16,7 @@ class ReferenciaCadastroState extends Equatable {
   final String cuidados;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
+  final bool gerandoId;
   final String? mensagem;
 
   const ReferenciaCadastroState({
@@ -32,6 +33,7 @@ class ReferenciaCadastroState extends Equatable {
     this.cuidados = '',
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
+    this.gerandoId = false,
     this.mensagem,
   });
 
@@ -49,6 +51,7 @@ class ReferenciaCadastroState extends Equatable {
     String? cuidados,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
+    bool? gerandoId,
     String? mensagem,
   }) {
     return ReferenciaCadastroState(
@@ -66,6 +69,7 @@ class ReferenciaCadastroState extends Equatable {
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
           carregandoSubCategorias ?? this.carregandoSubCategorias,
+      gerandoId: gerandoId ?? this.gerandoId,
       mensagem: mensagem,
     );
   }
@@ -85,6 +89,7 @@ class ReferenciaCadastroState extends Equatable {
     cuidados,
     carregandoCategorias,
     carregandoSubCategorias,
+    gerandoId,
     mensagem,
   ];
 }

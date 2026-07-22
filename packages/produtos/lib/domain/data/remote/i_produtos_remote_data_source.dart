@@ -8,6 +8,8 @@ abstract class IProdutosRemoteDataSource {
     required int tamanhoId,
   });
 
+  Future<List<Produto>> createProdutos(List<NovoProdutoCombinacao> itens);
+
   Future<Produto> atualizarProduto({
     required int id,
     required int referenciaId,

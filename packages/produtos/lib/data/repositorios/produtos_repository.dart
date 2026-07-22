@@ -23,6 +23,11 @@ class ProdutosRepository implements IProdutosRepository {
   }
 
   @override
+  Future<List<Produto>> criarProdutos(List<NovoProdutoCombinacao> itens) {
+    return produtosRemoteDataSource.createProdutos(itens);
+  }
+
+  @override
   Future<Produto> atualizarProduto({
     required int id,
     required int referenciaId,

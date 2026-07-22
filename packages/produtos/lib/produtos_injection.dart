@@ -281,6 +281,10 @@ void _usesCases() {
     () => CriarReferencia(referenciasRepository: sl()),
   );
 
+  sl.registerFactory<RecuperarProximoIdReferencia>(
+    () => RecuperarProximoIdReferencia(referenciasRepository: sl()),
+  );
+
   sl.registerFactory<RecuperarReferencias>(
     () => RecuperarReferencias(referenciasRepository: sl()),
   );
@@ -296,6 +300,10 @@ void _usesCases() {
 
   sl.registerFactory<CriarProduto>(
     () => CriarProduto(produtosRepository: sl()),
+  );
+
+  sl.registerFactory<CriarProdutosEmLote>(
+    () => CriarProdutosEmLote(produtosRepository: sl()),
   );
 
   sl.registerFactory<CriarCodigoDeBarras>(() => CriarCodigoDeBarras());
@@ -419,7 +427,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ReferenciaCadastroBloc>(
-    () => ReferenciaCadastroBloc(sl(), sl(), sl()),
+    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(

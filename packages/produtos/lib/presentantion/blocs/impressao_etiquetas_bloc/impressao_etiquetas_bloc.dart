@@ -191,7 +191,13 @@ class ImpressaoEtiquetasBloc
     }
 
     try {
-      emit(state.copyWith(processando: true, erro: () => null, sucesso: () => null));
+      emit(
+        state.copyWith(
+          processando: true,
+          erro: () => null,
+          sucesso: () => null,
+        ),
+      );
 
       final precoDaReferencia = await _obterPrecoDaReferencia(
         tabelaDePrecoId: tabela.id,
@@ -224,7 +230,8 @@ class ImpressaoEtiquetasBloc
 
       final limitesCaracteres = <String, int>{
         for (final elemento in etiqueta.elementos)
-          if (elemento.limiteCaracteres != null) elemento.nome: elemento.limiteCaracteres!,
+          if (elemento.limiteCaracteres != null)
+            elemento.nome: elemento.limiteCaracteres!,
       };
 
       final novosItens = <EtiquetaImpressaoItem>[];
@@ -283,7 +290,8 @@ class ImpressaoEtiquetasBloc
         emit(
           state.copyWith(
             processando: false,
-            erro: () => 'Informe ao menos uma quantidade maior que zero na grade.',
+            erro: () =>
+                'Informe ao menos uma quantidade maior que zero na grade.',
           ),
         );
         return;
@@ -300,8 +308,15 @@ class ImpressaoEtiquetasBloc
       // Bug anterior: pra cada requisicao gerava TODAS as vias com os MESMOS dados (mesma
       // requisicao repetida em todas as colunas) -- "X e Y" saia "X e X" numa linha e "Y e Y" em
       // outra, em vez de "X e Y" numa linha so.
-      for (var inicio = 0; inicio < requisicoes.length; inicio += viasOrdenadas.length) {
-        final bloco = requisicoes.skip(inicio).take(viasOrdenadas.length).toList(growable: false);
+      for (
+        var inicio = 0;
+        inicio < requisicoes.length;
+        inicio += viasOrdenadas.length
+      ) {
+        final bloco = requisicoes
+            .skip(inicio)
+            .take(viasOrdenadas.length)
+            .toList(growable: false);
 
         for (var coluna = 0; coluna < bloco.length; coluna++) {
           final requisicao = bloco[coluna];
@@ -335,11 +350,12 @@ class ImpressaoEtiquetasBloc
       emit(
         state.copyWith(
           processando: false,
-          pilhaImpressao: _ordenarPilha(
-            [...state.pilhaImpressao, ...novosItens],
-            state.pilhaOrdenacao,
-          ),
-          sucesso: () => '${novosItens.length} etiqueta(s) adicionada(s) a pilha.',
+          pilhaImpressao: _ordenarPilha([
+            ...state.pilhaImpressao,
+            ...novosItens,
+          ], state.pilhaOrdenacao),
+          sucesso: () =>
+              '${novosItens.length} etiqueta(s) adicionada(s) a pilha.',
         ),
       );
     } catch (e, s) {
@@ -364,16 +380,21 @@ class ImpressaoEtiquetasBloc
     }
 
     try {
-      emit(state.copyWith(imprimindo: true, erro: () => null, sucesso: () => null));
+      emit(
+        state.copyWith(imprimindo: true, erro: () => null, sucesso: () => null),
+      );
 
       await _imprimirEtiquetas(
-        zpls: state.pilhaImpressao.map((item) => item.zpl).toList(growable: false),
+        zpls: state.pilhaImpressao
+            .map((item) => item.zpl)
+            .toList(growable: false),
       );
 
       emit(
         state.copyWith(
           imprimindo: false,
-          sucesso: () => 'Chamada de impressao enviada. Implementacao pendente.',
+          sucesso: () =>
+              'Chamada de impressao enviada. Implementacao pendente.',
         ),
       );
     } catch (e, s) {
@@ -445,9 +466,11 @@ class ImpressaoEtiquetasBloc
       } else if (novaQuantidade != quantidadeAtual) {
         if (novaQuantidade < quantidadeAtual) {
           var quantidadeParaRemover = quantidadeAtual - novaQuantidade;
-          for (var i = pilhaAtual.length - 1;
-              i >= 0 && quantidadeParaRemover > 0;
-              i--) {
+          for (
+            var i = pilhaAtual.length - 1;
+            i >= 0 && quantidadeParaRemover > 0;
+            i--
+          ) {
             final item = pilhaAtual[i];
             if (_mesmaCombinacao(
               item: item,
@@ -650,7 +673,7 @@ double _rankTamanho(String nome) {
 
   final numero = num.tryParse(normalizado);
   if (numero != null) {
-    return _ordemTamanhosConhecidos.length + numero;
+    return _ordemTamanhosConhecidos.length + (numero + 0);
   }
 
   final indiceConhecido = _ordemTamanhosConhecidos.indexOf(normalizado);

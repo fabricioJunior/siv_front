@@ -36,7 +36,6 @@ import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_sou
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
-import 'package:produtos/domain/data/repositorios/i_etiquetas_repository.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_sub_categorias_remote_data_source.dart';
@@ -403,7 +402,9 @@ void _presentantion() {
 
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 
-  sl.registerFactory<EtiquetasBloc>(() => EtiquetasBloc(sl(), sl(), sl(), sl()));
+  sl.registerFactory<EtiquetasBloc>(
+    () => EtiquetasBloc(sl(), sl(), sl(), sl()),
+  );
 
   sl.registerFactory<ProdutosDaReferenciaBloc>(
     () => ProdutosDaReferenciaBloc(sl(), sl()),

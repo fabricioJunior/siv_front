@@ -89,7 +89,7 @@ class AdministracaoMenuPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _Header(
+          const _Header(
             titulo: 'Acessos administrativos',
             descricao:
                 'Permissões, empresas, configurações e rotinas do sistema.',
@@ -138,10 +138,7 @@ class _Header extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
-          colors: [
-            Colors.blueGrey.shade500,
-            Colors.blueGrey.shade400,
-          ],
+          colors: [Colors.blueGrey.shade500, Colors.blueGrey.shade400],
         ),
       ),
       child: Row(
@@ -162,16 +159,16 @@ class _Header extends StatelessWidget {
                 Text(
                   titulo,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   descricao,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.90),
-                      ),
+                    color: Colors.white.withValues(alpha: 0.90),
+                  ),
                 ),
               ],
             ),

@@ -2,7 +2,9 @@ import 'package:core/equals.dart';
 import 'package:core/impressora.dart';
 
 abstract class EtiquetaImpressaoItem implements ItemDeImpressao, Equatable {
+  @override
   String get descricao;
+  @override
   String get zpl;
   String get referencia;
   String get cor;
@@ -19,7 +21,14 @@ abstract class EtiquetaImpressaoItem implements ItemDeImpressao, Equatable {
   }) = _EtiquetaImpressaoItemImpl;
 
   @override
-  List<Object?> get props => [descricao, zpl, referencia, cor, tamanho, viaOrdem];
+  List<Object?> get props => [
+    descricao,
+    zpl,
+    referencia,
+    cor,
+    tamanho,
+    viaOrdem,
+  ];
 
   @override
   bool? get stringify => true;
@@ -72,7 +81,14 @@ class _EtiquetaImpressaoItemImpl implements EtiquetaImpressaoItem {
   }
 
   @override
-  List<Object?> get props => [descricao, zpl, referencia, cor, tamanho, viaOrdem];
+  List<Object?> get props => [
+    descricao,
+    zpl,
+    referencia,
+    cor,
+    tamanho,
+    viaOrdem,
+  ];
 
   @override
   bool? get stringify => true;

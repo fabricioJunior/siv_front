@@ -16,7 +16,8 @@ class ImpressaoDeEtiquetasPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<ImpressaoEtiquetasBloc>(
-      create: (_) => sl<ImpressaoEtiquetasBloc>()..add(ImpressaoEtiquetasIniciou()),
+      create: (_) =>
+          sl<ImpressaoEtiquetasBloc>()..add(ImpressaoEtiquetasIniciou()),
       child: _ImpressaoDeEtiquetasView(
         tabelasDePrecoSeletor: tabelasDePrecoSeletor,
       ),
@@ -162,11 +163,17 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                       ),
                       const SizedBox(height: 12),
                       if (state.carregandoGrade)
-                        const Center(child: CircularProgressIndicator.adaptive())
+                        const Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        )
                       else if (state.referenciaSelecionada == null)
-                        const Text('Selecione uma referencia para visualizar a grade.')
+                        const Text(
+                          'Selecione uma referencia para visualizar a grade.',
+                        )
                       else if (state.produtos.isEmpty)
-                        const Text('Nenhum produto encontrado para a referencia selecionada.')
+                        const Text(
+                          'Nenhum produto encontrado para a referencia selecionada.',
+                        )
                       else
                         _buildGradeQuantidade(context, state),
                       const SizedBox(height: 12),
@@ -176,16 +183,22 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                         alignment: WrapAlignment.end,
                         children: [
                           FilledButton.icon(
-                            onPressed: state.processando || !state.podeAdicionarEtiquetas
+                            onPressed:
+                                state.processando ||
+                                    !state.podeAdicionarEtiquetas
                                 ? null
                                 : () {
-                                    bloc.add(ImpressaoEtiquetasAdicionarSolicitado());
+                                    bloc.add(
+                                      ImpressaoEtiquetasAdicionarSolicitado(),
+                                    );
                                   },
                             icon: state.processando
                                 ? const SizedBox(
                                     height: 16,
                                     width: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Icon(Icons.playlist_add_outlined),
                             label: Text(
@@ -269,7 +282,10 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                               (grupo) => ListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
-                                leading: const Icon(Icons.print_outlined, size: 18),
+                                leading: const Icon(
+                                  Icons.print_outlined,
+                                  size: 18,
+                                ),
                                 title: Text(
                                   '${grupo.referencia} | Cor: ${grupo.cor} | Tam: ${grupo.tamanho}',
                                 ),
@@ -282,10 +298,11 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                     SizedBox(
                                       width: 72,
                                       child: TextField(
-                                        controller: _getPilhaQuantidadeController(
-                                          grupo.chave,
-                                          grupo.quantidade,
-                                        ),
+                                        controller:
+                                            _getPilhaQuantidadeController(
+                                              grupo.chave,
+                                              grupo.quantidade,
+                                            ),
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
                                           isDense: true,
@@ -303,7 +320,9 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                             return;
                                           }
 
-                                          final parsed = int.tryParse(value.trim());
+                                          final parsed = int.tryParse(
+                                            value.trim(),
+                                          );
                                           if (parsed == null) {
                                             return;
                                           }
@@ -353,13 +372,16 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                             onPressed: state.pilhaImpressao.isEmpty
                                 ? null
                                 : () {
-                                    bloc.add(ImpressaoEtiquetasPilhaLimpaSolicitada());
+                                    bloc.add(
+                                      ImpressaoEtiquetasPilhaLimpaSolicitada(),
+                                    );
                                   },
                             icon: const Icon(Icons.delete_sweep_outlined),
                             label: const Text('Limpar pilha de impressao'),
                           ),
                           FilledButton.icon(
-                            onPressed: state.imprimindo || state.pilhaImpressao.isEmpty
+                            onPressed:
+                                state.imprimindo || state.pilhaImpressao.isEmpty
                                 ? null
                                 : () {
                                     Navigator.of(context).pushNamed(
@@ -367,7 +389,11 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                       arguments: {
                                         'itens': state.pilhaImpressao,
                                         'quantidadeDeVias':
-                                            state.etiquetaSelecionada?.vias.length ?? 1,
+                                            state
+                                                .etiquetaSelecionada
+                                                ?.vias
+                                                .length ??
+                                            1,
                                       },
                                     );
                                   },
@@ -396,59 +422,61 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
       child: DataTable(
         columns: [
           const DataColumn(label: Text('Cor \\ Tamanho')),
-          ...state.tamanhos
-              .map((tamanho) => DataColumn(label: Text(tamanho.nome)))
-              .toList(growable: false),
+          ...state.tamanhos.map(
+            (tamanho) => DataColumn(label: Text(tamanho.nome)),
+          ),
         ],
-        rows: state.cores.map((cor) {
-          return DataRow(
-            cells: [
-              DataCell(Text(cor.nome)),
-              ...state.tamanhos.map((tamanho) {
-                final chave = '${cor.id}_${tamanho.id}';
-                final produto = state.mapaCorTamanhoParaProduto[chave];
+        rows: state.cores
+            .map((cor) {
+              return DataRow(
+                cells: [
+                  DataCell(Text(cor.nome)),
+                  ...state.tamanhos.map((tamanho) {
+                    final chave = '${cor.id}_${tamanho.id}';
+                    final produto = state.mapaCorTamanhoParaProduto[chave];
 
-                if (produto?.id == null) {
-                  return const DataCell(Center(child: Text('-')));
-                }
+                    if (produto?.id == null) {
+                      return const DataCell(Center(child: Text('-')));
+                    }
 
-                final produtoId = produto!.id!;
-                final controller = _getController(
-                  produtoId,
-                  state.quantidadesPorProdutoId[produtoId] ?? 0,
-                );
+                    final produtoId = produto!.id!;
+                    final controller = _getController(
+                      produtoId,
+                      state.quantidadesPorProdutoId[produtoId] ?? 0,
+                    );
 
-                return DataCell(
-                  SizedBox(
-                    width: 72,
-                    child: TextField(
-                      controller: controller,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        hintText: '0',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        final parsed = int.tryParse(value.trim()) ?? 0;
-                        context.read<ImpressaoEtiquetasBloc>().add(
+                    return DataCell(
+                      SizedBox(
+                        width: 72,
+                        child: TextField(
+                          controller: controller,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            hintText: '0',
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            final parsed = int.tryParse(value.trim()) ?? 0;
+                            context.read<ImpressaoEtiquetasBloc>().add(
                               ImpressaoEtiquetasQuantidadeAlterada(
                                 produtoId: produtoId,
                                 quantidade: parsed,
                               ),
                             );
-                      },
-                    ),
-                  ),
-                );
-              }),
-            ],
-          );
-        }).toList(growable: false),
+                          },
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            })
+            .toList(growable: false),
       ),
     );
   }
@@ -470,7 +498,10 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
     return controller;
   }
 
-  TextEditingController _getPilhaQuantidadeController(String chave, int valorAtual) {
+  TextEditingController _getPilhaQuantidadeController(
+    String chave,
+    int valorAtual,
+  ) {
     final existente = _pilhaQuantidadeControllers[chave];
     if (existente != null) {
       final textoAtual = valorAtual <= 0 ? '' : valorAtual.toString();
@@ -503,7 +534,9 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
           quantidade: 1,
         );
       } else {
-        grupos[chave] = existente.copyWith(quantidade: existente.quantidade + 1);
+        grupos[chave] = existente.copyWith(
+          quantidade: existente.quantidade + 1,
+        );
       }
     }
 

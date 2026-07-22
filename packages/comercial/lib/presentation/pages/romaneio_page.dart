@@ -84,9 +84,11 @@ class _RomaneioPageState extends State<RomaneioPage> {
     );
   }
 
-  void _imprimirNotaFiscal(DocumentoFiscal documentoFiscal, Romaneio? romaneio) {
+  void _imprimirNotaFiscal(
+      DocumentoFiscal documentoFiscal, Romaneio? romaneio) {
     final adaptado = comAvisoServidor(
-      () => NotaFiscalPdfExporter.gerarBytes(documentoFiscal, romaneio: romaneio),
+      () =>
+          NotaFiscalPdfExporter.gerarBytes(documentoFiscal, romaneio: romaneio),
     );
     imprimirDocumentoPdf(
       context,
@@ -235,8 +237,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
           if (state.step == RomaneioStep.formaDePagamentoCorrigida) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content:
-                    Text('Forma de pagamento corrigida com sucesso.'),
+                content: Text('Forma de pagamento corrigida com sucesso.'),
               ),
             );
             return;
@@ -986,19 +987,17 @@ class _RomaneioPageState extends State<RomaneioPage> {
                       ),
                     ),
                   ),
-                  if (state.romaneio?.formasDePagamentoRealizadas
-                          .isNotEmpty ==
+                  if (state.romaneio?.formasDePagamentoRealizadas.isNotEmpty ==
                       true)
                     PermissaoPorNome(
                       idComponente: 'FCXFP002',
                       child: Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: OutlinedButton.icon(
-                          onPressed:
-                              processandoAcao || _romaneioCancelado(state)
-                                  ? null
-                                  : () =>
-                                      _editarFormasDePagamento(context, state),
+                          onPressed: processandoAcao ||
+                                  _romaneioCancelado(state)
+                              ? null
+                              : () => _editarFormasDePagamento(context, state),
                           icon: const Icon(Icons.credit_card_outlined),
                           label: const Text('Editar formas de pagamento'),
                         ),
@@ -1073,16 +1072,16 @@ class _RomaneioPageState extends State<RomaneioPage> {
           descontoJaAplicadoNoRomaneio: state.romaneio?.desconto ?? 0,
           taxaEntregaJaAplicadaNoRomaneio:
               state.romaneio?.valorTaxaEntrega ?? 0,
-          formasDePagamentoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                  FormasDePagamentoSeletor(
-                    modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
-                    titulo: 'Forma de pagamento',
-                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-                  ),
+          formasDePagamentoSeletor: (
+                  {itemsSelecionadosInicial, onChanged, onlyView}) =>
+              FormasDePagamentoSeletor(
+            modo: FormasDePagamentoSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+            titulo: 'Forma de pagamento',
+            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+          ),
         );
       },
     );
@@ -1108,12 +1107,11 @@ class _RomaneioPageState extends State<RomaneioPage> {
     // receber.service.ts) -- sempre substituindo, nunca duplicando.
     final descontosItensRaw =
         pagamentoResultado['descontosItens'] as List<dynamic>? ?? const [];
-    final descontoTotal = descontosItensRaw
-        .whereType<Map<String, dynamic>>()
-        .fold<double>(
-          0,
-          (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
-        );
+    final descontoTotal =
+        descontosItensRaw.whereType<Map<String, dynamic>>().fold<double>(
+              0,
+              (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
+            );
 
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
@@ -1271,10 +1269,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
                           tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
                           onChanged: (selecionados) {
                             setDialogState(() {
-                              formaSelecionadaPorDocumento[
-                                  pagamento.controle] = selecionados.isNotEmpty
-                                  ? selecionados.first.id
-                                  : null;
+                              formaSelecionadaPorDocumento[pagamento.controle] =
+                                  selecionados.isNotEmpty
+                                      ? selecionados.first.id
+                                      : null;
                             });
                           },
                         ),
@@ -1291,14 +1289,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
                 ),
                 FilledButton(
                   onPressed: () {
-                    final pagamentosCorrigidos = formaSelecionadaPorDocumento
-                        .entries
-                        .where((entry) => entry.value != null)
-                        .map((entry) => {
-                              'documento': entry.key,
-                              'formaDePagamentoId': entry.value,
-                            })
-                        .toList(growable: false);
+                    final pagamentosCorrigidos =
+                        formaSelecionadaPorDocumento.entries
+                            .where((entry) => entry.value != null)
+                            .map((entry) => {
+                                  'documento': entry.key,
+                                  'formaDePagamentoId': entry.value,
+                                })
+                            .toList(growable: false);
 
                     if (pagamentosCorrigidos.isEmpty) {
                       Navigator.of(dialogContext).pop();

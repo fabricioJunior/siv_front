@@ -96,6 +96,7 @@ class _VendaPageState extends State<VendaPage> {
                     state.formasDePagamentoRealizadas,
                 'desconto': state.valorDesconto,
                 'descontosItens': state.descontosItens,
+                'valorTaxaEntrega': state.valorTaxaEntrega,
                 'incluirCpfNaNota': state.incluirCpfNaNota,
                 'cpfNaNota': state.cpfNaNota,
                 'pontuarFidelidade': state.pontuarFidelidade,

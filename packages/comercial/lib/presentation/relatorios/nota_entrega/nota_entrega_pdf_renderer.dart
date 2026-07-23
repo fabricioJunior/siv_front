@@ -31,6 +31,7 @@ class NotaEntregaDadosFiscais {
 /// maior que o restante), diferente do DANFE.
 class NotaEntregaLayoutData {
   final String enderecoFormatado;
+  final String? googleMapsUrl;
   final String nomeCliente;
   final DateTime? dataCompra;
   final int? numeroRomaneio;
@@ -50,6 +51,7 @@ class NotaEntregaLayoutData {
 
   const NotaEntregaLayoutData({
     required this.enderecoFormatado,
+    this.googleMapsUrl,
     required this.nomeCliente,
     this.dataCompra,
     this.numeroRomaneio,
@@ -105,6 +107,24 @@ class NotaEntregaPdfRenderer {
                 fontWeight: pw.FontWeight.bold,
               ),
             ),
+            if ((dados.googleMapsUrl ?? '').trim().isNotEmpty)
+              pw.Center(
+                child: pw.Column(
+                  children: [
+                    pw.SizedBox(height: 6),
+                    pw.BarcodeWidget(
+                      barcode: pw.Barcode.qrCode(),
+                      data: dados.googleMapsUrl!,
+                      width: 90,
+                      height: 90,
+                    ),
+                    pw.Text(
+                      'Aponte a câmera para abrir a rota no mapa',
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ],
+                ),
+              ),
             pw.SizedBox(height: 8),
             pw.Divider(thickness: 0.7),
             pw.SizedBox(height: 4),

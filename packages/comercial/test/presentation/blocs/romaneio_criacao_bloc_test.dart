@@ -67,7 +67,8 @@ class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
       {'items': const <DocumentoFiscal>[]};
 
   @override
-  Future<DocumentoFiscal> reprocessar(int id) async => throw UnimplementedError();
+  Future<DocumentoFiscal> reprocessar(int id) async =>
+      throw UnimplementedError();
 
   @override
   Future<DocumentoFiscalDetalhe> getDetalhe(int id) async =>
@@ -231,7 +232,7 @@ void main() {
     funcionarioId: 10,
     tabelaPrecoId: 20,
   );
-  final produto = ProdutoCompartilhado(
+  const produto = ProdutoCompartilhado(
     hash: 'produto-hash',
     produtoId: 1,
     hashLista: hashLista,
@@ -275,13 +276,12 @@ void main() {
       RecuperarCaixaAberto(repository: StubCaixaRepository()),
       ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
     ),
-    act: (bloc) =>
-        bloc.add(
-          const RomaneioCriacaoSolicitada(
-            hashLista: hashLista,
-            formasDePagamentoRealizadas: const [],
-          ),
-        ),
+    act: (bloc) => bloc.add(
+      const RomaneioCriacaoSolicitada(
+        hashLista: hashLista,
+        formasDePagamentoRealizadas: [],
+      ),
+    ),
     expect: () => [
       isA<RomaneioCriacaoState>().having(
         (state) => state.step,

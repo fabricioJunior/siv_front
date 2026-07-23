@@ -30,6 +30,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   bool _salvando = false;
   bool _abrindoPreco = false;
   bool _detalhesExpandidos = false;
+  int _refreshProdutosTrigger = 0;
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
   SubCategoria? _subCategoriaSelecionada;
@@ -448,26 +449,21 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                       label: const Text('Ver códigos de barras'),
                                     ),
                                     TextButton.icon(
-                                      onPressed: () {
-                                        Navigator.of(context)
-                                            .pushNamed(
-                                              '/produto',
-                                              arguments: {
-                                                'referenciaId':
-                                                    state.referencia?.id,
-                                              },
-                                            )
-                                            .then((_) {
-                                              // ignore: use_build_context_synchronously
-                                              context
-                                                  .read<ReferenciaBloc>()
-                                                  .add(
-                                                    ReferenciaIniciou(
-                                                      idReferencia:
-                                                          widget.idReferencia,
-                                                    ),
-                                                  );
-                                            });
+                                      onPressed: () async {
+                                        final criou = await Navigator.of(context).pushNamed(
+                                          '/produto',
+                                          arguments: {
+                                            'referenciaId': state.referencia?.id,
+                                          },
+                                        );
+
+                                        if (!mounted) return;
+
+                                        if (criou == true) {
+                                          setState(() {
+                                            _refreshProdutosTrigger++;
+                                          });
+                                        }
                                       },
                                       icon: const Icon(Icons.add),
                                       label: const Text('Cadastrar novo produto'),
@@ -496,6 +492,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                       referenciaId:
                                           _referencia?.id ??
                                           widget.idReferencia,
+                                      refreshTrigger: _refreshProdutosTrigger,
                                     )
                                   : const Text(
                                       'ID da referência indisponível para carregar produtos.',

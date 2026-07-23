@@ -9,10 +9,15 @@ class ProdutosDaReferenciaTabelaWidget extends StatefulWidget {
   final int referenciaId;
   final bool permitirCriacaoDeNovoProduto;
 
+  /// Alterar esse valor (ex: incrementando um contador no widget pai)
+  /// força um novo fetch dos produtos, mesmo com o mesmo [referenciaId].
+  final Object? refreshTrigger;
+
   const ProdutosDaReferenciaTabelaWidget({
     super.key,
     required this.referenciaId,
     this.permitirCriacaoDeNovoProduto = false,
+    this.refreshTrigger,
   });
 
   @override
@@ -33,6 +38,15 @@ class _ProdutosDaReferenciaTabelaWidgetState
     _tabController = TabController(length: 2, vsync: this);
     _bloc = sl<ProdutosDaReferenciaBloc>()
       ..add(ProdutosDaReferenciaIniciou(referenciaId: widget.referenciaId));
+  }
+
+  @override
+  void didUpdateWidget(ProdutosDaReferenciaTabelaWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.referenciaId != widget.referenciaId ||
+        oldWidget.refreshTrigger != widget.refreshTrigger) {
+      _bloc.add(ProdutosDaReferenciaIniciou(referenciaId: widget.referenciaId));
+    }
   }
 
   @override
@@ -332,8 +346,8 @@ class _ProdutosDaReferenciaTabelaWidgetState
     if (!existe && widget.permitirCriacaoDeNovoProduto) {
       return IconButton(
         icon: const Icon(Icons.add, size: 18),
-        onPressed: () {
-          Navigator.of(context).pushNamed(
+        onPressed: () async {
+          final criou = await Navigator.of(context).pushNamed(
             '/produto',
             arguments: {
               'referenciaId': widget.referenciaId,
@@ -341,6 +355,10 @@ class _ProdutosDaReferenciaTabelaWidgetState
               'tamanhoId': tamanhoId,
             },
           );
+
+          if (criou == true) {
+            _bloc.add(ProdutosDaReferenciaIniciou(referenciaId: widget.referenciaId));
+          }
         },
       );
     }

@@ -1,5 +1,6 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
@@ -18,6 +19,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
   final double desconto;
   final List<Map<String, dynamic>> descontosItens;
+  final double valorTaxaEntrega;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -30,6 +32,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     this.formasDePagamentoRealizadas = const [],
     this.desconto = 0,
     this.descontosItens = const [],
+    this.valorTaxaEntrega = 0,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
@@ -47,6 +50,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             formasDePagamentoRealizadas: formasDePagamentoRealizadas,
             desconto: desconto,
             descontosItens: descontosItens,
+            valorTaxaEntrega: valorTaxaEntrega,
             incluirCpfNaNota: incluirCpfNaNota,
             cpfNaNota: cpfNaNota,
             pontuarFidelidade: pontuarFidelidade,
@@ -131,6 +135,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                                     formasDePagamentoRealizadas,
                                 desconto: desconto,
                                 descontosItens: descontosItens,
+                                valorTaxaEntrega: valorTaxaEntrega,
                                 incluirCpfNaNota: incluirCpfNaNota,
                                 cpfNaNota: cpfNaNota,
                                 pontuarFidelidade: pontuarFidelidade,
@@ -276,6 +281,78 @@ class _SucessoRomaneioView extends StatelessWidget {
     this.itensCriados = const [],
   });
 
+  Future<void> _imprimirNotaEntrega(BuildContext context) async {
+    final pessoaId = romaneio?.pessoaId;
+    if (romaneio == null || pessoaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Romaneio sem cliente associado.')),
+      );
+      return;
+    }
+
+    final enderecoSelecionado = await Navigator.of(context).pushNamed(
+      '/selecionar_endereco',
+      arguments: {
+        'idPessoa': pessoaId,
+        'titulo': 'Endereço de entrega',
+      },
+    ) as Map<String, dynamic>?;
+
+    if (enderecoSelecionado == null || !context.mounted) return;
+
+    await imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir nota de entrega',
+      nomeDocumento: 'Nota de Entrega - Romaneio #${romaneio!.id}',
+      gerarBytes: () async {
+        final resultado = await NotaEntregaPdfExporter.gerarBytes(
+          romaneio: romaneio!,
+          itens: itensCriados,
+          enderecoFormatado: _formatarEnderecoSelecionado(enderecoSelecionado),
+          documentoFiscal: documentoFiscal,
+          documentoFiscalFalhou: documentoFiscal?.status == 'falha',
+        );
+        return resultado.bytes;
+      },
+    );
+  }
+
+  String _formatarEnderecoSelecionado(Map<String, dynamic> endereco) {
+    final numero = (endereco['numero'] as String? ?? '').trim();
+    final complemento = (endereco['complemento'] as String? ?? '').trim();
+    final logradouro = (endereco['logradouro'] as String? ?? '').trim();
+    final linha1Buffer = StringBuffer(logradouro);
+    if (numero.isNotEmpty) linha1Buffer.write(', $numero');
+    if (complemento.isNotEmpty) linha1Buffer.write(' - $complemento');
+
+    final bairro = (endereco['bairro'] as String? ?? '').trim();
+    final municipio = (endereco['municipio'] as String? ?? '').trim();
+    final uf = (endereco['uf'] as String? ?? '').trim();
+    final cep = (endereco['cep'] as String? ?? '').trim();
+
+    final linha2Buffer = StringBuffer();
+    if (bairro.isNotEmpty) linha2Buffer.write(bairro);
+    if (municipio.isNotEmpty || uf.isNotEmpty) {
+      if (linha2Buffer.isNotEmpty) linha2Buffer.write(' - ');
+      linha2Buffer.write([
+        if (municipio.isNotEmpty) municipio,
+        if (uf.isNotEmpty) uf,
+      ].join('/'));
+    }
+    if (cep.isNotEmpty) {
+      if (linha2Buffer.isNotEmpty) {
+        linha2Buffer.write('  CEP: $cep');
+      } else {
+        linha2Buffer.write('CEP: $cep');
+      }
+    }
+
+    return [
+      linha1Buffer.toString(),
+      if (linha2Buffer.isNotEmpty) linha2Buffer.toString(),
+    ].join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -349,6 +426,14 @@ class _SucessoRomaneioView extends StatelessWidget {
             ),
             icon: const Icon(Icons.print_outlined),
             label: const Text('Imprimir Romaneio'),
+          ),
+        ],
+        if (romaneio != null) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => _imprimirNotaEntrega(context),
+            icon: const Icon(Icons.local_shipping_outlined),
+            label: const Text('Imprimir Nota de Entrega'),
           ),
         ],
         const SizedBox(height: 12),

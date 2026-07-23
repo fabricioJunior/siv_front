@@ -509,6 +509,10 @@ Map<String, Widget Function(BuildContext)> routes = {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
+    final valorTaxaEntregaArg = argumentos['valorTaxaEntrega'];
+    final valorTaxaEntrega = valorTaxaEntregaArg is num
+        ? valorTaxaEntregaArg.toDouble()
+        : double.tryParse(valorTaxaEntregaArg?.toString() ?? '') ?? 0;
     final incluirCpfNaNota = argumentos['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade = argumentos['pontuarFidelidade'] as bool? ?? false;
@@ -529,6 +533,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         desconto: desconto,
         descontosItens: descontosItens,
+        valorTaxaEntrega: valorTaxaEntrega,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,

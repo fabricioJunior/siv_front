@@ -235,7 +235,7 @@ class BalancoRemoteDataSource extends RemoteDataSourceBase
         )
         .map((dto) => dto.toJson())
         .toList();
-    final response = await put(
+    await put(
       pathParameters: {'path': '/$balancoId/lotes/$loteId/itens'},
       body: body,
     );

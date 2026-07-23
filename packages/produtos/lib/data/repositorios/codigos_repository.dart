@@ -1,9 +1,11 @@
 import 'package:core/paginacao/i_paginacao_data_source.dart';
 import 'package:core/paginacao/paginacao.dart';
+import 'package:produtos/data/remote/dtos/codigo_dto.dart';
 import 'package:produtos/domain/data/local/i_codigos_local_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigos_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_codigos_repository.dart';
+import 'package:produtos/domain/models/codigo.dart';
 
 class CodigoDeBarrasRepository implements ICodigosRepository {
   final ICodigosDoProdutoRemoteDatasource _codigosDoProdutoRemoteDatasource;
@@ -22,11 +24,15 @@ class CodigoDeBarrasRepository implements ICodigosRepository {
        _paginacaoDataSource = paginacaoDataSource;
 
   @override
-  Future<void> criarCodigo({required int produtoId, required String codigo}) {
-    return _codigosDoProdutoRemoteDatasource.salvarCodigo(
+  Future<void> criarCodigo({required int produtoId, required String codigo}) async {
+    await _codigosDoProdutoRemoteDatasource.salvarCodigo(
       produtoId: produtoId,
       codigoDeBarras: codigo,
     );
+
+    await _codigosLocalDataSource.salvarCodigosDeBarras([
+      CodigoDto(codigo: codigo, tipo: TipoCodigo.ean13, produtoId: produtoId),
+    ]);
   }
 
   @override

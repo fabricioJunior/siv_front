@@ -28,6 +28,7 @@ class NotaEntregaPdfExporter {
   }) async {
     final dados = NotaEntregaLayoutData(
       enderecoFormatado: enderecoFormatado,
+      googleMapsUrl: _googleMapsUrl(enderecoFormatado),
       nomeCliente: (romaneio.pessoaNome?.trim().isNotEmpty ?? false)
           ? romaneio.pessoaNome!.trim().toUpperCase()
           : 'CLIENTE NÃO IDENTIFICADO',
@@ -77,6 +78,7 @@ class NotaEntregaPdfExporter {
   }) async {
     final dados = NotaEntregaLayoutData(
       enderecoFormatado: enderecoFormatado,
+      googleMapsUrl: _googleMapsUrl(enderecoFormatado),
       nomeCliente: (pessoaNome?.trim().isNotEmpty ?? false)
           ? pessoaNome!.trim().toUpperCase()
           : 'CLIENTE NÃO IDENTIFICADO',
@@ -103,6 +105,15 @@ class NotaEntregaPdfExporter {
     final bytes =
         await NotaEntregaPdfRenderer.render(dados, pageFormat: pageFormat);
     return (bytes: bytes, erroServidor: null);
+  }
+
+  /// Monta a URL de busca do Google Maps a partir do endereco ja formatado
+  /// (multi-linha, com "CEP:" etc) -- a API de busca do Maps aceita texto
+  /// livre, entao nao precisa dos campos crus do endereco separados.
+  static String? _googleMapsUrl(String enderecoFormatado) {
+    final query = enderecoFormatado.replaceAll('\n', ', ').trim();
+    if (query.isEmpty) return null;
+    return 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}';
   }
 
   static NotaEntregaDadosFiscais? _dadosFiscais(

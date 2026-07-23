@@ -33,19 +33,20 @@ class EtiquetaSeletor extends StatefulWidget implements ISeletor {
   State<EtiquetaSeletor> createState() => _EtiquetaSeletorState();
 
   @override
-  List<SelectData> get itemsSelecionadosInicial =>
-      etiquetasSelecionadasIniciais
-          .map(
-            (etiqueta) => SelectData(
-              id: etiqueta.id ?? 0,
-              nome: etiqueta.nome,
-              data: {
-                'etiqueta': etiqueta.toString(),
-                'vias': etiqueta.vias.map((item) => item.zpl).toList(growable: false),
-              },
-            ),
-          )
-          .toList();
+  List<SelectData> get itemsSelecionadosInicial => etiquetasSelecionadasIniciais
+      .map(
+        (etiqueta) => SelectData(
+          id: etiqueta.id ?? 0,
+          nome: etiqueta.nome,
+          data: {
+            'etiqueta': etiqueta.toString(),
+            'vias': etiqueta.vias
+                .map((item) => item.zpl)
+                .toList(growable: false),
+          },
+        ),
+      )
+      .toList();
 }
 
 class _EtiquetaSeletorState extends State<EtiquetaSeletor> {
@@ -75,7 +76,8 @@ class _EtiquetaSeletorState extends State<EtiquetaSeletor> {
       value: _etiquetasBloc,
       child: BlocBuilder<EtiquetasBloc, EtiquetasState>(
         builder: (context, state) {
-          if (state is EtiquetasCarregarEmProgresso && state.etiquetas.isEmpty) {
+          if (state is EtiquetasCarregarEmProgresso &&
+              state.etiquetas.isEmpty) {
             return const Center(child: CircularProgressIndicator.adaptive());
           }
 
@@ -109,7 +111,8 @@ class _EtiquetaSeletorState extends State<EtiquetaSeletor> {
                 : widget.etiquetasSelecionadasIniciais
                       .where(
                         (etiquetaInicial) => state.etiquetas.any(
-                          (etiqueta) => _mesmaEtiqueta(etiqueta, etiquetaInicial),
+                          (etiqueta) =>
+                              _mesmaEtiqueta(etiqueta, etiquetaInicial),
                         ),
                       )
                       .toList(),
@@ -156,7 +159,9 @@ class _EtiquetaSeletorState extends State<EtiquetaSeletor> {
                 nome: item.nome,
                 data: {
                   'etiqueta': item.toString(),
-                  'vias': item.vias.map((via) => via.zpl).toList(growable: false),
+                  'vias': item.vias
+                      .map((via) => via.zpl)
+                      .toList(growable: false),
                 },
               );
             },
@@ -170,7 +175,7 @@ class _EtiquetaSeletorState extends State<EtiquetaSeletor> {
     final id = etiqueta.id == null ? 'sem ID' : etiqueta.id.toString();
     final largura = etiqueta.largura.toStringAsFixed(0);
     final altura = etiqueta.altura.toStringAsFixed(0);
-    return '($id) ${etiqueta.nome} - ${etiqueta.vias.length} via(s) - ${largura}x${altura} mm - ${etiqueta.dpi.valor} DPI';
+    return '($id) ${etiqueta.nome} - ${etiqueta.vias.length} via(s) - ${largura}x$altura mm - ${etiqueta.dpi.valor} DPI';
   }
 
   Widget _mensagem(BuildContext context, String texto, Color cor) {

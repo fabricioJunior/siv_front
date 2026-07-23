@@ -163,14 +163,10 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                 state is FluxoDeCaixaCarregarEmProgresso &&
                     state.caixa == null &&
                     state.caixaId == null;
-            final contagemJaEncerrada =
-                state.caixa?.contagem?.encerrada == true;
+
             final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto ||
                 (state.caixa?.situacao == SituacaoCaixa.contagem);
-            final caixaEmContagem =
-                state.caixa?.situacao == SituacaoCaixa.contagem &&
-                    !contagemJaEncerrada &&
-                    state.caixa?.situacao == SituacaoCaixa.contagem;
+
             final carregandoAbertura = state is FluxoDeCaixaAbrirEmProgresso;
             final erroRecuperacaoCaixa =
                 state is FluxoDeCaixaCarregarFalha && state.caixa == null
@@ -395,8 +391,8 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                                         ),
                                       );
 
-                                      final resultado = await bloc.stream
-                                          .firstWhere(
+                                      final resultado =
+                                          await bloc.stream.firstWhere(
                                         (s) =>
                                             s is FluxoDeCaixaFecharSucesso ||
                                             s is FluxoDeCaixaFecharFalha,
@@ -504,8 +500,7 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final extratosFiltrados =
-                          _aplicarFiltros(state.extratos);
+                      final extratosFiltrados = _aplicarFiltros(state.extratos);
                       if (extratosFiltrados.isEmpty) {
                         return Center(
                           child: Padding(
@@ -587,53 +582,6 @@ class _ResumoCaixa extends StatelessWidget {
         trailing: Text(
           rotulo,
           style: TextStyle(fontWeight: FontWeight.bold, color: cor),
-        ),
-      ),
-    );
-  }
-}
-
-class _CaixaEmContagem extends StatelessWidget {
-  final int? caixaId;
-  final VoidCallback? onIrParaContagem;
-
-  const _CaixaEmContagem({required this.caixaId, this.onIrParaContagem});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Card(
-          margin: const EdgeInsets.all(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.calculate_outlined,
-                    size: 44, color: Colors.orange),
-                const SizedBox(height: 12),
-                Text(
-                  'Caixa em contagem',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Este caixa está em processo de contagem e não pode ser aberto novamente. Finalize a contagem para liberar o caixa.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: onIrParaContagem,
-                  icon: const Icon(Icons.calculate_outlined),
-                  label: const Text('Ir para contagem do caixa'),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

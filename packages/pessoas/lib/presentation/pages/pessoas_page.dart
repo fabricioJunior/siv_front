@@ -1,7 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
-import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoas_bloc/pessoas_bloc.dart';

@@ -61,12 +61,12 @@ class PrecosDeReferenciasRemoteDataSource extends RemoteDataSourceBase
     while (true) {
       final queryParameters = <String, String>{'page': pagina.toString()};
       if (ultimaAtualizacaoInicio != null) {
-        queryParameters['ultimaAtualizacaoInicio'] =
-            ultimaAtualizacaoInicio.toIso8601String();
+        queryParameters['ultimaAtualizacaoInicio'] = ultimaAtualizacaoInicio
+            .toIso8601String();
       }
       if (ultimaAtualizacaoFim != null) {
-        queryParameters['ultimaAtualizacaoFim'] =
-            ultimaAtualizacaoFim.toIso8601String();
+        queryParameters['ultimaAtualizacaoFim'] = ultimaAtualizacaoFim
+            .toIso8601String();
       }
 
       final response = await get(

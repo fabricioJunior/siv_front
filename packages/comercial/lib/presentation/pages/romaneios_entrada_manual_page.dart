@@ -451,7 +451,8 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      romaneio.funcionarioNome ?? 'Funcionário não informado',
+                      romaneio.funcionarioNome?.toUpperCase() ??
+                          'Funcionário não informado',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),

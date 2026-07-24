@@ -273,7 +273,7 @@ class _PessoasPageState extends State<PessoasPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      pessoa.nome,
+                      pessoa.nome.toUpperCase(),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

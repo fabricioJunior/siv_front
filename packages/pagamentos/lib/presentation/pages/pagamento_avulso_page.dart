@@ -246,7 +246,7 @@ class _PagamentoAvulsoPageState extends State<PagamentoAvulsoPage> {
     required ValueChanged<Map<String, String>> onSelecionado,
     required VoidCallback onRemover,
   }) {
-    final nome = valorAtual['nome'] ?? '';
+    final nome = (valorAtual['nome'] ?? '').toUpperCase();
     final documento = valorAtual['documento'] ?? '';
     final email = valorAtual['email'] ?? '';
     final telefone = valorAtual['telefone'] ?? '';

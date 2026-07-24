@@ -262,7 +262,7 @@ class _FuncionarioCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              item.funcionarioNome as String,
+              (item.funcionarioNome as String).toUpperCase(),
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
             ),
             const SizedBox(height: 10),

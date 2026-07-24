@@ -215,7 +215,7 @@ class _Body extends StatelessWidget {
               ],
             ),
           ),
-          _InfoRow('Cliente', doc.pessoaNome ?? '-'),
+          _InfoRow('Cliente', doc.pessoaNome?.toUpperCase() ?? '-'),
           _InfoRow('Tipo da Nota', doc.tipoNota),
           _InfoRow('Ambiente', doc.ambienteEmissao),
           _InfoRow('CPF/CNPJ Emissão', doc.cpfOuCnpjEmissao, copiavel: true),

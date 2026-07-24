@@ -451,7 +451,7 @@ class _RomaneioCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Pessoa: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}',
+                          'Pessoa: ${romaneio.pessoaNome?.toUpperCase() ?? romaneio.pessoaId ?? '-'}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],

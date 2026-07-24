@@ -43,10 +43,10 @@ class OrcamentosPage extends StatelessWidget {
                   child: ListTile(
                     onTap: () => Navigator.of(context).pop(orcamento.hash),
                     title: Text(
-                      'Cliente: ${orcamento.clienteNome ?? '-'}',
+                      'Cliente: ${orcamento.clienteNome?.toUpperCase() ?? '-'}',
                     ),
                     subtitle: Text(
-                      'Vendedor: ${orcamento.funcionarioNome ?? '-'}\n'
+                      'Vendedor: ${orcamento.funcionarioNome?.toUpperCase() ?? '-'}\n'
                       'Data: ${_formatarData(orcamento.atualizadoEm)}  •  '
                       'Total: ${_formatarMoeda(orcamento.valorTotal)}',
                     ),

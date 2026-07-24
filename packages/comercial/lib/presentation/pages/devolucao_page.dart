@@ -203,7 +203,7 @@ class _DevolucaoPageState extends State<DevolucaoPage> {
                   _buildInfoChip(
                     icon: Icons.person_outline,
                     label:
-                        'Cliente: ${state.romaneioOriginal!.pessoaNome ?? state.romaneioOriginal!.pessoaId ?? '-'}',
+                        'Cliente: ${state.romaneioOriginal!.pessoaNome?.toUpperCase() ?? state.romaneioOriginal!.pessoaId ?? '-'}',
                   ),
                   _buildInfoChip(
                     icon: Icons.inventory_2_outlined,
@@ -676,7 +676,7 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
                                           'Romaneio #${romaneio.id ?? '-'} · ${_formatarDataCurta(romaneio.data)}',
                                         ),
                                         subtitle: Text(
-                                          'Cliente: ${romaneio.pessoaNome ?? romaneio.pessoaId ?? '-'}\n'
+                                          'Cliente: ${romaneio.pessoaNome?.toUpperCase() ?? romaneio.pessoaId ?? '-'}\n'
                                           'Valor: ${_formatarMoedaItem(romaneio.valorBruto)}',
                                         ),
                                         isThreeLine: true,

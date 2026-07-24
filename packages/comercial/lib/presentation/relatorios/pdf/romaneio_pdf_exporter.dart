@@ -196,7 +196,7 @@ class RomaneioPdfExporter {
                       ),
                     ),
                     _linha(
-                      'Pessoa: ${romaneio.pessoaId ?? '-'} - ${_naoVazio(romaneio.pessoaNome)}',
+                      'Pessoa: ${romaneio.pessoaId ?? '-'} - ${_naoVazio(romaneio.pessoaNome?.toUpperCase())}',
                     ),
                     if (romaneio.temEntrega == true) ...[
                       _linha(
@@ -220,10 +220,10 @@ class RomaneioPdfExporter {
                   children: [
                     _linha('Data da venda: ${_fmtData(romaneio.data)}'),
                     _linha(
-                      'Caixa: ${_naoVazio(romaneio.caixaTerminalNome ?? romaneio.operadorNome)}',
+                      'Caixa: ${_naoVazio((romaneio.caixaTerminalNome ?? romaneio.operadorNome)?.toUpperCase())}',
                     ),
                     _linha(
-                      'Vendedor: ${romaneio.funcionarioId ?? '-'} - ${_naoVazio(romaneio.funcionarioNome)}',
+                      'Vendedor: ${romaneio.funcionarioId ?? '-'} - ${_naoVazio(romaneio.funcionarioNome?.toUpperCase())}',
                     ),
                   ],
                 ),

@@ -90,7 +90,7 @@ class _SelecionarPessoaPageState extends State<SelecionarPessoaPage> {
                       return Card(
                         child: ListTile(
                           onTap: () => _selecionarPessoa(context, pessoa),
-                          title: Text(pessoa.nome),
+                          title: Text(pessoa.nome.toUpperCase()),
                           subtitle: Text(formatarDocumento(pessoa.documento)),
                           trailing: const Icon(Icons.chevron_right),
                         ),

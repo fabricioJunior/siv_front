@@ -380,7 +380,7 @@ class _ClienteCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            item.clienteNome as String,
+                            (item.clienteNome as String).toUpperCase(),
                             style: const TextStyle(
                                 fontWeight: FontWeight.w700, fontSize: 13),
                           ),

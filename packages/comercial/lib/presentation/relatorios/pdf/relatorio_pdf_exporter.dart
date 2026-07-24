@@ -167,7 +167,7 @@ class RelatorioPdfExporter {
                   for (final v in empresa.vendedores)
                     pw.TableRow(
                       children: [
-                        v.funcionarioNome,
+                        v.funcionarioNome.toString().toUpperCase(),
                         _fmtMoeda(v.total),
                         '${v.quantidadeVendas}',
                         _fmtMoeda(v.ticketMedio),
@@ -349,7 +349,7 @@ class RelatorioPdfExporter {
               for (final item in dados.items)
                 pw.TableRow(
                   children: [
-                    item.clienteNome,
+                    item.clienteNome.toString().toUpperCase(),
                     item.empresaNome,
                     _fmtData(item.dataUltimaCompra),
                     _fmtMoeda(item.valorTotalComprado),

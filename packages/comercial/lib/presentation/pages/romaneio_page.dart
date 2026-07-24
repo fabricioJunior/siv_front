@@ -434,7 +434,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                           ?.trim()
                                           .isNotEmpty ==
                                       true
-                                  ? state.romaneio!.pessoaNome!
+                                  ? state.romaneio!.pessoaNome!.toUpperCase()
                                   : 'Pessoa #${state.pessoaId}',
                               data: {
                                 'id': state.pessoaId,
@@ -469,6 +469,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                           .isNotEmpty ==
                                       true
                                   ? state.romaneio!.funcionarioNome!
+                                      .toUpperCase()
                                   : 'Funcionário #${state.funcionarioId}',
                               data: {
                                 'id': state.funcionarioId,
@@ -841,7 +842,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                   icone: Icons.person_outline,
                   titulo: 'Pessoa',
                   valor: _valorOuFallback(
-                    romaneio?.pessoaNome,
+                    romaneio?.pessoaNome?.toUpperCase(),
                     fallback: state.pessoaId != null
                         ? 'Pessoa #${state.pessoaId}'
                         : '-',
@@ -855,7 +856,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                   icone: Icons.badge,
                   titulo: 'Funcionário',
                   valor: _valorOuFallback(
-                    romaneio?.funcionarioNome,
+                    romaneio?.funcionarioNome?.toUpperCase(),
                     fallback: state.funcionarioId != null
                         ? 'Funcionário #${state.funcionarioId}'
                         : '-',
@@ -1167,7 +1168,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                                     ?.trim()
                                     .isNotEmpty ==
                                 true
-                            ? state.romaneio!.funcionarioNome!
+                            ? state.romaneio!.funcionarioNome!.toUpperCase()
                             : 'Funcionário #${state.funcionarioId}',
                         data: {
                           'id': state.funcionarioId,

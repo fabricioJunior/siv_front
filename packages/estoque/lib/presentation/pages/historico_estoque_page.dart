@@ -414,7 +414,7 @@ class _HistoricoEstoqueCard extends StatelessWidget {
             if (item.pessoaNome != null) ...[
               const SizedBox(height: 4),
               Text(
-                'Cliente: ${item.pessoaNome}',
+                'Cliente: ${item.pessoaNome!.toUpperCase()}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -423,9 +423,9 @@ class _HistoricoEstoqueCard extends StatelessWidget {
               Text(
                 [
                   if (item.funcionarioNome != null)
-                    'Funcionário: ${item.funcionarioNome}',
+                    'Funcionário: ${item.funcionarioNome!.toUpperCase()}',
                   if (item.operadorNome != null)
-                    'Usuário: ${item.operadorNome}',
+                    'Usuário: ${item.operadorNome!.toUpperCase()}',
                 ].join('  •  '),
                 style: Theme.of(context).textTheme.bodySmall,
               ),

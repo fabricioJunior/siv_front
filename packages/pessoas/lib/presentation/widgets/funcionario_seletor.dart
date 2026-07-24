@@ -118,11 +118,11 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
           return SeletorGenerico<Funcionario>(
             toSelectData: (item) => SelectData(
               id: item.id,
-              nome: item.nome,
+              nome: item.nome.toUpperCase(),
               data: item.toJson(),
             ),
             itens: funcionariosDisponiveis,
-            itemLabel: (f) => f.nome,
+            itemLabel: (f) => f.nome.toUpperCase(),
             itemKey: (f) => f.id,
             onlyView: widget.onlyView,
             modo: widget.modo == FuncionarioSeletorModo.unica

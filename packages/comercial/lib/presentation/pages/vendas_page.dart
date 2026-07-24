@@ -494,7 +494,7 @@ class _VendaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      venda.pessoaNome ?? 'Cliente não informado',
+                      venda.pessoaNome?.toUpperCase() ?? 'Cliente não informado',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),

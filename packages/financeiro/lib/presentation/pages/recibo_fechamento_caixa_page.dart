@@ -373,7 +373,7 @@ class _ItemMovimentacao extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${_fmtDataHora(movimentacao.dataHora)} · ${movimentacao.operadorNome ?? 'Operador ${movimentacao.operadorId}'}',
+                    '${_fmtDataHora(movimentacao.dataHora)} · ${movimentacao.operadorNome?.toUpperCase() ?? 'Operador ${movimentacao.operadorId}'}',
                     style: theme(context).textTheme.bodySmall,
                   ),
                   if (cancelada)

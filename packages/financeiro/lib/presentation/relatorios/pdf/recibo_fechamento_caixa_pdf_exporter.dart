@@ -83,7 +83,7 @@ pw.Widget _tabelaMovimentacao(
             _fmtMoeda(item.valor),
             _fmtDataHora(item.dataHora),
             _naoVazio(item.descricao, item.origem),
-            _naoVazio(item.operadorNome, '${item.operadorId}'),
+            _naoVazio(item.operadorNome?.toUpperCase(), '${item.operadorId}'),
             item.cancelado
                 ? 'Cancelada${item.motivoCancelamento?.trim().isNotEmpty == true ? ': ${item.motivoCancelamento}' : ''}'
                 : 'Ativa',

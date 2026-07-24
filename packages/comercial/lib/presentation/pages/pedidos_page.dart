@@ -360,7 +360,7 @@ class _PedidoCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              pedido.pessoaNome ??
+                              pedido.pessoaNome?.toUpperCase() ??
                                   (pedido.pessoaId != null
                                       ? 'Pessoa #${pedido.pessoaId}'
                                       : '-'),
@@ -381,7 +381,7 @@ class _PedidoCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Vendedor: ${pedido.funcionarioNome ?? (pedido.funcionarioId != null ? 'Funcionário #${pedido.funcionarioId}' : '-')}',
+                              'Vendedor: ${pedido.funcionarioNome?.toUpperCase() ?? (pedido.funcionarioId != null ? 'Funcionário #${pedido.funcionarioId}' : '-')}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.black54,

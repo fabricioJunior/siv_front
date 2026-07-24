@@ -373,12 +373,12 @@ class _VendaPageState extends State<VendaPage> {
                       _buildInfoChip(
                         icon: Icons.person_outline,
                         label:
-                            'Cliente: ${state.clienteSelecionado?.nome ?? '-'}',
+                            'Cliente: ${state.clienteSelecionado?.nome.toUpperCase() ?? '-'}',
                       ),
                       _buildInfoChip(
                         icon: Icons.badge_outlined,
                         label:
-                            'Vendedor: ${state.vendedorSelecionado?.nome ?? '-'}',
+                            'Vendedor: ${state.vendedorSelecionado?.nome.toUpperCase() ?? '-'}',
                       ),
                       _buildInfoChip(
                         icon: Icons.sell_outlined,
@@ -551,12 +551,14 @@ class _VendaPageState extends State<VendaPage> {
                   const SizedBox(height: 12),
                   _buildInfoChip(
                     icon: Icons.person_outline,
-                    label: 'Cliente: ${clienteSelecionado?.nome ?? '-'}',
+                    label:
+                        'Cliente: ${clienteSelecionado?.nome.toUpperCase() ?? '-'}',
                   ),
                   const SizedBox(height: 8),
                   _buildInfoChip(
                     icon: Icons.badge_outlined,
-                    label: 'Vendedor: ${vendedorSelecionado?.nome ?? '-'}',
+                    label:
+                        'Vendedor: ${vendedorSelecionado?.nome.toUpperCase() ?? '-'}',
                   ),
                   const SizedBox(height: 8),
                   _buildInfoChip(

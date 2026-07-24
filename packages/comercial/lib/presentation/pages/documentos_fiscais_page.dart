@@ -389,7 +389,8 @@ class _DocumentoFiscalCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            documento.pessoaNome ?? 'Sem cliente',
+                            documento.pessoaNome?.toUpperCase() ??
+                                'Sem cliente',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                             overflow: TextOverflow.ellipsis,
                           ),

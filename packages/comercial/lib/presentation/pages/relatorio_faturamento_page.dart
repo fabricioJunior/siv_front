@@ -715,7 +715,7 @@ class _VendedorRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-                child: Text(v.funcionarioNome as String,
+                child: Text((v.funcionarioNome as String).toUpperCase(),
                     style: const TextStyle(fontSize: 12))),
             Text(_fmtMoeda(v.total as double),
                 style: const TextStyle(

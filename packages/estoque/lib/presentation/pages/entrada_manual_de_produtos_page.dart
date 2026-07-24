@@ -345,7 +345,9 @@ class _EntradaManualDeProdutosPageState
                 if (state.funcionarioSelecionado != null)
                   Chip(
                     avatar: const Icon(Icons.person_outline, size: 18),
-                    label: Text(state.funcionarioSelecionado!.nome),
+                    label: Text(
+                      state.funcionarioSelecionado!.nome.toUpperCase(),
+                    ),
                   ),
                 if (state.tabelaDePrecoSelecionada != null)
                   Chip(
@@ -434,7 +436,7 @@ class _EntradaManualDeProdutosPageState
                 _buildInfoChip(
                   icon: Icons.badge_outlined,
                   label:
-                      'Funcionário: ${state.funcionarioSelecionado?.nome ?? '-'}',
+                      'Funcionário: ${state.funcionarioSelecionado?.nome.toUpperCase() ?? '-'}',
                 ),
                 _buildInfoChip(
                   icon: Icons.sell_outlined,

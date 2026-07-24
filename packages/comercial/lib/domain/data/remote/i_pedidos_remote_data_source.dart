@@ -5,6 +5,7 @@ abstract class IPedidosRemoteDataSource {
   Future<Pedido> recuperarPedido(int id);
   Future<Pedido> criarPedido(Pedido pedido);
   Future<Pedido> atualizarPedido(Pedido pedido);
+  Future<Pedido> aplicarDesconto(int id, {required double desconto});
   Future<void> conferirPedido(int id, {bool processarComDivergencia = false});
   Future<void> faturarPedido(int id, {required int caixaId});
   Future<void> cancelarPedido(int id, {required String motivoCancelamento});

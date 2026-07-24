@@ -675,9 +675,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(
                                     item.descricao,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
                                   ),
                                   subtitle: Text(
                                     '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  ${widget.rotuloQuantidadeDisponivel}: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',

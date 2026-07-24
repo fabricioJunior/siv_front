@@ -14,6 +14,7 @@ export 'presentation/pages/comercial_menu_page.dart';
 export 'presentation/pages/credito_devolucao_movimentacoes_page.dart';
 export 'presentation/pages/criar_romaneio_por_parametros_page.dart';
 export 'presentation/pages/devolucao_page.dart';
+export 'presentation/pages/pedido_itens_leitor_page.dart';
 export 'presentation/pages/pedido_page.dart';
 export 'presentation/pages/pedidos_page.dart';
 export 'presentation/pages/romaneio_page.dart';

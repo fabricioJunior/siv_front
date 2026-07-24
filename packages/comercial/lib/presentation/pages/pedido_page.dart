@@ -138,7 +138,7 @@ class _PedidoPageState extends State<PedidoPage> {
       0,
       (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
     );
-    final restante = state.valorTotalItens - somaLancada;
+    final restante = state.valorTotalComDesconto - somaLancada;
     return restante > 0 ? restante : 0;
   }
 
@@ -183,7 +183,14 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (tipoEscolhido == null || !mounted) return;
 
-    final valorRestante = _valorRestantePagamento(state);
+    final somaLancada = state.pagamentos.fold<double>(
+      0,
+      (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
+    );
+    // Alvo passado ao diálogo é o BRUTO (itens - já lançado), sem descontar o desconto de nível
+    // pedido -- o próprio diálogo reduz o alvo a partir de descontoJaAplicadoNoRomaneio (mesmo padrão
+    // de romaneio_page._irParaPagamento). Evita descontar duas vezes.
+    final valorBrutoRestante = state.valorTotalItens - somaLancada;
     final produtosCompartilhados = state.itens
         .where((item) => item.produtoId != null)
         .map(
@@ -211,9 +218,11 @@ class _PedidoPageState extends State<PedidoPage> {
               0,
               (soma, produto) => soma + produto.quantidade,
             ),
-            valorTotalProdutos: valorRestante,
+            valorTotalProdutos:
+                valorBrutoRestante > 0 ? valorBrutoRestante : 0,
           ),
           pessoaId: int.tryParse(state.pessoaId ?? ''),
+          descontoJaAplicadoNoRomaneio: state.pedido?.desconto ?? 0,
           permitirTaxaEntrega: false,
           formasDePagamentoSeletor:
               ({itemsSelecionadosInicial, onChanged, onlyView}) =>
@@ -285,6 +294,20 @@ class _PedidoPageState extends State<PedidoPage> {
     if (linhasValidas.isEmpty) return;
 
     setState(() => _criandoPagamento = true);
+
+    // Desconto vem do próprio diálogo de pagamentos (mesmo padrão de romaneio_page._irParaPagamento):
+    // descontosItens já representa o total FINAL (pré-carregado com o que já existia via
+    // descontoJaAplicadoNoRomaneio acima), então sempre REESCREVE em vez de somar.
+    final descontosItensRaw =
+        resultado['descontosItens'] as List<dynamic>? ?? const [];
+    final descontoTotal =
+        descontosItensRaw.whereType<Map<String, dynamic>>().fold<double>(
+              0,
+              (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
+            );
+    if (descontoTotal != (state.pedido?.desconto ?? 0)) {
+      bloc.add(PedidoDescontoAlterado(descontoTotal));
+    }
 
     for (final linha in linhasValidas) {
       bloc.add(
@@ -495,6 +518,95 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
+  // Observação/taxa de entrega de um pedido já existente salvam via modal dedicado (PedidoObservacaoSalva/
+  // PedidoTaxaEntregaSalva) -- NUNCA via PedidoSalvou, que sempre navega pra fora da tela ao terminar
+  // (correto só na criação do pedido). Criar pedido novo (idPedido == null) continua usando o botão
+  // "Criar pedido" no AppBar + os campos inline de sempre.
+  Future<void> _abrirEditarObservacao(
+    BuildContext context,
+    PedidoState state,
+  ) async {
+    final controller = TextEditingController(text: state.observacao ?? '');
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Observação do pedido'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 4,
+            decoration: const InputDecoration(labelText: 'Observação'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || !mounted) return;
+
+    context.read<PedidoBloc>().add(PedidoObservacaoSalva(controller.text.trim()));
+  }
+
+  Future<void> _abrirEditarTaxaEntrega(
+    BuildContext context,
+    PedidoState state,
+  ) async {
+    final controller = TextEditingController(text: state.valorTaxaEntrega ?? '');
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Taxa de entrega'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Valor da taxa de entrega (R\$)',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || !mounted) return;
+
+    context
+        .read<PedidoBloc>()
+        .add(PedidoTaxaEntregaSalva(controller.text.trim()));
+  }
+
+  String _valorTaxaEntregaFormatado(PedidoState state) {
+    final valor = _parseValorReais(state.valorTaxaEntrega ?? '');
+    if (valor == null || valor <= 0) return 'Nenhuma taxa informada.';
+    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
   double? _parseValorReais(String raw) {
     final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
     if (normalized.isEmpty) return null;
@@ -570,6 +682,20 @@ class _PedidoPageState extends State<PedidoPage> {
           if (state.step == PedidoStep.itemConferido) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Item conferido.')),
+            );
+            return;
+          }
+
+          if (state.step == PedidoStep.dadosSalvos) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Dados do pedido atualizados.')),
+            );
+            return;
+          }
+
+          if (state.step == PedidoStep.descontoAlterado) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Desconto aplicado ao pedido.')),
             );
             return;
           }
@@ -659,18 +785,20 @@ class _PedidoPageState extends State<PedidoPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
+                    )
+                  else if (widget.idPedido == null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextButton(
+                        onPressed: () {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            context.read<PedidoBloc>().add(PedidoSalvou());
+                          }
+                        },
+                        child: const Text('Criar pedido'),
+                      ),
                     ),
                 ],
-              ),
-              floatingActionButton: FloatingActionButton(
-                onPressed: carregando
-                    ? null
-                    : () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          context.read<PedidoBloc>().add(PedidoSalvou());
-                        }
-                      },
-                child: const Icon(Icons.save),
               ),
               body: state.step == PedidoStep.carregando
                   ? const Center(child: CircularProgressIndicator.adaptive())
@@ -707,7 +835,7 @@ class _PedidoPageState extends State<PedidoPage> {
         const SizedBox(height: 16),
         _buildEntregaCard(context, state, carregando),
         const SizedBox(height: 16),
-        _buildObservacaoCard(context, carregando),
+        _buildObservacaoCard(context, state, carregando),
         if (state.id != null) ...[
           const SizedBox(height: 16),
           _buildItensCard(context, state, carregando),
@@ -932,7 +1060,7 @@ class _PedidoPageState extends State<PedidoPage> {
                 icone: Icons.person_outline,
                 titulo: 'Pessoa',
                 valor: _valorOuFallback(
-                  state.pedido?.pessoaNome,
+                  state.pedido?.pessoaNome?.toUpperCase(),
                   fallback: state.pessoaId?.trim().isNotEmpty == true
                       ? 'Pessoa #${state.pessoaId}'
                       : '-',
@@ -944,7 +1072,7 @@ class _PedidoPageState extends State<PedidoPage> {
                 icone: Icons.badge,
                 titulo: 'Funcionário',
                 valor: _valorOuFallback(
-                  state.pedido?.funcionarioNome,
+                  state.pedido?.funcionarioNome?.toUpperCase(),
                   fallback: state.funcionarioId?.trim().isNotEmpty == true
                       ? 'Funcionário #${state.funcionarioId}'
                       : '-',
@@ -970,7 +1098,8 @@ class _PedidoPageState extends State<PedidoPage> {
                     SeletorParamentros(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.pessoaId,
-                            nomeFallback: state.pedido?.pessoaNome ??
+                            nomeFallback: state.pedido?.pessoaNome
+                                    ?.toUpperCase() ??
                                 'Pessoa selecionada',
                           ) ??
                           const [],
@@ -1001,7 +1130,8 @@ class _PedidoPageState extends State<PedidoPage> {
                     SeletorParamentros(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.funcionarioId,
-                            nomeFallback: state.pedido?.funcionarioNome ??
+                            nomeFallback: state.pedido?.funcionarioNome
+                                    ?.toUpperCase() ??
                                 'Funcionário selecionado',
                           ) ??
                           const [],
@@ -1106,22 +1236,50 @@ class _PedidoPageState extends State<PedidoPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _valorTaxaEntregaController,
-                readOnly: carregando,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Valor da taxa de entrega (R\$)',
+              if (widget.idPedido != null)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _valorTaxaEntregaFormatado(state),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: carregando
+                          ? null
+                          : () => _abrirEditarTaxaEntrega(context, state),
+                      icon: Icon(
+                        (state.valorTaxaEntrega ?? '').trim().isEmpty
+                            ? Icons.add
+                            : Icons.edit_outlined,
+                      ),
+                      label: Text(
+                        (state.valorTaxaEntrega ?? '').trim().isEmpty
+                            ? 'Adicionar'
+                            : 'Editar',
+                      ),
+                    ),
+                  ],
+                )
+              else
+                TextFormField(
+                  controller: _valorTaxaEntregaController,
+                  readOnly: carregando,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Valor da taxa de entrega (R\$)',
+                  ),
+                  onChanged: (value) => _onCampoAlterado(
+                    context,
+                    valorTaxaEntrega: value,
+                  ),
                 ),
-                onChanged: (value) => _onCampoAlterado(
-                  context,
-                  valorTaxaEntrega: value,
-                ),
-              ),
             ],
           ],
         ),
@@ -1129,31 +1287,65 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
-  Widget _buildObservacaoCard(BuildContext context, bool carregando) {
+  Widget _buildObservacaoCard(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTituloSecao(
-              context,
-              'Observação',
-              Icons.edit_note_outlined,
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTituloSecao(
+                    context,
+                    'Observação',
+                    Icons.edit_note_outlined,
+                  ),
+                ),
+                if (widget.idPedido != null)
+                  TextButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () => _abrirEditarObservacao(context, state),
+                    icon: Icon(
+                      (state.observacao ?? '').trim().isEmpty
+                          ? Icons.add
+                          : Icons.edit_outlined,
+                    ),
+                    label: Text(
+                      (state.observacao ?? '').trim().isEmpty
+                          ? 'Adicionar'
+                          : 'Editar',
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _observacaoController,
-              maxLines: 3,
-              readOnly: carregando,
-              decoration: const InputDecoration(
-                labelText: 'Observação',
+            if (widget.idPedido != null)
+              Text(
+                (state.observacao ?? '').trim().isEmpty
+                    ? 'Nenhuma observação.'
+                    : state.observacao!.trim(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              )
+            else
+              TextFormField(
+                controller: _observacaoController,
+                maxLines: 3,
+                readOnly: carregando,
+                decoration: const InputDecoration(
+                  labelText: 'Observação',
+                ),
+                onChanged: (value) => _onCampoAlterado(
+                  context,
+                  observacao: value,
+                ),
               ),
-              onChanged: (value) => _onCampoAlterado(
-                context,
-                observacao: value,
-              ),
-            ),
           ],
         ),
       ),
@@ -1185,9 +1377,9 @@ class _PedidoPageState extends State<PedidoPage> {
                 TextButton.icon(
                   onPressed: (carregando || !podeEditarItens)
                       ? null
-                      : () => _abrirAdicionarItem(context),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar produto'),
+                      : () => _abrirGerenciarProdutos(context),
+                  icon: const Icon(Icons.qr_code_scanner_outlined),
+                  label: const Text('Gerenciar produtos'),
                 ),
               ],
             ),
@@ -1208,7 +1400,6 @@ class _PedidoPageState extends State<PedidoPage> {
                       context,
                       entry.value,
                       entry.key,
-                      podeEditarItens && !carregando,
                     ),
                   ),
             const Divider(),
@@ -1241,7 +1432,6 @@ class _PedidoPageState extends State<PedidoPage> {
     BuildContext context,
     PedidoItem item,
     int index,
-    bool podeEditar,
   ) {
     final theme = Theme.of(context);
     final unitario = item.valorUnitario ?? 0;
@@ -1334,141 +1524,26 @@ class _PedidoPageState extends State<PedidoPage> {
                 ],
               ),
             ),
-            if (podeEditar)
-              IconButton(
-                onPressed: () => _confirmarRemoverItem(context, item),
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Remover item',
-              ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _abrirAdicionarItem(BuildContext context) async {
+  // Adicionar/remover produtos passou a acontecer numa tela dedicada com o LeitorWidget (mostra
+  // cliente/pedido/funcionário, permite bipar livremente e só aplica a diferença ao confirmar) --
+  // substitui os antigos dois fluxos separados (dialog "Adicionar produto" + botão de excluir por
+  // linha). Reusa a mesma instância de PedidoBloc via BlocProvider.value pra que as alterações já
+  // apareçam nesta tela ao voltar.
+  Future<void> _abrirGerenciarProdutos(BuildContext context) async {
     final bloc = context.read<PedidoBloc>();
 
-    final idsSelecionados = await Navigator.of(context).pushNamed(
-      '/selecionar_produtos',
-    ) as List<dynamic>?;
-
-    if (idsSelecionados == null || idsSelecionados.isEmpty || !mounted) {
-      return;
-    }
-
-    final produtoIds = idsSelecionados
-        .map((e) => e is int ? e : int.tryParse(e.toString()))
-        .whereType<int>()
-        .toList();
-
-    if (produtoIds.isEmpty) return;
-
-    final quantidadeController = TextEditingController(text: '1');
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            produtoIds.length == 1
-                ? 'Quantidade do produto'
-                : 'Quantidade para cada produto selecionado',
-          ),
-          content: TextField(
-            controller: quantidadeController,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
-            decoration: const InputDecoration(labelText: 'Quantidade'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Adicionar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmou != true || !mounted) return;
-
-    final quantidade = _parseValorReais(quantidadeController.text);
-    if (quantidade == null || quantidade <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe uma quantidade válida.')),
-      );
-      return;
-    }
-
-    for (final produtoId in produtoIds) {
-      bloc.add(
-        PedidoItemAdicionou(produtoId: produtoId, quantidade: quantidade),
-      );
-    }
-  }
-
-  Future<void> _confirmarRemoverItem(
-    BuildContext context,
-    PedidoItem item,
-  ) async {
-    final bloc = context.read<PedidoBloc>();
-    final quantidadeController = TextEditingController(
-      text: (item.solicitado ?? 0).toStringAsFixed(3),
-    );
-
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Remover produto #${item.produtoId}'),
-          content: TextField(
-            controller: quantidadeController,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
-            decoration:
-                const InputDecoration(labelText: 'Quantidade a remover'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton.tonal(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Remover'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmou != true || !mounted) return;
-
-    final quantidade = _parseValorReais(quantidadeController.text);
-    if (quantidade == null || quantidade <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe uma quantidade válida.')),
-      );
-      return;
-    }
-
-    if (item.produtoId == null || item.sequencia == null) return;
-
-    bloc.add(
-      PedidoItemRemoveu(
-        produtoId: item.produtoId!,
-        sequencia: item.sequencia!,
-        quantidade: quantidade,
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: bloc,
+          child: const PedidoItensLeitorPage(),
+        ),
       ),
     );
   }
@@ -1501,6 +1576,11 @@ class _PedidoPageState extends State<PedidoPage> {
               ],
             ),
             const SizedBox(height: 4),
+            if ((state.pedido?.desconto ?? 0) > 0)
+              Text(
+                'Desconto aplicado: R\$ ${(state.pedido?.desconto ?? 0).toStringAsFixed(2)}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             Text(
               'Valor restante: R\$ ${valorRestante.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(

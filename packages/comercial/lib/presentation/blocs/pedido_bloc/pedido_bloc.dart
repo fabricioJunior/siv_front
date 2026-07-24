@@ -16,6 +16,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final RecuperarPedido _recuperarPedido;
   final CriarPedido _criarPedido;
   final AtualizarPedido _atualizarPedido;
+  final AplicarDescontoPedido _aplicarDescontoPedido;
   final ConferirPedido _conferirPedido;
   final FaturarPedido _faturarPedido;
   final CancelarPedido _cancelarPedido;
@@ -39,6 +40,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._recuperarPedido,
     this._criarPedido,
     this._atualizarPedido,
+    this._aplicarDescontoPedido,
     this._conferirPedido,
     this._faturarPedido,
     this._cancelarPedido,
@@ -63,6 +65,9 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoModalidadeEntregaAlterada>(_onModalidadeEntregaAlterada);
     on<PedidoEnderecoEntregaAlterado>(_onEnderecoEntregaAlterado);
     on<PedidoSalvou>(_onSalvou);
+    on<PedidoDescontoAlterado>(_onDescontoAlterado);
+    on<PedidoObservacaoSalva>(_onObservacaoSalva);
+    on<PedidoTaxaEntregaSalva>(_onTaxaEntregaSalva);
     on<PedidoConferiu>(_onConferiu);
     on<PedidoFaturou>(_onFaturou);
     on<PedidoCancelou>(_onCancelou);
@@ -204,6 +209,90 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao salvar pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onDescontoAlterado(
+    PedidoDescontoAlterado event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _aplicarDescontoPedido.call(state.id!, desconto: event.desconto);
+      await _recarregarComDependencias(emit, PedidoStep.descontoAlterado);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao aplicar desconto no pedido.')));
+      addError(e, s);
+    }
+  }
+
+  // Salvam só um campo isolado (via modal, ver pedido_page) num pedido já existente -- reusa
+  // _toModel/_atualizarPedido igual _onSalvou, mas SEM navegar pra fora da tela ao terminar
+  // (PedidoStep.dadosSalvos, não criado/salvo -- é isso que o listener da tela usa pra decidir se
+  // faz Navigator.pop). Preserva pagamentos/eventos/itens/formasDePagamentoPorId já carregados,
+  // igual _onConferiu/_onFaturou fazem.
+  FutureOr<void> _onObservacaoSalva(
+    PedidoObservacaoSalva event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      final pedido = _toModel(state.copyWith(observacao: event.observacao));
+      final salvo = await _atualizarPedido.call(pedido);
+      emit(
+        PedidoState.fromModel(
+          salvo,
+          step: PedidoStep.dadosSalvos,
+          pagamentos: state.pagamentos,
+          eventos: state.eventos,
+          itens: state.itens,
+          formasDePagamentoPorId: state.formasDePagamentoPorId,
+          enderecoEntregaResumo: state.enderecoEntregaResumo,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar observação do pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onTaxaEntregaSalva(
+    PedidoTaxaEntregaSalva event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      final pedido = _toModel(
+        state.copyWith(valorTaxaEntrega: event.valorTaxaEntrega),
+      );
+      final salvo = await _atualizarPedido.call(pedido);
+      emit(
+        PedidoState.fromModel(
+          salvo,
+          step: PedidoStep.dadosSalvos,
+          pagamentos: state.pagamentos,
+          eventos: state.eventos,
+          itens: state.itens,
+          formasDePagamentoPorId: state.formasDePagamentoPorId,
+          enderecoEntregaResumo: state.enderecoEntregaResumo,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao salvar taxa de entrega do pedido.')));
       addError(e, s);
     }
   }

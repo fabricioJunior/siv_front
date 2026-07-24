@@ -56,6 +56,27 @@ class PedidoEnderecoEntregaAlterado extends PedidoEvent {
 
 class PedidoSalvou extends PedidoEvent {}
 
+class PedidoDescontoAlterado extends PedidoEvent {
+  final double desconto;
+
+  PedidoDescontoAlterado(this.desconto);
+}
+
+// Salvam só observação/taxa de entrega de um pedido já existente (via modal, ver pedido_page) --
+// diferente de PedidoSalvou, que sempre navega pra fora da tela ao terminar (correto pra criação de
+// pedido novo, errado aqui: editar um campo isolado não deve tirar o usuário da tela).
+class PedidoObservacaoSalva extends PedidoEvent {
+  final String observacao;
+
+  PedidoObservacaoSalva(this.observacao);
+}
+
+class PedidoTaxaEntregaSalva extends PedidoEvent {
+  final String valorTaxaEntrega;
+
+  PedidoTaxaEntregaSalva(this.valorTaxaEntrega);
+}
+
 class PedidoConferiu extends PedidoEvent {}
 
 class PedidoFaturou extends PedidoEvent {}

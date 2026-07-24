@@ -496,6 +496,23 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
       return [];
     }
 
+    // Quando o widget pai busca no servidor (onBuscaChanged), `itens` ja
+    // vem filtrado por la -- e por criterios que o itemLabel (nome) nao
+    // necessariamente reflete (ex: CPF, ID). Refiltrar aqui por
+    // "nome contem o texto digitado" descartaria resultados corretos do
+    // servidor sempre que a busca fosse por documento/ID em vez de nome.
+    if (widget.onBuscaChanged != null) {
+      final disponiveis = itens.where((item) {
+        final selecionado = _isSelecionado(item);
+        if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
+          return false;
+        }
+        return true;
+      }).toList();
+
+      return disponiveis.take(widget.maxSugestoes).toList();
+    }
+
     final filtradas = itens.where((item) {
       final label = _normalizarBusca(widget.itemLabel(item));
       final selecionado = _isSelecionado(item);

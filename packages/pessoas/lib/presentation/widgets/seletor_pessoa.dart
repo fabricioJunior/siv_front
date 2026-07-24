@@ -57,6 +57,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
   late final PessoasBloc _pessoasBloc;
   late final Debouncer _buscaDebouncer;
   PessoasCarregarSucesso? _ultimoSucesso;
+  Pessoa? _pessoaSelecionadaAtual;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         eFornecedor: widget.eFornecedor,
         clienteOuFuncionario: widget.clienteOuFuncionario,
       ));
+    _pessoaSelecionadaAtual = _resolverPessoasIniciais().firstOrNull;
   }
 
   @override
@@ -164,7 +166,9 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
               SeletorGenerico<Pessoa>(
                 toSelectData: _toSelectData,
                 itens: pessoasDisponiveis,
-                itemLabel: (pessoa) => pessoa.nome,
+                itemLabel: (pessoa) => pessoa.id != null
+                    ? '${pessoa.id} - ${pessoa.nome.toUpperCase()}'
+                    : pessoa.nome.toUpperCase(),
                 itemKey: (pessoa) =>
                     pessoa.id ?? '${pessoa.nome}-${pessoa.documento}',
                 modo: widget.modo == PessoaSeletorModo.unica
@@ -181,6 +185,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                   widget.onChanged?.call(dadosSelecionados);
 
                   final pessoa = selecionadas.firstOrNull;
+                  setState(() => _pessoaSelecionadaAtual = pessoa);
                   if (widget.onSelecionado != null) {
                     widget.onSelecionado!.call(_toResultadoMapa(pessoa));
                   }
@@ -235,6 +240,30 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              if (_mensagemAniversario(
+                    // Prioriza a pessoa vinda da seleção local (onChanged, objeto completo já
+                    // carregado do bloc) -- só cai pro fetch inicial por id (pessoaSelecionada)
+                    // quando ainda não há seleção local com data de nascimento preenchida (ex:
+                    // primeira renderização com pessoa pré-selecionada via id).
+                    _pessoaSelecionadaAtual?.dataDeNascimento != null
+                        ? _pessoaSelecionadaAtual
+                        : estadoExibido.pessoaSelecionada,
+                  ) !=
+                  null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _mensagemAniversario(
+                      _pessoaSelecionadaAtual?.dataDeNascimento != null
+                          ? _pessoaSelecionadaAtual
+                          : estadoExibido.pessoaSelecionada,
+                    )!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
             ],
@@ -307,11 +336,15 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         : int.tryParse(data['id']?.toString() ?? '') ??
             (item.id > 0 ? item.id : 0);
 
+    // Prioriza data['nome'] (grafia original, sem uppercase) -- item.nome e
+    // so o label de exibicao do seletor (SeletorGenerico/chip), que agora
+    // pode estar em caixa alta so pra exibir; nao pode vazar pro objeto
+    // Pessoa reconstruido aqui, que alimenta o que a tela salva/envia.
+    final nomeOriginal = data['nome']?.toString().trim() ?? '';
+
     return Pessoa.create(
       id: id > 0 ? id : null,
-      nome: item.nome.trim().isNotEmpty
-          ? item.nome
-          : data['nome']?.toString() ?? 'Pessoa selecionada',
+      nome: nomeOriginal.isNotEmpty ? nomeOriginal : item.nome,
       tipoPessoa: TipoPessoa.fisica,
       documento: data['documento']?.toString() ?? '',
       email: data['email']?.toString(),
@@ -329,7 +362,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
   SelectData _toSelectData(Pessoa pessoa) {
     return SelectData(
       id: pessoa.id ?? 0,
-      nome: pessoa.nome,
+      nome: pessoa.nome.toUpperCase(),
       data: {
         'id': pessoa.id,
         'nome': pessoa.nome,
@@ -377,6 +410,23 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         style: theme.textTheme.bodyMedium?.copyWith(color: cor),
       ),
     );
+  }
+
+  // Mês do aniversário: mensagem em verde (chama atenção, sem ser erro/alerta). Dia exato tem
+  // mensagem própria mais direta -- ambas só aparecem com pessoa selecionada e data de nascimento
+  // cadastrada.
+  String? _mensagemAniversario(Pessoa? pessoa) {
+    final nascimento = pessoa?.dataDeNascimento;
+    if (nascimento == null) return null;
+
+    final hoje = DateTime.now();
+    if (nascimento.month != hoje.month) return null;
+
+    if (nascimento.day == hoje.day) {
+      return 'Hoje é aniversário do cliente!';
+    }
+
+    return 'Aniversário no dia ${nascimento.day}.';
   }
 
   bool _mesmaPessoa(Pessoa a, Pessoa b) {

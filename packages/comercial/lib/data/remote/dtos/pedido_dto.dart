@@ -46,6 +46,8 @@ class PedidoDto implements Pedido {
   @override
   final double? valorTaxaEntrega;
   @override
+  final double? desconto;
+  @override
   final String? pessoaNome;
   @override
   final String? funcionarioNome;
@@ -85,6 +87,7 @@ class PedidoDto implements Pedido {
     this.situacaoEntrega,
     this.pedidoOrigemId,
     this.valorTaxaEntrega,
+    this.desconto,
     this.pessoaNome,
     this.funcionarioNome,
     this.tabelaPrecoNome,
@@ -119,6 +122,7 @@ class PedidoDto implements Pedido {
       situacaoEntrega: json['situacaoEntrega']?.toString(),
       pedidoOrigemId: _toInt(json['pedidoOrigemId']),
       valorTaxaEntrega: _toDouble(json['valorTaxaEntrega']),
+      desconto: _toDouble(json['desconto']),
       pessoaNome: json['pessoaNome']?.toString(),
       funcionarioNome: json['funcionarioNome']?.toString(),
       tabelaPrecoNome: json['tabelaPrecoNome']?.toString(),
@@ -154,6 +158,7 @@ class PedidoDto implements Pedido {
       situacaoEntrega: pedido.situacaoEntrega,
       pedidoOrigemId: pedido.pedidoOrigemId,
       valorTaxaEntrega: pedido.valorTaxaEntrega,
+      desconto: pedido.desconto,
       pessoaNome: pedido.pessoaNome,
       funcionarioNome: pedido.funcionarioNome,
       tabelaPrecoNome: pedido.tabelaPrecoNome,
@@ -224,6 +229,7 @@ class PedidoDto implements Pedido {
         situacaoEntrega,
         pedidoOrigemId,
         valorTaxaEntrega,
+        desconto,
         pessoaNome,
         funcionarioNome,
         tabelaPrecoNome,

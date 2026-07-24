@@ -16,6 +16,11 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<Pedido> aplicarDesconto(int id, {required double desconto}) {
+    return remoteDataSource.aplicarDesconto(id, desconto: desconto);
+  }
+
+  @override
   Future<void> cancelarPedido(
     int id, {
     required String motivoCancelamento,

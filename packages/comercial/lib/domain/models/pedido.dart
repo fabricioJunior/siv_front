@@ -23,6 +23,7 @@ abstract class Pedido implements Equatable {
   String? get situacaoEntrega;
   int? get pedidoOrigemId;
   double? get valorTaxaEntrega;
+  double? get desconto;
   String? get pessoaNome;
   String? get funcionarioNome;
   String? get tabelaPrecoNome;
@@ -55,6 +56,7 @@ abstract class Pedido implements Equatable {
     String? situacaoEntrega,
     int? pedidoOrigemId,
     double? valorTaxaEntrega,
+    double? desconto,
     String? pessoaNome,
     String? funcionarioNome,
     String? tabelaPrecoNome,
@@ -89,6 +91,7 @@ abstract class Pedido implements Equatable {
         situacaoEntrega,
         pedidoOrigemId,
         valorTaxaEntrega,
+        desconto,
         pessoaNome,
         funcionarioNome,
         tabelaPrecoNome,
@@ -149,6 +152,8 @@ class _PedidoImpl implements Pedido {
   @override
   final double? valorTaxaEntrega;
   @override
+  final double? desconto;
+  @override
   final String? pessoaNome;
   @override
   final String? funcionarioNome;
@@ -188,6 +193,7 @@ class _PedidoImpl implements Pedido {
     this.situacaoEntrega,
     this.pedidoOrigemId,
     this.valorTaxaEntrega,
+    this.desconto,
     this.pessoaNome,
     this.funcionarioNome,
     this.tabelaPrecoNome,
@@ -222,6 +228,7 @@ class _PedidoImpl implements Pedido {
         situacaoEntrega,
         pedidoOrigemId,
         valorTaxaEntrega,
+        desconto,
         pessoaNome,
         funcionarioNome,
         tabelaPrecoNome,

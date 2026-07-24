@@ -22,6 +22,15 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Pedido> aplicarDesconto(int id, {required double desconto}) async {
+    final response = await put(
+      pathParameters: {'id': '$id/desconto'},
+      body: {'desconto': desconto},
+    );
+    return PedidoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<void> cancelarPedido(
     int id, {
     required String motivoCancelamento,

@@ -202,6 +202,14 @@ class PedidoState extends Equatable {
     });
   }
 
+  // valorTotalItens já desconta o desconto por item (valorUnitDesconto) -- este getter desconta
+  // também o desconto de nível pedido (pedido.desconto, aplicado via tela de pagamentos, ver
+  // PedidoBloc._onDescontoAlterado), usado como alvo do pagamento em vez de valorTotalItens puro.
+  double get valorTotalComDesconto {
+    final total = valorTotalItens - (pedido?.desconto ?? 0);
+    return total > 0 ? total : 0;
+  }
+
   String get motivoNaoPodeFechar {
     final pendencias = <String>[];
     if (pedido?.situacaoPagamento != 'pago') {
@@ -264,6 +272,8 @@ enum PedidoStep {
   cancelado,
   pagamentoAdicionado,
   pagamentoRemovido,
+  descontoAlterado,
+  dadosSalvos,
   pagamentoConfirmado,
   entregadorChamado,
   entregaConfirmada,

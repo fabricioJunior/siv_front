@@ -264,6 +264,38 @@ class _ValorContadoReciboDto implements ValorContadoRecibo {
   static String _normalizarTexto(String value) {
     return value
         .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('à', 'a')
+        .replaceAll('â', 'a')
+        .replaceAll('ã', 'a')
+        .replaceAll('ä', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('è', 'e')
+        .replaceAll('ê', 'e')
+        .replaceAll('ë', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ì', 'i')
+        .replaceAll('î', 'i')
+        .replaceAll('ï', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ò', 'o')
+        .replaceAll('ô', 'o')
+        .replaceAll('õ', 'o')
+        .replaceAll('ö', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ù', 'u')
+        .replaceAll('û', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ç', 'c')
+        // Remove espaços/barras/pontuação -- o enum local usa camelCase sem
+        // separadores (ex: "creditoDeDevolucao", "tedDoc"), mas os labels que
+        // vêm do backend têm espaço/barra ("Crédito de devolução", "TED/DOC").
+        // Sem substituir os acentos ANTES de remover a pontuação, "Cartão"
+        // virava "carto" (não "cartao"), nunca batia com o enum "cartao" e o
+        // firstWhere caía silenciosamente no orElse (dinheiro) -- fazendo
+        // pagamento em cartão aparecer como uma segunda linha "Dinheiro" no
+        // recibo de fechamento de caixa (mesmo bug já corrigido em
+        // contagem_do_caixa_item_dto.dart).
         .replaceAll(RegExp(r'[^a-z0-9]'), '');
   }
 

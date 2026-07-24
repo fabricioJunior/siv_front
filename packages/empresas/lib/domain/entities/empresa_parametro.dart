@@ -154,3 +154,15 @@ extension EmpresaParametroCopyWith on EmpresaParametro {
 }
 
 enum TipoEmpresaParametro { checkbox, texto }
+
+/// Decide se um parametro de empresa e booleano (checkbox) pela CHAVE, nao
+/// pelo valor atual -- inferir pelo valor (ex: '0'/'1'/'s'/'n') classifica
+/// errado qualquer parametro numerico/texto que hoje tenha um desses
+/// valores (ex: VL_PONTO_FIDELIDADE com valorPadrao '0' virava checkbox por
+/// acidente, zerando o campo de texto e quebrando a deteccao de alteracao
+/// no bloc ao salvar).
+bool ehParametroBooleanoPorChave(String chave) {
+  return chave.endsWith('_HABILITADA') ||
+      chave == 'DEVOLVER_SEM_ROMANEIO' ||
+      chave == 'FATURAR_PEDIDO_SEM_CONFERENCIA';
+}

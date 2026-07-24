@@ -4,4 +4,9 @@
 abstract class ItemDeImpressao {
   String get descricao;
   String get zpl;
+
+  /// Coluna (posicao dentro de uma mesma etiqueta fisica com N vias) que
+  /// este item deve ocupar. Usado por [MesclaEtiquetas] pra nunca posicionar
+  /// dois itens na mesma coluna/offset de uma etiqueta mesclada.
+  int get viaOrdem;
 }

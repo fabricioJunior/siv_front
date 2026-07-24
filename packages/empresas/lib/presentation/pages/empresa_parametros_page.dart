@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:empresas/domain/entities/empresa_parametro.dart';
 import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_parametros_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -255,11 +256,7 @@ class EmpresaParametrosPage extends StatelessWidget {
     return 'Outros';
   }
 
-  bool _ehParametroBooleano(String chave) {
-    return chave.endsWith('_HABILITADA') ||
-        chave == 'DEVOLVER_SEM_ROMANEIO' ||
-        chave == 'FATURAR_PEDIDO_SEM_CONFERENCIA';
-  }
+  bool _ehParametroBooleano(String chave) => ehParametroBooleanoPorChave(chave);
 
   Widget _iconeDaSecao(String secao) {
     if (secao == 'Integração Infinity Pay') {

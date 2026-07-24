@@ -104,10 +104,7 @@ class ImpressaoProgressCubit extends Cubit<ImpressaoProgressState> {
       ),
     ); 
 
-    var etiquetasMescladas = _mesclaEtiquetas(
-      _itens.map((e) => e.zpl).toList(),
-      _quantidadeDeVias,
-    );
+    var etiquetasMescladas = _mesclaEtiquetas(_itens, _quantidadeDeVias);
 
       try {
         final ok = await _printersService.printZpl(impressora, etiquetasMescladas);

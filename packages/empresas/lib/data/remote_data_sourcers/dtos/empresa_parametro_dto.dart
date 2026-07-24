@@ -42,17 +42,18 @@ class EmpresaParametroDto implements EmpresaParametro {
 
   factory EmpresaParametroDto.fromJson(Map<String, dynamic> json) {
     final valor = (json['valor'] as String? ?? '').trim();
-    final valorBooleano = _parseBool(valor);
-    final ehCheckbox = _parseBool(valor) != null;
+    final parametroId = (json['parametroId'] as String?) ?? '';
+    final ehCheckbox = ehParametroBooleanoPorChave(parametroId);
 
     final tipo =
         ehCheckbox ? TipoEmpresaParametro.checkbox : TipoEmpresaParametro.texto;
 
+    final valorBooleano = ehCheckbox ? (_parseBool(valor) ?? false) : null;
     final valorTexto = ehCheckbox ? null : valor;
 
     return EmpresaParametroDto(
       empresaId: (json['empresaId'] as num?)?.toInt() ?? 0,
-      parametroId: (json['parametroId'] as String?) ?? '',
+      parametroId: parametroId,
       descricao: (json['descricao'] as String?) ?? '',
       depreciado: (json['depreciado'] as int?) ?? 0,
       tipo: tipo,

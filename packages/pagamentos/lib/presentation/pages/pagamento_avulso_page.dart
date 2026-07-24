@@ -5,13 +5,28 @@ import 'package:flutter/services.dart';
 import 'package:pagamentos/presentation/bloc/pagamento_avulso_bloc/pagamento_avulso_bloc.dart';
 import 'package:pagamentos/presentation/pages/pagamento_avulso_detalhes_page.dart';
 
-class PagamentoAvulsoPage extends StatelessWidget {
+class PagamentoAvulsoPage extends StatefulWidget {
+  final bool retornarAoSalvar;
+
+  const PagamentoAvulsoPage({super.key, this.retornarAoSalvar = false});
+
+  @override
+  State<PagamentoAvulsoPage> createState() => _PagamentoAvulsoPageState();
+}
+
+class _PagamentoAvulsoPageState extends State<PagamentoAvulsoPage> {
   static const _providers = ['infinitypay', 'openpix', 'mercadopago'];
 
   final _formKey = GlobalKey<FormState>();
-  final bool retornarAoSalvar;
+  final _valorController = TextEditingController();
 
-  PagamentoAvulsoPage({super.key, this.retornarAoSalvar = false});
+  bool get retornarAoSalvar => widget.retornarAoSalvar;
+
+  @override
+  void dispose() {
+    _valorController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +120,7 @@ class PagamentoAvulsoPage extends StatelessWidget {
                         _campoTexto(
                           context,
                           label: 'Valor (R\$)',
-                          initialValue: _formatarReais(state.amount),
+                          controller: _valorController,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -188,7 +203,8 @@ class PagamentoAvulsoPage extends StatelessWidget {
   Widget _campoTexto(
     BuildContext context, {
     required String label,
-    required String initialValue,
+    String? initialValue,
+    TextEditingController? controller,
     required ValueChanged<String> onChanged,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
@@ -196,10 +212,15 @@ class PagamentoAvulsoPage extends StatelessWidget {
     int minLines = 1,
     int maxLines = 1,
   }) {
+    assert(
+      controller == null || initialValue == null,
+      'Informe controller OU initialValue, nunca os dois.',
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
-        initialValue: initialValue,
+        controller: controller,
+        initialValue: controller == null ? initialValue : null,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         minLines: minLines,
@@ -337,12 +358,6 @@ class PagamentoAvulsoPage extends StatelessWidget {
     }
 
     return 'OpenPix';
-  }
-
-  String _formatarReais(int? amountInCents) {
-    final cents = amountInCents ?? 0;
-    final value = (cents / 100).toStringAsFixed(2);
-    return value.replaceAll('.', ',');
   }
 
   int? _reaisParaCentavos(String raw) {

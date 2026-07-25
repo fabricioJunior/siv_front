@@ -55,6 +55,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final bool enviarNotaPorEmail;
+  final String emailNota;
 
   const VendaFinalizarSolicitada({
     required this.itens,
@@ -65,6 +67,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.enviarNotaPorEmail = false,
+    this.emailNota = '',
   });
 
   @override
@@ -77,6 +81,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        enviarNotaPorEmail,
+        emailNota,
       ];
 }
 

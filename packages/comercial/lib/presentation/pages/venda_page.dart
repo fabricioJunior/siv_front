@@ -100,6 +100,8 @@ class _VendaPageState extends State<VendaPage> {
                 'incluirCpfNaNota': state.incluirCpfNaNota,
                 'cpfNaNota': state.cpfNaNota,
                 'pontuarFidelidade': state.pontuarFidelidade,
+                'enviarNotaPorEmail': state.enviarNotaPorEmail,
+                'emailNota': state.emailNota,
               },
             );
 
@@ -633,6 +635,9 @@ class _VendaPageState extends State<VendaPage> {
           pessoaId: clienteSelecionado?.id,
           cpfClienteInicial: clienteSelecionado?.data['documento']?.toString(),
           clienteGenerico: clienteSelecionado?.data['generica'] == true,
+          emailClienteInicial: clienteSelecionado?.data['email']?.toString(),
+          enviarNotaPorEmailInicial:
+              clienteSelecionado?.data['enviarNotaPorEmail'] == true,
           formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
           exibirCheckboxFidelidade: true,
         );
@@ -664,6 +669,9 @@ class _VendaPageState extends State<VendaPage> {
         pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
     final valorTaxaEntrega =
         _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
+    final enviarNotaPorEmail =
+        pagamentoResultado['enviarNotaPorEmail'] as bool? ?? false;
+    final emailNota = pagamentoResultado['emailNota']?.toString() ?? '';
 
     final confirmouEmissao = await _abrirConfirmacaoEmissao(
       context,
@@ -685,6 +693,8 @@ class _VendaPageState extends State<VendaPage> {
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,
+        enviarNotaPorEmail: enviarNotaPorEmail,
+        emailNota: emailNota,
       ),
     );
   }

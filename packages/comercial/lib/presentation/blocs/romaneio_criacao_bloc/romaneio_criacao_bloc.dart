@@ -29,6 +29,12 @@ class RomaneioCriacaoBloc
   final RecuperarCaixaAberto _recuperarCaixaAberto;
   final ListarDocumentosFiscais _listarDocumentosFiscais;
 
+  Timer? _pollingDocumentoFiscalTimer;
+  DateTime? _pollingDocumentoFiscalIniciadoEm;
+
+  static const _intervaloPollingDocumentoFiscal = Duration(seconds: 4);
+  static const _timeoutPollingDocumentoFiscal = Duration(minutes: 2);
+
   RomaneioCriacaoBloc(
     this._criarRomaneio,
     this._adicionarItemRomaneio,
@@ -43,12 +49,20 @@ class RomaneioCriacaoBloc
     this._listarDocumentosFiscais,
   ) : super(const RomaneioCriacaoState.initial()) {
     on<RomaneioCriacaoSolicitada>(_onSolicitada);
+    on<RomaneioCriacaoDocumentoFiscalPollTick>(_onDocumentoFiscalPollTick);
+  }
+
+  @override
+  Future<void> close() {
+    _pararPollingDocumentoFiscal();
+    return super.close();
   }
 
   FutureOr<void> _onSolicitada(
     RomaneioCriacaoSolicitada event,
     Emitter<RomaneioCriacaoState> emit,
   ) async {
+    _pararPollingDocumentoFiscal();
     ListaDeProdutosCompartilhada? listaCompartilhada;
     var produtosCompartilhados = <ProdutoCompartilhado>[];
     TipoOperacao? operacao;
@@ -208,6 +222,8 @@ class RomaneioCriacaoBloc
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
           pontuarFidelidade: event.pontuarFidelidade,
+          enviarNotaPorEmail: event.enviarNotaPorEmail,
+          emailNota: event.emailNota,
         );
         falhaAoReceberNoCaixa = false;
       }
@@ -227,6 +243,11 @@ class RomaneioCriacaoBloc
           itensCriados: itens,
         ),
       );
+
+      if (event.enviarNotaPorEmail &&
+          _statusDocumentoFiscalEhTransitorio(documentoFiscal?.status)) {
+        _iniciarPollingDocumentoFiscal(romaneioId);
+      }
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -386,6 +407,51 @@ class RomaneioCriacaoBloc
       await _removerListaDeProdutosCompartilhada(hashLista);
     } catch (e, s) {
       addError(e, s);
+    }
+  }
+
+  bool _statusDocumentoFiscalEhTransitorio(String? status) {
+    return status == 'pendente' || status == 'processando';
+  }
+
+  void _iniciarPollingDocumentoFiscal(int romaneioId) {
+    _pararPollingDocumentoFiscal();
+    _pollingDocumentoFiscalIniciadoEm = DateTime.now();
+    _pollingDocumentoFiscalTimer = Timer.periodic(
+      _intervaloPollingDocumentoFiscal,
+      (_) => add(RomaneioCriacaoDocumentoFiscalPollTick(romaneioId)),
+    );
+  }
+
+  void _pararPollingDocumentoFiscal() {
+    _pollingDocumentoFiscalTimer?.cancel();
+    _pollingDocumentoFiscalTimer = null;
+    _pollingDocumentoFiscalIniciadoEm = null;
+  }
+
+  FutureOr<void> _onDocumentoFiscalPollTick(
+    RomaneioCriacaoDocumentoFiscalPollTick event,
+    Emitter<RomaneioCriacaoState> emit,
+  ) async {
+    if (_pollingDocumentoFiscalTimer == null) return;
+
+    final iniciadoEm = _pollingDocumentoFiscalIniciadoEm;
+    if (iniciadoEm != null &&
+        DateTime.now().difference(iniciadoEm) >
+            _timeoutPollingDocumentoFiscal) {
+      _pararPollingDocumentoFiscal();
+      return;
+    }
+
+    final documentoFiscal =
+        await _carregarUltimoDocumentoFiscal(event.romaneioId);
+
+    if (!_statusDocumentoFiscalEhTransitorio(documentoFiscal?.status)) {
+      _pararPollingDocumentoFiscal();
+    }
+
+    if (documentoFiscal != null && documentoFiscal != state.documentoFiscal) {
+      emit(state.copyWith(documentoFiscal: documentoFiscal));
     }
   }
 

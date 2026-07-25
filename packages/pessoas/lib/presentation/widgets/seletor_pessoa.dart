@@ -325,6 +325,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         eFuncionario: false,
         bloqueado: false,
         generica: false,
+        enviarNotaPorEmail: false,
       ),
     ];
   }
@@ -356,6 +357,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
       eFuncionario: false,
       bloqueado: false,
       generica: data['generica'] == true,
+      enviarNotaPorEmail: data['enviarNotaPorEmail'] == true,
     );
   }
 
@@ -370,6 +372,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         'email': pessoa.email,
         'telefone': pessoa.contato,
         'generica': pessoa.generica,
+        'enviarNotaPorEmail': pessoa.enviarNotaPorEmail,
       },
     );
   }

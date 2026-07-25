@@ -23,6 +23,8 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final bool enviarNotaPorEmail;
+  final String emailNota;
   final int? consignacaoId;
   final List<int> romaneiosConsignacao;
 
@@ -36,6 +38,8 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.enviarNotaPorEmail = false,
+    this.emailNota = '',
     this.consignacaoId,
     this.romaneiosConsignacao = const [],
   });
@@ -54,6 +58,8 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             incluirCpfNaNota: incluirCpfNaNota,
             cpfNaNota: cpfNaNota,
             pontuarFidelidade: pontuarFidelidade,
+            enviarNotaPorEmail: enviarNotaPorEmail,
+            emailNota: emailNota,
             consignacaoId: consignacaoId,
             romaneiosConsignacao: romaneiosConsignacao,
           ),
@@ -68,6 +74,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             );
           }
           if (state.step == RomaneioCriacaoStep.sucesso &&
+              !enviarNotaPorEmail &&
               state.documentoFiscal?.status == 'emitida') {
             tentarImprimirNotaFiscalAutomaticamente(
               context,
@@ -139,6 +146,8 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                                 incluirCpfNaNota: incluirCpfNaNota,
                                 cpfNaNota: cpfNaNota,
                                 pontuarFidelidade: pontuarFidelidade,
+                                enviarNotaPorEmail: enviarNotaPorEmail,
+                                emailNota: emailNota,
                                 consignacaoId: consignacaoId,
                                 romaneiosConsignacao: romaneiosConsignacao,
                               ),
@@ -159,6 +168,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                       quantidadeItens: state.totalItensProcessados,
                       documentoFiscal: state.documentoFiscal,
                       itensCriados: state.itensCriados,
+                      enviarNotaPorEmail: enviarNotaPorEmail,
                     ),
                 },
               ),
@@ -273,13 +283,19 @@ class _SucessoRomaneioView extends StatelessWidget {
   final int quantidadeItens;
   final DocumentoFiscal? documentoFiscal;
   final List<RomaneioItem> itensCriados;
+  final bool enviarNotaPorEmail;
 
   const _SucessoRomaneioView({
     required this.romaneio,
     required this.quantidadeItens,
     this.documentoFiscal,
     this.itensCriados = const [],
+    this.enviarNotaPorEmail = false,
   });
+
+  bool get _statusDocumentoFiscalTransitorio =>
+      documentoFiscal?.status == 'pendente' ||
+      documentoFiscal?.status == 'processando';
 
   Future<void> _imprimirNotaEntrega(BuildContext context) async {
     final pessoaId = romaneio?.pessoaId;
@@ -390,7 +406,15 @@ class _SucessoRomaneioView extends StatelessWidget {
             ),
           ),
         ),
-        if (documentoFiscal?.status == 'emitida') ...[
+        if (enviarNotaPorEmail && _statusDocumentoFiscalTransitorio) ...[
+          const SizedBox(height: 12),
+          const LinearProgressIndicator(),
+          const SizedBox(height: 8),
+          const Text(
+            'Emitindo nota fiscal e enviando por e-mail...',
+            textAlign: TextAlign.center,
+          ),
+        ] else if (documentoFiscal?.status == 'emitida') ...[
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
@@ -426,6 +450,17 @@ class _SucessoRomaneioView extends StatelessWidget {
             ),
             icon: const Icon(Icons.print_outlined),
             label: const Text('Imprimir Romaneio'),
+          ),
+        ],
+        if (enviarNotaPorEmail &&
+            (documentoFiscal?.status == 'falha' ||
+                documentoFiscal?.status == 'rejeitada')) ...[
+          const SizedBox(height: 12),
+          Text(
+            'Não foi possível emitir a nota fiscal automaticamente. '
+            'Você pode tentar novamente mais tarde.',
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
           ),
         ],
         if (romaneio != null) ...[

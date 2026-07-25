@@ -14,6 +14,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
   final int? pessoaId;
   final String? cpfClienteInicial;
   final bool clienteGenerico;
+  final String? emailClienteInicial;
+  final bool enviarNotaPorEmailInicial;
   final SeletorWidget formasDePagamentoSeletor;
   // Desconto já persistido no romaneio (fora deste diálogo) -- usado só pra
   // pré-carregar o desconto do diálogo com esse valor, reaproveitando os
@@ -47,6 +49,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
     this.pessoaId,
     this.cpfClienteInicial,
     this.clienteGenerico = false,
+    this.emailClienteInicial,
+    this.enviarNotaPorEmailInicial = false,
     required this.formasDePagamentoSeletor,
     this.descontoJaAplicadoNoRomaneio = 0,
     this.taxaEntregaJaAplicadaNoRomaneio = 0,
@@ -67,6 +71,8 @@ class PagamentosRealizadosWidget extends StatelessWidget {
             clienteGenerico: clienteGenerico,
             descontoJaAplicadoNoRomaneio: descontoJaAplicadoNoRomaneio,
             taxaEntregaJaAplicadaNoRomaneio: taxaEntregaJaAplicadaNoRomaneio,
+            emailClienteInicial: emailClienteInicial,
+            enviarNotaPorEmailInicial: enviarNotaPorEmailInicial,
           ),
         ),
       child: BlocConsumer<PagamentosRealizadosBloc, PagamentosRealizadosState>(
@@ -103,6 +109,12 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               'cpfNaNota': state.incluirCpfNaNota ? state.cpfNaNota : '',
               'pontuarFidelidade':
                   state.clienteElegivelFidelidade && state.pontuarFidelidade,
+              'enviarNotaPorEmail': state.enviarNotaPorEmail,
+              'emailNota': state.enviarNotaPorEmail
+                  ? (state.exigeEmailNota
+                      ? state.emailNota.trim()
+                      : (state.emailClienteCadastrado ?? ''))
+                  : '',
             });
           }
         },
@@ -257,11 +269,13 @@ class _ResumoPagamentoCard extends StatefulWidget {
 
 class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   late final TextEditingController _cpfController;
+  late final TextEditingController _emailNotaController;
 
   @override
   void initState() {
     super.initState();
     _cpfController = TextEditingController(text: widget.state.cpfNaNota);
+    _emailNotaController = TextEditingController(text: widget.state.emailNota);
   }
 
   @override
@@ -271,11 +285,16 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
         widget.state.cpfNaNota != oldWidget.state.cpfNaNota) {
       _cpfController.text = widget.state.cpfNaNota;
     }
+    if (widget.state.emailNota != _emailNotaController.text &&
+        widget.state.emailNota != oldWidget.state.emailNota) {
+      _emailNotaController.text = widget.state.emailNota;
+    }
   }
 
   @override
   void dispose() {
     _cpfController.dispose();
+    _emailNotaController.dispose();
     super.dispose();
   }
 
@@ -441,6 +460,38 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                       );
                 },
               ),
+            if (state.permiteNotaFiscalEmail) ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: state.enviarNotaPorEmail,
+                title: const Text('Enviar Nota Fiscal por E-mail'),
+                onChanged: (value) {
+                  context.read<PagamentosRealizadosBloc>().add(
+                        PagamentosRealizadosEnviarNotaPorEmailAlterado(
+                          enviarNotaPorEmail: value ?? false,
+                        ),
+                      );
+                },
+              ),
+              if (state.exigeEmailNota)
+                TextFormField(
+                  controller: _emailNotaController,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail do cliente',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                  onChanged: (value) {
+                    context.read<PagamentosRealizadosBloc>().add(
+                          PagamentosRealizadosEmailNotaAlterado(
+                            emailNota: value,
+                          ),
+                        );
+                  },
+                ),
+            ],
             if (widget.exibirCheckboxFidelidade)
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,

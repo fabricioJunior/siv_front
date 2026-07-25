@@ -272,6 +272,18 @@ class EmpresaPage extends StatelessWidget {
                   icon: const Icon(Icons.settings),
                   label: const Text('Configurações'),
                 ),
+                OutlinedButton.icon(
+                  onPressed: !habilitado
+                      ? null
+                      : () {
+                          Navigator.of(context).pushNamed(
+                            '/nota_fiscal_email_empresa',
+                            arguments: {'empresaId': empresaId},
+                          );
+                        },
+                  icon: const Icon(Icons.mail_outline),
+                  label: const Text('Nota fiscal por e-mail'),
+                ),
               ],
             ),
           ],

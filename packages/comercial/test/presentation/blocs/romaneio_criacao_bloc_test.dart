@@ -181,6 +181,8 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   }) {
     return onCall(
       caixaId: caixaId,

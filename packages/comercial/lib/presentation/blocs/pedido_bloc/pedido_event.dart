@@ -109,6 +109,16 @@ class PedidoPagamentoConfirmou extends PedidoEvent {
   });
 }
 
+class PedidoPagamentoValorParaTrocoAtualizou extends PedidoEvent {
+  final int pagamentoId;
+  final double valorParaTroco;
+
+  PedidoPagamentoValorParaTrocoAtualizou({
+    required this.pagamentoId,
+    required this.valorParaTroco,
+  });
+}
+
 class PedidoPagamentoRemoveu extends PedidoEvent {
   final int pagamentoId;
 

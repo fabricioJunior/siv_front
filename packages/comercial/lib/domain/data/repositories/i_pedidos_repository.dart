@@ -23,6 +23,11 @@ abstract class IPedidosRepository {
     required double valorConfirmado,
   });
   Future<void> removerPagamento(int id, int pagamentoId);
+  Future<PedidoPagamento> atualizarValorParaTrocoPagamento(
+    int id,
+    int pagamentoId, {
+    required double valorParaTroco,
+  });
   Future<void> chamarEntregador(int id);
   Future<void> confirmarEntrega(int id);
   Future<Pedido> criarTaxaEntrega(

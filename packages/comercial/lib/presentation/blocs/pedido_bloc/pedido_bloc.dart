@@ -24,6 +24,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final RemoverPagamentoPedido _removerPagamentoPedido;
   final ListarPagamentosPedido _listarPagamentosPedido;
   final ConfirmarPagamentoPedido _confirmarPagamentoPedido;
+  final AtualizarValorParaTrocoPagamentoPedido
+      _atualizarValorParaTrocoPagamentoPedido;
   final ChamarEntregadorPedido _chamarEntregadorPedido;
   final ConfirmarEntregaPedido _confirmarEntregaPedido;
   final CriarTaxaEntregaPedido _criarTaxaEntregaPedido;
@@ -48,6 +50,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._removerPagamentoPedido,
     this._listarPagamentosPedido,
     this._confirmarPagamentoPedido,
+    this._atualizarValorParaTrocoPagamentoPedido,
     this._chamarEntregadorPedido,
     this._confirmarEntregaPedido,
     this._criarTaxaEntregaPedido,
@@ -74,6 +77,9 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoPagamentoAdicionou>(_onPagamentoAdicionou);
     on<PedidoPagamentoRemoveu>(_onPagamentoRemoveu);
     on<PedidoPagamentoConfirmou>(_onPagamentoConfirmou);
+    on<PedidoPagamentoValorParaTrocoAtualizou>(
+      _onPagamentoValorParaTrocoAtualizou,
+    );
     on<PedidoEntregadorChamou>(_onEntregadorChamou);
     on<PedidoEntregaConfirmou>(_onEntregaConfirmou);
     on<PedidoTaxaEntregaCriou>(_onTaxaEntregaCriou);
@@ -455,6 +461,32 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao confirmar pagamento.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onPagamentoValorParaTrocoAtualizou(
+    PedidoPagamentoValorParaTrocoAtualizou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _atualizarValorParaTrocoPagamentoPedido.call(
+        state.id!,
+        event.pagamentoId,
+        valorParaTroco: event.valorParaTroco,
+      );
+      await _recarregarComDependencias(
+        emit,
+        PedidoStep.pagamentoValorParaTrocoAtualizado,
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao informar valor para troco.')));
       addError(e, s);
     }
   }

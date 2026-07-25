@@ -25,6 +25,7 @@ export 'domain/use_cases/adicionar_pagamento_pedido.dart';
 export 'domain/use_cases/remover_pagamento_pedido.dart';
 export 'domain/use_cases/listar_pagamentos_pedido.dart';
 export 'domain/use_cases/confirmar_pagamento_pedido.dart';
+export 'domain/use_cases/atualizar_valor_para_troco_pagamento_pedido.dart';
 export 'domain/use_cases/chamar_entregador_pedido.dart';
 export 'domain/use_cases/confirmar_entrega_pedido.dart';
 export 'domain/use_cases/criar_taxa_entrega_pedido.dart';

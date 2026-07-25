@@ -131,6 +131,21 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<PedidoPagamento> atualizarValorParaTrocoPagamento(
+    int id,
+    int pagamentoId, {
+    required double valorParaTroco,
+  }) async {
+    final response = await put(
+      pathParameters: {
+        'id': '$id/pagamentos/$pagamentoId/valor-para-troco',
+      },
+      body: {'valorParaTroco': valorParaTroco},
+    );
+    return PedidoPagamentoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<void> chamarEntregador(int id) async {
     await put(
       pathParameters: {'id': '$id/entregador/chamar'},

@@ -98,6 +98,19 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<PedidoPagamento> atualizarValorParaTrocoPagamento(
+    int id,
+    int pagamentoId, {
+    required double valorParaTroco,
+  }) {
+    return remoteDataSource.atualizarValorParaTrocoPagamento(
+      id,
+      pagamentoId,
+      valorParaTroco: valorParaTroco,
+    );
+  }
+
+  @override
   Future<void> chamarEntregador(int id) {
     return remoteDataSource.chamarEntregador(id);
   }

@@ -275,6 +275,7 @@ enum PedidoStep {
   descontoAlterado,
   dadosSalvos,
   pagamentoConfirmado,
+  pagamentoValorParaTrocoAtualizado,
   entregadorChamado,
   entregaConfirmada,
   taxaEntregaCriada,

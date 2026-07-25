@@ -417,6 +417,89 @@ class _PedidoPageState extends State<PedidoPage> {
         );
   }
 
+  Future<void> _informarValorParaTroco(
+    BuildContext context,
+    PedidoPagamento pagamento,
+  ) async {
+    final valorController = TextEditingController();
+    final valorEsperado = pagamento.valorEsperado ?? 0;
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final valorParaTroco = _parseValorReais(valorController.text);
+            final troco = (valorParaTroco != null && valorParaTroco > valorEsperado)
+                ? valorParaTroco - valorEsperado
+                : null;
+
+            return AlertDialog(
+              title: const Text('Informar valor para troco'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Valor esperado: R\$ ${valorEsperado.toStringAsFixed(2).replaceAll('.', ',')}',
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: valorController,
+                    autofocus: true,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Quanto o cliente vai pagar (R\$)',
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    troco != null
+                        ? 'Troco: R\$ ${troco.toStringAsFixed(2).replaceAll('.', ',')}'
+                        : 'Troco: —',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmou != true || !mounted) return;
+
+    final valor = _parseValorReais(valorController.text);
+    if (valor == null || valor <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe um valor válido.')),
+      );
+      return;
+    }
+
+    context.read<PedidoBloc>().add(
+          PedidoPagamentoValorParaTrocoAtualizou(
+            pagamentoId: pagamento.id!,
+            valorParaTroco: valor,
+          ),
+        );
+  }
+
   Future<void> _imprimirNotaEntregaDoPedido(
     BuildContext context,
     PedidoState state,
@@ -447,6 +530,7 @@ class _PedidoPageState extends State<PedidoPage> {
           empresaCnpj: state.pedido?.empresaCnpj,
           enderecoFormatado: enderecoResumo,
           itens: state.itens,
+          pagamentos: state.pagamentos,
         );
         return resultado.bytes;
       },
@@ -1657,6 +1741,13 @@ class _PedidoPageState extends State<PedidoPage> {
                       '${pagamento.valorConfirmado != null ? ' · Confirmado: R\$ ${pagamento.valorConfirmado!.toStringAsFixed(2)}' : ''}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    if (pagamento.valorParaTroco != null)
+                      Text(
+                        'Troco esperado: R\$ '
+                        '${(pagamento.valorParaTroco! - (pagamento.valorEsperado ?? 0)).toStringAsFixed(2)}'
+                        ' (cliente paga R\$ ${pagamento.valorParaTroco!.toStringAsFixed(2)})',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     Text(
                       label,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1666,6 +1757,13 @@ class _PedidoPageState extends State<PedidoPage> {
                   ],
                 ),
               ),
+              if (!confirmado && !ehOnline)
+                IconButton(
+                  tooltip: 'Informar valor para troco',
+                  onPressed: () =>
+                      _informarValorParaTroco(context, pagamento),
+                  icon: const Icon(Icons.currency_exchange),
+                ),
               if (!confirmado && !ehOnline)
                 TextButton(
                   onPressed: () =>

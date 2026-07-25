@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
 import 'package:comercial/domain/models/pedido_item.dart';
+import 'package:comercial/domain/models/pedido_pagamento.dart';
 import 'package:comercial/domain/models/romaneio.dart';
 import 'package:comercial/domain/models/romaneio_item.dart';
 import 'package:comercial/presentation/relatorios/danfe/danfe_pdf_renderer.dart';
@@ -74,8 +75,25 @@ class NotaEntregaPdfExporter {
     String? empresaCnpj,
     required String enderecoFormatado,
     required List<PedidoItem> itens,
+    List<PedidoPagamento> pagamentos = const [],
     PdfPageFormat pageFormat = DanfePdfRenderer.roll80Seguro,
   }) async {
+    final pagamentosPendentes =
+        pagamentos.where((p) => p.valorConfirmado == null);
+    final valorPagamentoPendente = pagamentosPendentes.fold<double>(
+      0,
+      (soma, p) => soma + (p.valorEsperado ?? 0),
+    );
+    final pagamentosComTroco = pagamentosPendentes
+        .where((p) => p.valorParaTroco != null)
+        .map(
+          (p) => NotaEntregaPagamentoTroco(
+            valorParaTroco: p.valorParaTroco!,
+            troco: p.valorParaTroco! - (p.valorEsperado ?? 0),
+          ),
+        )
+        .toList(growable: false);
+
     final dados = NotaEntregaLayoutData(
       enderecoFormatado: enderecoFormatado,
       googleMapsUrl: _googleMapsUrl(enderecoFormatado),
@@ -100,6 +118,8 @@ class NotaEntregaPdfExporter {
           )
           .toList(growable: false),
       dadosFiscais: null,
+      valorPagamentoPendente: valorPagamentoPendente,
+      pagamentosComTroco: pagamentosComTroco,
     );
 
     final bytes =

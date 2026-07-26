@@ -92,6 +92,8 @@ class RomaneiosRepository implements IRomaneiosRepository {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   }) {
     return caixasRemoteDataSource.receberRomaneio(
       caixaId: caixaId,
@@ -103,6 +105,8 @@ class RomaneiosRepository implements IRomaneiosRepository {
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
       pontuarFidelidade: pontuarFidelidade,
+      enviarNotaPorEmail: enviarNotaPorEmail,
+      emailNota: emailNota,
     );
   }
 

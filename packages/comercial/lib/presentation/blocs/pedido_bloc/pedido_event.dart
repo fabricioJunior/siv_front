@@ -91,11 +91,17 @@ class PedidoPagamentoAdicionou extends PedidoEvent {
   final int formaDePagamentoId;
   final double valorEsperado;
   final double? taxaAplicada;
+  // Preenchido quando a linha de pagamento é dinheiro e o valor digitado
+  // excede o valorEsperado -- mesmo cálculo de troco já feito pelo
+  // PagamentosRealizadosWidget (state.valorTroco), reaproveitado aqui em vez
+  // de pedir o operador informar de novo depois via valorParaTroco manual.
+  final double? valorParaTroco;
 
   PedidoPagamentoAdicionou({
     required this.formaDePagamentoId,
     required this.valorEsperado,
     this.taxaAplicada,
+    this.valorParaTroco,
   });
 }
 
@@ -109,6 +115,16 @@ class PedidoPagamentoConfirmou extends PedidoEvent {
   });
 }
 
+class PedidoPagamentoValorParaTrocoAtualizou extends PedidoEvent {
+  final int pagamentoId;
+  final double valorParaTroco;
+
+  PedidoPagamentoValorParaTrocoAtualizou({
+    required this.pagamentoId,
+    required this.valorParaTroco,
+  });
+}
+
 class PedidoPagamentoRemoveu extends PedidoEvent {
   final int pagamentoId;
 
@@ -118,6 +134,18 @@ class PedidoPagamentoRemoveu extends PedidoEvent {
 class PedidoEntregadorChamou extends PedidoEvent {}
 
 class PedidoEntregaConfirmou extends PedidoEvent {}
+
+class PedidoRetiradaConfirmou extends PedidoEvent {
+  final String codigo;
+
+  PedidoRetiradaConfirmou(this.codigo);
+}
+
+class PedidoRetiradaLoteConfirmou extends PedidoEvent {
+  final List<int> pedidoIds;
+
+  PedidoRetiradaLoteConfirmou(this.pedidoIds);
+}
 
 class PedidoTaxaEntregaCriou extends PedidoEvent {
   final double valorTaxaEntrega;

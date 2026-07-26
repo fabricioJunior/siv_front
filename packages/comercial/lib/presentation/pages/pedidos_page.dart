@@ -136,6 +136,7 @@ class _PedidosPageState extends State<PedidosPage> {
                               _bloc.add(PedidosIniciou());
                             }
                           },
+                          onCancelar: () => _cancelarPedido(context, pedido),
                         ),
                       ),
                     ),
@@ -146,6 +147,38 @@ class _PedidosPageState extends State<PedidosPage> {
         },
       ),
     );
+  }
+
+  Future<void> _cancelarPedido(BuildContext context, Pedido pedido) async {
+    final motivoController = TextEditingController();
+    final motivo = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Cancelar pedido #${pedido.id}'),
+          content: TextField(
+            controller: motivoController,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Motivo cancelamento'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Fechar'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(motivoController.text.trim()),
+              child: const Text('Cancelar pedido'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (motivo == null || motivo.isEmpty || pedido.id == null) return;
+
+    _bloc.add(PedidosPedidoCancelou(pedido.id!, motivoCancelamento: motivo));
   }
 }
 
@@ -202,8 +235,17 @@ class _PedidosHeader extends StatelessWidget {
 class _PedidoCard extends StatelessWidget {
   final Pedido pedido;
   final VoidCallback onTap;
+  final VoidCallback? onCancelar;
 
-  const _PedidoCard({required this.pedido, required this.onTap});
+  const _PedidoCard(
+      {required this.pedido, required this.onTap, this.onCancelar});
+
+  bool get _podeCancelar {
+    final situacao = pedido.situacao?.toLowerCase();
+    return situacao != 'encerrado' &&
+        situacao != 'faturado' &&
+        situacao != 'cancelado';
+  }
 
   Color get _cor => switch (pedido.situacao?.toLowerCase()) {
         'aberto' || 'criado' => Colors.blue,
@@ -457,9 +499,19 @@ class _PedidoCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
+                          if (_podeCancelar && onCancelar != null)
+                            IconButton(
+                              tooltip: 'Cancelar pedido',
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: onCancelar,
+                              icon: const Icon(Icons.cancel_outlined,
+                                  size: 18, color: Colors.red),
+                            ),
+                          const SizedBox(height: 4),
                           Icon(Icons.chevron_right,
-                              size: 18,
-                              color: cor.withValues(alpha: 0.5)),
+                              size: 18, color: cor.withValues(alpha: 0.5)),
                         ],
                       ),
                     ],
@@ -493,8 +545,7 @@ class _EstadoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

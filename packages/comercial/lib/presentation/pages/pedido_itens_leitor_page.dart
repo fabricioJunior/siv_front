@@ -34,8 +34,13 @@ class _PedidoItensLeitorPageState extends State<PedidoItensLeitorPage> {
     super.dispose();
   }
 
-  void _preCarregarSeNecessario(PedidoState state) {
-    if (_preCarregado) return;
+  // Guarda o snapshot original (pra calcular a diferença ao confirmar) só uma vez -- mas a lista de
+  // ProdutosPreCarregado precisa ser recalculada a cada build e passada via LeitorWidget.produtosPreCarregados,
+  // não via _leitorController.preCarregarProdutos() direto: nesse ponto (build do pai, antes do
+  // LeitorWidget montar) o controller ainda não foi vinculado ao LeitorBloc interno (bind() só roda no
+  // initState do LeitorWidget), então o comando cai no vazio (_bloc?.add é no-op com _bloc == null).
+  List<ProdutosPreCarregado> _produtosPreCarregados(PedidoState state) {
+    if (_preCarregado) return const [];
     _preCarregado = true;
 
     final agrupado = <int, int>{};
@@ -47,19 +52,16 @@ class _PedidoItensLeitorPageState extends State<PedidoItensLeitorPage> {
     }
     _quantidadesOriginais = agrupado;
 
-    if (agrupado.isEmpty) return;
-    _leitorController.preCarregarProdutos(
-      agrupado.entries
-          .map((e) => ProdutosPreCarregado(id: e.key, quantidade: e.value))
-          .toList(),
-    );
+    return agrupado.entries
+        .map((e) => ProdutosPreCarregado(id: e.key, quantidade: e.value))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PedidoBloc, PedidoState>(
       builder: (context, state) {
-        _preCarregarSeNecessario(state);
+        final produtosPreCarregados = _produtosPreCarregados(state);
 
         return PopScope(
           canPop: !_aplicando,
@@ -92,6 +94,7 @@ class _PedidoItensLeitorPageState extends State<PedidoItensLeitorPage> {
                             controller: _leitorController,
                             dataSource: sl(),
                             buscaDataSource: sl(),
+                            produtosPreCarregados: produtosPreCarregados,
                             desativado: _aplicando,
                             tabelaDePrecoId:
                                 int.tryParse(state.tabelaPrecoId ?? ''),

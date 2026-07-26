@@ -16,6 +16,8 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final bool enviarNotaPorEmail;
+  final String emailNota;
   final int? consignacaoId;
   final List<int> romaneiosConsignacao;
 
@@ -28,6 +30,8 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.enviarNotaPorEmail = false,
+    this.emailNota = '',
     this.consignacaoId,
     this.romaneiosConsignacao = const [],
   });
@@ -42,7 +46,21 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        enviarNotaPorEmail,
+        emailNota,
         consignacaoId,
         romaneiosConsignacao,
       ];
+}
+
+// Evento interno disparado pelo Timer.periodic de polling do documento
+// fiscal (só usado quando enviarNotaPorEmail == true e a emissão ainda
+// está pendente/processando na tela de sucesso).
+class RomaneioCriacaoDocumentoFiscalPollTick extends RomaneioCriacaoEvent {
+  final int romaneioId;
+
+  const RomaneioCriacaoDocumentoFiscalPollTick(this.romaneioId);
+
+  @override
+  List<Object?> get props => [romaneioId];
 }

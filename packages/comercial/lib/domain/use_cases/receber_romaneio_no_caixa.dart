@@ -17,6 +17,8 @@ class ReceberRomaneioNoCaixa {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   }) {
     return _repository.receberRomaneioNoCaixa(
       caixaId: caixaId,
@@ -28,6 +30,8 @@ class ReceberRomaneioNoCaixa {
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
       pontuarFidelidade: pontuarFidelidade,
+      enviarNotaPorEmail: enviarNotaPorEmail,
+      emailNota: emailNota,
     );
   }
 }

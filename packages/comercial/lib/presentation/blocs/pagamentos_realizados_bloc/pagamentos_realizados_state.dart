@@ -39,6 +39,10 @@ class PagamentosRealizadosState extends Equatable {
   final bool clienteElegivelFidelidade;
   final bool carregandoElegibilidadeFidelidade;
   final bool clienteGenerico;
+  final bool permiteNotaFiscalEmail;
+  final bool enviarNotaPorEmail;
+  final String emailNota;
+  final String? emailClienteCadastrado;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -65,7 +69,15 @@ class PagamentosRealizadosState extends Equatable {
     this.clienteElegivelFidelidade = false,
     this.carregandoElegibilidadeFidelidade = false,
     this.clienteGenerico = false,
+    this.permiteNotaFiscalEmail = false,
+    this.enviarNotaPorEmail = false,
+    this.emailNota = '',
+    this.emailClienteCadastrado,
   });
+
+  bool get exigeEmailNota =>
+      enviarNotaPorEmail &&
+      (emailClienteCadastrado == null || emailClienteCadastrado!.isEmpty);
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
   double get valorDescontoItensTotal =>
@@ -130,6 +142,10 @@ class PagamentosRealizadosState extends Equatable {
     bool? clienteElegivelFidelidade,
     bool? carregandoElegibilidadeFidelidade,
     bool? clienteGenerico,
+    bool? permiteNotaFiscalEmail,
+    bool? enviarNotaPorEmail,
+    String? emailNota,
+    Object? emailClienteCadastrado = _sentinela,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -170,6 +186,13 @@ class PagamentosRealizadosState extends Equatable {
       carregandoElegibilidadeFidelidade: carregandoElegibilidadeFidelidade ??
           this.carregandoElegibilidadeFidelidade,
       clienteGenerico: clienteGenerico ?? this.clienteGenerico,
+      permiteNotaFiscalEmail:
+          permiteNotaFiscalEmail ?? this.permiteNotaFiscalEmail,
+      enviarNotaPorEmail: enviarNotaPorEmail ?? this.enviarNotaPorEmail,
+      emailNota: emailNota ?? this.emailNota,
+      emailClienteCadastrado: identical(emailClienteCadastrado, _sentinela)
+          ? this.emailClienteCadastrado
+          : emailClienteCadastrado as String?,
     );
   }
 
@@ -199,6 +222,10 @@ class PagamentosRealizadosState extends Equatable {
         clienteElegivelFidelidade,
         carregandoElegibilidadeFidelidade,
         clienteGenerico,
+        permiteNotaFiscalEmail,
+        enviarNotaPorEmail,
+        emailNota,
+        emailClienteCadastrado,
       ];
 }
 
@@ -284,6 +311,7 @@ class PagamentoRealizadoLinha extends Equatable {
       'formaDePagamentoId': formaDePagamento!.id,
       'parcela': parcelas,
       'valor': valor,
+      'ehDinheiro': ehDinheiro,
     };
   }
 

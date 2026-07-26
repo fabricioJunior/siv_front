@@ -8,20 +8,29 @@ import 'package:core/presentation.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
+import 'package:core/sessao.dart';
+import 'package:empresas/use_cases.dart';
 
 part 'pagamentos_realizados_event.dart';
 part 'pagamentos_realizados_state.dart';
+
+final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 class PagamentosRealizadosBloc
     extends Bloc<PagamentosRealizadosEvent, PagamentosRealizadosState> {
   final CarregarResumoPagamentosRealizados _carregarResumo;
   final BuscarSaldoCreditoDevolucao _buscarSaldoCreditoDevolucao;
   final VerificarElegibilidadeFidelidade _verificarElegibilidadeFidelidade;
+  final RecuperarConfiguracaoNotaFiscalEmail
+      _recuperarConfiguracaoNotaFiscalEmail;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
   PagamentosRealizadosBloc(
     this._carregarResumo,
     this._buscarSaldoCreditoDevolucao,
     this._verificarElegibilidadeFidelidade,
+    this._recuperarConfiguracaoNotaFiscalEmail,
+    this._acessoGlobalSessao,
   ) : super(const PagamentosRealizadosState()) {
     on<PagamentosRealizadosIniciado>(_onIniciado);
     on<PagamentosRealizadosLinhaAdicionada>(_onLinhaAdicionada);
@@ -39,6 +48,10 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosPontuarFidelidadeAlterado>(
       _onPontuarFidelidadeAlterado,
     );
+    on<PagamentosRealizadosEnviarNotaPorEmailAlterado>(
+      _onEnviarNotaPorEmailAlterado,
+    );
+    on<PagamentosRealizadosEmailNotaAlterado>(_onEmailNotaAlterado);
   }
 
   FutureOr<void> _onIniciado(
@@ -59,8 +72,14 @@ class PagamentosRealizadosBloc
         clienteElegivelFidelidade: false,
         carregandoElegibilidadeFidelidade: false,
         clienteGenerico: event.clienteGenerico,
+        enviarNotaPorEmail: event.enviarNotaPorEmailInicial,
+        emailNota: event.emailClienteInicial ?? '',
+        emailClienteCadastrado: event.emailClienteInicial,
+        permiteNotaFiscalEmail: false,
       ),
     );
+
+    await _carregarPermiteNotaFiscalEmail(emit);
 
     try {
       final resumo =
@@ -152,6 +171,21 @@ class PagamentosRealizadosBloc
               mensagemDeErroApi(e, 'Falha ao carregar pagamentos realizados.'),
         ),
       );
+      addError(e, s);
+    }
+  }
+
+  Future<void> _carregarPermiteNotaFiscalEmail(
+    Emitter<PagamentosRealizadosState> emit,
+  ) async {
+    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+    if (empresaId == null) return;
+
+    try {
+      final configuracao =
+          await _recuperarConfiguracaoNotaFiscalEmail.call(empresaId);
+      emit(state.copyWith(permiteNotaFiscalEmail: configuracao.ativo));
+    } catch (e, s) {
       addError(e, s);
     }
   }
@@ -529,6 +563,15 @@ class PagamentosRealizadosBloc
       return;
     }
 
+    if (state.exigeEmailNota && !_emailRegex.hasMatch(state.emailNota.trim())) {
+      emit(
+        state.copyWith(
+          erro: 'Informe um e-mail válido para o envio da nota fiscal.',
+        ),
+      );
+      return;
+    }
+
     final linhasValidadas = <PagamentoRealizadoLinha>[];
     for (final linha in state.linhas) {
       if (linha.formaDePagamento == null) {
@@ -672,6 +715,25 @@ class PagamentosRealizadosBloc
         erro: null,
       ),
     );
+  }
+
+  void _onEnviarNotaPorEmailAlterado(
+    PagamentosRealizadosEnviarNotaPorEmailAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        enviarNotaPorEmail: event.enviarNotaPorEmail,
+        erro: null,
+      ),
+    );
+  }
+
+  void _onEmailNotaAlterado(
+    PagamentosRealizadosEmailNotaAlterado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    emit(state.copyWith(emailNota: event.emailNota, erro: null));
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {

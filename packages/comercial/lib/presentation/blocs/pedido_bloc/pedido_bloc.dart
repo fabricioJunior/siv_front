@@ -24,8 +24,12 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final RemoverPagamentoPedido _removerPagamentoPedido;
   final ListarPagamentosPedido _listarPagamentosPedido;
   final ConfirmarPagamentoPedido _confirmarPagamentoPedido;
+  final AtualizarValorParaTrocoPagamentoPedido
+      _atualizarValorParaTrocoPagamentoPedido;
   final ChamarEntregadorPedido _chamarEntregadorPedido;
   final ConfirmarEntregaPedido _confirmarEntregaPedido;
+  final ConfirmarRetiradaPedido _confirmarRetiradaPedido;
+  final ConfirmarRetiradaLotePedido _confirmarRetiradaLotePedido;
   final CriarTaxaEntregaPedido _criarTaxaEntregaPedido;
   final ListarEventosPedido _listarEventosPedido;
   final ListarItensPedido _listarItensPedido;
@@ -48,8 +52,11 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._removerPagamentoPedido,
     this._listarPagamentosPedido,
     this._confirmarPagamentoPedido,
+    this._atualizarValorParaTrocoPagamentoPedido,
     this._chamarEntregadorPedido,
     this._confirmarEntregaPedido,
+    this._confirmarRetiradaPedido,
+    this._confirmarRetiradaLotePedido,
     this._criarTaxaEntregaPedido,
     this._listarEventosPedido,
     this._listarItensPedido,
@@ -74,8 +81,13 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoPagamentoAdicionou>(_onPagamentoAdicionou);
     on<PedidoPagamentoRemoveu>(_onPagamentoRemoveu);
     on<PedidoPagamentoConfirmou>(_onPagamentoConfirmou);
+    on<PedidoPagamentoValorParaTrocoAtualizou>(
+      _onPagamentoValorParaTrocoAtualizou,
+    );
     on<PedidoEntregadorChamou>(_onEntregadorChamou);
     on<PedidoEntregaConfirmou>(_onEntregaConfirmou);
+    on<PedidoRetiradaConfirmou>(_onRetiradaConfirmou);
+    on<PedidoRetiradaLoteConfirmou>(_onRetiradaLoteConfirmou);
     on<PedidoTaxaEntregaCriou>(_onTaxaEntregaCriou);
     on<PedidoItemAdicionou>(_onItemAdicionou);
     on<PedidoItemRemoveu>(_onItemRemoveu);
@@ -155,30 +167,87 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   FutureOr<void> _onModalidadeEntregaAlterada(
     PedidoModalidadeEntregaAlterada event,
     Emitter<PedidoState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        modalidadeEntrega: event.modalidadeEntrega,
-        limparEnderecoEntregaId: event.modalidadeEntrega == 'retirada',
-        step: PedidoStep.editando,
-        erro: null,
-      ),
+  ) async {
+    final novoEstadoLocal = state.copyWith(
+      modalidadeEntrega: event.modalidadeEntrega,
+      limparEnderecoEntregaId: event.modalidadeEntrega == 'retirada',
+      step: PedidoStep.editando,
+      erro: null,
     );
+
+    // Pedido novo (id == null) ainda não existe no backend -- fica só no estado local, mandado
+    // junto no PedidoSalvou. Pedido já existente precisa persistir na hora (mesmo padrão de
+    // _onObservacaoSalva/_onTaxaEntregaSalva), senão a troca de modalidade nunca chega no servidor
+    // e a situacaoEntrega nunca sai de "nao_aplicavel".
+    if (state.id == null) {
+      emit(novoEstadoLocal);
+      return;
+    }
+
+    emit(novoEstadoLocal.copyWith(step: PedidoStep.processando));
+    try {
+      final pedido = _toModel(novoEstadoLocal);
+      final salvo = await _atualizarPedido.call(pedido);
+      emit(
+        PedidoState.fromModel(
+          salvo,
+          step: PedidoStep.dadosSalvos,
+          pagamentos: state.pagamentos,
+          eventos: state.eventos,
+          itens: state.itens,
+          formasDePagamentoPorId: state.formasDePagamentoPorId,
+          enderecoEntregaResumo:
+              event.modalidadeEntrega == 'retirada' ? null : state.enderecoEntregaResumo,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao salvar modalidade de entrega do pedido.')));
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onEnderecoEntregaAlterado(
     PedidoEnderecoEntregaAlterado event,
     Emitter<PedidoState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        enderecoEntregaId: event.enderecoEntregaId,
-        limparEnderecoEntregaId: event.enderecoEntregaId == null,
-        enderecoEntregaResumo: event.enderecoEntregaResumo,
-        step: PedidoStep.editando,
-        erro: null,
-      ),
+  ) async {
+    final novoEstadoLocal = state.copyWith(
+      enderecoEntregaId: event.enderecoEntregaId,
+      limparEnderecoEntregaId: event.enderecoEntregaId == null,
+      enderecoEntregaResumo: event.enderecoEntregaResumo,
+      step: PedidoStep.editando,
+      erro: null,
     );
+
+    if (state.id == null) {
+      emit(novoEstadoLocal);
+      return;
+    }
+
+    emit(novoEstadoLocal.copyWith(step: PedidoStep.processando));
+    try {
+      final pedido = _toModel(novoEstadoLocal);
+      final salvo = await _atualizarPedido.call(pedido);
+      emit(
+        PedidoState.fromModel(
+          salvo,
+          step: PedidoStep.enderecoEntregaSalvo,
+          pagamentos: state.pagamentos,
+          eventos: state.eventos,
+          itens: state.itens,
+          formasDePagamentoPorId: state.formasDePagamentoPorId,
+          enderecoEntregaResumo: event.enderecoEntregaResumo,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao salvar endereço de entrega do pedido.')));
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onSalvou(
@@ -406,6 +475,21 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
         valorEsperado: event.valorEsperado,
         taxaAplicada: event.taxaAplicada,
       );
+      // Reaproveita o troco já calculado pelo PagamentosRealizadosWidget --
+      // se o backend rejeitar (forma nao e dinheiro), ignora silenciosamente:
+      // e um preenchimento automatico best-effort, nao uma acao explicita
+      // do operador que mereça SnackBar de erro.
+      if (event.valorParaTroco != null && pagamento.id != null) {
+        try {
+          await _atualizarValorParaTrocoPagamentoPedido.call(
+            state.id!,
+            pagamento.id!,
+            valorParaTroco: event.valorParaTroco!,
+          );
+        } catch (_) {
+          // best-effort, ver comentario acima
+        }
+      }
       await _recarregarComDependencias(
         emit,
         PedidoStep.pagamentoAdicionado,
@@ -459,6 +543,32 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     }
   }
 
+  FutureOr<void> _onPagamentoValorParaTrocoAtualizou(
+    PedidoPagamentoValorParaTrocoAtualizou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _atualizarValorParaTrocoPagamentoPedido.call(
+        state.id!,
+        event.pagamentoId,
+        valorParaTroco: event.valorParaTroco,
+      );
+      await _recarregarComDependencias(
+        emit,
+        PedidoStep.pagamentoValorParaTrocoAtualizado,
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao informar valor para troco.')));
+      addError(e, s);
+    }
+  }
+
   FutureOr<void> _onEntregadorChamou(
     PedidoEntregadorChamou event,
     Emitter<PedidoState> emit,
@@ -491,6 +601,55 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao confirmar entrega.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onRetiradaConfirmou(
+    PedidoRetiradaConfirmou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      final (pedido, outrosPedidosPendentes) =
+          await _confirmarRetiradaPedido.call(state.id!, event.codigo);
+      final dependencias = await _carregarDependencias(pedido.id!);
+      emit(
+        PedidoState.fromModel(
+          pedido,
+          step: PedidoStep.retiradaConfirmada,
+          pagamentos: dependencias.$1,
+          eventos: dependencias.$2,
+          itens: dependencias.$3,
+        ).copyWith(outrosPedidosPendentes: outrosPedidosPendentes),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao confirmar retirada.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onRetiradaLoteConfirmou(
+    PedidoRetiradaLoteConfirmou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _confirmarRetiradaLotePedido.call(event.pedidoIds);
+      await _recarregarComDependencias(
+        emit,
+        PedidoStep.retiradaLoteConfirmada,
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao confirmar retirada em lote.')));
       addError(e, s);
     }
   }

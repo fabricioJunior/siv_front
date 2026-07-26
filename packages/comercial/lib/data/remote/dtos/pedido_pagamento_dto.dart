@@ -43,6 +43,8 @@ class PedidoPagamentoDto implements PedidoPagamento {
   @override
   final double? valorConfirmado;
   @override
+  final double? valorParaTroco;
+  @override
   final double? taxaAplicada;
   @override
   final DateTime? confirmadoEm;
@@ -58,6 +60,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
     this.tipo,
     this.valorEsperado,
     this.valorConfirmado,
+    this.valorParaTroco,
     this.taxaAplicada,
     this.confirmadoEm,
     this.confirmadoPorOperadorId,
@@ -73,6 +76,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
       tipo: json['tipo']?.toString(),
       valorEsperado: _toDouble(json['valorEsperado']),
       valorConfirmado: _toDouble(json['valorConfirmado']),
+      valorParaTroco: _toDouble(json['valorParaTroco']),
       taxaAplicada: _toDouble(json['taxaAplicada']),
       confirmadoEm: _toDate(json['confirmadoEm']),
       confirmadoPorOperadorId: _toInt(json['confirmadoPorOperadorId']),
@@ -90,6 +94,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
         tipo,
         valorEsperado,
         valorConfirmado,
+        valorParaTroco,
         taxaAplicada,
         confirmadoEm,
         confirmadoPorOperadorId,

@@ -22,6 +22,8 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   }) async {
     final formasDePagamento = formasDePagamentoRealizadas
         .map((forma) => _formaDePagamentoToJson(forma))
@@ -45,6 +47,9 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
           'cpfNaNota': cpfNaNota.trim(),
         if (pontuarFidelidade) 'pontuarFidelidade': pontuarFidelidade,
+        if (enviarNotaPorEmail) 'enviarNotaPorEmail': enviarNotaPorEmail,
+        if (enviarNotaPorEmail && emailNota.trim().isNotEmpty)
+          'emailNota': emailNota.trim(),
       },
     );
   }

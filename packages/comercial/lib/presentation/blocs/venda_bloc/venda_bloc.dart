@@ -103,6 +103,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
         'email': pessoa.email,
         'telefone': pessoa.contato,
         'generica': pessoa.generica,
+        'enviarNotaPorEmail': pessoa.enviarNotaPorEmail,
       },
     );
   }
@@ -275,6 +276,8 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
           pontuarFidelidade: event.pontuarFidelidade,
+          enviarNotaPorEmail: event.enviarNotaPorEmail,
+          emailNota: event.emailNota,
           erro: null,
         ),
       );

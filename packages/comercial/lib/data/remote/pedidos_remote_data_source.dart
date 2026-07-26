@@ -131,6 +131,21 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<PedidoPagamento> atualizarValorParaTrocoPagamento(
+    int id,
+    int pagamentoId, {
+    required double valorParaTroco,
+  }) async {
+    final response = await put(
+      pathParameters: {
+        'id': '$id/pagamentos/$pagamentoId/valor-para-troco',
+      },
+      body: {'valorParaTroco': valorParaTroco},
+    );
+    return PedidoPagamentoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<void> chamarEntregador(int id) async {
     await put(
       pathParameters: {'id': '$id/entregador/chamar'},
@@ -144,6 +159,35 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
       pathParameters: {'id': '$id/entregador/confirmar-entrega'},
       body: {},
     );
+  }
+
+  @override
+  Future<(Pedido, List<Pedido>)> confirmarRetirada(
+    int id,
+    String codigo,
+  ) async {
+    final response = await put(
+      pathParameters: {'id': '$id/confirmar-retirada'},
+      body: {'codigo': codigo},
+    );
+    final json = response.body as Map<String, dynamic>;
+    final pedido = PedidoDto.fromJson(json['pedido'] as Map<String, dynamic>);
+    final outrosPedidosPendentes =
+        (json['outrosPedidosPendentes'] as List<dynamic>? ?? [])
+            .map((item) => PedidoDto.fromJson(item as Map<String, dynamic>))
+            .toList();
+    return (pedido, outrosPedidosPendentes);
+  }
+
+  @override
+  Future<List<Pedido>> confirmarRetiradaLote(List<int> pedidoIds) async {
+    final response = await put(
+      pathParameters: {'id': 'confirmar-retirada-lote'},
+      body: {'pedidoIds': pedidoIds},
+    );
+    return (response.body as List<dynamic>)
+        .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   @override

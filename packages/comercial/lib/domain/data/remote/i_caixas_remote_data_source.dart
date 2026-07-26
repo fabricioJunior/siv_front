@@ -11,6 +11,8 @@ abstract class IReceberRomaneioNoCaixaRemoteDataSource {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   });
 }
 

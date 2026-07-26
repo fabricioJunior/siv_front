@@ -21,6 +21,8 @@ class VendaState extends Equatable {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final bool enviarNotaPorEmail;
+  final String emailNota;
   final int? pedidoCriadoId;
   final String? orcamentoId;
   final List<ProdutoCompartilhado> orcamentoItensPreCarregados;
@@ -43,6 +45,8 @@ class VendaState extends Equatable {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.enviarNotaPorEmail = false,
+    this.emailNota = '',
     this.pedidoCriadoId,
     this.orcamentoId,
     this.orcamentoItensPreCarregados = const [],
@@ -79,6 +83,8 @@ class VendaState extends Equatable {
     bool? incluirCpfNaNota,
     String? cpfNaNota,
     bool? pontuarFidelidade,
+    bool? enviarNotaPorEmail,
+    String? emailNota,
     Object? pedidoCriadoId = _sentinela,
     Object? orcamentoId = _sentinela,
     List<ProdutoCompartilhado>? orcamentoItensPreCarregados,
@@ -114,6 +120,8 @@ class VendaState extends Equatable {
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
       pontuarFidelidade: pontuarFidelidade ?? this.pontuarFidelidade,
+      enviarNotaPorEmail: enviarNotaPorEmail ?? this.enviarNotaPorEmail,
+      emailNota: emailNota ?? this.emailNota,
       pedidoCriadoId: identical(pedidoCriadoId, _sentinela)
           ? this.pedidoCriadoId
           : pedidoCriadoId as int?,
@@ -145,6 +153,8 @@ class VendaState extends Equatable {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        enviarNotaPorEmail,
+        emailNota,
         pedidoCriadoId,
         orcamentoId,
         orcamentoItensPreCarregados,

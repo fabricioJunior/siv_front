@@ -516,6 +516,9 @@ Map<String, Widget Function(BuildContext)> routes = {
     final incluirCpfNaNota = argumentos['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade = argumentos['pontuarFidelidade'] as bool? ?? false;
+    final enviarNotaPorEmail =
+        argumentos['enviarNotaPorEmail'] as bool? ?? false;
+    final emailNota = argumentos['emailNota']?.toString() ?? '';
     final consignacaoIdArg = argumentos['consignacaoId'];
     final consignacaoId = consignacaoIdArg is int
         ? consignacaoIdArg
@@ -537,6 +540,8 @@ Map<String, Widget Function(BuildContext)> routes = {
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,
+        enviarNotaPorEmail: enviarNotaPorEmail,
+        emailNota: emailNota,
         consignacaoId: consignacaoId,
         romaneiosConsignacao: romaneiosConsignacao,
       ),
@@ -994,6 +999,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/parametros_empresa': (context) {
     return EmpresaParametrosPage(idEmpresa: args(context)['empresaId']);
+  },
+  '/nota_fiscal_email_empresa': (context) {
+    return EmpresaNotaFiscalEmailPage(idEmpresa: args(context)['empresaId']);
   },
   // Impressoras:
   '/etiqueta_preview_page': (context) {

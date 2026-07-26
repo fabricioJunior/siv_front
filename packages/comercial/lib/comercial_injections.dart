@@ -134,11 +134,20 @@ void _useCases() {
   sl.registerFactory<ConfirmarPagamentoPedido>(
     () => ConfirmarPagamentoPedido(repository: sl()),
   );
+  sl.registerFactory<AtualizarValorParaTrocoPagamentoPedido>(
+    () => AtualizarValorParaTrocoPagamentoPedido(repository: sl()),
+  );
   sl.registerFactory<ChamarEntregadorPedido>(
     () => ChamarEntregadorPedido(repository: sl()),
   );
   sl.registerFactory<ConfirmarEntregaPedido>(
     () => ConfirmarEntregaPedido(repository: sl()),
+  );
+  sl.registerFactory<ConfirmarRetiradaPedido>(
+    () => ConfirmarRetiradaPedido(repository: sl()),
+  );
+  sl.registerFactory<ConfirmarRetiradaLotePedido>(
+    () => ConfirmarRetiradaLotePedido(repository: sl()),
   );
   sl.registerFactory<CriarTaxaEntregaPedido>(
     () => CriarTaxaEntregaPedido(repository: sl()),
@@ -282,11 +291,15 @@ void _presentation() {
   sl.registerFactory<PedidosBloc>(
     () => PedidosBloc(
       sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -386,6 +399,8 @@ void _presentation() {
 
   sl.registerFactory<PagamentosRealizadosBloc>(
     () => PagamentosRealizadosBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

@@ -46,6 +46,7 @@ abstract class PedidoPagamento implements Equatable {
   String? get tipo;
   double? get valorEsperado;
   double? get valorConfirmado;
+  double? get valorParaTroco;
   double? get taxaAplicada;
   DateTime? get confirmadoEm;
   int? get confirmadoPorOperadorId;
@@ -58,6 +59,7 @@ abstract class PedidoPagamento implements Equatable {
     String? tipo,
     double? valorEsperado,
     double? valorConfirmado,
+    double? valorParaTroco,
     double? taxaAplicada,
     DateTime? confirmadoEm,
     int? confirmadoPorOperadorId,
@@ -72,6 +74,7 @@ abstract class PedidoPagamento implements Equatable {
         tipo,
         valorEsperado,
         valorConfirmado,
+        valorParaTroco,
         taxaAplicada,
         confirmadoEm,
         confirmadoPorOperadorId,
@@ -96,6 +99,8 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
   @override
   final double? valorConfirmado;
   @override
+  final double? valorParaTroco;
+  @override
   final double? taxaAplicada;
   @override
   final DateTime? confirmadoEm;
@@ -111,6 +116,7 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
     this.tipo,
     this.valorEsperado,
     this.valorConfirmado,
+    this.valorParaTroco,
     this.taxaAplicada,
     this.confirmadoEm,
     this.confirmadoPorOperadorId,
@@ -125,6 +131,7 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
         tipo,
         valorEsperado,
         valorConfirmado,
+        valorParaTroco,
         taxaAplicada,
         confirmadoEm,
         confirmadoPorOperadorId,

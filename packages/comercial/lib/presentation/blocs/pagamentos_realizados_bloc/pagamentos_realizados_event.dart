@@ -15,6 +15,8 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final double descontoJaAplicadoNoRomaneio;
   final double taxaEntregaJaAplicadaNoRomaneio;
   final bool clienteGenerico;
+  final String? emailClienteInicial;
+  final bool enviarNotaPorEmailInicial;
 
   const PagamentosRealizadosIniciado({
     required this.hashLista,
@@ -24,6 +26,8 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.descontoJaAplicadoNoRomaneio = 0,
     this.taxaEntregaJaAplicadaNoRomaneio = 0,
     this.clienteGenerico = false,
+    this.emailClienteInicial,
+    this.enviarNotaPorEmailInicial = false,
   });
 
   @override
@@ -35,6 +39,8 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         descontoJaAplicadoNoRomaneio,
         taxaEntregaJaAplicadaNoRomaneio,
         clienteGenerico,
+        emailClienteInicial,
+        enviarNotaPorEmailInicial,
       ];
 }
 
@@ -169,4 +175,25 @@ class PagamentosRealizadosPontuarFidelidadeAlterado
 
   @override
   List<Object?> get props => [pontuarFidelidade];
+}
+
+class PagamentosRealizadosEnviarNotaPorEmailAlterado
+    extends PagamentosRealizadosEvent {
+  final bool enviarNotaPorEmail;
+
+  const PagamentosRealizadosEnviarNotaPorEmailAlterado({
+    required this.enviarNotaPorEmail,
+  });
+
+  @override
+  List<Object?> get props => [enviarNotaPorEmail];
+}
+
+class PagamentosRealizadosEmailNotaAlterado extends PagamentosRealizadosEvent {
+  final String emailNota;
+
+  const PagamentosRealizadosEmailNotaAlterado({required this.emailNota});
+
+  @override
+  List<Object?> get props => [emailNota];
 }

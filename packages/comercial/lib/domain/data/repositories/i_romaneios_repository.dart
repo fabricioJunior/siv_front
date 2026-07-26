@@ -31,6 +31,8 @@ abstract class IRomaneiosRepository {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
   });
   Future<Romaneio> corrigirFormaDePagamento({
     required int caixaId,

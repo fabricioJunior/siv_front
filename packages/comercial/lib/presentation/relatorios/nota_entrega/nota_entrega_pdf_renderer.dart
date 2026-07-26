@@ -12,6 +12,18 @@ class NotaEntregaItem {
   const NotaEntregaItem({required this.descricao, this.valor});
 }
 
+/// Pagamento em dinheiro com troco esperado, exibido na Nota de Entrega pro
+/// entregador saber quanto de troco levar.
+class NotaEntregaPagamentoTroco {
+  final double valorParaTroco;
+  final double troco;
+
+  const NotaEntregaPagamentoTroco({
+    required this.valorParaTroco,
+    required this.troco,
+  });
+}
+
 /// Dados fiscais da nota, exibidos somente quando a NFe foi autorizada com
 /// sucesso -- ver [NotaEntregaLayoutData.dadosFiscais].
 class NotaEntregaDadosFiscais {
@@ -49,6 +61,13 @@ class NotaEntregaLayoutData {
   /// QR code) simplesmente nao sao renderizados.
   final NotaEntregaDadosFiscais? dadosFiscais;
 
+  /// Soma do `valorEsperado` dos pagamentos ainda não confirmados. `null`/0
+  /// quando não há pagamento pendente -- nesse caso a seção não é exibida.
+  final double? valorPagamentoPendente;
+
+  /// Pagamentos em dinheiro com troco esperado informado.
+  final List<NotaEntregaPagamentoTroco> pagamentosComTroco;
+
   const NotaEntregaLayoutData({
     required this.enderecoFormatado,
     this.googleMapsUrl,
@@ -60,6 +79,8 @@ class NotaEntregaLayoutData {
     this.empresaCnpj,
     this.itens = const [],
     this.dadosFiscais,
+    this.valorPagamentoPendente,
+    this.pagamentosComTroco = const [],
   });
 }
 
@@ -174,6 +195,24 @@ class NotaEntregaPdfRenderer {
                   ],
                 ),
               ),
+            if ((dados.valorPagamentoPendente ?? 0) > 0) ...[
+              pw.SizedBox(height: 8),
+              pw.Divider(thickness: 0.7),
+              pw.Text(
+                'Pagamento pendente: ${_fmtMoeda(dados.valorPagamentoPendente)}',
+                style:
+                    pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+              ),
+              for (final pagamento in dados.pagamentosComTroco)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 2),
+                  child: pw.Text(
+                    'Troco: cliente paga ${_fmtMoeda(pagamento.valorParaTroco)}'
+                    ', troco de ${_fmtMoeda(pagamento.troco)}',
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+            ],
             if (dados.dadosFiscais != null) ...[
               pw.SizedBox(height: 8),
               pw.Divider(thickness: 0.7),

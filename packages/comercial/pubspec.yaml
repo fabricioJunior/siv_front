@@ -21,6 +21,8 @@ dependencies:
     path: ../pessoas
   produtos:
     path: ../produtos
+  empresas:
+    path: ../empresas
   fl_chart: ^0.69.0
 
 dev_dependencies:

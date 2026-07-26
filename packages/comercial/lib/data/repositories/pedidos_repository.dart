@@ -98,6 +98,19 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<PedidoPagamento> atualizarValorParaTrocoPagamento(
+    int id,
+    int pagamentoId, {
+    required double valorParaTroco,
+  }) {
+    return remoteDataSource.atualizarValorParaTrocoPagamento(
+      id,
+      pagamentoId,
+      valorParaTroco: valorParaTroco,
+    );
+  }
+
+  @override
   Future<void> chamarEntregador(int id) {
     return remoteDataSource.chamarEntregador(id);
   }
@@ -105,6 +118,16 @@ class PedidosRepository implements IPedidosRepository {
   @override
   Future<void> confirmarEntrega(int id) {
     return remoteDataSource.confirmarEntrega(id);
+  }
+
+  @override
+  Future<(Pedido, List<Pedido>)> confirmarRetirada(int id, String codigo) {
+    return remoteDataSource.confirmarRetirada(id, codigo);
+  }
+
+  @override
+  Future<List<Pedido>> confirmarRetiradaLote(List<int> pedidoIds) {
+    return remoteDataSource.confirmarRetiradaLote(pedidoIds);
   }
 
   @override

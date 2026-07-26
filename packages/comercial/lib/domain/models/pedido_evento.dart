@@ -5,6 +5,7 @@ abstract class PedidoEvento implements Equatable {
   int? get pedidoId;
   String? get tipo;
   int? get operadorId;
+  String? get operadorNome;
   String? get observacao;
   DateTime? get criadoEm;
 
@@ -13,6 +14,7 @@ abstract class PedidoEvento implements Equatable {
     int? pedidoId,
     String? tipo,
     int? operadorId,
+    String? operadorNome,
     String? observacao,
     DateTime? criadoEm,
   }) = _PedidoEventoImpl;
@@ -23,6 +25,7 @@ abstract class PedidoEvento implements Equatable {
         pedidoId,
         tipo,
         operadorId,
+        operadorNome,
         observacao,
         criadoEm,
       ];
@@ -41,6 +44,8 @@ class _PedidoEventoImpl implements PedidoEvento {
   @override
   final int? operadorId;
   @override
+  final String? operadorNome;
+  @override
   final String? observacao;
   @override
   final DateTime? criadoEm;
@@ -50,6 +55,7 @@ class _PedidoEventoImpl implements PedidoEvento {
     this.pedidoId,
     this.tipo,
     this.operadorId,
+    this.operadorNome,
     this.observacao,
     this.criadoEm,
   });
@@ -60,6 +66,7 @@ class _PedidoEventoImpl implements PedidoEvento {
         pedidoId,
         tipo,
         operadorId,
+        operadorNome,
         observacao,
         criadoEm,
       ];

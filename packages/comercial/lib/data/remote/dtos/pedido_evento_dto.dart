@@ -10,6 +10,8 @@ class PedidoEventoDto implements PedidoEvento {
   @override
   final int? operadorId;
   @override
+  final String? operadorNome;
+  @override
   final String? observacao;
   @override
   final DateTime? criadoEm;
@@ -19,6 +21,7 @@ class PedidoEventoDto implements PedidoEvento {
     this.pedidoId,
     this.tipo,
     this.operadorId,
+    this.operadorNome,
     this.observacao,
     this.criadoEm,
   });
@@ -29,6 +32,7 @@ class PedidoEventoDto implements PedidoEvento {
       pedidoId: _toInt(json['pedidoId']),
       tipo: json['tipo']?.toString(),
       operadorId: _toInt(json['operadorId']),
+      operadorNome: json['operadorNome']?.toString(),
       observacao: json['observacao']?.toString(),
       criadoEm: _toDate(json['criadoEm']),
     );
@@ -40,6 +44,7 @@ class PedidoEventoDto implements PedidoEvento {
         pedidoId,
         tipo,
         operadorId,
+        operadorNome,
         observacao,
         criadoEm,
       ];

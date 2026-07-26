@@ -121,6 +121,16 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<(Pedido, List<Pedido>)> confirmarRetirada(int id, String codigo) {
+    return remoteDataSource.confirmarRetirada(id, codigo);
+  }
+
+  @override
+  Future<List<Pedido>> confirmarRetiradaLote(List<int> pedidoIds) {
+    return remoteDataSource.confirmarRetiradaLote(pedidoIds);
+  }
+
+  @override
   Future<Pedido> criarTaxaEntrega(
     int id, {
     required double valorTaxaEntrega,

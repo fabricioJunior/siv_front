@@ -24,6 +24,10 @@ class PedidoState extends Equatable {
   final int? pedidoTaxaEntregaCriadoId;
   final PedidoPagamento? ultimoPagamentoAdicionado;
   final Map<int, String> formasDePagamentoPorId;
+  // Outros pedidos do mesmo cliente pendentes de retirada, retornados pelo backend logo após
+  // confirmar a retirada de um pedido (ver PedidoBloc._onRetiradaConfirmou) -- usado pra oferecer
+  // liberar todos de uma vez via PedidoRetiradaLoteConfirmou, sem pedir o código de novo.
+  final List<Pedido> outrosPedidosPendentes;
   final String? erro;
   final PedidoStep step;
 
@@ -51,6 +55,7 @@ class PedidoState extends Equatable {
     this.pedidoTaxaEntregaCriadoId,
     this.ultimoPagamentoAdicionado,
     this.formasDePagamentoPorId = const {},
+    this.outrosPedidosPendentes = const [],
     this.erro,
     required this.step,
   });
@@ -79,6 +84,7 @@ class PedidoState extends Equatable {
         pedidoTaxaEntregaCriadoId = null,
         ultimoPagamentoAdicionado = null,
         formasDePagamentoPorId = const {},
+        outrosPedidosPendentes = const [],
         erro = null,
         step = PedidoStep.inicial;
 
@@ -90,6 +96,7 @@ class PedidoState extends Equatable {
     List<PedidoItem>? itens,
     Map<int, String>? formasDePagamentoPorId,
     String? enderecoEntregaResumo,
+    List<Pedido>? outrosPedidosPendentes,
   })  : id = model.id,
         pessoaId = (model.pessoaId ?? '').toString(),
         funcionarioId = (model.funcionarioId ?? '').toString(),
@@ -102,7 +109,8 @@ class PedidoState extends Equatable {
         tipo = model.tipo ?? 'venda',
         fiscal = model.fiscal ?? false,
         observacao = model.observacao ?? '',
-        valorTaxaEntrega = model.valorTaxaEntrega?.toStringAsFixed(2),
+        valorTaxaEntrega =
+            model.valorTaxaEntrega?.toStringAsFixed(2).replaceAll('.', ','),
         modalidadeEntrega = model.modalidadeEntrega ?? 'retirada',
         enderecoEntregaId = model.enderecoEntregaId,
         enderecoEntregaResumo = enderecoEntregaResumo,
@@ -113,6 +121,7 @@ class PedidoState extends Equatable {
         pedidoTaxaEntregaCriadoId = null,
         ultimoPagamentoAdicionado = null,
         formasDePagamentoPorId = formasDePagamentoPorId ?? const {},
+        outrosPedidosPendentes = outrosPedidosPendentes ?? const [],
         erro = null,
         step = step ?? PedidoStep.editando;
 
@@ -142,6 +151,8 @@ class PedidoState extends Equatable {
     PedidoPagamento? ultimoPagamentoAdicionado,
     bool limparUltimoPagamentoAdicionado = false,
     Map<int, String>? formasDePagamentoPorId,
+    List<Pedido>? outrosPedidosPendentes,
+    bool limparOutrosPedidosPendentes = false,
     String? erro,
     PedidoStep? step,
   }) {
@@ -178,6 +189,9 @@ class PedidoState extends Equatable {
           : (ultimoPagamentoAdicionado ?? this.ultimoPagamentoAdicionado),
       formasDePagamentoPorId:
           formasDePagamentoPorId ?? this.formasDePagamentoPorId,
+      outrosPedidosPendentes: limparOutrosPedidosPendentes
+          ? const []
+          : (outrosPedidosPendentes ?? this.outrosPedidosPendentes),
       erro: erro,
       step: step ?? this.step,
     );
@@ -207,6 +221,14 @@ class PedidoState extends Equatable {
   // PedidoBloc._onDescontoAlterado), usado como alvo do pagamento em vez de valorTotalItens puro.
   double get valorTotalComDesconto {
     final total = valorTotalItens - (pedido?.desconto ?? 0);
+    return total > 0 ? total : 0;
+  }
+
+  // Taxa de entrega setada direto no pedido (edição inline, ver PedidoService.update no apollo-api)
+  // não vira item -- soma aqui pra ela contar no alvo de pagamento (mesmo total que o backend usa em
+  // PedidoPagamentoService.recalcularSituacaoPagamento), senão o pedido nunca fecha como "pago".
+  double get valorTotalGeral {
+    final total = valorTotalComDesconto + (pedido?.valorTaxaEntrega ?? 0);
     return total > 0 ? total : 0;
   }
 
@@ -249,6 +271,7 @@ class PedidoState extends Equatable {
         pedidoTaxaEntregaCriadoId,
         ultimoPagamentoAdicionado,
         formasDePagamentoPorId,
+        outrosPedidosPendentes,
         erro,
         step,
       ];
@@ -274,10 +297,13 @@ enum PedidoStep {
   pagamentoRemovido,
   descontoAlterado,
   dadosSalvos,
+  enderecoEntregaSalvo,
   pagamentoConfirmado,
   pagamentoValorParaTrocoAtualizado,
   entregadorChamado,
   entregaConfirmada,
+  retiradaConfirmada,
+  retiradaLoteConfirmada,
   taxaEntregaCriada,
   itemAdicionado,
   itemRemovido,

@@ -311,6 +311,7 @@ class PagamentoRealizadoLinha extends Equatable {
       'formaDePagamentoId': formaDePagamento!.id,
       'parcela': parcelas,
       'valor': valor,
+      'ehDinheiro': ehDinheiro,
     };
   }
 

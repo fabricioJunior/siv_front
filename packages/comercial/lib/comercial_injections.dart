@@ -143,6 +143,12 @@ void _useCases() {
   sl.registerFactory<ConfirmarEntregaPedido>(
     () => ConfirmarEntregaPedido(repository: sl()),
   );
+  sl.registerFactory<ConfirmarRetiradaPedido>(
+    () => ConfirmarRetiradaPedido(repository: sl()),
+  );
+  sl.registerFactory<ConfirmarRetiradaLotePedido>(
+    () => ConfirmarRetiradaLotePedido(repository: sl()),
+  );
   sl.registerFactory<CriarTaxaEntregaPedido>(
     () => CriarTaxaEntregaPedido(repository: sl()),
   );
@@ -285,11 +291,14 @@ void _presentation() {
   sl.registerFactory<PedidosBloc>(
     () => PedidosBloc(
       sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

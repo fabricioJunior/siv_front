@@ -30,6 +30,8 @@ abstract class IPedidosRepository {
   });
   Future<void> chamarEntregador(int id);
   Future<void> confirmarEntrega(int id);
+  Future<(Pedido, List<Pedido>)> confirmarRetirada(int id, String codigo);
+  Future<List<Pedido>> confirmarRetiradaLote(List<int> pedidoIds);
   Future<Pedido> criarTaxaEntrega(
     int id, {
     required double valorTaxaEntrega,

@@ -11,10 +11,13 @@ part 'pedidos_state.dart';
 
 class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
   final RecuperarPedidos _recuperarPedidos;
+  final CancelarPedido _cancelarPedido;
 
-  PedidosBloc(this._recuperarPedidos) : super(const PedidosState.initial()) {
+  PedidosBloc(this._recuperarPedidos, this._cancelarPedido)
+      : super(const PedidosState.initial()) {
     on<PedidosIniciou>(_onIniciou);
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
+    on<PedidosPedidoCancelou>(_onPedidoCancelou);
   }
 
   FutureOr<void> _onIniciou(
@@ -52,6 +55,33 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
         filtrados: _filtrar(state.pedidos, event.busca),
       ),
     );
+  }
+
+  FutureOr<void> _onPedidoCancelou(
+    PedidosPedidoCancelou event,
+    Emitter<PedidosState> emit,
+  ) async {
+    try {
+      await _cancelarPedido.call(
+        event.pedidoId,
+        motivoCancelamento: event.motivoCancelamento,
+      );
+
+      final pedidos = await _recuperarPedidos.call();
+      emit(
+        state.copyWith(
+          pedidos: pedidos,
+          filtrados: _filtrar(pedidos, state.busca),
+          step: PedidosStep.sucesso,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidosStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao cancelar pedido.')));
+      addError(e, s);
+    }
   }
 
   List<Pedido> _filtrar(List<Pedido> pedidos, String busca) {

@@ -96,6 +96,118 @@ class _PedidoPageState extends State<PedidoPage> {
     context.read<PedidoBloc>().add(PedidoCancelou(motivo));
   }
 
+  Future<void> _confirmarRetiradaPedido(BuildContext context) async {
+    final codigoController = TextEditingController();
+    final codigo = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirmar retirada'),
+          content: TextField(
+            controller: codigoController,
+            autofocus: true,
+            maxLength: 4,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'Código de retirada',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fechar'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(context, codigoController.text.trim()),
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (codigo == null || codigo.isEmpty) return;
+
+    if (!mounted) return;
+    context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
+  }
+
+  Future<void> _abrirOutrosPedidosPendentes(
+    BuildContext context,
+    List<Pedido> outrosPedidosPendentes,
+  ) async {
+    final bloc = context.read<PedidoBloc>();
+    final selecionados = {
+      for (final pedido in outrosPedidosPendentes)
+        if (pedido.id != null) pedido.id!,
+    };
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Outros pedidos pendentes de retirada'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'O cliente tem outros pedidos aguardando retirada. '
+                      'Selecione os que também podem ser liberados agora.',
+                    ),
+                    const SizedBox(height: 8),
+                    ...outrosPedidosPendentes.map((pedido) {
+                      final id = pedido.id;
+                      if (id == null) return const SizedBox.shrink();
+                      final valor = pedido.valorTotal;
+                      return CheckboxListTile(
+                        value: selecionados.contains(id),
+                        onChanged: (marcado) {
+                          setDialogState(() {
+                            if (marcado ?? false) {
+                              selecionados.add(id);
+                            } else {
+                              selecionados.remove(id);
+                            }
+                          });
+                        },
+                        title: Text('Pedido #$id'),
+                        subtitle: valor != null
+                            ? Text('Valor: R\$ ${valor.toStringAsFixed(2)}')
+                            : null,
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Fechar'),
+                ),
+                FilledButton(
+                  onPressed: selecionados.isEmpty
+                      ? null
+                      : () => Navigator.pop(context, true),
+                  child: const Text('Confirmar retirada dos selecionados'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmar != true || selecionados.isEmpty) return;
+
+    bloc.add(PedidoRetiradaLoteConfirmou(selecionados.toList()));
+  }
+
   Future<void> _selecionarEnderecoEntrega(BuildContext context) async {
     final pessoaId = int.tryParse(_pessoaIdController.text);
     if (pessoaId == null || pessoaId <= 0) {
@@ -138,7 +250,7 @@ class _PedidoPageState extends State<PedidoPage> {
       0,
       (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
     );
-    final restante = state.valorTotalComDesconto - somaLancada;
+    final restante = state.valorTotalGeral - somaLancada;
     return restante > 0 ? restante : 0;
   }
 
@@ -187,9 +299,11 @@ class _PedidoPageState extends State<PedidoPage> {
       0,
       (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
     );
-    // Alvo passado ao diálogo é o BRUTO (itens - já lançado), sem descontar o desconto de nível
-    // pedido -- o próprio diálogo reduz o alvo a partir de descontoJaAplicadoNoRomaneio (mesmo padrão
-    // de romaneio_page._irParaPagamento). Evita descontar duas vezes.
+    // Alvo passado ao diálogo é o BRUTO dos ITENS (itens - já lançado), sem descontar o desconto de
+    // nível pedido -- o próprio diálogo reduz o alvo a partir de descontoJaAplicadoNoRomaneio (mesmo
+    // padrão de romaneio_page._irParaPagamento). Evita descontar duas vezes. Taxa de entrega NÃO entra
+    // aqui -- vai à parte via taxaEntregaJaAplicadaNoRomaneio, que o diálogo soma DEPOIS do desconto
+    // (ver PagamentosRealizadosState.valorTotalAPagar), pois desconto nunca incide sobre a taxa.
     final valorBrutoRestante = state.valorTotalItens - somaLancada;
     final produtosCompartilhados = state.itens
         .where((item) => item.produtoId != null)
@@ -218,22 +332,22 @@ class _PedidoPageState extends State<PedidoPage> {
               0,
               (soma, produto) => soma + produto.quantidade,
             ),
-            valorTotalProdutos:
-                valorBrutoRestante > 0 ? valorBrutoRestante : 0,
+            valorTotalProdutos: valorBrutoRestante > 0 ? valorBrutoRestante : 0,
           ),
           pessoaId: int.tryParse(state.pessoaId ?? ''),
           descontoJaAplicadoNoRomaneio: state.pedido?.desconto ?? 0,
+          taxaEntregaJaAplicadaNoRomaneio: state.pedido?.valorTaxaEntrega ?? 0,
           permitirTaxaEntrega: false,
-          formasDePagamentoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-                  FormasDePagamentoSeletor(
-                    modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
-                    titulo: 'Forma de pagamento',
-                    tipoOperacaoFiltro: tipoEscolhido,
-                  ),
+          formasDePagamentoSeletor: (
+                  {itemsSelecionadosInicial, onChanged, onlyView}) =>
+              FormasDePagamentoSeletor(
+            modo: FormasDePagamentoSeletorModo.unica,
+            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            onChanged: onChanged,
+            onlyView: onlyView ?? false,
+            titulo: 'Forma de pagamento',
+            tipoOperacaoFiltro: tipoEscolhido,
+          ),
         );
       },
     );
@@ -241,8 +355,7 @@ class _PedidoPageState extends State<PedidoPage> {
     if (resultado == null || !mounted) return;
 
     final linhas =
-        (resultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
-                const [])
+        (resultado['formasDePagamentoRealizadas'] as List<dynamic>? ?? const [])
             .whereType<Map<String, dynamic>>()
             .toList(growable: false);
 
@@ -280,15 +393,27 @@ class _PedidoPageState extends State<PedidoPage> {
       if (confirmouOnline != true || !mounted) return;
     }
 
+    // Troco já calculado pelo PagamentosRealizadosWidget (dinheiro digitado
+    // acima do valor pendente) -- reaproveitado aqui em vez de descartado,
+    // pra não precisar de um segundo passo manual "informar valor pra troco"
+    // depois (ver PedidoPagamentoAdicionou.valorParaTroco).
+    final valorTrocoCalculado = _toDouble(resultado['valorTroco']) ?? 0;
+
     final linhasValidas = linhas
         .map((linha) {
           final formaDePagamentoId = int.tryParse(
             '${linha['formaDePagamentoId']}',
           );
-          final valor = _toDouble(linha['valor']);
-          return (formaDePagamentoId: formaDePagamentoId, valor: valor);
+          final valorBruto = _toDouble(linha['valor']);
+          final ehDinheiro = linha['ehDinheiro'] == true;
+          return (
+            formaDePagamentoId: formaDePagamentoId,
+            valorBruto: valorBruto,
+            ehDinheiro: ehDinheiro,
+          );
         })
-        .where((linha) => linha.formaDePagamentoId != null && (linha.valor ?? 0) > 0)
+        .where((linha) =>
+            linha.formaDePagamentoId != null && (linha.valorBruto ?? 0) > 0)
         .toList(growable: false);
 
     if (linhasValidas.isEmpty) return;
@@ -309,13 +434,35 @@ class _PedidoPageState extends State<PedidoPage> {
       bloc.add(PedidoDescontoAlterado(descontoTotal));
     }
 
+    // Troco só pode vir de uma linha em dinheiro -- aplica na primeira
+    // encontrada (caso normal é só uma linha de dinheiro por pagamento).
+    // Cada linha espera a anterior terminar (mesmo padrão de
+    // pedido_itens_leitor_page._confirmarAlteracoes) -- o id do pagamento é gerado no backend via
+    // max(id)+1 (ver PedidoPagamentoService.add), então disparar várias PedidoPagamentoAdicionou em
+    // paralelo (2+ formas de pagamento na mesma confirmação) fazia os handlers lerem o mesmo max
+    // concorrentemente e colidir no insert ("já existe um registro com esse valor").
+    var trocoRestante = valorTrocoCalculado;
     for (final linha in linhasValidas) {
+      final desconto = linha.ehDinheiro && trocoRestante > 0
+          ? (trocoRestante > linha.valorBruto!
+              ? linha.valorBruto!
+              : trocoRestante)
+          : 0.0;
+      if (desconto > 0) trocoRestante -= desconto;
+
       bloc.add(
         PedidoPagamentoAdicionou(
           formaDePagamentoId: linha.formaDePagamentoId!,
-          valorEsperado: linha.valor!,
+          valorEsperado: linha.valorBruto! - desconto,
+          valorParaTroco: desconto > 0 ? linha.valorBruto : null,
         ),
       );
+      final resultado = await bloc.stream.firstWhere(
+        (s) =>
+            s.step == PedidoStep.pagamentoAdicionado ||
+            s.step == PedidoStep.falha,
+      );
+      if (resultado.step == PedidoStep.falha) break;
     }
   }
 
@@ -417,94 +564,12 @@ class _PedidoPageState extends State<PedidoPage> {
         );
   }
 
-  Future<void> _informarValorParaTroco(
-    BuildContext context,
-    PedidoPagamento pagamento,
-  ) async {
-    final valorController = TextEditingController();
-    final valorEsperado = pagamento.valorEsperado ?? 0;
-
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final valorParaTroco = _parseValorReais(valorController.text);
-            final troco = (valorParaTroco != null && valorParaTroco > valorEsperado)
-                ? valorParaTroco - valorEsperado
-                : null;
-
-            return AlertDialog(
-              title: const Text('Informar valor para troco'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Valor esperado: R\$ ${valorEsperado.toStringAsFixed(2).replaceAll('.', ',')}',
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: valorController,
-                    autofocus: true,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Quanto o cliente vai pagar (R\$)',
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    troco != null
-                        ? 'Troco: R\$ ${troco.toStringAsFixed(2).replaceAll('.', ',')}'
-                        : 'Troco: —',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Salvar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (confirmou != true || !mounted) return;
-
-    final valor = _parseValorReais(valorController.text);
-    if (valor == null || valor <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe um valor válido.')),
-      );
-      return;
-    }
-
-    context.read<PedidoBloc>().add(
-          PedidoPagamentoValorParaTrocoAtualizou(
-            pagamentoId: pagamento.id!,
-            valorParaTroco: valor,
-          ),
-        );
-  }
-
   Future<void> _imprimirNotaEntregaDoPedido(
     BuildContext context,
     PedidoState state,
   ) async {
-    final enderecoResumo = _enderecoEntregaResumo ?? state.enderecoEntregaResumo;
+    final enderecoResumo =
+        _enderecoEntregaResumo ?? state.enderecoEntregaResumo;
     if (enderecoResumo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -639,14 +704,17 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (confirmou != true || !mounted) return;
 
-    context.read<PedidoBloc>().add(PedidoObservacaoSalva(controller.text.trim()));
+    context
+        .read<PedidoBloc>()
+        .add(PedidoObservacaoSalva(controller.text.trim()));
   }
 
   Future<void> _abrirEditarTaxaEntrega(
     BuildContext context,
     PedidoState state,
   ) async {
-    final controller = TextEditingController(text: state.valorTaxaEntrega ?? '');
+    final controller =
+        TextEditingController(text: state.valorTaxaEntrega ?? '');
 
     final confirmou = await showDialog<bool>(
       context: context,
@@ -680,9 +748,17 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (confirmou != true || !mounted) return;
 
-    context
-        .read<PedidoBloc>()
-        .add(PedidoTaxaEntregaSalva(controller.text.trim()));
+    final valor = _parseValorReais(controller.text);
+    if (valor == null || valor <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe um valor válido.')),
+      );
+      return;
+    }
+
+    context.read<PedidoBloc>().add(
+          PedidoTaxaEntregaSalva(valor.toStringAsFixed(2).replaceAll('.', ',')),
+        );
   }
 
   String _valorTaxaEntregaFormatado(PedidoState state) {
@@ -777,6 +853,21 @@ class _PedidoPageState extends State<PedidoPage> {
             return;
           }
 
+          if (state.step == PedidoStep.enderecoEntregaSalvo) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Endereço de entrega salvo.')),
+            );
+            // Endereço acabou de ser definido -- encadeia direto pro preenchimento da taxa de
+            // entrega (só se ainda não tiver uma), em vez de exigir um segundo toque manual no
+            // botão "Adicionar" da taxa.
+            if ((state.valorTaxaEntrega ?? '').trim().isEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _abrirEditarTaxaEntrega(context, state);
+              });
+            }
+            return;
+          }
+
           if (state.step == PedidoStep.descontoAlterado) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Desconto aplicado ao pedido.')),
@@ -816,6 +907,33 @@ class _PedidoPageState extends State<PedidoPage> {
           if (state.step == PedidoStep.entregaConfirmada) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Entrega confirmada.')),
+            );
+            return;
+          }
+
+          if (state.step == PedidoStep.retiradaConfirmada) {
+            if (state.outrosPedidosPendentes.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Retirada confirmada.')),
+              );
+            } else {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _abrirOutrosPedidosPendentes(
+                    context,
+                    state.outrosPedidosPendentes,
+                  );
+                }
+              });
+            }
+            return;
+          }
+
+          if (state.step == PedidoStep.retiradaLoteConfirmada) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Retirada dos pedidos selecionados confirmada.'),
+              ),
             );
             return;
           }
@@ -1182,9 +1300,9 @@ class _PedidoPageState extends State<PedidoPage> {
                     SeletorParamentros(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.pessoaId,
-                            nomeFallback: state.pedido?.pessoaNome
-                                    ?.toUpperCase() ??
-                                'Pessoa selecionada',
+                            nomeFallback:
+                                state.pedido?.pessoaNome?.toUpperCase() ??
+                                    'Pessoa selecionada',
                           ) ??
                           const [],
                       onlyView: false,
@@ -1214,9 +1332,9 @@ class _PedidoPageState extends State<PedidoPage> {
                     SeletorParamentros(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.funcionarioId,
-                            nomeFallback: state.pedido?.funcionarioNome
-                                    ?.toUpperCase() ??
-                                'Funcionário selecionado',
+                            nomeFallback:
+                                state.pedido?.funcionarioNome?.toUpperCase() ??
+                                    'Funcionário selecionado',
                           ) ??
                           const [],
                       onlyView: false,
@@ -1566,7 +1684,7 @@ class _PedidoPageState extends State<PedidoPage> {
                   ],
                   const SizedBox(height: 4),
                   Text(
-                    'Qtd solicitada: ${solicitado.toStringAsFixed(3)}'
+                    'Qtd solicitada: ${solicitado.toInt().toString()}'
                     '${atendido > 0 ? ' · Atendida: ${atendido.toStringAsFixed(3)}' : ''}',
                     style: theme.textTheme.bodySmall,
                   ),
@@ -1593,7 +1711,7 @@ class _PedidoPageState extends State<PedidoPage> {
                 children: [
                   Text('Qtd.', style: theme.textTheme.labelSmall),
                   Text(
-                    solicitado.toStringAsFixed(3),
+                    solicitado.toInt().toString(),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -1718,7 +1836,8 @@ class _PedidoPageState extends State<PedidoPage> {
     final nomeForma = formasDePagamentoPorId[pagamento.formaDePagamentoId] ??
         'Forma #${pagamento.formaDePagamentoId ?? '-'}';
     final cobranca = pagamento.cobranca;
-    final linkCobranca = cobranca?.urlDePagamento ?? cobranca?.chavePixCopiaECola;
+    final linkCobranca =
+        cobranca?.urlDePagamento ?? cobranca?.chavePixCopiaECola;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -1757,13 +1876,6 @@ class _PedidoPageState extends State<PedidoPage> {
                   ],
                 ),
               ),
-              if (!confirmado && !ehOnline)
-                IconButton(
-                  tooltip: 'Informar valor para troco',
-                  onPressed: () =>
-                      _informarValorParaTroco(context, pagamento),
-                  icon: const Icon(Icons.currency_exchange),
-                ),
               if (!confirmado && !ehOnline)
                 TextButton(
                   onPressed: () =>
@@ -1905,6 +2017,16 @@ class _PedidoPageState extends State<PedidoPage> {
                     icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Confirmar entrega'),
                   ),
+                if (state.modalidadeEntrega == 'retirada' &&
+                    state.pedido?.situacao == 'encerrado' &&
+                    state.pedido?.retiradoEm == null)
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () => _confirmarRetiradaPedido(context),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Confirmar retirada'),
+                  ),
                 OutlinedButton.icon(
                   onPressed: carregando ? null : _cancelarPedido,
                   icon: const Icon(Icons.cancel),
@@ -1986,6 +2108,11 @@ class _PedidoPageState extends State<PedidoPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_labelEvento(evento.tipo)),
+                if ((evento.operadorNome ?? '').trim().isNotEmpty)
+                  Text(
+                    'Por: ${evento.operadorNome}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if ((evento.observacao ?? '').trim().isNotEmpty)
                   Text(
                     evento.observacao!,

@@ -9,3 +9,10 @@ class PedidosBuscaAlterada extends PedidosEvent {
 
   PedidosBuscaAlterada(this.busca);
 }
+
+class PedidosPedidoCancelou extends PedidosEvent {
+  final int pedidoId;
+  final String motivoCancelamento;
+
+  PedidosPedidoCancelou(this.pedidoId, {required this.motivoCancelamento});
+}

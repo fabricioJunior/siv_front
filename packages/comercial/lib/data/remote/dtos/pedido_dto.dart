@@ -63,6 +63,8 @@ class PedidoDto implements Pedido {
   final String? empresaNome;
   @override
   final String? empresaCnpj;
+  @override
+  final DateTime? retiradoEm;
 
   const PedidoDto({
     this.id,
@@ -96,6 +98,7 @@ class PedidoDto implements Pedido {
     this.romaneioId,
     this.empresaNome,
     this.empresaCnpj,
+    this.retiradoEm,
   });
 
   factory PedidoDto.fromJson(Map<String, dynamic> json) {
@@ -131,6 +134,7 @@ class PedidoDto implements Pedido {
       romaneioId: _toInt(json['romaneioId']),
       empresaNome: json['empresaNome']?.toString(),
       empresaCnpj: json['empresaCnpj']?.toString(),
+      retiradoEm: _toDate(json['retiradoEm']),
     );
   }
 
@@ -167,6 +171,7 @@ class PedidoDto implements Pedido {
       romaneioId: pedido.romaneioId,
       empresaNome: pedido.empresaNome,
       empresaCnpj: pedido.empresaCnpj,
+      retiradoEm: pedido.retiradoEm,
     );
   }
 
@@ -202,6 +207,7 @@ class PedidoDto implements Pedido {
       'observacao': observacao,
       'modalidadeEntrega': modalidadeEntrega,
       if (enderecoEntregaId != null) 'enderecoEntregaId': enderecoEntregaId,
+      if (valorTaxaEntrega != null) 'valorTaxaEntrega': valorTaxaEntrega,
     };
   }
 
@@ -238,6 +244,7 @@ class PedidoDto implements Pedido {
         romaneioId,
         empresaNome,
         empresaCnpj,
+        retiradoEm,
       ];
 
   @override

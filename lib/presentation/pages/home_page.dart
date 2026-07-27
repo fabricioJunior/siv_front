@@ -267,6 +267,18 @@ class _HomePageState extends State<HomePage> {
                 ),
               ];
 
+              final relatoriosEstoque = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Produtos Defasados',
+                  subtitle:
+                      'Produtos ou referências sem movimentação recente.',
+                  color: Colors.blueGrey,
+                  route: '/relatorio_produtos_defasados',
+                  componentesNecessarios: ['RELFC008'],
+                ),
+              ];
+
               final relatoriosFiscal = <_AccessFlowItem>[
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
@@ -389,6 +401,14 @@ class _HomePageState extends State<HomePage> {
                             subtitle:
                                 'Aniversariantes e pontos de fidelidade.',
                             items: _permitidos(relatoriosClientes),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosEstoque).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios de Estoque',
+                            subtitle: 'Produtos parados sem movimentação.',
+                            items: _permitidos(relatoriosEstoque),
                           ),
                         ],
                         if (_permitidos(relatoriosFiscal).isNotEmpty) ...[

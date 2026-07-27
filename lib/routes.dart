@@ -414,6 +414,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/relatorio_produtos_defasados': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_produtos_defasados',
+      child: const RelatorioProdutosDefasadosPage(),
+    );
+  },
   '/relatorio_pontos_fidelidade': (context) {
     return _rotaProtegida(
       route: '/relatorio_pontos_fidelidade',
@@ -1095,6 +1101,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],
   '/relatorio_clientes_ativos': ['RELFC003'],
+  '/relatorio_produtos_defasados': ['RELFC008'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],

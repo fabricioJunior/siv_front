@@ -247,8 +247,20 @@ void _useCases() {
   sl.registerFactory<GetRelatorioClientesAtivos>(
     () => GetRelatorioClientesAtivos(sl()),
   );
+  sl.registerFactory<GetRelatorioComprasClientes>(
+    () => GetRelatorioComprasClientes(sl()),
+  );
   sl.registerFactory<GetRelatorioVendasPorFuncionario>(
     () => GetRelatorioVendasPorFuncionario(sl()),
+  );
+  sl.registerFactory<GetRelatorioPontosFidelidade>(
+    () => GetRelatorioPontosFidelidade(sl()),
+  );
+  sl.registerFactory<GetRelatorioClientesAniversariantes>(
+    () => GetRelatorioClientesAniversariantes(sl()),
+  );
+  sl.registerFactory<GetComprasDoCliente>(
+    () => GetComprasDoCliente(sl()),
   );
 
   sl.registerFactory<SalvarOrcamento>(
@@ -439,8 +451,20 @@ void _presentation() {
   sl.registerFactory<RelatorioClientesBloc>(
     () => RelatorioClientesBloc(sl()),
   );
+  sl.registerFactory<RelatorioComprasClientesBloc>(
+    () => RelatorioComprasClientesBloc(sl()),
+  );
   sl.registerFactory<RelatorioVendasPorFuncionarioBloc>(
     () => RelatorioVendasPorFuncionarioBloc(sl()),
+  );
+  sl.registerFactory<RelatorioPontosFidelidadeBloc>(
+    () => RelatorioPontosFidelidadeBloc(sl()),
+  );
+  sl.registerFactory<RelatorioClientesAniversariantesBloc>(
+    () => RelatorioClientesAniversariantesBloc(sl()),
+  );
+  sl.registerFactory<ComprasDoClienteBloc>(
+    () => ComprasDoClienteBloc(sl()),
   );
 
   sl.registerFactory<ConsignacoesBloc>(

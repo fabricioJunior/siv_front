@@ -114,3 +114,91 @@ abstract class RelatorioClientesAtivos {
   List<RelatorioClienteAtivoItem> get items;
   RelatorioClienteAtivoMeta get meta;
 }
+
+abstract class RelatorioCompraClienteItem {
+  int get clienteId;
+  String get clienteNome;
+  String get clienteDocumento;
+  int? get produtoId;
+  String? get produtoNome;
+  String? get corNome;
+  String? get tamanhoNome;
+  int? get referenciaId;
+  String? get referenciaNome;
+  int? get categoriaId;
+  String? get categoriaNome;
+  int get totalCompras;
+  int get quantidadeProdutos;
+  double get valorTotalCompras;
+}
+
+abstract class RelatorioCompraClienteMeta {
+  int get totalItems;
+  int get itemCount;
+  int get itemsPerPage;
+  int get totalPages;
+  int get currentPage;
+}
+
+abstract class RelatorioComprasClientes {
+  List<RelatorioCompraClienteItem> get items;
+  RelatorioCompraClienteMeta get meta;
+}
+
+abstract class RelatorioClienteAniversarianteItem {
+  int get pessoaId;
+  String get nome;
+  String get documento;
+  String? get email;
+  String? get contato;
+  String get nascimento;
+  String? get dataUltimaCompra;
+}
+
+abstract class RelatorioClienteAniversarianteMeta {
+  int get totalItems;
+  int get itemCount;
+  int get itemsPerPage;
+  int get totalPages;
+  int get currentPage;
+}
+
+abstract class RelatorioClientesAniversariantes {
+  List<RelatorioClienteAniversarianteItem> get items;
+  RelatorioClienteAniversarianteMeta get meta;
+}
+
+abstract class RelatorioClienteCompraItem {
+  int get romaneioId;
+  int get empresaId;
+  String get empresaNome;
+  String get data;
+  double get valorLiquido;
+}
+
+abstract class RelatorioClienteCompras {
+  List<RelatorioClienteCompraItem> get items;
+}
+
+abstract class RelatorioPontoFidelidadeItem {
+  int get clienteId;
+  String get clienteNome;
+  String get clienteDocumento;
+  bool get cadastradoPortal;
+  double get saldoPontos;
+  String? get dataUltimoCredito;
+}
+
+abstract class RelatorioPontoFidelidadeMeta {
+  int get totalItems;
+  int get itemCount;
+  int get itemsPerPage;
+  int get totalPages;
+  int get currentPage;
+}
+
+abstract class RelatorioPontosFidelidade {
+  List<RelatorioPontoFidelidadeItem> get items;
+  RelatorioPontoFidelidadeMeta get meta;
+  double get saldoPontosTotal;
+}

@@ -225,6 +225,15 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_clientes_ativos',
                   componentesNecessarios: ['RELFC003'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.shopping_bag_outlined,
+                  title: 'Compras de Clientes',
+                  subtitle:
+                      'Clientes vs. categoria, referência ou produto comprado.',
+                  color: Colors.purple,
+                  route: '/relatorio_compras_clientes',
+                  componentesNecessarios: ['RELFC007'],
+                ),
               ];
 
               final relatoriosMovimentacoes = <_AccessFlowItem>[
@@ -236,6 +245,25 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.deepOrange,
                   route: '/romaneios',
                   componentesNecessarios: ['ROMFP001'],
+                ),
+              ];
+
+              final relatoriosClientes = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.cake_outlined,
+                  title: 'Aniversariantes',
+                  subtitle: 'Clientes que fazem aniversário no mês.',
+                  color: Colors.pink,
+                  route: '/relatorio_clientes_aniversariantes',
+                  componentesNecessarios: ['RELFC009'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.stars_outlined,
+                  title: 'Pontos de Fidelidade',
+                  subtitle: 'Saldo, último crédito e cadastro no portal.',
+                  color: Colors.amber,
+                  route: '/relatorio_pontos_fidelidade',
+                  componentesNecessarios: ['RELFC006'],
                 ),
               ];
 
@@ -352,6 +380,15 @@ class _HomePageState extends State<HomePage> {
                             subtitle:
                                 'Auditoria de romaneios — todas as operações de produto.',
                             items: _permitidos(relatoriosMovimentacoes),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosClientes).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios de Clientes',
+                            subtitle:
+                                'Aniversariantes e pontos de fidelidade.',
+                            items: _permitidos(relatoriosClientes),
                           ),
                         ],
                         if (_permitidos(relatoriosFiscal).isNotEmpty) ...[

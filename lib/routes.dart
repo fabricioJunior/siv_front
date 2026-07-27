@@ -391,6 +391,35 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioClientesAtivosPage(),
     );
   },
+  '/relatorio_compras_clientes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_compras_clientes',
+      child: const RelatorioComprasClientesPage(),
+    );
+  },
+  '/relatorio_clientes_aniversariantes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_clientes_aniversariantes',
+      child: const RelatorioClientesAniversariantesPage(),
+    );
+  },
+  '/cliente_compras': (context) {
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    return _rotaProtegida(
+      route: '/cliente_compras',
+      child: ComprasDoClientePage(
+        pessoaId: args['pessoaId'] as int,
+        nomeCliente: args['nome'] as String,
+      ),
+    );
+  },
+  '/relatorio_pontos_fidelidade': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_pontos_fidelidade',
+      child: const RelatorioPontosFidelidadePage(),
+    );
+  },
   '/relatorio_vendas_por_funcionario': (context) {
     return _rotaProtegida(
       route: '/relatorio_vendas_por_funcionario',
@@ -1067,6 +1096,10 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_curva_abc': ['RELFC002'],
   '/relatorio_clientes_ativos': ['RELFC003'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
+  '/relatorio_pontos_fidelidade': ['RELFC006'],
+  '/relatorio_compras_clientes': ['RELFC007'],
+  '/relatorio_clientes_aniversariantes': ['RELFC009'],
+  '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],

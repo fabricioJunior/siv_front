@@ -34,10 +34,46 @@ abstract class IRelatorioRepository {
     int limit = 100,
   });
 
+  Future<RelatorioComprasClientes> comprasClientes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    String agruparPor = 'produto',
+    List<int>? produtoIds,
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    int page = 1,
+    int limit = 100,
+  });
+
   Future<List<RelatorioVendasPorFuncionarioItem>> vendasPorFuncionario({
     required List<int> empresaIds,
     required List<int> funcionarioIds,
     required String dataInicial,
     required String dataFinal,
+  });
+
+  Future<RelatorioPontosFidelidade> pontosFidelidade({
+    required List<int> empresaIds,
+    String? situacaoCadastro,
+    int page = 1,
+    int limit = 100,
+  });
+
+  Future<RelatorioClientesAniversariantes> clientesAniversariantes({
+    required List<int> empresaIds,
+    int? mes,
+    String? dataUltimaCompraInicial,
+    String? dataUltimaCompraFinal,
+    int page = 1,
+    int limit = 100,
+  });
+
+  Future<RelatorioClienteCompras> comprasDoCliente({
+    required List<int> empresaIds,
+    required int pessoaId,
+    int limit = 10,
   });
 }

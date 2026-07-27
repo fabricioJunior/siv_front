@@ -124,6 +124,14 @@ class _HomePageState extends State<HomePage> {
                   route: '/pagamentos_avulsos',
                   componentesNecessarios: ['PAGFM001', 'PAGFP005'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.qr_code_scanner,
+                  title: 'Consultar Produto',
+                  subtitle: 'Bipe ou busque um produto e veja preço e grade.',
+                  color: Colors.deepPurple,
+                  route: '/consultar_produto',
+                  componentesNecessarios: ['PRDFL002'],
+                ),
               ];
 
               final cadastros = <_AccessFlowItem>[

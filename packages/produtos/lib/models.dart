@@ -11,3 +11,6 @@ export 'domain/models/etiqueta.dart';
 export 'domain/models/etiqueta_impressao_item.dart';
 export 'domain/models/codigo_barras_resumo.dart';
 export 'domain/models/pagina_codigos_de_barras.dart';
+export 'domain/models/imagem_da_referencia.dart';
+export 'domain/models/produto_da_grade.dart';
+export 'domain/models/grade_da_referencia.dart';

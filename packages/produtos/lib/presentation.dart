@@ -29,6 +29,8 @@ export 'package:produtos/presentantion/blocs/produto_bloc/produto_bloc.dart';
 export 'package:produtos/presentantion/blocs/produtos_da_referencia_bloc/produtos_da_referencia_bloc.dart';
 export 'package:produtos/presentantion/blocs/codigos_de_barras_da_referencia_bloc/codigos_de_barras_da_referencia_bloc.dart';
 export 'package:produtos/presentantion/pages/codigos_de_barras_da_referencia_page.dart';
+export 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
+export 'package:produtos/presentantion/pages/consultar_produto_page.dart';
 export 'package:produtos/presentantion/blocs/impressao_etiquetas_bloc/impressao_etiquetas_bloc.dart';
 export 'package:produtos/presentantion/pages/referencias_page.dart';
 export 'package:produtos/presentantion/pages/referencia_page.dart';

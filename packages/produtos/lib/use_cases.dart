@@ -58,3 +58,4 @@ export 'domain/use_cases/imprimir_etiquetas.dart';
 export 'domain/use_cases/recuperar_referencias_sem_ncm.dart';
 export 'domain/use_cases/atualizar_ncm_em_massa.dart';
 export 'domain/use_cases/recuperar_codigos_de_barras_da_referencia.dart';
+export 'domain/use_cases/recuperar_grade_da_referencia.dart';

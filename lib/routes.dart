@@ -774,6 +774,12 @@ Map<String, Widget Function(BuildContext)> routes = {
         : const <int>[];
     return SelecionarReferenciasPage(idsSelecionadosIniciais: idsSelecionados);
   },
+  '/consultar_produto': (context) {
+    return _rotaProtegida(
+      route: '/consultar_produto',
+      child: const ConsultarProdutoPage(),
+    );
+  },
   '/produto': (context) {
     return ProdutoPage(
       referenciaId: args(context)['referenciaId'],
@@ -1114,6 +1120,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cancelar_romaneio': ['ROMFP001'],
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
+  '/consultar_produto': ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
   '/criar_balanco': ['PRDFL001'],

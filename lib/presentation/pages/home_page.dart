@@ -124,6 +124,14 @@ class _HomePageState extends State<HomePage> {
                   route: '/pagamentos_avulsos',
                   componentesNecessarios: ['PAGFM001', 'PAGFP005'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.qr_code_scanner,
+                  title: 'Consultar Produto',
+                  subtitle: 'Bipe ou busque um produto e veja preço e grade.',
+                  color: Colors.deepPurple,
+                  route: '/consultar_produto',
+                  componentesNecessarios: ['PRDFL002'],
+                ),
               ];
 
               final cadastros = <_AccessFlowItem>[
@@ -225,6 +233,15 @@ class _HomePageState extends State<HomePage> {
                   route: '/relatorio_clientes_ativos',
                   componentesNecessarios: ['RELFC003'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.shopping_bag_outlined,
+                  title: 'Compras de Clientes',
+                  subtitle:
+                      'Clientes vs. categoria, referência ou produto comprado.',
+                  color: Colors.purple,
+                  route: '/relatorio_compras_clientes',
+                  componentesNecessarios: ['RELFC007'],
+                ),
               ];
 
               final relatoriosMovimentacoes = <_AccessFlowItem>[
@@ -236,6 +253,37 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.deepOrange,
                   route: '/romaneios',
                   componentesNecessarios: ['ROMFP001'],
+                ),
+              ];
+
+              final relatoriosClientes = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.cake_outlined,
+                  title: 'Aniversariantes',
+                  subtitle: 'Clientes que fazem aniversário no mês.',
+                  color: Colors.pink,
+                  route: '/relatorio_clientes_aniversariantes',
+                  componentesNecessarios: ['RELFC009'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.stars_outlined,
+                  title: 'Pontos de Fidelidade',
+                  subtitle: 'Saldo, último crédito e cadastro no portal.',
+                  color: Colors.amber,
+                  route: '/relatorio_pontos_fidelidade',
+                  componentesNecessarios: ['RELFC006'],
+                ),
+              ];
+
+              final relatoriosEstoque = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Produtos Defasados',
+                  subtitle:
+                      'Produtos ou referências sem movimentação recente.',
+                  color: Colors.blueGrey,
+                  route: '/relatorio_produtos_defasados',
+                  componentesNecessarios: ['RELFC008'],
                 ),
               ];
 
@@ -352,6 +400,23 @@ class _HomePageState extends State<HomePage> {
                             subtitle:
                                 'Auditoria de romaneios — todas as operações de produto.',
                             items: _permitidos(relatoriosMovimentacoes),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosClientes).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios de Clientes',
+                            subtitle:
+                                'Aniversariantes e pontos de fidelidade.',
+                            items: _permitidos(relatoriosClientes),
+                          ),
+                        ],
+                        if (_permitidos(relatoriosEstoque).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Relatórios de Estoque',
+                            subtitle: 'Produtos parados sem movimentação.',
+                            items: _permitidos(relatoriosEstoque),
                           ),
                         ],
                         if (_permitidos(relatoriosFiscal).isNotEmpty) ...[

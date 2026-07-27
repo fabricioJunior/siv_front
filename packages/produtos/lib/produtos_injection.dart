@@ -21,6 +21,10 @@ import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart'
 import 'package:produtos/data/remote/codigos_de_barras_da_referencia_remote_data_source.dart';
 import 'package:produtos/data/repositorios/codigos_de_barras_da_referencia_repository.dart';
 import 'package:produtos/domain/data/remote/i_codigos_de_barras_da_referencia_remote_data_source.dart';
+import 'package:produtos/data/remote/grade_da_referencia_remote_datasource.dart';
+import 'package:produtos/data/repositorios/grade_da_referencia_repository.dart';
+import 'package:produtos/domain/data/remote/i_grade_da_referencia_remote_data_source.dart';
+import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
@@ -113,6 +117,10 @@ void _data() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<IGradeDaReferenciaRemoteDataSource>(
+    () => GradeDaReferenciaRemoteDatasource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -171,6 +179,10 @@ void _repositores() {
 
   sl.registerFactory<ICodigosDeBarrasDaReferenciaRepository>(
     () => CodigosDeBarrasDaReferenciaRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IGradeDaReferenciaRepository>(
+    () => GradeDaReferenciaRepository(gradeDaReferenciaRemoteDataSource: sl()),
   );
 }
 
@@ -379,6 +391,10 @@ void _usesCases() {
   sl.registerFactory<RecuperarCodigosDeBarrasDaReferencia>(
     () => RecuperarCodigosDeBarrasDaReferencia(repository: sl()),
   );
+
+  sl.registerFactory<RecuperarGradeDaReferencia>(
+    () => RecuperarGradeDaReferencia(gradeDaReferenciaRepository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -446,6 +462,13 @@ void _presentantion() {
 
   sl.registerFactory<CodigosDeBarrasDaReferenciaBloc>(
     () => CodigosDeBarrasDaReferenciaBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<ConsultarProdutoBloc>(
+    () => ConsultarProdutoBloc(
+      leitorDataDatasource: sl<ILeitorDataDatasource>(),
+      recuperarGradeDaReferencia: sl(),
+    ),
   );
 }
 

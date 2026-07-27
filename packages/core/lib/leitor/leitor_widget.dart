@@ -851,7 +851,8 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
       value: _buscaBloc,
       child: BlocBuilder<LeitorBuscaBloc, LeitorBuscaState>(
         builder: (context, state) {
-          final resultadosFiltrados = state.resultadosFiltrados;
+          final resultadosFiltrados = [...state.resultadosFiltrados]
+            ..sort((a, b) => b.quantidade.compareTo(a.quantidade));
 
           return Dialog(
             child: ConstrainedBox(

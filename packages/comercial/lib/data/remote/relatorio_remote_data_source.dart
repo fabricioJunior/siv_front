@@ -102,6 +102,44 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<RelatorioComprasClientes> comprasClientes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    String agruparPor = 'produto',
+    List<int>? produtoIds,
+    List<int>? referenciaIds,
+    List<int>? categoriaIds,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/clientes/compras'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        'agruparPor': agruparPor,
+        'page': '$page',
+        'limit': '$limit',
+        if (produtoIds != null && produtoIds.isNotEmpty)
+          'produtoIds': produtoIds.join(','),
+        if (referenciaIds != null && referenciaIds.isNotEmpty)
+          'referenciaIds': referenciaIds.join(','),
+        if (categoriaIds != null && categoriaIds.isNotEmpty)
+          'categoriaIds': categoriaIds.join(','),
+        if (corIds != null && corIds.isNotEmpty) 'corIds': corIds.join(','),
+        if (tamanhoIds != null && tamanhoIds.isNotEmpty)
+          'tamanhoIds': tamanhoIds.join(','),
+      },
+    );
+    return RelatorioComprasClientesDto.fromJson(
+        response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<List<RelatorioVendasPorFuncionarioItem>> vendasPorFuncionario({
     required List<int> empresaIds,
     required List<int> funcionarioIds,
@@ -118,6 +156,69 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
       },
     );
     return RelatorioVendasPorFuncionarioItemDto.listFromJson(
+        response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioPontosFidelidade> pontosFidelidade({
+    required List<int> empresaIds,
+    String? situacaoCadastro,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/fidelidade/pontos'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        if (situacaoCadastro != null) 'situacaoCadastro': situacaoCadastro,
+        'page': '$page',
+        'limit': '$limit',
+      },
+    );
+    return RelatorioPontosFidelidadeDto.fromJson(
+        response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioClientesAniversariantes> clientesAniversariantes({
+    required List<int> empresaIds,
+    int? mes,
+    String? dataUltimaCompraInicial,
+    String? dataUltimaCompraFinal,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/clientes/aniversariantes'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        if (mes != null) 'mes': '$mes',
+        if (dataUltimaCompraInicial != null)
+          'dataUltimaCompraInicial': dataUltimaCompraInicial,
+        if (dataUltimaCompraFinal != null)
+          'dataUltimaCompraFinal': dataUltimaCompraFinal,
+        'page': '$page',
+        'limit': '$limit',
+      },
+    );
+    return RelatorioClientesAniversariantesDto.fromJson(
+        response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioClienteCompras> comprasDoCliente({
+    required List<int> empresaIds,
+    required int pessoaId,
+    int limit = 10,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/clientes/$pessoaId/compras'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'limit': '$limit',
+      },
+    );
+    return RelatorioClienteComprasDto.fromJson(
         response.body as Map<String, dynamic>);
   }
 }

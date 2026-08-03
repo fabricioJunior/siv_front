@@ -23,6 +23,7 @@ ProdutoDoEstoqueDto _$ProdutoDoEstoqueDtoFromJson(Map<String, dynamic> json) =>
       atualizadoEm: json['atualizadoEm'] == null
           ? null
           : DateTime.parse(json['atualizadoEm'] as String),
+      produtoApagado: json['produtoApagado'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ProdutoDoEstoqueDtoToJson(
@@ -41,4 +42,5 @@ Map<String, dynamic> _$ProdutoDoEstoqueDtoToJson(
   'unidadeMedida': instance.unidadeMedida,
   'saldo': instance.saldo,
   'atualizadoEm': instance.atualizadoEm?.toIso8601String(),
+  'produtoApagado': instance.produtoApagado,
 };

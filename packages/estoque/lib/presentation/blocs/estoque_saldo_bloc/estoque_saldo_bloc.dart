@@ -47,8 +47,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: event.atualizadoEmFim,
       corIds: event.corIds,
       tamanhoIds: event.tamanhoIds,
-      ordenarPor: event.ordenarPor,
-      ordenarDirecao: event.ordenarDirecao,
+      ordenacoes: event.ordenacoes,
     );
 
     emit(
@@ -62,8 +61,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         disponibilidadeEstoque: event.disponibilidadeEstoque,
         atualizadoEmInicio: event.atualizadoEmInicio,
         atualizadoEmFim: event.atualizadoEmFim,
-        ordenarPor: event.ordenarPor,
-        ordenarDirecao: event.ordenarDirecao,
+        ordenacoes: event.ordenacoes,
         visualizarPorReferencia: event.visualizarPorReferencia,
         corIdsSelecionadas: event.corIds,
         tamanhoIdsSelecionados: event.tamanhoIds,
@@ -79,8 +77,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         final agrupado = await _carregarAgrupadoAcumulado(
           filtroBase: filtro,
           paginaAtual: 1,
-          ordenarPor: event.ordenarPor,
-          ordenarDirecao: event.ordenarDirecao,
+          ordenacoes: event.ordenacoes,
         );
         emit(
           state.copyWith(
@@ -121,8 +118,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         final agrupado = await _carregarAgrupadoAcumulado(
           filtroBase: filtro,
           paginaAtual: 1,
-          ordenarPor: event.ordenarPor,
-          ordenarDirecao: event.ordenarDirecao,
+          ordenacoes: event.ordenacoes,
         );
         emit(
           state.copyWith(
@@ -185,8 +181,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: state.atualizadoEmFim,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
-      ordenarPor: state.ordenarPor,
-      ordenarDirecao: state.ordenarDirecao,
+      ordenacoes: state.ordenacoes,
     );
 
     emit(
@@ -202,8 +197,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         final agrupado = await _carregarAgrupadoAcumulado(
           filtroBase: filtro,
           paginaAtual: proximaPagina,
-          ordenarPor: state.ordenarPor,
-          ordenarDirecao: state.ordenarDirecao,
+          ordenacoes: state.ordenacoes,
         );
         final avancouPagina =
             agrupado.items.length > state.itensAgrupados.length;
@@ -253,8 +247,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
         final agrupado = await _carregarAgrupadoAcumulado(
           filtroBase: filtro,
           paginaAtual: proximaPagina,
-          ordenarPor: state.ordenarPor,
-          ordenarDirecao: state.ordenarDirecao,
+          ordenacoes: state.ordenacoes,
         );
         emit(
           state.copyWith(
@@ -312,8 +305,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: state.atualizadoEmFim,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
-      ordenarPor: state.ordenarPor,
-      ordenarDirecao: state.ordenarDirecao,
+      ordenacoes: state.ordenacoes,
     );
     final saldo = await _recuperarSaldoDoEstoque(filtro: filtro);
     return saldo.items;
@@ -332,14 +324,12 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       atualizadoEmFim: state.atualizadoEmFim,
       corIds: state.corIdsSelecionadas,
       tamanhoIds: state.tamanhoIdsSelecionados,
-      ordenarPor: state.ordenarPor,
-      ordenarDirecao: state.ordenarDirecao,
+      ordenacoes: state.ordenacoes,
     );
     final todos = await _buscarTodosOsItensDoFiltro(filtro);
     final agrupado = _agruparSaldoPorReferencia(
       itens: todos,
-      ordenarPor: state.ordenarPor,
-      ordenarDirecao: state.ordenarDirecao,
+      ordenacoes: state.ordenacoes,
       page: 1,
       limit: _limiteParaRelatorio,
     );
@@ -361,14 +351,12 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
   Future<PaginaAgrupadaPorReferencia> _carregarAgrupadoAcumulado({
     required FiltroProdutoDoEstoque filtroBase,
     required int paginaAtual,
-    CampoOrdenacaoEstoque? ordenarPor,
-    DirecaoOrdenacaoEstoque ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
+    List<OrdenacaoEstoqueItem> ordenacoes = const [],
   }) async {
     final todos = await _buscarTodosOsItensDoFiltro(filtroBase);
     return _agruparSaldoPorReferencia(
       itens: todos,
-      ordenarPor: ordenarPor,
-      ordenarDirecao: ordenarDirecao,
+      ordenacoes: ordenacoes,
       page: 1,
       limit: filtroBase.limit * paginaAtual,
     );
@@ -392,8 +380,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     required DateTime? atualizadoEmFim,
     required List<int> corIds,
     required List<int> tamanhoIds,
-    CampoOrdenacaoEstoque? ordenarPor,
-    DirecaoOrdenacaoEstoque ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
+    List<OrdenacaoEstoqueItem> ordenacoes = const [],
   }) {
     return FiltroProdutoDoEstoque(
       page: page,
@@ -405,8 +392,7 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
       tamanhoIds: tamanhoIds,
       produtoIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
       referenciaIdExternos: termoBusca.isEmpty ? const [] : [termoBusca],
-      ordenarPor: ordenarPor,
-      ordenarDirecao: ordenarDirecao,
+      ordenacoes: ordenacoes,
     );
   }
 

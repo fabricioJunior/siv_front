@@ -14,6 +14,7 @@ abstract class ProdutoDoEstoque implements Equatable {
   String? get unidadeMedida;
   double get saldo;
   DateTime? get atualizadoEm;
+  bool get produtoApagado;
 
   factory ProdutoDoEstoque.create({
     required int empresaId,
@@ -29,6 +30,7 @@ abstract class ProdutoDoEstoque implements Equatable {
     required String? unidadeMedida,
     required double saldo,
     DateTime? atualizadoEm,
+    bool produtoApagado,
   }) = _ProdutoDoEstoqueImpl;
 
   @override
@@ -46,6 +48,7 @@ abstract class ProdutoDoEstoque implements Equatable {
     unidadeMedida,
     saldo,
     atualizadoEm,
+    produtoApagado,
   ];
 
   @override
@@ -92,6 +95,9 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
   @override
   final DateTime? atualizadoEm;
 
+  @override
+  final bool produtoApagado;
+
   _ProdutoDoEstoqueImpl({
     required this.empresaId,
     required this.referenciaId,
@@ -106,6 +112,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     required this.unidadeMedida,
     required this.saldo,
     this.atualizadoEm,
+    this.produtoApagado = false,
   });
 
   _ProdutoDoEstoqueImpl copyWith({
@@ -122,6 +129,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     String? unidadeMedida,
     double? saldo,
     DateTime? atualizadoEm,
+    bool? produtoApagado,
   }) {
     return _ProdutoDoEstoqueImpl(
       empresaId: empresaId ?? this.empresaId,
@@ -137,6 +145,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       saldo: saldo ?? this.saldo,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
+      produtoApagado: produtoApagado ?? this.produtoApagado,
     );
   }
 
@@ -155,6 +164,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     unidadeMedida,
     saldo,
     atualizadoEm,
+    produtoApagado,
   ];
 
   @override
@@ -176,6 +186,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
     String? unidadeMedida,
     double? saldo,
     DateTime? atualizadoEm,
+    bool? produtoApagado,
   }) {
     if (this is _ProdutoDoEstoqueImpl) {
       return (this as _ProdutoDoEstoqueImpl).copyWith(
@@ -192,6 +203,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
         unidadeMedida: unidadeMedida,
         saldo: saldo,
         atualizadoEm: atualizadoEm,
+        produtoApagado: produtoApagado,
       );
     }
     return ProdutoDoEstoque.create(
@@ -208,6 +220,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       saldo: saldo ?? this.saldo,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
+      produtoApagado: produtoApagado ?? this.produtoApagado,
     );
   }
 }

@@ -53,8 +53,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   bool _gerandoRelatorio = false;
   bool _filtrosExpandidos = false;
   bool _visualizarPorReferencia = false;
-  CampoOrdenacaoEstoque? _ordenarPor;
-  DirecaoOrdenacaoEstoque _ordenarDirecao = DirecaoOrdenacaoEstoque.asc;
+  List<OrdenacaoEstoqueItem> _ordenacoes = const [];
 
   @override
   void initState() {
@@ -82,8 +81,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
         disponibilidadeEstoque: _disponibilidadeEstoque,
         atualizadoEmInicio: _atualizadoEmInicio,
         atualizadoEmFim: _atualizadoEmFim,
-        ordenarPor: _ordenarPor,
-        ordenarDirecao: _ordenarDirecao,
+        ordenacoes: _ordenacoes,
         visualizarPorReferencia: _visualizarPorReferencia,
       ),
     );
@@ -111,11 +109,15 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
       case CampoOrdenacaoEstoque.nome:
         return 'Nome';
       case CampoOrdenacaoEstoque.saldo:
-        return 'Saldo';
+        return 'Quantidade em estoque';
       case CampoOrdenacaoEstoque.referenciaIdExterno:
         return 'Referência';
       case CampoOrdenacaoEstoque.atualizadoEm:
         return 'Atualizado em';
+      case CampoOrdenacaoEstoque.corNome:
+        return 'Cor';
+      case CampoOrdenacaoEstoque.tamanhoNome:
+        return 'Tamanho';
     }
   }
 
@@ -516,54 +518,162 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   }
 
   Widget _buildOrdenacao(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PopupMenuButton<CampoOrdenacaoEstoque>(
-          tooltip: 'Ordenar por',
-          initialValue: _ordenarPor,
-          onSelected: (campo) {
-            setState(() => _ordenarPor = campo);
-            _reiniciarListaERecarregar();
-          },
-          itemBuilder: (context) => CampoOrdenacaoEstoque.values
-              .map(
-                (campo) => PopupMenuItem(
-                  value: campo,
-                  child: Text(_rotuloCampoOrdenacao(campo)),
-                ),
-              )
-              .toList(),
-          child: Chip(
-            label: Text(
-              _ordenarPor == null
-                  ? 'Ordenar'
-                  : _rotuloCampoOrdenacao(_ordenarPor!),
-            ),
-            avatar: const Icon(Icons.sort, size: 18),
-          ),
-        ),
-        if (_ordenarPor != null)
-          IconButton(
-            tooltip: _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                ? 'Crescente'
-                : 'Decrescente',
-            icon: Icon(
-              _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                  ? Icons.arrow_upward
-                  : Icons.arrow_downward,
-            ),
-            onPressed: () {
-              setState(() {
-                _ordenarDirecao = _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                    ? DirecaoOrdenacaoEstoque.desc
-                    : DirecaoOrdenacaoEstoque.asc;
-              });
-              _reiniciarListaERecarregar();
-            },
-          ),
-      ],
+    final rotulo = _ordenacoes.isEmpty
+        ? 'Ordenar'
+        : _ordenacoes.map((item) => _rotuloCampoOrdenacao(item.campo)).join(', ');
+
+    return ActionChip(
+      avatar: const Icon(Icons.sort, size: 18),
+      label: Text(rotulo),
+      onPressed: _abrirSeletorDeOrdenacao,
     );
+  }
+
+  Future<void> _abrirSeletorDeOrdenacao() async {
+    var rascunho = List<OrdenacaoEstoqueItem>.from(_ordenacoes);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final disponiveis = CampoOrdenacaoEstoque.values
+                .where(
+                  (campo) => !rascunho.any((item) => item.campo == campo),
+                )
+                .toList(growable: false);
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ordenar por',
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Combine mais de um critério: a ordem da lista abaixo '
+                    'define a prioridade (o primeiro desempata usando o '
+                    'segundo, e assim por diante).',
+                    style: Theme.of(sheetContext).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  if (rascunho.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Nenhum critério selecionado.'),
+                    )
+                  else
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: rascunho.length,
+                      onReorder: (oldIndex, newIndex) {
+                        setSheetState(() {
+                          if (newIndex > oldIndex) newIndex--;
+                          final item = rascunho.removeAt(oldIndex);
+                          rascunho.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final item = rascunho[index];
+                        return ListTile(
+                          key: ValueKey(item.campo),
+                          leading: const Icon(Icons.drag_handle),
+                          title: Text(_rotuloCampoOrdenacao(item.campo)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: item.direcao == DirecaoOrdenacaoEstoque.asc
+                                    ? 'Crescente'
+                                    : 'Decrescente',
+                                icon: Icon(
+                                  item.direcao == DirecaoOrdenacaoEstoque.asc
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
+                                ),
+                                onPressed: () {
+                                  setSheetState(() {
+                                    rascunho[index] = item.copyWith(
+                                      direcao:
+                                          item.direcao == DirecaoOrdenacaoEstoque.asc
+                                              ? DirecaoOrdenacaoEstoque.desc
+                                              : DirecaoOrdenacaoEstoque.asc,
+                                    );
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                tooltip: 'Remover',
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  setSheetState(() => rascunho.removeAt(index));
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  if (disponiveis.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: disponiveis
+                          .map(
+                            (campo) => ActionChip(
+                              avatar: const Icon(Icons.add, size: 16),
+                              label: Text(_rotuloCampoOrdenacao(campo)),
+                              onPressed: () {
+                                setSheetState(
+                                  () => rascunho.add(
+                                    OrdenacaoEstoqueItem(campo: campo),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                          .toList(growable: false),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      if (rascunho.isNotEmpty)
+                        TextButton(
+                          onPressed: () =>
+                              setSheetState(() => rascunho.clear()),
+                          child: const Text('Limpar'),
+                        ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        child: const Text('Aplicar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted) return;
+    setState(() => _ordenacoes = rascunho);
+    _reiniciarListaERecarregar();
   }
 
   Widget _buildPainelFiltros(BuildContext context) {

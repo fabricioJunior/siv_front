@@ -211,6 +211,9 @@ void _useCases() {
   sl.registerFactory<AtualizarVendedorRomaneio>(
     () => AtualizarVendedorRomaneio(repository: sl()),
   );
+  sl.registerFactory<FinalizarRomaneio>(
+    () => FinalizarRomaneio(repository: sl()),
+  );
   sl.registerFactory<CorrigirFormaDePagamentoRomaneio>(
     () => CorrigirFormaDePagamentoRomaneio(repository: sl()),
   );
@@ -368,11 +371,13 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<RomaneioCriacaoBloc>(
     () => RomaneioCriacaoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

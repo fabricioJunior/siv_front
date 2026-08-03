@@ -9,12 +9,14 @@ abstract class IRomaneiosRepository {
     DateTime? dataHoraInicial,
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
+    List<int>? referenciaIds,
   });
   Future<Romaneio> recuperarRomaneio(int id);
   Future<Romaneio> criarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio);
   Future<Romaneio> atualizarObservacao(int id, String observacao);
   Future<Romaneio> atualizarVendedor(int id, int funcionarioId);
+  Future<Romaneio> finalizarRomaneio(int id);
   Future<List<RomaneioItem>> recuperarItensRomaneio(int romaneioId);
   Future<List<RomaneioItemDevolvido>> recuperarItensDevolvidosRomaneio(
     int romaneioId,

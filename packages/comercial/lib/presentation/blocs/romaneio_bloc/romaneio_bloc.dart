@@ -19,6 +19,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
   final AtualizarRomaneio _atualizarRomaneio;
   final AtualizarObservacaoRomaneio _atualizarObservacaoRomaneio;
   final AtualizarVendedorRomaneio _atualizarVendedorRomaneio;
+  final FinalizarRomaneio _finalizarRomaneio;
   final RecuperarListaDeProdutosCompartilhada
       _recuperarListaDeProdutosCompartilhada;
   final AdicionarItemRomaneio _adicionarItemRomaneio;
@@ -36,6 +37,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     this._atualizarRomaneio,
     this._atualizarObservacaoRomaneio,
     this._atualizarVendedorRomaneio,
+    this._finalizarRomaneio,
     this._recuperarListaDeProdutosCompartilhada,
     this._adicionarItemRomaneio,
     this._removerProdutoCompartilhado,
@@ -49,6 +51,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
     on<RomaneioSalvou>(_onSalvou);
     on<RomaneioObservacaoAtualizada>(_onObservacaoAtualizada);
     on<RomaneioVendedorAtualizado>(_onVendedorAtualizado);
+    on<RomaneioFinalizarSolicitado>(_onFinalizarSolicitado);
     on<RomaneioFormaDePagamentoCorrigida>(_onFormaDePagamentoCorrigida);
     on<RomaneioPagamentoRecebido>(_onPagamentoRecebido);
     on<RomaneioContinuarEnvioSolicitado>(_onContinuarEnvioSolicitado);
@@ -210,6 +213,31 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
       emit(state.copyWith(
           step: RomaneioStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao atualizar vendedor.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onFinalizarSolicitado(
+    RomaneioFinalizarSolicitado event,
+    Emitter<RomaneioState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: RomaneioStep.processando, erro: null));
+      final romaneio = await _finalizarRomaneio.call(state.id!);
+      emit(
+        RomaneioState.fromModel(
+          romaneio,
+          itensDoRomaneio: state.itens,
+          itensDevolvidos: state.itensDevolvidos,
+          step: RomaneioStep.finalizado,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: RomaneioStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao finalizar romaneio.')));
       addError(e, s);
     }
   }

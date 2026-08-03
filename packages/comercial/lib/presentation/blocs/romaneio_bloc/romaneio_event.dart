@@ -65,3 +65,5 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
 }
 
 class RomaneioContinuarEnvioSolicitado extends RomaneioEvent {}
+
+class RomaneioFinalizarSolicitado extends RomaneioEvent {}

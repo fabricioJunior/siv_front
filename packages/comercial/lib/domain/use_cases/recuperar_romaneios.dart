@@ -16,6 +16,7 @@ class RecuperarRomaneios {
     DateTime? dataHoraInicial,
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
+    List<int>? referenciaIds,
   }) {
     return _repository.recuperarRomaneios(
       page: page,
@@ -25,6 +26,7 @@ class RecuperarRomaneios {
       dataHoraInicial: dataHoraInicial,
       dataHoraFinal: dataHoraFinal,
       operacoes: operacoes,
+      referenciaIds: referenciaIds,
     );
   }
 }

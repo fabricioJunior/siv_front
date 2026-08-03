@@ -250,6 +250,14 @@ class _FalhaRomaneioView extends StatelessWidget {
             erro,
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 8),
+          Text(
+            romaneioPendente
+                ? 'O estoque ainda não foi alterado — só é atualizado quando o romaneio for finalizado.'
+                : 'O estoque não foi alterado.',
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: onTentarNovamente,

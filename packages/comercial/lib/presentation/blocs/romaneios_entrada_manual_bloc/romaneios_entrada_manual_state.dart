@@ -5,6 +5,7 @@ class RomaneiosEntradaManualState extends Equatable {
   final String searchTerm;
   final DateTime? dataHoraInicial;
   final DateTime? dataHoraFinal;
+  final List<int> referenciaIds;
   final String? erro;
   final RomaneiosEntradaManualStep step;
 
@@ -13,6 +14,7 @@ class RomaneiosEntradaManualState extends Equatable {
     this.searchTerm = '',
     this.dataHoraInicial,
     this.dataHoraFinal,
+    this.referenciaIds = const [],
     required this.step,
     this.erro,
   });
@@ -22,6 +24,7 @@ class RomaneiosEntradaManualState extends Equatable {
         searchTerm = '',
         dataHoraInicial = null,
         dataHoraFinal = null,
+        referenciaIds = const [],
         erro = null,
         step = RomaneiosEntradaManualStep.inicial;
 
@@ -32,6 +35,7 @@ class RomaneiosEntradaManualState extends Equatable {
     bool limparDataHoraInicial = false,
     DateTime? dataHoraFinal,
     bool limparDataHoraFinal = false,
+    List<int>? referenciaIds,
     String? erro,
     RomaneiosEntradaManualStep? step,
   }) {
@@ -43,6 +47,7 @@ class RomaneiosEntradaManualState extends Equatable {
           : (dataHoraInicial ?? this.dataHoraInicial),
       dataHoraFinal:
           limparDataHoraFinal ? null : (dataHoraFinal ?? this.dataHoraFinal),
+      referenciaIds: referenciaIds ?? this.referenciaIds,
       erro: erro,
       step: step ?? this.step,
     );
@@ -54,6 +59,7 @@ class RomaneiosEntradaManualState extends Equatable {
         searchTerm,
         dataHoraInicial,
         dataHoraFinal,
+        referenciaIds,
         erro,
         step,
       ];

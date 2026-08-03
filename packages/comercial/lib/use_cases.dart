@@ -2,6 +2,7 @@ export 'domain/use_cases/adicionar_item_romaneio.dart';
 export 'domain/use_cases/buscar_credito_devolucao_movimentacoes.dart';
 export 'domain/use_cases/buscar_saldo_credito_devolucao.dart';
 export 'domain/use_cases/atualizar_observacao_romaneio.dart';
+export 'domain/use_cases/finalizar_romaneio.dart';
 export 'domain/use_cases/aplicar_desconto_pedido.dart';
 export 'domain/use_cases/atualizar_pedido.dart';
 export 'domain/use_cases/atualizar_romaneio.dart';

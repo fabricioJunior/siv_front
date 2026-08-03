@@ -29,6 +29,11 @@ class RomaneiosRepository implements IRomaneiosRepository {
   }
 
   @override
+  Future<Romaneio> finalizarRomaneio(int id) {
+    return remoteDataSource.finalizarRomaneio(id);
+  }
+
+  @override
   Future<Romaneio> atualizarRomaneio(Romaneio romaneio) {
     return remoteDataSource.atualizarRomaneio(romaneio);
   }
@@ -64,6 +69,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
     DateTime? dataHoraInicial,
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
+    List<int>? referenciaIds,
   }) {
     return remoteDataSource.recuperarRomaneios(
       page: page,
@@ -73,6 +79,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
       dataHoraInicial: dataHoraInicial,
       dataHoraFinal: dataHoraFinal,
       operacoes: operacoes,
+      referenciaIds: referenciaIds,
     );
   }
 

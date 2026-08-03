@@ -30,6 +30,9 @@ class RomaneiosEntradaManualBloc
     final dataHoraFinal = event.dataHoraFinalInformada
         ? event.dataHoraFinal
         : state.dataHoraFinal;
+    final referenciaIds = event.referenciaIdsInformada
+        ? (event.referenciaIds ?? const [])
+        : state.referenciaIds;
 
     try {
       emit(
@@ -40,6 +43,7 @@ class RomaneiosEntradaManualBloc
           limparDataHoraInicial: dataHoraInicial == null,
           dataHoraFinal: dataHoraFinal,
           limparDataHoraFinal: dataHoraFinal == null,
+          referenciaIds: referenciaIds,
           erro: null,
         ),
       );
@@ -54,6 +58,7 @@ class RomaneiosEntradaManualBloc
           TipoOperacao.manual_entrada,
           TipoOperacao.manual_saida,
         ],
+        referenciaIds: referenciaIds.isEmpty ? null : referenciaIds,
       );
 
       emit(

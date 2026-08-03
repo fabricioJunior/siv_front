@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/presentation.dart';
 
 class RomaneiosEntradaManualPage extends StatefulWidget {
   const RomaneiosEntradaManualPage({super.key});
@@ -100,6 +101,68 @@ class _RomaneiosEntradaManualPageState
     _bloc.add(RomaneiosEntradaManualIniciou(dataHoraFinalInformada: true));
   }
 
+  Future<void> _abrirFiltroReferencia() async {
+    var referenciaIds = _bloc.state.referenciaIds;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Filtrar por referência',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                ReferenciaSeletor(
+                  modo: ReferenciaSeletorModo.multipla,
+                  permitirCadastro: false,
+                  idReferenciasSelecionadasIniciais: referenciaIds,
+                  onChanged: (dados) {
+                    referenciaIds = dados.map((d) => d.id).toList();
+                  },
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _bloc.add(
+                      RomaneiosEntradaManualIniciou(
+                        referenciaIds: referenciaIds,
+                        referenciaIdsInformada: true,
+                      ),
+                    );
+                  },
+                  child: const Text('Aplicar'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _limparReferencias() {
+    _bloc.add(
+      RomaneiosEntradaManualIniciou(
+        referenciaIds: const [],
+        referenciaIdsInformada: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RomaneiosEntradaManualBloc>.value(
@@ -168,6 +231,16 @@ class _RomaneiosEntradaManualPageState
                             ? null
                             : _limparDataHoraFinal,
                       ),
+                      _FiltroDataChip(
+                        icon: Icons.tag_outlined,
+                        label: state.referenciaIds.isEmpty
+                            ? 'Referência'
+                            : '${state.referenciaIds.length} referência(s)',
+                        onTap: _abrirFiltroReferencia,
+                        onLimpar: state.referenciaIds.isEmpty
+                            ? null
+                            : _limparReferencias,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -226,6 +299,32 @@ class _RomaneiosEntradaManualPageState
         ),
       ),
     );
+  }
+}
+
+String _labelSituacao(String? situacao) {
+  switch (situacao) {
+    case 'em_andamento':
+      return 'Em andamento';
+    case 'encerrado':
+      return 'Finalizado';
+    case 'cancelado':
+      return 'Cancelado';
+    default:
+      return situacao ?? '-';
+  }
+}
+
+Color _corSituacao(String? situacao, ColorScheme colorScheme) {
+  switch (situacao) {
+    case 'em_andamento':
+      return Colors.amber.shade800;
+    case 'encerrado':
+      return Colors.green.shade700;
+    case 'cancelado':
+      return colorScheme.error;
+    default:
+      return colorScheme.outline;
   }
 }
 
@@ -402,6 +501,7 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
     final data = romaneio.criadoEm ?? romaneio.data;
     final ehSaida = romaneio.operacao == TipoOperacao.manual_saida;
     final corTipo = ehSaida ? Colors.deepOrange : colorScheme.primary;
+    final corSituacao = _corSituacao(romaneio.situacao, colorScheme);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -438,14 +538,31 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        Chip(
-                          label: Text(ehSaida ? 'Saída' : 'Entrada'),
-                          labelStyle: TextStyle(color: corTipo, fontSize: 12),
-                          backgroundColor: corTipo.withValues(alpha: 0.10),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          side: BorderSide.none,
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            Chip(
+                              label: Text(ehSaida ? 'Saída' : 'Entrada'),
+                              labelStyle:
+                                  TextStyle(color: corTipo, fontSize: 12),
+                              backgroundColor: corTipo.withValues(alpha: 0.10),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide.none,
+                            ),
+                            Chip(
+                              label: Text(_labelSituacao(romaneio.situacao)),
+                              labelStyle:
+                                  TextStyle(color: corSituacao, fontSize: 12),
+                              backgroundColor:
+                                  corSituacao.withValues(alpha: 0.10),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide.none,
+                            ),
+                          ],
                         ),
                       ],
                     ),

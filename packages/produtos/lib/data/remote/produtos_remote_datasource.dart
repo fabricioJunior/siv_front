@@ -83,6 +83,20 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<ExclusaoProdutosEmLoteResultado> excluirProdutosEmLote(
+    List<int> ids,
+  ) async {
+    final response = await post(
+      pathParameters: {'id': 'excluir-em-lote'},
+      body: {'produtoIds': ids},
+    );
+
+    return ExclusaoProdutosEmLoteResultado.fromJson(
+      response.body as Map<String, dynamic>,
+    );
+  }
+
+  @override
   Future<List<Produto>> fetchProdutos({
     String? idExterno,
     int? referenciaId,

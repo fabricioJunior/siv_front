@@ -24,6 +24,8 @@ import 'package:pagamentos/use_cases.dart'
     show RecuperarProvidersPagamentosAvulsos;
 import 'package:precos/presentation.dart';
 import 'package:precos/use_cases.dart' show RecuperarPrecosDasReferencias;
+import 'package:produtos/data/remote/dtos/cor_dto.dart';
+import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
@@ -845,15 +847,27 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/estoque',
       child: EstoqueSaldoPage(
         seletorCores: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-            CorSeletor(modo: CorSeletorModo.multipla, onChanged: onChanged),
+            CorSeletor(
+              modo: CorSeletorModo.multipla,
+              coresSelecionadasIniciais: (itemsSelecionadosInicial ?? [])
+                  .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
+                  .toList(),
+              onChanged: onChanged,
+            ),
         seletorTamanhos: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
             TamanhoSeletor(
               modo: TamanhoSeletorModo.multipla,
+              tamanhosSelecionadosIniciais: (itemsSelecionadosInicial ?? [])
+                  .map(
+                    (s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
         seletorTabelaPreco: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
             TabelasDePrecoSeletor(
               modo: TabelasDePrecoSeletorModo.unica,
+              itemsSelecionadosInicial: itemsSelecionadosInicial,
               onChanged: onChanged,
               titulo: 'Tabela de preço',
             ),
@@ -877,18 +891,6 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/historico_estoque',
       child: HistoricoEstoquePage(
-        seletorReferencia: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-            ReferenciaSeletor(
-              modo: ReferenciaSeletorModo.unica,
-              onChanged: onChanged,
-              permitirCadastro: false,
-            ),
-        seletorFuncionario: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
-            FuncionarioSeletor(
-              modo: FuncionarioSeletorModo.unica,
-              onChanged: onChanged,
-              itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
-            ),
         obterUsuarios: () async {
           final usuarios = await sl<RecuperarUsuarios>().call();
           return usuarios

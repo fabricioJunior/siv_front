@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:financeiro/domain/models/caixa.dart';
 import 'package:financeiro/domain/models/filtro_historico_de_caixas.dart';
 import 'package:financeiro/presentation/blocs/historico_de_caixas_bloc/historico_de_caixas_bloc.dart';
@@ -42,18 +43,18 @@ class _SelecionarCaixaPageState extends State<SelecionarCaixaPage> {
   }
 
   Future<void> _selecionarPeriodo() async {
-    final agora = DateTime.now();
-    final selecionado = await showDateRangePicker(
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      firstDate: DateTime(agora.year - 2),
-      lastDate: agora,
-      initialDateRange: DateTimeRange(start: _dataInicio, end: _dataFim),
+      dataInicioAtual: _dataInicio,
+      dataFimAtual: _dataFim,
+      lastDate: DateTime.now(),
+      permitirHora: false,
     );
-    if (selecionado == null || !mounted) return;
+    if (resultado == null || !mounted) return;
 
     setState(() {
-      _dataInicio = selecionado.start;
-      _dataFim = selecionado.end;
+      _dataInicio = resultado.dataInicio;
+      _dataFim = resultado.dataFim;
     });
     _bloc.add(HistoricoDeCaixasIniciou(filtro: _montarFiltro()));
   }
@@ -89,8 +90,7 @@ class _SelecionarCaixaPageState extends State<SelecionarCaixaPage> {
               ),
             ),
             Expanded(
-              child:
-                  BlocBuilder<HistoricoDeCaixasBloc, HistoricoDeCaixasState>(
+              child: BlocBuilder<HistoricoDeCaixasBloc, HistoricoDeCaixasState>(
                 builder: (context, state) {
                   if (state.step == HistoricoDeCaixasStep.carregando) {
                     return const Center(

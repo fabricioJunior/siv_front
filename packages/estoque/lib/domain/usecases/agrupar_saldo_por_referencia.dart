@@ -13,13 +13,11 @@ typedef PaginaAgrupadaPorReferencia = ({
 class AgruparSaldoPorReferencia {
   PaginaAgrupadaPorReferencia call({
     required List<ProdutoDoEstoque> itens,
-    CampoOrdenacaoEstoque? ordenarPor,
-    DirecaoOrdenacaoEstoque ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
+    List<OrdenacaoEstoqueItem> ordenacoes = const [],
     required int page,
     required int limit,
   }) {
-    final agregados = _agrupar(itens)
-      ..sort(_comparador(ordenarPor, ordenarDirecao));
+    final agregados = _agrupar(itens)..sort(_comparadorCombinado(ordenacoes));
 
     final totalItems = agregados.length;
     final totalPages = totalItems == 0 ? 0 : ((totalItems - 1) ~/ limit) + 1;
@@ -58,10 +56,29 @@ class AgruparSaldoPorReferencia {
   }
 
   int Function(ProdutoDoEstoquePorReferencia, ProdutoDoEstoquePorReferencia)
-  _comparador(CampoOrdenacaoEstoque? campo, DirecaoOrdenacaoEstoque direcao) {
+  _comparadorCombinado(List<OrdenacaoEstoqueItem> ordenacoes) {
+    if (ordenacoes.isEmpty) {
+      return (a, b) => a.nome.compareTo(b.nome);
+    }
+
+    final comparadores = ordenacoes
+        .map(_comparadorParaItem)
+        .toList(growable: false);
+
+    return (a, b) {
+      for (final comparador in comparadores) {
+        final resultado = comparador(a, b);
+        if (resultado != 0) return resultado;
+      }
+      return 0;
+    };
+  }
+
+  int Function(ProdutoDoEstoquePorReferencia, ProdutoDoEstoquePorReferencia)
+  _comparadorParaItem(OrdenacaoEstoqueItem item) {
     int Function(ProdutoDoEstoquePorReferencia, ProdutoDoEstoquePorReferencia)
     base;
-    switch (campo) {
+    switch (item.campo) {
       case CampoOrdenacaoEstoque.saldo:
         base = (a, b) => a.saldoTotal.compareTo(b.saldoTotal);
         break;
@@ -78,12 +95,18 @@ class AgruparSaldoPorReferencia {
                 );
         break;
       case CampoOrdenacaoEstoque.nome:
-      case null:
         base = (a, b) => a.nome.compareTo(b.nome);
+        break;
+      case CampoOrdenacaoEstoque.corNome:
+      case CampoOrdenacaoEstoque.tamanhoNome:
+        // Não aplicável na visão agrupada por referência (uma referência
+        // agrega várias cores/tamanhos) -- critério vira no-op aqui,
+        // os demais critérios da combinação continuam valendo.
+        base = (a, b) => 0;
         break;
     }
 
-    return direcao == DirecaoOrdenacaoEstoque.desc
+    return item.direcao == DirecaoOrdenacaoEstoque.desc
         ? (a, b) => base(b, a)
         : base;
   }

@@ -45,6 +45,10 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
   @override
   final DateTime? atualizadoEm;
 
+  @override
+  @JsonKey(defaultValue: false)
+  final bool produtoApagado;
+
   ProdutoDoEstoqueDto({
     required this.empresaId,
     required this.referenciaId,
@@ -59,6 +63,7 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
     required this.unidadeMedida,
     required this.saldo,
     this.atualizadoEm,
+    this.produtoApagado = false,
   });
 
   factory ProdutoDoEstoqueDto.fromJson(Map<String, dynamic> json) =>
@@ -82,6 +87,7 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
     unidadeMedida,
     saldo,
     atualizadoEm,
+    produtoApagado,
   ];
 
   @override

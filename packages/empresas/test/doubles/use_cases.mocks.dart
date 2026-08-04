@@ -107,6 +107,12 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
     required _i3.TipoDeSubstituicaoTributaria? substituicaoTributaria,
     required String? telefone,
     required String? uf,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {
@@ -122,6 +128,12 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
               #substituicaoTributaria: substituicaoTributaria,
               #telefone: telefone,
               #uf: uf,
+              #logradouro: logradouro,
+              #numero: numero,
+              #bairro: bairro,
+              #codigoMunicipioIbge: codigoMunicipioIbge,
+              #municipio: municipio,
+              #cep: cep,
             }),
             returnValue: _i5.Future<_i3.Empresa>.value(
               _FakeEmpresa_1(
@@ -139,6 +151,12 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
                   #substituicaoTributaria: substituicaoTributaria,
                   #telefone: telefone,
                   #uf: uf,
+                  #logradouro: logradouro,
+                  #numero: numero,
+                  #bairro: bairro,
+                  #codigoMunicipioIbge: codigoMunicipioIbge,
+                  #municipio: municipio,
+                  #cep: cep,
                 }),
               ),
             ),

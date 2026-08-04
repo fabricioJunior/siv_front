@@ -43,9 +43,14 @@ class EstoqueSaldoRemoteDataSource extends RemoteDataSourceBase
             filtro.ultimaAtualizacaoFim!.toUtc().toIso8601String(),
       'page': filtro.page.toString(),
       'limit': filtro.limit.toString(),
-      if (filtro.ordenarPor != null) 'ordenarPor': filtro.ordenarPor!.name,
-      if (filtro.ordenarPor != null)
-        'ordenarDirecao': filtro.ordenarDirecao.name,
+      if (filtro.ordenacoes.isNotEmpty)
+        'ordenarPor': filtro.ordenacoes
+            .map((item) => item.campo.name)
+            .join(','),
+      if (filtro.ordenacoes.isNotEmpty)
+        'ordenarDirecao': filtro.ordenacoes
+            .map((item) => item.direcao.name)
+            .join(','),
     };
   }
 

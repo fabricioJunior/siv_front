@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/presentation.dart';
 
 class RomaneiosEntradaManualPage extends StatefulWidget {
   const RomaneiosEntradaManualPage({super.key});
@@ -51,53 +52,94 @@ class _RomaneiosEntradaManualPageState
     _bloc.add(RomaneiosEntradaManualIniciou(searchTerm: ''));
   }
 
-  Future<void> _selecionarDataHoraInicial() async {
-    final selecionada = await _selecionarDataHora(_bloc.state.dataHoraInicial);
-    if (selecionada == null) return;
-    _bloc.add(
-      RomaneiosEntradaManualIniciou(
-        dataHoraInicial: selecionada,
-        dataHoraInicialInformada: true,
-      ),
+  Future<void> _abrirFiltroPeriodo() async {
+    final agora = DateTime.now();
+    final resultado = await abrirFiltroPeriodoSheet(
+      context: context,
+      dataInicioAtual: _bloc.state.dataHoraInicial ?? agora,
+      dataFimAtual: _bloc.state.dataHoraFinal ?? agora,
+      permitirHora: true,
     );
-  }
-
-  Future<void> _selecionarDataHoraFinal() async {
-    final selecionada = await _selecionarDataHora(_bloc.state.dataHoraFinal);
-    if (selecionada == null) return;
+    if (resultado == null || !mounted) return;
     _bloc.add(
       RomaneiosEntradaManualIniciou(
-        dataHoraFinal: selecionada,
+        dataHoraInicial: resultado.dataInicio,
+        dataHoraInicialInformada: true,
+        dataHoraFinal: resultado.dataFim,
         dataHoraFinalInformada: true,
       ),
     );
   }
 
-  Future<DateTime?> _selecionarDataHora(DateTime? inicial) async {
-    final agora = DateTime.now();
-    final data = await showDatePicker(
-      context: context,
-      initialDate: inicial ?? agora,
-      firstDate: DateTime(agora.year - 5),
-      lastDate: DateTime(agora.year + 1),
+  void _limparPeriodo() {
+    _bloc.add(
+      RomaneiosEntradaManualIniciou(
+        dataHoraInicialInformada: true,
+        dataHoraFinalInformada: true,
+      ),
     );
-    if (data == null || !mounted) return null;
-
-    final hora = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(inicial ?? agora),
-    );
-    if (hora == null) return null;
-
-    return DateTime(data.year, data.month, data.day, hora.hour, hora.minute);
   }
 
-  void _limparDataHoraInicial() {
-    _bloc.add(RomaneiosEntradaManualIniciou(dataHoraInicialInformada: true));
+  Future<void> _abrirFiltroReferencia() async {
+    var referenciaIds = _bloc.state.referenciaIds;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Filtrar por referência',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                ReferenciaSeletor(
+                  modo: ReferenciaSeletorModo.multipla,
+                  permitirCadastro: false,
+                  idReferenciasSelecionadasIniciais: referenciaIds,
+                  onChanged: (dados) {
+                    referenciaIds = dados.map((d) => d.id).toList();
+                  },
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    _bloc.add(
+                      RomaneiosEntradaManualIniciou(
+                        referenciaIds: referenciaIds,
+                        referenciaIdsInformada: true,
+                      ),
+                    );
+                  },
+                  child: const Text('Aplicar'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  void _limparDataHoraFinal() {
-    _bloc.add(RomaneiosEntradaManualIniciou(dataHoraFinalInformada: true));
+  void _limparReferencias() {
+    _bloc.add(
+      RomaneiosEntradaManualIniciou(
+        referenciaIds: const [],
+        referenciaIdsInformada: true,
+      ),
+    );
   }
 
   @override
@@ -151,22 +193,22 @@ class _RomaneiosEntradaManualPageState
                       _FiltroDataChip(
                         icon: Icons.event,
                         label: state.dataHoraInicial == null
-                            ? 'Data/hora inicial'
-                            : _formatarDataHora(state.dataHoraInicial!),
-                        onTap: _selecionarDataHoraInicial,
+                            ? 'Período'
+                            : '${_formatarDataHora(state.dataHoraInicial!)} - ${_formatarDataHora(state.dataHoraFinal!)}',
+                        onTap: _abrirFiltroPeriodo,
                         onLimpar: state.dataHoraInicial == null
                             ? null
-                            : _limparDataHoraInicial,
+                            : _limparPeriodo,
                       ),
                       _FiltroDataChip(
-                        icon: Icons.event_available,
-                        label: state.dataHoraFinal == null
-                            ? 'Data/hora final'
-                            : _formatarDataHora(state.dataHoraFinal!),
-                        onTap: _selecionarDataHoraFinal,
-                        onLimpar: state.dataHoraFinal == null
+                        icon: Icons.tag_outlined,
+                        label: state.referenciaIds.isEmpty
+                            ? 'Referência'
+                            : '${state.referenciaIds.length} referência(s)',
+                        onTap: _abrirFiltroReferencia,
+                        onLimpar: state.referenciaIds.isEmpty
                             ? null
-                            : _limparDataHoraFinal,
+                            : _limparReferencias,
                       ),
                     ],
                   ),
@@ -226,6 +268,32 @@ class _RomaneiosEntradaManualPageState
         ),
       ),
     );
+  }
+}
+
+String _labelSituacao(String? situacao) {
+  switch (situacao) {
+    case 'em_andamento':
+      return 'Em andamento';
+    case 'encerrado':
+      return 'Finalizado';
+    case 'cancelado':
+      return 'Cancelado';
+    default:
+      return situacao ?? '-';
+  }
+}
+
+Color _corSituacao(String? situacao, ColorScheme colorScheme) {
+  switch (situacao) {
+    case 'em_andamento':
+      return Colors.amber.shade800;
+    case 'encerrado':
+      return Colors.green.shade700;
+    case 'cancelado':
+      return colorScheme.error;
+    default:
+      return colorScheme.outline;
   }
 }
 
@@ -402,6 +470,7 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
     final data = romaneio.criadoEm ?? romaneio.data;
     final ehSaida = romaneio.operacao == TipoOperacao.manual_saida;
     final corTipo = ehSaida ? Colors.deepOrange : colorScheme.primary;
+    final corSituacao = _corSituacao(romaneio.situacao, colorScheme);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -438,14 +507,31 @@ class _RomaneioEntradaManualCard extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        Chip(
-                          label: Text(ehSaida ? 'Saída' : 'Entrada'),
-                          labelStyle: TextStyle(color: corTipo, fontSize: 12),
-                          backgroundColor: corTipo.withValues(alpha: 0.10),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          side: BorderSide.none,
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            Chip(
+                              label: Text(ehSaida ? 'Saída' : 'Entrada'),
+                              labelStyle:
+                                  TextStyle(color: corTipo, fontSize: 12),
+                              backgroundColor: corTipo.withValues(alpha: 0.10),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide.none,
+                            ),
+                            Chip(
+                              label: Text(_labelSituacao(romaneio.situacao)),
+                              labelStyle:
+                                  TextStyle(color: corSituacao, fontSize: 12),
+                              backgroundColor:
+                                  corSituacao.withValues(alpha: 0.10),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide.none,
+                            ),
+                          ],
                         ),
                       ],
                     ),

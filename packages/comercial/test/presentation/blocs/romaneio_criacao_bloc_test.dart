@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/data.dart';
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
@@ -39,6 +41,9 @@ class StubCaixaRepository implements ICaixaRepository {
 
 class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   @override
+  Future<Uint8List> baixarDanfe(int id) async => throw UnimplementedError();
+
+  @override
   Future<List<String>> listarProviders() async => const [];
 
   @override
@@ -73,6 +78,17 @@ class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   @override
   Future<DocumentoFiscalDetalhe> getDetalhe(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> excluirCertificadoFiscal() async => throw UnimplementedError();
 }
 
 class StubCriarRomaneio implements CriarRomaneio {
@@ -103,6 +119,15 @@ class StubRecuperarRomaneio implements RecuperarRomaneio {
 
   @override
   Future<Romaneio> call(int id) => onCall(id);
+}
+
+class StubAtualizarObservacaoRomaneio implements AtualizarObservacaoRomaneio {
+  final Future<Romaneio> Function(int id, String observacao) onCall;
+
+  StubAtualizarObservacaoRomaneio(this.onCall);
+
+  @override
+  Future<Romaneio> call(int id, String observacao) => onCall(id, observacao);
 }
 
 class StubRecuperarListaDeProdutosCompartilhada
@@ -258,6 +283,7 @@ void main() {
       StubAdicionarItemRomaneio(
           ({required romaneioId, required item}) async {}),
       StubRecuperarRomaneio((_) async => romaneioCriado),
+      StubAtualizarObservacaoRomaneio((_, __) async => romaneioCriado),
       StubRecuperarListaDeProdutosCompartilhada(
         onCall: (_) async => listaCompartilhada,
         onRecuperarProdutos: (_) async => [produto],
@@ -349,6 +375,13 @@ void main() {
         StubAdicionarItemRomaneio(
             ({required romaneioId, required item}) async {}),
         StubRecuperarRomaneio((_) async => Romaneio.create(
+              id: 456,
+              funcionarioId: 10,
+              tabelaPrecoId: 20,
+              operacao: TipoOperacao.consignacao_saida,
+              consignacaoId: 77,
+            )),
+        StubAtualizarObservacaoRomaneio((_, __) async => Romaneio.create(
               id: 456,
               funcionarioId: 10,
               tabelaPrecoId: 20,

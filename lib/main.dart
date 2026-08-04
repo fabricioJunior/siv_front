@@ -6,6 +6,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/isar_anotacoes.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
@@ -47,6 +48,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorObservers: [navigationObserver],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: const [Locale('pt', 'BR')],
+      locale: const Locale('pt', 'BR'),
       initialRoute:
           sl<AppBloc>().state.statusAutenticacao ==
               StatusAutenticacao.autenticado

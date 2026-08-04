@@ -211,6 +211,9 @@ void _useCases() {
   sl.registerFactory<AtualizarVendedorRomaneio>(
     () => AtualizarVendedorRomaneio(repository: sl()),
   );
+  sl.registerFactory<FinalizarRomaneio>(
+    () => FinalizarRomaneio(repository: sl()),
+  );
   sl.registerFactory<CorrigirFormaDePagamentoRomaneio>(
     () => CorrigirFormaDePagamentoRomaneio(repository: sl()),
   );
@@ -230,6 +233,12 @@ void _useCases() {
   );
   sl.registerFactory<SalvarConfiguracaoFiscal>(
     () => SalvarConfiguracaoFiscal(repository: sl()),
+  );
+  sl.registerFactory<EnviarCertificadoFiscal>(
+    () => EnviarCertificadoFiscal(repository: sl()),
+  );
+  sl.registerFactory<ExcluirCertificadoFiscal>(
+    () => ExcluirCertificadoFiscal(repository: sl()),
   );
   sl.registerFactory<ReprocessarDocumentoFiscal>(
     () => ReprocessarDocumentoFiscal(repository: sl()),
@@ -368,11 +377,13 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl(),
     ),
   );
 
   sl.registerFactory<RomaneioCriacaoBloc>(
     () => RomaneioCriacaoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -432,7 +443,7 @@ void _presentation() {
   );
 
   sl.registerFactory<ConfiguracaoFiscalBloc>(
-    () => ConfiguracaoFiscalBloc(sl(), sl()),
+    () => ConfiguracaoFiscalBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<DocumentosFiscaisBloc>(

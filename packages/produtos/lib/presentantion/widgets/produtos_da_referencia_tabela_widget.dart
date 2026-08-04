@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
+import 'package:produtos/use_cases.dart';
 
 class ProdutosDaReferenciaTabelaWidget extends StatefulWidget {
   final int referenciaId;
@@ -31,6 +32,10 @@ class _ProdutosDaReferenciaTabelaWidgetState
   late final ProdutosDaReferenciaBloc _bloc;
   late final TabController _tabController;
   final ScrollController _horizontalController = ScrollController();
+
+  bool _modoSelecaoExclusao = false;
+  bool _excluindo = false;
+  final Set<int> _idsSelecionadosParaExclusao = {};
 
   @override
   void initState() {
@@ -112,7 +117,11 @@ class _ProdutosDaReferenciaTabelaWidgetState
                 animation: _tabController,
                 builder: (context, _) {
                   if (_tabController.index == 1) {
-                    return _buildProdutosCards(state.produtos);
+                    return _buildProdutosCards(
+                      state.produtos,
+                      state.mapaCorTamanhoParaSaldo,
+                      state.saldoIndisponivel,
+                    );
                   }
 
                   return _buildGradeTab(
@@ -187,27 +196,201 @@ class _ProdutosDaReferenciaTabelaWidgetState
     );
   }
 
-  Widget _buildProdutosCards(List<Produto> produtos) {
+  Widget _buildProdutosCards(
+    List<Produto> produtos,
+    Map<String, double> mapaCorTamanhoParaSaldo,
+    bool saldoIndisponivel,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: produtos
-          .map(
-            (produto) => Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                title: Text('Produto #${produto.id ?? '-'}'),
-                subtitle: Text(
-                  'ID externo: ${produto.idExterno}\nCor: ${produto.cor?.nome ?? produto.corId} • Tamanho: ${produto.tamanho?.nome ?? produto.tamanhoId}',
-                ),
-                trailing: IconButton(
-                  onPressed: null,
-                  icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Exclusão pendente de alinhamento com backend',
-                ),
-              ),
-            ),
-          )
-          .toList(growable: false),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildBarraSelecaoExclusao(),
+        const SizedBox(height: 8),
+        ...produtos.map(
+          (produto) => _buildProdutoCard(
+            produto,
+            mapaCorTamanhoParaSaldo,
+            saldoIndisponivel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProdutoCard(
+    Produto produto,
+    Map<String, double> mapaCorTamanhoParaSaldo,
+    bool saldoIndisponivel,
+  ) {
+    final chave = '${produto.corId}_${produto.tamanhoId}';
+    final saldo = saldoIndisponivel ? null : mapaCorTamanhoParaSaldo[chave];
+    final selecionado = _idsSelecionadosParaExclusao.contains(produto.id);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: _modoSelecaoExclusao
+            ? Checkbox(
+                value: selecionado,
+                onChanged: produto.id == null
+                    ? null
+                    : (_) => _alternarSelecaoProduto(produto.id!),
+              )
+            : null,
+        title: Text(
+          '${produto.cor?.nome ?? produto.corId} • ${produto.tamanho?.nome ?? produto.tamanhoId}',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          'ID externo: ${produto.idExterno}\nEstoque: ${_formatarSaldo(saldo)}',
+        ),
+        onTap: _modoSelecaoExclusao && produto.id != null
+            ? () => _alternarSelecaoProduto(produto.id!)
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildBarraSelecaoExclusao() {
+    if (!_modoSelecaoExclusao) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton.icon(
+          onPressed: () => setState(() => _modoSelecaoExclusao = true),
+          icon: const Icon(Icons.delete_outline),
+          label: const Text('Selecionar para excluir'),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Text('${_idsSelecionadosParaExclusao.length} selecionado(s)'),
+        const Spacer(),
+        TextButton(
+          onPressed: _excluindo
+              ? null
+              : () => setState(() {
+                    _modoSelecaoExclusao = false;
+                    _idsSelecionadosParaExclusao.clear();
+                  }),
+          child: const Text('Cancelar'),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed:
+              _idsSelecionadosParaExclusao.isEmpty || _excluindo
+                  ? null
+                  : _confirmarExclusaoEmLote,
+          icon: _excluindo
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                )
+              : const Icon(Icons.delete_outline),
+          label: const Text('Excluir selecionados'),
+        ),
+      ],
+    );
+  }
+
+  void _alternarSelecaoProduto(int produtoId) {
+    setState(() {
+      if (!_idsSelecionadosParaExclusao.remove(produtoId)) {
+        _idsSelecionadosParaExclusao.add(produtoId);
+      }
+    });
+  }
+
+  Future<void> _confirmarExclusaoEmLote() async {
+    final quantidade = _idsSelecionadosParaExclusao.length;
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir produtos'),
+        content: Text(
+          'Excluir $quantidade produto(s) selecionado(s)? Só produtos sem '
+          'estoque e sem movimentação em romaneios/pedidos serão excluídos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    setState(() => _excluindo = true);
+    try {
+      final resultado = await sl<ExcluirProdutosEmLote>().call(
+        _idsSelecionadosParaExclusao.toList(),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _modoSelecaoExclusao = false;
+        _idsSelecionadosParaExclusao.clear();
+      });
+
+      _bloc.add(ProdutosDaReferenciaIniciou(referenciaId: widget.referenciaId));
+
+      final mensagem = resultado.rejeitados.isEmpty
+          ? '${resultado.excluidos.length} produto(s) excluído(s).'
+          : '${resultado.excluidos.length} produto(s) excluído(s). '
+              '${resultado.rejeitados.length} não puderam ser excluídos.';
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(mensagem)));
+
+      if (resultado.rejeitados.isNotEmpty) {
+        _mostrarProdutosRejeitados(resultado.rejeitados);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao excluir produtos: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _excluindo = false);
+    }
+  }
+
+  void _mostrarProdutosRejeitados(List<ProdutoRejeitadoExclusao> rejeitados) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Produtos não excluídos'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: rejeitados
+                .map(
+                  (rejeitado) => ListTile(
+                    dense: true,
+                    title: Text('Produto #${rejeitado.produtoId}'),
+                    subtitle: Text(rejeitado.motivo),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
     );
   }
 

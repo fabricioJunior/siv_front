@@ -332,6 +332,10 @@ void _usesCases() {
     () => ExcluirProduto(produtosRepository: sl()),
   );
 
+  sl.registerFactory<ExcluirProdutosEmLote>(
+    () => ExcluirProdutosEmLote(produtosRepository: sl()),
+  );
+
   sl.registerFactory<CriarEtiqueta>(
     () => CriarEtiqueta(etiquetasRepository: sl()),
   );

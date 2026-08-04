@@ -30,6 +30,15 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Romaneio> finalizarRomaneio(int id) async {
+    final response = await put(
+      pathParameters: {'id': '$id/finalizar'},
+      body: {},
+    );
+    return RomaneioDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<Romaneio> atualizarVendedor(int id, int funcionarioId) async {
     final response = await put(
       pathParameters: {'id': '$id/vendedor'},
@@ -91,6 +100,7 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
     DateTime? dataHoraInicial,
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
+    List<int>? referenciaIds,
   }) async {
     final response = await get(
       queryParameters: {
@@ -105,6 +115,8 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
           'dataHoraFinal': dataHoraFinal.toIso8601String(),
         if (operacoes != null && operacoes.isNotEmpty)
           'operacoes': operacoes.map((o) => o.toJsonValue()).join(','),
+        if (referenciaIds != null && referenciaIds.isNotEmpty)
+          'referenciaIds': referenciaIds.join(','),
       },
     );
 

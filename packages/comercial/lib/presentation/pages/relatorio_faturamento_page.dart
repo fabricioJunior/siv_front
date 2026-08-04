@@ -3,6 +3,7 @@ import 'package:comercial/presentation/blocs/relatorio_faturamento_bloc/relatori
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -28,10 +29,12 @@ String _fmtData(String iso) {
 
 (String, String) _hoje() {
   final now = DateTime.now();
-  final iso =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  final iso = _isoDate(now);
   return (iso, iso);
 }
+
+String _isoDate(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 class RelatorioFaturamentoPage extends StatefulWidget {
   const RelatorioFaturamentoPage({super.key});
@@ -86,24 +89,22 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
     super.dispose();
   }
 
-  Future<void> _selecionarData(bool isInicial) async {
-    final initial = DateTime.tryParse(isInicial ? _dataInicial : _dataFinal);
-    final picked = await showDatePicker(
+  Future<void> _abrirFiltroPeriodo() async {
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      initialDate: initial ?? DateTime.now(),
+      dataInicioAtual:
+          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      permitirHora: false,
     );
-    if (picked == null) return;
-    final fmt =
-        '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    if (resultado == null || !mounted) return;
     setState(() {
-      if (isInicial) {
-        _dataInicial = fmt;
-      } else {
-        _dataFinal = fmt;
-      }
+      _dataInicial = _isoDate(resultado.dataInicio);
+      _dataFinal = _isoDate(resultado.dataFim);
     });
+    _aplicarFiltro();
   }
 
   void _aplicarFiltro() {
@@ -154,18 +155,8 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
                 _FiltroCard(
                   dataInicial: _dataInicial,
                   dataFinal: _dataFinal,
-                  onSelecionarInicial: () => _selecionarData(true),
-                  onSelecionarFinal: () => _selecionarData(false),
+                  onSelecionarPeriodo: _abrirFiltroPeriodo,
                   onAplicar: _aplicarFiltro,
-                  onPeriodoRapido: (ini, fim) {
-                    setState(() {
-                      _dataInicial = ini;
-                      _dataFinal = fim;
-                    });
-                    _bloc.add(RelatorioFaturamentoCarregar(
-                        dataInicial: ini, dataFinal: fim));
-                    _dispararComparativoSeElegivel();
-                  },
                 ),
                 const SizedBox(height: 16),
                 if (state.step == RelatorioFaturamentoStep.carregando)
@@ -218,18 +209,14 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
 class _FiltroCard extends StatelessWidget {
   final String dataInicial;
   final String dataFinal;
-  final VoidCallback onSelecionarInicial;
-  final VoidCallback onSelecionarFinal;
+  final VoidCallback onSelecionarPeriodo;
   final VoidCallback onAplicar;
-  final void Function(String ini, String fim) onPeriodoRapido;
 
   const _FiltroCard({
     required this.dataInicial,
     required this.dataFinal,
-    required this.onSelecionarInicial,
-    required this.onSelecionarFinal,
+    required this.onSelecionarPeriodo,
     required this.onAplicar,
-    required this.onPeriodoRapido,
   });
 
   @override
@@ -250,64 +237,10 @@ class _FiltroCard extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _chipPeriodo(context, 'Hoje', () {
-                    final hoje = _isoDate(DateTime.now());
-                    onPeriodoRapido(hoje, hoje);
-                  }),
-                  const SizedBox(width: 8),
-                  _chipPeriodo(context, 'Este mês', () {
-                    final now = DateTime.now();
-                    final ultimo = DateTime(now.year, now.month + 1, 0).day;
-                    final m = now.month.toString().padLeft(2, '0');
-                    onPeriodoRapido(
-                      '${now.year}-$m-01',
-                      '${now.year}-$m-${ultimo.toString().padLeft(2, '0')}',
-                    );
-                  }),
-                  const SizedBox(width: 8),
-                  _chipPeriodo(context, '7 dias', () {
-                    final fim = DateTime.now();
-                    final ini = fim.subtract(const Duration(days: 6));
-                    onPeriodoRapido(_isoDate(ini), _isoDate(fim));
-                  }),
-                  const SizedBox(width: 8),
-                  _chipPeriodo(context, '30 dias', () {
-                    final fim = DateTime.now();
-                    final ini = fim.subtract(const Duration(days: 29));
-                    onPeriodoRapido(_isoDate(ini), _isoDate(fim));
-                  }),
-                  const SizedBox(width: 8),
-                  _chipPeriodo(context, '90 dias', () {
-                    final fim = DateTime.now();
-                    final ini = fim.subtract(const Duration(days: 89));
-                    onPeriodoRapido(_isoDate(ini), _isoDate(fim));
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _DateButton(
-                    label: 'De',
-                    date: _fmtData(dataInicial),
-                    onTap: onSelecionarInicial,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _DateButton(
-                    label: 'Até',
-                    date: _fmtData(dataFinal),
-                    onTap: onSelecionarFinal,
-                  ),
-                ),
-              ],
+            _DateButton(
+              label: 'Período',
+              date: '${_fmtData(dataInicial)} - ${_fmtData(dataFinal)}',
+              onTap: onSelecionarPeriodo,
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -323,17 +256,6 @@ class _FiltroCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _chipPeriodo(
-      BuildContext ctx, String label, VoidCallback onTap) =>
-      ActionChip(
-        label: Text(label),
-        visualDensity: VisualDensity.compact,
-        onPressed: onTap,
-      );
-
-  String _isoDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
 class _DateButton extends StatelessWidget {

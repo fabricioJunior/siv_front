@@ -15,6 +15,12 @@ Empresa fakeEmpresa({
       TipoDeSubstituicaoTributaria.naoCalcula,
   String telefone = 'telefone',
   String uf = 'uf',
+  String logradouro = 'logradouro',
+  String numero = 'numero',
+  String bairro = 'bairro',
+  String codigoMunicipioIbge = '2211001',
+  String municipio = 'municipio',
+  String cep = 'cep',
 }) =>
     Empresa.create(
       cnpj: cnpj,
@@ -30,4 +36,10 @@ Empresa fakeEmpresa({
       substituicaoTributaria: substituicaoTributaria,
       telefone: telefone,
       uf: uf,
+      logradouro: logradouro,
+      numero: numero,
+      bairro: bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge,
+      municipio: municipio,
+      cep: cep,
     );

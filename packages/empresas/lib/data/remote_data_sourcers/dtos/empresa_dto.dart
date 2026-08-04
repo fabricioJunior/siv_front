@@ -52,6 +52,24 @@ class EmpresaDto implements Empresa {
   @override
   final String? uf;
 
+  @override
+  final String? logradouro;
+
+  @override
+  final String? numero;
+
+  @override
+  final String? bairro;
+
+  @override
+  final String? codigoMunicipioIbge;
+
+  @override
+  final String? municipio;
+
+  @override
+  final String? cep;
+
   EmpresaDto({
     required this.cnpj,
     required this.codigoDeAtividade,
@@ -66,6 +84,12 @@ class EmpresaDto implements Empresa {
     required this.substituicaoTributaria,
     required this.telefone,
     required this.uf,
+    required this.logradouro,
+    required this.numero,
+    required this.bairro,
+    required this.codigoMunicipioIbge,
+    required this.municipio,
+    required this.cep,
   });
 
   Map<String, dynamic> toJson() => _$EmpresaDtoToJson(this);
@@ -87,6 +111,12 @@ class EmpresaDto implements Empresa {
     TipoDeSubstituicaoTributaria? substituicaoTributaria,
     String? telefone,
     String? uf,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
   }) {
     return EmpresaDto(
       cnpj: cnpj ?? this.cnpj,
@@ -104,6 +134,12 @@ class EmpresaDto implements Empresa {
           substituicaoTributaria ?? this.substituicaoTributaria,
       telefone: telefone ?? this.telefone,
       uf: uf ?? this.uf,
+      logradouro: logradouro ?? this.logradouro,
+      numero: numero ?? this.numero,
+      bairro: bairro ?? this.bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
+      municipio: municipio ?? this.municipio,
+      cep: cep ?? this.cep,
     );
   }
 
@@ -122,6 +158,12 @@ class EmpresaDto implements Empresa {
         substituicaoTributaria,
         telefone,
         uf,
+        logradouro,
+        numero,
+        bairro,
+        codigoMunicipioIbge,
+        municipio,
+        cep,
       ];
 
   @override

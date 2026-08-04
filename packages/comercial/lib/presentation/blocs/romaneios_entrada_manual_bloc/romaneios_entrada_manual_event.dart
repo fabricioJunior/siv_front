@@ -8,6 +8,8 @@ class RomaneiosEntradaManualIniciou extends RomaneiosEntradaManualEvent {
   final bool dataHoraInicialInformada;
   final DateTime? dataHoraFinal;
   final bool dataHoraFinalInformada;
+  final List<int>? referenciaIds;
+  final bool referenciaIdsInformada;
 
   RomaneiosEntradaManualIniciou({
     this.searchTerm,
@@ -15,5 +17,7 @@ class RomaneiosEntradaManualIniciou extends RomaneiosEntradaManualEvent {
     this.dataHoraInicialInformada = false,
     this.dataHoraFinal,
     this.dataHoraFinalInformada = false,
+    this.referenciaIds,
+    this.referenciaIdsInformada = false,
   });
 }

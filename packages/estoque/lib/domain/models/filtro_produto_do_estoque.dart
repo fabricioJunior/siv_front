@@ -2,9 +2,43 @@ import 'package:core/equals.dart';
 
 enum FiltroDisponibilidadeEstoque { todos, comEstoque, semEstoque }
 
-enum CampoOrdenacaoEstoque { nome, saldo, referenciaIdExterno, atualizadoEm }
+enum CampoOrdenacaoEstoque {
+  nome,
+  saldo,
+  referenciaIdExterno,
+  atualizadoEm,
+  corNome,
+  tamanhoNome,
+}
 
 enum DirecaoOrdenacaoEstoque { asc, desc }
+
+/// Um critério de ordenação combinada: a posição na lista de
+/// [FiltroProdutoDoEstoque.ordenacoes] define a prioridade (o primeiro
+/// desempata usando o segundo, e assim por diante) — ex: ordenar por
+/// referência e, dentro da mesma referência, por saldo.
+class OrdenacaoEstoqueItem extends Equatable {
+  final CampoOrdenacaoEstoque campo;
+  final DirecaoOrdenacaoEstoque direcao;
+
+  const OrdenacaoEstoqueItem({
+    required this.campo,
+    this.direcao = DirecaoOrdenacaoEstoque.asc,
+  });
+
+  OrdenacaoEstoqueItem copyWith({
+    CampoOrdenacaoEstoque? campo,
+    DirecaoOrdenacaoEstoque? direcao,
+  }) {
+    return OrdenacaoEstoqueItem(
+      campo: campo ?? this.campo,
+      direcao: direcao ?? this.direcao,
+    );
+  }
+
+  @override
+  List<Object?> get props => [campo, direcao];
+}
 
 class FiltroProdutoDoEstoque extends Equatable {
   final List<int> empresaIds;
@@ -21,8 +55,7 @@ class FiltroProdutoDoEstoque extends Equatable {
   final DateTime? atualizadoEmFim;
   final DateTime? ultimaAtualizacaoInicio;
   final DateTime? ultimaAtualizacaoFim;
-  final CampoOrdenacaoEstoque? ordenarPor;
-  final DirecaoOrdenacaoEstoque ordenarDirecao;
+  final List<OrdenacaoEstoqueItem> ordenacoes;
 
   const FiltroProdutoDoEstoque({
     this.empresaIds = const [],
@@ -39,8 +72,7 @@ class FiltroProdutoDoEstoque extends Equatable {
     this.atualizadoEmFim,
     this.ultimaAtualizacaoFim,
     this.ultimaAtualizacaoInicio,
-    this.ordenarPor,
-    this.ordenarDirecao = DirecaoOrdenacaoEstoque.asc,
+    this.ordenacoes = const [],
   });
 
   FiltroProdutoDoEstoque copyWith({
@@ -58,8 +90,7 @@ class FiltroProdutoDoEstoque extends Equatable {
     DateTime? atualizadoEmFim,
     DateTime? ultimaAtualizacaoInicio,
     DateTime? ultimaAtualizacaoFim,
-    Object? ordenarPor = _sentinela,
-    DirecaoOrdenacaoEstoque? ordenarDirecao,
+    List<OrdenacaoEstoqueItem>? ordenacoes,
   }) {
     return FiltroProdutoDoEstoque(
       empresaIds: empresaIds ?? this.empresaIds,
@@ -78,10 +109,7 @@ class FiltroProdutoDoEstoque extends Equatable {
       ultimaAtualizacaoInicio:
           ultimaAtualizacaoInicio ?? this.ultimaAtualizacaoInicio,
       ultimaAtualizacaoFim: ultimaAtualizacaoFim ?? this.ultimaAtualizacaoFim,
-      ordenarPor: identical(ordenarPor, _sentinela)
-          ? this.ordenarPor
-          : ordenarPor as CampoOrdenacaoEstoque?,
-      ordenarDirecao: ordenarDirecao ?? this.ordenarDirecao,
+      ordenacoes: ordenacoes ?? this.ordenacoes,
     );
   }
 
@@ -101,9 +129,6 @@ class FiltroProdutoDoEstoque extends Equatable {
     atualizadoEmFim,
     ultimaAtualizacaoInicio,
     ultimaAtualizacaoFim,
-    ordenarPor,
-    ordenarDirecao,
+    ordenacoes,
   ];
 }
-
-const Object _sentinela = Object();

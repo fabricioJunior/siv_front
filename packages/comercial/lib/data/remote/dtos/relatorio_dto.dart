@@ -501,11 +501,11 @@ class RelatorioClienteAniversarianteItemDto
   factory RelatorioClienteAniversarianteItemDto.fromJson(
           Map<String, dynamic> j) =>
       RelatorioClienteAniversarianteItemDto(
-        pessoaId: (j['pessoaId'] as num? ?? 0).toInt(),
-        nome: j['nome'] as String? ?? '',
-        documento: j['documento'] as String? ?? '',
-        email: j['email'] as String?,
-        contato: j['contato'] as String?,
+        pessoaId: (j['clienteId'] as num? ?? 0).toInt(),
+        nome: j['clienteNome'] as String? ?? '',
+        documento: j['clienteDocumento'] as String? ?? '',
+        email: j['clienteEmail'] as String?,
+        contato: j['clienteTelefone'] as String?,
         nascimento: j['nascimento'] as String? ?? '',
         dataUltimaCompra: j['dataUltimaCompra'] as String?,
       );

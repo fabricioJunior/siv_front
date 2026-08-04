@@ -50,6 +50,11 @@ class ProdutosRepository implements IProdutosRepository {
   }
 
   @override
+  Future<ExclusaoProdutosEmLoteResultado> excluirProdutosEmLote(List<int> ids) {
+    return produtosRemoteDataSource.excluirProdutosEmLote(ids);
+  }
+
+  @override
   Future<List<Produto>> obterProdutos({
     String? idExterno,
     int? referenciaId,

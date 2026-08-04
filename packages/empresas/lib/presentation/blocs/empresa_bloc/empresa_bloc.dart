@@ -60,6 +60,12 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
           substituicaoTributaria: event.substituicaoTributaria,
           telefone: event.telefone, // ok
           uf: event.uf,
+          logradouro: event.logradouro,
+          numero: event.numero,
+          bairro: event.bairro,
+          codigoMunicipioIbge: event.codigoMunicipioIbge,
+          municipio: event.municipio,
+          cep: event.cep,
         );
         emit(
           (state as EmpresaEditarEmProgresso).copyWith(
@@ -76,6 +82,12 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
             substituicaoTributaria: event.substituicaoTributaria,
             telefone: event.telefone, // ok
             uf: event.uf,
+            logradouro: event.logradouro,
+            numero: event.numero,
+            bairro: event.bairro,
+            codigoMunicipioIbge: event.codigoMunicipioIbge,
+            municipio: event.municipio,
+            cep: event.cep,
             empresa: updatedEmpresa,
           ),
         );
@@ -113,6 +125,12 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
             substituicaoTributaria: editState.substituicaoTributaria,
             telefone: editState.telefone,
             uf: editState.uf,
+            logradouro: editState.logradouro,
+            numero: editState.numero,
+            bairro: editState.bairro,
+            codigoMunicipioIbge: editState.codigoMunicipioIbge,
+            municipio: editState.municipio,
+            cep: editState.cep,
           );
           emit(EmpresaSalvarSucesso(empresa: empresa));
         }

@@ -14,6 +14,12 @@ abstract class Empresa implements Equatable {
   String? get registroMunicipal;
   String? get telefone;
   String? get email;
+  String? get logradouro;
+  String? get numero;
+  String? get bairro;
+  String? get codigoMunicipioIbge;
+  String? get municipio;
+  String? get cep;
 
   factory Empresa.create({
     int? id,
@@ -29,6 +35,12 @@ abstract class Empresa implements Equatable {
     String? registroMunicipal,
     String? telefone,
     String? email,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
   }) = _EmpresaImpl;
 
   @override
@@ -49,6 +61,12 @@ abstract class Empresa implements Equatable {
         substituicaoTributaria,
         telefone,
         uf,
+        logradouro,
+        numero,
+        bairro,
+        codigoMunicipioIbge,
+        municipio,
+        cep,
       ];
 }
 
@@ -79,6 +97,18 @@ class _EmpresaImpl implements Empresa {
   final String? telefone;
   @override
   final String? email;
+  @override
+  final String? logradouro;
+  @override
+  final String? numero;
+  @override
+  final String? bairro;
+  @override
+  final String? codigoMunicipioIbge;
+  @override
+  final String? municipio;
+  @override
+  final String? cep;
 
   _EmpresaImpl({
     this.id,
@@ -94,6 +124,12 @@ class _EmpresaImpl implements Empresa {
     this.registroMunicipal,
     this.telefone,
     this.email,
+    this.logradouro,
+    this.numero,
+    this.bairro,
+    this.codigoMunicipioIbge,
+    this.municipio,
+    this.cep,
   });
 
   _EmpresaImpl copyWith({
@@ -110,6 +146,12 @@ class _EmpresaImpl implements Empresa {
     String? registroMunicipal,
     String? telefone,
     String? email,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
   }) {
     return _EmpresaImpl(
       id: id ?? this.id,
@@ -127,6 +169,12 @@ class _EmpresaImpl implements Empresa {
       registroMunicipal: registroMunicipal ?? this.registroMunicipal,
       telefone: telefone ?? this.telefone,
       email: email ?? this.email,
+      logradouro: logradouro ?? this.logradouro,
+      numero: numero ?? this.numero,
+      bairro: bairro ?? this.bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
+      municipio: municipio ?? this.municipio,
+      cep: cep ?? this.cep,
     );
   }
 
@@ -148,6 +196,12 @@ class _EmpresaImpl implements Empresa {
         substituicaoTributaria,
         telefone,
         uf,
+        logradouro,
+        numero,
+        bairro,
+        codigoMunicipioIbge,
+        municipio,
+        cep,
       ];
 }
 
@@ -166,6 +220,12 @@ extension EmpresaCopyWith on Empresa {
     String? registroMunicipal,
     String? telefone,
     String? email,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
   }) {
     if (this is _EmpresaImpl) {
       return (this as _EmpresaImpl).copyWith(
@@ -182,6 +242,12 @@ extension EmpresaCopyWith on Empresa {
         registroMunicipal: registroMunicipal,
         telefone: telefone,
         email: email,
+        logradouro: logradouro,
+        numero: numero,
+        bairro: bairro,
+        codigoMunicipioIbge: codigoMunicipioIbge,
+        municipio: municipio,
+        cep: cep,
       );
     }
     // If it's not _EmpresaImpl, create new instance from current values
@@ -201,6 +267,12 @@ extension EmpresaCopyWith on Empresa {
       registroMunicipal: registroMunicipal ?? this.registroMunicipal,
       telefone: telefone ?? this.telefone,
       email: email ?? this.email,
+      logradouro: logradouro ?? this.logradouro,
+      numero: numero ?? this.numero,
+      bairro: bairro ?? this.bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
+      municipio: municipio ?? this.municipio,
+      cep: cep ?? this.cep,
     );
   }
 }

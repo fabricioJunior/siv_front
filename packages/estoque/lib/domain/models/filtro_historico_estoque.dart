@@ -1,6 +1,7 @@
 import 'package:core/equals.dart';
 
 class FiltroHistoricoEstoque extends Equatable {
+  final String? busca;
   final int? referenciaId;
   final List<int> referenciaIds;
   final int? produtoId;
@@ -14,6 +15,7 @@ class FiltroHistoricoEstoque extends Equatable {
   final int limit;
 
   const FiltroHistoricoEstoque({
+    this.busca,
     this.referenciaId,
     this.referenciaIds = const [],
     this.produtoId,
@@ -28,6 +30,7 @@ class FiltroHistoricoEstoque extends Equatable {
   });
 
   FiltroHistoricoEstoque copyWith({
+    String? busca,
     int? referenciaId,
     List<int>? referenciaIds,
     int? produtoId,
@@ -41,6 +44,7 @@ class FiltroHistoricoEstoque extends Equatable {
     int? limit,
   }) {
     return FiltroHistoricoEstoque(
+      busca: busca ?? this.busca,
       referenciaId: referenciaId ?? this.referenciaId,
       referenciaIds: referenciaIds ?? this.referenciaIds,
       produtoId: produtoId ?? this.produtoId,
@@ -57,6 +61,7 @@ class FiltroHistoricoEstoque extends Equatable {
 
   @override
   List<Object?> get props => [
+    busca,
     referenciaId,
     referenciaIds,
     produtoId,

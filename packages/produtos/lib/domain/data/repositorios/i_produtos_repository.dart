@@ -20,6 +20,8 @@ abstract class IProdutosRepository {
 
   Future<void> excluirProduto(int id);
 
+  Future<ExclusaoProdutosEmLoteResultado> excluirProdutosEmLote(List<int> ids);
+
   Future<List<Produto>> obterProdutos({
     String? idExterno,
     int? referenciaId,

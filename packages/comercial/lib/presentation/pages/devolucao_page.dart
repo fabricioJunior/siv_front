@@ -503,7 +503,8 @@ class _BuscaRomaneioOriginalSheet extends StatefulWidget {
       _BuscaRomaneioOriginalSheetState();
 }
 
-class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet> {
+class _BuscaRomaneioOriginalSheetState
+    extends State<_BuscaRomaneioOriginalSheet> {
   final Debouncer _debouncer = Debouncer(milliseconds: 350);
   final TextEditingController _buscaController = TextEditingController();
 
@@ -545,33 +546,21 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
     DevolucaoState state,
   ) async {
     final agora = DateTime.now();
-    final selecionado = await showDateRangePicker(
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      firstDate: DateTime(agora.year - 2),
+      dataInicioAtual: state.dataInicialBuscaRomaneios ?? agora,
+      dataFimAtual: state.dataFinalBuscaRomaneios ?? agora,
       lastDate: DateTime(agora.year + 1),
-      initialDateRange: state.dataInicialBuscaRomaneios != null &&
-              state.dataFinalBuscaRomaneios != null
-          ? DateTimeRange(
-              start: state.dataInicialBuscaRomaneios!,
-              end: state.dataFinalBuscaRomaneios!,
-            )
-          : null,
+      permitirHora: false,
     );
 
-    if (selecionado == null || !context.mounted) return;
+    if (resultado == null || !context.mounted) return;
 
     context.read<DevolucaoBloc>().add(
           DevolucaoBuscaRomaneiosSolicitada(
             searchTerm: state.termoBuscaRomaneios,
-            dataInicial: selecionado.start,
-            dataFinal: DateTime(
-              selecionado.end.year,
-              selecionado.end.month,
-              selecionado.end.day,
-              23,
-              59,
-              59,
-            ),
+            dataInicial: resultado.dataInicio,
+            dataFinal: resultado.dataFim,
           ),
         );
   }
@@ -670,8 +659,7 @@ class _BuscaRomaneioOriginalSheetState extends State<_BuscaRomaneioOriginalSheet
                                       final romaneio =
                                           state.romaneiosBuscaDeVenda[index];
                                       return ListTile(
-                                        leading:
-                                            const Icon(Icons.receipt_long),
+                                        leading: const Icon(Icons.receipt_long),
                                         title: Text(
                                           'Romaneio #${romaneio.id ?? '-'} · ${_formatarDataCurta(romaneio.data)}',
                                         ),

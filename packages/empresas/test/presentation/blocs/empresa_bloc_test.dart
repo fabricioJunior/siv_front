@@ -49,6 +49,12 @@ void main() {
         nomeFantasia: empresa.nomeFantasia,
         regime: empresa.regime,
         substituicaoTributaria: empresa.substituicaoTributaria,
+        logradouro: empresa.logradouro,
+        numero: empresa.numero,
+        bairro: empresa.bairro,
+        codigoMunicipioIbge: empresa.codigoMunicipioIbge,
+        municipio: empresa.municipio,
+        cep: empresa.cep,
       ),
     ),
     expect: () => [
@@ -73,6 +79,12 @@ void main() {
       nomeFantasia: empresa.nomeFantasia,
       regime: empresa.regime!,
       substituicaoTributaria: empresa.substituicaoTributaria!,
+      logradouro: empresa.logradouro,
+      numero: empresa.numero,
+      bairro: empresa.bairro,
+      codigoMunicipioIbge: empresa.codigoMunicipioIbge,
+      municipio: empresa.municipio,
+      cep: empresa.cep,
     ),
     setUp: () {
       _setupCriarEmpresa(
@@ -88,6 +100,12 @@ void main() {
         nomeFantasia: empresa.nomeFantasia,
         regime: empresa.regime!,
         substituicaoTributaria: empresa.substituicaoTributaria!,
+        logradouro: empresa.logradouro,
+        numero: empresa.numero,
+        bairro: empresa.bairro,
+        codigoMunicipioIbge: empresa.codigoMunicipioIbge,
+        municipio: empresa.municipio,
+        cep: empresa.cep,
         response: empresa,
       );
     },
@@ -110,6 +128,12 @@ void main() {
         nomeFantasia: empresa.nomeFantasia,
         regime: empresa.regime!,
         substituicaoTributaria: empresa.substituicaoTributaria!,
+        logradouro: empresa.logradouro,
+        numero: empresa.numero,
+        bairro: empresa.bairro,
+        codigoMunicipioIbge: empresa.codigoMunicipioIbge,
+        municipio: empresa.municipio,
+        cep: empresa.cep,
       );
     },
   );
@@ -153,6 +177,12 @@ void _setupCriarEmpresa({
   required TipoDeSubstituicaoTributaria substituicaoTributaria,
   required String telefone,
   required String uf,
+  String? logradouro,
+  String? numero,
+  String? bairro,
+  String? codigoMunicipioIbge,
+  String? municipio,
+  String? cep,
   required Empresa response,
 }) {
   when(
@@ -169,6 +199,12 @@ void _setupCriarEmpresa({
       substituicaoTributaria: substituicaoTributaria,
       telefone: telefone,
       uf: uf,
+      logradouro: logradouro,
+      numero: numero,
+      bairro: bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge,
+      municipio: municipio,
+      cep: cep,
     ),
   ).thenAnswer((_) async => response);
 }

@@ -80,7 +80,13 @@ class EstoqueRepository implements IEstoqueRepository {
         break;
       }
 
-      await produtosEstoqueLocalDataSource.salvarProdutos(saldo.items);
+      final apagados = saldo.items.where((item) => item.produtoApagado);
+      final vigentes = saldo.items.where((item) => !item.produtoApagado).toList();
+
+      await produtosEstoqueLocalDataSource.salvarProdutos(vigentes);
+      for (final produto in apagados) {
+        await produtosEstoqueLocalDataSource.excluirProduto(produto.produtoId.toInt());
+      }
 
       var pagicao = Paginacao(
         key: 'estoque_sync',

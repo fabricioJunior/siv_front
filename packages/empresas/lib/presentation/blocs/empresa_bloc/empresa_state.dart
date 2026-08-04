@@ -34,6 +34,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
   final String? telefone;
   final String? uf;
   final int? id;
+  final String? logradouro;
+  final String? numero;
+  final String? bairro;
+  final String? codigoMunicipioIbge;
+  final String? municipio;
+  final String? cep;
 
   @override
   final Empresa? empresa;
@@ -52,6 +58,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     this.telefone,
     this.uf,
     this.id,
+    this.logradouro,
+    this.numero,
+    this.bairro,
+    this.codigoMunicipioIbge,
+    this.municipio,
+    this.cep,
     this.empresa,
   });
 
@@ -68,6 +80,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         telefone = empresa?.telefone,
         uf = empresa?.uf,
         substituicaoTributaria = empresa?.substituicaoTributaria,
+        logradouro = empresa?.logradouro,
+        numero = empresa?.numero,
+        bairro = empresa?.bairro,
+        codigoMunicipioIbge = empresa?.codigoMunicipioIbge,
+        municipio = empresa?.municipio,
+        cep = empresa?.cep,
         id = empresa?.id;
 
   @override
@@ -84,6 +102,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         substituicaoTributaria,
         telefone,
         uf,
+        logradouro,
+        numero,
+        bairro,
+        codigoMunicipioIbge,
+        municipio,
+        cep,
       ];
 
   EmpresaEditarEmProgresso copyWith({
@@ -100,6 +124,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     String? telefone,
     String? uf,
     int? id,
+    String? logradouro,
+    String? numero,
+    String? bairro,
+    String? codigoMunicipioIbge,
+    String? municipio,
+    String? cep,
     Empresa? empresa,
   }) {
     return EmpresaEditarEmProgresso(
@@ -118,6 +148,12 @@ class EmpresaEditarEmProgresso extends EmpresaState {
           substituicaoTributaria ?? this.substituicaoTributaria,
       telefone: telefone ?? this.telefone,
       uf: uf ?? this.uf,
+      logradouro: logradouro ?? this.logradouro,
+      numero: numero ?? this.numero,
+      bairro: bairro ?? this.bairro,
+      codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
+      municipio: municipio ?? this.municipio,
+      cep: cep ?? this.cep,
       empresa: empresa ?? this.empresa,
     );
   }

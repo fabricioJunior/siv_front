@@ -1,6 +1,7 @@
 import 'package:comercial/presentation/blocs/relatorio_vendas_por_funcionario_bloc/relatorio_vendas_por_funcionario_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,9 @@ String _fmtData(String iso) {
   final p = iso.split('-');
   return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : iso;
 }
+
+String _isoDate(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 (String, String) _mesAtual() {
   final now = DateTime.now();
@@ -65,23 +69,20 @@ class _RelatorioVendasPorFuncionarioPageState
     super.dispose();
   }
 
-  Future<void> _selecionarData(bool isInicial) async {
-    final initial = DateTime.tryParse(isInicial ? _dataInicial : _dataFinal);
-    final picked = await showDatePicker(
+  Future<void> _abrirFiltroPeriodo() async {
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      initialDate: initial ?? DateTime.now(),
+      dataInicioAtual:
+          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      permitirHora: false,
     );
-    if (picked == null) return;
-    final fmt =
-        '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    if (resultado == null || !mounted) return;
     setState(() {
-      if (isInicial) {
-        _dataInicial = fmt;
-      } else {
-        _dataFinal = fmt;
-      }
+      _dataInicial = _isoDate(resultado.dataInicio);
+      _dataFinal = _isoDate(resultado.dataFim);
     });
   }
 
@@ -131,24 +132,11 @@ class _RelatorioVendasPorFuncionarioPageState
                           },
                         ),
                         const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DateButton(
-                                label: 'De',
-                                date: _fmtData(_dataInicial),
-                                onTap: () => _selecionarData(true),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _DateButton(
-                                label: 'Até',
-                                date: _fmtData(_dataFinal),
-                                onTap: () => _selecionarData(false),
-                              ),
-                            ),
-                          ],
+                        _DateButton(
+                          label: 'Período',
+                          date:
+                              '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                          onTap: _abrirFiltroPeriodo,
                         ),
                         const SizedBox(height: 10),
                         SizedBox(

@@ -20,6 +20,8 @@ abstract class IProdutosRemoteDataSource {
 
   Future<void> excluirProduto(int id);
 
+  Future<ExclusaoProdutosEmLoteResultado> excluirProdutosEmLote(List<int> ids);
+
   Future<List<Produto>> fetchProdutos({
     String? idExterno,
     int? referenciaId,

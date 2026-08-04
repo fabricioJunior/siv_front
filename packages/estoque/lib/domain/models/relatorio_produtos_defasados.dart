@@ -1,12 +1,12 @@
 abstract class RelatorioProdutoDefasadoItem {
-  int get produtoId;
+  int? get produtoId;
   String get produtoIdExterno;
   int get referenciaId;
   String get referenciaIdExterno;
   String get referenciaNome;
-  int get corId;
+  int? get corId;
   String get corNome;
-  int get tamanhoId;
+  int? get tamanhoId;
   String get tamanhoNome;
   int get quantidadeProdutos;
   int get saldo;

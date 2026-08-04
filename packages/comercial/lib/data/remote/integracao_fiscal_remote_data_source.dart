@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:comercial/data/remote/dtos/documento_fiscal_dto.dart';
@@ -104,5 +105,27 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<Uint8List> baixarDanfe(int id) {
     return getBytes(pathParameters: {'path': '/$id/danfe'});
+  }
+
+  @override
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    final response = await postFile(
+      field: 'file',
+      file: File(filePath),
+      fileType: FileType.other,
+      pathParameters: {'path': '/configuracao/certificado'},
+      body: {'senha': senha},
+      onSendProgress: onSendProgress,
+    );
+    return response.body as Map<String, dynamic>;
+  }
+
+  @override
+  Future<void> excluirCertificadoFiscal() async {
+    await delete(pathParameters: {'path': '/configuracao/certificado'});
   }
 }

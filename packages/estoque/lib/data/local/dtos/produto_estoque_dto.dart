@@ -3,7 +3,7 @@ import 'package:estoque/estoque.dart';
 
 part 'produto_estoque_dto.g.dart';
 
-@Collection(ignore: {'produtoId', 'props', 'stringify'})
+@Collection(ignore: {'produtoId', 'props', 'stringify', 'produtoApagado'})
 class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
   @override
   final DateTime? atualizadoEm;
@@ -28,6 +28,12 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
 
   @override
   final String? produtoIdExterno;
+
+  // Sempre false: itens apagados nunca são upsertados localmente (o
+  // repositório de sync os apaga em vez de salvar, ver EstoqueRepository.syncEstoque).
+  @override
+  @ignore
+  bool get produtoApagado => false;
 
   @override
   List<Object?> get props => [

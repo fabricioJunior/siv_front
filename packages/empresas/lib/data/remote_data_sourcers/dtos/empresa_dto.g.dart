@@ -22,6 +22,12 @@ EmpresaDto _$EmpresaDtoFromJson(Map<String, dynamic> json) => EmpresaDto(
   ),
   telefone: json['telefone'] as String?,
   uf: json['uf'] as String?,
+  logradouro: json['logradouro'] as String?,
+  numero: json['numero'] as String?,
+  bairro: json['bairro'] as String?,
+  codigoMunicipioIbge: json['codigoMunicipioIbge'] as String?,
+  municipio: json['municipio'] as String?,
+  cep: json['cep'] as String?,
 );
 
 Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
@@ -41,4 +47,10 @@ Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
       ),
       'telefone': ?instance.telefone,
       'uf': ?instance.uf,
+      'logradouro': ?instance.logradouro,
+      'numero': ?instance.numero,
+      'bairro': ?instance.bairro,
+      'codigoMunicipioIbge': ?instance.codigoMunicipioIbge,
+      'municipio': ?instance.municipio,
+      'cep': ?instance.cep,
     };

@@ -561,6 +561,16 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     label: const Text('Cancelar romaneio'),
                   ),
                   const SizedBox(height: 8),
+                  if (_romaneioPendenteDeFinalizacao(state)) ...[
+                    FilledButton.icon(
+                      onPressed: carregando
+                          ? null
+                          : () => _finalizarRomaneio(context, state),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Finalização'),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   OutlinedButton.icon(
                     onPressed:
                         carregando ? null : () => _imprimirNotaEntrega(state),
@@ -943,6 +953,16 @@ class _RomaneioPageState extends State<RomaneioPage> {
                     label: const Text('Cancelar romaneio'),
                   ),
                   const SizedBox(height: 8),
+                  if (_romaneioPendenteDeFinalizacao(state)) ...[
+                    FilledButton.icon(
+                      onPressed: processandoAcao
+                          ? null
+                          : () => _finalizarRomaneio(context, state),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Finalização'),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   OutlinedButton.icon(
                     onPressed: processandoAcao
                         ? null
@@ -1708,6 +1728,40 @@ class _RomaneioPageState extends State<RomaneioPage> {
   bool _romaneioCancelado(RomaneioState state) {
     final situacao = state.romaneio?.situacao?.trim().toLowerCase() ?? '';
     return situacao == 'cancelado';
+  }
+
+  bool _romaneioPendenteDeFinalizacao(RomaneioState state) {
+    return state.romaneio?.modalidade == 'entrada' &&
+        state.romaneio?.situacao == 'em_andamento';
+  }
+
+  Future<void> _finalizarRomaneio(BuildContext context, RomaneioState state) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Finalizar romaneio'),
+          content: const Text(
+            'Finalizar este romaneio de entrada vai atualizar o estoque. '
+            'Esta ação não pode ser desfeita. Deseja continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Não'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Sim'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true || !context.mounted) return;
+
+    context.read<RomaneioBloc>().add(RomaneioFinalizarSolicitado());
   }
 
   void _sincronizarControllers(RomaneioState state) {

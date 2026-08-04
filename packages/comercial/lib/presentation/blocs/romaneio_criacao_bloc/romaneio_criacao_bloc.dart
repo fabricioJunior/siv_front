@@ -18,6 +18,7 @@ class RomaneioCriacaoBloc
   final CriarRomaneio _criarRomaneio;
   final AdicionarItemRomaneio _adicionarItemRomaneio;
   final RecuperarRomaneio _recuperarRomaneio;
+  final AtualizarObservacaoRomaneio _atualizarObservacaoRomaneio;
   final RecuperarListaDeProdutosCompartilhada
       _recuperarListaDeProdutosCompartilhada;
   final RemoverListaDeProdutosCompartilhada
@@ -39,6 +40,7 @@ class RomaneioCriacaoBloc
     this._criarRomaneio,
     this._adicionarItemRomaneio,
     this._recuperarRomaneio,
+    this._atualizarObservacaoRomaneio,
     this._recuperarListaDeProdutosCompartilhada,
     this._removerListaDeProdutosCompartilhada,
     this._removerProdutoCompartilhado,
@@ -249,6 +251,11 @@ class RomaneioCriacaoBloc
         _iniciarPollingDocumentoFiscal(romaneioId);
       }
     } catch (e, s) {
+      final romaneioId = listaCompartilhada?.idLista;
+      if (falhaAoReceberNoCaixa && romaneioId != null) {
+        await _salvarMotivoPendencia(romaneioId, e);
+      }
+
       emit(
         state.copyWith(
           step: RomaneioCriacaoStep.falha,
@@ -264,6 +271,26 @@ class RomaneioCriacaoBloc
           totalItensProcessados: itens.length,
         ),
       );
+      addError(e, s);
+    }
+  }
+
+  // Motivo real (usuário não anota a mensagem que aparece na tela) fica
+  // registrado na observação do romaneio, pra dar pra investigar depois sem
+  // precisar do usuário reproduzir o erro. Nunca deixa uma falha aqui mascarar
+  // o estado de falha original que já vai ser emitido de qualquer forma.
+  Future<void> _salvarMotivoPendencia(int romaneioId, Object erro) async {
+    try {
+      final romaneioAtual = await _recuperarRomaneio.call(romaneioId);
+      final observacaoAtual = (romaneioAtual.observacao ?? '').trim();
+      final motivo = 'Pendência de finalização (${DateTime.now()}): '
+          '${mensagemDeErroApi(erro, 'motivo desconhecido')}';
+      final novaObservacao = observacaoAtual.isEmpty
+          ? motivo
+          : '$observacaoAtual\n$motivo';
+
+      await _atualizarObservacaoRomaneio.call(romaneioId, novaObservacao);
+    } catch (e, s) {
       addError(e, s);
     }
   }

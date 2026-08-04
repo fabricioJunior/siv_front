@@ -16,7 +16,7 @@ class TerminaisDoUsuarioRemoteDataSource extends RemoteDataSourceBase
     int idEmpresa,
   ) async {
     final response = await get(
-      pathParameters: {'usuarioId': usuarioId.toString(), '{empresaWithId}': 'empresas/$idEmpresa'},
+      pathParameters: {'usuarioId': usuarioId.toString(), 'empresaWithId': 'empresas/$idEmpresa'},
     );
 
     if (response.statusCode == 204 ||

@@ -3,6 +3,7 @@ import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dar
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation/debouncer.dart';
+import 'package:core/presentation/filtro_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
@@ -87,24 +88,6 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
     });
   }
 
-  Future<void> _selecionarData(bool isInicial) async {
-    final initial = DateTime.tryParse(isInicial ? _dataInicial : _dataFinal);
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked == null) return;
-    setState(() {
-      if (isInicial) {
-        _dataInicial = _isoDate(picked);
-      } else {
-        _dataFinal = _isoDate(picked);
-      }
-    });
-  }
-
   void _aplicar({int page = 1}) {
     final busca = _buscaController.text.trim();
     _bloc.add(RelatorioCurvaAbcCarregar(
@@ -146,6 +129,187 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
           .toList();
     });
     _aplicar(page: 1);
+  }
+
+  Future<void> _abrirFiltroPeriodo() async {
+    var dataInicial = _dataInicial;
+    var dataFinal = _dataFinal;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Filtrar por período',
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ActionChip(
+                          label: const Text('Este mês'),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            final (ini, fim) = _mesAtual();
+                            setSheetState(() {
+                              dataInicial = ini;
+                              dataFinal = fim;
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          label: const Text('30 dias'),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            final fim = DateTime.now();
+                            final ini = fim.subtract(const Duration(days: 29));
+                            setSheetState(() {
+                              dataInicial = _isoDate(ini);
+                              dataFinal = _isoDate(fim);
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          label: const Text('90 dias'),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            final fim = DateTime.now();
+                            final ini = fim.subtract(const Duration(days: 89));
+                            setSheetState(() {
+                              dataInicial = _isoDate(ini);
+                              dataFinal = _isoDate(fim);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DateBtn(
+                          label: 'De',
+                          date: _fmtData(dataInicial),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: sheetContext,
+                              initialDate:
+                                  DateTime.tryParse(dataInicial) ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked == null) return;
+                            setSheetState(() => dataInicial = _isoDate(picked));
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DateBtn(
+                          label: 'Até',
+                          date: _fmtData(dataFinal),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: sheetContext,
+                              initialDate:
+                                  DateTime.tryParse(dataFinal) ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked == null) return;
+                            setSheetState(() => dataFinal = _isoDate(picked));
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: const Text('Aplicar'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _dataInicial = dataInicial;
+      _dataFinal = dataFinal;
+    });
+    _aplicar(page: 1);
+  }
+
+  Future<void> _abrirFiltroReferenciaOuCategoria() async {
+    final porReferencia = _agruparPor == 'produto';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  porReferencia ? 'Filtrar por referência' : 'Filtrar por categoria',
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                if (porReferencia)
+                  ReferenciaSeletor(
+                    key: const ValueKey('referencia-seletor-curva-abc'),
+                    modo: ReferenciaSeletorModo.multipla,
+                    permitirCadastro: false,
+                    onReferenciaChanged: _onReferenciaSelecionada,
+                  )
+                else
+                  CategoriaSeletor(
+                    key: const ValueKey('categoria-seletor-curva-abc'),
+                    modo: CategoriaSeletorModo.multipla,
+                    onCategoriaChanged: _onCategoriaSelecionada,
+                  ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('Aplicar'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _mostrarComoFunciona() {
@@ -204,167 +368,86 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
                 // Filtros
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Filtros',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 10),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              ActionChip(
-                                label: const Text('Este mês'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  final (ini, fim) = _mesAtual();
-                                  setState(() {
-                                    _dataInicial = ini;
-                                    _dataFinal = fim;
-                                  });
-                                  _aplicar();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              ActionChip(
-                                label: const Text('30 dias'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  final fim = DateTime.now();
-                                  final ini =
-                                      fim.subtract(const Duration(days: 29));
-                                  setState(() {
-                                    _dataInicial = _isoDate(ini);
-                                    _dataFinal = _isoDate(fim);
-                                  });
-                                  _aplicar();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              ActionChip(
-                                label: const Text('90 dias'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  final fim = DateTime.now();
-                                  final ini =
-                                      fim.subtract(const Duration(days: 89));
-                                  setState(() {
-                                    _dataInicial = _isoDate(ini);
-                                    _dataFinal = _isoDate(fim);
-                                  });
-                                  _aplicar();
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DateBtn(
-                                label: 'De',
-                                date: _fmtData(_dataInicial),
-                                onTap: () => _selecionarData(true),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _DateBtn(
-                                label: 'Até',
-                                date: _fmtData(_dataFinal),
-                                onTap: () => _selecionarData(false),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(
-                                value: 'produto',
-                                label: Text('Produto'),
-                                icon: Icon(Icons.checkroom_outlined, size: 16),
-                              ),
-                              ButtonSegment(
-                                value: 'referencia',
-                                label: Text('Referência'),
-                                icon: Icon(Icons.style_outlined, size: 16),
-                              ),
-                              ButtonSegment(
-                                value: 'categoria',
-                                label: Text('Categoria'),
-                                icon: Icon(Icons.category_outlined, size: 16),
-                              ),
-                            ],
-                            selected: {_agruparPor},
-                            onSelectionChanged: (selecao) =>
-                                _onAgruparPorAlterado(selecao.first),
-                          ),
-                        ),
-                        if (_agruparPor == 'produto') ...[
-                          const SizedBox(height: 10),
-                          ReferenciaSeletor(
-                            key: const ValueKey('referencia-seletor-curva-abc'),
-                            modo: ReferenciaSeletorModo.multipla,
-                            titulo: 'Filtrar por referência',
-                            permitirCadastro: false,
-                            onReferenciaChanged: _onReferenciaSelecionada,
-                          ),
-                        ] else if (_agruparPor == 'referencia') ...[
-                          const SizedBox(height: 10),
-                          CategoriaSeletor(
-                            key: const ValueKey('categoria-seletor-curva-abc'),
-                            modo: CategoriaSeletorModo.multipla,
-                            titulo: 'Filtrar por categoria',
-                            onCategoriaChanged: _onCategoriaSelecionada,
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _buscaController,
-                          onChanged: _onBuscaAlterada,
-                          decoration: InputDecoration(
-                            hintText: 'Buscar por referência ou código...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            isDense: true,
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                _buscaController.clear();
-                                _onBuscaAlterada('');
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onSubmitted: (_) => _aplicar(),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _aplicar,
-                            icon: const Icon(Icons.search),
-                            label: const Text('Consultar'),
-                          ),
-                        ),
-                      ],
+                TextField(
+                  controller: _buscaController,
+                  onChanged: _onBuscaAlterada,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por referência ou código...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        _buscaController.clear();
+                        _onBuscaAlterada('');
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  onSubmitted: (_) => _aplicar(),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'produto',
+                        label: Text('Produto'),
+                        icon: Icon(Icons.checkroom_outlined, size: 16),
+                      ),
+                      ButtonSegment(
+                        value: 'referencia',
+                        label: Text('Referência'),
+                        icon: Icon(Icons.style_outlined, size: 16),
+                      ),
+                      ButtonSegment(
+                        value: 'categoria',
+                        label: Text('Categoria'),
+                        icon: Icon(Icons.category_outlined, size: 16),
+                      ),
+                    ],
+                    selected: {_agruparPor},
+                    onSelectionChanged: (selecao) =>
+                        _onAgruparPorAlterado(selecao.first),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FiltroChip(
+                      icon: Icons.event,
+                      label:
+                          '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                      onTap: _abrirFiltroPeriodo,
+                    ),
+                    if (_agruparPor == 'produto')
+                      FiltroChip(
+                        icon: Icons.style_outlined,
+                        label: _referenciaIdsSelecionados.isEmpty
+                            ? 'Referência'
+                            : '${_referenciaIdsSelecionados.length} referência(s)',
+                        onTap: _abrirFiltroReferenciaOuCategoria,
+                        onLimpar: _referenciaIdsSelecionados.isEmpty
+                            ? null
+                            : () => _onReferenciaSelecionada(const []),
+                      )
+                    else if (_agruparPor == 'referencia')
+                      FiltroChip(
+                        icon: Icons.category_outlined,
+                        label: _categoriaIdsSelecionados.isEmpty
+                            ? 'Categoria'
+                            : '${_categoriaIdsSelecionados.length} categoria(s)',
+                        onTap: _abrirFiltroReferenciaOuCategoria,
+                        onLimpar: _categoriaIdsSelecionados.isEmpty
+                            ? null
+                            : () => _onCategoriaSelecionada(const []),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 

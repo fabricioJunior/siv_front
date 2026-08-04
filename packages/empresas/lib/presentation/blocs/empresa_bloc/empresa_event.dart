@@ -22,6 +22,12 @@ class EmpresaEditou extends EmpresaEvent {
   final String? telefone;
   final String? uf;
   final int? id;
+  final String? logradouro;
+  final String? numero;
+  final String? bairro;
+  final String? codigoMunicipioIbge;
+  final String? municipio;
+  final String? cep;
 
   EmpresaEditou({
     this.id,
@@ -37,6 +43,12 @@ class EmpresaEditou extends EmpresaEvent {
     this.substituicaoTributaria,
     this.telefone,
     this.uf,
+    this.logradouro,
+    this.numero,
+    this.bairro,
+    this.codigoMunicipioIbge,
+    this.municipio,
+    this.cep,
   });
 }
 

@@ -1,6 +1,7 @@
 import 'package:comercial/presentation/blocs/relatorio_compras_clientes_bloc/relatorio_compras_clientes_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
@@ -69,21 +70,20 @@ class _RelatorioComprasClientesPageState
     super.dispose();
   }
 
-  Future<void> _selecionarData(bool isInicial) async {
-    final initial = DateTime.tryParse(isInicial ? _dataInicial : _dataFinal);
-    final picked = await showDatePicker(
+  Future<void> _abrirFiltroPeriodo() async {
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      initialDate: initial ?? DateTime.now(),
+      dataInicioAtual:
+          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      permitirHora: false,
     );
-    if (picked == null) return;
+    if (resultado == null || !mounted) return;
     setState(() {
-      if (isInicial) {
-        _dataInicial = _isoDate(picked);
-      } else {
-        _dataFinal = _isoDate(picked);
-      }
+      _dataInicial = _isoDate(resultado.dataInicio);
+      _dataFinal = _isoDate(resultado.dataFim);
     });
     _aplicar();
   }
@@ -195,24 +195,11 @@ class _RelatorioComprasClientesPageState
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _DateBtn(
-                                label: 'De',
-                                date: _fmtData(_dataInicial),
-                                onTap: () => _selecionarData(true),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _DateBtn(
-                                label: 'Até',
-                                date: _fmtData(_dataFinal),
-                                onTap: () => _selecionarData(false),
-                              ),
-                            ),
-                          ],
+                        _DateBtn(
+                          label: 'Período',
+                          date:
+                              '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                          onTap: _abrirFiltroPeriodo,
                         ),
                         if (_agruparPor == 'referencia') ...[
                           const SizedBox(height: 10),

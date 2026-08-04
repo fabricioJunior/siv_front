@@ -199,11 +199,26 @@ bool _estaNoIntervaloDeDatas(
 int Function(ProdutoDoEstoque, ProdutoDoEstoque) _comparadorParaFiltro(
   FiltroProdutoDoEstoque filtro,
 ) {
-  final campo = filtro.ordenarPor;
-  if (campo == null) return _ordenarProdutoParaSaldo;
+  if (filtro.ordenacoes.isEmpty) return _ordenarProdutoParaSaldo;
 
+  final comparadores = filtro.ordenacoes
+      .map(_comparadorParaItem)
+      .toList(growable: false);
+
+  return (a, b) {
+    for (final comparador in comparadores) {
+      final resultado = comparador(a, b);
+      if (resultado != 0) return resultado;
+    }
+    return 0;
+  };
+}
+
+int Function(ProdutoDoEstoque, ProdutoDoEstoque) _comparadorParaItem(
+  OrdenacaoEstoqueItem item,
+) {
   int Function(ProdutoDoEstoque, ProdutoDoEstoque) base;
-  switch (campo) {
+  switch (item.campo) {
     case CampoOrdenacaoEstoque.nome:
       base = (a, b) => a.nome.compareTo(b.nome);
       break;
@@ -218,9 +233,15 @@ int Function(ProdutoDoEstoque, ProdutoDoEstoque) _comparadorParaFiltro(
       base = (a, b) => (a.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0))
           .compareTo(b.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0));
       break;
+    case CampoOrdenacaoEstoque.corNome:
+      base = (a, b) => a.corNome.compareTo(b.corNome);
+      break;
+    case CampoOrdenacaoEstoque.tamanhoNome:
+      base = (a, b) => a.tamanhoNome.compareTo(b.tamanhoNome);
+      break;
   }
 
-  return filtro.ordenarDirecao == DirecaoOrdenacaoEstoque.desc
+  return item.direcao == DirecaoOrdenacaoEstoque.desc
       ? (a, b) => base(b, a)
       : base;
 }

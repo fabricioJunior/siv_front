@@ -43,18 +43,16 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   late final StreamSubscription<List<SelectData>>? _corSub;
   late final StreamSubscription<List<SelectData>>? _tamanhoSub;
 
-  List<int> _corIds = const [];
-  List<int> _tamanhoIds = const [];
+  List<SelectData> _coresSelecionadas = const [];
+  List<SelectData> _tamanhosSelecionados = const [];
   FiltroDisponibilidadeEstoque _disponibilidadeEstoque =
       FiltroDisponibilidadeEstoque.todos;
   DateTime? _atualizadoEmInicio;
   DateTime? _atualizadoEmFim;
   SelectData? _tabelaDePrecoSelecionada;
   bool _gerandoRelatorio = false;
-  bool _filtrosExpandidos = false;
   bool _visualizarPorReferencia = false;
-  CampoOrdenacaoEstoque? _ordenarPor;
-  DirecaoOrdenacaoEstoque _ordenarDirecao = DirecaoOrdenacaoEstoque.asc;
+  List<OrdenacaoEstoqueItem> _ordenacoes = const [];
 
   @override
   void initState() {
@@ -77,13 +75,12 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     _bloc.add(
       EstoqueSaldoIniciou(
         termoBusca: _buscaController.text.trim(),
-        corIds: _corIds,
-        tamanhoIds: _tamanhoIds,
+        corIds: _coresSelecionadas.map((e) => e.id).toList(),
+        tamanhoIds: _tamanhosSelecionados.map((e) => e.id).toList(),
         disponibilidadeEstoque: _disponibilidadeEstoque,
         atualizadoEmInicio: _atualizadoEmInicio,
         atualizadoEmFim: _atualizadoEmFim,
-        ordenarPor: _ordenarPor,
-        ordenarDirecao: _ordenarDirecao,
+        ordenacoes: _ordenacoes,
         visualizarPorReferencia: _visualizarPorReferencia,
       ),
     );
@@ -100,8 +97,8 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     var total = 0;
     if (_disponibilidadeEstoque != FiltroDisponibilidadeEstoque.todos) total++;
     if (_atualizadoEmInicio != null || _atualizadoEmFim != null) total++;
-    if (_corIds.isNotEmpty) total++;
-    if (_tamanhoIds.isNotEmpty) total++;
+    if (_coresSelecionadas.isNotEmpty) total++;
+    if (_tamanhosSelecionados.isNotEmpty) total++;
     if (_tabelaDePrecoSelecionada != null) total++;
     return total;
   }
@@ -111,32 +108,16 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
       case CampoOrdenacaoEstoque.nome:
         return 'Nome';
       case CampoOrdenacaoEstoque.saldo:
-        return 'Saldo';
+        return 'Quantidade em estoque';
       case CampoOrdenacaoEstoque.referenciaIdExterno:
         return 'Referência';
       case CampoOrdenacaoEstoque.atualizadoEm:
         return 'Atualizado em';
+      case CampoOrdenacaoEstoque.corNome:
+        return 'Cor';
+      case CampoOrdenacaoEstoque.tamanhoNome:
+        return 'Tamanho';
     }
-  }
-
-  Future<void> _selecionarPeriodoAtualizacao() async {
-    final intervaloSelecionado = await showDateRangePicker(
-      context: context,
-      initialDateRange: _atualizadoEmInicio != null && _atualizadoEmFim != null
-          ? DateTimeRange(start: _atualizadoEmInicio!, end: _atualizadoEmFim!)
-          : null,
-      currentDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 3650)),
-      helpText: 'Filtrar por período de atualização',
-    );
-
-    if (!mounted || intervaloSelecionado == null) return;
-    setState(() {
-      _atualizadoEmInicio = intervaloSelecionado.start;
-      _atualizadoEmFim = intervaloSelecionado.end;
-    });
-    _recarregar();
   }
 
   Future<void> _gerarRelatorioValorEstoque() async {
@@ -257,19 +238,13 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => setState(
-                              () => _filtrosExpandidos = !_filtrosExpandidos,
-                            ),
+                            onPressed: _abrirFiltros,
                             icon: Badge(
                               isLabelVisible: _quantidadeFiltrosAtivos > 0,
                               label: Text('$_quantidadeFiltrosAtivos'),
                               child: const Icon(Icons.filter_list),
                             ),
-                            label: Text(
-                              _filtrosExpandidos
-                                  ? 'Ocultar filtros'
-                                  : 'Filtros',
-                            ),
+                            label: const Text('Filtros'),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -301,10 +276,6 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                         },
                       ),
                     ),
-                    if (_filtrosExpandidos) ...[
-                      const SizedBox(height: 12),
-                      _buildPainelFiltros(context),
-                    ],
                     const SizedBox(height: 8),
                     Expanded(
                       child: BlocBuilder<EstoqueSaldoBloc, EstoqueSaldoState>(
@@ -516,158 +487,329 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   }
 
   Widget _buildOrdenacao(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PopupMenuButton<CampoOrdenacaoEstoque>(
-          tooltip: 'Ordenar por',
-          initialValue: _ordenarPor,
-          onSelected: (campo) {
-            setState(() => _ordenarPor = campo);
-            _reiniciarListaERecarregar();
-          },
-          itemBuilder: (context) => CampoOrdenacaoEstoque.values
-              .map(
-                (campo) => PopupMenuItem(
-                  value: campo,
-                  child: Text(_rotuloCampoOrdenacao(campo)),
-                ),
-              )
-              .toList(),
-          child: Chip(
-            label: Text(
-              _ordenarPor == null
-                  ? 'Ordenar'
-                  : _rotuloCampoOrdenacao(_ordenarPor!),
-            ),
-            avatar: const Icon(Icons.sort, size: 18),
-          ),
-        ),
-        if (_ordenarPor != null)
-          IconButton(
-            tooltip: _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                ? 'Crescente'
-                : 'Decrescente',
-            icon: Icon(
-              _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                  ? Icons.arrow_upward
-                  : Icons.arrow_downward,
-            ),
-            onPressed: () {
-              setState(() {
-                _ordenarDirecao = _ordenarDirecao == DirecaoOrdenacaoEstoque.asc
-                    ? DirecaoOrdenacaoEstoque.desc
-                    : DirecaoOrdenacaoEstoque.asc;
-              });
-              _reiniciarListaERecarregar();
-            },
-          ),
-      ],
+    final rotulo = _ordenacoes.isEmpty
+        ? 'Ordenar'
+        : _ordenacoes
+              .map((item) => _rotuloCampoOrdenacao(item.campo))
+              .join(', ');
+
+    return ActionChip(
+      avatar: const Icon(Icons.sort, size: 18),
+      label: Text(rotulo),
+      onPressed: _abrirSeletorDeOrdenacao,
     );
   }
 
-  Widget _buildPainelFiltros(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('Todos'),
-                  selected:
-                      _disponibilidadeEstoque ==
-                      FiltroDisponibilidadeEstoque.todos,
-                  onSelected: (_) {
-                    setState(() {
-                      _disponibilidadeEstoque =
-                          FiltroDisponibilidadeEstoque.todos;
-                    });
-                    _recarregar();
-                  },
-                ),
-                ChoiceChip(
-                  label: const Text('Com estoque'),
-                  selected:
-                      _disponibilidadeEstoque ==
-                      FiltroDisponibilidadeEstoque.comEstoque,
-                  onSelected: (_) {
-                    setState(() {
-                      _disponibilidadeEstoque =
-                          FiltroDisponibilidadeEstoque.comEstoque;
-                    });
-                    _recarregar();
-                  },
-                ),
-                ChoiceChip(
-                  label: const Text('Sem estoque'),
-                  selected:
-                      _disponibilidadeEstoque ==
-                      FiltroDisponibilidadeEstoque.semEstoque,
-                  onSelected: (_) {
-                    setState(() {
-                      _disponibilidadeEstoque =
-                          FiltroDisponibilidadeEstoque.semEstoque;
-                    });
-                    _recarregar();
-                  },
-                ),
-                OutlinedButton.icon(
-                  onPressed: _selecionarPeriodoAtualizacao,
-                  icon: const Icon(Icons.calendar_today_outlined),
-                  label: Text(
-                    _atualizadoEmInicio == null || _atualizadoEmFim == null
-                        ? 'Atualizado em (intervalo)'
-                        : 'Atualizado: ${_formatDateOnly(_atualizadoEmInicio!)} - ${_formatDateOnly(_atualizadoEmFim!)}',
+  Future<void> _abrirSeletorDeOrdenacao() async {
+    var rascunho = List<OrdenacaoEstoqueItem>.from(_ordenacoes);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final disponiveis = CampoOrdenacaoEstoque.values
+                .where((campo) => !rascunho.any((item) => item.campo == campo))
+                .toList(growable: false);
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ordenar por',
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
                   ),
-                ),
-                if (_atualizadoEmInicio != null || _atualizadoEmFim != null)
-                  TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _atualizadoEmInicio = null;
-                        _atualizadoEmFim = null;
-                      });
-                      _recarregar();
-                    },
-                    icon: const Icon(Icons.close),
-                    label: const Text('Limpar data'),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Combine mais de um critério: a ordem da lista abaixo '
+                    'define a prioridade (o primeiro desempata usando o '
+                    'segundo, e assim por diante).',
+                    style: Theme.of(sheetContext).textTheme.bodySmall,
                   ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            widget.seletorCores.call(
-              onChanged: (dados) {
-                _corIds = dados.map((e) => e.id).toList();
-                _recarregar();
-              },
-            ),
-            const SizedBox(height: 12),
-            widget.seletorTamanhos.call(
-              onChanged: (dados) {
-                _tamanhoIds = dados.map((e) => e.id).toList();
-                _recarregar();
-              },
-            ),
-            const SizedBox(height: 12),
-            widget.seletorTabelaPreco.call(
-              onChanged: (dados) {
-                setState(() {
-                  _tabelaDePrecoSelecionada = dados.isEmpty
-                      ? null
-                      : dados.first;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
+                  const SizedBox(height: 12),
+                  if (rascunho.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Nenhum critério selecionado.'),
+                    )
+                  else
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: rascunho.length,
+                      onReorder: (oldIndex, newIndex) {
+                        setSheetState(() {
+                          if (newIndex > oldIndex) newIndex--;
+                          final item = rascunho.removeAt(oldIndex);
+                          rascunho.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final item = rascunho[index];
+                        return ListTile(
+                          key: ValueKey(item.campo),
+                          leading: const Icon(Icons.drag_handle),
+                          title: Text(_rotuloCampoOrdenacao(item.campo)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip:
+                                    item.direcao == DirecaoOrdenacaoEstoque.asc
+                                    ? 'Crescente'
+                                    : 'Decrescente',
+                                icon: Icon(
+                                  item.direcao == DirecaoOrdenacaoEstoque.asc
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
+                                ),
+                                onPressed: () {
+                                  setSheetState(() {
+                                    rascunho[index] = item.copyWith(
+                                      direcao:
+                                          item.direcao ==
+                                              DirecaoOrdenacaoEstoque.asc
+                                          ? DirecaoOrdenacaoEstoque.desc
+                                          : DirecaoOrdenacaoEstoque.asc,
+                                    );
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                tooltip: 'Remover',
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  setSheetState(() => rascunho.removeAt(index));
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  if (disponiveis.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: disponiveis
+                          .map(
+                            (campo) => ActionChip(
+                              avatar: const Icon(Icons.add, size: 16),
+                              label: Text(_rotuloCampoOrdenacao(campo)),
+                              onPressed: () {
+                                setSheetState(
+                                  () => rascunho.add(
+                                    OrdenacaoEstoqueItem(campo: campo),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                          .toList(growable: false),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      if (rascunho.isNotEmpty)
+                        TextButton(
+                          onPressed: () =>
+                              setSheetState(() => rascunho.clear()),
+                          child: const Text('Limpar'),
+                        ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        child: const Text('Aplicar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+
+    if (!mounted) return;
+    setState(() => _ordenacoes = rascunho);
+    _reiniciarListaERecarregar();
+  }
+
+  Future<void> _abrirFiltros() async {
+    var disponibilidade = _disponibilidadeEstoque;
+    var atualizadoEmInicio = _atualizadoEmInicio;
+    var atualizadoEmFim = _atualizadoEmFim;
+    var coresSelecionadas = _coresSelecionadas;
+    var tamanhosSelecionados = _tamanhosSelecionados;
+    var tabelaSelecionada = _tabelaDePrecoSelecionada;
+
+    final agora = DateTime.now();
+
+    Future<void> selecionarPeriodo(
+      void Function(void Function()) setSheetState,
+    ) async {
+      final resultado = await abrirFiltroPeriodoSheet(
+        context: context,
+        dataInicioAtual: atualizadoEmInicio ?? agora,
+        dataFimAtual: atualizadoEmFim ?? agora,
+        firstDate: DateTime(2000),
+        lastDate: agora.add(const Duration(days: 3650)),
+        permitirHora: false,
+      );
+      if (!mounted || resultado == null) return;
+      setSheetState(() {
+        atualizadoEmInicio = resultado.dataInicio;
+        atualizadoEmFim = resultado.dataFim;
+      });
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filtros',
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Todos'),
+                          selected:
+                              disponibilidade ==
+                              FiltroDisponibilidadeEstoque.todos,
+                          onSelected: (_) => setSheetState(
+                            () => disponibilidade =
+                                FiltroDisponibilidadeEstoque.todos,
+                          ),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Com estoque'),
+                          selected:
+                              disponibilidade ==
+                              FiltroDisponibilidadeEstoque.comEstoque,
+                          onSelected: (_) => setSheetState(
+                            () => disponibilidade =
+                                FiltroDisponibilidadeEstoque.comEstoque,
+                          ),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Sem estoque'),
+                          selected:
+                              disponibilidade ==
+                              FiltroDisponibilidadeEstoque.semEstoque,
+                          onSelected: (_) => setSheetState(
+                            () => disponibilidade =
+                                FiltroDisponibilidadeEstoque.semEstoque,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () => selecionarPeriodo(setSheetState),
+                          icon: const Icon(Icons.calendar_today_outlined),
+                          label: Text(
+                            atualizadoEmInicio == null ||
+                                    atualizadoEmFim == null
+                                ? 'Atualizado em (intervalo)'
+                                : 'Atualizado: ${_formatDateOnly(atualizadoEmInicio!)} - ${_formatDateOnly(atualizadoEmFim!)}',
+                          ),
+                        ),
+                        if (atualizadoEmInicio != null ||
+                            atualizadoEmFim != null)
+                          TextButton.icon(
+                            onPressed: () => setSheetState(() {
+                              atualizadoEmInicio = null;
+                              atualizadoEmFim = null;
+                            }),
+                            icon: const Icon(Icons.close),
+                            label: const Text('Limpar data'),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    widget.seletorCores.call(
+                      itemsSelecionadosInicial: coresSelecionadas,
+                      onChanged: (dados) {
+                        coresSelecionadas = dados;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    widget.seletorTamanhos.call(
+                      itemsSelecionadosInicial: tamanhosSelecionados,
+                      onChanged: (dados) {
+                        tamanhosSelecionados = dados;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    widget.seletorTabelaPreco.call(
+                      itemsSelecionadosInicial: tabelaSelecionada != null
+                          ? [tabelaSelecionada!]
+                          : null,
+                      onChanged: (dados) => setSheetState(
+                        () => tabelaSelecionada = dados.isEmpty
+                            ? null
+                            : dados.first,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      child: const Text('Aplicar'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _disponibilidadeEstoque = disponibilidade;
+      _atualizadoEmInicio = atualizadoEmInicio;
+      _atualizadoEmFim = atualizadoEmFim;
+      _coresSelecionadas = coresSelecionadas;
+      _tamanhosSelecionados = tamanhosSelecionados;
+      _tabelaDePrecoSelecionada = tabelaSelecionada;
+    });
+    _reiniciarListaERecarregar();
   }
 
   Widget _buildResumo(

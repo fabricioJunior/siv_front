@@ -20,6 +20,8 @@ class HistoricoEstoqueRemoteDataSource extends RemoteDataSourceBase
 
   Map<String, String> _toQueryParameters(FiltroHistoricoEstoque filtro) {
     return {
+      if (filtro.busca != null && filtro.busca!.trim().isNotEmpty)
+        'busca': filtro.busca!.trim(),
       if (filtro.referenciaId != null)
         'referenciaId': filtro.referenciaId.toString(),
       if (filtro.referenciaIds.isNotEmpty)

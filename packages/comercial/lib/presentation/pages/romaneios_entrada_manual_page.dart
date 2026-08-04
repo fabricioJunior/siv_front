@@ -52,53 +52,32 @@ class _RomaneiosEntradaManualPageState
     _bloc.add(RomaneiosEntradaManualIniciou(searchTerm: ''));
   }
 
-  Future<void> _selecionarDataHoraInicial() async {
-    final selecionada = await _selecionarDataHora(_bloc.state.dataHoraInicial);
-    if (selecionada == null) return;
-    _bloc.add(
-      RomaneiosEntradaManualIniciou(
-        dataHoraInicial: selecionada,
-        dataHoraInicialInformada: true,
-      ),
+  Future<void> _abrirFiltroPeriodo() async {
+    final agora = DateTime.now();
+    final resultado = await abrirFiltroPeriodoSheet(
+      context: context,
+      dataInicioAtual: _bloc.state.dataHoraInicial ?? agora,
+      dataFimAtual: _bloc.state.dataHoraFinal ?? agora,
+      permitirHora: true,
     );
-  }
-
-  Future<void> _selecionarDataHoraFinal() async {
-    final selecionada = await _selecionarDataHora(_bloc.state.dataHoraFinal);
-    if (selecionada == null) return;
+    if (resultado == null || !mounted) return;
     _bloc.add(
       RomaneiosEntradaManualIniciou(
-        dataHoraFinal: selecionada,
+        dataHoraInicial: resultado.dataInicio,
+        dataHoraInicialInformada: true,
+        dataHoraFinal: resultado.dataFim,
         dataHoraFinalInformada: true,
       ),
     );
   }
 
-  Future<DateTime?> _selecionarDataHora(DateTime? inicial) async {
-    final agora = DateTime.now();
-    final data = await showDatePicker(
-      context: context,
-      initialDate: inicial ?? agora,
-      firstDate: DateTime(agora.year - 5),
-      lastDate: DateTime(agora.year + 1),
+  void _limparPeriodo() {
+    _bloc.add(
+      RomaneiosEntradaManualIniciou(
+        dataHoraInicialInformada: true,
+        dataHoraFinalInformada: true,
+      ),
     );
-    if (data == null || !mounted) return null;
-
-    final hora = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(inicial ?? agora),
-    );
-    if (hora == null) return null;
-
-    return DateTime(data.year, data.month, data.day, hora.hour, hora.minute);
-  }
-
-  void _limparDataHoraInicial() {
-    _bloc.add(RomaneiosEntradaManualIniciou(dataHoraInicialInformada: true));
-  }
-
-  void _limparDataHoraFinal() {
-    _bloc.add(RomaneiosEntradaManualIniciou(dataHoraFinalInformada: true));
   }
 
   Future<void> _abrirFiltroReferencia() async {
@@ -214,22 +193,12 @@ class _RomaneiosEntradaManualPageState
                       _FiltroDataChip(
                         icon: Icons.event,
                         label: state.dataHoraInicial == null
-                            ? 'Data/hora inicial'
-                            : _formatarDataHora(state.dataHoraInicial!),
-                        onTap: _selecionarDataHoraInicial,
+                            ? 'Período'
+                            : '${_formatarDataHora(state.dataHoraInicial!)} - ${_formatarDataHora(state.dataHoraFinal!)}',
+                        onTap: _abrirFiltroPeriodo,
                         onLimpar: state.dataHoraInicial == null
                             ? null
-                            : _limparDataHoraInicial,
-                      ),
-                      _FiltroDataChip(
-                        icon: Icons.event_available,
-                        label: state.dataHoraFinal == null
-                            ? 'Data/hora final'
-                            : _formatarDataHora(state.dataHoraFinal!),
-                        onTap: _selecionarDataHoraFinal,
-                        onLimpar: state.dataHoraFinal == null
-                            ? null
-                            : _limparDataHoraFinal,
+                            : _limparPeriodo,
                       ),
                       _FiltroDataChip(
                         icon: Icons.tag_outlined,

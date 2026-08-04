@@ -62,5 +62,11 @@ extension ToDto on Empresa {
         substituicaoTributaria: substituicaoTributaria,
         telefone: telefone,
         uf: uf,
+        logradouro: logradouro,
+        numero: numero,
+        bairro: bairro,
+        codigoMunicipioIbge: codigoMunicipioIbge,
+        municipio: municipio,
+        cep: cep,
       );
 }

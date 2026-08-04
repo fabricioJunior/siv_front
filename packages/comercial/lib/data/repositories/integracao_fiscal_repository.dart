@@ -62,4 +62,20 @@ class IntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
 
   @override
   Future<Uint8List> baixarDanfe(int id) => remoteDataSource.baixarDanfe(id);
+
+  @override
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  }) =>
+      remoteDataSource.enviarCertificadoFiscal(
+        filePath: filePath,
+        senha: senha,
+        onSendProgress: onSendProgress,
+      );
+
+  @override
+  Future<void> excluirCertificadoFiscal() =>
+      remoteDataSource.excluirCertificadoFiscal();
 }

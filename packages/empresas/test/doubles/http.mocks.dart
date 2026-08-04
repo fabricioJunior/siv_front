@@ -4,7 +4,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
-import 'dart:io' as _i5;
+import 'dart:io' as _i6;
+import 'dart:typed_data' as _i5;
 
 import 'package:core/http/i_http_response.dart' as _i2;
 import 'package:core/http/i_http_source.dart' as _i3;
@@ -55,6 +56,14 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
           as _i4.Future<_i2.IHttpResponse>);
 
   @override
+  _i4.Future<_i5.Uint8List> getBytes({required Uri? uri}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getBytes, [], {#uri: uri}),
+            returnValue: _i4.Future<_i5.Uint8List>.value(_i5.Uint8List(0)),
+          )
+          as _i4.Future<_i5.Uint8List>);
+
+  @override
   _i4.Future<_i2.IHttpResponse> put({
     required dynamic body,
     required Uri? uri,
@@ -65,6 +74,22 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
               _FakeIHttpResponse_0(
                 this,
                 Invocation.method(#put, [], {#body: body, #uri: uri}),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.IHttpResponse>);
+
+  @override
+  _i4.Future<_i2.IHttpResponse> patch({
+    required dynamic body,
+    required Uri? uri,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#patch, [], {#body: body, #uri: uri}),
+            returnValue: _i4.Future<_i2.IHttpResponse>.value(
+              _FakeIHttpResponse_0(
+                this,
+                Invocation.method(#patch, [], {#body: body, #uri: uri}),
               ),
             ),
           )
@@ -100,7 +125,7 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
   _i4.Future<_i2.IHttpResponse> postMultipart({
     required Uri? uri,
     required String? field,
-    required _i5.File? file,
+    required _i6.File? file,
     required _i3.FileType? fileType,
     Map<String, dynamic>? body,
     Map<String, String>? headers,

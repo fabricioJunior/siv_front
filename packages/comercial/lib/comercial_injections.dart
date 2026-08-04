@@ -234,6 +234,12 @@ void _useCases() {
   sl.registerFactory<SalvarConfiguracaoFiscal>(
     () => SalvarConfiguracaoFiscal(repository: sl()),
   );
+  sl.registerFactory<EnviarCertificadoFiscal>(
+    () => EnviarCertificadoFiscal(repository: sl()),
+  );
+  sl.registerFactory<ExcluirCertificadoFiscal>(
+    () => ExcluirCertificadoFiscal(repository: sl()),
+  );
   sl.registerFactory<ReprocessarDocumentoFiscal>(
     () => ReprocessarDocumentoFiscal(repository: sl()),
   );
@@ -437,7 +443,7 @@ void _presentation() {
   );
 
   sl.registerFactory<ConfiguracaoFiscalBloc>(
-    () => ConfiguracaoFiscalBloc(sl(), sl()),
+    () => ConfiguracaoFiscalBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<DocumentosFiscaisBloc>(

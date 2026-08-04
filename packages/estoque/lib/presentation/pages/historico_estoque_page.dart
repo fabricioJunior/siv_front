@@ -1,28 +1,22 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:estoque/domain/models/filtro_historico_estoque.dart';
 import 'package:estoque/domain/models/historico_estoque.dart';
 import 'package:estoque/presentation.dart';
 import 'package:flutter/material.dart';
 
-/// Filtros sem seletor pronto no app (produto/operador/caixa) são resolvidos
-/// aqui de forma simples:
-/// - produto: campo numérico direto para `produtoId` (não existe autocomplete
-///   de produto no app).
-/// - operador/caixa: callback fornecido pela rota (app-level), populando um
-///   dropdown simples -- evita criar dependência nova do package `estoque`
-///   para `autenticacao`/`empresas`.
+/// Filtro textual (`busca`) cobre referência/produto/funcionário/cliente no
+/// backend (LIKE case-insensitive, OR entre os campos). Os demais filtros
+/// (operador, caixa, período) viram [FiltroChip]s abaixo da busca, seguindo o
+/// padrão já usado em outras telas do projeto.
 class HistoricoEstoquePage extends StatefulWidget {
-  final SeletorWidget seletorReferencia;
-  final SeletorWidget seletorFuncionario;
   final Future<List<SelectData>> Function() obterUsuarios;
   final Future<List<SelectData>> Function() obterCaixas;
 
   const HistoricoEstoquePage({
     super.key,
-    required this.seletorReferencia,
-    required this.seletorFuncionario,
     required this.obterUsuarios,
     required this.obterCaixas,
   });
@@ -33,15 +27,15 @@ class HistoricoEstoquePage extends StatefulWidget {
 
 class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
   late final HistoricoEstoqueBloc _bloc;
+  final Debouncer _debouncer = Debouncer(milliseconds: 400);
+  final TextEditingController _buscaController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  int? _referenciaId;
-  int? _funcionarioId;
-  int? _produtoId;
   SelectData? _usuarioSelecionado;
   SelectData? _caixaSelecionado;
   late DateTime _dataInicio;
   late DateTime _dataFim;
+  bool _horaAjustadaManualmente = false;
 
   List<SelectData> _usuarios = const [];
   List<SelectData> _caixas = const [];
@@ -55,9 +49,7 @@ class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
 
     _scrollController.addListener(_onScroll);
     _bloc = sl<HistoricoEstoqueBloc>()
-      ..add(
-        HistoricoEstoqueIniciou(filtro: _montarFiltro()),
-      );
+      ..add(HistoricoEstoqueIniciou(filtro: _montarFiltro()));
 
     widget.obterUsuarios().then((usuarios) {
       if (!mounted) return;
@@ -71,19 +63,19 @@ class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
 
   @override
   void dispose() {
+    _buscaController.dispose();
     _scrollController.dispose();
     _bloc.close();
     super.dispose();
   }
 
   FiltroHistoricoEstoque _montarFiltro() {
+    final busca = _buscaController.text.trim();
     return FiltroHistoricoEstoque(
-      referenciaId: _referenciaId,
-      produtoId: _produtoId,
+      busca: busca.isEmpty ? null : busca,
       dataInicio: _dataInicio,
       dataFim: _dataFim,
       operadorId: _usuarioSelecionado?.id,
-      funcionarioId: _funcionarioId,
       caixaId: _caixaSelecionado?.id,
     );
   }
@@ -106,161 +98,77 @@ class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
     }
   }
 
-  Future<DateTime?> _selecionarDataHora(DateTime inicial) async {
-    final data = await showDatePicker(
-      context: context,
-      initialDate: inicial,
-      firstDate: DateTime(inicial.year - 5),
-      lastDate: DateTime(inicial.year + 1),
-    );
-    if (data == null || !mounted) return null;
-
-    final hora = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(inicial),
-    );
-    if (hora == null) return null;
-
-    return DateTime(data.year, data.month, data.day, hora.hour, hora.minute);
-  }
-
-  Future<void> _abrirFiltros() async {
-    await showModalBottomSheet(
+  Future<SelectData?> _selecionarDaLista({
+    required String titulo,
+    required List<SelectData> itens,
+    required SelectData? selecionado,
+  }) {
+    return showModalBottomSheet<SelectData>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Filtros',
-                      style: Theme.of(sheetContext).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    widget.seletorReferencia.call(
-                      onChanged: (dados) {
-                        _referenciaId = dados.isEmpty ? null : dados.first.id;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    widget.seletorFuncionario.call(
-                      onChanged: (dados) {
-                        _funcionarioId = dados.isEmpty ? null : dados.first.id;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: _produtoId?.toString(),
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'ID do produto',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      onChanged: (value) {
-                        _produtoId = int.tryParse(value.trim());
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<SelectData>(
-                      initialValue: _usuarioSelecionado,
-                      decoration: const InputDecoration(
-                        labelText: 'Usuário (operador)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: _usuarios
-                          .map(
-                            (usuario) => DropdownMenuItem(
-                              value: usuario,
-                              child: Text(usuario.nome),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setSheetState(() => _usuarioSelecionado = value);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<SelectData>(
-                      initialValue: _caixaSelecionado,
-                      decoration: const InputDecoration(
-                        labelText: 'Caixa (terminal)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: _caixas
-                          .map(
-                            (caixa) => DropdownMenuItem(
-                              value: caixa,
-                              child: Text(caixa.nome),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setSheetState(() => _caixaSelecionado = value);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final selecionada = await _selecionarDataHora(
-                                _dataInicio,
-                              );
-                              if (selecionada == null) return;
-                              setSheetState(() => _dataInicio = selecionada);
-                            },
-                            icon: const Icon(Icons.event),
-                            label: Text(_formatarDataHora(_dataInicio)),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final selecionada = await _selecionarDataHora(
-                                _dataFim,
-                              );
-                              if (selecionada == null) return;
-                              setSheetState(() => _dataFim = selecionada);
-                            },
-                            icon: const Icon(Icons.event_available),
-                            label: Text(_formatarDataHora(_dataFim)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.of(sheetContext).pop();
-                        setState(() {});
-                        _recarregar();
-                      },
-                      child: const Text('Aplicar filtros'),
-                    ),
-                  ],
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  titulo,
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
                 ),
               ),
-            );
-          },
+              for (final item in itens)
+                ListTile(
+                  title: Text(item.nome),
+                  trailing: item.id == selecionado?.id
+                      ? const Icon(Icons.check)
+                      : null,
+                  onTap: () => Navigator.of(sheetContext).pop(item),
+                ),
+            ],
+          ),
         );
       },
     );
+  }
+
+  Future<void> _abrirFiltroUsuario() async {
+    final selecionado = await _selecionarDaLista(
+      titulo: 'Usuário (operador)',
+      itens: _usuarios,
+      selecionado: _usuarioSelecionado,
+    );
+    if (selecionado == null || !mounted) return;
+    setState(() => _usuarioSelecionado = selecionado);
+    _recarregar();
+  }
+
+  Future<void> _abrirFiltroCaixa() async {
+    final selecionado = await _selecionarDaLista(
+      titulo: 'Caixa (terminal)',
+      itens: _caixas,
+      selecionado: _caixaSelecionado,
+    );
+    if (selecionado == null || !mounted) return;
+    setState(() => _caixaSelecionado = selecionado);
+    _recarregar();
+  }
+
+  Future<void> _abrirFiltroPeriodo() async {
+    final resultado = await abrirFiltroPeriodoSheet(
+      context: context,
+      dataInicioAtual: _dataInicio,
+      dataFimAtual: _dataFim,
+      horaAjustadaManualmenteAtual: _horaAjustadaManualmente,
+    );
+    if (resultado == null || !mounted) return;
+    setState(() {
+      _dataInicio = resultado.dataInicio;
+      _dataFim = resultado.dataFim;
+      _horaAjustadaManualmente = resultado.horaAjustadaManualmente;
+    });
+    _recarregar();
   }
 
   @override
@@ -268,95 +176,118 @@ class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
     return BlocProvider<HistoricoEstoqueBloc>.value(
       value: _bloc,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Histórico de Estoque'),
-          actions: [
-            IconButton(
-              onPressed: _abrirFiltros,
-              icon: const Icon(Icons.filter_list),
-              tooltip: 'Filtros',
-            ),
-          ],
-        ),
+        appBar: AppBar(title: const Text('Histórico de Estoque')),
         body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Align(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                SearchBar(
+                  controller: _buscaController,
+                  hintText: 'Buscar por referência, funcionário ou cliente',
+                  onChanged: (_) => _debouncer.run(_recarregar),
+                  onSubmitted: (_) => _recarregar(),
+                ),
+                const SizedBox(height: 8),
+                Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Período: ${_formatarDataHora(_dataInicio)} até ${_formatarDataHora(_dataFim)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FiltroChip(
+                        icon: Icons.date_range_outlined,
+                        label:
+                            '${formatarDataHora(_dataInicio)} - ${formatarDataHora(_dataFim)}',
+                        onTap: _abrirFiltroPeriodo,
+                      ),
+                      FiltroChip(
+                        icon: Icons.person_outline,
+                        label: _usuarioSelecionado?.nome ?? 'Usuário',
+                        onTap: _abrirFiltroUsuario,
+                        onLimpar: _usuarioSelecionado == null
+                            ? null
+                            : () {
+                                setState(() => _usuarioSelecionado = null);
+                                _recarregar();
+                              },
+                      ),
+                      FiltroChip(
+                        icon: Icons.point_of_sale_outlined,
+                        label: _caixaSelecionado?.nome ?? 'Caixa',
+                        onTap: _abrirFiltroCaixa,
+                        onLimpar: _caixaSelecionado == null
+                            ? null
+                            : () {
+                                setState(() => _caixaSelecionado = null);
+                                _recarregar();
+                              },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              Expanded(
-                child: BlocBuilder<HistoricoEstoqueBloc, HistoricoEstoqueState>(
-                  builder: (context, state) {
-                    if (state.step == HistoricoEstoqueStep.carregando &&
-                        state.itens.isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator.adaptive(),
-                      );
-                    }
-
-                    if (state.step == HistoricoEstoqueStep.falha &&
-                        state.itens.isEmpty) {
-                      return Center(
-                        child: Text(
-                          state.erro ?? 'Erro ao carregar histórico.',
-                        ),
-                      );
-                    }
-
-                    if (state.itens.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'Nenhuma movimentação encontrada para os filtros informados.',
-                        ),
-                      );
-                    }
-
-                    final exibirLoaderFinal =
-                        state.step == HistoricoEstoqueStep.carregandoMais;
-
-                    return ListView.separated(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount:
-                          state.itens.length + (exibirLoaderFinal ? 1 : 0),
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        if (index >= state.itens.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Center(
-                              child: CircularProgressIndicator.adaptive(),
-                            ),
-                          );
-                        }
-                        return _HistoricoEstoqueCard(
-                          item: state.itens[index],
+                const SizedBox(height: 8),
+                Expanded(
+                  child: BlocBuilder<HistoricoEstoqueBloc, HistoricoEstoqueState>(
+                    builder: (context, state) {
+                      if (state.step == HistoricoEstoqueStep.carregando &&
+                          state.itens.isEmpty) {
+                        return const Center(
+                          child: CircularProgressIndicator.adaptive(),
                         );
-                      },
-                    );
-                  },
+                      }
+
+                      if (state.step == HistoricoEstoqueStep.falha &&
+                          state.itens.isEmpty) {
+                        return Center(
+                          child: Text(
+                            state.erro ?? 'Erro ao carregar histórico.',
+                          ),
+                        );
+                      }
+
+                      if (state.itens.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Nenhuma movimentação encontrada para os filtros informados.',
+                          ),
+                        );
+                      }
+
+                      final exibirLoaderFinal =
+                          state.step == HistoricoEstoqueStep.carregandoMais;
+
+                      return ListView.separated(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(top: 8),
+                        itemCount:
+                            state.itens.length + (exibirLoaderFinal ? 1 : 0),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          if (index >= state.itens.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Center(
+                                child: CircularProgressIndicator.adaptive(),
+                              ),
+                            );
+                          }
+                          return _HistoricoEstoqueCard(
+                            item: state.itens[index],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-}
-
-String _formatarDataHora(DateTime data) {
-  final local = data.toLocal();
-  String dois(int v) => v.toString().padLeft(2, '0');
-  return '${dois(local.day)}/${dois(local.month)}/${local.year} ${dois(local.hour)}:${dois(local.minute)}';
 }
 
 class _HistoricoEstoqueCard extends StatelessWidget {
@@ -383,9 +314,9 @@ class _HistoricoEstoqueCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     '${item.referenciaNome}${item.corNome != null ? ' • ${item.corNome}' : ''}${item.tamanhoNome != null ? ' • ${item.tamanhoNome}' : ''}',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 Text(
@@ -401,7 +332,7 @@ class _HistoricoEstoqueCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Romaneio #${item.romaneioId}  •  ${_formatarDataHora(item.dataHora)}',
+              'Romaneio #${item.romaneioId}  •  ${formatarDataHora(item.dataHora)}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),

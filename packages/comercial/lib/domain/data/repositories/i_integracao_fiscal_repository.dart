@@ -24,4 +24,11 @@ abstract class IIntegracaoFiscalRepository {
   Future<DocumentoFiscal> reprocessar(int id);
   Future<DocumentoFiscalDetalhe> getDetalhe(int id);
   Future<Uint8List> baixarDanfe(int id);
+
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  });
+  Future<void> excluirCertificadoFiscal();
 }

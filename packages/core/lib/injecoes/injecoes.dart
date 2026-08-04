@@ -21,6 +21,7 @@ import 'package:core/produtos_compartilhados/local/lista_de_produtos_compartilha
 import 'package:core/produtos_compartilhados/local/produtos_compartilhados_local_data_source.dart';
 import 'package:core/produtos_compartilhados/repositories/lista_de_produtos_compartilhada_repository.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/arquivos.dart';
 import 'package:core/cep.dart';
 import 'package:get_it/get_it.dart';
 import 'package:isar_community/isar.dart';
@@ -58,6 +59,8 @@ void coreInjections() {
   );
 
   sl.registerLazySingleton<CepService>(() => CepService());
+
+  sl.registerLazySingleton<ArquivoService>(() => ArquivoService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 

@@ -483,19 +483,155 @@ class EmpresaPage extends StatelessWidget {
             ),
           );
 
-          if (duasColunas) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          final endereco = _buildSectionCard(
+            context,
+            icon: Icons.location_on_outlined,
+            title: 'Endereço',
+            subtitle: 'Usado na emissão de notas fiscais (SEFAZ).',
+            child: Column(
               children: [
-                Expanded(child: principal),
-                const SizedBox(width: 16),
-                Expanded(child: contato),
+                _buildTextField(
+                  context,
+                  label: 'Logradouro',
+                  icon: Icons.signpost_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.logradouro ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(logradouro: value),
+                    );
+                  },
+                  fieldKey: const Key('logradouro_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Número',
+                  icon: Icons.tag,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.numero ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(numero: value),
+                    );
+                  },
+                  fieldKey: const Key('numero_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Bairro',
+                  icon: Icons.holiday_village_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.bairro ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(bairro: value),
+                    );
+                  },
+                  fieldKey: const Key('bairro_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Município',
+                  icon: Icons.location_city_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.municipio ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(municipio: value),
+                    );
+                  },
+                  fieldKey: const Key('municipio_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Código IBGE do município',
+                  icon: Icons.pin_drop_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(
+                      text: empresa?.codigoMunicipioIbge ?? '',
+                    ),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(codigoMunicipioIbge: value),
+                    );
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    LengthLimitingTextInputFormatter(7),
+                  ],
+                  keyboardType: TextInputType.number,
+                  fieldKey: const Key('codigo_municipio_ibge_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'CEP',
+                  icon: Icons.markunread_mailbox_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.cep ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(cep: value),
+                    );
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CepInputFormatter(),
+                  ],
+                  keyboardType: TextInputType.number,
+                  fieldKey: const Key('cep_empresa'),
+                ),
+              ],
+            ),
+          );
+
+          if (duasColunas) {
+            return Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: principal),
+                    const SizedBox(width: 16),
+                    Expanded(child: contato),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                endereco,
               ],
             );
           }
 
           return Column(
-            children: [principal, const SizedBox(height: 16), contato],
+            children: [
+              principal,
+              const SizedBox(height: 16),
+              contato,
+              const SizedBox(height: 16),
+              endereco,
+            ],
           );
         },
       ),

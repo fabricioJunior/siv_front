@@ -15,3 +15,15 @@ class ConfiguracaoFiscalSalvar extends ConfiguracaoFiscalEvent {
     this.configuracao,
   });
 }
+
+class ConfiguracaoFiscalEnviarCertificado extends ConfiguracaoFiscalEvent {
+  final String filePath;
+  final String senha;
+
+  ConfiguracaoFiscalEnviarCertificado({
+    required this.filePath,
+    required this.senha,
+  });
+}
+
+class ConfiguracaoFiscalExcluirCertificado extends ConfiguracaoFiscalEvent {}

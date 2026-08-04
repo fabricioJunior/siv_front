@@ -27,4 +27,16 @@ abstract class IIntegracaoFiscalRemoteDataSource {
   /// Baixa o PDF da DANFE pronta direto do backend, que faz o proxy
   /// autenticado pro gateway fiscal (credenciais nunca chegam no app).
   Future<Uint8List> baixarDanfe(int id);
+
+  /// Envia o certificado A1 (.pfx/.p12) do provider SEFAZ. Retorna
+  /// `{ certificadoStorageKey, validade }`.
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  });
+
+  /// Remove o certificado A1 salvo. Backend só aceita se já expirado e o
+  /// provider sefaz não estiver ativo — erro chega como [HttpException].
+  Future<void> excluirCertificadoFiscal();
 }

@@ -4,6 +4,7 @@ import 'package:comercial/domain/models/documento_fiscal.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'configuracao_fiscal_event.dart';
 part 'configuracao_fiscal_state.dart';
@@ -12,13 +13,19 @@ class ConfiguracaoFiscalBloc
     extends Bloc<ConfiguracaoFiscalEvent, ConfiguracaoFiscalState> {
   final GetConfiguracaoFiscal _getConfiguracao;
   final SalvarConfiguracaoFiscal _salvarConfiguracao;
+  final EnviarCertificadoFiscal _enviarCertificado;
+  final ExcluirCertificadoFiscal _excluirCertificado;
 
   ConfiguracaoFiscalBloc(
     this._getConfiguracao,
     this._salvarConfiguracao,
+    this._enviarCertificado,
+    this._excluirCertificado,
   ) : super(const ConfiguracaoFiscalState.initial()) {
     on<ConfiguracaoFiscalIniciou>(_onIniciou);
     on<ConfiguracaoFiscalSalvar>(_onSalvar);
+    on<ConfiguracaoFiscalEnviarCertificado>(_onEnviarCertificado);
+    on<ConfiguracaoFiscalExcluirCertificado>(_onExcluirCertificado);
   }
 
   FutureOr<void> _onIniciou(
@@ -61,6 +68,62 @@ class ConfiguracaoFiscalBloc
       emit(state.copyWith(
         step: ConfiguracaoFiscalStep.falha,
         erro: 'Falha ao salvar configuração fiscal.',
+      ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onEnviarCertificado(
+    ConfiguracaoFiscalEnviarCertificado event,
+    Emitter<ConfiguracaoFiscalState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(
+        enviandoCertificado: true,
+        certificadoErro: null,
+        certificadoSucesso: null,
+      ));
+      await _enviarCertificado.call(
+        filePath: event.filePath,
+        senha: event.senha,
+      );
+      final result = await _getConfiguracao.call();
+      emit(state.copyWith(
+        config: result.config,
+        enviandoCertificado: false,
+        certificadoSucesso: 'Certificado enviado com sucesso!',
+      ));
+    } catch (e, s) {
+      emit(state.copyWith(
+        enviandoCertificado: false,
+        certificadoErro: mensagemDeErroApi(e, 'Falha ao enviar certificado.'),
+      ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onExcluirCertificado(
+    ConfiguracaoFiscalExcluirCertificado event,
+    Emitter<ConfiguracaoFiscalState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(
+        excluindoCertificado: true,
+        certificadoErro: null,
+        certificadoSucesso: null,
+      ));
+      await _excluirCertificado.call();
+      final result = await _getConfiguracao.call();
+      emit(state.copyWith(
+        config: result.config,
+        excluindoCertificado: false,
+        certificadoSucesso: 'Certificado excluído com sucesso!',
+      ));
+    } catch (e, s) {
+      emit(state.copyWith(
+        excluindoCertificado: false,
+        certificadoErro:
+            mensagemDeErroApi(e, 'Falha ao excluir certificado.'),
       ));
       addError(e, s);
     }

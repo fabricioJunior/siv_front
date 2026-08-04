@@ -78,6 +78,17 @@ class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   @override
   Future<DocumentoFiscalDetalhe> getDetalhe(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> enviarCertificadoFiscal({
+    required String filePath,
+    required String senha,
+    void Function(int sent, int total)? onSendProgress,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> excluirCertificadoFiscal() async => throw UnimplementedError();
 }
 
 class StubCriarRomaneio implements CriarRomaneio {

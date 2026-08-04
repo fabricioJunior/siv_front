@@ -83,57 +83,32 @@ class _VendasPageState extends State<VendasPage> {
     _vendasBloc.add(VendasIniciou(searchTerm: ''));
   }
 
-  Future<void> _selecionarDataHoraInicial() async {
-    final selecionada = await _selecionarDataHora(
-      _vendasBloc.state.dataHoraInicial,
+  Future<void> _abrirFiltroPeriodo() async {
+    final agora = DateTime.now();
+    final resultado = await abrirFiltroPeriodoSheet(
+      context: context,
+      dataInicioAtual: _vendasBloc.state.dataHoraInicial ?? agora,
+      dataFimAtual: _vendasBloc.state.dataHoraFinal ?? agora,
+      permitirHora: true,
     );
-    if (selecionada == null) return;
+    if (resultado == null || !mounted) return;
     _vendasBloc.add(
       VendasIniciou(
-        dataHoraInicial: selecionada,
+        dataHoraInicial: resultado.dataInicio,
         dataHoraInicialInformada: true,
-      ),
-    );
-  }
-
-  Future<void> _selecionarDataHoraFinal() async {
-    final selecionada = await _selecionarDataHora(
-      _vendasBloc.state.dataHoraFinal,
-    );
-    if (selecionada == null) return;
-    _vendasBloc.add(
-      VendasIniciou(
-        dataHoraFinal: selecionada,
+        dataHoraFinal: resultado.dataFim,
         dataHoraFinalInformada: true,
       ),
     );
   }
 
-  Future<DateTime?> _selecionarDataHora(DateTime? inicial) async {
-    final agora = DateTime.now();
-    final data = await showDatePicker(
-      context: context,
-      initialDate: inicial ?? agora,
-      firstDate: DateTime(agora.year - 5),
-      lastDate: DateTime(agora.year + 1),
+  void _limparPeriodo() {
+    _vendasBloc.add(
+      VendasIniciou(
+        dataHoraInicialInformada: true,
+        dataHoraFinalInformada: true,
+      ),
     );
-    if (data == null || !mounted) return null;
-
-    final hora = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(inicial ?? agora),
-    );
-    if (hora == null) return null;
-
-    return DateTime(data.year, data.month, data.day, hora.hour, hora.minute);
-  }
-
-  void _limparDataHoraInicial() {
-    _vendasBloc.add(VendasIniciou(dataHoraInicialInformada: true));
-  }
-
-  void _limparDataHoraFinal() {
-    _vendasBloc.add(VendasIniciou(dataHoraFinalInformada: true));
   }
 
   @override
@@ -201,22 +176,12 @@ class _VendasPageState extends State<VendasPage> {
                       _FiltroDataChip(
                         icon: Icons.event,
                         label: state.dataHoraInicial == null
-                            ? 'Data/hora inicial'
-                            : _formatarDataHora(state.dataHoraInicial!),
-                        onTap: _selecionarDataHoraInicial,
+                            ? 'Período'
+                            : '${_formatarDataHora(state.dataHoraInicial!)} - ${_formatarDataHora(state.dataHoraFinal!)}',
+                        onTap: _abrirFiltroPeriodo,
                         onLimpar: state.dataHoraInicial == null
                             ? null
-                            : _limparDataHoraInicial,
-                      ),
-                      _FiltroDataChip(
-                        icon: Icons.event_available,
-                        label: state.dataHoraFinal == null
-                            ? 'Data/hora final'
-                            : _formatarDataHora(state.dataHoraFinal!),
-                        onTap: _selecionarDataHoraFinal,
-                        onLimpar: state.dataHoraFinal == null
-                            ? null
-                            : _limparDataHoraFinal,
+                            : _limparPeriodo,
                       ),
                     ],
                   ),

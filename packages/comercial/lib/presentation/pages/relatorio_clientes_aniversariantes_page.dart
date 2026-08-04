@@ -2,6 +2,7 @@ import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_clientes_aniversariantes_bloc/relatorio_clientes_aniversariantes_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 
 const _meses = [
@@ -66,22 +67,21 @@ class _RelatorioClientesAniversariantesPageState
     ));
   }
 
-  Future<void> _selecionarData({required bool inicial}) async {
-    final atual = inicial ? _dataUltimaCompraInicial : _dataUltimaCompraFinal;
-    final initialDate = atual != null ? DateTime.tryParse(atual) : DateTime.now();
-    final picked = await showDatePicker(
+  Future<void> _abrirFiltroPeriodoUltimaCompra() async {
+    final agora = DateTime.now();
+    final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      initialDate: initialDate ?? DateTime.now(),
+      dataInicioAtual:
+          DateTime.tryParse(_dataUltimaCompraInicial ?? '') ?? agora,
+      dataFimAtual: DateTime.tryParse(_dataUltimaCompraFinal ?? '') ?? agora,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      permitirHora: false,
     );
-    if (picked == null) return;
+    if (resultado == null || !mounted) return;
     setState(() {
-      if (inicial) {
-        _dataUltimaCompraInicial = _isoDate(picked);
-      } else {
-        _dataUltimaCompraFinal = _isoDate(picked);
-      }
+      _dataUltimaCompraInicial = _isoDate(resultado.dataInicio);
+      _dataUltimaCompraFinal = _isoDate(resultado.dataFim);
     });
   }
 
@@ -136,24 +136,11 @@ class _RelatorioClientesAniversariantesPageState
                         Text('Última compra entre',
                             style: Theme.of(context).textTheme.bodySmall),
                         const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _CampoData(
-                                label: 'De',
-                                valor: _dataUltimaCompraInicial,
-                                onTap: () => _selecionarData(inicial: true),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _CampoData(
-                                label: 'Até',
-                                valor: _dataUltimaCompraFinal,
-                                onTap: () => _selecionarData(inicial: false),
-                              ),
-                            ),
-                          ],
+                        _CampoData(
+                          label: 'Período',
+                          valorInicial: _dataUltimaCompraInicial,
+                          valorFinal: _dataUltimaCompraFinal,
+                          onTap: _abrirFiltroPeriodoUltimaCompra,
                         ),
                         if (_dataUltimaCompraInicial != null ||
                             _dataUltimaCompraFinal != null) ...[
@@ -255,13 +242,22 @@ class _RelatorioClientesAniversariantesPageState
 
 class _CampoData extends StatelessWidget {
   final String label;
-  final String? valor;
+  final String? valorInicial;
+  final String? valorFinal;
   final VoidCallback onTap;
 
-  const _CampoData({required this.label, this.valor, required this.onTap});
+  const _CampoData({
+    required this.label,
+    this.valorInicial,
+    this.valorFinal,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final valor = valorInicial == null && valorFinal == null
+        ? '-'
+        : '${_fmtData(valorInicial)} - ${_fmtData(valorFinal)}';
     return InkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: onTap,
@@ -277,7 +273,7 @@ class _CampoData extends StatelessWidget {
                 style: const TextStyle(fontSize: 12, color: Colors.black54)),
             Expanded(
               child: Text(
-                _fmtData(valor),
+                valor,
                 style: const TextStyle(
                     fontWeight: FontWeight.w600, fontSize: 13),
               ),

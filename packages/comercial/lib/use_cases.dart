@@ -40,6 +40,8 @@ export 'domain/use_cases/conferir_item_pedido.dart';
 export 'domain/use_cases/listar_documentos_fiscais.dart';
 export 'domain/use_cases/get_configuracao_fiscal.dart';
 export 'domain/use_cases/salvar_configuracao_fiscal.dart';
+export 'domain/use_cases/enviar_certificado_fiscal.dart';
+export 'domain/use_cases/excluir_certificado_fiscal.dart';
 export 'domain/use_cases/reprocessar_documento_fiscal.dart';
 export 'domain/use_cases/get_documento_fiscal_detalhe.dart';
 export 'domain/use_cases/get_relatorio_faturamento.dart';

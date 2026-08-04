@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:financeiro/domain/models/caixa.dart';
 import 'package:financeiro/domain/models/caixa_do_historico.dart';
@@ -193,20 +194,17 @@ class _HistoricoDeCaixasPageState extends State<HistoricoDeCaixasPage> {
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () async {
-                        final agora = DateTime.now();
-                        final selecionado = await showDateRangePicker(
+                        final resultado = await abrirFiltroPeriodoSheet(
                           context: sheetContext,
-                          firstDate: DateTime(agora.year - 2),
-                          lastDate: agora,
-                          initialDateRange: DateTimeRange(
-                            start: _dataInicio,
-                            end: _dataFim,
-                          ),
+                          dataInicioAtual: _dataInicio,
+                          dataFimAtual: _dataFim,
+                          lastDate: DateTime.now(),
+                          permitirHora: false,
                         );
-                        if (selecionado == null) return;
+                        if (resultado == null) return;
                         setSheetState(() {
-                          _dataInicio = selecionado.start;
-                          _dataFim = selecionado.end;
+                          _dataInicio = resultado.dataInicio;
+                          _dataFim = resultado.dataFim;
                         });
                       },
                       icon: const Icon(Icons.date_range),

@@ -23,6 +23,7 @@ import 'package:core/produtos_compartilhados/repositories/lista_de_produtos_comp
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/arquivos.dart';
 import 'package:core/cep.dart';
+import 'package:core/links.dart';
 import 'package:get_it/get_it.dart';
 import 'package:isar_community/isar.dart';
 
@@ -61,6 +62,8 @@ void coreInjections() {
   sl.registerLazySingleton<CepService>(() => CepService());
 
   sl.registerLazySingleton<ArquivoService>(() => ArquivoService());
+
+  sl.registerLazySingleton<LinkService>(() => LinkService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 

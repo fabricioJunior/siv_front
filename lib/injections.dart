@@ -14,6 +14,7 @@ import 'package:core/local_data_sourcers/database_configs/i_isar_database_instan
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
+import 'package:entregas/entregas_injections.dart';
 import 'package:estoque/estoque_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
@@ -69,6 +70,7 @@ Future<void> resolverDependenciasApp() async {
   resolverComercialInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();
+  resolverEntregasInjections();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }

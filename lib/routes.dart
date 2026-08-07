@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
+import 'package:entregas/pages.dart';
 import 'package:core/seletores.dart' show SelectData;
 import 'package:empresas/presentation.dart';
 import 'package:empresas/use_cases.dart' show RecuperarTerminais;
@@ -373,6 +374,18 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/configuracao_fiscal',
       child: const ConfiguracaoFiscalPage(),
+    );
+  },
+  '/configuracao_entrega': (context) {
+    return _rotaProtegida(
+      route: '/configuracao_entrega',
+      child: const ConfiguracaoEntregaPage(),
+    );
+  },
+  '/chamar_entregador': (context) {
+    return _rotaProtegida(
+      route: '/chamar_entregador',
+      child: const ChamarEntregadorPage(),
     );
   },
   '/relatorio_faturamento': (context) {
@@ -1106,6 +1119,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/documentos_fiscais': ['FISFM001'],
   '/documento_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],
+  '/configuracao_entrega': ['ENTFM001'],
+  '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],
   '/relatorio_clientes_ativos': ['RELFC003'],

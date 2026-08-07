@@ -132,6 +132,14 @@ class _HomePageState extends State<HomePage> {
                   route: '/consultar_produto',
                   componentesNecessarios: ['PRDFL002'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.two_wheeler_outlined,
+                  title: 'Chamar Entregador',
+                  subtitle: 'Entrega avulsa fora do fluxo de pedido/romaneio.',
+                  color: Colors.deepOrange,
+                  route: '/chamar_entregador',
+                  componentesNecessarios: ['ENTFM001'],
+                ),
               ];
 
               final cadastros = <_AccessFlowItem>[
@@ -326,6 +334,14 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.indigo,
                   route: '/configuracao_fiscal',
                   componentesNecessarios: ['FISFM001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.local_shipping_outlined,
+                  title: 'Config. Entrega',
+                  subtitle: 'Integração com provider de entregador avulso.',
+                  color: Colors.indigo,
+                  route: '/configuracao_entrega',
+                  componentesNecessarios: ['ENTFM001'],
                 ),
                 const _AccessFlowItem(
                   icon: Icons.sync,

@@ -50,6 +50,8 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   // comentário em romaneio_page.dart:_irParaPagamento.
   final double? desconto;
   final double? valorTaxaEntrega;
+  final List<Map<String, dynamic>> descontosPromocao;
+  final Map<String, dynamic>? cupom;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -58,6 +60,8 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
     required this.formasDePagamentoRealizadas,
     this.desconto,
     this.valorTaxaEntrega,
+    this.descontosPromocao = const [],
+    this.cupom,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,

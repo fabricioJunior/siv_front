@@ -30,6 +30,7 @@ export 'domain/data/repositories/i_sangrias_repository.dart';
 export 'data/remote/contagem_do_caixa_remote_data_source.dart';
 export 'data/remote/dtos/contagem_do_caixa_dto.dart';
 export 'data/remote/dtos/contagem_do_caixa_item_dto.dart';
+export 'data/remote/dtos/faturamento_do_caixa_dto.dart';
 export 'data/repositories/contagem_do_caixa_repository.dart';
 export 'domain/data/remote/i_contagem_do_caixa_remote_data_source.dart';
 export 'domain/data/repositories/i_contagem_do_caixa_repository.dart';

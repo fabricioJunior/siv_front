@@ -56,6 +56,22 @@ class ComercialMenuPage extends StatelessWidget {
         componente: 'CONFC001',
         route: '/consignacoes',
       ),
+      const _ItemData(
+        icon: Icons.local_offer_outlined,
+        titulo: 'Promoções',
+        subtitulo: 'Regras de desconto por período, referência ou combo.',
+        cor: Colors.pink,
+        componente: 'PROMFC001',
+        route: '/promocoes',
+      ),
+      const _ItemData(
+        icon: Icons.confirmation_number_outlined,
+        titulo: 'Cupons',
+        subtitulo: 'Códigos de desconto com limite de uso.',
+        cor: Colors.purple,
+        componente: 'CUPFC001',
+        route: '/cupons',
+      ),
     ];
 
     // Filtra apenas itens com permissão

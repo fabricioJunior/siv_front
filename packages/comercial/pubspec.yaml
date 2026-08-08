@@ -23,6 +23,8 @@ dependencies:
     path: ../produtos
   empresas:
     path: ../empresas
+  promocoes:
+    path: ../promocoes
   fl_chart: ^0.69.0
 
 dev_dependencies:

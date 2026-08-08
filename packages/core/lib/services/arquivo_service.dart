@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 
 /// Wrapper fino sobre `file_picker` — evita dependência direta de package
@@ -12,5 +15,20 @@ class ArquivoService {
       allowedExtensions: extensoes,
     );
     return result?.files.single.path;
+  }
+
+  /// Abre o diálogo nativo "Salvar como" sugerindo [nomeSugerido] e grava
+  /// [bytes] no arquivo escolhido. Retorna o path final, ou `null` se o
+  /// usuário cancelar.
+  Future<String?> salvarBytes({
+    required Uint8List bytes,
+    required String nomeSugerido,
+  }) async {
+    final path = await FilePicker.platform.saveFile(
+      fileName: nomeSugerido,
+    );
+    if (path == null) return null;
+    await File(path).writeAsBytes(bytes);
+    return path;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_clientes_aniversariantes_bloc/relatorio_clientes_aniversariantes_bloc.dart';
+import 'package:comercial/presentation/relatorios/csv/relatorio_csv_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -67,6 +68,16 @@ class _RelatorioClientesAniversariantesPageState
     ));
   }
 
+  Future<void> _exportarCsv(
+    List<RelatorioClienteAniversarianteItem> items,
+  ) async {
+    final path = await RelatorioCsvExporter.exportarAniversariantes(items);
+    if (!mounted || path == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('CSV salvo em $path')),
+    );
+  }
+
   Future<void> _abrirFiltroPeriodoUltimaCompra() async {
     final agora = DateTime.now();
     final resultado = await abrirFiltroPeriodoSheet(
@@ -93,7 +104,18 @@ class _RelatorioClientesAniversariantesPageState
           RelatorioClientesAniversariantesState>(
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Clientes Aniversariantes')),
+            appBar: AppBar(
+              title: const Text('Clientes Aniversariantes'),
+              actions: [
+                IconButton(
+                  tooltip: 'Exportar CSV',
+                  icon: const Icon(Icons.file_download_outlined),
+                  onPressed: (state.dados?.items.isEmpty ?? true)
+                      ? null
+                      : () => _exportarCsv(state.dados!.items),
+                ),
+              ],
+            ),
             body: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [

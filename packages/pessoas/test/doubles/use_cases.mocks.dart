@@ -405,19 +405,22 @@ class MockCriarFuncionario extends _i1.Mock implements _i14.CriarFuncionario {
   }
 
   @override
-  _i5.Future<_i3.Funcionario> call({required _i3.Funcionario? funcionario}) =>
+  _i5.Future<_i3.Funcionario> call({
+    required _i3.Funcionario? funcionario,
+    required int? empresaId,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
-          {#funcionario: funcionario},
+          {#funcionario: funcionario, #empresaId: empresaId},
         ),
         returnValue: _i5.Future<_i3.Funcionario>.value(_FakeFuncionario_2(
           this,
           Invocation.method(
             #call,
             [],
-            {#funcionario: funcionario},
+            {#funcionario: funcionario, #empresaId: empresaId},
           ),
         )),
       ) as _i5.Future<_i3.Funcionario>);

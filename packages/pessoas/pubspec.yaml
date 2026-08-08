@@ -11,8 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  core: 
+  core:
     path: ../core
+  empresas:
+    path: ../empresas
   json_annotation: ^4.9.0
   mockito: ^5.0.0
   horizontal_stepper_flutter: ^1.0.3

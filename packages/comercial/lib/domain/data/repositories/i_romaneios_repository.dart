@@ -30,6 +30,8 @@ abstract class IRomaneiosRepository {
     double? desconto,
     double? valorTaxaEntrega,
     List<Map<String, dynamic>> descontosItens = const [],
+    List<Map<String, dynamic>> descontosPromocao = const [],
+    Map<String, dynamic>? cupom,
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,

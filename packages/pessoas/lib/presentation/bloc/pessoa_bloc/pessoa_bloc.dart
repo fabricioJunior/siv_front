@@ -114,7 +114,6 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
               pessoaState = pessoaState.copyWith(
                 funcionarioId: funcionario.id,
                 tipoFuncionario: funcionario.tipo,
-                funcionarioEmpresaId: funcionario.empresaId,
                 funcionarioInativo: funcionario.inativo,
               );
             }
@@ -245,11 +244,13 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         if ((state.eFuncionario ?? false) && pessoa.id != null) {
           try {
             if (state.funcionarioId != null) {
+              // Empresa não é mais editável por aqui -- vínculo agora é
+              // gerenciado no painel de vínculos (múltiplas empresas por
+              // funcionário), fora do fluxo de salvar pessoa.
               var funcionario = await salvarFuncionario.call(
                 funcionario: Funcionario(
                   criadoEm: null,
                   atualizadoEm: null,
-                  empresaId: state.funcionarioEmpresaId ?? 0,
                   id: state.funcionarioId!,
                   nome: state.nome ?? '',
                   pessoaId: pessoa.id!,
@@ -263,13 +264,13 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
                 funcionario: Funcionario(
                   criadoEm: null,
                   atualizadoEm: null,
-                  empresaId: state.funcionarioEmpresaId ?? 0,
                   id: 0,
                   nome: state.nome ?? '',
                   pessoaId: pessoa.id!,
                   tipo: state.tipoFuncionario ?? TipoFuncionario.comprador,
                   inativo: state.funcionarioInativo,
                 ),
+                empresaId: state.funcionarioEmpresaId ?? 0,
               );
               funcionarioId = funcionario.id;
             }
@@ -310,13 +311,13 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
             funcionario: Funcionario(
               criadoEm: null,
               atualizadoEm: null,
-              empresaId: state.funcionarioEmpresaId ?? 0,
               id: 0,
               nome: state.nome ?? '',
               pessoaId: pessoa.id!,
               tipo: state.tipoFuncionario ?? TipoFuncionario.comprador,
               inativo: state.funcionarioInativo,
             ),
+            empresaId: state.funcionarioEmpresaId ?? 0,
           );
         }
 

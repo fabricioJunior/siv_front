@@ -7,7 +7,13 @@ class CriarFuncionario {
   CriarFuncionario({required IFuncionariosRepository funcionariosRepository})
       : _funcionariosRepository = funcionariosRepository;
 
-  Future<Funcionario> call({required Funcionario funcionario}) {
-    return _funcionariosRepository.novoFuncionario(funcionario: funcionario);
+  Future<Funcionario> call({
+    required Funcionario funcionario,
+    required int empresaId,
+  }) {
+    return _funcionariosRepository.novoFuncionario(
+      funcionario: funcionario,
+      empresaId: empresaId,
+    );
   }
 }

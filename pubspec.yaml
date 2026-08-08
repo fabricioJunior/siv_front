@@ -47,6 +47,8 @@ dependencies:
     path: packages/financeiro
   comercial:
     path: packages/comercial
+  promocoes:
+    path: packages/promocoes
   precos:
     path: packages/precos
   estoque:

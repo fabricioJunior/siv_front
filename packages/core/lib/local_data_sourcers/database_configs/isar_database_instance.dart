@@ -66,4 +66,25 @@ class IsarDatabaseInstance implements IIsarDatabaseInstance {
 
     _openedInstances.clear();
   }
+
+  @override
+  Future<void> apagarTodosOsDados() async {
+    final instances = List<Isar>.from(_openedInstances);
+
+    for (final instance in instances) {
+      await instance.close();
+    }
+
+    _openedInstances.clear();
+
+    // Apaga o diretório raiz inteiro (não só as instâncias já abertas nesta
+    // execução) -- se o app foi reiniciado sem nunca ter aberto algum
+    // módulo, apagar só `_openedInstances` deixaria o arquivo antigo no
+    // disco pra ser reaberto com dados do licenciado anterior no próximo
+    // `getIsar`.
+    final directory = isarDirectory;
+    if (directory != null && directory.existsSync()) {
+      await directory.delete(recursive: true);
+    }
+  }
 }

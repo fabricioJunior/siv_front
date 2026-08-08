@@ -127,6 +127,10 @@ class _FechamentoDeCaixaPageState extends State<FechamentoDeCaixaPage> {
                   ),
                 ),
               ),
+              if (state.faturamento != null) ...[
+                const SizedBox(height: 12),
+                _CardFaturamento(faturamento: state.faturamento!),
+              ],
               if (possuiDivergencia) ...[
                 const SizedBox(height: 8),
                 Card(
@@ -281,4 +285,54 @@ IconData _iconeTipo(TipoContagemDoCaixaItem tipo) {
 
 String _formatarMoeda(double valor) {
   return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+}
+
+class _CardFaturamento extends StatelessWidget {
+  final FaturamentoDoCaixa faturamento;
+
+  const _CardFaturamento({required this.faturamento});
+
+  @override
+  Widget build(BuildContext context) {
+    final naoContabilizado = faturamento.naoContabilizado;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Faturamento do caixa',
+                style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Text(
+              'Faturamento total: ${_formatarMoeda(faturamento.totalFaturamento)}',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              'Contabilizado na contagem: ${_formatarMoeda(faturamento.totalContabilizado)}',
+            ),
+            if (naoContabilizado.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Não entra na contagem (ex: pagamento online já confirmado eletronicamente): '
+                '${_formatarMoeda(faturamento.totalNaoContabilizado)}',
+                style: TextStyle(color: Colors.blueGrey.shade700),
+              ),
+              const SizedBox(height: 4),
+              ...naoContabilizado.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 2),
+                  child: Text(
+                    '• ${_labelTipo(item.tipoDocumento)}: ${_formatarMoeda(item.valor)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

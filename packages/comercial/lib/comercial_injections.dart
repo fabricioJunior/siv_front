@@ -3,6 +3,7 @@ import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
+import 'package:promocoes/use_cases.dart';
 
 void resolverComercialInjections() {
   _remoteDataSources();
@@ -427,6 +428,8 @@ void _presentation() {
       sl(),
       sl(),
       sl(),
+      sl<ApurarElegibilidade>(),
+      sl<ILeitorDataDatasource>(),
     ),
   );
 

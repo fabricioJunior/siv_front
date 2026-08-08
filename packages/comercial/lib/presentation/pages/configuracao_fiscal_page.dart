@@ -48,6 +48,14 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
     ('csosn', 'CSOSN (opcional, padrão 102)'),
     ('cstPisCofins', 'CST PIS/COFINS (opcional, padrão 07)'),
     ('naturezaOperacaoVenda', 'Natureza da Operação (opcional)'),
+    (
+      'qrCodeUrl',
+      'URL de consulta do QR Code (opcional — só se a UF não tiver URL padrão cadastrada no backend)',
+    ),
+    (
+      'urlChaveUrl',
+      'URL de consulta por chave de acesso (opcional, mesmo caso acima)',
+    ),
   ];
 
   @override
@@ -112,6 +120,8 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
         'cstPisCofins': sefaz['cstPisCofins']?.toString() ?? '',
         'naturezaOperacaoVenda':
             sefaz['naturezaOperacaoVenda']?.toString() ?? '',
+        'qrCodeUrl': sefaz['qrCodeUrl']?.toString() ?? '',
+        'urlChaveUrl': sefaz['urlChaveUrl']?.toString() ?? '',
       };
       for (final entry in valores.entries) {
         _sefazControllers[entry.key]?.text = entry.value;
@@ -169,6 +179,9 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
             'cstPisCofins': campo('cstPisCofins'),
           if (campo('naturezaOperacaoVenda') != null)
             'naturezaOperacaoVenda': campo('naturezaOperacaoVenda'),
+          if (campo('qrCodeUrl') != null) 'qrCodeUrl': campo('qrCodeUrl'),
+          if (campo('urlChaveUrl') != null)
+            'urlChaveUrl': campo('urlChaveUrl'),
         },
       };
     }

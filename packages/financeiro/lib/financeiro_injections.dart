@@ -186,6 +186,10 @@ void _useCases() {
     () => RecuperarContagemDoCaixa(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarFaturamentoDoCaixa>(
+    () => RecuperarFaturamentoDoCaixa(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarItensPendentesParaContagemDoCaixaUseCase>(
     () => RecuperarItensPendentesParaContagemDoCaixaUseCase(repository: sl()),
   );
@@ -270,6 +274,7 @@ void _presentation() {
 
   sl.registerFactory<FechamentoDeCaixaBloc>(
     () => FechamentoDeCaixaBloc(
+      sl(),
       sl(),
       sl(),
     ),

@@ -522,6 +522,21 @@ class _SecaoErro extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     color: Colors.red.shade700)),
+            const Spacer(),
+            InkWell(
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: mensagem));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erro copiado'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: Icon(Icons.copy, size: 16, color: Colors.red.shade700),
+            ),
           ]),
           const SizedBox(height: 6),
           Text(mensagem,

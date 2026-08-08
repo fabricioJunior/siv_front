@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/sessao.dart';
 import 'package:estoque/domain/models/filtro_produto_do_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque_por_referencia.dart';
@@ -15,12 +16,14 @@ part 'estoque_saldo_state.dart';
 class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
   final RecuperarSaldoDoEstoque _recuperarSaldoDoEstoque;
   final AgruparSaldoPorReferencia _agruparSaldoPorReferencia;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
   static const int _limiteParaRelatorio = 1000000;
 
   EstoqueSaldoBloc(
     this._recuperarSaldoDoEstoque,
     this._agruparSaldoPorReferencia,
+    this._acessoGlobalSessao,
   ) : super(const EstoqueSaldoState()) {
     // `restartable` cancela a busca anterior sempre que uma nova é
     // disparada (troca de filtro/ordenação/busca): evita que a resposta de
@@ -382,9 +385,16 @@ class EstoqueSaldoBloc extends Bloc<EstoqueSaldoEvent, EstoqueSaldoState> {
     required List<int> tamanhoIds,
     List<OrdenacaoEstoqueItem> ordenacoes = const [],
   }) {
+    final empresaIdDaSessao = _acessoGlobalSessao.empresaIdDaSessao;
+
     return FiltroProdutoDoEstoque(
       page: page,
       limit: limit,
+      // Sem esse filtro a tela mostrava o acumulado de TODAS as empresas já
+      // sincronizadas neste device (o dado local não é filtrado por padrão),
+      // parecendo "travado" na primeira empresa usada -- na prática era o
+      // acumulado de todas, não filtrado por nenhuma.
+      empresaIds: empresaIdDaSessao != null ? [empresaIdDaSessao] : const [],
       disponibilidadeEstoque: disponibilidadeEstoque,
       atualizadoEmInicio: atualizadoEmInicio,
       atualizadoEmFim: atualizadoEmFim,

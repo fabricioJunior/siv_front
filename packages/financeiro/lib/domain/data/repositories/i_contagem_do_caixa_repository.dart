@@ -1,5 +1,6 @@
 import 'package:financeiro/domain/models/contagem_do_caixa.dart';
 import 'package:financeiro/domain/models/contagem_do_caixa_item.dart';
+import 'package:financeiro/domain/models/faturamento_do_caixa.dart';
 
 abstract class IContagemDoCaixaRepository {
   Future<ContagemDoCaixa?> recuperarContagemDoCaixa({required int caixaId});
@@ -14,6 +15,10 @@ abstract class IContagemDoCaixaRepository {
   });
 
   Future<List<ContagemDoCaixaItem>> recuperarItensPendentesParaContagemDoCaixa({
+    required int caixaId,
+  });
+
+  Future<FaturamentoDoCaixa> recuperarFaturamentoDoCaixa({
     required int caixaId,
   });
 }

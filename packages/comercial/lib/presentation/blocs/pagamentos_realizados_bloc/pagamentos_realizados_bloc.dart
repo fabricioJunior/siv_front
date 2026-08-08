@@ -4,12 +4,15 @@ import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/presentation.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:empresas/use_cases.dart';
+import 'package:promocoes/models.dart';
+import 'package:promocoes/use_cases.dart';
 
 part 'pagamentos_realizados_event.dart';
 part 'pagamentos_realizados_state.dart';
@@ -24,6 +27,8 @@ class PagamentosRealizadosBloc
   final RecuperarConfiguracaoNotaFiscalEmail
       _recuperarConfiguracaoNotaFiscalEmail;
   final IAcessoGlobalSessao _acessoGlobalSessao;
+  final ApurarElegibilidade _apurarElegibilidade;
+  final ILeitorDataDatasource _leitorDataDatasource;
 
   PagamentosRealizadosBloc(
     this._carregarResumo,
@@ -31,6 +36,8 @@ class PagamentosRealizadosBloc
     this._verificarElegibilidadeFidelidade,
     this._recuperarConfiguracaoNotaFiscalEmail,
     this._acessoGlobalSessao,
+    this._apurarElegibilidade,
+    this._leitorDataDatasource,
   ) : super(const PagamentosRealizadosState()) {
     on<PagamentosRealizadosIniciado>(_onIniciado);
     on<PagamentosRealizadosLinhaAdicionada>(_onLinhaAdicionada);
@@ -52,6 +59,10 @@ class PagamentosRealizadosBloc
       _onEnviarNotaPorEmailAlterado,
     );
     on<PagamentosRealizadosEmailNotaAlterado>(_onEmailNotaAlterado);
+    on<PagamentosRealizadosCarregouElegibilidade>(_onCarregouElegibilidade);
+    on<PagamentosRealizadosPromocaoEscolhida>(_onPromocaoEscolhida);
+    on<PagamentosRealizadosCupomInformado>(_onCupomInformado);
+    on<PagamentosRealizadosCupomRemovido>(_onCupomRemovido);
   }
 
   FutureOr<void> _onIniciado(
@@ -163,6 +174,8 @@ class PagamentosRealizadosBloc
           addError(e, s);
         }
       }
+
+      add(const PagamentosRealizadosCarregouElegibilidade());
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -532,11 +545,20 @@ class PagamentosRealizadosBloc
     final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
       ..[event.produtoId] = double.parse(descontoAplicado.toStringAsFixed(2));
 
+    // Desconto manual e promocao/cupom sao mutuamente exclusivos por
+    // produtoId -- aplicar desconto manual remove a promocao escolhida
+    // desse item, se houver (ver tambem _onPromocaoEscolhida, sentido
+    // inverso).
+    final promocaoMap = Map<int, OpcaoElegivel>.from(
+      state.promocaoEscolhidaPorItem,
+    )..remove(event.produtoId);
+
     emit(
       state.copyWith(
         descontosItensTipo: tipoMap,
         descontosItensValorTexto: valorTextoMap,
         descontosItensAplicado: aplicadoMap,
+        promocaoEscolhidaPorItem: promocaoMap,
         erro: null,
       ),
     );
@@ -734,6 +756,196 @@ class PagamentosRealizadosBloc
     Emitter<PagamentosRealizadosState> emit,
   ) {
     emit(state.copyWith(emailNota: event.emailNota, erro: null));
+  }
+
+  Future<void> _onCarregouElegibilidade(
+    PagamentosRealizadosCarregouElegibilidade event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) async {
+    final produtos = state.resumo?.produtosCompartilhados ?? const [];
+    if (produtos.isEmpty) return;
+
+    emit(state.copyWith(carregandoElegibilidade: true));
+
+    try {
+      final itens = await _montarItensApuracao(produtos);
+      if (itens.isEmpty) {
+        emit(state.copyWith(carregandoElegibilidade: false));
+        return;
+      }
+
+      final resultado = await _apurarElegibilidade.call(
+        clienteId: state.pessoaId,
+        itens: itens.values.toList(),
+        codigoCupom: state.cupomCodigoAplicado,
+      );
+
+      emit(
+        state.copyWith(
+          opcoesElegiveisPorItem: _mapearOpcoesPorProduto(itens, resultado),
+          referenciaIdPorProdutoId: itens.map(
+            (produtoId, item) => MapEntry(produtoId, item.referenciaId),
+          ),
+          carregandoElegibilidade: false,
+        ),
+      );
+    } catch (e, s) {
+      // Elegibilidade e um extra do fluxo de pagamento -- falha aqui nao
+      // pode travar a venda, so fica sem opcoes de promocao/cupom.
+      emit(state.copyWith(carregandoElegibilidade: false));
+      addError(e, s);
+    }
+  }
+
+  // Mapeia produtoId -> item de apuracao (com referenciaId), consultando o
+  // leitor por produtoId pra descobrir a referencia de cada item do
+  // carrinho (ProdutoCompartilhado nao carrega referenciaId).
+  Future<Map<int, ItemApuracaoElegibilidade>> _montarItensApuracao(
+    List<ProdutoCompartilhado> produtos,
+  ) async {
+    final itens = <int, ItemApuracaoElegibilidade>{};
+
+    for (final produto in produtos) {
+      try {
+        final leitorData =
+            await _leitorDataDatasource.getDataPorProdutoId(produto.produtoId);
+        if (leitorData == null) continue;
+
+        itens[produto.produtoId] = ItemApuracaoElegibilidade(
+          referenciaId: leitorData.idReferencia,
+          produtoId: produto.produtoId,
+          quantidade: produto.quantidade,
+          valorUnitario: produto.valorUnitario,
+        );
+      } catch (e, s) {
+        addError(e, s);
+      }
+    }
+
+    return itens;
+  }
+
+  Map<int, List<OpcaoElegivel>> _mapearOpcoesPorProduto(
+    Map<int, ItemApuracaoElegibilidade> itensPorProduto,
+    ResultadoElegibilidade resultado,
+  ) {
+    final opcoesPorReferencia = {
+      for (final item in resultado.itens) item.referenciaId: item.opcoesElegiveis,
+    };
+
+    return {
+      for (final entrada in itensPorProduto.entries)
+        entrada.key: opcoesPorReferencia[entrada.value.referenciaId] ?? const [],
+    };
+  }
+
+  void _onPromocaoEscolhida(
+    PagamentosRealizadosPromocaoEscolhida event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    final promocaoMap = Map<int, OpcaoElegivel>.from(
+      state.promocaoEscolhidaPorItem,
+    );
+
+    if (event.opcao == null) {
+      promocaoMap.remove(event.produtoId);
+    } else {
+      promocaoMap[event.produtoId] = event.opcao!;
+    }
+
+    // Mutuamente exclusivo com desconto manual do mesmo produto (sentido
+    // inverso de _onDescontoItemAlterado).
+    final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo)
+      ..remove(event.produtoId);
+    final valorTextoMap = Map<int, String>.from(state.descontosItensValorTexto)
+      ..remove(event.produtoId);
+    final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
+      ..remove(event.produtoId);
+
+    emit(
+      state.copyWith(
+        promocaoEscolhidaPorItem: promocaoMap,
+        descontosItensTipo: tipoMap,
+        descontosItensValorTexto: valorTextoMap,
+        descontosItensAplicado: aplicadoMap,
+        erro: null,
+      ),
+    );
+  }
+
+  Future<void> _onCupomInformado(
+    PagamentosRealizadosCupomInformado event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) async {
+    final codigo = event.codigo.trim();
+    if (codigo.isEmpty) {
+      emit(state.copyWith(erro: 'Informe o código do cupom.'));
+      return;
+    }
+
+    final produtos = state.resumo?.produtosCompartilhados ?? const [];
+    emit(state.copyWith(carregandoElegibilidade: true, cupomErro: null));
+
+    try {
+      final itens = await _montarItensApuracao(produtos);
+      final resultado = await _apurarElegibilidade.call(
+        clienteId: state.pessoaId,
+        itens: itens.values.toList(),
+        codigoCupom: codigo,
+      );
+
+      if (resultado.cupomInvalido != null) {
+        emit(
+          state.copyWith(
+            carregandoElegibilidade: false,
+            cupomErro: resultado.cupomInvalido,
+            cupomCodigoAplicado: null,
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          opcoesElegiveisPorItem: _mapearOpcoesPorProduto(itens, resultado),
+          referenciaIdPorProdutoId: itens.map(
+            (produtoId, item) => MapEntry(produtoId, item.referenciaId),
+          ),
+          carregandoElegibilidade: false,
+          cupomCodigoAplicado: codigo,
+          cupomErro: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          carregandoElegibilidade: false,
+          cupomErro: mensagemDeErroApi(e, 'Falha ao validar cupom.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  Future<void> _onCupomRemovido(
+    PagamentosRealizadosCupomRemovido event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) async {
+    // Limpa a escolha de qualquer item que estava usando o cupom removido
+    // (promocoes escolhidas continuam intactas).
+    final promocaoMap = Map<int, OpcaoElegivel>.from(
+      state.promocaoEscolhidaPorItem,
+    )..removeWhere((_, opcao) => opcao.ehCupom);
+
+    emit(
+      state.copyWith(
+        cupomCodigoAplicado: null,
+        cupomErro: null,
+        promocaoEscolhidaPorItem: promocaoMap,
+      ),
+    );
+
+    add(const PagamentosRealizadosCarregouElegibilidade());
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {

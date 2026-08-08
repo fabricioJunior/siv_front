@@ -52,6 +52,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final double valorDesconto;
   final double valorTaxaEntrega;
   final List<Map<String, dynamic>> descontosItens;
+  final List<Map<String, dynamic>> descontosPromocao;
+  final Map<String, dynamic>? cupom;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -64,6 +66,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
     this.valorDesconto = 0,
     this.valorTaxaEntrega = 0,
     this.descontosItens = const [],
+    this.descontosPromocao = const [],
+    this.cupom,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
@@ -78,6 +82,8 @@ class VendaFinalizarSolicitada extends VendaEvent {
         valorDesconto,
         valorTaxaEntrega,
         descontosItens,
+        descontosPromocao,
+        cupom,
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,

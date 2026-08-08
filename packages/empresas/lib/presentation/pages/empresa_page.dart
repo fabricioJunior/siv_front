@@ -460,6 +460,28 @@ class EmpresaPage extends StatelessWidget {
                 const SizedBox(height: 14),
                 _buildTextField(
                   context,
+                  label: 'Inscrição Estadual',
+                  icon: Icons.badge_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.inscricaoEstadual ?? ''),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe a Inscrição Estadual da empresa';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(inscricaoEstadual: value),
+                    );
+                  },
+                  fieldKey: const Key('inscricao_estadual_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
                   label: 'Registro municipal',
                   icon: Icons.assignment_outlined,
                   readOnly: readOnly,

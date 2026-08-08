@@ -429,6 +429,14 @@ class _DocumentoFiscalCard extends StatelessWidget {
                             label: 'Pedido #${documento.pedidoId}',
                           ),
                         ],
+                        if (documento.emitidaEmHomologacao) ...[
+                          const SizedBox(width: 8),
+                          const _InfoChip(
+                            icon: Icons.science_outlined,
+                            label: 'HOMOLOGAÇÃO',
+                            cor: Colors.deepOrange,
+                          ),
+                        ],
                       ],
                     ),
                     if (documento.erroMensagem != null) ...[
@@ -497,18 +505,27 @@ class _DocumentoFiscalCard extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
+  const _InfoChip({required this.icon, required this.label, this.cor});
   final IconData icon;
   final String label;
+  final Color? cor;
 
   @override
   Widget build(BuildContext context) {
+    final corEfetiva = cor ?? Colors.grey;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: Colors.grey),
+        Icon(icon, size: 12, color: corEfetiva),
         const SizedBox(width: 2),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: corEfetiva,
+            fontWeight: cor != null ? FontWeight.w700 : null,
+          ),
+        ),
       ],
     );
   }

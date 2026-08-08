@@ -8,6 +8,7 @@ import 'package:comercial/domain/use_cases/get_documento_fiscal_detalhe.dart';
 import 'package:comercial/domain/use_cases/recuperar_itens_devolvidos_romaneio.dart';
 import 'package:comercial/domain/use_cases/recuperar_itens_romaneio.dart';
 import 'package:comercial/domain/use_cases/recuperar_romaneio.dart';
+import 'package:comercial/domain/use_cases/reprocessar_documento_fiscal.dart';
 import 'package:core/bloc.dart';
 
 part 'documento_fiscal_detalhe_event.dart';
@@ -19,14 +20,17 @@ class DocumentoFiscalDetalheBloc
   final RecuperarRomaneio _recuperarRomaneio;
   final RecuperarItensRomaneio _recuperarItensRomaneio;
   final RecuperarItensDevolvidosRomaneio _recuperarItensDevolvidosRomaneio;
+  final ReprocessarDocumentoFiscal _reprocessar;
 
   DocumentoFiscalDetalheBloc(
     this._getDetalhe,
     this._recuperarRomaneio,
     this._recuperarItensRomaneio,
     this._recuperarItensDevolvidosRomaneio,
+    this._reprocessar,
   ) : super(const DocumentoFiscalDetalheState()) {
     on<DocumentoFiscalDetalheCarregar>(_onCarregar);
+    on<DocumentoFiscalDetalheReprocessar>(_onReprocessar);
   }
 
   FutureOr<void> _onCarregar(
@@ -46,7 +50,8 @@ class DocumentoFiscalDetalheBloc
       List<RomaneioItemDevolvido> itensDevolvidos = const [];
       try {
         romaneio = await _recuperarRomaneio.call(detalhe.documento.romaneioId);
-        itens = await _recuperarItensRomaneio.call(detalhe.documento.romaneioId);
+        itens =
+            await _recuperarItensRomaneio.call(detalhe.documento.romaneioId);
         itensDevolvidos = await _recuperarItensDevolvidosRomaneio.call(
           detalhe.documento.romaneioId,
         );
@@ -67,6 +72,26 @@ class DocumentoFiscalDetalheBloc
       emit(state.copyWith(
         step: DocumentoFiscalDetalheStep.falha,
         erro: 'Falha ao carregar documento fiscal.',
+      ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onReprocessar(
+    DocumentoFiscalDetalheReprocessar event,
+    Emitter<DocumentoFiscalDetalheState> emit,
+  ) async {
+    try {
+      // Backend sempre reprocessa com forcar=true (ReprocessarDocumentoFiscal), sem checar
+      // tentativas/maxTentativas -- de propósito, não replicar esse controle aqui no client.
+      emit(state.copyWith(reprocessando: true));
+      await _reprocessar.call(event.id);
+      final detalhe = await _getDetalhe.call(event.id);
+      emit(state.copyWith(reprocessando: false, detalhe: detalhe));
+    } catch (e, s) {
+      emit(state.copyWith(
+        reprocessando: false,
+        erro: 'Falha ao reprocessar documento fiscal.',
       ));
       addError(e, s);
     }

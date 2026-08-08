@@ -284,6 +284,18 @@ class EmpresaPage extends StatelessWidget {
                   icon: const Icon(Icons.mail_outline),
                   label: const Text('Nota fiscal por e-mail'),
                 ),
+                OutlinedButton.icon(
+                  onPressed: !habilitado
+                      ? null
+                      : () {
+                          Navigator.of(context).pushNamed(
+                            '/configuracao_fiscal',
+                            arguments: {'empresaId': empresaId},
+                          );
+                        },
+                  icon: const Icon(Icons.receipt_long),
+                  label: const Text('Configuração fiscal'),
+                ),
               ],
             ),
           ],
@@ -501,6 +513,114 @@ class EmpresaPage extends StatelessWidget {
                   },
                   fieldKey: const Key('registro_municipal_empresa'),
                 ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Código de atividade',
+                  icon: Icons.category_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(text: empresa?.codigoDeAtividade ?? ''),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(codigoDeAtividade: value),
+                    );
+                  },
+                  fieldKey: const Key('codigo_de_atividade_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Código de natureza jurídica',
+                  icon: Icons.account_balance_outlined,
+                  readOnly: readOnly,
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(
+                      text: empresa?.codigoDeNaturezaJuridica ?? '',
+                    ),
+                  ),
+                  validator: (_) => null,
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(codigoDeNaturezaJuridica: value),
+                    );
+                  },
+                  fieldKey: const Key('codigo_de_natureza_juridica_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildDropdownField<TipoRegimeEmpresa>(
+                  context,
+                  label: 'Regime tributário',
+                  icon: Icons.gavel_outlined,
+                  readOnly: readOnly,
+                  valueSelector: (empresa) => empresa?.regime,
+                  items: const [
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.normal,
+                      child: Text('Normal'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.microEmpresa,
+                      child: Text('Micro Empresa'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.epp,
+                      child: Text('EPP'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.lucroReal,
+                      child: Text('Lucro Real'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.lucroPresumido,
+                      child: Text('Lucro Presumido'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.mei,
+                      child: Text('MEI'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.eireli,
+                      child: Text('Eireli'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoRegimeEmpresa.outros,
+                      child: Text('Outros'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(regime: value),
+                    );
+                  },
+                  fieldKey: const Key('regime_empresa'),
+                ),
+                const SizedBox(height: 14),
+                _buildDropdownField<TipoDeSubstituicaoTributaria>(
+                  context,
+                  label: 'Substituição tributária',
+                  icon: Icons.swap_horiz_outlined,
+                  readOnly: readOnly,
+                  valueSelector: (empresa) => empresa?.substituicaoTributaria,
+                  items: const [
+                    DropdownMenuItem(
+                      value: TipoDeSubstituicaoTributaria.calcula,
+                      child: Text('Calcula'),
+                    ),
+                    DropdownMenuItem(
+                      value: TipoDeSubstituicaoTributaria.naoCalcula,
+                      child: Text('Não calcula'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(substituicaoTributaria: value),
+                    );
+                  },
+                  fieldKey: const Key('substituicao_tributaria_empresa'),
+                ),
               ],
             ),
           );
@@ -580,6 +700,34 @@ class EmpresaPage extends StatelessWidget {
                   fieldKey: const Key('municipio_empresa'),
                 ),
                 const SizedBox(height: 14),
+                _buildDropdownField<String>(
+                  context,
+                  label: 'UF',
+                  icon: Icons.map_outlined,
+                  readOnly: readOnly,
+                  valueSelector: (empresa) =>
+                      (empresa?.uf?.isEmpty ?? true) ? null : empresa!.uf,
+                  items: [
+                    for (var i = 0; i < Estados.listaEstadosSigla.length; i++)
+                      DropdownMenuItem(
+                        value: Estados.listaEstadosSigla[i],
+                        child: Text(
+                          '${Estados.listaEstadosSigla[i]} — ${Estados.listaEstados[i]}',
+                        ),
+                      ),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Selecione a UF da empresa';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    context.read<EmpresaBloc>().add(EmpresaEditou(uf: value));
+                  },
+                  fieldKey: const Key('uf_empresa'),
+                ),
+                const SizedBox(height: 14),
                 _buildTextField(
                   context,
                   label: 'Código IBGE do município',
@@ -618,9 +766,14 @@ class EmpresaPage extends StatelessWidget {
                       EmpresaEditou(cep: value),
                     );
                   },
+                  // ponytail: sem CepInputFormatter (brasil_fields) -- ele conta o tamanho da
+                  // string JÁ mascarada (com ponto/traço) contra o limite de 8, então trava a
+                  // digitação bem antes dos 8 dígitos reais (reproduzido: só deixa digitar até
+                  // "64.215-2", 6 dígitos). Backend só quer os dígitos mesmo (limpa pontuação
+                  // ao montar o XML da NFe), então manda cru, sem máscara visual.
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    CepInputFormatter(),
+                    LengthLimitingTextInputFormatter(8),
                   ],
                   keyboardType: TextInputType.number,
                   fieldKey: const Key('cep_empresa'),
@@ -753,6 +906,59 @@ class EmpresaPage extends StatelessWidget {
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  // BlocBuilder próprio (sem o buildWhen restritivo da página) -- a página só rebuilda uma vez
+  // ao entrar em modo edição (de propósito, pra não recriar os TextEditingController a cada
+  // tecla e resetar o cursor). Isso deixa os dropdowns sem refletir a seleção depois do toque
+  // (o valor no bloc muda, mas ninguém redesenha o DropdownButtonFormField com o novo
+  // initialValue). Cada dropdown resolve isso sozinho, se inscrevendo direto no bloc.
+  Widget _buildDropdownField<T>(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required bool readOnly,
+    required T? Function(Empresa?) valueSelector,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+    FormFieldValidator<T>? validator,
+    Key? fieldKey,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 6),
+        BlocBuilder<EmpresaBloc, EmpresaState>(
+          builder: (context, state) {
+            return DropdownButtonFormField<T>(
+              key: fieldKey,
+              initialValue: valueSelector(state.empresa),
+              items: items,
+              validator: validator,
+              onChanged: readOnly ? null : onChanged,
+              decoration: InputDecoration(
+                prefixIcon: Icon(icon),
+                filled: true,
+                fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

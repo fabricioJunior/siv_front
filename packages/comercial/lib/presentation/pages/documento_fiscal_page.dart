@@ -9,6 +9,8 @@ import 'package:comercial/presentation/blocs/documento_fiscal_detalhe_bloc/docum
 import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
+import 'package:comercial/use_cases.dart';
+import 'package:core/arquivos.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +69,17 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
   Widget build(BuildContext context) {
     return BlocProvider<DocumentoFiscalDetalheBloc>.value(
       value: _bloc,
-      child: BlocBuilder<DocumentoFiscalDetalheBloc, DocumentoFiscalDetalheState>(
+      child:
+          BlocConsumer<DocumentoFiscalDetalheBloc, DocumentoFiscalDetalheState>(
+        // erro é "grudento" (copyWith não zera pra null) -- só dispara quando o valor muda de
+        // verdade, senão repetiria a mesma mensagem em qualquer emissão futura.
+        listenWhen: (previous, current) =>
+            previous.erro != current.erro && current.erro != null,
+        listener: (context, state) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.erro!), backgroundColor: Colors.red),
+          );
+        },
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
@@ -94,8 +106,7 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
                     ],
                   ),
                 ),
-              DocumentoFiscalDetalheStep.sucesso =>
-                _Body(
+              DocumentoFiscalDetalheStep.sucesso => _Body(
                   detalhe: state.detalhe!,
                   corStatus: _corStatus,
                   fmtDt: _fmtDt,
@@ -112,6 +123,10 @@ class _DocumentoFiscalPageState extends State<DocumentoFiscalPage> {
                   itensParaImpressao: state.itensParaImpressao,
                   itensDevolvidosParaImpressao:
                       state.itensDevolvidosParaImpressao,
+                  reprocessando: state.reprocessando,
+                  onReemitir: () => _bloc.add(
+                    DocumentoFiscalDetalheReprocessar(widget.documentoId),
+                  ),
                 ),
             },
           );
@@ -130,6 +145,8 @@ class _Body extends StatelessWidget {
   final Romaneio? romaneioParaImpressao;
   final List<RomaneioItem> itensParaImpressao;
   final List<RomaneioItemDevolvido> itensDevolvidosParaImpressao;
+  final bool reprocessando;
+  final VoidCallback onReemitir;
 
   const _Body({
     required this.detalhe,
@@ -137,6 +154,8 @@ class _Body extends StatelessWidget {
     required this.fmtDt,
     required this.prettyJson,
     required this.onVerRomaneio,
+    required this.reprocessando,
+    required this.onReemitir,
     this.romaneioParaImpressao,
     this.itensParaImpressao = const [],
     this.itensDevolvidosParaImpressao = const [],
@@ -152,12 +171,41 @@ class _Body extends StatelessWidget {
       children: [
         // Status banner
         _StatusBanner(status: doc.status, cor: cor),
+        if (doc.emitidaEmHomologacao) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.deepOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.deepOrange),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.science_outlined, size: 16, color: Colors.deepOrange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'NOTA EMITIDA EM AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         if (doc.status != 'falha')
           FilledButton.icon(
             onPressed: () {
               final adaptado = comAvisoServidor(
-                () => NotaFiscalPdfExporter.gerarBytes(doc, romaneio: romaneioParaImpressao),
+                () => NotaFiscalPdfExporter.gerarBytes(doc,
+                    romaneio: romaneioParaImpressao),
               );
               imprimirDocumentoPdf(
                 context,
@@ -185,6 +233,46 @@ class _Body extends StatelessWidget {
             icon: const Icon(Icons.print_outlined),
             label: const Text('Imprimir Romaneio'),
           ),
+        if (doc.status == 'falha' ||
+            doc.status == 'pendente_edicao' ||
+            doc.status == 'rejeitada') ...[
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            onPressed: reprocessando ? null : onReemitir,
+            icon: reprocessando
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.replay),
+            label: Text(reprocessando ? 'Reemitindo...' : 'Reemitir'),
+          ),
+        ],
+        if (doc.status == 'emitida') ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _exportarPdf(context),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: const Text('Exportar PDF'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _exportarXml(context),
+                icon: const Icon(Icons.code_outlined),
+                label: const Text('Exportar XML'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _abrirDialogoEnviarEmail(context),
+                icon: const Icon(Icons.email_outlined),
+                label: const Text('Enviar por e-mail'),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 16),
 
         // Dados da Nota
@@ -201,7 +289,8 @@ class _Body extends StatelessWidget {
                       style: TextStyle(fontSize: 12, color: Colors.black54)),
                 ),
                 Expanded(
-                  child: Text('#${doc.romaneioId}', style: const TextStyle(fontSize: 13)),
+                  child: Text('#${doc.romaneioId}',
+                      style: const TextStyle(fontSize: 13)),
                 ),
                 TextButton.icon(
                   onPressed: onVerRomaneio,
@@ -219,7 +308,8 @@ class _Body extends StatelessWidget {
           _InfoRow('Tipo da Nota', doc.tipoNota),
           _InfoRow('Ambiente', doc.ambienteEmissao),
           _InfoRow('CPF/CNPJ Emissão', doc.cpfOuCnpjEmissao, copiavel: true),
-          _InfoRow('Valor Total', 'R\$ ${doc.valorTotalNota.toStringAsFixed(2)}'),
+          _InfoRow(
+              'Valor Total', 'R\$ ${doc.valorTotalNota.toStringAsFixed(2)}'),
           if (doc.urlDanfe != null)
             _InfoRow('URL da Nota', doc.urlDanfe!, copiavel: true),
           if (doc.produtosDaNota.isNotEmpty) ...[
@@ -261,11 +351,14 @@ class _Body extends StatelessWidget {
             _InfoRow('Protocolo', doc.protocolo!, copiavel: true),
           if (doc.payload != null) ...[
             const SizedBox(height: 10),
-            _JsonBloco(label: 'Body da Requisição', valor: prettyJson(doc.payload)),
+            _JsonBloco(
+                label: 'Body da Requisição', valor: prettyJson(doc.payload)),
           ],
           if (doc.respostaGateway != null) ...[
             const SizedBox(height: 10),
-            _JsonBloco(label: 'Resposta do Servidor', valor: prettyJson(doc.respostaGateway)),
+            _JsonBloco(
+                label: 'Resposta do Servidor',
+                valor: prettyJson(doc.respostaGateway)),
           ],
         ]),
 
@@ -285,6 +378,104 @@ class _Body extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _exportarPdf(BuildContext context) async {
+    try {
+      final adaptado = comAvisoServidor(
+        () => NotaFiscalPdfExporter.gerarBytes(detalhe.documento,
+            romaneio: romaneioParaImpressao),
+      );
+      final bytes = await adaptado.gerarBytes();
+      final path = await sl<ArquivoService>().salvarBytes(
+        bytes: bytes,
+        nomeSugerido: 'nota-fiscal-${detalhe.documento.id}.pdf',
+      );
+      if (!context.mounted || path == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF salvo em $path')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao exportar PDF: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportarXml(BuildContext context) async {
+    try {
+      final bytes = await sl<BaixarXmlDocumentoFiscal>()(detalhe.documento.id);
+      final path = await sl<ArquivoService>().salvarBytes(
+        bytes: bytes,
+        nomeSugerido: 'nota-fiscal-${detalhe.documento.id}.xml',
+      );
+      if (!context.mounted || path == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('XML salvo em $path')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao exportar XML: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _abrirDialogoEnviarEmail(BuildContext context) async {
+    final controller = TextEditingController();
+    final emailDigitado = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Enviar nota fiscal por e-mail'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'E-mail de destino',
+            hintText: 'Em branco usa o e-mail cadastrado do cliente',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    );
+
+    if (emailDigitado == null || !context.mounted) return;
+
+    try {
+      await sl<ReenviarEmailDocumentoFiscal>()(
+        detalhe.documento.id,
+        emailDestino: emailDigitado.isEmpty ? null : emailDigitado,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail enviado')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao enviar e-mail: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
@@ -341,7 +532,9 @@ extension _DocumentoFiscalExtracao on DocumentoFiscal {
     if (tpAmb == '2') return 'Homologação';
     final homologacao = _webmania?['homologacao'];
     if (homologacao is bool) {
-      return homologacao ? 'Homologação (não emitida)' : 'Produção (não emitida)';
+      return homologacao
+          ? 'Homologação (não emitida)'
+          : 'Produção (não emitida)';
     }
     return 'Não emitida ainda';
   }
@@ -403,7 +596,8 @@ class _Secao extends StatelessWidget {
       children: [
         Text(
           titulo,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54),
         ),
         const SizedBox(height: 8),
         Card(
@@ -488,7 +682,8 @@ class _InfoRow extends StatelessWidget {
               },
               child: const Padding(
                 padding: EdgeInsets.only(left: 8),
-                child: Icon(Icons.copy_outlined, size: 16, color: Colors.black38),
+                child:
+                    Icon(Icons.copy_outlined, size: 16, color: Colors.black38),
               ),
             ),
         ],
@@ -581,62 +776,67 @@ class _EventoCardState extends State<_EventoCard> {
           GestureDetector(
             onTap: () => setState(() => _expandido = !_expandido),
             child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(
-                  width: 5,
-                  decoration: BoxDecoration(
-                    color: cor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 5,
+                    decoration: BoxDecoration(
+                      color: cor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    child: Row(
-                      children: [
-                        Icon(
-                          e.sucesso ? Icons.check_circle_outline : Icons.cancel_outlined,
-                          size: 16,
-                          color: cor,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Tentativa ${e.tentativa}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          e.sucesso ? 'Sucesso' : 'Falha',
-                          style: TextStyle(fontSize: 12, color: cor),
-                        ),
-                        if (e.requestUrl != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Icon(Icons.http, size: 14, color: Colors.blueGrey.shade300),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      child: Row(
+                        children: [
+                          Icon(
+                            e.sucesso
+                                ? Icons.check_circle_outline
+                                : Icons.cancel_outlined,
+                            size: 16,
+                            color: cor,
                           ),
-                        const Spacer(),
-                        Text(
-                          widget.fmtDt(e.criadoEm),
-                          style: const TextStyle(fontSize: 11, color: Colors.black45),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          _expandido ? Icons.expand_less : Icons.expand_more,
-                          size: 18,
-                          color: Colors.black45,
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Tentativa ${e.tentativa}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            e.sucesso ? 'Sucesso' : 'Falha',
+                            style: TextStyle(fontSize: 12, color: cor),
+                          ),
+                          if (e.requestUrl != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Icon(Icons.http,
+                                  size: 14, color: Colors.blueGrey.shade300),
+                            ),
+                          const Spacer(),
+                          Text(
+                            widget.fmtDt(e.criadoEm),
+                            style: const TextStyle(
+                                fontSize: 11, color: Colors.black45),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            _expandido ? Icons.expand_less : Icons.expand_more,
+                            size: 18,
+                            color: Colors.black45,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ),
 
           // Detalhe expandível
@@ -686,7 +886,8 @@ class _LabelBloco extends StatelessWidget {
   final String label;
   final String valor;
   final bool copiavel;
-  const _LabelBloco({required this.label, required this.valor, this.copiavel = false});
+  const _LabelBloco(
+      {required this.label, required this.valor, this.copiavel = false});
 
   @override
   Widget build(BuildContext context) {
@@ -711,7 +912,8 @@ class _LabelBloco extends StatelessWidget {
                         duration: Duration(seconds: 1)),
                   );
                 },
-                child: const Icon(Icons.copy_outlined, size: 14, color: Colors.black38),
+                child: const Icon(Icons.copy_outlined,
+                    size: 14, color: Colors.black38),
               ),
             ],
           ],
@@ -724,7 +926,8 @@ class _LabelBloco extends StatelessWidget {
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Text(valor, style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+          child: Text(valor,
+              style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
         ),
       ],
     );
@@ -758,7 +961,8 @@ class _JsonBloco extends StatelessWidget {
                       duration: Duration(seconds: 1)),
                 );
               },
-              child: const Icon(Icons.copy_outlined, size: 14, color: Colors.black38),
+              child: const Icon(Icons.copy_outlined,
+                  size: 14, color: Colors.black38),
             ),
           ],
         ),

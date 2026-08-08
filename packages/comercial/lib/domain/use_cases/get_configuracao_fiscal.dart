@@ -8,9 +8,9 @@ class GetConfiguracaoFiscal {
       : _repository = repository;
 
   Future<({List<String> providers, EmpresaIntegracaoFiscal? config})>
-      call() async {
+      call({int? empresaId}) async {
     final providers = await _repository.listarProviders();
-    final config = await _repository.getConfiguracao();
+    final config = await _repository.getConfiguracao(empresaId: empresaId);
     return (providers: providers, config: config);
   }
 }

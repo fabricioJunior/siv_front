@@ -9,6 +9,7 @@ class DocumentoFiscalDetalheState {
   final Romaneio? romaneioParaImpressao;
   final List<RomaneioItem> itensParaImpressao;
   final List<RomaneioItemDevolvido> itensDevolvidosParaImpressao;
+  final bool reprocessando;
 
   const DocumentoFiscalDetalheState({
     this.step = DocumentoFiscalDetalheStep.inicial,
@@ -17,6 +18,7 @@ class DocumentoFiscalDetalheState {
     this.romaneioParaImpressao,
     this.itensParaImpressao = const [],
     this.itensDevolvidosParaImpressao = const [],
+    this.reprocessando = false,
   });
 
   DocumentoFiscalDetalheState copyWith({
@@ -26,6 +28,7 @@ class DocumentoFiscalDetalheState {
     Romaneio? romaneioParaImpressao,
     List<RomaneioItem>? itensParaImpressao,
     List<RomaneioItemDevolvido>? itensDevolvidosParaImpressao,
+    bool? reprocessando,
   }) =>
       DocumentoFiscalDetalheState(
         step: step ?? this.step,
@@ -35,5 +38,6 @@ class DocumentoFiscalDetalheState {
         itensParaImpressao: itensParaImpressao ?? this.itensParaImpressao,
         itensDevolvidosParaImpressao:
             itensDevolvidosParaImpressao ?? this.itensDevolvidosParaImpressao,
+        reprocessando: reprocessando ?? this.reprocessando,
       );
 }

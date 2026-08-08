@@ -41,17 +41,24 @@ Map<String, dynamic>? _webmaniaPayload(DocumentoFiscal documento) {
   return p is Map<String, dynamic> ? p : null;
 }
 
-/// Constroi o [DanfeLayoutData] a partir do payload fiscal do documento
-/// (`documento.payload.webmania.payload`, formato usado ao montar a
-/// requisicao pra webMania -- ver `IntegracaoFiscalService.
-/// buildWebmaniaPayloadFromRomaneio` no apollo-api) e, quando disponivel,
-/// dos dados da empresa no [romaneio] (nome/CNPJ -- nao ha endereco, IE nem
-/// telefone da empresa disponiveis no app hoje, ver nota em [DanfeEmpresa]).
+/// Constroi o [DanfeLayoutData] a partir do payload fiscal do documento.
+/// Dois formatos possiveis (ver `IntegracaoFiscalService.buildPayload` no
+/// apollo-api): `documento.payload.webmania.payload` (especifico da
+/// WebMania, existe SO quando o provider e webmania) ou o formato GENERICO
+/// em `documento.payload` direto (`itens`/`formasDePagamento`/`valorLiquido`
+/// etc -- usado por TODOS os providers, inclusive webmania por baixo do
+/// especifico). Sem esse fallback, documento emitido pelo gateway `sefaz`
+/// (ou `noop`) nunca tinha produtos/totais/pagamentos no PDF local -- so
+/// funcionava por coincidencia pra webmania, que tem os dois formatos.
+/// Tambem usa dados da empresa no [romaneio] (nome/CNPJ -- nao ha endereco,
+/// IE nem telefone da empresa disponiveis no app hoje, ver nota em
+/// [DanfeEmpresa]).
 DanfeLayoutData construirDanfeLayoutData(
   DocumentoFiscal documento, {
   Romaneio? romaneio,
 }) {
   final webmaniaPayload = _webmaniaPayload(documento);
+  final payloadGenerico = documento.payload;
   final pedido = webmaniaPayload?['pedido'];
   final destinatario = webmaniaPayload?['destinatario'];
   final numeroSerie = _numeroSerie(documento.chaveAcesso);
@@ -80,9 +87,15 @@ DanfeLayoutData construirDanfeLayoutData(
       dataVenda: romaneio?.criadoEm,
       ehNfce: ehNfce,
     ),
-    itens: _itens(webmaniaPayload),
-    totais: _totais(pedido, documento),
-    pagamentos: _pagamentos(pedido),
+    itens: webmaniaPayload != null
+        ? _itens(webmaniaPayload)
+        : _itensGenerico(payloadGenerico),
+    totais: webmaniaPayload != null
+        ? _totais(pedido, documento)
+        : _totaisGenerico(payloadGenerico),
+    pagamentos: webmaniaPayload != null
+        ? _pagamentos(pedido)
+        : _pagamentosGenerico(payloadGenerico),
     // Troco nao vai no payload webMania (filtrado antes de montar o pedido) --
     // vem de `Romaneio.troco` (novo campo em `RomaneioImpressaoDto` no apollo-api).
     troco: romaneio?.troco,
@@ -96,7 +109,7 @@ DanfeLayoutData construirDanfeLayoutData(
                 ? ((destinatario['cnpj'] as String?)?.isNotEmpty == true
                     ? destinatario['cnpj'] as String?
                     : destinatario['cpf'] as String?)
-                : null,
+                : payloadGenerico?['pessoaDocumento'] as String?,
           )
         : const DanfeConsumidor(),
     tributosAproximados: null, // Sem fonte de dado hoje (webMania nao devolve, payload nao guarda).
@@ -110,6 +123,8 @@ DanfeLayoutData construirDanfeLayoutData(
     // depender de campo separado no payload (ver `sefaz_nfce_portais.dart`).
     qrCodePayload: sefazNfceUrl(documento.chaveAcesso),
     mensagensRodape: [
+      if (documento.emitidaEmHomologacao)
+        'EMITIDA EM AMBIENTE DE HOMOLOGAÇÃO - SEM VALOR FISCAL',
       if (ehNfce) 'Não permite aproveitamento de crédito de ICMS',
       if (documento.erroMensagem != null) 'Obs.: ${documento.erroMensagem}',
       'Romaneio #${documento.romaneioId}',
@@ -135,6 +150,69 @@ List<DanfeItem> _itens(Map<String, dynamic>? webmaniaPayload) {
       valorUnitario: valorUnitario,
       valorTotal: total,
       desconto: desconto,
+    );
+  }).toList();
+}
+
+/// Itens a partir do formato genérico (`documento.payload.itens`, presente
+/// em qualquer provider -- ver `IntegracaoFiscalService.buildPayload`).
+/// Campos batem com o que o backend monta pro romaneio (`referenciaNome`/
+/// `referenciaDescricao`, `valorUnitario`, `valorTotalLiquido`,
+/// `valorTotalDesconto`, `tamanhoNome` como unidade -- mesmo shape usado
+/// na montagem do XML da NFe, ver `sefaz-fiscal.gateway.ts`).
+List<DanfeItem> _itensGenerico(Map<String, dynamic>? payload) {
+  final itens = payload?['itens'];
+  if (itens is! List) return const [];
+  return itens.whereType<Map>().map((item) {
+    final quantidade = (item['quantidade'] as num?) ?? 0;
+    final valorUnitario = (item['valorUnitario'] as num?) ?? 0;
+    final valorTotal =
+        (item['valorTotalLiquido'] as num?) ?? (valorUnitario * quantidade);
+    final desconto = item['valorTotalDesconto'] as num?;
+    final descricaoCompleta = item['referenciaDescricao'] as String?;
+    final descricao = (descricaoCompleta?.isNotEmpty ?? false)
+        ? descricaoCompleta!
+        : (item['referenciaNome']?.toString() ?? '-');
+    return DanfeItem(
+      codigo: (item['produtoIdExterno'] ?? item['produtoId'])?.toString(),
+      descricao: descricao,
+      quantidade: quantidade,
+      unidade: (item['tamanhoNome'] as String?) ?? 'UN',
+      valorUnitario: valorUnitario,
+      valorTotal: valorTotal,
+      desconto: (desconto != null && desconto > 0) ? desconto : null,
+    );
+  }).toList();
+}
+
+/// Totais a partir do formato genérico -- valores já vêm prontos no
+/// payload (`valorLiquido`/`valorDesconto`/`valorFrete`), sem precisar de
+/// um objeto `pedido` aninhado como no formato webMania.
+DanfeTotais _totaisGenerico(Map<String, dynamic>? payload) {
+  final valorLiquido = (payload?['valorLiquido'] as num?) ?? 0;
+  final desconto = (payload?['valorDesconto'] as num?) ?? 0;
+  final acrescimo = (payload?['valorFrete'] as num?) ?? 0;
+  return DanfeTotais(
+    subtotal: valorLiquido - acrescimo + desconto,
+    descontos: desconto,
+    acrescimos: acrescimo,
+    total: valorLiquido,
+  );
+}
+
+/// Pagamentos a partir do formato genérico (`documento.payload.formasDePagamento`,
+/// já resolvido em `ReceberService.romaneio()` -- `tipo` é o `TipoDocumento`
+/// já descrito, ex: 'Dinheiro'/'Pix'/'Cartao').
+List<DanfePagamento> _pagamentosGenerico(Map<String, dynamic>? payload) {
+  final formas = payload?['formasDePagamento'];
+  if (formas is! List) return const [];
+  return formas.whereType<Map>().map((forma) {
+    final tipo = forma['tipo']?.toString();
+    final descricao = forma['descricao']?.toString();
+    final valor = (forma['valor'] as num?) ?? 0;
+    return DanfePagamento(
+      forma: (descricao?.isNotEmpty ?? false) ? descricao! : (tipo ?? '-'),
+      valor: valor,
     );
   }).toList();
 }

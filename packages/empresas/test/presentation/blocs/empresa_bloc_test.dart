@@ -64,6 +64,18 @@ void main() {
     ],
   );
   blocTest<EmpresaBloc, EmpresaState>(
+    'aplica o valor do evento já na primeira edição após carregar uma empresa existente '
+    '(regressão: seletor só "pegava" o valor na segunda tentativa)',
+    build: () => empresaBloc,
+    seed: () => EmpresaCarregarSucesso(empresa: empresa),
+    act: (bloc) => bloc.add(EmpresaEditou(uf: 'PI')),
+    expect: () => [
+      isA<EmpresaEditarEmProgresso>()
+          .having((s) => s.uf, 'uf', 'PI')
+          .having((s) => s.empresa?.uf, 'empresa.uf', 'PI'),
+    ],
+  );
+  blocTest<EmpresaBloc, EmpresaState>(
     'emite estado de sucesso ao salvar empresa',
     build: () => empresaBloc,
     seed: () => EmpresaEditarEmProgresso(

@@ -10,10 +10,12 @@ class EnviarCertificadoFiscal {
     required String filePath,
     required String senha,
     void Function(int sent, int total)? onSendProgress,
+    int? empresaId,
   }) =>
       _repository.enviarCertificadoFiscal(
         filePath: filePath,
         senha: senha,
         onSendProgress: onSendProgress,
+        empresaId: empresaId,
       );
 }

@@ -15,6 +15,7 @@ class ConfiguracaoFiscalBloc
   final SalvarConfiguracaoFiscal _salvarConfiguracao;
   final EnviarCertificadoFiscal _enviarCertificado;
   final ExcluirCertificadoFiscal _excluirCertificado;
+  int? _empresaId;
 
   ConfiguracaoFiscalBloc(
     this._getConfiguracao,
@@ -33,8 +34,9 @@ class ConfiguracaoFiscalBloc
     Emitter<ConfiguracaoFiscalState> emit,
   ) async {
     try {
+      _empresaId = event.empresaId;
       emit(state.copyWith(step: ConfiguracaoFiscalStep.carregando));
-      final result = await _getConfiguracao.call();
+      final result = await _getConfiguracao.call(empresaId: _empresaId);
       emit(state.copyWith(
         providers: result.providers,
         config: result.config,
@@ -59,6 +61,7 @@ class ConfiguracaoFiscalBloc
         provider: event.provider,
         ativo: event.ativo,
         configuracao: event.configuracao,
+        empresaId: _empresaId,
       );
       emit(state.copyWith(
         config: config,
@@ -86,8 +89,9 @@ class ConfiguracaoFiscalBloc
       await _enviarCertificado.call(
         filePath: event.filePath,
         senha: event.senha,
+        empresaId: _empresaId,
       );
-      final result = await _getConfiguracao.call();
+      final result = await _getConfiguracao.call(empresaId: _empresaId);
       emit(state.copyWith(
         config: result.config,
         enviandoCertificado: false,
@@ -112,8 +116,8 @@ class ConfiguracaoFiscalBloc
         certificadoErro: null,
         certificadoSucesso: null,
       ));
-      await _excluirCertificado.call();
-      final result = await _getConfiguracao.call();
+      await _excluirCertificado.call(empresaId: _empresaId);
+      final result = await _getConfiguracao.call(empresaId: _empresaId);
       emit(state.copyWith(
         config: result.config,
         excluindoCertificado: false,

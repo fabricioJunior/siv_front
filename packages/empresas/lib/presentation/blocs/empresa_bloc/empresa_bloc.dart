@@ -45,20 +45,51 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
     Emitter<EmpresaState> emit,
   ) async {
     try {
-      if (state is EmpresaEditarEmProgresso) {
-        var updatedEmpresa = state.empresa?.copyWith(
+      // Entra em modo edição a partir de QUALQUER estado anterior (ex: acabou de carregar uma
+      // empresa existente) -- e já aplica o campo editado nesta mesma emissão. Antes, a primeira
+      // edição de uma empresa existente só trocava pro modo edição (via fromEmpresa) e descartava
+      // o valor do evento; o campo editado só "pegava" na segunda tentativa. Muito visível em
+      // seletores (um toque só, sem digitação contínua pra mascarar o drop).
+      final atual = state is EmpresaEditarEmProgresso
+          ? state as EmpresaEditarEmProgresso
+          : EmpresaEditarEmProgresso.fromEmpresa(state.empresa);
+
+      final empresaAtualizada = atual.empresa?.copyWith(
+        id: event.id,
+        cnpj: event.cnpj,
+        codigoDeAtividade: event.codigoDeAtividade,
+        codigoDeNaturezaJuridica: event.codigoDeNaturezaJuridica,
+        email: event.email,
+        inscricaoEstadual: event.inscricaoEstadual,
+        nome: event.nome,
+        nomeFantasia: event.nomeFantasia,
+        regime: event.regime,
+        registroMunicipal: event.registroMunicipal,
+        substituicaoTributaria: event.substituicaoTributaria,
+        telefone: event.telefone,
+        uf: event.uf,
+        logradouro: event.logradouro,
+        numero: event.numero,
+        bairro: event.bairro,
+        codigoMunicipioIbge: event.codigoMunicipioIbge,
+        municipio: event.municipio,
+        cep: event.cep,
+      );
+
+      emit(
+        atual.copyWith(
           id: event.id,
-          cnpj: event.cnpj, // ok
+          cnpj: event.cnpj,
           codigoDeAtividade: event.codigoDeAtividade,
           codigoDeNaturezaJuridica: event.codigoDeNaturezaJuridica,
-          email: event.email, // ok
+          email: event.email,
           inscricaoEstadual: event.inscricaoEstadual,
-          nome: event.nome, // ok
-          nomeFantasia: event.nomeFantasia, // ok
+          nome: event.nome,
+          nomeFantasia: event.nomeFantasia,
           regime: event.regime,
-          registroMunicipal: event.registroMunicipal, // OK
+          registroMunicipal: event.registroMunicipal,
           substituicaoTributaria: event.substituicaoTributaria,
-          telefone: event.telefone, // ok
+          telefone: event.telefone,
           uf: event.uf,
           logradouro: event.logradouro,
           numero: event.numero,
@@ -66,34 +97,9 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
           codigoMunicipioIbge: event.codigoMunicipioIbge,
           municipio: event.municipio,
           cep: event.cep,
-        );
-        emit(
-          (state as EmpresaEditarEmProgresso).copyWith(
-            id: event.id,
-            cnpj: event.cnpj, // ok
-            codigoDeAtividade: event.codigoDeAtividade,
-            codigoDeNaturezaJuridica: event.codigoDeNaturezaJuridica,
-            email: event.email, // ok
-            inscricaoEstadual: event.inscricaoEstadual,
-            nome: event.nome, // ok
-            nomeFantasia: event.nomeFantasia, // ok
-            regime: event.regime,
-            registroMunicipal: event.registroMunicipal, // OK
-            substituicaoTributaria: event.substituicaoTributaria,
-            telefone: event.telefone, // ok
-            uf: event.uf,
-            logradouro: event.logradouro,
-            numero: event.numero,
-            bairro: event.bairro,
-            codigoMunicipioIbge: event.codigoMunicipioIbge,
-            municipio: event.municipio,
-            cep: event.cep,
-            empresa: updatedEmpresa,
-          ),
-        );
-      } else {
-        emit(EmpresaEditarEmProgresso.fromEmpresa(state.empresa));
-      }
+          empresa: empresaAtualizada,
+        ),
+      );
     } catch (e, s) {
       addError(e, s);
     }

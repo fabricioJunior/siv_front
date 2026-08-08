@@ -19,6 +19,12 @@ abstract class DocumentoFiscal implements Equatable {
   DateTime? get updatedAt;
   Map<String, dynamic>? get payload;
   dynamic get respostaGateway;
+  int? get ambiente;
+}
+
+/// tpAmb 2 = homologacao (SEFAZ), nota sem valor fiscal -- so o provider sefaz preenche `ambiente`.
+extension DocumentoFiscalAmbiente on DocumentoFiscal {
+  bool get emitidaEmHomologacao => ambiente == 2;
 }
 
 abstract class DocumentoFiscalFiltros {

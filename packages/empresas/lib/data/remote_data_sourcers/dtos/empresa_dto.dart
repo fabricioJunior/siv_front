@@ -192,13 +192,15 @@ class EmpresaDto implements Empresa {
       _$TipoRegimeEmpresaEnumMap[tipo];
 }
 
+// Valores tem que bater literal com o enum `TaxRegime` do backend
+// (apollo-api/src/commons/enum/tax-regime.ts) -- não é PascalCase simples.
 const _$TipoRegimeEmpresaEnumMap = {
   TipoRegimeEmpresa.normal: 'Normal',
-  TipoRegimeEmpresa.microEmpresa: 'MicroEmpresa',
-  TipoRegimeEmpresa.epp: 'Epp',
-  TipoRegimeEmpresa.lucroReal: 'LucroReal',
-  TipoRegimeEmpresa.lucroPresumido: 'LucroPresumido',
-  TipoRegimeEmpresa.mei: 'Mei',
+  TipoRegimeEmpresa.microEmpresa: 'Micro empresa',
+  TipoRegimeEmpresa.epp: 'EPP',
+  TipoRegimeEmpresa.lucroReal: 'Lucro real',
+  TipoRegimeEmpresa.lucroPresumido: 'Lucro presumido',
+  TipoRegimeEmpresa.mei: 'MEI',
   TipoRegimeEmpresa.eireli: 'Eireli',
   TipoRegimeEmpresa.outros: 'Outros',
 };

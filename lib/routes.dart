@@ -372,9 +372,13 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/configuracao_fiscal': (context) {
+    final empresaIdArg = args(context)['empresaId'];
+    final empresaId = empresaIdArg is int
+        ? empresaIdArg
+        : int.tryParse(empresaIdArg?.toString() ?? '');
     return _rotaProtegida(
       route: '/configuracao_fiscal',
-      child: const ConfiguracaoFiscalPage(),
+      child: ConfiguracaoFiscalPage(empresaId: empresaId),
     );
   },
   '/configuracao_entrega': (context) {

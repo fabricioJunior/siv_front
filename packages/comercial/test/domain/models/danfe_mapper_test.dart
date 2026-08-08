@@ -227,5 +227,99 @@ void main() {
       expect(dados.pagamentos[0].forma, 'Dinheiro');
       expect(dados.pagamentos[1].forma, 'PIX');
     });
+
+    group('formato genérico (provider sefaz/noop, sem payload.webmania)', () {
+      DocumentoFiscalDto documentoGenerico({
+        List<Map<String, dynamic>>? itens,
+        List<Map<String, dynamic>>? formasDePagamento,
+      }) {
+        return DocumentoFiscalDto.fromJson({
+          'id': 1,
+          'empresaId': 1,
+          'romaneioId': 10,
+          'acao': 'emitir',
+          'tipoDocumento': 'nfce',
+          'status': 'emitida',
+          'provider': 'sefaz',
+          'chaveAcesso': '35260112345678000199650010000012341234567890',
+          'protocolo': '135260000012345',
+          'tentativas': 1,
+          'maxTentativas': 5,
+          'updatedAt': '2026-07-18T12:00:00.000Z',
+          'payload': {
+            'pessoaNome': 'Fulano de Tal',
+            'pessoaDocumento': '12345678900',
+            'valorLiquido': 149.0,
+            'valorDesconto': 10.0,
+            'valorFrete': 0,
+            'itens': itens ??
+                [
+                  {
+                    'produtoIdExterno': '10004503',
+                    'referenciaNome': 'BAG CLARA PALHA',
+                    'referenciaDescricao': '',
+                    'quantidade': 1,
+                    'valorUnitario': 149.0,
+                    'valorTotalLiquido': 149.0,
+                    'valorTotalDesconto': 0,
+                    'tamanhoNome': 'UN',
+                  },
+                ],
+            'formasDePagamento': formasDePagamento ??
+                [
+                  {'tipo': 'Pix', 'valor': 149.0},
+                ],
+          },
+        });
+      }
+
+      test('sem payload.webmania: itens vêm do payload genérico (documento.payload.itens)', () {
+        final doc = documentoGenerico();
+
+        final dados = construirDanfeLayoutData(doc);
+
+        expect(dados.itens, hasLength(1));
+        expect(dados.itens.single.descricao, 'BAG CLARA PALHA');
+        expect(dados.itens.single.quantidade, 1);
+        expect(dados.itens.single.valorUnitario, 149.0);
+        expect(dados.itens.single.valorTotal, 149.0);
+      });
+
+      test('sem payload.webmania: totais vêm de valorLiquido/valorDesconto/valorFrete', () {
+        final doc = documentoGenerico();
+
+        final dados = construirDanfeLayoutData(doc);
+
+        expect(dados.totais.total, 149.0);
+        expect(dados.totais.descontos, 10.0);
+      });
+
+      test('sem payload.webmania: pagamentos vêm de formasDePagamento (tipo como forma)', () {
+        final doc = documentoGenerico();
+
+        final dados = construirDanfeLayoutData(doc);
+
+        expect(dados.pagamentos, hasLength(1));
+        expect(dados.pagamentos.single.forma, 'Pix');
+        expect(dados.pagamentos.single.valor, 149.0);
+      });
+
+      test('referenciaDescricao preenchida tem prioridade sobre referenciaNome', () {
+        final doc = documentoGenerico(itens: [
+          {
+            'produtoIdExterno': '1',
+            'referenciaNome': 'CONJUNTO',
+            'referenciaDescricao': 'CONJUNTO BRUNA MODAL POLO',
+            'quantidade': 1,
+            'valorUnitario': 50.0,
+            'valorTotalLiquido': 50.0,
+          },
+        ]);
+
+        final dados = construirDanfeLayoutData(doc);
+
+        expect(dados.itens.single.descricao, 'CONJUNTO BRUNA MODAL POLO');
+      });
+    });
   });
 }

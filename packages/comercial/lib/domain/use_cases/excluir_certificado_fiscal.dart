@@ -6,5 +6,6 @@ class ExcluirCertificadoFiscal {
   ExcluirCertificadoFiscal({required IIntegracaoFiscalRepository repository})
       : _repository = repository;
 
-  Future<void> call() => _repository.excluirCertificadoFiscal();
+  Future<void> call({int? empresaId}) =>
+      _repository.excluirCertificadoFiscal(empresaId: empresaId);
 }

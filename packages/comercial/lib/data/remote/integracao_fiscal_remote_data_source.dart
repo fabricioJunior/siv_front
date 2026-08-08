@@ -10,8 +10,16 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
     implements IIntegracaoFiscalRemoteDataSource {
   IntegracaoFiscalRemoteDataSource({required super.informacoesParaRequest});
 
+  // Setado/limpo dentro do mesmo método (sem await entre as duas pontas) quando empresaId vem
+  // explícito -- mesma técnica já usada no datasource de entregas pra rota de profundidade
+  // diferente. path getter é lido de forma síncrona antes do único await (a request em si),
+  // então não há race entre chamadas concorrentes desta instância.
+  int? _empresaIdOverride;
+
   @override
-  String get path => '/v1/integracoes-fiscais{path}';
+  String get path => _empresaIdOverride != null
+      ? '/v1/empresas/$_empresaIdOverride/integracoes-fiscais{path}'
+      : '/v1/integracoes-fiscais{path}';
 
   @override
   Future<List<String>> listarProviders() async {
@@ -20,7 +28,8 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<EmpresaIntegracaoFiscal?> getConfiguracao() async {
+  Future<EmpresaIntegracaoFiscal?> getConfiguracao({int? empresaId}) async {
+    _empresaIdOverride = empresaId;
     try {
       final response = await get(pathParameters: {'path': '/configuracao'});
       if (response.body == null) return null;
@@ -29,6 +38,8 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
       );
     } catch (_) {
       return null;
+    } finally {
+      _empresaIdOverride = null;
     }
   }
 
@@ -37,18 +48,24 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
     required String provider,
     required bool ativo,
     Map<String, dynamic>? configuracao,
+    int? empresaId,
   }) async {
-    final response = await post(
-      pathParameters: {'path': '/configuracao'},
-      body: {
-        'provider': provider,
-        'ativo': ativo,
-        if (configuracao != null) 'configuracao': configuracao,
-      },
-    );
-    return EmpresaIntegracaoFiscalDto.fromJson(
-      response.body as Map<String, dynamic>,
-    );
+    _empresaIdOverride = empresaId;
+    try {
+      final response = await post(
+        pathParameters: {'path': '/configuracao'},
+        body: {
+          'provider': provider,
+          'ativo': ativo,
+          if (configuracao != null) 'configuracao': configuracao,
+        },
+      );
+      return EmpresaIntegracaoFiscalDto.fromJson(
+        response.body as Map<String, dynamic>,
+      );
+    } finally {
+      _empresaIdOverride = null;
+    }
   }
 
   @override
@@ -108,24 +125,48 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Uint8List> baixarXml(int id) {
+    return getBytes(pathParameters: {'path': '/$id/xml'});
+  }
+
+  @override
+  Future<void> reenviarEmail(int id, {String? emailDestino}) async {
+    await post(
+      pathParameters: {'path': '/$id/reenviar-email'},
+      body: {if (emailDestino != null && emailDestino.isNotEmpty) 'emailDestino': emailDestino},
+    );
+  }
+
+  @override
   Future<Map<String, dynamic>> enviarCertificadoFiscal({
     required String filePath,
     required String senha,
     void Function(int sent, int total)? onSendProgress,
+    int? empresaId,
   }) async {
-    final response = await postFile(
-      field: 'file',
-      file: File(filePath),
-      fileType: FileType.other,
-      pathParameters: {'path': '/configuracao/certificado'},
-      body: {'senha': senha},
-      onSendProgress: onSendProgress,
-    );
-    return response.body as Map<String, dynamic>;
+    _empresaIdOverride = empresaId;
+    try {
+      final response = await postFile(
+        field: 'file',
+        file: File(filePath),
+        fileType: FileType.other,
+        pathParameters: {'path': '/configuracao/certificado'},
+        body: {'senha': senha},
+        onSendProgress: onSendProgress,
+      );
+      return response.body as Map<String, dynamic>;
+    } finally {
+      _empresaIdOverride = null;
+    }
   }
 
   @override
-  Future<void> excluirCertificadoFiscal() async {
-    await delete(pathParameters: {'path': '/configuracao/certificado'});
+  Future<void> excluirCertificadoFiscal({int? empresaId}) async {
+    _empresaIdOverride = empresaId;
+    try {
+      await delete(pathParameters: {'path': '/configuracao/certificado'});
+    } finally {
+      _empresaIdOverride = null;
+    }
   }
 }

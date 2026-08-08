@@ -6,3 +6,8 @@ class DocumentoFiscalDetalheCarregar extends DocumentoFiscalDetalheEvent {
   final int id;
   DocumentoFiscalDetalheCarregar(this.id);
 }
+
+class DocumentoFiscalDetalheReprocessar extends DocumentoFiscalDetalheEvent {
+  final int id;
+  DocumentoFiscalDetalheReprocessar(this.id);
+}

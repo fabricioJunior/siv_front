@@ -8,7 +8,12 @@ import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 
 class ConfiguracaoFiscalPage extends StatefulWidget {
-  const ConfiguracaoFiscalPage({super.key});
+  /// Informado quando aberta a partir do cadastro de empresa (rota
+  /// administrativa que configura QUALQUER empresa) -- omitido usa a
+  /// empresa da sessão logada.
+  final int? empresaId;
+
+  const ConfiguracaoFiscalPage({this.empresaId, super.key});
 
   @override
   State<ConfiguracaoFiscalPage> createState() =>
@@ -61,7 +66,8 @@ class _ConfiguracaoFiscalPageState extends State<ConfiguracaoFiscalPage> {
   @override
   void initState() {
     super.initState();
-    _bloc = sl<ConfiguracaoFiscalBloc>()..add(ConfiguracaoFiscalIniciou());
+    _bloc = sl<ConfiguracaoFiscalBloc>()
+      ..add(ConfiguracaoFiscalIniciou(empresaId: widget.empresaId));
     for (final campo in _credenciaisWebmania) {
       _credenciaisControllers[campo.$1] = TextEditingController();
     }

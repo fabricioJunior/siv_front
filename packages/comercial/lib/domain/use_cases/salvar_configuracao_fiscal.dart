@@ -11,10 +11,12 @@ class SalvarConfiguracaoFiscal {
     required String provider,
     required bool ativo,
     Map<String, dynamic>? configuracao,
+    int? empresaId,
   }) =>
       _repository.salvarConfiguracao(
         provider: provider,
         ativo: ativo,
         configuracao: configuracao,
+        empresaId: empresaId,
       );
 }

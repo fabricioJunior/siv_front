@@ -14,7 +14,7 @@ abstract class ConfiguracaoEntregaMachine implements Equatable {
   String? get apiKey;
   String? get basicAuthUsername;
   String? get basicAuthPassword;
-  String? get baseUrl;
+  String get ambiente;
   String? get empresaIdExterno;
   String? get tipoIdentificacaoEmpresa;
   String? get identificacaoEmpresa;

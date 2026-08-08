@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:financeiro/models.dart';
+import 'package:financeiro/use_cases.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/promocao_forma_pagamento.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
 import 'package:promocoes/use_cases.dart';
 
@@ -13,11 +16,13 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
   final RecuperarPromocao _recuperarPromocao;
   final CriarPromocao _criarPromocao;
   final AtualizarPromocao _atualizarPromocao;
+  final RecuperarFormasDePagamento _recuperarFormasDePagamento;
 
   PromocaoBloc(
     this._recuperarPromocao,
     this._criarPromocao,
     this._atualizarPromocao,
+    this._recuperarFormasDePagamento,
   ) : super(const PromocaoState(step: PromocaoStep.inicial)) {
     on<PromocaoIniciou>(_onIniciou);
     on<PromocaoCampoAlterado>(_onCampoAlterado);
@@ -31,6 +36,9 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
     try {
       emit(state.copyWith(step: PromocaoStep.carregando));
 
+      final formasDePagamentoDisponiveis =
+          await _recuperarFormasDePagamento.call();
+
       if (event.idPromocao != null) {
         final promocao = await _recuperarPromocao.call(event.idPromocao!);
 
@@ -39,15 +47,21 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
           return;
         }
 
-        emit(PromocaoState.fromModel(promocao));
+        emit(
+          PromocaoState.fromModel(
+            promocao,
+            formasDePagamentoDisponiveis: formasDePagamentoDisponiveis,
+          ),
+        );
         return;
       }
 
       emit(
-        const PromocaoState(
+        PromocaoState(
           nome: '',
           tipoDesconto: TipoDesconto.percentual,
           tipoEscopo: TipoEscopo.geral,
+          formasDePagamentoDisponiveis: formasDePagamentoDisponiveis,
           step: PromocaoStep.editando,
         ),
       );
@@ -83,6 +97,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         limiteUnidadesVendidas: event.limiteUnidadesVendidas,
         somenteAniversariante: event.somenteAniversariante,
         ativa: event.ativa,
+        restringirFormasPagamento: event.restringirFormasPagamento,
+        formasPagamento: event.formasPagamento,
         step: PromocaoStep.editando,
         erro: null,
       ),
@@ -140,6 +156,17 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         return;
       }
 
+      if (state.restringirFormasPagamento && state.formasPagamento.isEmpty) {
+        emit(
+          state.copyWith(
+            step: PromocaoStep.validacaoInvalida,
+            erro:
+                'Selecione ao menos uma forma de pagamento permitida ou desligue a restrição.',
+          ),
+        );
+        return;
+      }
+
       emit(state.copyWith(step: PromocaoStep.salvando, erro: null));
 
       final promocao = Promocao.create(
@@ -165,6 +192,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         unidadesVendidas: state.promocao?.unidadesVendidas ?? 0,
         somenteAniversariante: state.somenteAniversariante,
         ativa: state.ativa,
+        restringirFormasPagamento: state.restringirFormasPagamento,
+        formasPagamento: state.formasPagamento,
         criadoEm: state.promocao?.criadoEm,
         atualizadoEm: state.promocao?.atualizadoEm,
       );
@@ -177,6 +206,7 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         PromocaoState.fromModel(
           salvo,
           step: state.id == null ? PromocaoStep.criado : PromocaoStep.salvo,
+          formasDePagamentoDisponiveis: state.formasDePagamentoDisponiveis,
         ),
       );
     } catch (e, s) {

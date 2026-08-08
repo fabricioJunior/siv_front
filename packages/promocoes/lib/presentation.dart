@@ -9,4 +9,5 @@ export 'presentation/pages/cupons_page.dart';
 export 'presentation/pages/promocao_form_page.dart';
 export 'presentation/pages/promocoes_page.dart';
 export 'presentation/widgets/escopo_selecionavel_widget.dart';
+export 'presentation/widgets/formas_pagamento_form_widget.dart';
 export 'presentation/widgets/regra_desconto_form_widget.dart';

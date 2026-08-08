@@ -235,6 +235,21 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                             limiteUnidadesVendidas: int.tryParse(value),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        FormasPagamentoFormWidget(
+                          restringirFormasPagamento:
+                              state.restringirFormasPagamento,
+                          formasPagamento: state.formasPagamento,
+                          formasDisponiveis:
+                              state.formasDePagamentoDisponiveis,
+                          tipoDesconto: state.tipoDesconto,
+                          onRestringirChanged: (valor) => _onCampoAlterado(
+                            context,
+                            restringirFormasPagamento: valor,
+                          ),
+                          onFormasPagamentoChanged: (formas) =>
+                              _onCampoAlterado(context, formasPagamento: formas),
+                        ),
                         const SizedBox(height: 8),
                         SwitchListTile.adaptive(
                           contentPadding: EdgeInsets.zero,
@@ -311,6 +326,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     int? limiteUnidadesVendidas,
     bool? somenteAniversariante,
     bool? ativa,
+    bool? restringirFormasPagamento,
+    List<PromocaoFormaPagamento>? formasPagamento,
   }) {
     context.read<PromocaoBloc>().add(
           PromocaoCampoAlterado(
@@ -332,6 +349,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             limiteUnidadesVendidas: limiteUnidadesVendidas,
             somenteAniversariante: somenteAniversariante,
             ativa: ativa,
+            restringirFormasPagamento: restringirFormasPagamento,
+            formasPagamento: formasPagamento,
           ),
         );
   }

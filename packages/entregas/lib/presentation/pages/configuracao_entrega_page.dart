@@ -16,11 +16,11 @@ class _ConfiguracaoEntregaPageState extends State<ConfiguracaoEntregaPage> {
   String _providerSelecionado = providersEntregaDisponiveis.first;
   bool _ativo = false;
   bool _preenchido = false;
+  String _ambiente = 'homologacao';
 
   final _apiKeyController = TextEditingController();
   final _basicAuthUsernameController = TextEditingController();
   final _basicAuthPasswordController = TextEditingController();
-  final _baseUrlController = TextEditingController();
   final _empresaIdExternoController = TextEditingController();
   final _tipoIdentificacaoEmpresaController = TextEditingController();
   final _identificacaoEmpresaController = TextEditingController();
@@ -37,7 +37,6 @@ class _ConfiguracaoEntregaPageState extends State<ConfiguracaoEntregaPage> {
     _apiKeyController.dispose();
     _basicAuthUsernameController.dispose();
     _basicAuthPasswordController.dispose();
-    _baseUrlController.dispose();
     _empresaIdExternoController.dispose();
     _tipoIdentificacaoEmpresaController.dispose();
     _identificacaoEmpresaController.dispose();
@@ -57,7 +56,7 @@ class _ConfiguracaoEntregaPageState extends State<ConfiguracaoEntregaPage> {
     final cfg = config.configuracao;
     if (cfg == null) return;
     _basicAuthUsernameController.text = cfg.basicAuthUsername ?? '';
-    _baseUrlController.text = cfg.baseUrl ?? '';
+    _ambiente = cfg.ambiente;
     _empresaIdExternoController.text = cfg.empresaIdExterno ?? '';
     _tipoIdentificacaoEmpresaController.text =
         cfg.tipoIdentificacaoEmpresa ?? '';
@@ -75,7 +74,7 @@ class _ConfiguracaoEntregaPageState extends State<ConfiguracaoEntregaPage> {
       'basicAuthUsername': _basicAuthUsernameController.text.trim(),
       if (_basicAuthPasswordController.text.trim().isNotEmpty)
         'basicAuthPassword': _basicAuthPasswordController.text.trim(),
-      'baseUrl': _baseUrlController.text.trim(),
+      'ambiente': _ambiente,
       'empresaIdExterno': _empresaIdExternoController.text.trim(),
       'tipoIdentificacaoEmpresa': _tipoIdentificacaoEmpresaController.text.trim(),
       'identificacaoEmpresa': _identificacaoEmpresaController.text.trim(),
@@ -192,12 +191,27 @@ class _ConfiguracaoEntregaPageState extends State<ConfiguracaoEntregaPage> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _baseUrlController,
-                            decoration: const InputDecoration(
-                              labelText: 'URL Base',
-                              border: OutlineInputBorder(),
-                            ),
+                          SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(
+                                value: 'homologacao',
+                                label: Text('Homologação (Testes)'),
+                              ),
+                              ButtonSegment(
+                                value: 'producao',
+                                label: Text('Produção'),
+                              ),
+                            ],
+                            selected: {_ambiente},
+                            onSelectionChanged: (selecao) =>
+                                setState(() => _ambiente = selecao.first),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _ambiente == 'producao'
+                                ? 'Ambiente real — ações aqui são permanentes.'
+                                : 'Testes e validação, não afeta operações reais.',
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(

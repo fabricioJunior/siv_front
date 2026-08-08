@@ -21,6 +21,9 @@ class PromocaoState extends Equatable {
   final int? limiteUnidadesVendidas;
   final bool somenteAniversariante;
   final bool ativa;
+  final bool restringirFormasPagamento;
+  final List<PromocaoFormaPagamento> formasPagamento;
+  final List<FormaDePagamento> formasDePagamentoDisponiveis;
   final Promocao? promocao;
   final String? erro;
   final PromocaoStep step;
@@ -46,13 +49,19 @@ class PromocaoState extends Equatable {
     this.limiteUnidadesVendidas,
     this.somenteAniversariante = false,
     this.ativa = true,
+    this.restringirFormasPagamento = false,
+    this.formasPagamento = const [],
+    this.formasDePagamentoDisponiveis = const [],
     this.promocao,
     this.erro,
     required this.step,
   });
 
-  PromocaoState.fromModel(Promocao origem, {PromocaoStep? step})
-      : id = origem.id,
+  PromocaoState.fromModel(
+    Promocao origem, {
+    PromocaoStep? step,
+    this.formasDePagamentoDisponiveis = const [],
+  })  : id = origem.id,
         nome = origem.nome,
         descricao = origem.descricao,
         dataInicio = origem.dataInicio,
@@ -72,6 +81,8 @@ class PromocaoState extends Equatable {
         limiteUnidadesVendidas = origem.limiteUnidadesVendidas,
         somenteAniversariante = origem.somenteAniversariante,
         ativa = origem.ativa,
+        restringirFormasPagamento = origem.restringirFormasPagamento,
+        formasPagamento = origem.formasPagamento,
         promocao = origem,
         erro = null,
         step = step ?? PromocaoStep.editando;
@@ -97,6 +108,9 @@ class PromocaoState extends Equatable {
     int? limiteUnidadesVendidas,
     bool? somenteAniversariante,
     bool? ativa,
+    bool? restringirFormasPagamento,
+    List<PromocaoFormaPagamento>? formasPagamento,
+    List<FormaDePagamento>? formasDePagamentoDisponiveis,
     Promocao? promocao,
     String? erro,
     PromocaoStep? step,
@@ -123,6 +137,11 @@ class PromocaoState extends Equatable {
           limiteUnidadesVendidas ?? this.limiteUnidadesVendidas,
       somenteAniversariante: somenteAniversariante ?? this.somenteAniversariante,
       ativa: ativa ?? this.ativa,
+      restringirFormasPagamento:
+          restringirFormasPagamento ?? this.restringirFormasPagamento,
+      formasPagamento: formasPagamento ?? this.formasPagamento,
+      formasDePagamentoDisponiveis:
+          formasDePagamentoDisponiveis ?? this.formasDePagamentoDisponiveis,
       promocao: promocao ?? this.promocao,
       erro: erro,
       step: step ?? this.step,
@@ -151,6 +170,9 @@ class PromocaoState extends Equatable {
         limiteUnidadesVendidas,
         somenteAniversariante,
         ativa,
+        restringirFormasPagamento,
+        formasPagamento,
+        formasDePagamentoDisponiveis,
         promocao,
         erro,
         step,

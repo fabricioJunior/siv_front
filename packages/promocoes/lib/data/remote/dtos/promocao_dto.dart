@@ -1,4 +1,5 @@
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/promocao_forma_pagamento.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
 
 class PromocaoDto implements Promocao {
@@ -47,6 +48,10 @@ class PromocaoDto implements Promocao {
   @override
   final bool ativa;
   @override
+  final bool restringirFormasPagamento;
+  @override
+  final List<PromocaoFormaPagamento> formasPagamento;
+  @override
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
@@ -74,6 +79,8 @@ class PromocaoDto implements Promocao {
     this.unidadesVendidas = 0,
     this.somenteAniversariante = false,
     this.ativa = true,
+    this.restringirFormasPagamento = false,
+    this.formasPagamento = const [],
     this.criadoEm,
     this.atualizadoEm,
   });
@@ -107,6 +114,13 @@ class PromocaoDto implements Promocao {
       unidadesVendidas: (json['unidadesVendidas'] as num?)?.toInt() ?? 0,
       somenteAniversariante: json['somenteAniversariante'] as bool? ?? false,
       ativa: json['ativa'] as bool? ?? true,
+      restringirFormasPagamento:
+          json['restringirFormasPagamento'] as bool? ?? false,
+      formasPagamento: (json['formasPagamento'] as List<dynamic>?)
+              ?.map((e) =>
+                  PromocaoFormaPagamento.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       criadoEm: _parseDateTime(json['criadoEm']),
       atualizadoEm: _parseDateTime(json['atualizadoEm']),
     );
@@ -136,6 +150,8 @@ class PromocaoDto implements Promocao {
       unidadesVendidas: promocao.unidadesVendidas,
       somenteAniversariante: promocao.somenteAniversariante,
       ativa: promocao.ativa,
+      restringirFormasPagamento: promocao.restringirFormasPagamento,
+      formasPagamento: promocao.formasPagamento,
       criadoEm: promocao.criadoEm,
       atualizadoEm: promocao.atualizadoEm,
     );
@@ -167,6 +183,9 @@ class PromocaoDto implements Promocao {
         'limiteUnidadesVendidas': limiteUnidadesVendidas,
       'somenteAniversariante': somenteAniversariante,
       'ativa': ativa,
+      'restringirFormasPagamento': restringirFormasPagamento,
+      'formasPagamento':
+          formasPagamento.map((forma) => forma.toJson()).toList(),
     };
   }
 
@@ -196,6 +215,8 @@ class PromocaoDto implements Promocao {
         unidadesVendidas,
         somenteAniversariante,
         ativa,
+        restringirFormasPagamento,
+        formasPagamento,
         criadoEm,
         atualizadoEm,
       ];

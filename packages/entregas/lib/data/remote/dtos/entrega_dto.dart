@@ -10,7 +10,7 @@ class ConfiguracaoEntregaMachineDto extends Equatable
   @override
   final String? basicAuthPassword;
   @override
-  final String? baseUrl;
+  final String ambiente;
   @override
   final String? empresaIdExterno;
   @override
@@ -24,7 +24,7 @@ class ConfiguracaoEntregaMachineDto extends Equatable
     this.apiKey,
     this.basicAuthUsername,
     this.basicAuthPassword,
-    this.baseUrl,
+    this.ambiente = 'homologacao',
     this.empresaIdExterno,
     this.tipoIdentificacaoEmpresa,
     this.identificacaoEmpresa,
@@ -36,7 +36,7 @@ class ConfiguracaoEntregaMachineDto extends Equatable
       apiKey: json['apiKey'] as String?,
       basicAuthUsername: json['basicAuthUsername'] as String?,
       basicAuthPassword: json['basicAuthPassword'] as String?,
-      baseUrl: json['baseUrl'] as String?,
+      ambiente: json['ambiente'] as String? ?? 'homologacao',
       empresaIdExterno: json['empresaIdExterno'] as String?,
       tipoIdentificacaoEmpresa: json['tipoIdentificacaoEmpresa'] as String?,
       identificacaoEmpresa: json['identificacaoEmpresa'] as String?,
@@ -49,7 +49,7 @@ class ConfiguracaoEntregaMachineDto extends Equatable
         apiKey,
         basicAuthUsername,
         basicAuthPassword,
-        baseUrl,
+        ambiente,
         empresaIdExterno,
         tipoIdentificacaoEmpresa,
         identificacaoEmpresa,

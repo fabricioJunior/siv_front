@@ -82,7 +82,7 @@ void _presentation() {
   );
 
   sl.registerFactory<PromocaoBloc>(
-    () => PromocaoBloc(sl(), sl(), sl()),
+    () => PromocaoBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<CuponsBloc>(

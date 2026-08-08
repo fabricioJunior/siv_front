@@ -1,4 +1,5 @@
 import 'package:core/equals.dart';
+import 'package:promocoes/domain/models/promocao_forma_pagamento.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
 
 abstract class Promocao implements Equatable {
@@ -24,6 +25,8 @@ abstract class Promocao implements Equatable {
   int get unidadesVendidas;
   bool get somenteAniversariante;
   bool get ativa;
+  bool get restringirFormasPagamento;
+  List<PromocaoFormaPagamento> get formasPagamento;
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
 
@@ -50,6 +53,8 @@ abstract class Promocao implements Equatable {
     int unidadesVendidas,
     bool somenteAniversariante,
     bool ativa,
+    bool restringirFormasPagamento,
+    List<PromocaoFormaPagamento> formasPagamento,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
   }) = _PromocaoImpl;
@@ -78,6 +83,8 @@ abstract class Promocao implements Equatable {
         unidadesVendidas,
         somenteAniversariante,
         ativa,
+        restringirFormasPagamento,
+        formasPagamento,
         criadoEm,
         atualizadoEm,
       ];
@@ -132,6 +139,10 @@ class _PromocaoImpl implements Promocao {
   @override
   final bool ativa;
   @override
+  final bool restringirFormasPagamento;
+  @override
+  final List<PromocaoFormaPagamento> formasPagamento;
+  @override
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
@@ -159,6 +170,8 @@ class _PromocaoImpl implements Promocao {
     this.unidadesVendidas = 0,
     this.somenteAniversariante = false,
     this.ativa = true,
+    this.restringirFormasPagamento = false,
+    this.formasPagamento = const [],
     this.criadoEm,
     this.atualizadoEm,
   });
@@ -187,6 +200,8 @@ class _PromocaoImpl implements Promocao {
         unidadesVendidas,
         somenteAniversariante,
         ativa,
+        restringirFormasPagamento,
+        formasPagamento,
         criadoEm,
         atualizadoEm,
       ];

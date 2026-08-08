@@ -28,6 +28,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final int? limiteUnidadesVendidas;
   final bool? somenteAniversariante;
   final bool? ativa;
+  final bool? restringirFormasPagamento;
+  final List<PromocaoFormaPagamento>? formasPagamento;
   // true quando o tipoEscopo mudou -- limpa os campos do escopo anterior
   // (referenciaIds/comboKit/quantidadeLeva/quantidadePaga) em vez de manter
   // valores que nao fazem mais sentido pro novo tipoEscopo.
@@ -53,6 +55,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
     this.limiteUnidadesVendidas,
     this.somenteAniversariante,
     this.ativa,
+    this.restringirFormasPagamento,
+    this.formasPagamento,
     this.limparEscopo = false,
   });
 }

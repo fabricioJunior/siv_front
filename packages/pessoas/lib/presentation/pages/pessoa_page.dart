@@ -6,6 +6,7 @@ import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
+import 'package:pessoas/presentation/widgets/funcionario_vinculos_painel.dart';
 
 class PessoaPage extends StatefulWidget {
   final int? idPessoa;
@@ -493,23 +494,26 @@ class _PessoaPageState extends State<PessoaPage> {
               },
             ),
             const SizedBox(height: 12),
-            InkWell(
-              onTap: () async {
-                await _selecionarEmpresa(context);
-              },
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Empresa',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.search),
-                ),
-                child: Text(
-                  _textoEmpresaSelecionada(state).isEmpty
-                      ? 'Selecione uma empresa'
-                      : _textoEmpresaSelecionada(state),
+            if (state.funcionarioId != null)
+              FuncionarioVinculosPainel(idFuncionario: state.funcionarioId!)
+            else
+              InkWell(
+                onTap: () async {
+                  await _selecionarEmpresa(context);
+                },
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Empresa',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.search),
+                  ),
+                  child: Text(
+                    _textoEmpresaSelecionada(state).isEmpty
+                        ? 'Selecione uma empresa'
+                        : _textoEmpresaSelecionada(state),
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: 12),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
@@ -585,22 +589,16 @@ class _PessoaPageState extends State<PessoaPage> {
               title: const Text('Tipo de funcionário'),
               subtitle: Text(_descricaoTipoFuncionario(state.tipoFuncionario)),
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Empresa'),
-              subtitle: Text(
-                _textoEmpresaSelecionada(state).isEmpty
-                    ? '-'
-                    : _textoEmpresaSelecionada(state),
+            if (state.funcionarioId == null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Empresa'),
+                subtitle: Text(
+                  _textoEmpresaSelecionada(state).isEmpty
+                      ? '-'
+                      : _textoEmpresaSelecionada(state),
+                ),
               ),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Empresa ID'),
-              subtitle: Text(
-                state.funcionarioEmpresaId?.toString() ?? '-',
-              ),
-            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Situação'),

@@ -7,6 +7,7 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:promocoes/models.dart';
 
 class PagamentosRealizadosWidget extends StatelessWidget {
   final String hashLista;
@@ -93,6 +94,20 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               'descontosItens': state.descontosItensAplicado.entries
                   .map((e) => {'produtoId': e.key, 'valor': e.value})
                   .toList(),
+              'descontosPromocao': state.promocaoEscolhidaPorItem.entries
+                  .where((e) => !e.value.ehCupom)
+                  .map((e) => {'produtoId': e.key, 'promocaoId': e.value.id})
+                  .toList(),
+              'cupom': state.promocaoEscolhidaPorItem.values
+                      .any((opcao) => opcao.ehCupom)
+                  ? {
+                      'codigo': state.cupomCodigoAplicado,
+                      'produtoIds': state.promocaoEscolhidaPorItem.entries
+                          .where((e) => e.value.ehCupom)
+                          .map((e) => e.key)
+                          .toList(),
+                    }
+                  : null,
               'valorTaxaEntrega': state.valorTaxaEntregaAplicado,
               'resumoFormasDePagamento': state.linhas
                   .where((linha) => linha.formaDePagamento != null)
@@ -270,6 +285,7 @@ class _ResumoPagamentoCard extends StatefulWidget {
 class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   late final TextEditingController _cpfController;
   late final TextEditingController _emailNotaController;
+  final _cupomController = TextEditingController();
 
   @override
   void initState() {
@@ -295,6 +311,7 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   void dispose() {
     _cpfController.dispose();
     _emailNotaController.dispose();
+    _cupomController.dispose();
     super.dispose();
   }
 
@@ -343,6 +360,12 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
               ],
             ),
             const SizedBox(height: 12),
+            _CupomField(
+              state: state,
+              controller: _cupomController,
+              habilitado: onDescontoPressed != null,
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -363,6 +386,11 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                   titulo: 'Desconto por produto',
                   valor: _formatarMoeda(state.valorDescontoItensTotal),
                 ),
+                if (state.valorDescontoPromocaoTotal > 0)
+                  _InfoBox(
+                    titulo: 'Desconto promoção/cupom',
+                    valor: _formatarMoeda(state.valorDescontoPromocaoTotal),
+                  ),
                 _InfoBox(
                   titulo: 'Total c/ desconto',
                   valor: _formatarMoeda(state.valorTotalComDesconto),
@@ -523,6 +551,74 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   }
 }
 
+class _CupomField extends StatelessWidget {
+  final PagamentosRealizadosState state;
+  final TextEditingController controller;
+  final bool habilitado;
+
+  const _CupomField({
+    required this.state,
+    required this.controller,
+    required this.habilitado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.possuiCupomAplicado) {
+      return Chip(
+        avatar: const Icon(Icons.confirmation_number, size: 16),
+        label: Text('Cupom aplicado: ${state.cupomCodigoAplicado}'),
+        onDeleted: habilitado
+            ? () => context
+                .read<PagamentosRealizadosBloc>()
+                .add(const PagamentosRealizadosCupomRemovido())
+            : null,
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            enabled: habilitado && !state.carregandoElegibilidade,
+            decoration: InputDecoration(
+              labelText: 'Código do cupom',
+              border: const OutlineInputBorder(),
+              isDense: true,
+              errorText: state.cupomErro,
+            ),
+            textInputAction: TextInputAction.done,
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            onSubmitted: (_) => _aplicar(context),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton(
+          onPressed: habilitado && !state.carregandoElegibilidade
+              ? () => _aplicar(context)
+              : null,
+          child: state.carregandoElegibilidade
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Aplicar'),
+        ),
+      ],
+    );
+  }
+
+  void _aplicar(BuildContext context) {
+    if (controller.text.trim().isEmpty) return;
+    context.read<PagamentosRealizadosBloc>().add(
+          PagamentosRealizadosCupomInformado(codigo: controller.text.trim()),
+        );
+  }
+}
+
 class _LinhaPagamentoCard extends StatelessWidget {
   final PagamentoRealizadoLinha linha;
   final SeletorWidget formasDePagamentoSeletor;
@@ -659,6 +755,13 @@ class _ProdutosCard extends StatelessWidget {
               final valorTotalItem = produto.quantidade * produto.valorUnitario;
               final descontoAplicado =
                   state.descontosItensAplicado[produto.produtoId] ?? 0;
+              final promocaoAplicada =
+                  state.promocaoEscolhidaPorItem[produto.produtoId];
+              final descontoPromocaoItem =
+                  (promocaoAplicada?.valorDesconto ?? 0) * produto.quantidade;
+              final temDesconto = descontoAplicado > 0 || promocaoAplicada != null;
+              final opcoesElegiveis =
+                  state.opcoesElegiveisPorItem[produto.produtoId] ?? const [];
               final descricao = [
                 produto.nome,
                 if (produto.corNome.isNotEmpty) produto.corNome,
@@ -681,10 +784,14 @@ class _ProdutosCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        descontoAplicado > 0
-                            ? _formatarMoeda(valorTotalItem - descontoAplicado)
+                        temDesconto
+                            ? _formatarMoeda(
+                                valorTotalItem -
+                                    descontoAplicado -
+                                    descontoPromocaoItem,
+                              )
                             : _formatarMoeda(valorTotalItem),
-                        style: descontoAplicado > 0
+                        style: temDesconto
                             ? TextStyle(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -703,6 +810,45 @@ class _ProdutosCard extends StatelessWidget {
                       icon: const Icon(Icons.percent, size: 16),
                       label: Text(descontoAplicado > 0 ? 'Editar' : 'Desconto'),
                     ),
+                    if (promocaoAplicada != null)
+                      InputChip(
+                        avatar: const Icon(Icons.local_offer, size: 16),
+                        label: Text(
+                          promocaoAplicada.nome,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onPressed: podeEditar
+                            ? () => _abrirDialogoPromocaoItem(
+                                  context,
+                                  produto.produtoId,
+                                  opcoesElegiveis,
+                                  promocaoAplicada,
+                                )
+                            : null,
+                        onDeleted: podeEditar
+                            ? () => context
+                                .read<PagamentosRealizadosBloc>()
+                                .add(
+                                  PagamentosRealizadosPromocaoEscolhida(
+                                    produtoId: produto.produtoId,
+                                    opcao: null,
+                                  ),
+                                )
+                            : null,
+                      )
+                    else if (opcoesElegiveis.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: podeEditar
+                            ? () => _abrirDialogoPromocaoItem(
+                                  context,
+                                  produto.produtoId,
+                                  opcoesElegiveis,
+                                  null,
+                                )
+                            : null,
+                        icon: const Icon(Icons.local_offer_outlined, size: 16),
+                        label: const Text('Promoção'),
+                      ),
                   ],
                 ),
               );
@@ -1095,6 +1241,77 @@ Future<void> _abrirDialogoDescontoItem(
       ),
     );
   }
+}
+
+Future<void> _abrirDialogoPromocaoItem(
+  BuildContext context,
+  int produtoId,
+  List<OpcaoElegivel> opcoes,
+  OpcaoElegivel? selecionadaAtual,
+) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+
+  final escolhida = await showDialog<Object?>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Promoções e cupons elegíveis'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<OpcaoElegivel?>(
+                  title: const Text('Nenhuma'),
+                  value: null,
+                  groupValue: selecionadaAtual,
+                  onChanged: (value) => Navigator.of(dialogContext).pop(
+                    const _NenhumaOpcaoSelecionada(),
+                  ),
+                ),
+                ...opcoes.map(
+                  (opcao) => RadioListTile<OpcaoElegivel?>(
+                    title: Text(opcao.nome),
+                    subtitle: Text(
+                      '${opcao.ehCupom ? 'Cupom' : 'Promoção'} — desconto de ${_formatarMoeda(opcao.valorDesconto)} por unidade',
+                    ),
+                    value: opcao,
+                    groupValue: selecionadaAtual,
+                    onChanged: (value) =>
+                        Navigator.of(dialogContext).pop(opcao),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (escolhida == null) return;
+
+  bloc.add(
+    PagamentosRealizadosPromocaoEscolhida(
+      produtoId: produtoId,
+      opcao: escolhida is _NenhumaOpcaoSelecionada
+          ? null
+          : escolhida as OpcaoElegivel,
+    ),
+  );
+}
+
+// Marcador pra distinguir "operador cancelou o dialog" (escolhida == null,
+// nao faz nada) de "operador escolheu Nenhuma" (limpa a promoção do item).
+class _NenhumaOpcaoSelecionada {
+  const _NenhumaOpcaoSelecionada();
 }
 
 Future<void> _abrirAjudaAtalhos(BuildContext context) {

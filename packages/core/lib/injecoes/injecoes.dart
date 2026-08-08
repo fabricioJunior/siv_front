@@ -108,7 +108,12 @@ void coreInjections() {
     ),
   );
 
-  sl.registerFactory<IIsarDatabaseInstance>(() => IsarDatabaseInstance());
+  // Singleton -- precisa acumular as instâncias Isar abertas
+  // (`_openedInstances`) pra `closeAllInstances`/`apagarTodosOsDados`
+  // funcionarem de verdade. Como factory, cada `sl()` criava um objeto novo
+  // com a lista sempre vazia, e essas duas operações nunca fechavam/apagavam
+  // nada de fato.
+  sl.registerLazySingleton<IIsarDatabaseInstance>(() => IsarDatabaseInstance());
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {

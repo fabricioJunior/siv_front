@@ -146,6 +146,7 @@ void _usesCases() {
       usuariosRepository: sl(),
       licenciadosRepository: sl(),
       limparCredenciaisDeAutenticacao: sl(),
+      isarDatabaseInstance: sl(),
     ),
   );
 

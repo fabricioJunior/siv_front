@@ -1,6 +1,7 @@
 import 'package:core/remote_data_sourcers.dart';
 import 'package:financeiro/data.dart';
 import 'package:financeiro/domain/models/contagem_do_caixa.dart';
+import 'package:financeiro/domain/models/faturamento_do_caixa.dart';
 
 class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
     implements IContagemDoCaixaRemoteDataSource {
@@ -117,7 +118,21 @@ class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
         })
         .toList();
   }
-  
+
+  @override
+  Future<FaturamentoDoCaixa> recuperarFaturamentoDoCaixa({
+    required int caixaId,
+  }) async {
+    final response = await get(
+      pathParameters: {
+        'caixaId': caixaId.toString(),
+        'pendente': 'faturamento',
+      },
+    );
+
+    return FaturamentoDoCaixaDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
   @override
   Future<ContagemDoCaixa?> recuperarContagemDoCaixaRealizada({
     required int idCaixa,

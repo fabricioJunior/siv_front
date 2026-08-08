@@ -43,6 +43,17 @@ class PagamentosRealizadosState extends Equatable {
   final bool enviarNotaPorEmail;
   final String emailNota;
   final String? emailClienteCadastrado;
+  // Opcoes de promocao/cupom elegiveis por produtoId (chave = produtoId,
+  // mesmo padrao das outras Maps deste state, mesmo a API respondendo por
+  // referenciaId -- o mapeamento produtoId->referenciaId e feito no bloc).
+  final Map<int, List<OpcaoElegivel>> opcoesElegiveisPorItem;
+  // Promocao/cupom escolhido pelo operador por produtoId. Mutuamente
+  // exclusivo com descontosItensAplicado (ver bloc).
+  final Map<int, OpcaoElegivel> promocaoEscolhidaPorItem;
+  final Map<int, int> referenciaIdPorProdutoId;
+  final bool carregandoElegibilidade;
+  final String? cupomCodigoAplicado;
+  final String? cupomErro;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -73,6 +84,12 @@ class PagamentosRealizadosState extends Equatable {
     this.enviarNotaPorEmail = false,
     this.emailNota = '',
     this.emailClienteCadastrado,
+    this.opcoesElegiveisPorItem = const {},
+    this.promocaoEscolhidaPorItem = const {},
+    this.referenciaIdPorProdutoId = const {},
+    this.carregandoElegibilidade = false,
+    this.cupomCodigoAplicado,
+    this.cupomErro,
   });
 
   bool get exigeEmailNota =>
@@ -82,6 +99,20 @@ class PagamentosRealizadosState extends Equatable {
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
+  // Desconto de promocao/cupom escolhido por item (valorDesconto da opcao
+  // e por unidade -- multiplica pela quantidade do produto no carrinho).
+  double get valorDescontoPromocaoTotal {
+    if (promocaoEscolhidaPorItem.isEmpty) return 0;
+    final quantidadePorProduto = {
+      for (final produto in resumo?.produtosCompartilhados ?? const [])
+        produto.produtoId: produto.quantidade,
+    };
+    return promocaoEscolhidaPorItem.entries.fold<double>(0, (soma, entrada) {
+      final quantidade = quantidadePorProduto[entrada.key] ?? 0;
+      return soma + (entrada.value.valorDesconto * quantidade);
+    });
+  }
+
   // Desconto do romaneio geral (valorDescontoAplicado) é distribuído pelos
   // produtos assim que aplicado (ver _onDescontoAlterado no bloc) -- o
   // valor já está embutido em descontosItensAplicado, então não é
@@ -89,7 +120,9 @@ class PagamentosRealizadosState extends Equatable {
   // valorDescontoAplicado fica só como registro/exibição do último valor
   // "geral" informado.
   double get valorTotalComDesconto =>
-      (valorTotalProdutos - valorDescontoItensTotal)
+      (valorTotalProdutos -
+              valorDescontoItensTotal -
+              valorDescontoPromocaoTotal)
           .clamp(0, double.infinity)
           .toDouble();
   // Taxa de entrega é somada FORA do desconto -- nunca sofre desconto,
@@ -111,6 +144,8 @@ class PagamentosRealizadosState extends Equatable {
       double.parse(valorDescontoAplicado.toStringAsFixed(2));
   double get valorTaxaEntregaAplicadoArredondado =>
       double.parse(valorTaxaEntregaAplicado.toStringAsFixed(2));
+  bool get possuiCupomAplicado =>
+      cupomCodigoAplicado != null && cupomCodigoAplicado!.isNotEmpty;
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
   bool get podeFinalizar =>
       step == PagamentosRealizadosStep.editando && linhas.isNotEmpty;
@@ -146,6 +181,12 @@ class PagamentosRealizadosState extends Equatable {
     bool? enviarNotaPorEmail,
     String? emailNota,
     Object? emailClienteCadastrado = _sentinela,
+    Map<int, List<OpcaoElegivel>>? opcoesElegiveisPorItem,
+    Map<int, OpcaoElegivel>? promocaoEscolhidaPorItem,
+    Map<int, int>? referenciaIdPorProdutoId,
+    bool? carregandoElegibilidade,
+    Object? cupomCodigoAplicado = _sentinela,
+    Object? cupomErro = _sentinela,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -193,6 +234,20 @@ class PagamentosRealizadosState extends Equatable {
       emailClienteCadastrado: identical(emailClienteCadastrado, _sentinela)
           ? this.emailClienteCadastrado
           : emailClienteCadastrado as String?,
+      opcoesElegiveisPorItem:
+          opcoesElegiveisPorItem ?? this.opcoesElegiveisPorItem,
+      promocaoEscolhidaPorItem:
+          promocaoEscolhidaPorItem ?? this.promocaoEscolhidaPorItem,
+      referenciaIdPorProdutoId:
+          referenciaIdPorProdutoId ?? this.referenciaIdPorProdutoId,
+      carregandoElegibilidade:
+          carregandoElegibilidade ?? this.carregandoElegibilidade,
+      cupomCodigoAplicado: identical(cupomCodigoAplicado, _sentinela)
+          ? this.cupomCodigoAplicado
+          : cupomCodigoAplicado as String?,
+      cupomErro: identical(cupomErro, _sentinela)
+          ? this.cupomErro
+          : cupomErro as String?,
     );
   }
 
@@ -226,6 +281,12 @@ class PagamentosRealizadosState extends Equatable {
         enviarNotaPorEmail,
         emailNota,
         emailClienteCadastrado,
+        opcoesElegiveisPorItem,
+        promocaoEscolhidaPorItem,
+        referenciaIdPorProdutoId,
+        carregandoElegibilidade,
+        cupomCodigoAplicado,
+        cupomErro,
       ];
 }
 

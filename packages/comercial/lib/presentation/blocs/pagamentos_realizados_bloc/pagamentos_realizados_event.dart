@@ -197,3 +197,42 @@ class PagamentosRealizadosEmailNotaAlterado extends PagamentosRealizadosEvent {
   @override
   List<Object?> get props => [emailNota];
 }
+
+// Dispara a apuracao de elegibilidade (promocoes/cupom) pros produtos do
+// carrinho -- disparado internamente ao final do carregamento do resumo em
+// _onIniciado. Sem parametros: usa state.resumo/pessoaId/cupomCodigoAplicado
+// ja carregados.
+class PagamentosRealizadosCarregouElegibilidade
+    extends PagamentosRealizadosEvent {
+  const PagamentosRealizadosCarregouElegibilidade();
+}
+
+// Operador escolhe (ou desmarca, opcao=null) uma promocao/cupom elegivel pra
+// um produto especifico. Mutuamente exclusivo com desconto manual do mesmo
+// produtoId (ver _onPromocaoEscolhida/_onDescontoItemAlterado no bloc).
+class PagamentosRealizadosPromocaoEscolhida
+    extends PagamentosRealizadosEvent {
+  final int produtoId;
+  final OpcaoElegivel? opcao;
+
+  const PagamentosRealizadosPromocaoEscolhida({
+    required this.produtoId,
+    required this.opcao,
+  });
+
+  @override
+  List<Object?> get props => [produtoId, opcao];
+}
+
+class PagamentosRealizadosCupomInformado extends PagamentosRealizadosEvent {
+  final String codigo;
+
+  const PagamentosRealizadosCupomInformado({required this.codigo});
+
+  @override
+  List<Object?> get props => [codigo];
+}
+
+class PagamentosRealizadosCupomRemovido extends PagamentosRealizadosEvent {
+  const PagamentosRealizadosCupomRemovido();
+}

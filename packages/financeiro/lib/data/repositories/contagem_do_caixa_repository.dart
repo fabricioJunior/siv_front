@@ -2,6 +2,7 @@ import 'package:financeiro/domain/data/remote/i_contagem_do_caixa_remote_data_so
 import 'package:financeiro/domain/data/repositories/i_contagem_do_caixa_repository.dart';
 import 'package:financeiro/domain/models/contagem_do_caixa.dart';
 import 'package:financeiro/domain/models/contagem_do_caixa_item.dart';
+import 'package:financeiro/domain/models/faturamento_do_caixa.dart';
 
 class ContagemDoCaixaRepository implements IContagemDoCaixaRepository {
   final IContagemDoCaixaRemoteDataSource remoteDataSource;
@@ -50,5 +51,12 @@ class ContagemDoCaixaRepository implements IContagemDoCaixaRepository {
     return remoteDataSource.recuperarItensPendentesParaContagemDoCaixa(
       caixaId: caixaId,
     );
+  }
+
+  @override
+  Future<FaturamentoDoCaixa> recuperarFaturamentoDoCaixa({
+    required int caixaId,
+  }) {
+    return remoteDataSource.recuperarFaturamentoDoCaixa(caixaId: caixaId);
   }
 }

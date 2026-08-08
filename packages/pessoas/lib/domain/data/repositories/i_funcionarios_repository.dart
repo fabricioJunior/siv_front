@@ -9,6 +9,7 @@ abstract class IFuncionariosRepository {
 
   Future<Funcionario> novoFuncionario({
     required Funcionario funcionario,
+    required int empresaId,
   });
 
   Future<Funcionario> salvarFuncionario({
@@ -17,5 +18,24 @@ abstract class IFuncionariosRepository {
 
   Future<void> excluirFuncionario({
     required int idFuncionario,
+  });
+
+  Future<List<FuncionarioEmpresaVinculo>> recuperarVinculosDoFuncionario({
+    required int idFuncionario,
+  });
+
+  Future<FuncionarioEmpresaVinculo> vincularEmpresa({
+    required int idFuncionario,
+    required int idEmpresa,
+  });
+
+  Future<void> desativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
+  });
+
+  Future<void> reativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
   });
 }

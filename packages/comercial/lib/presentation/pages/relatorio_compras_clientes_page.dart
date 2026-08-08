@@ -1,4 +1,6 @@
+import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_compras_clientes_bloc/relatorio_compras_clientes_bloc.dart';
+import 'package:comercial/presentation/relatorios/csv/relatorio_csv_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -88,6 +90,14 @@ class _RelatorioComprasClientesPageState
     _aplicar();
   }
 
+  Future<void> _exportarCsv(List<RelatorioCompraClienteItem> items) async {
+    final path = await RelatorioCsvExporter.exportarComprasClientes(items);
+    if (!mounted || path == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('CSV salvo em $path')),
+    );
+  }
+
   void _aplicar({int page = 1}) {
     _bloc.add(RelatorioComprasClientesCarregar(
       dataInicial: _dataInicial,
@@ -150,7 +160,18 @@ class _RelatorioComprasClientesPageState
           RelatorioComprasClientesState>(
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Compras de Clientes')),
+            appBar: AppBar(
+              title: const Text('Compras de Clientes'),
+              actions: [
+                IconButton(
+                  tooltip: 'Exportar CSV',
+                  icon: const Icon(Icons.file_download_outlined),
+                  onPressed: (state.dados?.items.isEmpty ?? true)
+                      ? null
+                      : () => _exportarCsv(state.dados!.items),
+                ),
+              ],
+            ),
             body: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [

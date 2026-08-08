@@ -1233,6 +1233,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  promocoes:
+    dependency: "direct main"
+    description:
+      path: "packages/promocoes"
+      relative: true
+    source: path
+    version: "0.0.1"
   provider:
     dependency: transitive
     description:

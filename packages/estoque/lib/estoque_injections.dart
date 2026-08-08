@@ -156,7 +156,7 @@ void _useCases() {
 }
 
 void _presentation() {
-  sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl(), sl()));
+  sl.registerFactory<EstoqueSaldoBloc>(() => EstoqueSaldoBloc(sl(), sl(), sl()));
   sl.registerFactory<HistoricoEstoqueBloc>(() => HistoricoEstoqueBloc(sl()));
   sl.registerFactory<RelatorioProdutosDefasadosBloc>(
     () => RelatorioProdutosDefasadosBloc(sl()),

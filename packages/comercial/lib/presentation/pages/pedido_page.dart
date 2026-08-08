@@ -63,7 +63,7 @@ class _PedidoPageState extends State<PedidoPage> {
     super.dispose();
   }
 
-  Future<void> _cancelarPedido() async {
+  Future<void> _cancelarPedido(BuildContext context) async {
     final motivoController = TextEditingController();
     final motivo = await showDialog<String>(
       context: context,
@@ -2028,7 +2028,7 @@ class _PedidoPageState extends State<PedidoPage> {
                     label: const Text('Confirmar retirada'),
                   ),
                 OutlinedButton.icon(
-                  onPressed: carregando ? null : _cancelarPedido,
+                  onPressed: carregando ? null : () => _cancelarPedido(context),
                   icon: const Icon(Icons.cancel),
                   label: const Text('Cancelar'),
                 ),

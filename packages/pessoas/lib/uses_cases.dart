@@ -17,4 +17,8 @@ export 'domain/usecases/salvar_funcionario.dart';
 export 'domain/usecases/excluir_funcionario.dart';
 export 'domain/usecases/recuperar_funcionario.dart';
 export 'domain/usecases/recuperar_funcionarios.dart';
+export 'domain/usecases/recuperar_vinculos_funcionario.dart';
+export 'domain/usecases/vincular_empresa_funcionario.dart';
+export 'domain/usecases/desativar_vinculo_funcionario.dart';
+export 'domain/usecases/reativar_vinculo_funcionario.dart';
 export 'domain/usecases/buscar_pessoa_extrato.dart';

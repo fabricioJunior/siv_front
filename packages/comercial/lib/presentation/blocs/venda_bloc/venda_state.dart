@@ -18,6 +18,8 @@ class VendaState extends Equatable {
   final double valorDesconto;
   final double valorTaxaEntrega;
   final List<Map<String, dynamic>> descontosItens;
+  final List<Map<String, dynamic>> descontosPromocao;
+  final Map<String, dynamic>? cupom;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -42,6 +44,8 @@ class VendaState extends Equatable {
     this.valorDesconto = 0,
     this.valorTaxaEntrega = 0,
     this.descontosItens = const [],
+    this.descontosPromocao = const [],
+    this.cupom,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
@@ -80,6 +84,8 @@ class VendaState extends Equatable {
     double? valorDesconto,
     double? valorTaxaEntrega,
     List<Map<String, dynamic>>? descontosItens,
+    List<Map<String, dynamic>>? descontosPromocao,
+    Object? cupom = _sentinela,
     bool? incluirCpfNaNota,
     String? cpfNaNota,
     bool? pontuarFidelidade,
@@ -117,6 +123,10 @@ class VendaState extends Equatable {
       valorDesconto: valorDesconto ?? this.valorDesconto,
       valorTaxaEntrega: valorTaxaEntrega ?? this.valorTaxaEntrega,
       descontosItens: descontosItens ?? this.descontosItens,
+      descontosPromocao: descontosPromocao ?? this.descontosPromocao,
+      cupom: identical(cupom, _sentinela)
+          ? this.cupom
+          : cupom as Map<String, dynamic>?,
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
       pontuarFidelidade: pontuarFidelidade ?? this.pontuarFidelidade,
@@ -150,6 +160,8 @@ class VendaState extends Equatable {
         valorDesconto,
         valorTaxaEntrega,
         descontosItens,
+        descontosPromocao,
+        cupom,
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,

@@ -6,8 +6,16 @@ class FuncionariosRemoteDataSource extends RemoteDataSourceBase
     implements IFuncionariosRemoteDataSource {
   FuncionariosRemoteDataSource({required super.informacoesParaRequest});
 
+  // ponytail: rota de vínculos tem profundidade diferente do CRUD de
+  // funcionário ('/funcionarios/{id}/empresas/...'). RemoteDataSourceBase só
+  // permite um template de path por classe, então usamos este override
+  // temporário (setado e limpo dentro do mesmo método, sem await entre as
+  // duas pontas) em vez de duplicar toda a validação/parsing de erro da
+  // classe base numa segunda implementação.
+  String? _pathOverride;
+
   @override
-  String get path => '/v1/funcionarios/{id}';
+  String get path => _pathOverride ?? '/v1/funcionarios/{id}';
 
   @override
   Future<Funcionario?> getFuncionario({required int idFuncionario}) async {
@@ -48,9 +56,13 @@ class FuncionariosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Funcionario> criarFuncionario(
-      {required Funcionario funcionario}) async {
-    final response = await post(body: funcionario.toJson());
+  Future<Funcionario> criarFuncionario({
+    required Funcionario funcionario,
+    required int empresaId,
+  }) async {
+    final response = await post(
+      body: {...funcionario.toJson(), 'empresaId': empresaId},
+    );
     return Funcionario.fromJson(response.body);
   }
 
@@ -62,6 +74,81 @@ class FuncionariosRemoteDataSource extends RemoteDataSourceBase
 
     if (response.statusCode != 200) {
       throw Exception('Erro ao excluir funcionário');
+    }
+  }
+
+  @override
+  Future<List<FuncionarioEmpresaVinculo>> getVinculosDoFuncionario({
+    required int idFuncionario,
+  }) async {
+    _pathOverride = '/v1/funcionarios/{id}/empresas';
+    try {
+      final response = await get(
+        pathParameters: {'id': idFuncionario.toString()},
+      );
+      return (response.body as List<dynamic>)
+          .map((json) =>
+              FuncionarioEmpresaVinculo.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } finally {
+      _pathOverride = null;
+    }
+  }
+
+  @override
+  Future<FuncionarioEmpresaVinculo> vincularEmpresa({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) async {
+    _pathOverride = '/v1/funcionarios/{id}/empresas';
+    try {
+      final response = await post(
+        pathParameters: {'id': idFuncionario.toString()},
+        body: {'empresaId': idEmpresa},
+      );
+      return FuncionarioEmpresaVinculo.fromJson(
+        response.body as Map<String, dynamic>,
+      );
+    } finally {
+      _pathOverride = null;
+    }
+  }
+
+  @override
+  Future<void> desativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) async {
+    _pathOverride = '/v1/funcionarios/{id}/empresas/{empresaId}/desativar';
+    try {
+      await put(
+        pathParameters: {
+          'id': idFuncionario.toString(),
+          'empresaId': idEmpresa.toString(),
+        },
+        body: const {},
+      );
+    } finally {
+      _pathOverride = null;
+    }
+  }
+
+  @override
+  Future<void> reativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) async {
+    _pathOverride = '/v1/funcionarios/{id}/empresas/{empresaId}/reativar';
+    try {
+      await put(
+        pathParameters: {
+          'id': idFuncionario.toString(),
+          'empresaId': idEmpresa.toString(),
+        },
+        body: const {},
+      );
+    } finally {
+      _pathOverride = null;
     }
   }
 }

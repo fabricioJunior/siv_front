@@ -119,6 +119,8 @@ abstract class RelatorioCompraClienteItem {
   int get clienteId;
   String get clienteNome;
   String get clienteDocumento;
+  String? get clienteEmail;
+  String? get clienteTelefone;
   int? get produtoId;
   String? get produtoNome;
   String? get corNome;

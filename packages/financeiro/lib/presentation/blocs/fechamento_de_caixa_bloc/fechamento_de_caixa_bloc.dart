@@ -12,10 +12,12 @@ class FechamentoDeCaixaBloc
     extends Bloc<FechamentoDeCaixaEvent, FechamentoDeCaixaState> {
   final RecuperarItensPendentesParaContagemDoCaixaUseCase _recuperarPendentes;
   final RecuperarContagemDoCaixa _recuperarContagem;
+  final RecuperarFaturamentoDoCaixa _recuperarFaturamento;
 
   FechamentoDeCaixaBloc(
     this._recuperarPendentes,
     this._recuperarContagem,
+    this._recuperarFaturamento,
   ) : super(const FechamentoDeCaixaState.initial()) {
     on<FechamentoDeCaixaIniciou>(_onIniciou);
     on<FechamentoDeCaixaRecarregarSolicitado>(_onRecarregarSolicitado);
@@ -51,6 +53,15 @@ class FechamentoDeCaixaBloc
       final pendentes = await _recuperarPendentes(caixaId: caixaId);
       final contagem = await _recuperarContagem(caixaId: caixaId);
 
+      // Informativo, não bloqueia o fluxo de fechamento -- se falhar, a tela segue sem a
+      // seção de faturamento em vez de travar a conferência (que é a parte crítica).
+      FaturamentoDoCaixa? faturamento;
+      try {
+        faturamento = await _recuperarFaturamento(caixaId: caixaId);
+      } catch (_) {
+        faturamento = null;
+      }
+
       final contadosPorTipo = {
         for (final item in (contagem?.itens ?? const <ContagemDoCaixaItem>[]))
           item.tipoDocumento: item.valor,
@@ -70,6 +81,7 @@ class FechamentoDeCaixaBloc
         state.copyWith(
           caixaId: caixaId,
           itens: itens,
+          faturamento: faturamento,
           step: FechamentoDeCaixaStep.carregado,
           erro: null,
         ),

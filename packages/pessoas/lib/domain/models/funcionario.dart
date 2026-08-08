@@ -3,7 +3,6 @@ import 'package:core/equals.dart';
 class Funcionario extends Equatable {
   final DateTime? criadoEm;
   final DateTime? atualizadoEm;
-  final int empresaId;
   final int id;
   final String nome;
   final int pessoaId;
@@ -13,7 +12,6 @@ class Funcionario extends Equatable {
   const Funcionario({
     this.criadoEm,
     this.atualizadoEm,
-    required this.empresaId,
     required this.id,
     required this.nome,
     required this.pessoaId,
@@ -25,7 +23,6 @@ class Funcionario extends Equatable {
     return Funcionario(
       criadoEm: _toDateTime(json['criadoEm']),
       atualizadoEm: _toDateTime(json['atualizadoEm']),
-      empresaId: _toInt(json['empresaId']),
       id: _toInt(json['id']),
       nome: (json['nome'] ?? '').toString(),
       pessoaId: _toInt(json['pessoaId']),
@@ -38,7 +35,6 @@ class Funcionario extends Equatable {
     return {
       'criadoEm': criadoEm?.toIso8601String(),
       'atualizadoEm': atualizadoEm?.toIso8601String(),
-      'empresaId': empresaId,
       'id': id,
       'nome': nome,
       'pessoaId': pessoaId,
@@ -51,7 +47,6 @@ class Funcionario extends Equatable {
   List<Object?> get props => [
         criadoEm,
         atualizadoEm,
-        empresaId,
         id,
         nome,
         pessoaId,

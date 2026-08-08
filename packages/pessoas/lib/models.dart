@@ -1,5 +1,6 @@
 export 'domain/models/endereco.dart';
 export 'domain/models/funcionario.dart';
+export 'domain/models/funcionario_empresa_vinculo.dart';
 export 'domain/models/pessoa.dart';
 export 'domain/models/ponto.dart';
 export 'domain/models/pessoa_extrato_movimentacao.dart';

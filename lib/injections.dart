@@ -17,6 +17,7 @@ import 'package:core/sessao.dart';
 import 'package:estoque/estoque_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
+import 'package:promocoes/promocoes_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
 import 'package:empresas/empresas_injections.dart';
@@ -67,6 +68,7 @@ Future<void> resolverDependenciasApp() async {
   resolverPagamentosInjections();
   resolverFinanceiroInjections();
   resolverComercialInjections();
+  resolverPromocoesInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();
   _presentation();

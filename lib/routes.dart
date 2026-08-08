@@ -24,6 +24,7 @@ import 'package:pagamentos/use_cases.dart'
     show RecuperarProvidersPagamentosAvulsos;
 import 'package:precos/presentation.dart';
 import 'package:precos/use_cases.dart' show RecuperarPrecosDasReferencias;
+import 'package:promocoes/pages.dart';
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
@@ -546,6 +547,13 @@ Map<String, Widget Function(BuildContext)> routes = {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
+    final descontosPromocaoRaw =
+        argumentos['descontosPromocao'] as List<dynamic>? ?? const [];
+    final descontosPromocao = descontosPromocaoRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+    final cupom = argumentos['cupom'] as Map<String, dynamic>?;
     final valorTaxaEntregaArg = argumentos['valorTaxaEntrega'];
     final valorTaxaEntrega = valorTaxaEntregaArg is num
         ? valorTaxaEntregaArg.toDouble()
@@ -573,6 +581,8 @@ Map<String, Widget Function(BuildContext)> routes = {
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         desconto: desconto,
         descontosItens: descontosItens,
+        descontosPromocao: descontosPromocao,
+        cupom: cupom,
         valorTaxaEntrega: valorTaxaEntrega,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
@@ -694,6 +704,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  ///PROMOCOES E CUPONS:
+  '/promocoes': (context) {
+    return _rotaProtegida(route: '/promocoes', child: PromocoesPage());
+  },
+  '/promocao/form': (context) {
+    return PromocaoFormPage(idPromocao: args(context)['idPromocao']);
+  },
+  '/cupons': (context) {
+    return _rotaProtegida(route: '/cupons', child: CuponsPage());
+  },
+  '/cupom/form': (context) {
+    return CupomFormPage(idCupom: args(context)['idCupom']);
+  },
+
   '/consignacao_extrato': (context) {
     final argumentos = args(context);
     final pessoaIdArg = argumentos['pessoaId'];
@@ -1151,6 +1175,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+  '/promocoes': ['PROMFC001'],
+  '/cupons': ['CUPFC001'],
 };
 
 class _AcessoNegadoPage extends StatelessWidget {

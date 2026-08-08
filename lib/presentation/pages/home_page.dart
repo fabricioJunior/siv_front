@@ -186,6 +186,22 @@ class _HomePageState extends State<HomePage> {
                   route: '/gerencia_estoque',
                   componentesNecessarios: ['ROMFP001', 'PRDFL001'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.local_offer_outlined,
+                  title: 'Promoções',
+                  subtitle: 'Descontos automáticos por referência, combo ou aniversário.',
+                  color: Colors.deepOrange,
+                  route: '/promocoes',
+                  componentesNecessarios: ['PROMFC001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.confirmation_number_outlined,
+                  title: 'Cupons',
+                  subtitle: 'Cupons de desconto com código para o caixa.',
+                  color: Colors.deepOrange,
+                  route: '/cupons',
+                  componentesNecessarios: ['CUPFC001'],
+                ),
               ];
 
               final relatoriosVendas = <_AccessFlowItem>[

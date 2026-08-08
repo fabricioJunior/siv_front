@@ -618,6 +618,10 @@ class RelatorioCompraClienteItemDto implements RelatorioCompraClienteItem {
   @override
   final String clienteDocumento;
   @override
+  final String? clienteEmail;
+  @override
+  final String? clienteTelefone;
+  @override
   final int? produtoId;
   @override
   final String? produtoNome;
@@ -644,6 +648,8 @@ class RelatorioCompraClienteItemDto implements RelatorioCompraClienteItem {
     required this.clienteId,
     required this.clienteNome,
     required this.clienteDocumento,
+    this.clienteEmail,
+    this.clienteTelefone,
     this.produtoId,
     this.produtoNome,
     this.corNome,
@@ -662,6 +668,8 @@ class RelatorioCompraClienteItemDto implements RelatorioCompraClienteItem {
         clienteId: (j['clienteId'] as num).toInt(),
         clienteNome: j['clienteNome'] as String? ?? '',
         clienteDocumento: j['clienteDocumento'] as String? ?? '',
+        clienteEmail: j['clienteEmail'] as String?,
+        clienteTelefone: j['clienteTelefone'] as String?,
         produtoId: (j['produtoId'] as num?)?.toInt(),
         produtoNome: j['produtoNome'] as String?,
         corNome: j['corNome'] as String?,

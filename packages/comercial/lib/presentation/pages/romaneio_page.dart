@@ -1133,6 +1133,13 @@ class _RomaneioPageState extends State<RomaneioPage> {
               0,
               (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
             );
+    final descontosPromocaoRaw =
+        pagamentoResultado['descontosPromocao'] as List<dynamic>? ?? const [];
+    final descontosPromocao = descontosPromocaoRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
+    final cupom = pagamentoResultado['cupom'] as Map<String, dynamic>?;
 
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
@@ -1147,6 +1154,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
         desconto: descontoTotal,
         valorTaxaEntrega: valorTaxaEntrega,
+        descontosPromocao: descontosPromocao,
+        cupom: cupom,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,

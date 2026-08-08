@@ -29,9 +29,13 @@ class FuncionariosRepository implements IFuncionariosRepository {
   }
 
   @override
-  Future<Funcionario> novoFuncionario({required Funcionario funcionario}) {
+  Future<Funcionario> novoFuncionario({
+    required Funcionario funcionario,
+    required int empresaId,
+  }) {
     return _funcionariosRemoteDataSource.criarFuncionario(
       funcionario: funcionario,
+      empresaId: empresaId,
     );
   }
 
@@ -39,6 +43,48 @@ class FuncionariosRepository implements IFuncionariosRepository {
   Future<Funcionario> salvarFuncionario({required Funcionario funcionario}) {
     return _funcionariosRemoteDataSource.atualizarFuncionario(
       funcionario: funcionario,
+    );
+  }
+
+  @override
+  Future<List<FuncionarioEmpresaVinculo>> recuperarVinculosDoFuncionario({
+    required int idFuncionario,
+  }) {
+    return _funcionariosRemoteDataSource.getVinculosDoFuncionario(
+      idFuncionario: idFuncionario,
+    );
+  }
+
+  @override
+  Future<FuncionarioEmpresaVinculo> vincularEmpresa({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) {
+    return _funcionariosRemoteDataSource.vincularEmpresa(
+      idFuncionario: idFuncionario,
+      idEmpresa: idEmpresa,
+    );
+  }
+
+  @override
+  Future<void> desativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) {
+    return _funcionariosRemoteDataSource.desativarVinculo(
+      idFuncionario: idFuncionario,
+      idEmpresa: idEmpresa,
+    );
+  }
+
+  @override
+  Future<void> reativarVinculo({
+    required int idFuncionario,
+    required int idEmpresa,
+  }) {
+    return _funcionariosRemoteDataSource.reativarVinculo(
+      idFuncionario: idFuncionario,
+      idEmpresa: idEmpresa,
     );
   }
 }

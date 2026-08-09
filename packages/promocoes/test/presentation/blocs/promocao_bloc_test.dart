@@ -142,6 +142,34 @@ void main() {
   );
 
   blocTest<PromocaoBloc, PromocaoState>(
+    'bloqueia salvar quando limiteUsosPorCliente é informado sem periodoLimiteCliente',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo aniversário',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          limiteUsosPorCliente: 1,
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    skip: 3,
+    expect: () => [
+      isA<PromocaoState>().having(
+        (s) => s.step,
+        'step',
+        PromocaoStep.validacaoInvalida,
+      ),
+    ],
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
     'envia restringirFormasPagamento e formasPagamento no payload de criação',
     build: () => criarBloc(
       promocoesRepository: StubPromocoesRepository(),

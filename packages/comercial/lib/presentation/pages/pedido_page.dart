@@ -339,7 +339,10 @@ class _PedidoPageState extends State<PedidoPage> {
           taxaEntregaJaAplicadaNoRomaneio: state.pedido?.valorTaxaEntrega ?? 0,
           permitirTaxaEntrega: false,
           formasDePagamentoSeletor: (
-                  {itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  {itemsSelecionadosInicial,
+                  onChanged,
+                  onlyView,
+                  idsPermitidos}) =>
               FormasDePagamentoSeletor(
             modo: FormasDePagamentoSeletorModo.unica,
             itemsSelecionadosInicial: itemsSelecionadosInicial,
@@ -347,6 +350,7 @@ class _PedidoPageState extends State<PedidoPage> {
             onlyView: onlyView ?? false,
             titulo: 'Forma de pagamento',
             tipoOperacaoFiltro: tipoEscolhido,
+            idsPermitidos: idsPermitidos,
           ),
         );
       },

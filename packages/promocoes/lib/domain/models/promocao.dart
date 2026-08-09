@@ -2,6 +2,33 @@ import 'package:core/equals.dart';
 import 'package:promocoes/domain/models/promocao_forma_pagamento.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
 
+// Obrigatorio: um sem o outro e erro de validacao no backend (limite de usos
+// por cliente no periodo, ex: desconto de aniversario 1x/ano).
+enum PeriodoLimiteCliente {
+  mes,
+  ano;
+
+  static PeriodoLimiteCliente? fromString(String? value) {
+    switch (value) {
+      case 'mes':
+        return PeriodoLimiteCliente.mes;
+      case 'ano':
+        return PeriodoLimiteCliente.ano;
+      default:
+        return null;
+    }
+  }
+
+  String get value {
+    switch (this) {
+      case PeriodoLimiteCliente.mes:
+        return 'mes';
+      case PeriodoLimiteCliente.ano:
+        return 'ano';
+    }
+  }
+}
+
 abstract class Promocao implements Equatable {
   int? get id;
   int? get empresaId;
@@ -23,6 +50,8 @@ abstract class Promocao implements Equatable {
   int? get quantidadePaga;
   int? get limiteUnidadesVendidas;
   int get unidadesVendidas;
+  int? get limiteUsosPorCliente;
+  PeriodoLimiteCliente? get periodoLimiteCliente;
   bool get somenteAniversariante;
   bool get ativa;
   bool get restringirFormasPagamento;
@@ -51,6 +80,8 @@ abstract class Promocao implements Equatable {
     int? quantidadePaga,
     int? limiteUnidadesVendidas,
     int unidadesVendidas,
+    int? limiteUsosPorCliente,
+    PeriodoLimiteCliente? periodoLimiteCliente,
     bool somenteAniversariante,
     bool ativa,
     bool restringirFormasPagamento,
@@ -81,6 +112,8 @@ abstract class Promocao implements Equatable {
         quantidadePaga,
         limiteUnidadesVendidas,
         unidadesVendidas,
+        limiteUsosPorCliente,
+        periodoLimiteCliente,
         somenteAniversariante,
         ativa,
         restringirFormasPagamento,
@@ -135,6 +168,10 @@ class _PromocaoImpl implements Promocao {
   @override
   final int unidadesVendidas;
   @override
+  final int? limiteUsosPorCliente;
+  @override
+  final PeriodoLimiteCliente? periodoLimiteCliente;
+  @override
   final bool somenteAniversariante;
   @override
   final bool ativa;
@@ -168,6 +205,8 @@ class _PromocaoImpl implements Promocao {
     this.quantidadePaga,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
+    this.limiteUsosPorCliente,
+    this.periodoLimiteCliente,
     this.somenteAniversariante = false,
     this.ativa = true,
     this.restringirFormasPagamento = false,
@@ -198,6 +237,8 @@ class _PromocaoImpl implements Promocao {
         quantidadePaga,
         limiteUnidadesVendidas,
         unidadesVendidas,
+        limiteUsosPorCliente,
+        periodoLimiteCliente,
         somenteAniversariante,
         ativa,
         restringirFormasPagamento,

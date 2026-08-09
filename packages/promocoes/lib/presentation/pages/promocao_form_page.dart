@@ -18,12 +18,14 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
   final _nomeController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _limiteUnidadesVendidasController = TextEditingController();
+  final _limiteUsosPorClienteController = TextEditingController();
 
   @override
   void dispose() {
     _nomeController.dispose();
     _descricaoController.dispose();
     _limiteUnidadesVendidasController.dispose();
+    _limiteUsosPorClienteController.dispose();
     super.dispose();
   }
 
@@ -235,6 +237,48 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                             limiteUnidadesVendidas: int.tryParse(value),
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _limiteUsosPorClienteController,
+                          decoration: const InputDecoration(
+                            labelText: 'Limite de usos por cliente (opcional)',
+                            helperText:
+                                'Quantas vezes cada cliente pode usar esta promoção no período selecionado. Vazio = sem limite por cliente. Só se aplica a vendas com cliente identificado.',
+                            helperMaxLines: 3,
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) => _onCampoAlterado(
+                            context,
+                            limiteUsosPorCliente: int.tryParse(value),
+                          ),
+                        ),
+                        if (state.limiteUsosPorCliente != null) ...[
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<PeriodoLimiteCliente>(
+                            decoration: const InputDecoration(
+                              labelText: 'Período do limite',
+                            ),
+                            initialValue: state.periodoLimiteCliente,
+                            items: const [
+                              DropdownMenuItem(
+                                value: PeriodoLimiteCliente.mes,
+                                child: Text('Por mês'),
+                              ),
+                              DropdownMenuItem(
+                                value: PeriodoLimiteCliente.ano,
+                                child: Text('Por ano'),
+                              ),
+                            ],
+                            onChanged: (periodo) => _onCampoAlterado(
+                              context,
+                              periodoLimiteCliente: periodo,
+                            ),
+                            validator: (_) =>
+                                state.periodoLimiteCliente == null
+                                    ? 'Selecione o período'
+                                    : null,
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         FormasPagamentoFormWidget(
                           restringirFormasPagamento:
@@ -283,6 +327,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     final nome = state.nome ?? '';
     final descricao = state.descricao ?? '';
     final limite = state.limiteUnidadesVendidas?.toString() ?? '';
+    final limitePorCliente = state.limiteUsosPorCliente?.toString() ?? '';
 
     if (_nomeController.text != nome) {
       _nomeController.value = TextEditingValue(
@@ -302,6 +347,13 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
       _limiteUnidadesVendidasController.value = TextEditingValue(
         text: limite,
         selection: TextSelection.collapsed(offset: limite.length),
+      );
+    }
+
+    if (_limiteUsosPorClienteController.text != limitePorCliente) {
+      _limiteUsosPorClienteController.value = TextEditingValue(
+        text: limitePorCliente,
+        selection: TextSelection.collapsed(offset: limitePorCliente.length),
       );
     }
   }
@@ -324,6 +376,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     int? quantidadeLeva,
     int? quantidadePaga,
     int? limiteUnidadesVendidas,
+    int? limiteUsosPorCliente,
+    PeriodoLimiteCliente? periodoLimiteCliente,
     bool? somenteAniversariante,
     bool? ativa,
     bool? restringirFormasPagamento,
@@ -347,6 +401,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             quantidadeLeva: quantidadeLeva,
             quantidadePaga: quantidadePaga,
             limiteUnidadesVendidas: limiteUnidadesVendidas,
+            limiteUsosPorCliente: limiteUsosPorCliente,
+            periodoLimiteCliente: periodoLimiteCliente,
             somenteAniversariante: somenteAniversariante,
             ativa: ativa,
             restringirFormasPagamento: restringirFormasPagamento,

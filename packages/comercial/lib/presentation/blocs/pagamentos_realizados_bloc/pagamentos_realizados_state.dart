@@ -146,6 +146,19 @@ class PagamentosRealizadosState extends Equatable {
       double.parse(valorTaxaEntregaAplicado.toStringAsFixed(2));
   bool get possuiCupomAplicado =>
       cupomCodigoAplicado != null && cupomCodigoAplicado!.isNotEmpty;
+  // Interseção das formas de pagamento permitidas pelas promoções escolhidas
+  // com restrição (null = nenhuma promoção escolhida restringe forma de
+  // pagamento). Interseção vazia é estado válido (nenhuma forma serve).
+  Set<int>? get formasPagamentoPermitidasIds {
+    final restricoes = promocaoEscolhidaPorItem.values
+        .map((opcao) => opcao.formasPagamentoPermitidasIds)
+        .whereType<List<int>>()
+        .map((ids) => ids.toSet())
+        .toList(growable: false);
+    if (restricoes.isEmpty) return null;
+    return restricoes.reduce((a, b) => a.intersection(b));
+  }
+
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
   bool get podeFinalizar =>
       step == PagamentosRealizadosStep.editando && linhas.isNotEmpty;

@@ -95,6 +95,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         quantidadePaga: event.quantidadePaga,
         limparEscopo: event.limparEscopo,
         limiteUnidadesVendidas: event.limiteUnidadesVendidas,
+        limiteUsosPorCliente: event.limiteUsosPorCliente,
+        periodoLimiteCliente: event.periodoLimiteCliente,
         somenteAniversariante: event.somenteAniversariante,
         ativa: event.ativa,
         restringirFormasPagamento: event.restringirFormasPagamento,
@@ -167,6 +169,18 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         return;
       }
 
+      if ((state.limiteUsosPorCliente != null) !=
+          (state.periodoLimiteCliente != null)) {
+        emit(
+          state.copyWith(
+            step: PromocaoStep.validacaoInvalida,
+            erro:
+                'Informe o limite de usos por cliente e o período juntos, ou deixe os dois vazios.',
+          ),
+        );
+        return;
+      }
+
       emit(state.copyWith(step: PromocaoStep.salvando, erro: null));
 
       final promocao = Promocao.create(
@@ -190,6 +204,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         quantidadePaga: state.quantidadePaga,
         limiteUnidadesVendidas: state.limiteUnidadesVendidas,
         unidadesVendidas: state.promocao?.unidadesVendidas ?? 0,
+        limiteUsosPorCliente: state.limiteUsosPorCliente,
+        periodoLimiteCliente: state.periodoLimiteCliente,
         somenteAniversariante: state.somenteAniversariante,
         ativa: state.ativa,
         restringirFormasPagamento: state.restringirFormasPagamento,

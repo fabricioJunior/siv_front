@@ -1094,7 +1094,10 @@ class _RomaneioPageState extends State<RomaneioPage> {
           taxaEntregaJaAplicadaNoRomaneio:
               state.romaneio?.valorTaxaEntrega ?? 0,
           formasDePagamentoSeletor: (
-                  {itemsSelecionadosInicial, onChanged, onlyView}) =>
+                  {itemsSelecionadosInicial,
+                  onChanged,
+                  onlyView,
+                  idsPermitidos}) =>
               FormasDePagamentoSeletor(
             modo: FormasDePagamentoSeletorModo.unica,
             itemsSelecionadosInicial: itemsSelecionadosInicial,
@@ -1102,6 +1105,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
             onlyView: onlyView ?? false,
             titulo: 'Forma de pagamento',
             tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+            idsPermitidos: idsPermitidos,
           ),
         );
       },

@@ -15,6 +15,7 @@ class FormasDePagamentoSeletor extends StatefulWidget implements ISeletor {
   final String titulo;
   final bool onlyView;
   final TipoOperacaoFormaPagamento? tipoOperacaoFiltro;
+  final Set<int>? idsPermitidos;
 
   @override
   final List<SelectData>? itemsSelecionadosInicial;
@@ -32,6 +33,7 @@ class FormasDePagamentoSeletor extends StatefulWidget implements ISeletor {
     this.itemsSelecionadosInicial,
     this.onChanged,
     this.tipoOperacaoFiltro,
+    this.idsPermitidos,
   });
 
   @override
@@ -85,6 +87,11 @@ class _FormasDePagamentoSeletorState extends State<FormasDePagamentoSeletor> {
                 (forma) =>
                     widget.tipoOperacaoFiltro == null ||
                     forma.tipoOperacao == widget.tipoOperacaoFiltro,
+              )
+              .where(
+                (forma) =>
+                    widget.idsPermitidos == null ||
+                    widget.idsPermitidos!.contains(forma.id),
               )
               .toList(growable: false);
 

@@ -19,6 +19,8 @@ class PromocaoState extends Equatable {
   final int? quantidadeLeva;
   final int? quantidadePaga;
   final int? limiteUnidadesVendidas;
+  final int? limiteUsosPorCliente;
+  final PeriodoLimiteCliente? periodoLimiteCliente;
   final bool somenteAniversariante;
   final bool ativa;
   final bool restringirFormasPagamento;
@@ -47,6 +49,8 @@ class PromocaoState extends Equatable {
     this.quantidadeLeva,
     this.quantidadePaga,
     this.limiteUnidadesVendidas,
+    this.limiteUsosPorCliente,
+    this.periodoLimiteCliente,
     this.somenteAniversariante = false,
     this.ativa = true,
     this.restringirFormasPagamento = false,
@@ -79,6 +83,8 @@ class PromocaoState extends Equatable {
         quantidadeLeva = origem.quantidadeLeva,
         quantidadePaga = origem.quantidadePaga,
         limiteUnidadesVendidas = origem.limiteUnidadesVendidas,
+        limiteUsosPorCliente = origem.limiteUsosPorCliente,
+        periodoLimiteCliente = origem.periodoLimiteCliente,
         somenteAniversariante = origem.somenteAniversariante,
         ativa = origem.ativa,
         restringirFormasPagamento = origem.restringirFormasPagamento,
@@ -106,6 +112,8 @@ class PromocaoState extends Equatable {
     int? quantidadePaga,
     bool limparEscopo = false,
     int? limiteUnidadesVendidas,
+    int? limiteUsosPorCliente,
+    PeriodoLimiteCliente? periodoLimiteCliente,
     bool? somenteAniversariante,
     bool? ativa,
     bool? restringirFormasPagamento,
@@ -135,6 +143,8 @@ class PromocaoState extends Equatable {
       quantidadePaga: limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
       limiteUnidadesVendidas:
           limiteUnidadesVendidas ?? this.limiteUnidadesVendidas,
+      limiteUsosPorCliente: limiteUsosPorCliente ?? this.limiteUsosPorCliente,
+      periodoLimiteCliente: periodoLimiteCliente ?? this.periodoLimiteCliente,
       somenteAniversariante: somenteAniversariante ?? this.somenteAniversariante,
       ativa: ativa ?? this.ativa,
       restringirFormasPagamento:
@@ -168,6 +178,8 @@ class PromocaoState extends Equatable {
         quantidadeLeva,
         quantidadePaga,
         limiteUnidadesVendidas,
+        limiteUsosPorCliente,
+        periodoLimiteCliente,
         somenteAniversariante,
         ativa,
         restringirFormasPagamento,

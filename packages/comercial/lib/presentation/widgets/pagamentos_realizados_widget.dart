@@ -198,11 +198,18 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 16),
+                    if (state.formasPagamentoPermitidasIds != null) ...[
+                      _AvisoRestricaoFormaPagamento(
+                        vazio: state.formasPagamentoPermitidasIds!.isEmpty,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     ...state.linhas.map(
                       (linha) => _LinhaPagamentoCard(
                         linha: linha,
                         formasDePagamentoSeletor: formasDePagamentoSeletor,
                         autofocusValor: linha.id == ultimoId,
+                        idsPermitidos: state.formasPagamentoPermitidasIds,
                       ),
                     ),
                     TextButton.icon(
@@ -619,15 +626,52 @@ class _CupomField extends StatelessWidget {
   }
 }
 
+class _AvisoRestricaoFormaPagamento extends StatelessWidget {
+  final bool vazio;
+
+  const _AvisoRestricaoFormaPagamento({required this.vazio});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              color: colorScheme.onErrorContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              vazio
+                  ? 'As promoções aplicadas não têm nenhuma forma de pagamento em comum. Ajuste as promoções escolhidas para conseguir finalizar o pagamento.'
+                  : 'Este pagamento tem promoção aplicada que restringe as formas de pagamento aceitas.',
+              style: TextStyle(color: colorScheme.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LinhaPagamentoCard extends StatelessWidget {
   final PagamentoRealizadoLinha linha;
   final SeletorWidget formasDePagamentoSeletor;
   final bool autofocusValor;
+  final Set<int>? idsPermitidos;
 
   const _LinhaPagamentoCard({
     required this.linha,
     required this.formasDePagamentoSeletor,
     required this.autofocusValor,
+    this.idsPermitidos,
   });
 
   @override
@@ -682,6 +726,7 @@ class _LinhaPagamentoCard extends StatelessWidget {
                       );
                     },
                     onlyView: false,
+                    idsPermitidos: idsPermitidos,
                   ),
                 ),
                 const SizedBox(width: 8),

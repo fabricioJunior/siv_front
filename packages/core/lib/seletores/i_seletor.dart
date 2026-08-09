@@ -6,6 +6,7 @@ typedef SeletorWidget = Widget Function({
   List<SelectData>? itemsSelecionadosInicial,
   void Function(List<SelectData>)? onChanged,
   bool? onlyView,
+  Set<int>? idsPermitidos,
 });
 
 class SeletorParamentros {

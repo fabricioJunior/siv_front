@@ -44,6 +44,10 @@ class PromocaoDto implements Promocao {
   @override
   final int unidadesVendidas;
   @override
+  final int? limiteUsosPorCliente;
+  @override
+  final PeriodoLimiteCliente? periodoLimiteCliente;
+  @override
   final bool somenteAniversariante;
   @override
   final bool ativa;
@@ -77,6 +81,8 @@ class PromocaoDto implements Promocao {
     this.quantidadePaga,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
+    this.limiteUsosPorCliente,
+    this.periodoLimiteCliente,
     this.somenteAniversariante = false,
     this.ativa = true,
     this.restringirFormasPagamento = false,
@@ -112,6 +118,9 @@ class PromocaoDto implements Promocao {
       limiteUnidadesVendidas:
           (json['limiteUnidadesVendidas'] as num?)?.toInt(),
       unidadesVendidas: (json['unidadesVendidas'] as num?)?.toInt() ?? 0,
+      limiteUsosPorCliente: (json['limiteUsosPorCliente'] as num?)?.toInt(),
+      periodoLimiteCliente:
+          PeriodoLimiteCliente.fromString(json['periodoLimiteCliente'] as String?),
       somenteAniversariante: json['somenteAniversariante'] as bool? ?? false,
       ativa: json['ativa'] as bool? ?? true,
       restringirFormasPagamento:
@@ -148,6 +157,8 @@ class PromocaoDto implements Promocao {
       quantidadePaga: promocao.quantidadePaga,
       limiteUnidadesVendidas: promocao.limiteUnidadesVendidas,
       unidadesVendidas: promocao.unidadesVendidas,
+      limiteUsosPorCliente: promocao.limiteUsosPorCliente,
+      periodoLimiteCliente: promocao.periodoLimiteCliente,
       somenteAniversariante: promocao.somenteAniversariante,
       ativa: promocao.ativa,
       restringirFormasPagamento: promocao.restringirFormasPagamento,
@@ -181,6 +192,10 @@ class PromocaoDto implements Promocao {
       if (quantidadePaga != null) 'quantidadePaga': quantidadePaga,
       if (limiteUnidadesVendidas != null)
         'limiteUnidadesVendidas': limiteUnidadesVendidas,
+      if (limiteUsosPorCliente != null)
+        'limiteUsosPorCliente': limiteUsosPorCliente,
+      if (periodoLimiteCliente != null)
+        'periodoLimiteCliente': periodoLimiteCliente!.value,
       'somenteAniversariante': somenteAniversariante,
       'ativa': ativa,
       'restringirFormasPagamento': restringirFormasPagamento,
@@ -213,6 +228,8 @@ class PromocaoDto implements Promocao {
         quantidadePaga,
         limiteUnidadesVendidas,
         unidadesVendidas,
+        limiteUsosPorCliente,
+        periodoLimiteCliente,
         somenteAniversariante,
         ativa,
         restringirFormasPagamento,

@@ -34,6 +34,9 @@ class OpcaoElegivel extends Equatable {
   final String nome;
   final double valorDesconto;
   final double valorFinalUnitario;
+  // Presente e preenchido só quando a promoção restringe forma de
+  // pagamento -- null/ausente = sem restrição, libera todas.
+  final List<int>? formasPagamentoPermitidasIds;
 
   const OpcaoElegivel({
     required this.tipo,
@@ -41,6 +44,7 @@ class OpcaoElegivel extends Equatable {
     required this.nome,
     required this.valorDesconto,
     required this.valorFinalUnitario,
+    this.formasPagamentoPermitidasIds,
   });
 
   factory OpcaoElegivel.fromJson(Map<String, dynamic> json) {
@@ -50,14 +54,24 @@ class OpcaoElegivel extends Equatable {
       nome: json['nome'] as String,
       valorDesconto: (json['valorDesconto'] as num).toDouble(),
       valorFinalUnitario: (json['valorFinalUnitario'] as num).toDouble(),
+      formasPagamentoPermitidasIds:
+          (json['formasPagamentoPermitidasIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList(),
     );
   }
 
   bool get ehCupom => tipo == 'cupom';
 
   @override
-  List<Object?> get props =>
-      [tipo, id, nome, valorDesconto, valorFinalUnitario];
+  List<Object?> get props => [
+        tipo,
+        id,
+        nome,
+        valorDesconto,
+        valorFinalUnitario,
+        formasPagamentoPermitidasIds,
+      ];
 }
 
 // Espelha ItemElegibilidadeResponse do backend.

@@ -2,36 +2,21 @@ import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
 
-typedef SeletorWidget = Widget Function({
-  List<SelectData>? itemsSelecionadosInicial,
-  void Function(List<SelectData>)? onChanged,
-  bool? onlyView,
-  Set<int>? idsPermitidos,
-});
-
-class SeletorParamentros {
+class SeletorData {
   final List<SelectData>? itemsSelecionadosInicial;
   final void Function(List<SelectData>)? onChanged;
   final bool onlyView;
+  final Set<int>? idsPermitidos;
 
-  const SeletorParamentros({
+  const SeletorData({
     this.itemsSelecionadosInicial,
     this.onChanged,
     this.onlyView = false,
+    this.idsPermitidos,
   });
 }
 
-typedef SeletorParametros = SeletorParamentros;
-
-extension SeletorWidgetExtension on SeletorWidget {
-  Widget buildComParametros(SeletorParamentros parametros) {
-    return call(
-      itemsSelecionadosInicial: parametros.itemsSelecionadosInicial,
-      onChanged: parametros.onChanged,
-      onlyView: parametros.onlyView,
-    );
-  }
-}
+typedef SeletorWidget = Widget Function(SeletorData data);
 
 abstract class ISeletor extends Widget {
   final List<SelectData>? itemsSelecionadosInicial;

@@ -298,8 +298,8 @@ class _EntradaManualDeProdutosPageState
                 opacity: state.leituraIniciada ? 0.7 : 1,
                 child: Column(
                   children: [
-                    widget.funcionariosSeletor.buildComParametros(
-                      SeletorParamentros(
+                    widget.funcionariosSeletor(
+                      SeletorData(
                         itemsSelecionadosInicial:
                             state.funcionarioSelecionado == null
                             ? null
@@ -316,8 +316,8 @@ class _EntradaManualDeProdutosPageState
                       ),
                     ),
                     const SizedBox(height: 12),
-                    widget.tabelasDePrecoSeletor.buildComParametros(
-                      SeletorParamentros(
+                    widget.tabelasDePrecoSeletor(
+                      SeletorData(
                         itemsSelecionadosInicial:
                             state.tabelaDePrecoSelecionada == null
                             ? null

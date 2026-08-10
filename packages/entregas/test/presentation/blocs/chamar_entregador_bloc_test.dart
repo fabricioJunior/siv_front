@@ -1,4 +1,7 @@
 import 'package:core/bloc_test.dart';
+import 'package:core/sessao.dart';
+import 'package:empresas/models.dart';
+import 'package:empresas/use_cases.dart';
 import 'package:entregas/domain/models/entrega.dart';
 import 'package:entregas/presentation.dart';
 import 'package:entregas/use_cases.dart';
@@ -87,12 +90,26 @@ class _FakeSolicitacao extends Fake implements SolicitacaoEntrega {
   String get status => 'G';
 }
 
+class _FakeRecuperarEmpresa extends Fake implements RecuperarEmpresa {
+  Empresa? empresa;
+
+  @override
+  Future<Empresa?> call(int idEmpresa) async => empresa;
+}
+
+class _FakeAcessoGlobalSessao extends Fake implements IAcessoGlobalSessao {
+  @override
+  int? empresaIdDaSessao = 1;
+}
+
 void main() {
   late _FakeObterSaldoEntrega obterSaldo;
   late _FakeEstimarEntrega estimar;
   late _FakeAbrirSolicitacaoEntrega abrirSolicitacao;
   late _FakeObterRastreioEntrega obterRastreio;
   late _FakeCancelarSolicitacaoEntrega cancelarSolicitacao;
+  late _FakeRecuperarEmpresa recuperarEmpresa;
+  late _FakeAcessoGlobalSessao acessoGlobalSessao;
 
   ChamarEntregadorBloc build() => ChamarEntregadorBloc(
         obterSaldo,
@@ -100,6 +117,8 @@ void main() {
         abrirSolicitacao,
         obterRastreio,
         cancelarSolicitacao,
+        recuperarEmpresa,
+        acessoGlobalSessao,
       );
 
   setUp(() {
@@ -108,6 +127,8 @@ void main() {
     abrirSolicitacao = _FakeAbrirSolicitacaoEntrega();
     obterRastreio = _FakeObterRastreioEntrega();
     cancelarSolicitacao = _FakeCancelarSolicitacaoEntrega();
+    recuperarEmpresa = _FakeRecuperarEmpresa();
+    acessoGlobalSessao = _FakeAcessoGlobalSessao();
   });
 
   blocTest<ChamarEntregadorBloc, ChamarEntregadorState>(
@@ -117,6 +138,58 @@ void main() {
     expect: () => [
       isA<ChamarEntregadorState>().having((s) => s.saldo, 'saldo', 100),
     ],
+  );
+
+  blocTest<ChamarEntregadorBloc, ChamarEntregadorState>(
+    'ChamarEntregadorIniciou monta a partida a partir do endereço da '
+    'empresa quando ela tem coordenadas cadastradas',
+    setUp: () {
+      recuperarEmpresa.empresa = Empresa.create(
+        cnpj: '00000000000191',
+        nome: 'Empresa',
+        nomeFantasia: 'Empresa',
+        logradouro: 'Rua A',
+        numero: '10',
+        bairro: 'Centro',
+        municipio: 'Cidade',
+        uf: 'SP',
+        latitude: -23.5,
+        longitude: -46.6,
+      );
+    },
+    build: build,
+    act: (bloc) async {
+      bloc.add(ChamarEntregadorIniciou());
+      await Future.delayed(Duration.zero);
+    },
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      expect(bloc.state.partida, isNotNull);
+      expect(bloc.state.partida!.lat, -23.5);
+      expect(bloc.state.partida!.lng, -46.6);
+    },
+  );
+
+  blocTest<ChamarEntregadorBloc, ChamarEntregadorState>(
+    'ChamarEntregadorIniciou deixa partida nula quando empresa nao tem '
+    'coordenadas cadastradas',
+    setUp: () {
+      recuperarEmpresa.empresa = Empresa.create(
+        cnpj: '00000000000191',
+        nome: 'Empresa',
+        nomeFantasia: 'Empresa',
+      );
+    },
+    build: build,
+    act: (bloc) async {
+      bloc.add(ChamarEntregadorIniciou());
+      await Future.delayed(Duration.zero);
+    },
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      expect(bloc.state.partida, isNull);
+      expect(bloc.state.empresa, isNotNull);
+    },
   );
 
   blocTest<ChamarEntregadorBloc, ChamarEntregadorState>(

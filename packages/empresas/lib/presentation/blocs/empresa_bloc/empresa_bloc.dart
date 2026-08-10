@@ -74,6 +74,8 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
         codigoMunicipioIbge: event.codigoMunicipioIbge,
         municipio: event.municipio,
         cep: event.cep,
+        latitude: event.latitude,
+        longitude: event.longitude,
       );
 
       emit(
@@ -97,6 +99,8 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
           codigoMunicipioIbge: event.codigoMunicipioIbge,
           municipio: event.municipio,
           cep: event.cep,
+          latitude: event.latitude,
+          longitude: event.longitude,
           empresa: empresaAtualizada,
         ),
       );
@@ -137,6 +141,8 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
             codigoMunicipioIbge: editState.codigoMunicipioIbge,
             municipio: editState.municipio,
             cep: editState.cep,
+            latitude: editState.latitude,
+            longitude: editState.longitude,
           );
           emit(EmpresaSalvarSucesso(empresa: empresa));
         }

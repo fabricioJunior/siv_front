@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/sessao.dart';
+import 'package:empresas/models.dart';
+import 'package:empresas/use_cases.dart';
+import 'package:entregas/data/remote/dtos/entrega_dto.dart';
 import 'package:entregas/domain/models/entrega.dart';
 import 'package:entregas/use_cases.dart';
 
@@ -21,6 +25,8 @@ class ChamarEntregadorBloc
   final AbrirSolicitacaoEntrega _abrirSolicitacao;
   final ObterRastreioEntrega _obterRastreio;
   final CancelarSolicitacaoEntrega _cancelarSolicitacao;
+  final RecuperarEmpresa _recuperarEmpresa;
+  final IAcessoGlobalSessao _acessoGlobalSessao;
 
   ChamarEntregadorBloc(
     this._obterSaldo,
@@ -28,6 +34,8 @@ class ChamarEntregadorBloc
     this._abrirSolicitacao,
     this._obterRastreio,
     this._cancelarSolicitacao,
+    this._recuperarEmpresa,
+    this._acessoGlobalSessao,
   ) : super(const ChamarEntregadorState.initial()) {
     on<ChamarEntregadorIniciou>(_onIniciou);
     on<ChamarEntregadorEstimou>(_onEstimou);
@@ -43,6 +51,32 @@ class ChamarEntregadorBloc
     try {
       final saldo = await _obterSaldo.call();
       emit(state.copyWith(saldo: saldo));
+    } catch (e, s) {
+      addError(e, s);
+    }
+
+    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+    if (empresaId == null) return;
+
+    try {
+      final empresa = await _recuperarEmpresa.call(empresaId);
+      if (empresa == null) return;
+
+      EnderecoEntrega? partida;
+      if (empresa.latitude != null && empresa.longitude != null) {
+        partida = EnderecoEntregaDto(
+          endereco: [empresa.logradouro, empresa.numero]
+              .where((v) => v != null && v.isNotEmpty)
+              .join(', '),
+          bairro: empresa.bairro ?? '',
+          cidade: empresa.municipio ?? '',
+          estado: empresa.uf ?? '',
+          lat: empresa.latitude!,
+          lng: empresa.longitude!,
+        );
+      }
+
+      emit(state.copyWith(empresa: empresa, partida: partida));
     } catch (e, s) {
       addError(e, s);
     }

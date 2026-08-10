@@ -85,8 +85,8 @@ class _AbrirConsignacaoPageState extends State<AbrirConsignacaoPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
-                        widget.pessoaSeletor.buildComParametros(
-                          SeletorParamentros(
+                        widget.pessoaSeletor(
+                          SeletorData(
                             itemsSelecionadosInicial:
                                 state.pessoaSelecionada == null
                                     ? null
@@ -103,8 +103,8 @@ class _AbrirConsignacaoPageState extends State<AbrirConsignacaoPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        widget.funcionarioSeletor.buildComParametros(
-                          SeletorParamentros(
+                        widget.funcionarioSeletor(
+                          SeletorData(
                             itemsSelecionadosInicial:
                                 state.funcionarioSelecionado == null
                                     ? null
@@ -121,8 +121,8 @@ class _AbrirConsignacaoPageState extends State<AbrirConsignacaoPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        widget.tabelaDePrecoSeletor.buildComParametros(
-                          SeletorParamentros(
+                        widget.tabelaDePrecoSeletor(
+                          SeletorData(
                             itemsSelecionadosInicial:
                                 state.tabelaSelecionada == null
                                     ? null

@@ -40,6 +40,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
   final String? codigoMunicipioIbge;
   final String? municipio;
   final String? cep;
+  final double? latitude;
+  final double? longitude;
 
   @override
   final Empresa? empresa;
@@ -64,6 +66,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     this.codigoMunicipioIbge,
     this.municipio,
     this.cep,
+    this.latitude,
+    this.longitude,
     this.empresa,
   });
 
@@ -86,6 +90,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         codigoMunicipioIbge = empresa?.codigoMunicipioIbge,
         municipio = empresa?.municipio,
         cep = empresa?.cep,
+        latitude = empresa?.latitude,
+        longitude = empresa?.longitude,
         id = empresa?.id;
 
   @override
@@ -108,6 +114,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         codigoMunicipioIbge,
         municipio,
         cep,
+        latitude,
+        longitude,
       ];
 
   EmpresaEditarEmProgresso copyWith({
@@ -130,6 +138,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
     Empresa? empresa,
   }) {
     return EmpresaEditarEmProgresso(
@@ -154,6 +164,8 @@ class EmpresaEditarEmProgresso extends EmpresaState {
       codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
       municipio: municipio ?? this.municipio,
       cep: cep ?? this.cep,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       empresa: empresa ?? this.empresa,
     );
   }

@@ -110,8 +110,8 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                         titulo: 'Etiqueta da impressao',
                       ),
                       const SizedBox(height: 12),
-                      widget.tabelasDePrecoSeletor.buildComParametros(
-                        SeletorParamentros(
+                      widget.tabelasDePrecoSeletor(
+                        SeletorData(
                           onChanged: (selecionadas) {
                             bloc.add(
                               ImpressaoEtiquetasTabelaSelecionada(

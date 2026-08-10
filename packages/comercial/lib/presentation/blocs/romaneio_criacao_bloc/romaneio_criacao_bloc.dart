@@ -287,9 +287,8 @@ class RomaneioCriacaoBloc
       final observacaoAtual = (romaneioAtual.observacao ?? '').trim();
       final motivo = 'Pendência de finalização (${DateTime.now()}): '
           '${mensagemDeErroApi(erro, 'motivo desconhecido')}';
-      final novaObservacao = observacaoAtual.isEmpty
-          ? motivo
-          : '$observacaoAtual\n$motivo';
+      final novaObservacao =
+          observacaoAtual.isEmpty ? motivo : '$observacaoAtual\n$motivo';
 
       await _atualizarObservacaoRomaneio.call(romaneioId, novaObservacao);
     } catch (e, s) {
@@ -484,7 +483,8 @@ class RomaneioCriacaoBloc
     }
   }
 
-  Future<DocumentoFiscal?> _carregarUltimoDocumentoFiscal(int romaneioId) async {
+  Future<DocumentoFiscal?> _carregarUltimoDocumentoFiscal(
+      int romaneioId) async {
     try {
       final resultado = await _listarDocumentosFiscais.call(
         romaneioId: romaneioId,

@@ -265,8 +265,8 @@ class _VendaPageState extends State<VendaPage> {
               absorbing: state.processando,
               child: Column(
                 children: [
-                  widget.pessoaSeletor.buildComParametros(
-                    SeletorParamentros(
+                  widget.pessoaSeletor(
+                    SeletorData(
                       itemsSelecionadosInicial: state.clienteSelecionado == null
                           ? null
                           : [state.clienteSelecionado!],
@@ -282,8 +282,8 @@ class _VendaPageState extends State<VendaPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  widget.vendedoresSeletor.buildComParametros(
-                    SeletorParamentros(
+                  widget.vendedoresSeletor(
+                    SeletorData(
                       itemsSelecionadosInicial:
                           state.vendedorSelecionado == null
                               ? null
@@ -300,8 +300,8 @@ class _VendaPageState extends State<VendaPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  widget.tabelasDePrecoSeletor.buildComParametros(
-                    SeletorParamentros(
+                  widget.tabelasDePrecoSeletor(
+                    SeletorData(
                       itemsSelecionadosInicial:
                           state.tabelaDePrecoSelecionada == null
                               ? null

@@ -28,6 +28,8 @@ EmpresaDto _$EmpresaDtoFromJson(Map<String, dynamic> json) => EmpresaDto(
   codigoMunicipioIbge: json['codigoMunicipioIbge'] as String?,
   municipio: json['municipio'] as String?,
   cep: json['cep'] as String?,
+  latitude: (json['latitude'] as num?)?.toDouble(),
+  longitude: (json['longitude'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
@@ -53,4 +55,6 @@ Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
       'codigoMunicipioIbge': ?instance.codigoMunicipioIbge,
       'municipio': ?instance.municipio,
       'cep': ?instance.cep,
+      'latitude': ?instance.latitude,
+      'longitude': ?instance.longitude,
     };

@@ -18,12 +18,12 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
   late final ChamarEntregadorBloc _bloc;
   final _formKey = GlobalKey<FormState>();
 
-  final _partidaControllers = EnderecoEntregaControllers();
   final _destinoControllers = EnderecoEntregaControllers();
   final _nomeClienteController = TextEditingController();
   final _telefoneClienteController = TextEditingController();
   final _observacaoController = TextEditingController();
   final _valorCobrarController = TextEditingController();
+  bool _defaultsCidadeAplicados = false;
 
   @override
   void initState() {
@@ -33,7 +33,6 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
 
   @override
   void dispose() {
-    _partidaControllers.dispose();
     _destinoControllers.dispose();
     _nomeClienteController.dispose();
     _telefoneClienteController.dispose();
@@ -60,7 +59,18 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
 
   void _calcular() {
     if (!_formKey.currentState!.validate()) return;
-    final partida = _construirEndereco(_partidaControllers);
+    final partida = _bloc.state.partida;
+    if (partida == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Empresa sem coordenadas cadastradas — cadastre em Configurações > Empresa.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     final destino = _construirEndereco(_destinoControllers);
     final parada = ParadaEntregaDto(
       endereco: destino,
@@ -121,6 +131,12 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
               SnackBar(content: Text(state.erro!), backgroundColor: Colors.red),
             );
           }
+          final empresa = state.empresa;
+          if (empresa != null && !_defaultsCidadeAplicados) {
+            _defaultsCidadeAplicados = true;
+            _destinoControllers.cidade.text = empresa.municipio ?? '';
+            _destinoControllers.estado.text = empresa.uf ?? '';
+          }
         },
         builder: (context, state) {
           return Scaffold(
@@ -169,6 +185,69 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
     );
   }
 
+  Widget _buildPartidaCard(BuildContext context, ChamarEntregadorState state) {
+    final empresa = state.empresa;
+    if (empresa == null) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Text('Carregando endereço de retirada...'),
+            ],
+          ),
+        ),
+      );
+    }
+    if (state.partida == null) {
+      return Card(
+        color: Colors.orange.shade50,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_outlined, color: Colors.orange),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Empresa sem coordenadas cadastradas — cadastre em '
+                  'Configurações > Empresa.',
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final endereco = [empresa.logradouro, empresa.numero]
+        .where((v) => v != null && v.isNotEmpty)
+        .join(', ');
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.store_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Retirada em: $endereco, ${empresa.bairro ?? ''} - '
+                '${empresa.municipio ?? ''}/${empresa.uf ?? ''}',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFormulario(BuildContext context, ChamarEntregadorState state) {
     final isEstimando = state.step == ChamarEntregadorStep.estimando;
     final isChamando = state.step == ChamarEntregadorStep.chamando;
@@ -180,10 +259,7 @@ class _ChamarEntregadorPageState extends State<ChamarEntregadorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          EnderecoEntregaForm(
-            titulo: 'Endereço de partida',
-            controllers: _partidaControllers,
-          ),
+          _buildPartidaCard(context, state),
           const SizedBox(height: 16),
           EnderecoEntregaForm(
             titulo: 'Endereço de destino',

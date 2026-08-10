@@ -763,27 +763,33 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
                     ),
                     const SizedBox(height: 12),
                     widget.seletorCores.call(
-                      itemsSelecionadosInicial: coresSelecionadas,
-                      onChanged: (dados) {
-                        coresSelecionadas = dados;
-                      },
+                      SeletorData(
+                        itemsSelecionadosInicial: coresSelecionadas,
+                        onChanged: (dados) {
+                          coresSelecionadas = dados;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
                     widget.seletorTamanhos.call(
-                      itemsSelecionadosInicial: tamanhosSelecionados,
-                      onChanged: (dados) {
-                        tamanhosSelecionados = dados;
-                      },
+                      SeletorData(
+                        itemsSelecionadosInicial: tamanhosSelecionados,
+                        onChanged: (dados) {
+                          tamanhosSelecionados = dados;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
                     widget.seletorTabelaPreco.call(
-                      itemsSelecionadosInicial: tabelaSelecionada != null
-                          ? [tabelaSelecionada!]
-                          : null,
-                      onChanged: (dados) => setSheetState(
-                        () => tabelaSelecionada = dados.isEmpty
-                            ? null
-                            : dados.first,
+                      SeletorData(
+                        itemsSelecionadosInicial: tabelaSelecionada != null
+                            ? [tabelaSelecionada!]
+                            : null,
+                        onChanged: (dados) => setSheetState(
+                          () => tabelaSelecionada = dados.isEmpty
+                              ? null
+                              : dados.first,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),

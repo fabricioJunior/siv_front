@@ -20,6 +20,8 @@ abstract class Empresa implements Equatable {
   String? get codigoMunicipioIbge;
   String? get municipio;
   String? get cep;
+  double? get latitude;
+  double? get longitude;
 
   factory Empresa.create({
     int? id,
@@ -41,6 +43,8 @@ abstract class Empresa implements Equatable {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
   }) = _EmpresaImpl;
 
   @override
@@ -67,6 +71,8 @@ abstract class Empresa implements Equatable {
         codigoMunicipioIbge,
         municipio,
         cep,
+        latitude,
+        longitude,
       ];
 }
 
@@ -109,6 +115,10 @@ class _EmpresaImpl implements Empresa {
   final String? municipio;
   @override
   final String? cep;
+  @override
+  final double? latitude;
+  @override
+  final double? longitude;
 
   _EmpresaImpl({
     this.id,
@@ -130,6 +140,8 @@ class _EmpresaImpl implements Empresa {
     this.codigoMunicipioIbge,
     this.municipio,
     this.cep,
+    this.latitude,
+    this.longitude,
   });
 
   _EmpresaImpl copyWith({
@@ -152,6 +164,8 @@ class _EmpresaImpl implements Empresa {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
   }) {
     return _EmpresaImpl(
       id: id ?? this.id,
@@ -175,6 +189,8 @@ class _EmpresaImpl implements Empresa {
       codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
       municipio: municipio ?? this.municipio,
       cep: cep ?? this.cep,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 
@@ -202,6 +218,8 @@ class _EmpresaImpl implements Empresa {
         codigoMunicipioIbge,
         municipio,
         cep,
+        latitude,
+        longitude,
       ];
 }
 
@@ -226,6 +244,8 @@ extension EmpresaCopyWith on Empresa {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
   }) {
     if (this is _EmpresaImpl) {
       return (this as _EmpresaImpl).copyWith(
@@ -248,6 +268,8 @@ extension EmpresaCopyWith on Empresa {
         codigoMunicipioIbge: codigoMunicipioIbge,
         municipio: municipio,
         cep: cep,
+        latitude: latitude,
+        longitude: longitude,
       );
     }
     // If it's not _EmpresaImpl, create new instance from current values
@@ -273,6 +295,8 @@ extension EmpresaCopyWith on Empresa {
       codigoMunicipioIbge: codigoMunicipioIbge ?? this.codigoMunicipioIbge,
       municipio: municipio ?? this.municipio,
       cep: cep ?? this.cep,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 }

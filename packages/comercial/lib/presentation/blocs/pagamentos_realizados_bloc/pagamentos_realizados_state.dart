@@ -97,19 +97,49 @@ class PagamentosRealizadosState extends Equatable {
       (emailClienteCadastrado == null || emailClienteCadastrado!.isEmpty);
 
   double get valorTotalProdutos => resumo?.valorTotalProdutos ?? 0;
+  // Total dos produtos SEM promoção aplicada -- teto/base do desconto geral
+  // do romaneio (produto com promoção já tem desconto embutido, não faz
+  // sentido "descontar desconto" -- ver _onDescontoAlterado no bloc).
+  double get valorTotalProdutosSemPromocao {
+    final produtos = resumo?.produtosCompartilhados ?? const [];
+    return produtos
+        .where((p) => !promocaoEscolhidaPorItem.containsKey(p.produtoId))
+        .fold<double>(0, (soma, p) => soma + p.quantidade * p.valorUnitario);
+  }
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
+  // Forma de pagamento escolhida, só quando há exatamente 1 linha com forma
+  // preenchida -- usada pra recalcular prévia de desconto com override por
+  // forma. NÃO exige valor digitado: o operador normalmente escolhe a forma
+  // primeiro pra saber quanto cobrar, então a prévia precisa reagir antes
+  // do campo "Valor recebido" ser preenchido. 0 ou 2+ linhas com forma
+  // escolhida (pagamento não escolhido, ou dividido em mais de uma forma)
+  // mantém o valor base (sem recálculo).
+  int? get formaDePagamentoUnicaId {
+    final comForma = linhas.where((l) => l.formaDePagamento != null);
+    if (comForma.length != 1) return null;
+    return comForma.first.formaDePagamento!.id;
+  }
+
   // Desconto de promocao/cupom escolhido por item (valorDesconto da opcao
   // e por unidade -- multiplica pela quantidade do produto no carrinho).
+  // Recalcula pela forma de pagamento escolhida quando a promoção tiver
+  // override pra ela (ver OpcaoElegivel.valorDescontoParaForma).
   double get valorDescontoPromocaoTotal {
     if (promocaoEscolhidaPorItem.isEmpty) return 0;
-    final quantidadePorProduto = {
+    final valorUnitarioPorProduto = {
       for (final produto in resumo?.produtosCompartilhados ?? const [])
-        produto.produtoId: produto.quantidade,
+        produto.produtoId: produto,
     };
+    final formaId = formaDePagamentoUnicaId;
     return promocaoEscolhidaPorItem.entries.fold<double>(0, (soma, entrada) {
-      final quantidade = quantidadePorProduto[entrada.key] ?? 0;
-      return soma + (entrada.value.valorDesconto * quantidade);
+      final produto = valorUnitarioPorProduto[entrada.key];
+      if (produto == null) return soma;
+      final desconto = entrada.value.valorDescontoParaForma(
+        formaId,
+        valorUnitario: produto.valorUnitario,
+      );
+      return soma + (desconto * produto.quantidade);
     });
   }
 

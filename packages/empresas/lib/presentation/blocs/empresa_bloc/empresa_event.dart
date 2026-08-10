@@ -28,6 +28,8 @@ class EmpresaEditou extends EmpresaEvent {
   final String? codigoMunicipioIbge;
   final String? municipio;
   final String? cep;
+  final double? latitude;
+  final double? longitude;
 
   EmpresaEditou({
     this.id,
@@ -49,6 +51,8 @@ class EmpresaEditou extends EmpresaEvent {
     this.codigoMunicipioIbge,
     this.municipio,
     this.cep,
+    this.latitude,
+    this.longitude,
   });
 }
 

@@ -338,19 +338,14 @@ class _PedidoPageState extends State<PedidoPage> {
           descontoJaAplicadoNoRomaneio: state.pedido?.desconto ?? 0,
           taxaEntregaJaAplicadaNoRomaneio: state.pedido?.valorTaxaEntrega ?? 0,
           permitirTaxaEntrega: false,
-          formasDePagamentoSeletor: (
-                  {itemsSelecionadosInicial,
-                  onChanged,
-                  onlyView,
-                  idsPermitidos}) =>
-              FormasDePagamentoSeletor(
+          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
             modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
             titulo: 'Forma de pagamento',
             tipoOperacaoFiltro: tipoEscolhido,
-            idsPermitidos: idsPermitidos,
+            idsPermitidos: data.idsPermitidos,
           ),
         );
       },
@@ -1300,8 +1295,8 @@ class _PedidoPageState extends State<PedidoPage> {
               if (widget.pessoaSeletor != null)
                 IgnorePointer(
                   ignoring: carregando,
-                  child: widget.pessoaSeletor!.buildComParametros(
-                    SeletorParamentros(
+                  child: widget.pessoaSeletor!(
+                    SeletorData(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.pessoaId,
                             nomeFallback:
@@ -1332,8 +1327,8 @@ class _PedidoPageState extends State<PedidoPage> {
               if (widget.funcionarioSeletor != null)
                 IgnorePointer(
                   ignoring: carregando,
-                  child: widget.funcionarioSeletor!.buildComParametros(
-                    SeletorParamentros(
+                  child: widget.funcionarioSeletor!(
+                    SeletorData(
                       itemsSelecionadosInicial: _selectDataInicial(
                             idTexto: state.funcionarioId,
                             nomeFallback:
@@ -1364,8 +1359,8 @@ class _PedidoPageState extends State<PedidoPage> {
               if (widget.tabelaDePrecoSeletor != null)
                 IgnorePointer(
                   ignoring: carregando,
-                  child: widget.tabelaDePrecoSeletor!.buildComParametros(
-                    SeletorParamentros(
+                  child: widget.tabelaDePrecoSeletor!(
+                    SeletorData(
                       itemsSelecionadosInicial: _selectDataInicial(
                         idTexto: state.tabelaPrecoId,
                         nomeFallback: state.pedido?.tabelaPrecoNome ??

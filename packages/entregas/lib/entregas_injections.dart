@@ -51,6 +51,6 @@ void _presentation() {
     () => ConfiguracaoEntregaBloc(sl(), sl()),
   );
   sl.registerFactory<ChamarEntregadorBloc>(
-    () => ChamarEntregadorBloc(sl(), sl(), sl(), sl(), sl()),
+    () => ChamarEntregadorBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 }

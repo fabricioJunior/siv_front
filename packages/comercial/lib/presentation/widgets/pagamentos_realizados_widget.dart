@@ -180,12 +180,10 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                           state.step == PagamentosRealizadosStep.editando
                               ? () => _abrirDialogoDesconto(context, state)
                               : null,
-                      onTaxaEntregaPressed:
-                          permitirTaxaEntrega &&
-                                  state.step ==
-                                      PagamentosRealizadosStep.editando
-                              ? () => _abrirDialogoTaxaEntrega(context, state)
-                              : null,
+                      onTaxaEntregaPressed: permitirTaxaEntrega &&
+                              state.step == PagamentosRealizadosStep.editando
+                          ? () => _abrirDialogoTaxaEntrega(context, state)
+                          : null,
                       exibirCheckboxFidelidade: exibirCheckboxFidelidade,
                     ),
                     if (state.erro != null) ...[
@@ -337,6 +335,91 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: !state.clienteGenerico && state.incluirCpfNaNota,
+              title: const Text('Incluir CPF do cliente na nota fiscal'),
+              subtitle: state.clienteGenerico
+                  ? const Text('Não disponível para cliente não cadastrado.')
+                  : null,
+              onChanged: state.clienteGenerico
+                  ? null
+                  : (value) {
+                      context.read<PagamentosRealizadosBloc>().add(
+                            PagamentosRealizadosIncluirCpfAlterado(
+                              incluirCpfNaNota: value ?? true,
+                            ),
+                          );
+                    },
+            ),
+            if (!state.clienteGenerico && state.incluirCpfNaNota)
+              CPFInput(
+                controller: _cpfController,
+                obrigatorio: false,
+                onChanged: (value) {
+                  context.read<PagamentosRealizadosBloc>().add(
+                        PagamentosRealizadosCpfAlterado(cpfNaNota: value),
+                      );
+                },
+              ),
+            if (state.permiteNotaFiscalEmail) ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: state.enviarNotaPorEmail,
+                title: const Text('Enviar Nota Fiscal por E-mail'),
+                onChanged: (value) {
+                  context.read<PagamentosRealizadosBloc>().add(
+                        PagamentosRealizadosEnviarNotaPorEmailAlterado(
+                          enviarNotaPorEmail: value ?? false,
+                        ),
+                      );
+                },
+              ),
+              if (state.exigeEmailNota)
+                TextFormField(
+                  controller: _emailNotaController,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail do cliente',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                  onChanged: (value) {
+                    context.read<PagamentosRealizadosBloc>().add(
+                          PagamentosRealizadosEmailNotaAlterado(
+                            emailNota: value,
+                          ),
+                        );
+                  },
+                ),
+            ],
+            if (widget.exibirCheckboxFidelidade)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: state.pontuarFidelidade,
+                title: const Text('Pontuar fidelidade'),
+                subtitle: !state.clienteElegivelFidelidade
+                    ? Text(
+                        state.carregandoElegibilidadeFidelidade
+                            ? 'Consultando elegibilidade do cliente...'
+                            : 'Cliente sem cadastro no portal de pontos.',
+                        style: theme.textTheme.bodySmall,
+                      )
+                    : null,
+                onChanged: state.clienteElegivelFidelidade
+                    ? (value) {
+                        context.read<PagamentosRealizadosBloc>().add(
+                              PagamentosRealizadosPontuarFidelidadeAlterado(
+                                pontuarFidelidade: value ?? false,
+                              ),
+                            );
+                      }
+                    : null,
+              ),
+            const Divider(height: 24),
             Row(
               children: [
                 Expanded(
@@ -372,6 +455,14 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
               controller: _cupomController,
               habilitado: onDescontoPressed != null,
             ),
+            if (_promocoesDistintas(state.opcoesElegiveisPorItem)
+                .isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _PromocoesGlobaisButton(
+                state: state,
+                habilitado: onDescontoPressed != null,
+              ),
+            ],
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,
@@ -466,91 +557,6 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                 ),
               ),
             ],
-            const Divider(height: 24),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: !state.clienteGenerico && state.incluirCpfNaNota,
-              title: const Text('Incluir CPF do cliente na nota fiscal'),
-              subtitle: state.clienteGenerico
-                  ? const Text('Não disponível para cliente não cadastrado.')
-                  : null,
-              onChanged: state.clienteGenerico
-                  ? null
-                  : (value) {
-                      context.read<PagamentosRealizadosBloc>().add(
-                            PagamentosRealizadosIncluirCpfAlterado(
-                              incluirCpfNaNota: value ?? true,
-                            ),
-                          );
-                    },
-            ),
-            if (!state.clienteGenerico && state.incluirCpfNaNota)
-              CPFInput(
-                controller: _cpfController,
-                obrigatorio: false,
-                onChanged: (value) {
-                  context.read<PagamentosRealizadosBloc>().add(
-                        PagamentosRealizadosCpfAlterado(cpfNaNota: value),
-                      );
-                },
-              ),
-            if (state.permiteNotaFiscalEmail) ...[
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: state.enviarNotaPorEmail,
-                title: const Text('Enviar Nota Fiscal por E-mail'),
-                onChanged: (value) {
-                  context.read<PagamentosRealizadosBloc>().add(
-                        PagamentosRealizadosEnviarNotaPorEmailAlterado(
-                          enviarNotaPorEmail: value ?? false,
-                        ),
-                      );
-                },
-              ),
-              if (state.exigeEmailNota)
-                TextFormField(
-                  controller: _emailNotaController,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail do cliente',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                  onChanged: (value) {
-                    context.read<PagamentosRealizadosBloc>().add(
-                          PagamentosRealizadosEmailNotaAlterado(
-                            emailNota: value,
-                          ),
-                        );
-                  },
-                ),
-            ],
-            if (widget.exibirCheckboxFidelidade)
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: state.pontuarFidelidade,
-                title: const Text('Pontuar fidelidade'),
-                subtitle: !state.clienteElegivelFidelidade
-                    ? Text(
-                        state.carregandoElegibilidadeFidelidade
-                            ? 'Consultando elegibilidade do cliente...'
-                            : 'Cliente sem cadastro no portal de pontos.',
-                        style: theme.textTheme.bodySmall,
-                      )
-                    : null,
-                onChanged: state.clienteElegivelFidelidade
-                    ? (value) {
-                        context.read<PagamentosRealizadosBloc>().add(
-                              PagamentosRealizadosPontuarFidelidadeAlterado(
-                                pontuarFidelidade: value ?? false,
-                              ),
-                            );
-                      }
-                    : null,
-              ),
           ],
         ),
       ),
@@ -624,6 +630,144 @@ class _CupomField extends StatelessWidget {
           PagamentosRealizadosCupomInformado(codigo: controller.text.trim()),
         );
   }
+}
+
+// Deduplica as opcoes tipo 'promocao' (nao-cupom) de todos os produtos por
+// id -- usado tanto pro botao/badge quanto pro conteudo do dialog global.
+List<OpcaoElegivel> _promocoesDistintas(
+  Map<int, List<OpcaoElegivel>> opcoesPorItem,
+) {
+  final mapa = <int, OpcaoElegivel>{};
+  for (final opcao in opcoesPorItem.values.expand((lista) => lista)) {
+    if (!opcao.ehCupom) mapa[opcao.id] = opcao;
+  }
+  return mapa.values.toList(growable: false);
+}
+
+class _PromocoesGlobaisButton extends StatelessWidget {
+  final PagamentosRealizadosState state;
+  final bool habilitado;
+
+  const _PromocoesGlobaisButton({
+    required this.state,
+    required this.habilitado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final quantidade = _promocoesDistintas(state.opcoesElegiveisPorItem).length;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Badge(
+        label: Text('$quantidade'),
+        child: OutlinedButton.icon(
+          onPressed:
+              habilitado ? () => _abrirDialogoPromocoesGlobais(context) : null,
+          icon: const Icon(Icons.local_offer_outlined),
+          label: const Text('Promoções disponíveis'),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _abrirDialogoPromocoesGlobais(BuildContext context) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return BlocBuilder<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+        bloc: bloc,
+        builder: (context, state) {
+          final produtos = state.resumo?.produtosCompartilhados ?? const [];
+          final quantidadePorProduto = {
+            for (final produto in produtos)
+              produto.produtoId: produto.quantidade,
+          };
+          final promocoes = _promocoesDistintas(state.opcoesElegiveisPorItem);
+
+          return AlertDialog(
+            title: const Text('Promoções disponíveis'),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: promocoes.map((promocao) {
+                    final produtosElegiveis =
+                        state.opcoesElegiveisPorItem.entries
+                            .where(
+                              (entrada) => entrada.value.any(
+                                (opcao) =>
+                                    opcao.id == promocao.id && !opcao.ehCupom,
+                              ),
+                            )
+                            .map((entrada) => entrada.key)
+                            .toList(growable: false);
+
+                    final marcado = produtosElegiveis.any((produtoId) {
+                      final atual = state.promocaoEscolhidaPorItem[produtoId];
+                      return atual != null &&
+                          atual.id == promocao.id &&
+                          !atual.ehCupom;
+                    });
+
+                    final produtosConflitantes =
+                        produtosElegiveis.where((produtoId) {
+                      final atual = state.promocaoEscolhidaPorItem[produtoId];
+                      return atual != null &&
+                          atual.id != promocao.id &&
+                          !atual.ehCupom;
+                    }).toList(growable: false);
+
+                    final desabilitado =
+                        !marcado && produtosConflitantes.isNotEmpty;
+
+                    final valorTotalDesconto =
+                        produtosElegiveis.fold<double>(0, (soma, produtoId) {
+                      final opcao =
+                          state.opcoesElegiveisPorItem[produtoId]!.firstWhere(
+                        (opcao) => opcao.id == promocao.id && !opcao.ehCupom,
+                      );
+                      return soma +
+                          opcao.valorDesconto *
+                              (quantidadePorProduto[produtoId] ?? 0);
+                    });
+
+                    return CheckboxListTile(
+                      value: marcado,
+                      title: Text(promocao.nome),
+                      subtitle: Text(
+                        desabilitado
+                            ? 'Conflita com ${state.promocaoEscolhidaPorItem[produtosConflitantes.first]!.nome} em ${produtosConflitantes.length} produto(s)'
+                            : '${produtosElegiveis.length} produto(s) elegível(is) — desconto estimado de ${_formatarMoeda(valorTotalDesconto)}',
+                      ),
+                      onChanged: desabilitado
+                          ? null
+                          : (value) => bloc.add(
+                                PagamentosRealizadosPromocaoGlobalAlterada(
+                                  promocaoId: promocao.id,
+                                  marcado: value ?? false,
+                                ),
+                              ),
+                    );
+                  }).toList(growable: false),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Fechar'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
 
 class _AvisoRestricaoFormaPagamento extends StatelessWidget {
@@ -712,21 +856,23 @@ class _LinhaPagamentoCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: formasDePagamentoSeletor(
-                    itemsSelecionadosInicial: formaSelecionada == null
-                        ? const []
-                        : [formaSelecionada],
-                    onChanged: (selecionadas) {
-                      final forma =
-                          selecionadas.isNotEmpty ? selecionadas.first : null;
-                      bloc.add(
-                        PagamentosRealizadosFormaAlterada(
-                          linhaId: linha.id,
-                          formaDePagamento: forma,
-                        ),
-                      );
-                    },
-                    onlyView: false,
-                    idsPermitidos: idsPermitidos,
+                    SeletorData(
+                      itemsSelecionadosInicial: formaSelecionada == null
+                          ? const []
+                          : [formaSelecionada],
+                      onChanged: (selecionadas) {
+                        final forma =
+                            selecionadas.isNotEmpty ? selecionadas.first : null;
+                        bloc.add(
+                          PagamentosRealizadosFormaAlterada(
+                            linhaId: linha.id,
+                            formaDePagamento: forma,
+                          ),
+                        );
+                      },
+                      onlyView: false,
+                      idsPermitidos: idsPermitidos,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -796,15 +942,26 @@ class _ProdutosCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ...produtos.map((produto) {
+            ...produtos.asMap().entries.expand((entry) {
+              final index = entry.key;
+              final produto = entry.value;
               final valorTotalItem = produto.quantidade * produto.valorUnitario;
               final descontoAplicado =
                   state.descontosItensAplicado[produto.produtoId] ?? 0;
               final promocaoAplicada =
                   state.promocaoEscolhidaPorItem[produto.produtoId];
+              // ponytail: prévia só recalcula p/ pagamento em 1 forma só,
+              // split fica com valor base -- cálculo final de verdade é
+              // sempre do backend (ver formaDePagamentoUnicaId no state).
               final descontoPromocaoItem =
-                  (promocaoAplicada?.valorDesconto ?? 0) * produto.quantidade;
-              final temDesconto = descontoAplicado > 0 || promocaoAplicada != null;
+                  (promocaoAplicada?.valorDescontoParaForma(
+                        state.formaDePagamentoUnicaId,
+                        valorUnitario: produto.valorUnitario,
+                      ) ??
+                      0) *
+                  produto.quantidade;
+              final temDesconto =
+                  descontoAplicado > 0 || promocaoAplicada != null;
               final opcoesElegiveis =
                   state.opcoesElegiveisPorItem[produto.produtoId] ?? const [];
               final descricao = [
@@ -813,90 +970,98 @@ class _ProdutosCard extends StatelessWidget {
                 if (produto.tamanhoNome.isNotEmpty) produto.tamanhoNome,
               ].join(' - ');
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(descricao, overflow: TextOverflow.ellipsis),
-                    ),
-                    Expanded(
-                      child: Text('Qtd: ${produto.quantidade}'),
-                    ),
-                    Expanded(
-                      child: Text(_formatarMoeda(produto.valorUnitario)),
-                    ),
-                    Expanded(
-                      child: Text(
-                        temDesconto
-                            ? _formatarMoeda(
-                                valorTotalItem -
-                                    descontoAplicado -
-                                    descontoPromocaoItem,
-                              )
-                            : _formatarMoeda(valorTotalItem),
-                        style: temDesconto
-                            ? TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              )
-                            : null,
+              return [
+                if (index > 0) const Divider(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              descricao,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text('Qtd: ${produto.quantidade}'),
+                          ),
+                          Expanded(
+                            child: Text(_formatarMoeda(produto.valorUnitario)),
+                          ),
+                          Expanded(
+                            child: Text(
+                              temDesconto
+                                  ? _formatarMoeda(
+                                      valorTotalItem -
+                                          descontoAplicado -
+                                          descontoPromocaoItem,
+                                    )
+                                  : _formatarMoeda(valorTotalItem),
+                              style: temDesconto
+                                  ? TextStyle(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    TextButton.icon(
-                      onPressed: podeEditar
-                          ? () => _abrirDialogoDescontoItem(
-                                context,
-                                state,
-                                produto,
-                              )
-                          : null,
-                      icon: const Icon(Icons.percent, size: 16),
-                      label: Text(descontoAplicado > 0 ? 'Editar' : 'Desconto'),
-                    ),
-                    if (promocaoAplicada != null)
-                      InputChip(
-                        avatar: const Icon(Icons.local_offer, size: 16),
-                        label: Text(
-                          promocaoAplicada.nome,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onPressed: podeEditar
-                            ? () => _abrirDialogoPromocaoItem(
-                                  context,
-                                  produto.produtoId,
-                                  opcoesElegiveis,
-                                  promocaoAplicada,
-                                )
-                            : null,
-                        onDeleted: podeEditar
-                            ? () => context
-                                .read<PagamentosRealizadosBloc>()
-                                .add(
-                                  PagamentosRealizadosPromocaoEscolhida(
-                                    produtoId: produto.produtoId,
-                                    opcao: null,
-                                  ),
-                                )
-                            : null,
-                      )
-                    else if (opcoesElegiveis.isNotEmpty)
-                      TextButton.icon(
-                        onPressed: podeEditar
-                            ? () => _abrirDialogoPromocaoItem(
-                                  context,
-                                  produto.produtoId,
-                                  opcoesElegiveis,
-                                  null,
-                                )
-                            : null,
-                        icon: const Icon(Icons.local_offer_outlined, size: 16),
-                        label: const Text('Promoção'),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          TextButton.icon(
+                            onPressed: podeEditar
+                                ? () => _abrirDialogoDescontoItem(
+                                      context,
+                                      state,
+                                      produto,
+                                    )
+                                : null,
+                            icon: const Icon(Icons.percent, size: 16),
+                            label: Text(
+                              descontoAplicado > 0 ? 'Editar' : 'Desconto',
+                            ),
+                          ),
+                          if (promocaoAplicada != null)
+                            InputChip(
+                              avatar: const Icon(Icons.local_offer, size: 16),
+                              label: Text(
+                                promocaoAplicada.nome,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onPressed: podeEditar
+                                  ? () => _abrirDialogoPromocaoItem(
+                                        context,
+                                        produto.produtoId,
+                                        opcoesElegiveis,
+                                        promocaoAplicada,
+                                      )
+                                  : null,
+                              onDeleted: podeEditar
+                                  ? () => context
+                                      .read<PagamentosRealizadosBloc>()
+                                      .add(
+                                        PagamentosRealizadosPromocaoEscolhida(
+                                          produtoId: produto.produtoId,
+                                          opcao: null,
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                        ],
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              );
+              ];
             }),
           ],
         ),
@@ -1081,9 +1246,7 @@ Future<void> _abrirDialogoTaxaEntrega(
 ) async {
   final bloc = context.read<PagamentosRealizadosBloc>();
   final controller = TextEditingController(
-    text: state.valorTaxaEntregaAplicado > 0
-        ? state.taxaEntregaValorTexto
-        : '',
+    text: state.valorTaxaEntregaAplicado > 0 ? state.taxaEntregaValorTexto : '',
   );
 
   final confirmou = await showDialog<bool>(

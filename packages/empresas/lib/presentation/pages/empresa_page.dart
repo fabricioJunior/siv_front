@@ -1,6 +1,7 @@
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:empresas/domain/coordenadas_parser.dart';
 import 'package:empresas/domain/entities/empresa.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -778,6 +779,41 @@ class EmpresaPage extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   fieldKey: const Key('cep_empresa'),
                 ),
+                const SizedBox(height: 14),
+                _buildTextField(
+                  context,
+                  label: 'Coordenadas (copie do Google Maps ou digite lat, lng)',
+                  icon: Icons.my_location_outlined,
+                  readOnly: readOnly,
+                  helperText: 'Ex: 2°54\'49.7"S 41°45\'15.6"W ou -2.9138, -41.7543',
+                  controller: TextEditingController.fromValue(
+                    TextEditingValue(
+                      text: empresa?.latitude != null && empresa?.longitude != null
+                          ? '${empresa!.latitude}, ${empresa.longitude}'
+                          : '',
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return null;
+                    }
+                    if (parseCoordenadas(value) == null) {
+                      return 'Formato de coordenadas inválido. Ex: '
+                          '2°54\'49.7"S 41°45\'15.6"W ou -2.9138, -41.7543';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    final coordenadas = parseCoordenadas(value);
+                    context.read<EmpresaBloc>().add(
+                      EmpresaEditou(
+                        latitude: coordenadas?.$1,
+                        longitude: coordenadas?.$2,
+                      ),
+                    );
+                  },
+                  fieldKey: const Key('coordenadas_empresa'),
+                ),
               ],
             ),
           );
@@ -876,6 +912,7 @@ class EmpresaPage extends StatelessWidget {
     required ValueChanged<String> onChanged,
     List<TextInputFormatter>? inputFormatters,
     TextInputType? keyboardType,
+    String? helperText,
     Key? fieldKey,
   }) {
     return Column(
@@ -898,6 +935,8 @@ class EmpresaPage extends StatelessWidget {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             prefixIcon: Icon(icon),
+            helperText: helperText,
+            helperMaxLines: 2,
             filled: true,
             fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),

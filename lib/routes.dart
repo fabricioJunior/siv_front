@@ -5,7 +5,7 @@ import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
-import 'package:core/seletores.dart' show SelectData;
+import 'package:core/seletores.dart' show SelectData, SeletorData;
 import 'package:empresas/presentation.dart';
 import 'package:empresas/use_cases.dart' show RecuperarTerminais;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
@@ -295,44 +295,45 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/venda',
         child: VendaPage(
-          pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          pessoaSeletor: (data) =>
               SeletorPessoa(
                 titulo: 'Cliente',
-                itemsSelecionadosInicial: itemsSelecionadosInicial,
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
                 retornarSomenteId: false,
-                onChanged: onChanged,
-                onlyView: onlyView ?? false,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
                 clienteOuFuncionario: true,
               ),
           vendedoresSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FuncionarioSeletor(
                     modo: FuncionarioSeletorModo.unica,
                     tipoFuncionario: TipoFuncionario.vendedor,
                     itemsSelecionadosInicial:
-                        itemsSelecionadosInicial ?? const [],
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                        data.itemsSelecionadosInicial ?? const [],
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                     titulo: 'Vendedor',
                   ),
           tabelasDePrecoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   TabelasDePrecoSeletor(
                     titulo: 'Tabela de preço',
                     modo: TabelasDePrecoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                   ),
           formasDePagamentoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FormasDePagamentoSeletor(
                     modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                     titulo: 'Forma de pagamento',
                     tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+                    idsPermitidos: data.idsPermitidos,
                   ),
         ),
       ),
@@ -451,12 +452,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/relatorio_vendas_por_funcionario',
       child: RelatorioVendasPorFuncionarioPage(
         funcionariosSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            (data) =>
                 FuncionarioSeletor(
                   modo: FuncionarioSeletorModo.multipla,
-                  onChanged: onChanged,
+                  onChanged: data.onChanged,
                   itemsSelecionadosInicial:
-                      itemsSelecionadosInicial ?? const [],
+                      data.itemsSelecionadosInicial ?? const [],
                 ),
       ),
     );
@@ -467,27 +468,27 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pedido': (context) {
     return PedidoPage(
       idPedido: args(context)['idPedido'],
-      pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      pessoaSeletor: (data) =>
           SeletorPessoa(
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
             retornarSomenteId: false,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
           ),
-      funcionarioSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      funcionarioSeletor: (data) =>
           FuncionarioSeletor(
             modo: FuncionarioSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
             titulo: 'Funcionário',
           ),
-      tabelaDePrecoSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      tabelaDePrecoSeletor: (data) =>
           TabelasDePrecoSeletor(
             modo: TabelasDePrecoSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
             titulo: 'Tabela de preço',
           ),
     );
@@ -508,25 +509,25 @@ Map<String, Widget Function(BuildContext)> routes = {
     return RomaneioPage(
       idRomaneio: args(context)['idRomaneio'],
       permitirEdicao: args(context)['permitirEdicao'] ?? true,
-      funcionarioSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      funcionarioSeletor: (data) =>
           FuncionarioSeletor(
             modo: FuncionarioSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial ?? const [],
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
           ),
-      tableDePrecoSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      tableDePrecoSeletor: (data) =>
           TabelasDePrecoSeletor(
             modo: TabelasDePrecoSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onlyView: data.onlyView,
           ),
-      pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+      pessoaSeletor: (data) =>
           SeletorPessoa(
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
             retornarSomenteId: false,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
           ),
     );
   },
@@ -624,33 +625,33 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/consignacao_abrir',
         child: AbrirConsignacaoPage(
-          pessoaSeletor: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+          pessoaSeletor: (data) =>
               SeletorPessoa(
                 titulo: 'Cliente',
-                itemsSelecionadosInicial: itemsSelecionadosInicial,
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
                 retornarSomenteId: false,
-                onChanged: onChanged,
-                onlyView: onlyView ?? false,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
                 eCliente: true,
               ),
           funcionarioSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FuncionarioSeletor(
                     modo: FuncionarioSeletorModo.unica,
                     itemsSelecionadosInicial:
-                        itemsSelecionadosInicial ?? const [],
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                        data.itemsSelecionadosInicial ?? const [],
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                     titulo: 'Vendedor',
                   ),
           tabelaDePrecoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   TabelasDePrecoSeletor(
                     titulo: 'Tabela de preço',
                     modo: TabelasDePrecoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                   ),
         ),
       ),
@@ -708,14 +709,15 @@ Map<String, Widget Function(BuildContext)> routes = {
         child: ConsignacaoAcertoPage(
           consignacao: consignacao,
           formasDePagamentoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FormasDePagamentoSeletor(
                     modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: itemsSelecionadosInicial,
-                    onChanged: onChanged,
-                    onlyView: onlyView ?? false,
+                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                    onChanged: data.onChanged,
+                    onlyView: data.onlyView,
                     titulo: 'Forma de pagamento',
                     tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+                    idsPermitidos: data.idsPermitidos,
                   ),
         ),
       ),
@@ -838,12 +840,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/impressao_etiquetas',
       child: ImpressaoDeEtiquetasPage(
         tabelasDePrecoSeletor:
-            ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+            (data) =>
                 TabelasDePrecoSeletor(
                   modo: TabelasDePrecoSeletorModo.unica,
-                  itemsSelecionadosInicial: itemsSelecionadosInicial,
-                  onChanged: onChanged,
-                  onlyView: onlyView ?? false,
+                  itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                  onChanged: data.onChanged,
+                  onlyView: data.onlyView,
                   titulo: 'Tabela de preco',
                 ),
       ),
@@ -887,29 +889,29 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/estoque',
       child: EstoqueSaldoPage(
-        seletorCores: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+        seletorCores: (data) =>
             CorSeletor(
               modo: CorSeletorModo.multipla,
-              coresSelecionadasIniciais: (itemsSelecionadosInicial ?? [])
+              coresSelecionadasIniciais: (data.itemsSelecionadosInicial ?? [])
                   .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
                   .toList(),
-              onChanged: onChanged,
+              onChanged: data.onChanged,
             ),
-        seletorTamanhos: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+        seletorTamanhos: (data) =>
             TamanhoSeletor(
               modo: TamanhoSeletorModo.multipla,
-              tamanhosSelecionadosIniciais: (itemsSelecionadosInicial ?? [])
+              tamanhosSelecionadosIniciais: (data.itemsSelecionadosInicial ?? [])
                   .map(
                     (s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false),
                   )
                   .toList(),
-              onChanged: onChanged,
+              onChanged: data.onChanged,
             ),
-        seletorTabelaPreco: ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+        seletorTabelaPreco: (data) =>
             TabelasDePrecoSeletor(
               modo: TabelasDePrecoSeletorModo.unica,
-              itemsSelecionadosInicial: itemsSelecionadosInicial,
-              onChanged: onChanged,
+              itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+              onChanged: data.onChanged,
               titulo: 'Tabela de preço',
             ),
         obterPrecosDaTabela: (tabelaDePrecoId) async {
@@ -958,18 +960,18 @@ Map<String, Widget Function(BuildContext)> routes = {
         route: '/entrada_manual_de_produtos',
         child: EntradaManualDeProdutosPage(
           funcionariosSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FuncionarioSeletor(
                     modo: FuncionarioSeletorModo.unica,
-                    onChanged: onChanged,
+                    onChanged: data.onChanged,
                     itemsSelecionadosInicial:
-                        itemsSelecionadosInicial ?? const [],
+                        data.itemsSelecionadosInicial ?? const [],
                   ),
           tabelasDePrecoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   TabelasDePrecoSeletor(
                     modo: TabelasDePrecoSeletorModo.unica,
-                    onChanged: onChanged,
+                    onChanged: data.onChanged,
                   ),
         ),
       ),
@@ -982,18 +984,18 @@ Map<String, Widget Function(BuildContext)> routes = {
         child: EntradaManualDeProdutosPage(
           modo: ModoMovimentacaoManual.saida,
           funcionariosSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   FuncionarioSeletor(
                     modo: FuncionarioSeletorModo.unica,
-                    onChanged: onChanged,
+                    onChanged: data.onChanged,
                     itemsSelecionadosInicial:
-                        itemsSelecionadosInicial ?? const [],
+                        data.itemsSelecionadosInicial ?? const [],
                   ),
           tabelasDePrecoSeletor:
-              ({itemsSelecionadosInicial, onChanged, onlyView}) =>
+              (data) =>
                   TabelasDePrecoSeletor(
                     modo: TabelasDePrecoSeletorModo.unica,
-                    onChanged: onChanged,
+                    onChanged: data.onChanged,
                   ),
         ),
       ),

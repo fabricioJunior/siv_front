@@ -124,12 +124,15 @@ class _RelatorioVendasPorFuncionarioPageState
                         ),
                         const SizedBox(height: 10),
                         widget.funcionariosSeletor.call(
-                          itemsSelecionadosInicial: _funcionariosSelecionados,
-                          onChanged: (selecionados) {
-                            setState(() {
-                              _funcionariosSelecionados = selecionados;
-                            });
-                          },
+                          SeletorData(
+                            itemsSelecionadosInicial:
+                                _funcionariosSelecionados,
+                            onChanged: (selecionados) {
+                              setState(() {
+                                _funcionariosSelecionados = selecionados;
+                              });
+                            },
+                          ),
                         ),
                         const SizedBox(height: 10),
                         _DateButton(

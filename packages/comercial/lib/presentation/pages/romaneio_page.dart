@@ -426,94 +426,101 @@ class _RomaneioPageState extends State<RomaneioPage> {
                 IgnorePointer(
                   ignoring: carregando,
                   child: widget.pessoaSeletor(
-                    itemsSelecionadosInicial: state.pessoaId != null
-                        ? [
-                            SelectData(
-                              id: state.pessoaId!,
-                              nome: state.romaneio?.pessoaNome
-                                          ?.trim()
-                                          .isNotEmpty ==
-                                      true
-                                  ? state.romaneio!.pessoaNome!.toUpperCase()
-                                  : 'Pessoa #${state.pessoaId}',
-                              data: {
-                                'id': state.pessoaId,
-                                'nome': state.romaneio?.pessoaNome,
-                              },
-                            ),
-                          ]
-                        : const [],
-                    onlyView: false,
-                    onChanged: (selecionados) {
-                      final id = selecionados.isNotEmpty
-                          ? selecionados.first.id
-                          : null;
-                      _onCampoAlterado(
-                        context,
-                        pessoaId: id,
-                      );
-                    },
+                    SeletorData(
+                      itemsSelecionadosInicial: state.pessoaId != null
+                          ? [
+                              SelectData(
+                                id: state.pessoaId!,
+                                nome: state.romaneio?.pessoaNome
+                                            ?.trim()
+                                            .isNotEmpty ==
+                                        true
+                                    ? state.romaneio!.pessoaNome!.toUpperCase()
+                                    : 'Pessoa #${state.pessoaId}',
+                                data: {
+                                  'id': state.pessoaId,
+                                  'nome': state.romaneio?.pessoaNome,
+                                },
+                              ),
+                            ]
+                          : const [],
+                      onlyView: false,
+                      onChanged: (selecionados) {
+                        final id = selecionados.isNotEmpty
+                            ? selecionados.first.id
+                            : null;
+                        _onCampoAlterado(
+                          context,
+                          pessoaId: id,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 IgnorePointer(
                   ignoring: carregando,
                   child: widget.funcionarioSeletor(
-                    onlyView: false,
-                    itemsSelecionadosInicial: state.funcionarioId != null
-                        ? [
-                            SelectData(
-                              id: state.funcionarioId!,
-                              nome: state.romaneio?.funcionarioNome
-                                          ?.trim()
-                                          .isNotEmpty ==
-                                      true
-                                  ? state.romaneio!.funcionarioNome!
-                                      .toUpperCase()
-                                  : 'Funcionário #${state.funcionarioId}',
-                              data: {
-                                'id': state.funcionarioId,
-                                'nome': state.romaneio?.funcionarioNome,
-                              },
-                            ),
-                          ]
-                        : const [],
-                    onChanged: (selecionados) {
-                      final id = selecionados.isNotEmpty
-                          ? selecionados.first.id
-                          : null;
-                      _onCampoAlterado(
-                        context,
-                        funcionarioId: id,
-                      );
-                    },
+                    SeletorData(
+                      onlyView: false,
+                      itemsSelecionadosInicial: state.funcionarioId != null
+                          ? [
+                              SelectData(
+                                id: state.funcionarioId!,
+                                nome: state.romaneio?.funcionarioNome
+                                            ?.trim()
+                                            .isNotEmpty ==
+                                        true
+                                    ? state.romaneio!.funcionarioNome!
+                                        .toUpperCase()
+                                    : 'Funcionário #${state.funcionarioId}',
+                                data: {
+                                  'id': state.funcionarioId,
+                                  'nome': state.romaneio?.funcionarioNome,
+                                },
+                              ),
+                            ]
+                          : const [],
+                      onChanged: (selecionados) {
+                        final id = selecionados.isNotEmpty
+                            ? selecionados.first.id
+                            : null;
+                        _onCampoAlterado(
+                          context,
+                          funcionarioId: id,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 IgnorePointer(
                   ignoring: carregando,
                   child: widget.tableDePrecoSeletor(
-                    onlyView: false,
-                    itemsSelecionadosInicial: state.tabelaPrecoId != null
-                        ? [
-                            SelectData(
-                              id: state.tabelaPrecoId!,
-                              nome: 'Tabela de preço #${state.tabelaPrecoId}',
-                              data: {
-                                'id': state.tabelaPrecoId,
-                              },
-                            ),
-                          ]
-                        : const [],
-                    onChanged: (selecionados) {
-                      final id = selecionados.isNotEmpty
-                          ? selecionados.first.id
-                          : null;
-                      _onCampoAlterado(
-                        context,
-                        tabelaPrecoId: id,
-                      );
-                    },
+                    SeletorData(
+                      onlyView: false,
+                      itemsSelecionadosInicial: state.tabelaPrecoId != null
+                          ? [
+                              SelectData(
+                                id: state.tabelaPrecoId!,
+                                nome:
+                                    'Tabela de preço #${state.tabelaPrecoId}',
+                                data: {
+                                  'id': state.tabelaPrecoId,
+                                },
+                              ),
+                            ]
+                          : const [],
+                      onChanged: (selecionados) {
+                        final id = selecionados.isNotEmpty
+                            ? selecionados.first.id
+                            : null;
+                        _onCampoAlterado(
+                          context,
+                          tabelaPrecoId: id,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1093,19 +1100,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
           descontoJaAplicadoNoRomaneio: state.romaneio?.desconto ?? 0,
           taxaEntregaJaAplicadaNoRomaneio:
               state.romaneio?.valorTaxaEntrega ?? 0,
-          formasDePagamentoSeletor: (
-                  {itemsSelecionadosInicial,
-                  onChanged,
-                  onlyView,
-                  idsPermitidos}) =>
-              FormasDePagamentoSeletor(
+          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
             modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: itemsSelecionadosInicial,
-            onChanged: onChanged,
-            onlyView: onlyView ?? false,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
             titulo: 'Forma de pagamento',
             tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-            idsPermitidos: idsPermitidos,
+            idsPermitidos: data.idsPermitidos,
           ),
         );
       },

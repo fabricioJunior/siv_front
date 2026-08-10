@@ -113,6 +113,8 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {
@@ -134,6 +136,8 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
               #codigoMunicipioIbge: codigoMunicipioIbge,
               #municipio: municipio,
               #cep: cep,
+              #latitude: latitude,
+              #longitude: longitude,
             }),
             returnValue: _i5.Future<_i3.Empresa>.value(
               _FakeEmpresa_1(
@@ -157,6 +161,8 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
                   #codigoMunicipioIbge: codigoMunicipioIbge,
                   #municipio: municipio,
                   #cep: cep,
+                  #latitude: latitude,
+                  #longitude: longitude,
                 }),
               ),
             ),

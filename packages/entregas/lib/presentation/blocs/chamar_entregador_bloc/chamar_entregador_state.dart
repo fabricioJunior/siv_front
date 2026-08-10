@@ -2,6 +2,7 @@ part of 'chamar_entregador_bloc.dart';
 
 class ChamarEntregadorState extends Equatable {
   final double? saldo;
+  final Empresa? empresa;
   final EnderecoEntrega? partida;
   final EnderecoEntrega? destino;
   final ParadaEntrega? parada;
@@ -13,6 +14,7 @@ class ChamarEntregadorState extends Equatable {
 
   const ChamarEntregadorState({
     this.saldo,
+    this.empresa,
     this.partida,
     this.destino,
     this.parada,
@@ -25,6 +27,7 @@ class ChamarEntregadorState extends Equatable {
 
   const ChamarEntregadorState.initial()
       : saldo = null,
+        empresa = null,
         partida = null,
         destino = null,
         parada = null,
@@ -36,6 +39,7 @@ class ChamarEntregadorState extends Equatable {
 
   ChamarEntregadorState copyWith({
     double? saldo,
+    Empresa? empresa,
     EnderecoEntrega? partida,
     EnderecoEntrega? destino,
     ParadaEntrega? parada,
@@ -47,6 +51,7 @@ class ChamarEntregadorState extends Equatable {
   }) {
     return ChamarEntregadorState(
       saldo: saldo ?? this.saldo,
+      empresa: empresa ?? this.empresa,
       partida: partida ?? this.partida,
       destino: destino ?? this.destino,
       parada: parada ?? this.parada,
@@ -61,6 +66,7 @@ class ChamarEntregadorState extends Equatable {
   @override
   List<Object?> get props => [
         saldo,
+        empresa,
         partida,
         destino,
         parada,

@@ -61,6 +61,7 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosEmailNotaAlterado>(_onEmailNotaAlterado);
     on<PagamentosRealizadosCarregouElegibilidade>(_onCarregouElegibilidade);
     on<PagamentosRealizadosPromocaoEscolhida>(_onPromocaoEscolhida);
+    on<PagamentosRealizadosPromocaoGlobalAlterada>(_onPromocaoGlobalAlterada);
     on<PagamentosRealizadosCupomInformado>(_onCupomInformado);
     on<PagamentosRealizadosCupomRemovido>(_onCupomRemovido);
   }
@@ -102,10 +103,19 @@ class PagamentosRealizadosBloc
       // aqui -- reaproveita os botões "Editar desconto"/"Remover desconto"
       // já existentes pra corrigir ou zerar esse valor, em vez de criar UI
       // nova. Mesma distribuição proporcional usada em _onDescontoAlterado.
+      final produtosSemPromocaoSeed = resumo.produtosCompartilhados
+          .where((p) => !state.promocaoEscolhidaPorItem.containsKey(
+                p.produtoId,
+              ))
+          .toList(growable: false);
+      final valorBaseSemPromocaoSeed = produtosSemPromocaoSeed.fold<double>(
+        0,
+        (soma, p) => soma + p.quantidade * p.valorUnitario,
+      );
       final descontosItensSeed = _distribuirDescontoProporcional(
-        produtos: resumo.produtosCompartilhados,
+        produtos: produtosSemPromocaoSeed,
         descontoTotal: event.descontoJaAplicadoNoRomaneio,
-        valorBase: resumo.valorTotalProdutos,
+        valorBase: valorBaseSemPromocaoSeed,
       );
 
       emit(
@@ -305,10 +315,20 @@ class PagamentosRealizadosBloc
       return;
     }
 
-    final valorBase = state.valorTotalProdutos;
+    final valorBase = state.valorTotalProdutosSemPromocao;
     final valorInformado = _toDouble(event.valorTexto);
     if (valorInformado == null) {
       emit(state.copyWith(erro: 'Informe um valor válido para desconto.'));
+      return;
+    }
+
+    if (valorBase <= 0 && valorInformado > 0) {
+      emit(
+        state.copyWith(
+          erro:
+              'Não há produtos sem promoção para aplicar desconto geral.',
+        ),
+      );
       return;
     }
 
@@ -351,16 +371,16 @@ class PagamentosRealizadosBloc
     descontoAplicado = double.parse(descontoAplicado.toStringAsFixed(2));
 
     // Desconto do romaneio geral é distribuído proporcionalmente pelo
-    // valor de cada produto (não pela quantidade) -- produto mais caro
-    // absorve fatia maior do desconto. O último item da lista fica com o
-    // resto da divisão (soma - já distribuído) em vez de sua fatia exata,
-    // pra a soma dos descontos por item bater centavo a centavo com o
-    // desconto total aplicado (evita erro de arredondamento por soma).
-    final produtos = state.resumo?.produtosCompartilhados ?? const [];
-    final descontosItens = _distribuirDescontoProporcional(
-      produtos: produtos,
-      descontoTotal: descontoAplicado,
-      valorBase: valorBase,
+    // valor de cada produto SEM promoção (não pela quantidade) -- produto
+    // mais caro absorve fatia maior do desconto. Produto com promoção fica
+    // de fora (já tem desconto embutido, não empilha com o geral). O
+    // último item elegível fica com o resto da divisão (soma - já
+    // distribuído) em vez de sua fatia exata, pra a soma dos descontos por
+    // item bater centavo a centavo com o desconto total aplicado (evita
+    // erro de arredondamento por soma).
+    final distribuicao = _recalcularDistribuicaoDesconto(
+      descontoAplicado,
+      state.promocaoEscolhidaPorItem,
     );
 
     emit(
@@ -368,15 +388,9 @@ class PagamentosRealizadosBloc
         descontoTipo: event.tipo,
         descontoValorTexto: event.valorTexto,
         valorDescontoAplicado: descontoAplicado,
-        descontosItensTipo: {
-          for (final produto in produtos)
-            produto.produtoId: DescontoTipo.valorBruto,
-        },
-        descontosItensValorTexto: {
-          for (final entrada in descontosItens.entries)
-            entrada.key: entrada.value.toStringAsFixed(2),
-        },
-        descontosItensAplicado: descontosItens,
+        descontosItensTipo: distribuicao.tipo,
+        descontosItensValorTexto: distribuicao.valorTexto,
+        descontosItensAplicado: distribuicao.aplicado,
         erro: null,
       ),
     );
@@ -429,6 +443,45 @@ class PagamentosRealizadosBloc
         descontosItensAplicado: const {},
         erro: null,
       ),
+    );
+  }
+
+  // Recalcula a distribuição do desconto geral entre os produtos SEM
+  // promoção do mapa informado. Usado tanto ao alterar o desconto geral
+  // quanto ao escolher/remover promoção de item com desconto geral já
+  // aplicado (redistribuição reativa, ver _onPromocaoEscolhida).
+  ({
+    Map<int, DescontoTipo> tipo,
+    Map<int, String> valorTexto,
+    Map<int, double> aplicado,
+  }) _recalcularDistribuicaoDesconto(
+    double descontoTotal,
+    Map<int, OpcaoElegivel> promocaoEscolhidaPorItem,
+  ) {
+    final produtos = (state.resumo?.produtosCompartilhados ?? const [])
+        .where((p) => !promocaoEscolhidaPorItem.containsKey(p.produtoId))
+        .toList(growable: false);
+    final valorBase = produtos.fold<double>(
+      0,
+      (soma, p) => soma + p.quantidade * p.valorUnitario,
+    );
+
+    final aplicado = _distribuirDescontoProporcional(
+      produtos: produtos,
+      descontoTotal: descontoTotal,
+      valorBase: valorBase,
+    );
+
+    return (
+      tipo: {
+        for (final produto in produtos)
+          produto.produtoId: DescontoTipo.valorBruto,
+      },
+      valorTexto: {
+        for (final entrada in aplicado.entries)
+          entrada.key: entrada.value.toStringAsFixed(2),
+      },
+      aplicado: aplicado,
     );
   }
 
@@ -780,11 +833,18 @@ class PagamentosRealizadosBloc
         codigoCupom: state.cupomCodigoAplicado,
       );
 
+      final opcoesPorItem = _mapearOpcoesPorProduto(itens, resultado);
+
       emit(
         state.copyWith(
-          opcoesElegiveisPorItem: _mapearOpcoesPorProduto(itens, resultado),
+          opcoesElegiveisPorItem: opcoesPorItem,
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
+          ),
+          promocaoEscolhidaPorItem: _autoAplicarPromocaoUnica(
+            opcoesPorItem,
+            state.promocaoEscolhidaPorItem,
+            state.descontosItensAplicado,
           ),
           carregandoElegibilidade: false,
         ),
@@ -855,12 +915,99 @@ class PagamentosRealizadosBloc
 
     // Mutuamente exclusivo com desconto manual do mesmo produto (sentido
     // inverso de _onDescontoItemAlterado).
-    final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo)
+    var tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo)
       ..remove(event.produtoId);
-    final valorTextoMap = Map<int, String>.from(state.descontosItensValorTexto)
+    var valorTextoMap = Map<int, String>.from(state.descontosItensValorTexto)
       ..remove(event.produtoId);
-    final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
+    var aplicadoMap = Map<int, double>.from(state.descontosItensAplicado)
       ..remove(event.produtoId);
+
+    var valorDescontoAplicado = state.valorDescontoAplicado;
+    var descontoTipo = state.descontoTipo;
+    var descontoValorTexto = state.descontoValorTexto;
+    String? avisoRedistribuicao;
+
+    // Item ganhou/perdeu promoção com desconto geral já distribuído --
+    // redistribui a fatia do desconto geral entre os produtos sem promoção
+    // restantes, senão a soma dos descontos por item fica menor que o
+    // desconto geral aplicado (ver _recalcularDistribuicaoDesconto).
+    if (state.valorDescontoAplicado > 0) {
+      final distribuicao = _recalcularDistribuicaoDesconto(
+        state.valorDescontoAplicado,
+        promocaoMap,
+      );
+      if (distribuicao.aplicado.isEmpty) {
+        valorDescontoAplicado = 0;
+        descontoTipo = null;
+        descontoValorTexto = '';
+        tipoMap = const {};
+        valorTextoMap = const {};
+        aplicadoMap = const {};
+        avisoRedistribuicao = 'Desconto geral removido: todos os produtos '
+            'agora têm promoção aplicada.';
+      } else {
+        tipoMap = distribuicao.tipo;
+        valorTextoMap = distribuicao.valorTexto;
+        aplicadoMap = distribuicao.aplicado;
+      }
+    }
+
+    emit(
+      state.copyWith(
+        promocaoEscolhidaPorItem: promocaoMap,
+        descontoTipo: descontoTipo,
+        descontoValorTexto: descontoValorTexto,
+        valorDescontoAplicado: valorDescontoAplicado,
+        descontosItensTipo: tipoMap,
+        descontosItensValorTexto: valorTextoMap,
+        descontosItensAplicado: aplicadoMap,
+        erro: avisoRedistribuicao,
+      ),
+    );
+  }
+
+  // Picker global de promocoes (ver _ResumoPagamentoCard no widget). Marcar
+  // aplica a promocao em todo produto elegivel ainda sem OUTRA promocao
+  // diferente aplicada (conflito e bloqueado na UI, nao resolvido aqui).
+  // Desmarcar remove a promocao de todo produto onde estava aplicada.
+  void _onPromocaoGlobalAlterada(
+    PagamentosRealizadosPromocaoGlobalAlterada event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    final promocaoMap = Map<int, OpcaoElegivel>.from(
+      state.promocaoEscolhidaPorItem,
+    );
+
+    if (!event.marcado) {
+      promocaoMap.removeWhere(
+        (_, opcao) => opcao.id == event.promocaoId && !opcao.ehCupom,
+      );
+      emit(state.copyWith(promocaoEscolhidaPorItem: promocaoMap, erro: null));
+      return;
+    }
+
+    final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo);
+    final valorTextoMap =
+        Map<int, String>.from(state.descontosItensValorTexto);
+    final aplicadoMap = Map<int, double>.from(state.descontosItensAplicado);
+
+    for (final entrada in state.opcoesElegiveisPorItem.entries) {
+      final produtoId = entrada.key;
+      final opcaoExistente = promocaoMap[produtoId];
+      if (opcaoExistente != null && opcaoExistente.id != event.promocaoId) {
+        continue;
+      }
+
+      for (final opcao in entrada.value) {
+        if (opcao.id == event.promocaoId && !opcao.ehCupom) {
+          promocaoMap[produtoId] = opcao;
+          tipoMap.remove(produtoId);
+          valorTextoMap.remove(produtoId);
+          aplicadoMap.remove(produtoId);
+          break;
+        }
+      }
+    }
 
     emit(
       state.copyWith(
@@ -905,11 +1052,18 @@ class PagamentosRealizadosBloc
         return;
       }
 
+      final opcoesPorItem = _mapearOpcoesPorProduto(itens, resultado);
+
       emit(
         state.copyWith(
-          opcoesElegiveisPorItem: _mapearOpcoesPorProduto(itens, resultado),
+          opcoesElegiveisPorItem: opcoesPorItem,
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
+          ),
+          promocaoEscolhidaPorItem: _autoAplicarPromocaoUnica(
+            opcoesPorItem,
+            state.promocaoEscolhidaPorItem,
+            state.descontosItensAplicado,
           ),
           carregandoElegibilidade: false,
           cupomCodigoAplicado: codigo,
@@ -925,6 +1079,42 @@ class PagamentosRealizadosBloc
       );
       addError(e, s);
     }
+  }
+
+  // Se, entre todas as opcoes elegiveis de todos os produtos, existir
+  // exatamente 1 promocao distinta (tipo != cupom -- cupom sempre exige
+  // codigo digitado, fluxo manual), aplica ela automaticamente em todo
+  // produto elegivel que ainda nao tenha promocao/desconto manual aplicado.
+  // Defensivo: nunca sobrescreve item com desconto manual ja aplicado.
+  Map<int, OpcaoElegivel> _autoAplicarPromocaoUnica(
+    Map<int, List<OpcaoElegivel>> opcoesPorItem,
+    Map<int, OpcaoElegivel> promocaoAtual,
+    Map<int, double> descontosItensAplicado,
+  ) {
+    final promocoesDistintas = <int, OpcaoElegivel>{};
+    for (final opcao in opcoesPorItem.values.expand((lista) => lista)) {
+      if (opcao.ehCupom) continue;
+      promocoesDistintas[opcao.id] = opcao;
+    }
+    if (promocoesDistintas.length != 1) return promocaoAtual;
+
+    final unicaId = promocoesDistintas.keys.first;
+    final resultado = Map<int, OpcaoElegivel>.from(promocaoAtual);
+
+    for (final entrada in opcoesPorItem.entries) {
+      final produtoId = entrada.key;
+      if (resultado.containsKey(produtoId)) continue;
+      if ((descontosItensAplicado[produtoId] ?? 0) > 0) continue;
+
+      for (final opcao in entrada.value) {
+        if (opcao.id == unicaId && !opcao.ehCupom) {
+          resultado[produtoId] = opcao;
+          break;
+        }
+      }
+    }
+
+    return resultado;
   }
 
   Future<void> _onCupomRemovido(

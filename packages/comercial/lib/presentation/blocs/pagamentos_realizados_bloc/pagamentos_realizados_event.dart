@@ -224,6 +224,24 @@ class PagamentosRealizadosPromocaoEscolhida
   List<Object?> get props => [produtoId, opcao];
 }
 
+// Marca/desmarca uma promocao no picker global (ver _ResumoPagamentoCard),
+// aplicando/removendo ela em todos os produtos elegiveis de uma vez. Ver
+// _onPromocaoGlobalAlterada no bloc pra regra de conflito entre promocoes
+// diferentes no mesmo produto.
+class PagamentosRealizadosPromocaoGlobalAlterada
+    extends PagamentosRealizadosEvent {
+  final int promocaoId;
+  final bool marcado;
+
+  const PagamentosRealizadosPromocaoGlobalAlterada({
+    required this.promocaoId,
+    required this.marcado,
+  });
+
+  @override
+  List<Object?> get props => [promocaoId, marcado];
+}
+
 class PagamentosRealizadosCupomInformado extends PagamentosRealizadosEvent {
   final String codigo;
 

@@ -28,6 +28,8 @@ class CriarEmpresa {
     String? codigoMunicipioIbge,
     String? municipio,
     String? cep,
+    double? latitude,
+    double? longitude,
   }) async {
     var novaEmpresa = Empresa.create(
       cnpj: cnpj,
@@ -49,6 +51,8 @@ class CriarEmpresa {
       codigoMunicipioIbge: codigoMunicipioIbge,
       municipio: municipio,
       cep: cep,
+      latitude: latitude,
+      longitude: longitude,
     );
     return _empresasRepository.criarNovaEmpresa(
       novaEmpresa,

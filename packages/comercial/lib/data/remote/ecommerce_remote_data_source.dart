@@ -72,7 +72,8 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
     final response = await get(
       pathParameters: {'id': '$ecommerceId/referencias'},
     );
-    return (response.body as List<dynamic>)
+    final body = response.body as Map<String, dynamic>;
+    return (body['items'] as List<dynamic>)
         .map(
           (json) =>
               EcommerceReferenciaDto.fromJson(json as Map<String, dynamic>),
@@ -105,7 +106,7 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
     bool? rascunho,
     int? tabelaDePrecoId,
   }) async {
-    final response = await put(
+    final response = await patch(
       pathParameters: {'id': '$ecommerceId/referencias/$id'},
       body: {
         if (rascunho != null) 'rascunho': rascunho,

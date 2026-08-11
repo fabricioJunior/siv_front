@@ -22,4 +22,10 @@ abstract class IPedidoItemRemoteDataSource {
     required int sequencia,
     required double quantidade,
   });
+
+  Future<void> conferirItemPorCodigo(
+    int pedidoId, {
+    required String codigoBarras,
+    required double quantidade,
+  });
 }

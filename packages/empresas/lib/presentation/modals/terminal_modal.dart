@@ -159,6 +159,32 @@ class TerminalModal extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 8),
+                        const Text('Tipo'),
+                        DropdownButtonFormField<String>(
+                          initialValue: state.tipo,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'fisico',
+                              child: Text('Físico'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'ecommerce',
+                              child: Text('E-commerce'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) {
+                              return;
+                            }
+                            context.read<TerminalBloc>().add(
+                              TerminalEditou(
+                                nome: nomeController.text,
+                                tipo: value,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
                         if (state.terminalStep == TerminalStep.falha)
                           const Padding(
                             padding: EdgeInsets.only(top: 8),

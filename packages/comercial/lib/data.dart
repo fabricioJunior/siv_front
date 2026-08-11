@@ -42,3 +42,8 @@ export 'domain/data/remote/i_fidelidade_remote_data_source.dart';
 export 'domain/data/repositories/i_fidelidade_repository.dart';
 export 'data/remote/fidelidade_remote_data_source.dart';
 export 'data/repositories/fidelidade_repository.dart';
+
+export 'domain/data/remote/i_ecommerce_remote_data_source.dart';
+export 'domain/data/repositories/i_ecommerce_repository.dart';
+export 'data/remote/ecommerce_remote_data_source.dart';
+export 'data/repositories/ecommerce_repository.dart';

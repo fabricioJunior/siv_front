@@ -15,10 +15,11 @@ class TerminaisRemoteDataSource extends RemoteDataSourceBase
     required int empresaId,
     required int id,
     required String nome,
+    String tipo = 'fisico',
   }) async {
     final response = await put(
       pathParameters: {'empresaId': empresaId.toString(), 'id': id.toString()},
-      body: {'empresaId': empresaId, 'nome': nome},
+      body: {'empresaId': empresaId, 'nome': nome, 'tipo': tipo},
     );
 
     return TerminalDto.fromJson(response.body as Map<String, dynamic>);
@@ -28,10 +29,11 @@ class TerminaisRemoteDataSource extends RemoteDataSourceBase
   Future<Terminal> criarTerminal({
     required int empresaId,
     required String nome,
+    String tipo = 'fisico',
   }) async {
     final response = await post(
       pathParameters: {'empresaId': empresaId.toString()},
-      body: {'empresaId': empresaId, 'nome': nome},
+      body: {'empresaId': empresaId, 'nome': nome, 'tipo': tipo},
     );
 
     return TerminalDto.fromJson(response.body as Map<String, dynamic>);

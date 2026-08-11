@@ -19,11 +19,12 @@ class TerminalIniciou extends TerminalEvent {
 
 class TerminalEditou extends TerminalEvent {
   final String nome;
+  final String? tipo;
 
-  const TerminalEditou({required this.nome});
+  const TerminalEditou({required this.nome, this.tipo});
 
   @override
-  List<Object?> get props => [nome];
+  List<Object?> get props => [nome, tipo];
 }
 
 class TerminalSalvou extends TerminalEvent {

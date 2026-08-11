@@ -9,6 +9,7 @@ abstract class IPedidosRepository {
   Future<void> conferirPedido(int id, {bool processarComDivergencia = false});
   Future<void> faturarPedido(int id, {required int caixaId});
   Future<void> cancelarPedido(int id, {required String motivoCancelamento});
+  Future<Pedido> assumirPedido(int id, {required int funcionarioId});
 
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
@@ -55,6 +56,11 @@ abstract class IPedidosRepository {
     int id, {
     required int produtoId,
     required int sequencia,
+    required double quantidade,
+  });
+  Future<void> conferirItemPorCodigo(
+    int id, {
+    required String codigoBarras,
     required double quantidade,
   });
 }

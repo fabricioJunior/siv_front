@@ -5,6 +5,7 @@ class TerminalState extends Equatable {
   final int? empresaId;
   final String? nome;
   final bool? inativo;
+  final String tipo;
   final TerminalStep terminalStep;
   final Terminal? terminal;
 
@@ -13,6 +14,7 @@ class TerminalState extends Equatable {
     this.empresaId,
     this.nome,
     this.inativo,
+    this.tipo = 'fisico',
     this.terminal,
     required this.terminalStep,
   });
@@ -22,6 +24,7 @@ class TerminalState extends Equatable {
       empresaId = terminal.empresaId,
       nome = terminal.nome,
       inativo = terminal.inativo,
+      tipo = terminal.tipo,
       terminalStep = step ?? TerminalStep.carregado;
 
   TerminalState copyWith({
@@ -29,6 +32,7 @@ class TerminalState extends Equatable {
     int? empresaId,
     String? nome,
     bool? inativo,
+    String? tipo,
     TerminalStep? terminalStep,
     Terminal? terminal,
   }) {
@@ -37,13 +41,21 @@ class TerminalState extends Equatable {
       empresaId: empresaId ?? this.empresaId,
       nome: nome ?? this.nome,
       inativo: inativo ?? this.inativo,
+      tipo: tipo ?? this.tipo,
       terminalStep: terminalStep ?? this.terminalStep,
       terminal: terminal ?? this.terminal,
     );
   }
 
   @override
-  List<Object?> get props => [id, empresaId, nome, inativo, terminalStep];
+  List<Object?> get props => [
+    id,
+    empresaId,
+    nome,
+    inativo,
+    tipo,
+    terminalStep,
+  ];
 }
 
 enum TerminalStep {

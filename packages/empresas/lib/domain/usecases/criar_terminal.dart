@@ -7,7 +7,15 @@ class CriarTerminal {
   CriarTerminal({required ITerminaisRepository repository})
     : _repository = repository;
 
-  Future<Terminal> call({required int empresaId, required String nome}) {
-    return _repository.criarTerminal(empresaId: empresaId, nome: nome);
+  Future<Terminal> call({
+    required int empresaId,
+    required String nome,
+    String tipo = 'fisico',
+  }) {
+    return _repository.criarTerminal(
+      empresaId: empresaId,
+      nome: nome,
+      tipo: tipo,
+    );
   }
 }

@@ -36,6 +36,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final AdicionarItemPedido _adicionarItemPedido;
   final RemoverItemPedido _removerItemPedido;
   final ConferirItemPedido _conferirItemPedido;
+  final ConferirItemPedidoPorCodigo _conferirItemPedidoPorCodigo;
+  final AssumirPedido _assumirPedido;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarFormasDePagamento _recuperarFormasDePagamento;
   final RecuperarEnderecosDaPessoa _recuperarEnderecosDaPessoa;
@@ -63,6 +65,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._adicionarItemPedido,
     this._removerItemPedido,
     this._conferirItemPedido,
+    this._conferirItemPedidoPorCodigo,
+    this._assumirPedido,
     this._acessoGlobalSessao,
     this._recuperarFormasDePagamento,
     this._recuperarEnderecosDaPessoa,
@@ -92,6 +96,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoItemAdicionou>(_onItemAdicionou);
     on<PedidoItemRemoveu>(_onItemRemoveu);
     on<PedidoItemConferiu>(_onItemConferiu);
+    on<PedidoItemConferiuPorCodigo>(_onItemConferiuPorCodigo);
+    on<PedidoAssumiu>(_onAssumiu);
   }
 
   FutureOr<void> _onIniciou(
@@ -374,7 +380,10 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
 
     try {
       emit(state.copyWith(step: PedidoStep.processando, erro: null));
-      await _conferirPedido.call(state.id!);
+      await _conferirPedido.call(
+        state.id!,
+        processarComDivergencia: event.processarComDivergencia,
+      );
       final pedido = await _recuperarPedido.call(state.id!);
       emit(PedidoState.fromModel(
         pedido,
@@ -748,6 +757,47 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao conferir item.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onItemConferiuPorCodigo(
+    PedidoItemConferiuPorCodigo event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _conferirItemPedidoPorCodigo.call(
+        state.id!,
+        codigoBarras: event.codigoBarras,
+        quantidade: event.quantidade,
+      );
+      final itens = await _listarItensPedido.call(state.id!);
+      emit(state.copyWith(itens: itens, step: PedidoStep.itemConferido));
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao conferir item por código.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onAssumiu(
+    PedidoAssumiu event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _assumirPedido.call(state.id!, funcionarioId: event.funcionarioId);
+      await _recarregarComDependencias(emit, PedidoStep.dadosSalvos);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao assumir pedido.')));
       addError(e, s);
     }
   }

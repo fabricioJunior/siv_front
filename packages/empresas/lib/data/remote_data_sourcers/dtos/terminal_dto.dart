@@ -23,6 +23,9 @@ class TerminalDto implements Terminal {
   @override
   final bool? inativo;
 
+  @override
+  final String tipo;
+
   const TerminalDto({
     required this.criadoEm,
     required this.atualizadoEm,
@@ -30,6 +33,7 @@ class TerminalDto implements Terminal {
     required this.empresaId,
     required this.nome,
     required this.inativo,
+    this.tipo = 'fisico',
   });
 
   factory TerminalDto.fromJson(Map<String, dynamic> json) =>
@@ -45,6 +49,7 @@ class TerminalDto implements Terminal {
     empresaId,
     nome,
     inativo,
+    tipo,
   ];
 
   @override

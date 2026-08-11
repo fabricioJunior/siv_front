@@ -4,6 +4,7 @@ abstract class ITerminaisRepository {
   Future<Terminal> criarTerminal({
     required int empresaId,
     required String nome,
+    String tipo = 'fisico',
   });
 
   Future<List<Terminal>> recuperarTerminais({
@@ -21,6 +22,7 @@ abstract class ITerminaisRepository {
     required int empresaId,
     required int id,
     required String nome,
+    String tipo = 'fisico',
   });
 
   Future<void> desativarTerminal({required int empresaId, required int id});

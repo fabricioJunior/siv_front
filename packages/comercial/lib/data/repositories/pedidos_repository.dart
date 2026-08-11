@@ -40,6 +40,11 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<Pedido> assumirPedido(int id, {required int funcionarioId}) {
+    return remoteDataSource.assumirPedido(id, funcionarioId: funcionarioId);
+  }
+
+  @override
   Future<Pedido> criarPedido(Pedido pedido) {
     return remoteDataSource.criarPedido(pedido);
   }
@@ -192,6 +197,19 @@ class PedidosRepository implements IPedidosRepository {
       id,
       produtoId: produtoId,
       sequencia: sequencia,
+      quantidade: quantidade,
+    );
+  }
+
+  @override
+  Future<void> conferirItemPorCodigo(
+    int id, {
+    required String codigoBarras,
+    required double quantidade,
+  }) {
+    return pedidoItemRemoteDataSource.conferirItemPorCodigo(
+      id,
+      codigoBarras: codigoBarras,
       quantidade: quantidade,
     );
   }

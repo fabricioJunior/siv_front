@@ -17,6 +17,7 @@ TerminalDto _$TerminalDtoFromJson(Map<String, dynamic> json) => TerminalDto(
   empresaId: (json['empresaId'] as num).toInt(),
   nome: json['nome'] as String,
   inativo: json['inativo'] as bool?,
+  tipo: json['tipo'] as String? ?? 'fisico',
 );
 
 Map<String, dynamic> _$TerminalDtoToJson(TerminalDto instance) =>
@@ -27,4 +28,5 @@ Map<String, dynamic> _$TerminalDtoToJson(TerminalDto instance) =>
       'empresaId': instance.empresaId,
       'nome': instance.nome,
       'inativo': ?instance.inativo,
+      'tipo': instance.tipo,
     };

@@ -11,11 +11,13 @@ class AtualizarTerminal {
     required int empresaId,
     required int id,
     required String nome,
+    String tipo = 'fisico',
   }) {
     return _repository.atualizarTerminal(
       empresaId: empresaId,
       id: id,
       nome: nome,
+      tipo: tipo,
     );
   }
 }

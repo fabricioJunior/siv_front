@@ -10,6 +10,8 @@ import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pessoas/models.dart';
+import 'package:pessoas/presentation/widgets/funcionario_seletor.dart';
 
 class PedidoPage extends StatefulWidget {
   final int? idPedido;
@@ -132,6 +134,42 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (!mounted) return;
     context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
+  }
+
+  Future<void> _assumirPedido(BuildContext context) async {
+    final bloc = context.read<PedidoBloc>();
+    Funcionario? selecionado;
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Assumir pedido'),
+          content: SizedBox(
+            width: 420,
+            child: FuncionarioSeletor(
+              itemsSelecionadosInicial: const [],
+              onFuncionarioChanged: (selecionados) {
+                selecionado = selecionados.isEmpty ? null : selecionados.first;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Fechar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Assumir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || selecionado == null || !mounted) return;
+    bloc.add(PedidoAssumiu(selecionado!.id));
   }
 
   Future<void> _abrirOutrosPedidosPendentes(
@@ -1749,6 +1787,19 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
+  Future<void> _abrirConferenciaPorLeitura(BuildContext context) async {
+    final bloc = context.read<PedidoBloc>();
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: bloc,
+          child: const PedidoConferenciaPage(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPagamentosCard(BuildContext context, PedidoState state) {
     final valorRestante = _valorRestantePagamento(state);
 
@@ -1929,6 +1980,12 @@ class _PedidoPageState extends State<PedidoPage> {
     // Pedido de origem "atendente_humano" (único canal existente hoje) dispensa a etapa de
     // conferência -- backend já libera faturar sem exigir situacao="conferido" pra essa origem.
     final exigeConferencia = state.pedido?.origem != 'atendente_humano';
+    final origemEcommerce = state.pedido?.origem == 'ecommerce';
+    final semVendedor = origemEcommerce && state.pedido?.funcionarioId == null;
+    final podeConferirOuFaturar = !semVendedor;
+    final podeConferirPorLeitura = origemEcommerce &&
+        state.pedido?.funcionarioId != null &&
+        state.pedido?.situacao == 'em_andamento';
 
     return Card(
       child: Padding(
@@ -1946,9 +2003,24 @@ class _PedidoPageState extends State<PedidoPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (semVendedor)
+                  FilledButton.icon(
+                    onPressed:
+                        carregando ? null : () => _assumirPedido(context),
+                    icon: const Icon(Icons.assignment_ind_outlined),
+                    label: const Text('Assumir pedido'),
+                  ),
+                if (podeConferirPorLeitura)
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () => _abrirConferenciaPorLeitura(context),
+                    icon: const Icon(Icons.qr_code_scanner_outlined),
+                    label: const Text('Conferir por leitura'),
+                  ),
                 if (exigeConferencia)
                   FilledButton.icon(
-                    onPressed: carregando
+                    onPressed: carregando || !podeConferirOuFaturar
                         ? null
                         : () {
                             context.read<PedidoBloc>().add(
@@ -1961,13 +2033,14 @@ class _PedidoPageState extends State<PedidoPage> {
                 Tooltip(
                   message: podeFechar ? '' : state.motivoNaoPodeFechar,
                   child: FilledButton.icon(
-                    onPressed: carregando || !podeFechar
-                        ? null
-                        : () {
-                            context.read<PedidoBloc>().add(
-                                  PedidoFaturou(),
-                                );
-                          },
+                    onPressed:
+                        carregando || !podeFechar || !podeConferirOuFaturar
+                            ? null
+                            : () {
+                                context.read<PedidoBloc>().add(
+                                      PedidoFaturou(),
+                                    );
+                              },
                     icon: const Icon(Icons.point_of_sale),
                     label: const Text('Faturar'),
                   ),

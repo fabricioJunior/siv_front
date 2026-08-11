@@ -7,6 +7,7 @@ abstract class Terminal implements Equatable {
   int get empresaId;
   String get nome;
   bool? get inativo;
+  String get tipo;
 
   factory Terminal.create({
     DateTime? criadoEm,
@@ -15,6 +16,7 @@ abstract class Terminal implements Equatable {
     required int empresaId,
     required String nome,
     bool? inativo,
+    required String tipo,
   }) = _TerminalImpl;
 
   @override
@@ -28,6 +30,7 @@ abstract class Terminal implements Equatable {
     empresaId,
     nome,
     inativo,
+    tipo,
   ];
 }
 
@@ -50,6 +53,9 @@ class _TerminalImpl implements Terminal {
   @override
   final bool? inativo;
 
+  @override
+  final String tipo;
+
   const _TerminalImpl({
     this.criadoEm,
     this.atualizadoEm,
@@ -57,6 +63,7 @@ class _TerminalImpl implements Terminal {
     required this.empresaId,
     required this.nome,
     this.inativo,
+    this.tipo = 'fisico',
   });
 
   _TerminalImpl copyWith({
@@ -66,6 +73,7 @@ class _TerminalImpl implements Terminal {
     int? empresaId,
     String? nome,
     bool? inativo,
+    String? tipo,
   }) {
     return _TerminalImpl(
       criadoEm: criadoEm ?? this.criadoEm,
@@ -74,6 +82,7 @@ class _TerminalImpl implements Terminal {
       empresaId: empresaId ?? this.empresaId,
       nome: nome ?? this.nome,
       inativo: inativo ?? this.inativo,
+      tipo: tipo ?? this.tipo,
     );
   }
 
@@ -88,6 +97,7 @@ class _TerminalImpl implements Terminal {
     empresaId,
     nome,
     inativo,
+    tipo,
   ];
 }
 
@@ -99,6 +109,7 @@ extension TerminalCopyWith on Terminal {
     int? empresaId,
     String? nome,
     bool? inativo,
+    String? tipo,
   }) {
     if (this is _TerminalImpl) {
       return (this as _TerminalImpl).copyWith(
@@ -108,6 +119,7 @@ extension TerminalCopyWith on Terminal {
         empresaId: empresaId,
         nome: nome,
         inativo: inativo,
+        tipo: tipo,
       );
     }
 
@@ -118,6 +130,7 @@ extension TerminalCopyWith on Terminal {
       empresaId: empresaId ?? this.empresaId,
       nome: nome ?? this.nome,
       inativo: inativo ?? this.inativo,
+      tipo: tipo ?? this.tipo,
     );
   }
 }

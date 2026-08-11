@@ -56,6 +56,15 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Pedido> assumirPedido(int id, {required int funcionarioId}) async {
+    final response = await put(
+      pathParameters: {'id': '$id/assumir'},
+      body: {'funcionarioId': funcionarioId},
+    );
+    return PedidoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<Pedido> criarPedido(Pedido pedido) async {
     final response =
         await post(body: PedidoDto.fromModel(pedido).toCreateJson());

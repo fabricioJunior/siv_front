@@ -12,11 +12,13 @@ class TerminaisRepository implements ITerminaisRepository {
     required int empresaId,
     required int id,
     required String nome,
+    String tipo = 'fisico',
   }) {
     return remoteDataSource.atualizarTerminal(
       empresaId: empresaId,
       id: id,
       nome: nome,
+      tipo: tipo,
     );
   }
 
@@ -24,8 +26,13 @@ class TerminaisRepository implements ITerminaisRepository {
   Future<Terminal> criarTerminal({
     required int empresaId,
     required String nome,
+    String tipo = 'fisico',
   }) {
-    return remoteDataSource.criarTerminal(empresaId: empresaId, nome: nome);
+    return remoteDataSource.criarTerminal(
+      empresaId: empresaId,
+      nome: nome,
+      tipo: tipo,
+    );
   }
 
   @override

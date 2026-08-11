@@ -59,6 +59,10 @@ void _remoteDataSources() {
   sl.registerFactory<IFidelidadeRemoteDataSource>(
     () => FidelidadeRemoteDataSource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IEcommerceRemoteDataSource>(
+    () => EcommerceRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -108,6 +112,10 @@ void _repositories() {
 
   sl.registerFactory<IFidelidadeRepository>(
     () => FidelidadeRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IEcommerceRepository>(
+    () => EcommerceRepository(remoteDataSource: sl()),
   );
 }
 
@@ -167,6 +175,12 @@ void _useCases() {
   );
   sl.registerFactory<ConferirItemPedido>(
     () => ConferirItemPedido(repository: sl()),
+  );
+  sl.registerFactory<ConferirItemPedidoPorCodigo>(
+    () => ConferirItemPedidoPorCodigo(repository: sl()),
+  );
+  sl.registerFactory<AssumirPedido>(
+    () => AssumirPedido(repository: sl()),
   );
 
   sl.registerFactory<CarregarResumoPagamentosRealizados>(
@@ -313,6 +327,31 @@ void _useCases() {
   sl.registerFactory<CancelarConsignacao>(
     () => CancelarConsignacao(repository: sl()),
   );
+
+  sl.registerFactory<RecuperarEcommerces>(
+    () => RecuperarEcommerces(repository: sl()),
+  );
+  sl.registerFactory<RecuperarEcommerce>(
+    () => RecuperarEcommerce(repository: sl()),
+  );
+  sl.registerFactory<SalvarEcommerce>(
+    () => SalvarEcommerce(repository: sl()),
+  );
+  sl.registerFactory<RecuperarReferenciasEcommerce>(
+    () => RecuperarReferenciasEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AdicionarReferenciaEcommerce>(
+    () => AdicionarReferenciaEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarReferenciaEcommerce>(
+    () => AtualizarReferenciaEcommerce(repository: sl()),
+  );
+  sl.registerFactory<RecuperarProdutosDaReferenciaEcommerce>(
+    () => RecuperarProdutosDaReferenciaEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarDisponibilidadeProdutoEcommerce>(
+    () => AtualizarDisponibilidadeProdutoEcommerce(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -325,6 +364,8 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -497,5 +538,17 @@ void _presentation() {
 
   sl.registerFactory<ConsignacaoDetalheBloc>(
     () => ConsignacaoDetalheBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<EcommerceConfiguracaoBloc>(
+    () => EcommerceConfiguracaoBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<EcommerceReferenciasBloc>(
+    () => EcommerceReferenciasBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<EcommerceReferenciaDetalheBloc>(
+    () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl()),
   );
 }

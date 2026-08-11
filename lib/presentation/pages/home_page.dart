@@ -140,6 +140,14 @@ class _HomePageState extends State<HomePage> {
                   route: '/chamar_entregador',
                   componentesNecessarios: ['ENTFM001'],
                 ),
+                const _AccessFlowItem(
+                  icon: Icons.storefront_outlined,
+                  title: 'Configuração do e-commerce',
+                  subtitle: 'Dados do site, estoque, tabela e pagamento.',
+                  color: Colors.teal,
+                  route: '/configuracao_ecommerce',
+                  componentesNecessarios: ['ECOFM001'],
+                ),
               ];
 
               final cadastros = <_AccessFlowItem>[

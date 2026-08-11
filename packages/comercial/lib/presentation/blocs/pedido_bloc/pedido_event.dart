@@ -77,7 +77,17 @@ class PedidoTaxaEntregaSalva extends PedidoEvent {
   PedidoTaxaEntregaSalva(this.valorTaxaEntrega);
 }
 
-class PedidoConferiu extends PedidoEvent {}
+class PedidoConferiu extends PedidoEvent {
+  final bool processarComDivergencia;
+
+  PedidoConferiu({this.processarComDivergencia = false});
+}
+
+class PedidoAssumiu extends PedidoEvent {
+  final int funcionarioId;
+
+  PedidoAssumiu(this.funcionarioId);
+}
 
 class PedidoFaturou extends PedidoEvent {}
 
@@ -187,6 +197,16 @@ class PedidoItemConferiu extends PedidoEvent {
   PedidoItemConferiu({
     required this.produtoId,
     required this.sequencia,
+    required this.quantidade,
+  });
+}
+
+class PedidoItemConferiuPorCodigo extends PedidoEvent {
+  final String codigoBarras;
+  final double quantidade;
+
+  PedidoItemConferiuPorCodigo({
+    required this.codigoBarras,
     required this.quantidade,
   });
 }

@@ -65,7 +65,13 @@ class TerminalBloc extends Bloc<TerminalEvent, TerminalState> {
     TerminalEditou event,
     Emitter<TerminalState> emit,
   ) {
-    emit(state.copyWith(terminalStep: TerminalStep.editando, nome: event.nome));
+    emit(
+      state.copyWith(
+        terminalStep: TerminalStep.editando,
+        nome: event.nome,
+        tipo: event.tipo,
+      ),
+    );
   }
 
   FutureOr<void> _onTerminalSalvou(
@@ -88,12 +94,14 @@ class TerminalBloc extends Bloc<TerminalEvent, TerminalState> {
           empresaId: empresaId,
           id: state.id!,
           nome: nome,
+          tipo: state.tipo,
         );
         emit(TerminalState.fromModel(terminal, step: TerminalStep.salvo));
       } else {
         final terminal = await _criarTerminal.call(
           empresaId: empresaId,
           nome: nome,
+          tipo: state.tipo,
         );
         emit(TerminalState.fromModel(terminal, step: TerminalStep.criado));
       }

@@ -12,3 +12,6 @@ export 'domain/models/relatorios.dart';
 export 'domain/models/orcamento_local.dart';
 export 'domain/models/consignacao.dart';
 export 'domain/models/consignacao_item.dart';
+export 'domain/models/ecommerce.dart';
+export 'domain/models/ecommerce_referencia.dart';
+export 'domain/models/ecommerce_referencia_produto.dart';

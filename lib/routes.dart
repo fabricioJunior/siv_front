@@ -388,6 +388,33 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const ConfiguracaoEntregaPage(),
     );
   },
+  '/configuracao_ecommerce': (context) {
+    final routeArgs = args(context);
+    final empresaIdArg = routeArgs['empresaId'];
+    final empresaId = empresaIdArg is int
+        ? empresaIdArg
+        : int.tryParse(empresaIdArg?.toString() ?? '');
+    final ecommerceIdArg = routeArgs['ecommerceId'];
+    final ecommerceId = ecommerceIdArg is int
+        ? ecommerceIdArg
+        : int.tryParse(ecommerceIdArg?.toString() ?? '');
+    return _rotaProtegida(
+      route: '/configuracao_ecommerce',
+      child: EcommerceConfiguracaoPage(
+        empresaId: empresaId,
+        ecommerceId: ecommerceId,
+      ),
+    );
+  },
+  '/ecommerce_referencias': (context) {
+    final routeArgs = args(context);
+    return _rotaProtegida(
+      route: '/ecommerce_referencias',
+      child: EcommerceReferenciasPage(
+        ecommerceId: routeArgs['ecommerceId'] as int,
+      ),
+    );
+  },
   '/chamar_entregador': (context) {
     return _rotaProtegida(
       route: '/chamar_entregador',
@@ -1150,6 +1177,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/documento_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],
   '/configuracao_entrega': ['ENTFM001'],
+  '/configuracao_ecommerce': ['ECOFM001'],
+  '/ecommerce_referencias': ['ECOFM002'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],

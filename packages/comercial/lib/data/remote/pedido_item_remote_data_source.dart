@@ -69,4 +69,19 @@ class PedidoItemRemoteDataSource extends RemoteDataSourceBase
       ],
     );
   }
+
+  @override
+  Future<void> conferirItemPorCodigo(
+    int pedidoId, {
+    required String codigoBarras,
+    required double quantidade,
+  }) async {
+    await put(
+      pathParameters: {'id': '$pedidoId/conferir-item-por-codigo'},
+      body: {
+        'codigoBarras': codigoBarras,
+        'quantidade': quantidade,
+      },
+    );
+  }
 }

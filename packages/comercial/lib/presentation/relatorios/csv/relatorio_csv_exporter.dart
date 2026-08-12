@@ -53,6 +53,33 @@ class RelatorioCsvExporter {
     return _salvarCsv(linhas, 'clientes_aniversariantes.csv');
   }
 
+  static Future<String?> exportarClientesAtivos(
+    List<RelatorioClienteAtivoItem> items,
+  ) {
+    final linhas = [
+      _linha([
+        'Cliente',
+        'Documento',
+        'Número de telefone',
+        'E-mail',
+        'Ultima Compra',
+        'Total Comprado',
+        'Quantidade',
+      ]),
+      for (final item in items)
+        _linha([
+          item.clienteNome,
+          item.clienteDocumento,
+          item.clienteTelefone ?? '',
+          item.clienteEmail ?? '',
+          _fmtData(item.dataUltimaCompra),
+          item.valorTotalComprado.toStringAsFixed(2).replaceAll('.', ','),
+          '${item.quantidadeCompras}',
+        ]),
+    ];
+    return _salvarCsv(linhas, 'relatorio_clientes_ativos.csv');
+  }
+
   static Future<String?> exportarComprasClientes(
     List<RelatorioCompraClienteItem> items,
   ) {

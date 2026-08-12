@@ -1,4 +1,5 @@
 import 'package:comercial/presentation/blocs/relatorio_clientes_bloc/relatorio_clientes_bloc.dart';
+import 'package:comercial/presentation/relatorios/csv/relatorio_csv_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -37,6 +38,7 @@ class _RelatorioClientesAtivosPageState
   int _dias = 30;
   String? _dataReferencia;
   bool _exportandoPdf = false;
+  bool _exportandoCsv = false;
   late final TextEditingController _diasController;
 
   @override
@@ -78,6 +80,30 @@ class _RelatorioClientesAtivosPageState
     setState(() => _dataReferencia = _isoDate(picked));
   }
 
+  Future<void> _exportarCsv() async {
+    setState(() => _exportandoCsv = true);
+    try {
+      final caminho = await RelatorioCsvExporter.exportarClientesAtivos(
+        _bloc.state.dados!.items,
+      );
+      if (mounted) {
+        if (caminho != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Relatório salvo em $caminho')),
+          );
+        }
+        setState(() => _exportandoCsv = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao exportar: $e')),
+        );
+        setState(() => _exportandoCsv = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RelatorioClientesBloc>.value(
@@ -89,7 +115,21 @@ class _RelatorioClientesAtivosPageState
               title: const Text('Clientes Ativos'),
               actions: [
                 if (state.step == RelatorioClientesStep.sucesso &&
-                    state.dados != null)
+                    state.dados != null) ...[
+                  _exportandoCsv
+                      ? const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.file_download_outlined),
+                          tooltip: 'Exportar CSV',
+                          onPressed: _exportarCsv,
+                        ),
                   _exportandoPdf
                       ? const Padding(
                           padding: EdgeInsets.all(14),
@@ -114,6 +154,7 @@ class _RelatorioClientesAtivosPageState
                             }
                           },
                         ),
+                ],
               ],
             ),
             body: ListView(

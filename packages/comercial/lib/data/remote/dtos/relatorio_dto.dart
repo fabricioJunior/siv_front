@@ -392,6 +392,10 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
   @override
   final String clienteDocumento;
   @override
+  final String? clienteEmail;
+  @override
+  final String? clienteTelefone;
+  @override
   final String dataUltimaCompra;
   @override
   final int quantidadeCompras;
@@ -404,6 +408,8 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
     required this.clienteId,
     required this.clienteNome,
     required this.clienteDocumento,
+    this.clienteEmail,
+    this.clienteTelefone,
     required this.dataUltimaCompra,
     required this.quantidadeCompras,
     required this.valorTotalComprado,
@@ -416,6 +422,8 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
         clienteId: (j['clienteId'] as num).toInt(),
         clienteNome: j['clienteNome'] as String? ?? '',
         clienteDocumento: j['clienteDocumento'] as String? ?? '',
+        clienteEmail: j['clienteEmail'] as String?,
+        clienteTelefone: j['clienteTelefone'] as String?,
         dataUltimaCompra: j['dataUltimaCompra'] as String? ?? '',
         quantidadeCompras: (j['quantidadeCompras'] as num).toInt(),
         valorTotalComprado: (j['valorTotalComprado'] as num).toDouble(),

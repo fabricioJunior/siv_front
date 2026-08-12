@@ -97,6 +97,8 @@ abstract class RelatorioClienteAtivoItem {
   int get clienteId;
   String get clienteNome;
   String get clienteDocumento;
+  String? get clienteEmail;
+  String? get clienteTelefone;
   String get dataUltimaCompra;
   int get quantidadeCompras;
   double get valorTotalComprado;

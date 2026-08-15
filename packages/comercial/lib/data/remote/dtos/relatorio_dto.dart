@@ -743,6 +743,8 @@ class RelatorioPontoFidelidadeItemDto implements RelatorioPontoFidelidadeItem {
   @override
   final bool cadastradoPortal;
   @override
+  final String? dataCadastroPortal;
+  @override
   final double saldoPontos;
   @override
   final String? dataUltimoCredito;
@@ -752,6 +754,7 @@ class RelatorioPontoFidelidadeItemDto implements RelatorioPontoFidelidadeItem {
     required this.clienteNome,
     required this.clienteDocumento,
     required this.cadastradoPortal,
+    this.dataCadastroPortal,
     required this.saldoPontos,
     this.dataUltimoCredito,
   });
@@ -762,6 +765,7 @@ class RelatorioPontoFidelidadeItemDto implements RelatorioPontoFidelidadeItem {
         clienteNome: j['clienteNome'] as String? ?? '',
         clienteDocumento: j['clienteDocumento'] as String? ?? '',
         cadastradoPortal: j['cadastradoPortal'] as bool? ?? false,
+        dataCadastroPortal: j['dataCadastroPortal'] as String?,
         saldoPontos: (j['saldoPontos'] as num).toDouble(),
         dataUltimoCredito: j['dataUltimoCredito'] as String?,
       );

@@ -43,9 +43,8 @@ class _PedidosPageState extends State<PedidosPage> {
               onPressed: state.step == PedidosStep.carregando
                   ? null
                   : () async {
-                      final result =
-                          await Navigator.pushNamed(context, '/pedido');
-                      if (result == true && context.mounted) {
+                      await Navigator.pushNamed(context, '/pedido');
+                      if (context.mounted) {
                         _bloc.add(PedidosIniciou());
                       }
                     },
@@ -89,6 +88,38 @@ class _PedidosPageState extends State<PedidosPage> {
                           .run(() => _bloc.add(PedidosBuscaAlterada(v)));
                     },
                   ),
+                  const SizedBox(height: 12),
+                  // Filtro por situação
+                  SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _SituacaoFilterChip(
+                          label: 'Todos',
+                          selected: state.situacaoFiltro == null,
+                          onSelected: () =>
+                              _bloc.add(PedidosFiltroSituacaoAlterado(null)),
+                        ),
+                        for (final situacao in const [
+                          'em_andamento',
+                          'conferido',
+                          'faturado',
+                          'encerrado',
+                          'cancelado',
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: _SituacaoFilterChip(
+                              label: _labelSituacaoPedido(situacao),
+                              selected: state.situacaoFiltro == situacao,
+                              onSelected: () => _bloc
+                                  .add(PedidosFiltroSituacaoAlterado(situacao)),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   // Estados
                   if (state.step == PedidosStep.carregando)
@@ -127,12 +158,12 @@ class _PedidosPageState extends State<PedidosPage> {
                         child: _PedidoCard(
                           pedido: pedido,
                           onTap: () async {
-                            final result = await Navigator.pushNamed(
+                            await Navigator.pushNamed(
                               context,
                               '/pedido',
                               arguments: {'idPedido': pedido.id},
                             );
-                            if (result == true && context.mounted) {
+                            if (context.mounted) {
                               _bloc.add(PedidosIniciou());
                             }
                           },
@@ -179,6 +210,46 @@ class _PedidosPageState extends State<PedidosPage> {
     if (motivo == null || motivo.isEmpty || pedido.id == null) return;
 
     _bloc.add(PedidosPedidoCancelou(pedido.id!, motivoCancelamento: motivo));
+  }
+}
+
+// Enum real do backend (SituacaoPedido): em_andamento, conferido, faturado, encerrado, cancelado.
+String _labelSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()) {
+      'em_andamento' => 'Em andamento',
+      'conferido' => 'Conferido',
+      'faturado' => 'Faturado',
+      'encerrado' => 'Encerrado',
+      'cancelado' => 'Cancelado',
+      _ => situacao ?? '-',
+    };
+
+Color _corSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()) {
+      'em_andamento' => Colors.blue,
+      'conferido' => Colors.orange,
+      'faturado' => Colors.teal,
+      'encerrado' => Colors.green,
+      'cancelado' => Colors.red,
+      _ => Colors.blueGrey,
+    };
+
+class _SituacaoFilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _SituacaoFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+    );
   }
 }
 
@@ -247,21 +318,9 @@ class _PedidoCard extends StatelessWidget {
         situacao != 'cancelado';
   }
 
-  Color get _cor => switch (pedido.situacao?.toLowerCase()) {
-        'aberto' || 'criado' => Colors.blue,
-        'conferido' => Colors.orange,
-        'faturado' => Colors.green,
-        'cancelado' => Colors.red,
-        _ => Colors.blueGrey,
-      };
+  Color get _cor => _corSituacaoPedido(pedido.situacao);
 
-  String get _labelSituacao => switch (pedido.situacao?.toLowerCase()) {
-        'aberto' || 'criado' => 'Aberto',
-        'conferido' => 'Conferido',
-        'faturado' => 'Faturado',
-        'cancelado' => 'Cancelado',
-        _ => pedido.situacao ?? '-',
-      };
+  String get _labelSituacao => _labelSituacaoPedido(pedido.situacao);
 
   String _formatarValorMonetario(double? valor) {
     if (valor == null) return '-';

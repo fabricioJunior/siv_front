@@ -112,10 +112,12 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       if (filtro.isEmpty) return true;
 
       final id = (pedido.id ?? 0).toString();
-      final pessoa = (pedido.pessoaId ?? 0).toString();
+      final pessoaId = (pedido.pessoaId ?? 0).toString();
+      final pessoaNome = (pedido.pessoaNome ?? '').toLowerCase();
       final situacao = (pedido.situacao ?? '').toLowerCase();
       return id.contains(filtro) ||
-          pessoa.contains(filtro) ||
+          pessoaId.contains(filtro) ||
+          pessoaNome.contains(filtro) ||
           situacao.contains(filtro);
     }).toList();
 

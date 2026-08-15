@@ -89,7 +89,8 @@ class _PedidosPageState extends State<PedidosPage> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  // Filtro por situação
+                  // Filtro por situação -- multi-seleção (OR entre os marcados). "Pago" é
+                  // situacaoPagamento, os demais são situacao do pedido.
                   SizedBox(
                     height: 36,
                     child: ListView(
@@ -97,9 +98,9 @@ class _PedidosPageState extends State<PedidosPage> {
                       children: [
                         _SituacaoFilterChip(
                           label: 'Todos',
-                          selected: state.situacaoFiltro == null,
-                          onSelected: () =>
-                              _bloc.add(PedidosFiltroSituacaoAlterado(null)),
+                          selected: state.situacoesFiltro.isEmpty,
+                          onSelected: () => _bloc
+                              .add(PedidosFiltroSituacaoAlterado(const {})),
                         ),
                         for (final situacao in const [
                           'em_andamento',
@@ -107,14 +108,24 @@ class _PedidosPageState extends State<PedidosPage> {
                           'faturado',
                           'encerrado',
                           'cancelado',
+                          'pago',
                         ])
                           Padding(
                             padding: const EdgeInsets.only(left: 8),
                             child: _SituacaoFilterChip(
-                              label: _labelSituacaoPedido(situacao),
-                              selected: state.situacaoFiltro == situacao,
-                              onSelected: () => _bloc
-                                  .add(PedidosFiltroSituacaoAlterado(situacao)),
+                              label: _labelFiltroSituacao(situacao),
+                              selected:
+                                  state.situacoesFiltro.contains(situacao),
+                              onSelected: () {
+                                final atualizado =
+                                    Set<String>.from(state.situacoesFiltro);
+                                if (!atualizado.remove(situacao)) {
+                                  atualizado.add(situacao);
+                                }
+                                _bloc.add(
+                                  PedidosFiltroSituacaoAlterado(atualizado),
+                                );
+                              },
                             ),
                           ),
                       ],
@@ -222,6 +233,10 @@ String _labelSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()
       'cancelado' => 'Cancelado',
       _ => situacao ?? '-',
     };
+
+// Chips do filtro: situacao do pedido + 'pago' (situacaoPagamento, dimensao separada).
+String _labelFiltroSituacao(String filtro) =>
+    filtro == 'pago' ? 'Pago' : _labelSituacaoPedido(filtro);
 
 Color _corSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()) {
       'em_andamento' => Colors.blue,

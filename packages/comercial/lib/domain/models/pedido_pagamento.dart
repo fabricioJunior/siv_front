@@ -51,6 +51,7 @@ abstract class PedidoPagamento implements Equatable {
   DateTime? get confirmadoEm;
   int? get confirmadoPorOperadorId;
   PedidoPagamentoCobranca? get cobranca;
+  bool? get estoqueDisponivel;
 
   factory PedidoPagamento.create({
     int? id,
@@ -64,6 +65,7 @@ abstract class PedidoPagamento implements Equatable {
     DateTime? confirmadoEm,
     int? confirmadoPorOperadorId,
     PedidoPagamentoCobranca? cobranca,
+    bool? estoqueDisponivel,
   }) = _PedidoPagamentoImpl;
 
   @override
@@ -79,6 +81,7 @@ abstract class PedidoPagamento implements Equatable {
         confirmadoEm,
         confirmadoPorOperadorId,
         cobranca,
+        estoqueDisponivel,
       ];
 
   @override
@@ -108,6 +111,8 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
   final int? confirmadoPorOperadorId;
   @override
   final PedidoPagamentoCobranca? cobranca;
+  @override
+  final bool? estoqueDisponivel;
 
   const _PedidoPagamentoImpl({
     this.id,
@@ -121,6 +126,7 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
     this.confirmadoEm,
     this.confirmadoPorOperadorId,
     this.cobranca,
+    this.estoqueDisponivel,
   });
 
   @override
@@ -136,6 +142,7 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
         confirmadoEm,
         confirmadoPorOperadorId,
         cobranca,
+        estoqueDisponivel,
       ];
 
   @override

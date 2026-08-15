@@ -40,9 +40,14 @@ class NotaEntregaDadosFiscais {
 
 /// Dados necessarios pra renderizar a Nota de Entrega -- documento voltado
 /// pro entregador, com destaque pro endereco e nome do cliente (fonte bem
-/// maior que o restante), diferente do DANFE.
+/// maior que o restante), diferente do DANFE. Tambem reaproveitado pela Nota
+/// de Conferencia (mesmo layout de cliente/itens, sem a secao de endereco --
+/// ver [NotaEntregaPdfExporter.gerarBytesConferenciaParaPedido]).
 class NotaEntregaLayoutData {
-  final String enderecoFormatado;
+  /// Titulo no topo do documento -- 'NOTA DE ENTREGA' ou 'NOTA DE CONFERÊNCIA'.
+  final String titulo;
+  /// Vazio/null pula a secao de endereco e QR do mapa (ex: Nota de Conferencia).
+  final String? enderecoFormatado;
   final String? googleMapsUrl;
   final String nomeCliente;
   final DateTime? dataCompra;
@@ -69,7 +74,8 @@ class NotaEntregaLayoutData {
   final List<NotaEntregaPagamentoTroco> pagamentosComTroco;
 
   const NotaEntregaLayoutData({
-    required this.enderecoFormatado,
+    this.titulo = 'NOTA DE ENTREGA',
+    this.enderecoFormatado,
     this.googleMapsUrl,
     required this.nomeCliente,
     this.dataCompra,
@@ -101,7 +107,7 @@ class NotaEntregaPdfRenderer {
           children: [
             pw.Center(
               child: pw.Text(
-                'NOTA DE ENTREGA',
+                dados.titulo,
                 style: pw.TextStyle(
                   fontSize: 13,
                   fontWeight: pw.FontWeight.bold,
@@ -118,34 +124,36 @@ class NotaEntregaPdfRenderer {
                 fontWeight: pw.FontWeight.bold,
               ),
             ),
-            pw.SizedBox(height: 8),
-            pw.Divider(thickness: 0.7),
-            pw.SizedBox(height: 8),
-            pw.Text(
-              dados.enderecoFormatado,
-              style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-            if ((dados.googleMapsUrl ?? '').trim().isNotEmpty)
-              pw.Center(
-                child: pw.Column(
-                  children: [
-                    pw.SizedBox(height: 6),
-                    pw.BarcodeWidget(
-                      barcode: pw.Barcode.qrCode(),
-                      data: dados.googleMapsUrl!,
-                      width: 90,
-                      height: 90,
-                    ),
-                    pw.Text(
-                      'Aponte a câmera para abrir a rota no mapa',
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ],
+            if ((dados.enderecoFormatado ?? '').trim().isNotEmpty) ...[
+              pw.SizedBox(height: 8),
+              pw.Divider(thickness: 0.7),
+              pw.SizedBox(height: 8),
+              pw.Text(
+                dados.enderecoFormatado!,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
                 ),
               ),
+              if ((dados.googleMapsUrl ?? '').trim().isNotEmpty)
+                pw.Center(
+                  child: pw.Column(
+                    children: [
+                      pw.SizedBox(height: 6),
+                      pw.BarcodeWidget(
+                        barcode: pw.Barcode.qrCode(),
+                        data: dados.googleMapsUrl!,
+                        width: 90,
+                        height: 90,
+                      ),
+                      pw.Text(
+                        'Aponte a câmera para abrir a rota no mapa',
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
             pw.SizedBox(height: 8),
             pw.Divider(thickness: 0.7),
             pw.SizedBox(height: 4),

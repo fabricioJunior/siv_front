@@ -127,6 +127,56 @@ class NotaEntregaPdfExporter {
     return (bytes: bytes, erroServidor: null);
   }
 
+  /// Nota de Conferência: mesmo layout de cliente/itens da nota de entrega,
+  /// sem a seção de endereço (não é documento de entrega -- é o checklist de
+  /// produtos/valores/cliente usado na conferência do pedido antes de sair).
+  static Future<({Uint8List bytes, Object? erroServidor})> gerarBytesConferenciaParaPedido({
+    required int numeroPedido,
+    required String? pessoaNome,
+    required DateTime? dataPedido,
+    required String empresaNome,
+    String? empresaCnpj,
+    required List<PedidoItem> itens,
+    List<PedidoPagamento> pagamentos = const [],
+    PdfPageFormat pageFormat = DanfePdfRenderer.roll80Seguro,
+  }) async {
+    final pagamentosPendentes =
+        pagamentos.where((p) => p.valorConfirmado == null);
+    final valorPagamentoPendente = pagamentosPendentes.fold<double>(
+      0,
+      (soma, p) => soma + (p.valorEsperado ?? 0),
+    );
+
+    final dados = NotaEntregaLayoutData(
+      titulo: 'NOTA DE CONFERÊNCIA',
+      nomeCliente: (pessoaNome?.trim().isNotEmpty ?? false)
+          ? pessoaNome!.trim().toUpperCase()
+          : 'CLIENTE NÃO IDENTIFICADO',
+      dataCompra: dataPedido,
+      numeroRomaneio: numeroPedido,
+      rotuloNumero: 'Pedido',
+      empresaNome: empresaNome,
+      empresaCnpj: empresaCnpj,
+      itens: itens
+          .where((item) => (item.solicitado ?? 0) != 0)
+          .map(
+            (item) => NotaEntregaItem(
+              descricao: (item.referenciaNome?.trim().isNotEmpty ?? false)
+                  ? item.referenciaNome!.trim()
+                  : 'Produto #${item.produtoId ?? '-'}',
+              valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
+                  (item.solicitado ?? 0),
+            ),
+          )
+          .toList(growable: false),
+      valorPagamentoPendente: valorPagamentoPendente,
+    );
+
+    final bytes =
+        await NotaEntregaPdfRenderer.render(dados, pageFormat: pageFormat);
+    return (bytes: bytes, erroServidor: null);
+  }
+
   /// Monta a URL de busca do Google Maps a partir do endereco ja formatado
   /// (multi-linha, com "CEP:" etc) -- a API de busca do Maps aceita texto
   /// livre, entao nao precisa dos campos crus do endereco separados.

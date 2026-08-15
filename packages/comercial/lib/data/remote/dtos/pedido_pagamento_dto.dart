@@ -52,6 +52,8 @@ class PedidoPagamentoDto implements PedidoPagamento {
   final int? confirmadoPorOperadorId;
   @override
   final PedidoPagamentoCobranca? cobranca;
+  @override
+  final bool? estoqueDisponivel;
 
   const PedidoPagamentoDto({
     this.id,
@@ -65,6 +67,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
     this.confirmadoEm,
     this.confirmadoPorOperadorId,
     this.cobranca,
+    this.estoqueDisponivel,
   });
 
   factory PedidoPagamentoDto.fromJson(Map<String, dynamic> json) {
@@ -83,6 +86,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
       cobranca: cobrancaJson is Map<String, dynamic>
           ? PedidoPagamentoCobrancaDto.fromJson(cobrancaJson)
           : null,
+      estoqueDisponivel: json['estoqueDisponivel'] as bool?,
     );
   }
 
@@ -99,6 +103,7 @@ class PedidoPagamentoDto implements PedidoPagamento {
         confirmadoEm,
         confirmadoPorOperadorId,
         cobranca,
+        estoqueDisponivel,
       ];
 
   @override

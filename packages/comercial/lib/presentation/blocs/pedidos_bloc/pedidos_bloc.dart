@@ -17,6 +17,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       : super(const PedidosState.initial()) {
     on<PedidosIniciou>(_onIniciou);
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
+    on<PedidosFiltroSituacaoAlterado>(_onFiltroSituacaoAlterado);
     on<PedidosPedidoCancelou>(_onPedidoCancelou);
   }
 
@@ -32,7 +33,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca),
+          filtrados: _filtrar(pedidos, state.busca, state.situacaoFiltro),
           step: PedidosStep.sucesso,
           erro: null,
         ),
@@ -52,7 +53,20 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     emit(
       state.copyWith(
         busca: event.busca,
-        filtrados: _filtrar(state.pedidos, event.busca),
+        filtrados: _filtrar(state.pedidos, event.busca, state.situacaoFiltro),
+      ),
+    );
+  }
+
+  FutureOr<void> _onFiltroSituacaoAlterado(
+    PedidosFiltroSituacaoAlterado event,
+    Emitter<PedidosState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        situacaoFiltro: event.situacao,
+        limparSituacaoFiltro: event.situacao == null,
+        filtrados: _filtrar(state.pedidos, state.busca, event.situacao),
       ),
     );
   }
@@ -71,7 +85,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca),
+          filtrados: _filtrar(pedidos, state.busca, state.situacaoFiltro),
           step: PedidosStep.sucesso,
           erro: null,
         ),
@@ -84,18 +98,28 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     }
   }
 
-  List<Pedido> _filtrar(List<Pedido> pedidos, String busca) {
+  List<Pedido> _filtrar(
+    List<Pedido> pedidos,
+    String busca,
+    String? situacaoFiltro,
+  ) {
     final filtro = busca.trim().toLowerCase();
-    final lista = filtro.isEmpty
-        ? List<Pedido>.from(pedidos)
-        : pedidos.where((pedido) {
-            final id = (pedido.id ?? 0).toString();
-            final pessoa = (pedido.pessoaId ?? 0).toString();
-            final situacao = (pedido.situacao ?? '').toLowerCase();
-            return id.contains(filtro) ||
-                pessoa.contains(filtro) ||
-                situacao.contains(filtro);
-          }).toList();
+    final lista = pedidos.where((pedido) {
+      if (situacaoFiltro != null &&
+          (pedido.situacao ?? '').toLowerCase() != situacaoFiltro) {
+        return false;
+      }
+      if (filtro.isEmpty) return true;
+
+      final id = (pedido.id ?? 0).toString();
+      final pessoaId = (pedido.pessoaId ?? 0).toString();
+      final pessoaNome = (pedido.pessoaNome ?? '').toLowerCase();
+      final situacao = (pedido.situacao ?? '').toLowerCase();
+      return id.contains(filtro) ||
+          pessoaId.contains(filtro) ||
+          pessoaNome.contains(filtro) ||
+          situacao.contains(filtro);
+    }).toList();
 
     lista.sort((a, b) => (b.criadoEm ?? DateTime(0))
         .compareTo(a.criadoEm ?? DateTime(0)));

@@ -76,14 +76,18 @@ class EcommerceReferenciasPage extends StatelessWidget {
                         ? Colors.orange.withValues(alpha: 0.2)
                         : Colors.green.withValues(alpha: 0.2),
                   ),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => EcommerceReferenciaDetalhePage(
-                        ecommerceId: ecommerceId,
-                        referencia: referencia,
+                  onTap: () async {
+                    final bloc = context.read<EcommerceReferenciasBloc>();
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => EcommerceReferenciaDetalhePage(
+                          ecommerceId: ecommerceId,
+                          referencia: referencia,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                    bloc.add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId));
+                  },
                 );
               },
             );

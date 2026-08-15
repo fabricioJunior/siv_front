@@ -10,6 +10,12 @@ class PedidosBuscaAlterada extends PedidosEvent {
   PedidosBuscaAlterada(this.busca);
 }
 
+class PedidosFiltroSituacaoAlterado extends PedidosEvent {
+  final String? situacao;
+
+  PedidosFiltroSituacaoAlterado(this.situacao);
+}
+
 class PedidosPedidoCancelou extends PedidosEvent {
   final int pedidoId;
   final String motivoCancelamento;

@@ -189,6 +189,7 @@ abstract class RelatorioPontoFidelidadeItem {
   String get clienteNome;
   String get clienteDocumento;
   bool get cadastradoPortal;
+  String? get dataCadastroPortal;
   double get saldoPontos;
   String? get dataUltimoCredito;
 }

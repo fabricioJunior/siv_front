@@ -284,7 +284,9 @@ class _ClienteCard extends StatelessWidget {
                             children: [
                               Text(
                                 item.cadastradoPortal
-                                    ? 'Cadastrado'
+                                    ? item.dataCadastroPortal != null
+                                        ? 'Cadastrado em ${_fmtData(item.dataCadastroPortal)}'
+                                        : 'Cadastrado'
                                     : 'Não cadastrado',
                                 style: TextStyle(
                                   fontSize: 11,

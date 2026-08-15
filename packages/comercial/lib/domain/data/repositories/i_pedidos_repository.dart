@@ -7,6 +7,7 @@ abstract class IPedidosRepository {
   Future<Pedido> atualizarPedido(Pedido pedido);
   Future<Pedido> aplicarDesconto(int id, {required double desconto});
   Future<void> conferirPedido(int id, {bool processarComDivergencia = false});
+  Future<void> marcarConferido(int id);
   Future<void> faturarPedido(int id, {required int caixaId});
   Future<void> cancelarPedido(int id, {required String motivoCancelamento});
   Future<Pedido> assumirPedido(int id, {required int funcionarioId});

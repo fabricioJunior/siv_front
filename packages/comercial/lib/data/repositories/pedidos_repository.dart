@@ -40,6 +40,11 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<void> marcarConferido(int id) {
+    return remoteDataSource.marcarConferido(id);
+  }
+
+  @override
   Future<Pedido> assumirPedido(int id, {required int funcionarioId}) {
     return remoteDataSource.assumirPedido(id, funcionarioId: funcionarioId);
   }

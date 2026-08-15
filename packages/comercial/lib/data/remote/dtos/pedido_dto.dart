@@ -65,6 +65,8 @@ class PedidoDto implements Pedido {
   final String? empresaCnpj;
   @override
   final DateTime? retiradoEm;
+  @override
+  final DateTime? conferidoEm;
 
   const PedidoDto({
     this.id,
@@ -99,6 +101,7 @@ class PedidoDto implements Pedido {
     this.empresaNome,
     this.empresaCnpj,
     this.retiradoEm,
+    this.conferidoEm,
   });
 
   factory PedidoDto.fromJson(Map<String, dynamic> json) {
@@ -135,6 +138,7 @@ class PedidoDto implements Pedido {
       empresaNome: json['empresaNome']?.toString(),
       empresaCnpj: json['empresaCnpj']?.toString(),
       retiradoEm: _toDate(json['retiradoEm']),
+      conferidoEm: _toDate(json['conferidoEm']),
     );
   }
 
@@ -172,6 +176,7 @@ class PedidoDto implements Pedido {
       empresaNome: pedido.empresaNome,
       empresaCnpj: pedido.empresaCnpj,
       retiradoEm: pedido.retiradoEm,
+      conferidoEm: pedido.conferidoEm,
     );
   }
 
@@ -245,6 +250,7 @@ class PedidoDto implements Pedido {
         empresaNome,
         empresaCnpj,
         retiradoEm,
+        conferidoEm,
       ];
 
   @override

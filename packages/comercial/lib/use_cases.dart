@@ -11,6 +11,7 @@ export 'domain/use_cases/corrigir_forma_de_pagamento_romaneio.dart';
 export 'domain/use_cases/cancelar_pedido.dart';
 export 'domain/use_cases/carregar_resumo_pagamentos_realizados.dart';
 export 'domain/use_cases/conferir_pedido.dart';
+export 'domain/use_cases/marcar_conferido.dart';
 export 'domain/use_cases/criar_pedido.dart';
 export 'domain/use_cases/criar_romaneio.dart';
 export 'domain/use_cases/faturar_pedido.dart';

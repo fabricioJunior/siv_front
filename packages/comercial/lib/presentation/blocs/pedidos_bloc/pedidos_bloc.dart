@@ -33,7 +33,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacaoFiltro),
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
           step: PedidosStep.sucesso,
           erro: null,
         ),
@@ -53,7 +53,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     emit(
       state.copyWith(
         busca: event.busca,
-        filtrados: _filtrar(state.pedidos, event.busca, state.situacaoFiltro),
+        filtrados: _filtrar(state.pedidos, event.busca, state.situacoesFiltro),
       ),
     );
   }
@@ -64,9 +64,8 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
   ) {
     emit(
       state.copyWith(
-        situacaoFiltro: event.situacao,
-        limparSituacaoFiltro: event.situacao == null,
-        filtrados: _filtrar(state.pedidos, state.busca, event.situacao),
+        situacoesFiltro: event.situacoes,
+        filtrados: _filtrar(state.pedidos, state.busca, event.situacoes),
       ),
     );
   }
@@ -85,7 +84,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacaoFiltro),
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
           step: PedidosStep.sucesso,
           erro: null,
         ),
@@ -98,17 +97,27 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     }
   }
 
+  // 'pago' e um chip a mais que checa situacaoPagamento, os demais checam situacao -- Set com
+  // qualquer um marcado entra no resultado (OR), nao AND (pedido nao pode ser em_andamento E
+  // encerrado ao mesmo tempo).
+  bool _bateSituacaoFiltro(Pedido pedido, Set<String> situacoesFiltro) {
+    if (situacoesFiltro.isEmpty) return true;
+    return situacoesFiltro.any((filtro) {
+      if (filtro == 'pago') {
+        return (pedido.situacaoPagamento ?? '').toLowerCase() == 'pago';
+      }
+      return (pedido.situacao ?? '').toLowerCase() == filtro;
+    });
+  }
+
   List<Pedido> _filtrar(
     List<Pedido> pedidos,
     String busca,
-    String? situacaoFiltro,
+    Set<String> situacoesFiltro,
   ) {
     final filtro = busca.trim().toLowerCase();
     final lista = pedidos.where((pedido) {
-      if (situacaoFiltro != null &&
-          (pedido.situacao ?? '').toLowerCase() != situacaoFiltro) {
-        return false;
-      }
+      if (!_bateSituacaoFiltro(pedido, situacoesFiltro)) return false;
       if (filtro.isEmpty) return true;
 
       final id = (pedido.id ?? 0).toString();

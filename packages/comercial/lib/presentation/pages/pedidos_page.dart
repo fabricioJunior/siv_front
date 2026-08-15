@@ -238,6 +238,15 @@ String _labelSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()
 String _labelFiltroSituacao(String filtro) =>
     filtro == 'pago' ? 'Pago' : _labelSituacaoPedido(filtro);
 
+// Faturamento automatico de e-commerce pula direto de em_andamento pra encerrado, sem passar por
+// conferido -- conferidoEm null nesse caso significa que ninguem checou os itens fisicamente ainda.
+// em_andamento/cancelado nao contam (conferencia ainda nem faz sentido nesses estados).
+bool _precisaConferencia(Pedido pedido) {
+  final situacao = pedido.situacao?.toLowerCase();
+  if (situacao == 'em_andamento' || situacao == 'cancelado') return false;
+  return pedido.conferidoEm == null;
+}
+
 Color _corSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()) {
       'em_andamento' => Colors.blue,
       'conferido' => Colors.orange,
@@ -514,7 +523,8 @@ class _PedidoCard extends StatelessWidget {
                               ),
                             ),
                             if (pedido.situacaoPagamento != null ||
-                                pedido.situacaoEntrega != null) ...[
+                                pedido.situacaoEntrega != null ||
+                                _precisaConferencia(pedido)) ...[
                               const SizedBox(height: 4),
                               Wrap(
                                 spacing: 4,
@@ -534,6 +544,14 @@ class _PedidoCard extends StatelessWidget {
                                       _corSituacaoEntrega(
                                         pedido.situacaoEntrega,
                                       ),
+                                    ),
+                                  // Faturamento automatico de e-commerce pula direto pra encerrado
+                                  // sem passar por conferido -- sinaliza que ninguem checou os
+                                  // itens fisicamente ainda.
+                                  if (_precisaConferencia(pedido))
+                                    _buildBadgeSecundario(
+                                      'Conferência pendente',
+                                      Colors.deepOrange,
                                     ),
                                 ],
                               ),

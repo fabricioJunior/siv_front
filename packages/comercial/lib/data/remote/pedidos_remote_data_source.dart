@@ -56,6 +56,11 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<void> marcarConferido(int id) async {
+    await put(pathParameters: {'id': '$id/marcar-conferido'}, body: {});
+  }
+
+  @override
   Future<Pedido> assumirPedido(int id, {required int funcionarioId}) async {
     final response = await put(
       pathParameters: {'id': '$id/assumir'},

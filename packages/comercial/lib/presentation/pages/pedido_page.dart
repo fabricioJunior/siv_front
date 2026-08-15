@@ -2031,6 +2031,12 @@ class _PedidoPageState extends State<PedidoPage> {
     final podeConferirPorLeitura = origemEcommerce &&
         state.pedido?.funcionarioId != null &&
         state.pedido?.situacao == 'em_andamento';
+    // Faturamento automatico de e-commerce (pagamento confirmado) pula direto de em_andamento pra
+    // encerrado, sem passar por Conferir -- pedido pode ter fechado sem ninguem checar os itens
+    // fisicamente. Botao separado pra registrar essa conferencia depois, sem reabrir situacao.
+    final precisaConferenciaRetroativa = state.pedido?.conferidoEm == null &&
+        state.pedido?.situacao != 'em_andamento' &&
+        state.pedido?.situacao != 'cancelado';
 
     return Card(
       child: Padding(
@@ -2074,6 +2080,22 @@ class _PedidoPageState extends State<PedidoPage> {
                           },
                     icon: const Icon(Icons.fact_check),
                     label: const Text('Conferir'),
+                  ),
+                if (precisaConferenciaRetroativa)
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
+                        : () {
+                            context.read<PedidoBloc>().add(
+                                  PedidoMarcouConferido(),
+                                );
+                          },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.deepOrange,
+                      side: const BorderSide(color: Colors.deepOrange),
+                    ),
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: const Text('Marcar como conferido'),
                   ),
                 Tooltip(
                   message: podeFechar ? '' : state.motivoNaoPodeFechar,

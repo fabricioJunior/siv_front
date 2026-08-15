@@ -18,6 +18,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final AtualizarPedido _atualizarPedido;
   final AplicarDescontoPedido _aplicarDescontoPedido;
   final ConferirPedido _conferirPedido;
+  final MarcarConferido _marcarConferido;
   final FaturarPedido _faturarPedido;
   final CancelarPedido _cancelarPedido;
   final AdicionarPagamentoPedido _adicionarPagamentoPedido;
@@ -50,6 +51,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._atualizarPedido,
     this._aplicarDescontoPedido,
     this._conferirPedido,
+    this._marcarConferido,
     this._faturarPedido,
     this._cancelarPedido,
     this._adicionarPagamentoPedido,
@@ -84,6 +86,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoObservacaoSalva>(_onObservacaoSalva);
     on<PedidoTaxaEntregaSalva>(_onTaxaEntregaSalva);
     on<PedidoConferiu>(_onConferiu);
+    on<PedidoMarcouConferido>(_onMarcouConferido);
     on<PedidoFaturou>(_onFaturou);
     on<PedidoCancelou>(_onCancelou);
     on<PedidoPagamentoAdicionou>(_onPagamentoAdicionou);
@@ -402,6 +405,31 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao conferir pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onMarcouConferido(
+    PedidoMarcouConferido event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _marcarConferido.call(state.id!);
+      final pedido = await _recuperarPedido.call(state.id!);
+      emit(PedidoState.fromModel(
+        pedido,
+        step: PedidoStep.conferido,
+        pagamentos: state.pagamentos,
+        eventos: state.eventos,
+        itens: state.itens,
+      ));
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao marcar conferência do pedido.')));
       addError(e, s);
     }
   }

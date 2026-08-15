@@ -83,6 +83,10 @@ class PedidoConferiu extends PedidoEvent {
   PedidoConferiu({this.processarComDivergencia = false});
 }
 
+// Conferência retroativa -- pedido de e-commerce faturado automaticamente pula direto pra
+// encerrado sem passar por PedidoConferiu. Não mexe em situacao.
+class PedidoMarcouConferido extends PedidoEvent {}
+
 class PedidoAssumiu extends PedidoEvent {
   final int funcionarioId;
 

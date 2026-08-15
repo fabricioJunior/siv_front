@@ -28,8 +28,8 @@ void _remoteDataSources() {
   );
 
   sl.registerFactory<ISaldoTotalCreditoDevolucaoRemoteDataSource>(
-    () =>
-        SaldoTotalCreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
+    () => SaldoTotalCreditoDevolucaoRemoteDataSource(
+        informacoesParaRequest: sl()),
   );
 
   sl.registerFactory<IPedidosRemoteDataSource>(
@@ -129,6 +129,7 @@ void _useCases() {
     () => AplicarDescontoPedido(repository: sl()),
   );
   sl.registerFactory<ConferirPedido>(() => ConferirPedido(repository: sl()));
+  sl.registerFactory<MarcarConferido>(() => MarcarConferido(repository: sl()));
   sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
   sl.registerFactory<CancelarPedido>(() => CancelarPedido(repository: sl()));
   sl.registerFactory<AdicionarPagamentoPedido>(
@@ -376,6 +377,7 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

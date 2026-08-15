@@ -10,7 +10,7 @@ class EcommerceConfiguracaoState extends Equatable {
   final int? empresaEstoqueId;
   final int? tabelaDePrecoId;
   final int? terminalId;
-  final int? formaDePagamentoId;
+  final List<int> formasDePagamentoIds;
   final String? erro;
   final EcommerceConfiguracaoStep step;
 
@@ -24,7 +24,7 @@ class EcommerceConfiguracaoState extends Equatable {
     this.empresaEstoqueId,
     this.tabelaDePrecoId,
     this.terminalId,
-    this.formaDePagamentoId,
+    this.formasDePagamentoIds = const [],
     this.erro,
     required this.step,
   });
@@ -41,7 +41,7 @@ class EcommerceConfiguracaoState extends Equatable {
         empresaEstoqueId = ecommerce.empresaEstoqueId,
         tabelaDePrecoId = ecommerce.tabelaDePrecoId,
         terminalId = ecommerce.terminalId,
-        formaDePagamentoId = ecommerce.formaDePagamentoId,
+        formasDePagamentoIds = ecommerce.formasDePagamentoIds,
         erro = null,
         step = step ?? EcommerceConfiguracaoStep.carregado;
 
@@ -55,7 +55,7 @@ class EcommerceConfiguracaoState extends Equatable {
     int? empresaEstoqueId,
     int? tabelaDePrecoId,
     int? terminalId,
-    int? formaDePagamentoId,
+    List<int>? formasDePagamentoIds,
     String? erro,
     EcommerceConfiguracaoStep? step,
   }) {
@@ -69,7 +69,7 @@ class EcommerceConfiguracaoState extends Equatable {
       empresaEstoqueId: empresaEstoqueId ?? this.empresaEstoqueId,
       tabelaDePrecoId: tabelaDePrecoId ?? this.tabelaDePrecoId,
       terminalId: terminalId ?? this.terminalId,
-      formaDePagamentoId: formaDePagamentoId ?? this.formaDePagamentoId,
+      formasDePagamentoIds: formasDePagamentoIds ?? this.formasDePagamentoIds,
       erro: erro,
       step: step ?? this.step,
     );
@@ -86,7 +86,7 @@ class EcommerceConfiguracaoState extends Equatable {
         empresaEstoqueId,
         tabelaDePrecoId,
         terminalId,
-        formaDePagamentoId,
+        formasDePagamentoIds,
         erro,
         step,
       ];

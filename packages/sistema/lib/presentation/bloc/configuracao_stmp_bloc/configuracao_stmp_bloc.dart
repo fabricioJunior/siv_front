@@ -65,6 +65,9 @@ class ConfiguracaoSTMPBloc
         senha: event.senha,
         assuntoRedefinicaoSenha: event.assuntoRedefinicaoSenha,
         corpoRedefinicaoSenha: event.corpoRedefinicaoSenha,
+        urlVerificacaoEmail: event.urlVerificacaoEmail,
+        assuntoVerificacaoEmail: event.assuntoVerificacaoEmail,
+        corpoVerificacaoEmail: event.corpoVerificacaoEmail,
       ),
     );
   }
@@ -88,6 +91,9 @@ class ConfiguracaoSTMPBloc
           senha: state.senha ?? '',
           assuntoRedefinicaoSenha: state.assuntoRedefinicaoSenha ?? '',
           corpoRedefinicaoSenha: state.corpoRedefinicaoSenha ?? '',
+          urlVerificacaoEmail: state.urlVerificacaoEmail ?? '',
+          assuntoVerificacaoEmail: state.assuntoVerificacaoEmail ?? '',
+          corpoVerificacaoEmail: state.corpoVerificacaoEmail ?? '',
         );
       } else {
         configuracaoSalva = await atualizarConfiguracao.call(
@@ -98,6 +104,9 @@ class ConfiguracaoSTMPBloc
           senha: state.senha,
           assuntoRedefinicaoSenha: state.assuntoRedefinicaoSenha,
           corpoRedefinicaoSenha: state.corpoRedefinicaoSenha,
+          urlVerificacaoEmail: state.urlVerificacaoEmail,
+          assuntoVerificacaoEmail: state.assuntoVerificacaoEmail,
+          corpoVerificacaoEmail: state.corpoVerificacaoEmail,
         );
       }
 

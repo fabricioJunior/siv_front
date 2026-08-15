@@ -20,7 +20,11 @@ class EcommerceDto implements Ecommerce {
   @override
   final int? terminalId;
   @override
-  final int? formaDePagamentoId;
+  final List<int> formasDePagamentoIds;
+  @override
+  final bool apagado;
+  @override
+  final DateTime? apagadoEm;
 
   const EcommerceDto({
     this.id,
@@ -32,7 +36,9 @@ class EcommerceDto implements Ecommerce {
     this.empresaEstoqueId,
     this.tabelaDePrecoId,
     this.terminalId,
-    this.formaDePagamentoId,
+    this.formasDePagamentoIds = const [],
+    this.apagado = false,
+    this.apagadoEm,
   });
 
   factory EcommerceDto.fromJson(Map<String, dynamic> json) {
@@ -46,7 +52,12 @@ class EcommerceDto implements Ecommerce {
       empresaEstoqueId: _toInt(json['empresaEstoqueId']),
       tabelaDePrecoId: _toInt(json['tabelaDePrecoId']),
       terminalId: _toInt(json['terminalId']),
-      formaDePagamentoId: _toInt(json['formaDePagamentoId']),
+      formasDePagamentoIds: ((json['formasDePagamentoIds'] as List<dynamic>?) ?? const [])
+          .map((id) => _toInt(id))
+          .whereType<int>()
+          .toList(),
+      apagado: json['apagado'] == true,
+      apagadoEm: DateTime.tryParse(json['apagadoEm']?.toString() ?? ''),
     );
   }
 
@@ -60,7 +71,7 @@ class EcommerceDto implements Ecommerce {
       if (empresaEstoqueId != null) 'empresaEstoqueId': empresaEstoqueId,
       if (tabelaDePrecoId != null) 'tabelaDePrecoId': tabelaDePrecoId,
       if (terminalId != null) 'terminalId': terminalId,
-      if (formaDePagamentoId != null) 'formaDePagamentoId': formaDePagamentoId,
+      if (formasDePagamentoIds.isNotEmpty) 'formasDePagamentoIds': formasDePagamentoIds,
     };
   }
 
@@ -75,7 +86,9 @@ class EcommerceDto implements Ecommerce {
         empresaEstoqueId,
         tabelaDePrecoId,
         terminalId,
-        formaDePagamentoId,
+        formasDePagamentoIds,
+        apagado,
+        apagadoEm,
       ];
 
   @override

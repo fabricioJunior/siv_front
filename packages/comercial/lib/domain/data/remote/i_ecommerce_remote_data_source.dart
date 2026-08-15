@@ -1,10 +1,12 @@
 import 'package:comercial/models.dart';
 
 abstract class IEcommerceRemoteDataSource {
-  Future<List<Ecommerce>> recuperarEcommerces();
+  Future<List<Ecommerce>> recuperarEcommerces({bool incluirApagados = false});
   Future<Ecommerce> recuperarEcommerce(int id);
   Future<Ecommerce> criarEcommerce(Ecommerce ecommerce);
   Future<Ecommerce> atualizarEcommerce(Ecommerce ecommerce);
+  Future<void> excluirEcommerce(int id);
+  Future<void> restaurarEcommerce(int id);
 
   Future<List<EcommerceReferencia>> recuperarReferencias(int ecommerceId);
   Future<EcommerceReferencia> adicionarReferencia(

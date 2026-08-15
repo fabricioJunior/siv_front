@@ -22,6 +22,7 @@ class PromocaoState extends Equatable {
   final int? limiteUsosPorCliente;
   final PeriodoLimiteCliente? periodoLimiteCliente;
   final bool somenteAniversariante;
+  final PromocaoCanal canal;
   final bool ativa;
   final bool restringirFormasPagamento;
   final List<PromocaoFormaPagamento> formasPagamento;
@@ -52,6 +53,7 @@ class PromocaoState extends Equatable {
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,
     this.somenteAniversariante = false,
+    this.canal = PromocaoCanal.ambos,
     this.ativa = true,
     this.restringirFormasPagamento = false,
     this.formasPagamento = const [],
@@ -86,6 +88,7 @@ class PromocaoState extends Equatable {
         limiteUsosPorCliente = origem.limiteUsosPorCliente,
         periodoLimiteCliente = origem.periodoLimiteCliente,
         somenteAniversariante = origem.somenteAniversariante,
+        canal = origem.canal,
         ativa = origem.ativa,
         restringirFormasPagamento = origem.restringirFormasPagamento,
         formasPagamento = origem.formasPagamento,
@@ -115,6 +118,7 @@ class PromocaoState extends Equatable {
     int? limiteUsosPorCliente,
     PeriodoLimiteCliente? periodoLimiteCliente,
     bool? somenteAniversariante,
+    PromocaoCanal? canal,
     bool? ativa,
     bool? restringirFormasPagamento,
     List<PromocaoFormaPagamento>? formasPagamento,
@@ -146,6 +150,7 @@ class PromocaoState extends Equatable {
       limiteUsosPorCliente: limiteUsosPorCliente ?? this.limiteUsosPorCliente,
       periodoLimiteCliente: periodoLimiteCliente ?? this.periodoLimiteCliente,
       somenteAniversariante: somenteAniversariante ?? this.somenteAniversariante,
+      canal: canal ?? this.canal,
       ativa: ativa ?? this.ativa,
       restringirFormasPagamento:
           restringirFormasPagamento ?? this.restringirFormasPagamento,
@@ -181,6 +186,7 @@ class PromocaoState extends Equatable {
         limiteUsosPorCliente,
         periodoLimiteCliente,
         somenteAniversariante,
+        canal,
         ativa,
         restringirFormasPagamento,
         formasPagamento,

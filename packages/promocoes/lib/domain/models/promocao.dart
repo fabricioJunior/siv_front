@@ -29,6 +29,35 @@ enum PeriodoLimiteCliente {
   }
 }
 
+enum PromocaoCanal {
+  loja,
+  ecommerce,
+  ambos;
+
+  static PromocaoCanal fromString(String? value) {
+    switch (value) {
+      case 'loja':
+        return PromocaoCanal.loja;
+      case 'ecommerce':
+        return PromocaoCanal.ecommerce;
+      case 'ambos':
+      default:
+        return PromocaoCanal.ambos;
+    }
+  }
+
+  String get value {
+    switch (this) {
+      case PromocaoCanal.loja:
+        return 'loja';
+      case PromocaoCanal.ecommerce:
+        return 'ecommerce';
+      case PromocaoCanal.ambos:
+        return 'ambos';
+    }
+  }
+}
+
 abstract class Promocao implements Equatable {
   int? get id;
   int? get empresaId;
@@ -53,6 +82,7 @@ abstract class Promocao implements Equatable {
   int? get limiteUsosPorCliente;
   PeriodoLimiteCliente? get periodoLimiteCliente;
   bool get somenteAniversariante;
+  PromocaoCanal get canal;
   bool get ativa;
   bool get restringirFormasPagamento;
   List<PromocaoFormaPagamento> get formasPagamento;
@@ -83,6 +113,7 @@ abstract class Promocao implements Equatable {
     int? limiteUsosPorCliente,
     PeriodoLimiteCliente? periodoLimiteCliente,
     bool somenteAniversariante,
+    PromocaoCanal canal,
     bool ativa,
     bool restringirFormasPagamento,
     List<PromocaoFormaPagamento> formasPagamento,
@@ -115,6 +146,7 @@ abstract class Promocao implements Equatable {
         limiteUsosPorCliente,
         periodoLimiteCliente,
         somenteAniversariante,
+        canal,
         ativa,
         restringirFormasPagamento,
         formasPagamento,
@@ -174,6 +206,8 @@ class _PromocaoImpl implements Promocao {
   @override
   final bool somenteAniversariante;
   @override
+  final PromocaoCanal canal;
+  @override
   final bool ativa;
   @override
   final bool restringirFormasPagamento;
@@ -208,6 +242,7 @@ class _PromocaoImpl implements Promocao {
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,
     this.somenteAniversariante = false,
+    this.canal = PromocaoCanal.ambos,
     this.ativa = true,
     this.restringirFormasPagamento = false,
     this.formasPagamento = const [],
@@ -240,6 +275,7 @@ class _PromocaoImpl implements Promocao {
         limiteUsosPorCliente,
         periodoLimiteCliente,
         somenteAniversariante,
+        canal,
         ativa,
         restringirFormasPagamento,
         formasPagamento,

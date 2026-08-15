@@ -10,7 +10,9 @@ abstract class Ecommerce implements Equatable {
   int? get empresaEstoqueId;
   int? get tabelaDePrecoId;
   int? get terminalId;
-  int? get formaDePagamentoId;
+  List<int> get formasDePagamentoIds;
+  bool get apagado;
+  DateTime? get apagadoEm;
 
   factory Ecommerce.create({
     int? id,
@@ -22,7 +24,9 @@ abstract class Ecommerce implements Equatable {
     int? empresaEstoqueId,
     int? tabelaDePrecoId,
     int? terminalId,
-    int? formaDePagamentoId,
+    List<int> formasDePagamentoIds,
+    bool apagado,
+    DateTime? apagadoEm,
   }) = _EcommerceImpl;
 
   @override
@@ -39,7 +43,9 @@ abstract class Ecommerce implements Equatable {
         empresaEstoqueId,
         tabelaDePrecoId,
         terminalId,
-        formaDePagamentoId,
+        formasDePagamentoIds,
+        apagado,
+        apagadoEm,
       ];
 }
 
@@ -63,7 +69,11 @@ class _EcommerceImpl implements Ecommerce {
   @override
   final int? terminalId;
   @override
-  final int? formaDePagamentoId;
+  final List<int> formasDePagamentoIds;
+  @override
+  final bool apagado;
+  @override
+  final DateTime? apagadoEm;
 
   const _EcommerceImpl({
     this.id,
@@ -75,7 +85,9 @@ class _EcommerceImpl implements Ecommerce {
     this.empresaEstoqueId,
     this.tabelaDePrecoId,
     this.terminalId,
-    this.formaDePagamentoId,
+    this.formasDePagamentoIds = const [],
+    this.apagado = false,
+    this.apagadoEm,
   });
 
   @override
@@ -92,6 +104,8 @@ class _EcommerceImpl implements Ecommerce {
         empresaEstoqueId,
         tabelaDePrecoId,
         terminalId,
-        formaDePagamentoId,
+        formasDePagamentoIds,
+        apagado,
+        apagadoEm,
       ];
 }

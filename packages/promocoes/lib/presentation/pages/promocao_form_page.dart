@@ -304,6 +304,34 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                             somenteAniversariante: value,
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Canal',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        SegmentedButton<PromocaoCanal>(
+                          segments: const [
+                            ButtonSegment(
+                              value: PromocaoCanal.loja,
+                              label: Text('Loja física'),
+                            ),
+                            ButtonSegment(
+                              value: PromocaoCanal.ecommerce,
+                              label: Text('E-commerce'),
+                            ),
+                            ButtonSegment(
+                              value: PromocaoCanal.ambos,
+                              label: Text('Ambos'),
+                            ),
+                          ],
+                          selected: {state.canal},
+                          onSelectionChanged: (selecionados) =>
+                              _onCampoAlterado(
+                            context,
+                            canal: selecionados.first,
+                          ),
+                        ),
                         SwitchListTile.adaptive(
                           contentPadding: EdgeInsets.zero,
                           title: const Text('Ativa'),
@@ -379,6 +407,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     int? limiteUsosPorCliente,
     PeriodoLimiteCliente? periodoLimiteCliente,
     bool? somenteAniversariante,
+    PromocaoCanal? canal,
     bool? ativa,
     bool? restringirFormasPagamento,
     List<PromocaoFormaPagamento>? formasPagamento,
@@ -404,6 +433,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             limiteUsosPorCliente: limiteUsosPorCliente,
             periodoLimiteCliente: periodoLimiteCliente,
             somenteAniversariante: somenteAniversariante,
+            canal: canal,
             ativa: ativa,
             restringirFormasPagamento: restringirFormasPagamento,
             formasPagamento: formasPagamento,

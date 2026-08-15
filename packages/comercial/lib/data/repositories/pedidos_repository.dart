@@ -126,6 +126,11 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<void> embalarPedido(int id) {
+    return remoteDataSource.embalarPedido(id);
+  }
+
+  @override
   Future<(Pedido, List<Pedido>)> confirmarRetirada(int id, String codigo) {
     return remoteDataSource.confirmarRetirada(id, codigo);
   }
@@ -151,6 +156,11 @@ class PedidosRepository implements IPedidosRepository {
   @override
   Future<List<PedidoEvento>> listarEventos(int id) {
     return remoteDataSource.listarEventos(id);
+  }
+
+  @override
+  Future<void> reenviarEmail(int id) {
+    return remoteDataSource.reenviarEmail(id);
   }
 
   @override

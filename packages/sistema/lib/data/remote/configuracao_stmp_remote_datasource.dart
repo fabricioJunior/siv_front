@@ -42,6 +42,8 @@ class ConfiguracaoSTMPRemoteDataSource extends RemoteDataSourceBase
     var path = {'extraPath': 'verificar-conexao'};
     var response = await get(pathParameters: path);
 
-    return response.statusCode == 200;
+    // Backend sempre responde 200 (erro de auth SMTP vira `false` no corpo, não um HTTP de erro) --
+    // checar só o statusCode reportava "sucesso" mesmo com falha real de autenticação.
+    return response.statusCode == 200 && response.body == true;
   }
 }

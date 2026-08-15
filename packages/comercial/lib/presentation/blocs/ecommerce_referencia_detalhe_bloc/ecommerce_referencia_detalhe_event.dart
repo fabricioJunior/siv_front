@@ -50,3 +50,13 @@ class EcommercePublicacaoAlterou extends EcommerceReferenciaDetalheEvent {
   @override
   List<Object?> get props => [rascunho];
 }
+
+class EcommercePublicarDisponiveisSolicitou
+    extends EcommerceReferenciaDetalheEvent {
+  const EcommercePublicarDisponiveisSolicitou();
+}
+
+class EcommerceRemoverSemEstoqueSolicitou
+    extends EcommerceReferenciaDetalheEvent {
+  const EcommerceRemoverSemEstoqueSolicitou();
+}

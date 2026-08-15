@@ -23,6 +23,12 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
   @override
   final RedefinirSenhaTemplateDto redefinirSenhaTemplate;
 
+  @override
+  final String? urlVerificacaoEmail;
+
+  @override
+  final VerificacaoEmailTemplateDto? verificacaoEmailTemplate;
+
   ConfiguracaoSTMPDto({
     required this.id,
     required this.servidor,
@@ -30,6 +36,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
     required this.usuario,
     required this.senha,
     required this.redefinirSenhaTemplate,
+    this.urlVerificacaoEmail,
+    this.verificacaoEmailTemplate,
   });
 
   factory ConfiguracaoSTMPDto.fromJson(Map<String, dynamic> json) =>
@@ -44,6 +52,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
     String? usuario,
     String? senha,
     RedefinirSenhaTemplateDto? redefinirSenhaTemplate,
+    String? urlVerificacaoEmail,
+    VerificacaoEmailTemplateDto? verificacaoEmailTemplate,
   }) {
     return ConfiguracaoSTMPDto(
       id: id ?? this.id,
@@ -53,6 +63,9 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
       senha: senha ?? this.senha,
       redefinirSenhaTemplate:
           redefinirSenhaTemplate ?? this.redefinirSenhaTemplate,
+      urlVerificacaoEmail: urlVerificacaoEmail ?? this.urlVerificacaoEmail,
+      verificacaoEmailTemplate:
+          verificacaoEmailTemplate ?? this.verificacaoEmailTemplate,
     );
   }
 
@@ -64,6 +77,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
         usuario,
         senha,
         redefinirSenhaTemplate,
+        urlVerificacaoEmail,
+        verificacaoEmailTemplate,
       ];
 
   @override
@@ -105,6 +120,41 @@ class RedefinirSenhaTemplateDto implements RedefinirSenhaTemplate {
   bool? get stringify => true;
 }
 
+@JsonSerializable()
+class VerificacaoEmailTemplateDto implements VerificacaoEmailTemplate {
+  @override
+  final String assunto;
+
+  @override
+  final String corpo;
+
+  VerificacaoEmailTemplateDto({
+    required this.assunto,
+    required this.corpo,
+  });
+
+  factory VerificacaoEmailTemplateDto.fromJson(Map<String, dynamic> json) =>
+      _$VerificacaoEmailTemplateDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$VerificacaoEmailTemplateDtoToJson(this);
+
+  VerificacaoEmailTemplateDto copyWith({
+    String? assunto,
+    String? corpo,
+  }) {
+    return VerificacaoEmailTemplateDto(
+      assunto: assunto ?? this.assunto,
+      corpo: corpo ?? this.corpo,
+    );
+  }
+
+  @override
+  List<Object?> get props => [assunto, corpo];
+
+  @override
+  bool? get stringify => true;
+}
+
 extension ConfiguracaoSTMPToDto on ConfiguracaoSTMP {
   ConfiguracaoSTMPDto toDto() {
     return ConfiguracaoSTMPDto(
@@ -117,6 +167,13 @@ extension ConfiguracaoSTMPToDto on ConfiguracaoSTMP {
         assunto: redefinirSenhaTemplate.assunto,
         corpo: redefinirSenhaTemplate.corpo,
       ),
+      urlVerificacaoEmail: urlVerificacaoEmail,
+      verificacaoEmailTemplate: verificacaoEmailTemplate == null
+          ? null
+          : VerificacaoEmailTemplateDto(
+              assunto: verificacaoEmailTemplate!.assunto,
+              corpo: verificacaoEmailTemplate!.corpo,
+            ),
     );
   }
 }

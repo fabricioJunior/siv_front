@@ -38,6 +38,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final ConferirItemPedido _conferirItemPedido;
   final ConferirItemPedidoPorCodigo _conferirItemPedidoPorCodigo;
   final AssumirPedido _assumirPedido;
+  final ReenviarEmailPedido _reenviarEmailPedido;
+  final EmbalarPedido _embalarPedido;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarFormasDePagamento _recuperarFormasDePagamento;
   final RecuperarEnderecosDaPessoa _recuperarEnderecosDaPessoa;
@@ -67,6 +69,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._conferirItemPedido,
     this._conferirItemPedidoPorCodigo,
     this._assumirPedido,
+    this._reenviarEmailPedido,
+    this._embalarPedido,
     this._acessoGlobalSessao,
     this._recuperarFormasDePagamento,
     this._recuperarEnderecosDaPessoa,
@@ -98,6 +102,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoItemConferiu>(_onItemConferiu);
     on<PedidoItemConferiuPorCodigo>(_onItemConferiuPorCodigo);
     on<PedidoAssumiu>(_onAssumiu);
+    on<PedidoEmailReenviou>(_onEmailReenviou);
+    on<PedidoEmbalou>(_onEmbalou);
   }
 
   FutureOr<void> _onIniciou(
@@ -798,6 +804,42 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao assumir pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onEmailReenviou(
+    PedidoEmailReenviou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _reenviarEmailPedido.call(state.id!);
+      emit(state.copyWith(step: PedidoStep.emailReenviado));
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao reenviar e-mail do pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onEmbalou(
+    PedidoEmbalou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _embalarPedido.call(state.id!);
+      await _recarregarComDependencias(emit, PedidoStep.embalado);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao marcar pedido como embalado.')));
       addError(e, s);
     }
   }

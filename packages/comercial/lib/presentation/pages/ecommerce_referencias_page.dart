@@ -48,9 +48,27 @@ class EcommerceReferenciasPage extends StatelessWidget {
               itemBuilder: (context, index) {
                 final referencia = state.referencias[index];
                 return ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: referencia.imagemUrl != null
+                          ? Image.network(
+                              referencia.imagemUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _placeholderImagem(context),
+                            )
+                          : _placeholderImagem(context),
+                    ),
+                  ),
                   title: Text(
                     referencia.referenciaNome ??
                         'Referência #${referencia.referenciaId}',
+                  ),
+                  subtitle: Text(
+                    '${referencia.valor != null ? _formatarMoeda(referencia.valor!) : 'Sem preço'} • Estoque: ${referencia.saldo ?? 0}',
                   ),
                   trailing: Chip(
                     label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
@@ -125,5 +143,20 @@ class EcommerceReferenciasPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _placeholderImagem(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  String _formatarMoeda(double valor) {
+    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }

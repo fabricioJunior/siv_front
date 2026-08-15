@@ -182,6 +182,12 @@ void _useCases() {
   sl.registerFactory<AssumirPedido>(
     () => AssumirPedido(repository: sl()),
   );
+  sl.registerFactory<ReenviarEmailPedido>(
+    () => ReenviarEmailPedido(repository: sl()),
+  );
+  sl.registerFactory<EmbalarPedido>(
+    () => EmbalarPedido(repository: sl()),
+  );
 
   sl.registerFactory<CarregarResumoPagamentosRealizados>(
     () => CarregarResumoPagamentosRealizados(recuperarLista: sl()),
@@ -337,6 +343,12 @@ void _useCases() {
   sl.registerFactory<SalvarEcommerce>(
     () => SalvarEcommerce(repository: sl()),
   );
+  sl.registerFactory<ExcluirEcommerce>(
+    () => ExcluirEcommerce(repository: sl()),
+  );
+  sl.registerFactory<RestaurarEcommerce>(
+    () => RestaurarEcommerce(repository: sl()),
+  );
   sl.registerFactory<RecuperarReferenciasEcommerce>(
     () => RecuperarReferenciasEcommerce(repository: sl()),
   );
@@ -364,6 +376,8 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),
@@ -538,6 +552,10 @@ void _presentation() {
 
   sl.registerFactory<ConsignacaoDetalheBloc>(
     () => ConsignacaoDetalheBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<EcommercesBloc>(
+    () => EcommercesBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommerceConfiguracaoBloc>(

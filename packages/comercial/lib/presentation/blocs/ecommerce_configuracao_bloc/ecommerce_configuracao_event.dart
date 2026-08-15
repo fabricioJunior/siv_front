@@ -28,7 +28,7 @@ class EcommerceConfiguracaoEditou extends EcommerceConfiguracaoEvent {
   final int? empresaEstoqueId;
   final int? tabelaDePrecoId;
   final int? terminalId;
-  final int? formaDePagamentoId;
+  final List<int>? formasDePagamentoIds;
 
   const EcommerceConfiguracaoEditou({
     this.titulo,
@@ -38,7 +38,7 @@ class EcommerceConfiguracaoEditou extends EcommerceConfiguracaoEvent {
     this.empresaEstoqueId,
     this.tabelaDePrecoId,
     this.terminalId,
-    this.formaDePagamentoId,
+    this.formasDePagamentoIds,
   });
 
   @override
@@ -50,7 +50,7 @@ class EcommerceConfiguracaoEditou extends EcommerceConfiguracaoEvent {
         empresaEstoqueId,
         tabelaDePrecoId,
         terminalId,
-        formaDePagamentoId,
+        formasDePagamentoIds,
       ];
 }
 

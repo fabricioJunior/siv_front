@@ -27,6 +27,7 @@ export 'presentation/pages/consignacao_bipagem_page.dart';
 export 'presentation/pages/consignacao_detalhe_page.dart';
 export 'presentation/pages/consignacao_acerto_page.dart';
 export 'presentation/pages/consignacao_extrato_page.dart';
+export 'presentation/pages/ecommerces_page.dart';
 export 'presentation/pages/ecommerce_configuracao_page.dart';
 export 'presentation/pages/ecommerce_referencias_page.dart';
 export 'presentation/pages/ecommerce_referencia_detalhe_page.dart';

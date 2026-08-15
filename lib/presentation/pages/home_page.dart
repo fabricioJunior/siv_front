@@ -142,10 +142,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const _AccessFlowItem(
                   icon: Icons.storefront_outlined,
-                  title: 'Configuração do e-commerce',
+                  title: 'E-commerces',
                   subtitle: 'Dados do site, estoque, tabela e pagamento.',
                   color: Colors.teal,
-                  route: '/configuracao_ecommerce',
+                  route: '/ecommerces',
                   componentesNecessarios: ['ECOFM001'],
                 ),
               ];

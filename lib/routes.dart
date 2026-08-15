@@ -388,6 +388,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const ConfiguracaoEntregaPage(),
     );
   },
+  '/ecommerces': (context) {
+    return _rotaProtegida(
+      route: '/ecommerces',
+      child: const EcommercesPage(),
+    );
+  },
   '/configuracao_ecommerce': (context) {
     final routeArgs = args(context);
     final empresaIdArg = routeArgs['empresaId'];
@@ -1177,6 +1183,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/documento_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],
   '/configuracao_entrega': ['ENTFM001'],
+  '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
   '/chamar_entregador': ['ENTFM001'],

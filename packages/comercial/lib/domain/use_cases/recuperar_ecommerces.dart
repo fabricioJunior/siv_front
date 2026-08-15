@@ -7,5 +7,6 @@ class RecuperarEcommerces {
   RecuperarEcommerces({required IEcommerceRepository repository})
       : _repository = repository;
 
-  Future<List<Ecommerce>> call() => _repository.recuperarEcommerces();
+  Future<List<Ecommerce>> call({bool incluirApagados = false}) =>
+      _repository.recuperarEcommerces(incluirApagados: incluirApagados);
 }

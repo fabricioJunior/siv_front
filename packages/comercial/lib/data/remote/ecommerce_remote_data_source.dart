@@ -13,8 +13,13 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
   String get path => '/v1/e-commerce/{id}';
 
   @override
-  Future<List<Ecommerce>> recuperarEcommerces() async {
-    final response = await get(pathParameters: const {'id': ''});
+  Future<List<Ecommerce>> recuperarEcommerces({
+    bool incluirApagados = false,
+  }) async {
+    final response = await get(
+      pathParameters: const {'id': ''},
+      queryParameters: {'incluirApagados': incluirApagados.toString()},
+    );
     return (response.body as List<dynamic>)
         .map((json) => EcommerceDto.fromJson(json as Map<String, dynamic>))
         .toList();
@@ -39,7 +44,7 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
         empresaEstoqueId: ecommerce.empresaEstoqueId,
         tabelaDePrecoId: ecommerce.tabelaDePrecoId,
         terminalId: ecommerce.terminalId,
-        formaDePagamentoId: ecommerce.formaDePagamentoId,
+        formasDePagamentoIds: ecommerce.formasDePagamentoIds,
       ).toJson(),
     );
     return EcommerceDto.fromJson(response.body as Map<String, dynamic>);
@@ -59,10 +64,23 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
         empresaEstoqueId: ecommerce.empresaEstoqueId,
         tabelaDePrecoId: ecommerce.tabelaDePrecoId,
         terminalId: ecommerce.terminalId,
-        formaDePagamentoId: ecommerce.formaDePagamentoId,
+        formasDePagamentoIds: ecommerce.formasDePagamentoIds,
       ).toJson(),
     );
     return EcommerceDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> excluirEcommerce(int id) async {
+    await delete(pathParameters: {'id': id.toString()});
+  }
+
+  @override
+  Future<void> restaurarEcommerce(int id) async {
+    await put(
+      pathParameters: {'id': '$id/restaurar'},
+      body: const <String, dynamic>{},
+    );
   }
 
   @override

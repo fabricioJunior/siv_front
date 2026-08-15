@@ -195,6 +195,71 @@ class ConfiguracaoSTMPPage extends StatelessWidget {
                                     ),
                               ),
                             ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'E-mail de verificação de cadastro',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('URL de verificação'),
+                            TextFormField(
+                              initialValue: state.urlVerificacaoEmail,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe a URL de verificação';
+                                }
+                                final uri = Uri.tryParse(value);
+                                if (uri == null || !uri.hasScheme) {
+                                  return 'Informe uma URL válida';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        urlVerificacaoEmail: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('Assunto do e-mail de verificação'),
+                            TextFormField(
+                              initialValue: state.assuntoVerificacaoEmail,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o assunto do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        assuntoVerificacaoEmail: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('Corpo do e-mail de verificação'),
+                            TextFormField(
+                              initialValue: state.corpoVerificacaoEmail,
+                              minLines: 4,
+                              maxLines: 8,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o corpo do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        corpoVerificacaoEmail: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             BlocBuilder<ConfiguracaoSTMPBloc,
                                 ConfiguracaoSTMPState>(

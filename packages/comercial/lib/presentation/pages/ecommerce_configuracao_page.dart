@@ -1,12 +1,14 @@
 import 'package:comercial/presentation/blocs/ecommerce_configuracao_bloc/ecommerce_configuracao_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:empresas/presentation/widgets/empresa_seletor.dart';
 import 'package:empresas/presentation/widgets/terminal_seletor.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/presentation/widgets/formas_de_pagamento_seletor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:precos/presentation/widgets/tabelas_de_preco_seletor.dart';
 
 // Página de configuração do e-commerce (não é modal -- tem mais campos que o padrão XModal do
@@ -102,6 +104,10 @@ class _EcommerceConfiguracaoPageState
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    if (state.id != null) ...[
+                      _CardIntegracao(ecommerceId: state.id!),
+                      const SizedBox(height: 16),
+                    ],
                     const Text('Título'),
                     TextFormField(
                       controller: _tituloController,
@@ -137,7 +143,8 @@ class _EcommerceConfiguracaoPageState
                     const SizedBox(height: 16),
                     EmpresaSeletor(
                       titulo: 'Empresa de estoque',
-                      itemsSelecionadosInicial: const [],
+                      itemsSelecionadosInicial:
+                          _idInicial(state.empresaEstoqueId),
                       onEmpresaChanged: (selecionadas) => _emitirEdicao(
                         context,
                         state,
@@ -147,7 +154,8 @@ class _EcommerceConfiguracaoPageState
                     ),
                     const SizedBox(height: 16),
                     TabelasDePrecoSeletor(
-                      itemsSelecionadosInicial: const [],
+                      itemsSelecionadosInicial:
+                          _idInicial(state.tabelaDePrecoId),
                       onTabelaDePrecoChanged: (selecionadas) => _emitirEdicao(
                         context,
                         state,
@@ -159,7 +167,7 @@ class _EcommerceConfiguracaoPageState
                     TerminalSeletor(
                       empresaId: _empresaId,
                       tipoFiltro: 'ecommerce',
-                      itemsSelecionadosInicial: const [],
+                      itemsSelecionadosInicial: _idInicial(state.terminalId),
                       onTerminalChanged: (selecionadas) => _emitirEdicao(
                         context,
                         state,
@@ -169,13 +177,18 @@ class _EcommerceConfiguracaoPageState
                     ),
                     const SizedBox(height: 16),
                     FormasDePagamentoSeletor(
+                      modo: FormasDePagamentoSeletorModo.multipla,
                       tipoOperacaoFiltro: TipoOperacaoFormaPagamento.online,
-                      itemsSelecionadosInicial: const [],
+                      itemsSelecionadosInicial: state.formasDePagamentoIds
+                          .map((id) => SelectData(id: id, nome: '', data: const {}))
+                          .toList(),
                       onFormaDePagamentoChanged: (selecionadas) => _emitirEdicao(
                         context,
                         state,
-                        formaDePagamentoId:
-                            selecionadas.isEmpty ? null : selecionadas.first.id,
+                        formasDePagamentoIds: selecionadas
+                            .map((forma) => forma.id)
+                            .whereType<int>()
+                            .toList(),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -200,6 +213,15 @@ class _EcommerceConfiguracaoPageState
                         icon: const Icon(Icons.shopping_bag_outlined),
                         label: const Text('Produtos no site'),
                       ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/promocoes'),
+                        icon: const Icon(Icons.local_offer_outlined),
+                        label: const Text(
+                          'Promoções (marque "Exclusiva do e-commerce" para ofertas só do site)',
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -211,13 +233,18 @@ class _EcommerceConfiguracaoPageState
     );
   }
 
+  // Seletores só usam o id de itemsSelecionadosInicial pra marcar seleção na lista que eles
+  // próprios carregam -- não precisa buscar o objeto completo aqui.
+  List<SelectData> _idInicial(int? id) =>
+      id == null ? const [] : [SelectData(id: id, nome: '', data: const {})];
+
   void _emitirEdicao(
     BuildContext context,
     EcommerceConfiguracaoState state, {
     int? empresaEstoqueId,
     int? tabelaDePrecoId,
     int? terminalId,
-    int? formaDePagamentoId,
+    List<int>? formasDePagamentoIds,
   }) {
     context.read<EcommerceConfiguracaoBloc>().add(
           EcommerceConfiguracaoEditou(
@@ -228,8 +255,96 @@ class _EcommerceConfiguracaoPageState
             empresaEstoqueId: empresaEstoqueId ?? state.empresaEstoqueId,
             tabelaDePrecoId: tabelaDePrecoId ?? state.tabelaDePrecoId,
             terminalId: terminalId ?? state.terminalId,
-            formaDePagamentoId: formaDePagamentoId ?? state.formaDePagamentoId,
+            formasDePagamentoIds:
+                formasDePagamentoIds ?? state.formasDePagamentoIds,
           ),
         );
+  }
+}
+
+// Card com os dados que quem integra o site externo precisa: o id real do e-commerce (não
+// confundir com empresaId) e o endpoint público do catálogo já montado com esse id.
+class _CardIntegracao extends StatelessWidget {
+  final int ecommerceId;
+
+  const _CardIntegracao({required this.ecommerceId});
+
+  String get _endpoint =>
+      '/v1/e-commerce/$ecommerceId/catalogos/referencias?page=1&limit=24';
+
+  void _copiar(BuildContext context, String texto, String rotulo) {
+    Clipboard.setData(ClipboardData(text: texto));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$rotulo copiado.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.integration_instructions_outlined, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Dados para integração',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _linha(
+              context,
+              label: 'ID do e-commerce (use este, não o da empresa)',
+              valor: '$ecommerceId',
+            ),
+            const SizedBox(height: 4),
+            _linha(
+              context,
+              label: 'Endpoint do catálogo público',
+              valor: _endpoint,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _linha(
+    BuildContext context, {
+    required String label,
+    required String valor,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: Theme.of(context).textTheme.labelSmall),
+              SelectableText(
+                valor,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontFamily: 'monospace'),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.copy, size: 18),
+          tooltip: 'Copiar',
+          onPressed: () => _copiar(context, valor, label),
+        ),
+      ],
+    );
   }
 }

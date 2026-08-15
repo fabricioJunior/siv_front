@@ -8,8 +8,10 @@ class EcommerceRepository implements IEcommerceRepository {
   EcommerceRepository({required this.remoteDataSource});
 
   @override
-  Future<List<Ecommerce>> recuperarEcommerces() {
-    return remoteDataSource.recuperarEcommerces();
+  Future<List<Ecommerce>> recuperarEcommerces({bool incluirApagados = false}) {
+    return remoteDataSource.recuperarEcommerces(
+      incluirApagados: incluirApagados,
+    );
   }
 
   @override
@@ -25,6 +27,16 @@ class EcommerceRepository implements IEcommerceRepository {
   @override
   Future<Ecommerce> atualizarEcommerce(Ecommerce ecommerce) {
     return remoteDataSource.atualizarEcommerce(ecommerce);
+  }
+
+  @override
+  Future<void> excluirEcommerce(int id) {
+    return remoteDataSource.excluirEcommerce(id);
+  }
+
+  @override
+  Future<void> restaurarEcommerce(int id) {
+    return remoteDataSource.restaurarEcommerce(id);
   }
 
   @override

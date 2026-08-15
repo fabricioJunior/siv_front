@@ -29,6 +29,8 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
     on<EcommerceReferenciaDetalheIniciou>(_onIniciou);
     on<EcommerceProdutoDisponibilidadeAlterou>(_onDisponibilidadeAlterou);
     on<EcommercePublicacaoAlterou>(_onPublicacaoAlterou);
+    on<EcommercePublicarDisponiveisSolicitou>(_onPublicarDisponiveis);
+    on<EcommerceRemoverSemEstoqueSolicitou>(_onRemoverSemEstoque);
   }
 
   FutureOr<void> _onIniciou(
@@ -91,6 +93,7 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
                     disponivel: event.disponivel,
                     corNome: produto.corNome,
                     tamanhoNome: produto.tamanhoNome,
+                    saldo: produto.saldo,
                   )
                 : produto,
           )
@@ -139,6 +142,89 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
         state.copyWith(
           step: EcommerceReferenciaDetalheStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao publicar referência.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onPublicarDisponiveis(
+    EcommercePublicarDisponiveisSolicitou event,
+    Emitter<EcommerceReferenciaDetalheState> emit,
+  ) {
+    return _atualizarEmLote(
+      emit,
+      disponivel: true,
+      selecionar: (produto) => !produto.disponivel && produto.saldo > 0,
+      mensagemErro: 'Falha ao publicar produtos disponíveis.',
+    );
+  }
+
+  FutureOr<void> _onRemoverSemEstoque(
+    EcommerceRemoverSemEstoqueSolicitou event,
+    Emitter<EcommerceReferenciaDetalheState> emit,
+  ) {
+    return _atualizarEmLote(
+      emit,
+      disponivel: false,
+      selecionar: (produto) => produto.disponivel && produto.saldo <= 0,
+      mensagemErro: 'Falha ao remover produtos sem estoque.',
+    );
+  }
+
+  FutureOr<void> _atualizarEmLote(
+    Emitter<EcommerceReferenciaDetalheState> emit, {
+    required bool disponivel,
+    required bool Function(EcommerceReferenciaProduto) selecionar,
+    required String mensagemErro,
+  }) async {
+    if (state.ecommerceId == null || state.referenciaEcommerceId == null) {
+      return;
+    }
+
+    final alvos = state.produtos.where(selecionar).toSet();
+    if (alvos.isEmpty) return;
+
+    emit(state.copyWith(processandoLote: true, erro: ''));
+    try {
+      // Sequencial, não Future.wait: disparar um PUT por produto em paralelo tromba no rate
+      // limiter da API (50 req/s por IP) quando a referência tem muitos produtos sem estoque.
+      for (final produto in alvos) {
+        await _atualizarDisponibilidadeProdutoEcommerce.call(
+          state.ecommerceId!,
+          state.referenciaEcommerceId!,
+          produto.produtoId,
+          disponivel: disponivel,
+        );
+      }
+      final produtos = state.produtos
+          .map(
+            (produto) => alvos.contains(produto)
+                ? EcommerceReferenciaProduto.create(
+                    id: produto.id,
+                    ecommerceReferenciaId: produto.ecommerceReferenciaId,
+                    produtoId: produto.produtoId,
+                    disponivel: disponivel,
+                    corNome: produto.corNome,
+                    tamanhoNome: produto.tamanhoNome,
+                    saldo: produto.saldo,
+                  )
+                : produto,
+          )
+          .toList();
+      emit(
+        state.copyWith(
+          produtos: produtos,
+          step: EcommerceReferenciaDetalheStep.atualizado,
+          processandoLote: false,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          step: EcommerceReferenciaDetalheStep.falha,
+          erro: mensagemDeErroApi(e, mensagemErro),
+          processandoLote: false,
         ),
       );
       addError(e, s);

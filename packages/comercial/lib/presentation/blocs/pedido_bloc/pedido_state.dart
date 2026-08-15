@@ -308,6 +308,8 @@ enum PedidoStep {
   itemAdicionado,
   itemRemovido,
   itemConferido,
+  emailReenviado,
+  embalado,
   validacaoInvalida,
   falha,
 }

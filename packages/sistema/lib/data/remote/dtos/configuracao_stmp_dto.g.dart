@@ -15,6 +15,11 @@ ConfiguracaoSTMPDto _$ConfiguracaoSTMPDtoFromJson(Map<String, dynamic> json) =>
       senha: json['senha'] as String,
       redefinirSenhaTemplate: RedefinirSenhaTemplateDto.fromJson(
           json['redefinirSenhaTemplate'] as Map<String, dynamic>),
+      urlVerificacaoEmail: json['urlVerificacaoEmail'] as String?,
+      verificacaoEmailTemplate: json['verificacaoEmailTemplate'] == null
+          ? null
+          : VerificacaoEmailTemplateDto.fromJson(
+              json['verificacaoEmailTemplate'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConfiguracaoSTMPDtoToJson(
@@ -26,6 +31,8 @@ Map<String, dynamic> _$ConfiguracaoSTMPDtoToJson(
       'usuario': instance.usuario,
       'senha': instance.senha,
       'redefinirSenhaTemplate': instance.redefinirSenhaTemplate,
+      'urlVerificacaoEmail': instance.urlVerificacaoEmail,
+      'verificacaoEmailTemplate': instance.verificacaoEmailTemplate,
     };
 
 RedefinirSenhaTemplateDto _$RedefinirSenhaTemplateDtoFromJson(
@@ -37,6 +44,20 @@ RedefinirSenhaTemplateDto _$RedefinirSenhaTemplateDtoFromJson(
 
 Map<String, dynamic> _$RedefinirSenhaTemplateDtoToJson(
         RedefinirSenhaTemplateDto instance) =>
+    <String, dynamic>{
+      'assunto': instance.assunto,
+      'corpo': instance.corpo,
+    };
+
+VerificacaoEmailTemplateDto _$VerificacaoEmailTemplateDtoFromJson(
+        Map<String, dynamic> json) =>
+    VerificacaoEmailTemplateDto(
+      assunto: json['assunto'] as String,
+      corpo: json['corpo'] as String,
+    );
+
+Map<String, dynamic> _$VerificacaoEmailTemplateDtoToJson(
+        VerificacaoEmailTemplateDto instance) =>
     <String, dynamic>{
       'assunto': instance.assunto,
       'corpo': instance.corpo,

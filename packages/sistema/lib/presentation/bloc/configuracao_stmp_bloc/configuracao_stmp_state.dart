@@ -8,6 +8,9 @@ class ConfiguracaoSTMPState extends Equatable {
   final String? senha;
   final String? assuntoRedefinicaoSenha;
   final String? corpoRedefinicaoSenha;
+  final String? urlVerificacaoEmail;
+  final String? assuntoVerificacaoEmail;
+  final String? corpoVerificacaoEmail;
   final ConfiguracaoSTMP? configuracao;
   final ConfiguracaoSTMPStep step;
 
@@ -19,6 +22,9 @@ class ConfiguracaoSTMPState extends Equatable {
     this.senha,
     this.assuntoRedefinicaoSenha,
     this.corpoRedefinicaoSenha,
+    this.urlVerificacaoEmail,
+    this.assuntoVerificacaoEmail,
+    this.corpoVerificacaoEmail,
     this.configuracao,
     required this.step,
   });
@@ -33,6 +39,10 @@ class ConfiguracaoSTMPState extends Equatable {
         senha = configuracao.senha,
         assuntoRedefinicaoSenha = configuracao.redefinirSenhaTemplate.assunto,
         corpoRedefinicaoSenha = configuracao.redefinirSenhaTemplate.corpo,
+        urlVerificacaoEmail = configuracao.urlVerificacaoEmail,
+        assuntoVerificacaoEmail =
+            configuracao.verificacaoEmailTemplate?.assunto,
+        corpoVerificacaoEmail = configuracao.verificacaoEmailTemplate?.corpo,
         step = step ?? ConfiguracaoSTMPStep.carregado;
 
   ConfiguracaoSTMPState copyWith({
@@ -43,6 +53,9 @@ class ConfiguracaoSTMPState extends Equatable {
     String? senha,
     String? assuntoRedefinicaoSenha,
     String? corpoRedefinicaoSenha,
+    String? urlVerificacaoEmail,
+    String? assuntoVerificacaoEmail,
+    String? corpoVerificacaoEmail,
     ConfiguracaoSTMP? configuracao,
     ConfiguracaoSTMPStep? step,
   }) {
@@ -56,6 +69,11 @@ class ConfiguracaoSTMPState extends Equatable {
           assuntoRedefinicaoSenha ?? this.assuntoRedefinicaoSenha,
       corpoRedefinicaoSenha:
           corpoRedefinicaoSenha ?? this.corpoRedefinicaoSenha,
+      urlVerificacaoEmail: urlVerificacaoEmail ?? this.urlVerificacaoEmail,
+      assuntoVerificacaoEmail:
+          assuntoVerificacaoEmail ?? this.assuntoVerificacaoEmail,
+      corpoVerificacaoEmail:
+          corpoVerificacaoEmail ?? this.corpoVerificacaoEmail,
       configuracao: configuracao ?? this.configuracao,
       step: step ?? this.step,
     );
@@ -70,6 +88,9 @@ class ConfiguracaoSTMPState extends Equatable {
         senha,
         assuntoRedefinicaoSenha,
         corpoRedefinicaoSenha,
+        urlVerificacaoEmail,
+        assuntoVerificacaoEmail,
+        corpoVerificacaoEmail,
         configuracao,
         step,
       ];

@@ -201,6 +201,10 @@ class PedidoItemConferiu extends PedidoEvent {
   });
 }
 
+class PedidoEmailReenviou extends PedidoEvent {}
+
+class PedidoEmbalou extends PedidoEvent {}
+
 class PedidoItemConferiuPorCodigo extends PedidoEvent {
   final String codigoBarras;
   final double quantidade;

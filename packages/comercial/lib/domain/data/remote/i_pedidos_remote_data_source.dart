@@ -31,6 +31,7 @@ abstract class IPedidosRemoteDataSource {
   });
   Future<void> chamarEntregador(int id);
   Future<void> confirmarEntrega(int id);
+  Future<void> embalarPedido(int id);
   Future<(Pedido, List<Pedido>)> confirmarRetirada(int id, String codigo);
   Future<List<Pedido>> confirmarRetiradaLote(List<int> pedidoIds);
   Future<Pedido> criarTaxaEntrega(
@@ -39,4 +40,5 @@ abstract class IPedidosRemoteDataSource {
     required int enderecoEntregaId,
   });
   Future<List<PedidoEvento>> listarEventos(int id);
+  Future<void> reenviarEmail(int id);
 }

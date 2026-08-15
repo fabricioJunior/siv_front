@@ -13,6 +13,8 @@ class EcommerceReferenciaProdutoDto implements EcommerceReferenciaProduto {
   final String? corNome;
   @override
   final String? tamanhoNome;
+  @override
+  final num saldo;
 
   const EcommerceReferenciaProdutoDto({
     this.id,
@@ -21,6 +23,7 @@ class EcommerceReferenciaProdutoDto implements EcommerceReferenciaProduto {
     this.disponivel = true,
     this.corNome,
     this.tamanhoNome,
+    this.saldo = 0,
   });
 
   factory EcommerceReferenciaProdutoDto.fromJson(Map<String, dynamic> json) {
@@ -31,6 +34,7 @@ class EcommerceReferenciaProdutoDto implements EcommerceReferenciaProduto {
       disponivel: json['disponivel'] as bool? ?? true,
       corNome: json['corNome']?.toString(),
       tamanhoNome: json['tamanhoNome']?.toString(),
+      saldo: num.tryParse(json['saldo']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -42,6 +46,7 @@ class EcommerceReferenciaProdutoDto implements EcommerceReferenciaProduto {
         disponivel,
         corNome,
         tamanhoNome,
+        saldo,
       ];
 
   @override

@@ -14,8 +14,10 @@ class EcommerceConfiguracaoBloc
   final RecuperarEcommerce _recuperarEcommerce;
   final SalvarEcommerce _salvarEcommerce;
 
-  EcommerceConfiguracaoBloc(this._recuperarEcommerce, this._salvarEcommerce)
-      : super(
+  EcommerceConfiguracaoBloc(
+    this._recuperarEcommerce,
+    this._salvarEcommerce,
+  ) : super(
           const EcommerceConfiguracaoState(
             step: EcommerceConfiguracaoStep.inicial,
           ),
@@ -37,8 +39,9 @@ class EcommerceConfiguracaoBloc
         ),
       );
 
-      if (event.ecommerceId != null) {
-        final ecommerce = await _recuperarEcommerce.call(event.ecommerceId!);
+      final ecommerceId = event.ecommerceId;
+      if (ecommerceId != null) {
+        final ecommerce = await _recuperarEcommerce.call(ecommerceId);
         emit(EcommerceConfiguracaoState.fromModel(ecommerce));
         return;
       }
@@ -69,7 +72,7 @@ class EcommerceConfiguracaoBloc
         empresaEstoqueId: event.empresaEstoqueId,
         tabelaDePrecoId: event.tabelaDePrecoId,
         terminalId: event.terminalId,
-        formaDePagamentoId: event.formaDePagamentoId,
+        formasDePagamentoIds: event.formasDePagamentoIds,
       ),
     );
   }
@@ -103,7 +106,7 @@ class EcommerceConfiguracaoBloc
         empresaEstoqueId: state.empresaEstoqueId,
         tabelaDePrecoId: state.tabelaDePrecoId,
         terminalId: state.terminalId,
-        formaDePagamentoId: state.formaDePagamentoId,
+        formasDePagamentoIds: state.formasDePagamentoIds,
       );
       final salvo = await _salvarEcommerce.call(ecommerce);
       emit(

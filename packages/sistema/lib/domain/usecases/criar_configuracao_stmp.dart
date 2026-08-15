@@ -16,6 +16,9 @@ class CriarConfiguracaoSTMP {
     required String senha,
     required String assuntoRedefinicaoSenha,
     required String corpoRedefinicaoSenha,
+    required String urlVerificacaoEmail,
+    required String assuntoVerificacaoEmail,
+    required String corpoVerificacaoEmail,
   }) {
     final configuracao = ConfiguracaoSTMP.create(
       id: id,
@@ -26,6 +29,11 @@ class CriarConfiguracaoSTMP {
       redefinirSenhaTemplate: RedefinirSenhaTemplate.create(
         assunto: assuntoRedefinicaoSenha,
         corpo: corpoRedefinicaoSenha,
+      ),
+      urlVerificacaoEmail: urlVerificacaoEmail,
+      verificacaoEmailTemplate: VerificacaoEmailTemplate.create(
+        assunto: assuntoVerificacaoEmail,
+        corpo: corpoVerificacaoEmail,
       ),
     );
 

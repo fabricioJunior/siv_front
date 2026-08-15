@@ -16,6 +16,9 @@ class AtualizarConfiguracaoSTMP {
     String? senha,
     String? assuntoRedefinicaoSenha,
     String? corpoRedefinicaoSenha,
+    String? urlVerificacaoEmail,
+    String? assuntoVerificacaoEmail,
+    String? corpoVerificacaoEmail,
   }) {
     final configuracaoAtualizada = configuracao.copyWith(
       servidor: servidor,
@@ -26,6 +29,16 @@ class AtualizarConfiguracaoSTMP {
         assunto: assuntoRedefinicaoSenha,
         corpo: corpoRedefinicaoSenha,
       ),
+      urlVerificacaoEmail: urlVerificacaoEmail,
+      verificacaoEmailTemplate: configuracao.verificacaoEmailTemplate
+              ?.copyWith(
+            assunto: assuntoVerificacaoEmail,
+            corpo: corpoVerificacaoEmail,
+          ) ??
+          VerificacaoEmailTemplate.create(
+            assunto: assuntoVerificacaoEmail ?? '',
+            corpo: corpoVerificacaoEmail ?? '',
+          ),
     );
 
     return _repository.atualizarConfiguracao(configuracaoAtualizada);

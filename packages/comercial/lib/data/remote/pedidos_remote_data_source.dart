@@ -171,6 +171,14 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<void> embalarPedido(int id) async {
+    await put(
+      pathParameters: {'id': '$id/embalar'},
+      body: {},
+    );
+  }
+
+  @override
   Future<(Pedido, List<Pedido>)> confirmarRetirada(
     int id,
     String codigo,
@@ -221,5 +229,13 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
     return (response.body as List<dynamic>)
         .map((json) => PedidoEventoDto.fromJson(json as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<void> reenviarEmail(int id) async {
+    await put(
+      pathParameters: {'id': '$id/reenviar-email'},
+      body: {},
+    );
   }
 }

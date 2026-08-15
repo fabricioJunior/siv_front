@@ -7,6 +7,7 @@ abstract class EcommerceReferenciaProduto implements Equatable {
   bool get disponivel;
   String? get corNome;
   String? get tamanhoNome;
+  num get saldo;
 
   factory EcommerceReferenciaProduto.create({
     int? id,
@@ -15,6 +16,7 @@ abstract class EcommerceReferenciaProduto implements Equatable {
     required bool disponivel,
     String? corNome,
     String? tamanhoNome,
+    required num saldo,
   }) = _EcommerceReferenciaProdutoImpl;
 
   @override
@@ -28,6 +30,7 @@ abstract class EcommerceReferenciaProduto implements Equatable {
         disponivel,
         corNome,
         tamanhoNome,
+        saldo,
       ];
 }
 
@@ -44,6 +47,8 @@ class _EcommerceReferenciaProdutoImpl implements EcommerceReferenciaProduto {
   final String? corNome;
   @override
   final String? tamanhoNome;
+  @override
+  final num saldo;
 
   const _EcommerceReferenciaProdutoImpl({
     this.id,
@@ -52,6 +57,7 @@ class _EcommerceReferenciaProdutoImpl implements EcommerceReferenciaProduto {
     this.disponivel = true,
     this.corNome,
     this.tamanhoNome,
+    this.saldo = 0,
   });
 
   @override
@@ -65,5 +71,6 @@ class _EcommerceReferenciaProdutoImpl implements EcommerceReferenciaProduto {
         disponivel,
         corNome,
         tamanhoNome,
+        saldo,
       ];
 }

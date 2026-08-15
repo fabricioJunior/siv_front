@@ -8,6 +8,7 @@ class EcommerceReferenciaDetalheState extends Equatable {
   final List<EcommerceReferenciaProduto> produtos;
   final String? erro;
   final EcommerceReferenciaDetalheStep step;
+  final bool processandoLote;
 
   const EcommerceReferenciaDetalheState({
     this.ecommerceId,
@@ -17,6 +18,7 @@ class EcommerceReferenciaDetalheState extends Equatable {
     this.produtos = const [],
     this.erro,
     required this.step,
+    this.processandoLote = false,
   });
 
   EcommerceReferenciaDetalheState copyWith({
@@ -27,6 +29,7 @@ class EcommerceReferenciaDetalheState extends Equatable {
     List<EcommerceReferenciaProduto>? produtos,
     String? erro,
     EcommerceReferenciaDetalheStep? step,
+    bool? processandoLote,
   }) {
     return EcommerceReferenciaDetalheState(
       ecommerceId: ecommerceId ?? this.ecommerceId,
@@ -36,6 +39,7 @@ class EcommerceReferenciaDetalheState extends Equatable {
       produtos: produtos ?? this.produtos,
       erro: erro?.isEmpty == true ? null : (erro ?? this.erro),
       step: step ?? this.step,
+      processandoLote: processandoLote ?? this.processandoLote,
     );
   }
 
@@ -48,6 +52,7 @@ class EcommerceReferenciaDetalheState extends Equatable {
         produtos,
         erro,
         step,
+        processandoLote,
       ];
 }
 

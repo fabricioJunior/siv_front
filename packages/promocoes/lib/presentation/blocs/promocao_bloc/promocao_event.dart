@@ -29,6 +29,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final int? limiteUsosPorCliente;
   final PeriodoLimiteCliente? periodoLimiteCliente;
   final bool? somenteAniversariante;
+  final PromocaoCanal? canal;
   final bool? ativa;
   final bool? restringirFormasPagamento;
   final List<PromocaoFormaPagamento>? formasPagamento;
@@ -58,6 +59,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,
     this.somenteAniversariante,
+    this.canal,
     this.ativa,
     this.restringirFormasPagamento,
     this.formasPagamento,

@@ -50,6 +50,8 @@ class PromocaoDto implements Promocao {
   @override
   final bool somenteAniversariante;
   @override
+  final PromocaoCanal canal;
+  @override
   final bool ativa;
   @override
   final bool restringirFormasPagamento;
@@ -84,6 +86,7 @@ class PromocaoDto implements Promocao {
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,
     this.somenteAniversariante = false,
+    this.canal = PromocaoCanal.ambos,
     this.ativa = true,
     this.restringirFormasPagamento = false,
     this.formasPagamento = const [],
@@ -122,6 +125,7 @@ class PromocaoDto implements Promocao {
       periodoLimiteCliente:
           PeriodoLimiteCliente.fromString(json['periodoLimiteCliente'] as String?),
       somenteAniversariante: json['somenteAniversariante'] as bool? ?? false,
+      canal: PromocaoCanal.fromString(json['canal'] as String?),
       ativa: json['ativa'] as bool? ?? true,
       restringirFormasPagamento:
           json['restringirFormasPagamento'] as bool? ?? false,
@@ -160,6 +164,7 @@ class PromocaoDto implements Promocao {
       limiteUsosPorCliente: promocao.limiteUsosPorCliente,
       periodoLimiteCliente: promocao.periodoLimiteCliente,
       somenteAniversariante: promocao.somenteAniversariante,
+      canal: promocao.canal,
       ativa: promocao.ativa,
       restringirFormasPagamento: promocao.restringirFormasPagamento,
       formasPagamento: promocao.formasPagamento,
@@ -197,6 +202,7 @@ class PromocaoDto implements Promocao {
       if (periodoLimiteCliente != null)
         'periodoLimiteCliente': periodoLimiteCliente!.value,
       'somenteAniversariante': somenteAniversariante,
+      'canal': canal.value,
       'ativa': ativa,
       'restringirFormasPagamento': restringirFormasPagamento,
       'formasPagamento':
@@ -231,6 +237,7 @@ class PromocaoDto implements Promocao {
         limiteUsosPorCliente,
         periodoLimiteCliente,
         somenteAniversariante,
+        canal,
         ativa,
         restringirFormasPagamento,
         formasPagamento,

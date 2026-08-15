@@ -110,7 +110,12 @@ class FormasPagamentoFormWidget extends StatelessWidget {
 
   String _descricaoDaForma(int formaDePagamentoId) {
     for (final forma in formasDisponiveis) {
-      if (forma.id == formaDePagamentoId) return forma.descricao;
+      if (forma.id == formaDePagamentoId) {
+        final tipo = forma.tipoOperacao == TipoOperacaoFormaPagamento.online
+            ? 'online'
+            : 'manual';
+        return '${forma.descricao} ($tipo)';
+      }
     }
     return 'Forma #$formaDePagamentoId';
   }

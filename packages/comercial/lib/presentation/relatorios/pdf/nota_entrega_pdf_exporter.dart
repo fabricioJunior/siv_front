@@ -43,11 +43,15 @@ class NotaEntregaPdfExporter {
           .where((item) => (item.quantidade ?? 0) != 0)
           .map(
             (item) => NotaEntregaItem(
-              descricao: (item.referenciaNome?.trim().isNotEmpty ?? false)
-                  ? item.referenciaNome!.trim()
-                  : (item.referenciaDescricao?.trim().isNotEmpty ?? false)
-                      ? item.referenciaDescricao!.trim()
-                      : 'Produto #${item.produtoId ?? '-'}',
+              descricao: _comVariacao(
+                (item.referenciaNome?.trim().isNotEmpty ?? false)
+                    ? item.referenciaNome!.trim()
+                    : (item.referenciaDescricao?.trim().isNotEmpty ?? false)
+                        ? item.referenciaDescricao!.trim()
+                        : 'Produto #${item.produtoId ?? '-'}',
+                item.corNome,
+                item.tamanhoNome,
+              ),
               valor: item.valorTotalLiquido ?? item.valorTotalBruto,
             ),
           )
@@ -109,9 +113,13 @@ class NotaEntregaPdfExporter {
           .where((item) => (item.solicitado ?? 0) != 0)
           .map(
             (item) => NotaEntregaItem(
-              descricao: (item.referenciaNome?.trim().isNotEmpty ?? false)
-                  ? item.referenciaNome!.trim()
-                  : 'Produto #${item.produtoId ?? '-'}',
+              descricao: _comVariacao(
+                (item.referenciaNome?.trim().isNotEmpty ?? false)
+                    ? item.referenciaNome!.trim()
+                    : 'Produto #${item.produtoId ?? '-'}',
+                item.corNome,
+                item.tamanhoNome,
+              ),
               valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
                   (item.solicitado ?? 0),
             ),
@@ -161,9 +169,13 @@ class NotaEntregaPdfExporter {
           .where((item) => (item.solicitado ?? 0) != 0)
           .map(
             (item) => NotaEntregaItem(
-              descricao: (item.referenciaNome?.trim().isNotEmpty ?? false)
-                  ? item.referenciaNome!.trim()
-                  : 'Produto #${item.produtoId ?? '-'}',
+              descricao: _comVariacao(
+                (item.referenciaNome?.trim().isNotEmpty ?? false)
+                    ? item.referenciaNome!.trim()
+                    : 'Produto #${item.produtoId ?? '-'}',
+                item.corNome,
+                item.tamanhoNome,
+              ),
               valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
                   (item.solicitado ?? 0),
             ),
@@ -180,6 +192,16 @@ class NotaEntregaPdfExporter {
   /// Monta a URL de busca do Google Maps a partir do endereco ja formatado
   /// (multi-linha, com "CEP:" etc) -- a API de busca do Maps aceita texto
   /// livre, entao nao precisa dos campos crus do endereco separados.
+  /// Anexa cor/tamanho na descricao do item (ex: "CAMISA X - AZUL/M") -- sem isso a nota
+  /// nao distingue variacoes da mesma referencia, informacao essencial pra conferencia/entrega.
+  static String _comVariacao(String descricao, String? cor, String? tamanho) {
+    final variacao = [cor, tamanho]
+        .where((v) => v?.trim().isNotEmpty ?? false)
+        .map((v) => v!.trim())
+        .join('/');
+    return variacao.isEmpty ? descricao : '$descricao - $variacao';
+  }
+
   static String? _googleMapsUrl(String enderecoFormatado) {
     final query = enderecoFormatado.replaceAll('\n', ', ').trim();
     if (query.isEmpty) return null;

@@ -639,6 +639,33 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
+  Future<void> _imprimirNotaConferenciaDoPedido(
+    BuildContext context,
+    PedidoState state,
+  ) async {
+    final numeroPedido = state.id ?? widget.idPedido;
+    if (numeroPedido == null) return;
+
+    await imprimirDocumentoPdf(
+      context,
+      titulo: 'Imprimir nota de conferência',
+      nomeDocumento: 'Nota de Conferência - Pedido #$numeroPedido',
+      gerarBytes: () async {
+        final resultado =
+            await NotaEntregaPdfExporter.gerarBytesConferenciaParaPedido(
+          numeroPedido: numeroPedido,
+          pessoaNome: state.pedido?.pessoaNome,
+          dataPedido: state.pedido?.criadoEm,
+          empresaNome: state.pedido?.empresaNome ?? 'Empresa não identificada',
+          empresaCnpj: state.pedido?.empresaCnpj,
+          itens: state.itens,
+          pagamentos: state.pagamentos,
+        );
+        return resultado.bytes;
+      },
+    );
+  }
+
   Future<void> _abrirConverterEmEntrega(BuildContext context) async {
     final bloc = context.read<PedidoBloc>();
     final pessoaId = int.tryParse(_pessoaIdController.text);
@@ -2071,6 +2098,13 @@ class _PedidoPageState extends State<PedidoPage> {
                     icon: const Icon(Icons.local_shipping_outlined),
                     label: const Text('Imprimir nota de entrega'),
                   ),
+                OutlinedButton.icon(
+                  onPressed: carregando
+                      ? null
+                      : () => _imprimirNotaConferenciaDoPedido(context, state),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: const Text('Imprimir nota de conferência'),
+                ),
                 if (state.pedido?.romaneioId != null)
                   OutlinedButton.icon(
                     onPressed: carregando

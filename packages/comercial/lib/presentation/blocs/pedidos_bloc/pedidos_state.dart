@@ -4,6 +4,7 @@ class PedidosState extends Equatable {
   final List<Pedido> pedidos;
   final List<Pedido> filtrados;
   final String busca;
+  final String? situacaoFiltro;
   final String? erro;
   final PedidosStep step;
 
@@ -12,6 +13,7 @@ class PedidosState extends Equatable {
     required this.filtrados,
     required this.busca,
     required this.step,
+    this.situacaoFiltro,
     this.erro,
   });
 
@@ -19,6 +21,7 @@ class PedidosState extends Equatable {
       : pedidos = const [],
         filtrados = const [],
         busca = '',
+        situacaoFiltro = null,
         erro = null,
         step = PedidosStep.inicial;
 
@@ -26,6 +29,8 @@ class PedidosState extends Equatable {
     List<Pedido>? pedidos,
     List<Pedido>? filtrados,
     String? busca,
+    String? situacaoFiltro,
+    bool limparSituacaoFiltro = false,
     String? erro,
     PedidosStep? step,
   }) {
@@ -33,13 +38,16 @@ class PedidosState extends Equatable {
       pedidos: pedidos ?? this.pedidos,
       filtrados: filtrados ?? this.filtrados,
       busca: busca ?? this.busca,
+      situacaoFiltro:
+          limparSituacaoFiltro ? null : (situacaoFiltro ?? this.situacaoFiltro),
       erro: erro,
       step: step ?? this.step,
     );
   }
 
   @override
-  List<Object?> get props => [pedidos, filtrados, busca, erro, step];
+  List<Object?> get props =>
+      [pedidos, filtrados, busca, situacaoFiltro, erro, step];
 }
 
 enum PedidosStep {

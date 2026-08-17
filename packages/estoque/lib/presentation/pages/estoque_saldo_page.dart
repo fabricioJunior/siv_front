@@ -10,6 +10,7 @@ import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque_por_referencia.dart';
 import 'package:estoque/presentation.dart';
+import 'package:estoque/presentation/relatorios/csv/estoque_relatorio_csv_exporter.dart';
 import 'package:estoque/presentation/relatorios/pdf/estoque_relatorio_pdf_exporter.dart';
 import 'package:flutter/material.dart';
 
@@ -51,6 +52,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   DateTime? _atualizadoEmFim;
   SelectData? _tabelaDePrecoSelecionada;
   bool _gerandoRelatorio = false;
+  bool _exportandoCsv = false;
   bool _visualizarPorReferencia = false;
   List<OrdenacaoEstoqueItem> _ordenacoes = const [];
 
@@ -155,6 +157,34 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
     }
   }
 
+  Future<void> _exportarCsv() async {
+    if (_exportandoCsv) return;
+    setState(() => _exportandoCsv = true);
+    try {
+      final String? caminho;
+      if (_visualizarPorReferencia) {
+        final itens = await _bloc.carregarTodosOsItensAgrupadosParaRelatorio();
+        caminho = await EstoqueRelatorioCsvExporter.exportarPorReferencia(itens);
+      } else {
+        final itens = await _bloc.carregarTodosOsItensParaRelatorio();
+        caminho = await EstoqueRelatorioCsvExporter.exportarPorProduto(itens);
+      }
+      if (!mounted) return;
+      if (caminho != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Relatório salvo em $caminho')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao exportar: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _exportandoCsv = false);
+    }
+  }
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
@@ -204,6 +234,17 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
             appBar: AppBar(
               title: const Text('Saldo de Estoque'),
               actions: [
+                IconButton(
+                  tooltip: 'Exportar para Excel',
+                  onPressed: _exportandoCsv ? null : _exportarCsv,
+                  icon: _exportandoCsv
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.file_download_outlined),
+                ),
                 IconButton(
                   tooltip: 'Gerar relatório de valor do estoque',
                   onPressed:

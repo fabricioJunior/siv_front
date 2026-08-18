@@ -62,8 +62,36 @@ class _ImportarPromocoesCsvPageState extends State<ImportarPromocoesCsvPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '1. Baixe o modelo com todas as referências, preencha o percentual '
-                        'de desconto somente nas que quer promocionar e faça upload de volta.',
+                        '1. Escolha o tipo de desconto',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      SegmentedButton<TipoDesconto>(
+                        segments: const [
+                          ButtonSegment(
+                            value: TipoDesconto.percentual,
+                            label: Text('Percentual'),
+                            icon: Icon(Icons.percent, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: TipoDesconto.precoFixo,
+                            label: Text('Preço fixo'),
+                            icon: Icon(Icons.sell_outlined, size: 16),
+                          ),
+                        ],
+                        selected: {state.tipoDesconto},
+                        onSelectionChanged: (selecao) => context
+                            .read<ImportarPromocoesCsvBloc>()
+                            .add(ImportarPromocoesCampoAlterado(
+                                tipoDesconto: selecao.first)),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        state.tipoDesconto == TipoDesconto.precoFixo
+                            ? '2. Baixe o modelo com todas as referências, preencha o preço fixo '
+                                '(R\$) somente nas que quer promocionar e faça upload de volta.'
+                            : '2. Baixe o modelo com todas as referências, preencha o percentual '
+                                'de desconto somente nas que quer promocionar e faça upload de volta.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 12),
@@ -76,7 +104,7 @@ class _ImportarPromocoesCsvPageState extends State<ImportarPromocoesCsvPage> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        '2. Preencha os dados da promoção',
+                        '3. Preencha os dados da promoção',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
@@ -139,7 +167,7 @@ class _ImportarPromocoesCsvPageState extends State<ImportarPromocoesCsvPage> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        '3. Selecione o CSV preenchido',
+                        '4. Selecione o CSV preenchido',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
@@ -193,6 +221,12 @@ class _ResultadoView extends StatelessWidget {
   final ImportarPromocoesCsvState state;
 
   const _ResultadoView({required this.state});
+
+  static String _formatarValor(TipoDesconto tipo, double valor) {
+    return tipo == TipoDesconto.precoFixo
+        ? 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}'
+        : '$valor%';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +285,8 @@ class _ResultadoView extends StatelessWidget {
                   leading: const Icon(Icons.local_offer_outlined),
                   title: Text(promocao.nome),
                   subtitle: Text(
-                    '${promocao.valorPercentual}% · ${promocao.quantidadeReferencias} referência(s)',
+                    '${_formatarValor(promocao.tipoDesconto, promocao.valor)} · '
+                    '${promocao.quantidadeReferencias} referência(s)',
                   ),
                 ),
               ),
@@ -267,7 +302,7 @@ class _ResultadoView extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.error_outline, color: Colors.red),
                 title: Text(
-                  'Linha ${rejeicao.numeroLinha} · ${rejeicao.referenciaIdExterno}',
+                  'Linha ${rejeicao.numeroLinha} · referência #${rejeicao.referenciaId}',
                 ),
                 subtitle: Text(rejeicao.motivo),
               ),

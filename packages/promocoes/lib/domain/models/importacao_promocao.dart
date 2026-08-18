@@ -1,4 +1,5 @@
 import 'package:core/equals.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 
 // Espelha ImportacaoSituacao do backend (apps/api/.../importacao/enum).
 enum ImportacaoSituacao {
@@ -21,41 +22,46 @@ enum ImportacaoSituacao {
       this == ImportacaoSituacao.cancelada;
 }
 
-// Espelha item de `resultado.rejeitados` do backend.
+// Espelha item de `resultado.rejeitados` do backend. referenciaId e o ID
+// interno (nao idExterno -- ver ImportacaoPromocaoService no backend, mudou
+// de idExterno pra id interno pra nao depender de campo que pode faltar).
 class ImportacaoPromocaoRejeicao extends Equatable {
   final int numeroLinha;
-  final String referenciaIdExterno;
+  final int referenciaId;
   final String motivo;
 
   const ImportacaoPromocaoRejeicao({
     required this.numeroLinha,
-    required this.referenciaIdExterno,
+    required this.referenciaId,
     required this.motivo,
   });
 
   factory ImportacaoPromocaoRejeicao.fromJson(Map<String, dynamic> json) {
     return ImportacaoPromocaoRejeicao(
       numeroLinha: (json['numeroLinha'] as num).toInt(),
-      referenciaIdExterno: json['referenciaIdExterno'] as String? ?? '',
+      referenciaId: (json['referenciaId'] as num?)?.toInt() ?? 0,
       motivo: json['motivo'] as String? ?? '',
     );
   }
 
   @override
-  List<Object?> get props => [numeroLinha, referenciaIdExterno, motivo];
+  List<Object?> get props => [numeroLinha, referenciaId, motivo];
 }
 
-// Espelha item de `resultado.promocoesCriadas` do backend.
+// Espelha item de `resultado.promocoesCriadas` do backend. "valor" e
+// generico -- percentual (%) ou preco fixo (R$), conforme tipoDesconto.
 class ImportacaoPromocaoCriada extends Equatable {
   final int id;
   final String nome;
-  final double valorPercentual;
+  final TipoDesconto tipoDesconto;
+  final double valor;
   final int quantidadeReferencias;
 
   const ImportacaoPromocaoCriada({
     required this.id,
     required this.nome,
-    required this.valorPercentual,
+    required this.tipoDesconto,
+    required this.valor,
     required this.quantidadeReferencias,
   });
 
@@ -63,7 +69,8 @@ class ImportacaoPromocaoCriada extends Equatable {
     return ImportacaoPromocaoCriada(
       id: (json['id'] as num).toInt(),
       nome: json['nome'] as String? ?? '',
-      valorPercentual: (json['valorPercentual'] as num?)?.toDouble() ?? 0,
+      tipoDesconto: TipoDesconto.fromString(json['tipoDesconto'] as String?),
+      valor: (json['valor'] as num?)?.toDouble() ?? 0,
       quantidadeReferencias:
           (json['quantidadeReferencias'] as num?)?.toInt() ?? 0,
     );
@@ -71,7 +78,7 @@ class ImportacaoPromocaoCriada extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, nome, valorPercentual, quantidadeReferencias];
+      [id, nome, tipoDesconto, valor, quantidadeReferencias];
 }
 
 // Espelha o objeto `resultado` do backend -- só populado quando

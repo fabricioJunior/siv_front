@@ -5,6 +5,7 @@ import 'package:core/remote_data_sourcers.dart';
 import 'package:promocoes/domain/data/remote/i_importacao_promocoes_remote_data_source.dart';
 import 'package:promocoes/domain/models/importacao_promocao.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 
 class ImportacaoPromocoesRemoteDataSource extends RemoteDataSourceBase
     implements IImportacaoPromocoesRemoteDataSource {
@@ -22,8 +23,11 @@ class ImportacaoPromocoesRemoteDataSource extends RemoteDataSourceBase
       : '/v1/importacao/promocoes{path}';
 
   @override
-  Future<Uint8List> baixarTemplateCsv() {
-    return getBytes(pathParameters: {'path': '/template'});
+  Future<Uint8List> baixarTemplateCsv({required TipoDesconto tipoDesconto}) {
+    return getBytes(
+      pathParameters: {'path': '/template'},
+      queryParameters: {'tipo': tipoDesconto.value},
+    );
   }
 
   @override
@@ -32,6 +36,7 @@ class ImportacaoPromocoesRemoteDataSource extends RemoteDataSourceBase
     required String nome,
     required DateTime dataInicio,
     required DateTime dataFim,
+    required TipoDesconto tipoDesconto,
     PromocaoCanal? canal,
   }) async {
     final response = await postFile(
@@ -43,6 +48,7 @@ class ImportacaoPromocoesRemoteDataSource extends RemoteDataSourceBase
         'nome': nome,
         'dataInicio': _formatarData(dataInicio),
         'dataFim': _formatarData(dataFim),
+        'tipoDesconto': tipoDesconto.value,
         if (canal != null) 'canal': canal.value,
       },
     );

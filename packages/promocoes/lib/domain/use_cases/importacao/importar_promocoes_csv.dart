@@ -1,6 +1,7 @@
 import 'package:promocoes/domain/data/repositories/i_importacao_promocoes_repository.dart';
 import 'package:promocoes/domain/models/importacao_promocao.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 
 class ImportarPromocoesCsv {
   final IImportacaoPromocoesRepository _repository;
@@ -13,6 +14,7 @@ class ImportarPromocoesCsv {
     required String nome,
     required DateTime dataInicio,
     required DateTime dataFim,
+    required TipoDesconto tipoDesconto,
     PromocaoCanal? canal,
   }) {
     return _repository.importarCsv(
@@ -20,6 +22,7 @@ class ImportarPromocoesCsv {
       nome: nome,
       dataInicio: dataInicio,
       dataFim: dataFim,
+      tipoDesconto: tipoDesconto,
       canal: canal,
     );
   }

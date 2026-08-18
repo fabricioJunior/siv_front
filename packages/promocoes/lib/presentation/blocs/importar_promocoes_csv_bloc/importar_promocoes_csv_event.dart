@@ -7,6 +7,7 @@ class ImportarPromocoesCampoAlterado extends ImportarPromocoesCsvEvent {
   final DateTime? dataInicio;
   final DateTime? dataFim;
   final PromocaoCanal? canal;
+  final TipoDesconto? tipoDesconto;
   final String? arquivoPath;
   final String? arquivoNome;
 
@@ -15,6 +16,7 @@ class ImportarPromocoesCampoAlterado extends ImportarPromocoesCsvEvent {
     this.dataInicio,
     this.dataFim,
     this.canal,
+    this.tipoDesconto,
     this.arquivoPath,
     this.arquivoNome,
   });

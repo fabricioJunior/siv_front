@@ -17,6 +17,7 @@ class ImportarPromocoesCsvState extends Equatable {
   final DateTime? dataInicio;
   final DateTime? dataFim;
   final PromocaoCanal canal;
+  final TipoDesconto tipoDesconto;
   final String? arquivoPath;
   final String? arquivoNome;
   final ImportacaoPromocao? importacao;
@@ -28,6 +29,7 @@ class ImportarPromocoesCsvState extends Equatable {
     this.dataInicio,
     this.dataFim,
     this.canal = PromocaoCanal.ambos,
+    this.tipoDesconto = TipoDesconto.percentual,
     this.arquivoPath,
     this.arquivoNome,
     this.importacao,
@@ -46,8 +48,10 @@ class ImportarPromocoesCsvState extends Equatable {
     DateTime? dataInicio,
     DateTime? dataFim,
     PromocaoCanal? canal,
+    TipoDesconto? tipoDesconto,
     String? arquivoPath,
     String? arquivoNome,
+    bool limparArquivo = false,
     ImportacaoPromocao? importacao,
     String? erro,
     ImportarPromocoesCsvStep? step,
@@ -57,8 +61,9 @@ class ImportarPromocoesCsvState extends Equatable {
       dataInicio: dataInicio ?? this.dataInicio,
       dataFim: dataFim ?? this.dataFim,
       canal: canal ?? this.canal,
-      arquivoPath: arquivoPath ?? this.arquivoPath,
-      arquivoNome: arquivoNome ?? this.arquivoNome,
+      tipoDesconto: tipoDesconto ?? this.tipoDesconto,
+      arquivoPath: limparArquivo ? null : (arquivoPath ?? this.arquivoPath),
+      arquivoNome: limparArquivo ? null : (arquivoNome ?? this.arquivoNome),
       importacao: importacao ?? this.importacao,
       erro: erro,
       step: step ?? this.step,
@@ -71,6 +76,7 @@ class ImportarPromocoesCsvState extends Equatable {
         dataInicio,
         dataFim,
         canal,
+        tipoDesconto,
         arquivoPath,
         arquivoNome,
         importacao,

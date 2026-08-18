@@ -7,6 +7,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:promocoes/domain/models/importacao_promocao.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 import 'package:promocoes/use_cases.dart';
 
 part 'importar_promocoes_csv_event.dart';
@@ -39,14 +40,22 @@ class ImportarPromocoesCsvBloc
     ImportarPromocoesCampoAlterado event,
     Emitter<ImportarPromocoesCsvState> emit,
   ) {
+    // Trocar o tipo (percentual x preço fixo) muda o sentido da coluna de valor
+    // no CSV -- o arquivo já selecionado (se for) não serve mais pro tipo novo,
+    // limpa pra evitar upload com o número no sentido errado.
+    final trocouTipo =
+        event.tipoDesconto != null && event.tipoDesconto != state.tipoDesconto;
+
     emit(
       state.copyWith(
         nome: event.nome,
         dataInicio: event.dataInicio,
         dataFim: event.dataFim,
         canal: event.canal,
+        tipoDesconto: event.tipoDesconto,
         arquivoPath: event.arquivoPath,
         arquivoNome: event.arquivoNome,
+        limparArquivo: trocouTipo,
         step: ImportarPromocoesCsvStep.editando,
         erro: null,
       ),
@@ -77,10 +86,12 @@ class ImportarPromocoesCsvBloc
     Emitter<ImportarPromocoesCsvState> emit,
   ) async {
     try {
-      final bytes = await _baixarTemplateCsv.call();
+      final bytes = await _baixarTemplateCsv.call(tipoDesconto: state.tipoDesconto);
       await sl<ArquivoService>().salvarBytes(
         bytes: bytes,
-        nomeSugerido: 'modelo-promocoes.csv',
+        nomeSugerido: state.tipoDesconto == TipoDesconto.precoFixo
+            ? 'modelo-promocoes-preco-fixo.csv'
+            : 'modelo-promocoes-percentual.csv',
       );
     } catch (e, s) {
       emit(
@@ -132,6 +143,7 @@ class ImportarPromocoesCsvBloc
         nome: nome,
         dataInicio: dataInicio,
         dataFim: dataFim,
+        tipoDesconto: state.tipoDesconto,
         canal: state.canal,
       );
 

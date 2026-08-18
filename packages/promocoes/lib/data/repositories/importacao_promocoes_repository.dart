@@ -4,6 +4,7 @@ import 'package:promocoes/domain/data/remote/i_importacao_promocoes_remote_data_
 import 'package:promocoes/domain/data/repositories/i_importacao_promocoes_repository.dart';
 import 'package:promocoes/domain/models/importacao_promocao.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 
 class ImportacaoPromocoesRepository implements IImportacaoPromocoesRepository {
   final IImportacaoPromocoesRemoteDataSource remoteDataSource;
@@ -11,8 +12,8 @@ class ImportacaoPromocoesRepository implements IImportacaoPromocoesRepository {
   ImportacaoPromocoesRepository({required this.remoteDataSource});
 
   @override
-  Future<Uint8List> baixarTemplateCsv() {
-    return remoteDataSource.baixarTemplateCsv();
+  Future<Uint8List> baixarTemplateCsv({required TipoDesconto tipoDesconto}) {
+    return remoteDataSource.baixarTemplateCsv(tipoDesconto: tipoDesconto);
   }
 
   @override
@@ -21,6 +22,7 @@ class ImportacaoPromocoesRepository implements IImportacaoPromocoesRepository {
     required String nome,
     required DateTime dataInicio,
     required DateTime dataFim,
+    required TipoDesconto tipoDesconto,
     PromocaoCanal? canal,
   }) {
     return remoteDataSource.importarCsv(
@@ -28,6 +30,7 @@ class ImportacaoPromocoesRepository implements IImportacaoPromocoesRepository {
       nome: nome,
       dataInicio: dataInicio,
       dataFim: dataFim,
+      tipoDesconto: tipoDesconto,
       canal: canal,
     );
   }

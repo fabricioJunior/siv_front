@@ -14,7 +14,8 @@ class StubImportacaoPromocoesRepository
   StubImportacaoPromocoesRepository({this.onImportar});
 
   @override
-  Future<Uint8List> baixarTemplateCsv() async => Uint8List(0);
+  Future<Uint8List> baixarTemplateCsv({required TipoDesconto tipoDesconto}) async =>
+      Uint8List(0);
 
   @override
   Future<ImportacaoPromocao> consultarImportacao(int id) async {
@@ -27,6 +28,7 @@ class StubImportacaoPromocoesRepository
     required String nome,
     required DateTime dataInicio,
     required DateTime dataFim,
+    required TipoDesconto tipoDesconto,
     PromocaoCanal? canal,
   }) {
     return onImportar?.call() ??

@@ -2,15 +2,17 @@ import 'dart:typed_data';
 
 import 'package:promocoes/domain/models/importacao_promocao.dart';
 import 'package:promocoes/domain/models/promocao.dart';
+import 'package:promocoes/domain/models/regra_desconto.dart';
 
 abstract class IImportacaoPromocoesRepository {
-  Future<Uint8List> baixarTemplateCsv();
+  Future<Uint8List> baixarTemplateCsv({required TipoDesconto tipoDesconto});
 
   Future<ImportacaoPromocao> importarCsv({
     required String filePath,
     required String nome,
     required DateTime dataInicio,
     required DateTime dataFim,
+    required TipoDesconto tipoDesconto,
     PromocaoCanal? canal,
   });
 

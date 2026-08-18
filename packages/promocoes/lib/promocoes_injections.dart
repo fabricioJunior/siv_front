@@ -22,6 +22,10 @@ void _remoteDataSources() {
   sl.registerFactory<IElegibilidadeRemoteDataSource>(
     () => ElegibilidadeRemoteDataSource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IImportacaoPromocoesRemoteDataSource>(
+    () => ImportacaoPromocoesRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -35,6 +39,10 @@ void _repositories() {
 
   sl.registerFactory<IElegibilidadeRepository>(
     () => ElegibilidadeRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IImportacaoPromocoesRepository>(
+    () => ImportacaoPromocoesRepository(remoteDataSource: sl()),
   );
 }
 
@@ -74,6 +82,18 @@ void _useCases() {
   sl.registerFactory<ApurarElegibilidade>(
     () => ApurarElegibilidade(repository: sl()),
   );
+
+  sl.registerFactory<BaixarTemplatePromocoesCsv>(
+    () => BaixarTemplatePromocoesCsv(repository: sl()),
+  );
+
+  sl.registerFactory<ImportarPromocoesCsv>(
+    () => ImportarPromocoesCsv(repository: sl()),
+  );
+
+  sl.registerFactory<ConsultarImportacaoPromocao>(
+    () => ConsultarImportacaoPromocao(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -91,5 +111,9 @@ void _presentation() {
 
   sl.registerFactory<CupomBloc>(
     () => CupomBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ImportarPromocoesCsvBloc>(
+    () => ImportarPromocoesCsvBloc(sl(), sl(), sl()),
   );
 }

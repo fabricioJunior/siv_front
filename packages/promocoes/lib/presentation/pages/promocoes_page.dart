@@ -16,7 +16,18 @@ class PromocoesPage extends StatelessWidget {
     return BlocProvider<PromocoesBloc>(
       create: (context) => bloc..add(PromocoesIniciou()),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Promoções')),
+        appBar: AppBar(
+          title: const Text('Promoções'),
+          actions: [
+            IconButton(
+              tooltip: 'Importar promoções via CSV',
+              icon: const Icon(Icons.upload_file_outlined),
+              onPressed: () {
+                Navigator.of(context).pushNamed('/promocao/importar_csv');
+              },
+            ),
+          ],
+        ),
         floatingActionButton: BlocBuilder<PromocoesBloc, PromocoesState>(
           builder: (context, state) {
             final carregando = state is PromocoesCarregarEmProgresso;

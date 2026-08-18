@@ -763,6 +763,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/promocao/form': (context) {
     return PromocaoFormPage(idPromocao: args(context)['idPromocao']);
   },
+  '/promocao/importar_csv': (context) {
+    return _rotaProtegida(
+      route: '/promocao/importar_csv',
+      child: const ImportarPromocoesCsvPage(),
+    );
+  },
   '/cupons': (context) {
     return _rotaProtegida(route: '/cupons', child: CuponsPage());
   },
@@ -1233,6 +1239,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
   '/promocoes': ['PROMFC001'],
+  '/promocao/importar_csv': ['PROMFM001'],
   '/cupons': ['CUPFC001'],
 };
 

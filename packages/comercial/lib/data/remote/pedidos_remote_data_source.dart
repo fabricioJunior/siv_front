@@ -243,4 +243,18 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
       body: {},
     );
   }
+
+  @override
+  Future<void> reenviarEmailEmbalado(int id) async {
+    await put(
+      pathParameters: {'id': '$id/reenviar-email-embalado'},
+      body: {},
+    );
+  }
+
+  @override
+  Future<String> linkCompartilhamento(int id) async {
+    final response = await get(pathParameters: {'id': '$id/link-compartilhamento'});
+    return (response.body as Map<String, dynamic>)['url'] as String;
+  }
 }

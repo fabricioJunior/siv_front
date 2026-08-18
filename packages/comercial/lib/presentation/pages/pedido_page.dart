@@ -2,9 +2,11 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
+import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/remote_data_sourcers.dart' show mensagemDeErroApi;
 import 'package:core/seletores.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/pages.dart';
@@ -49,6 +51,7 @@ class _PedidoPageState extends State<PedidoPage> {
 
   String? _enderecoEntregaResumo;
   bool _criandoPagamento = false;
+  bool _reenviandoEmailEmbalado = false;
 
   @override
   void initState() {
@@ -134,6 +137,26 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (!mounted) return;
     context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
+  }
+
+  Future<void> _reenviarEmailEmbalado(BuildContext context, int idPedido) async {
+    setState(() => _reenviandoEmailEmbalado = true);
+    try {
+      await sl<ReenviarEmailEmbaladoPedido>().call(idPedido);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail reenviado com sucesso.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mensagemDeErroApi(e, 'Falha ao reenviar e-mail.')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _reenviandoEmailEmbalado = false);
+    }
   }
 
   Future<void> _assumirPedido(BuildContext context) async {
@@ -2037,6 +2060,9 @@ class _PedidoPageState extends State<PedidoPage> {
     final precisaConferenciaRetroativa = state.pedido?.conferidoEm == null &&
         state.pedido?.situacao != 'em_andamento' &&
         state.pedido?.situacao != 'cancelado';
+    final podeReenviarEmailEmbalado = origemEcommerce &&
+        state.modalidadeEntrega == 'retirada' &&
+        state.pedido?.conferidoEm != null;
 
     return Card(
       child: Padding(
@@ -2172,6 +2198,20 @@ class _PedidoPageState extends State<PedidoPage> {
                         : () => _confirmarRetiradaPedido(context),
                     icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Confirmar retirada'),
+                  ),
+                if (podeReenviarEmailEmbalado)
+                  OutlinedButton.icon(
+                    onPressed: carregando || _reenviandoEmailEmbalado
+                        ? null
+                        : () => _reenviarEmailEmbalado(context, state.id!),
+                    icon: _reenviandoEmailEmbalado
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.mail_outline),
+                    label: const Text('Reenviar e-mail (pronto pra retirada)'),
                   ),
                 OutlinedButton.icon(
                   onPressed: carregando ? null : () => _cancelarPedido(context),

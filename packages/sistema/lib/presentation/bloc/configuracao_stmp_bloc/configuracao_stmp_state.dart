@@ -11,6 +11,10 @@ class ConfiguracaoSTMPState extends Equatable {
   final String? urlVerificacaoEmail;
   final String? assuntoVerificacaoEmail;
   final String? corpoVerificacaoEmail;
+  final String? assuntoPedidoConfirmado;
+  final String? corpoPedidoConfirmado;
+  final String? assuntoPedidoEmbalado;
+  final String? corpoPedidoEmbalado;
   final ConfiguracaoSTMP? configuracao;
   final ConfiguracaoSTMPStep step;
 
@@ -25,6 +29,10 @@ class ConfiguracaoSTMPState extends Equatable {
     this.urlVerificacaoEmail,
     this.assuntoVerificacaoEmail,
     this.corpoVerificacaoEmail,
+    this.assuntoPedidoConfirmado,
+    this.corpoPedidoConfirmado,
+    this.assuntoPedidoEmbalado,
+    this.corpoPedidoEmbalado,
     this.configuracao,
     required this.step,
   });
@@ -43,6 +51,11 @@ class ConfiguracaoSTMPState extends Equatable {
         assuntoVerificacaoEmail =
             configuracao.verificacaoEmailTemplate?.assunto,
         corpoVerificacaoEmail = configuracao.verificacaoEmailTemplate?.corpo,
+        assuntoPedidoConfirmado =
+            configuracao.pedidoConfirmadoTemplate?.assunto,
+        corpoPedidoConfirmado = configuracao.pedidoConfirmadoTemplate?.corpo,
+        assuntoPedidoEmbalado = configuracao.pedidoEmbaladoTemplate?.assunto,
+        corpoPedidoEmbalado = configuracao.pedidoEmbaladoTemplate?.corpo,
         step = step ?? ConfiguracaoSTMPStep.carregado;
 
   ConfiguracaoSTMPState copyWith({
@@ -56,6 +69,10 @@ class ConfiguracaoSTMPState extends Equatable {
     String? urlVerificacaoEmail,
     String? assuntoVerificacaoEmail,
     String? corpoVerificacaoEmail,
+    String? assuntoPedidoConfirmado,
+    String? corpoPedidoConfirmado,
+    String? assuntoPedidoEmbalado,
+    String? corpoPedidoEmbalado,
     ConfiguracaoSTMP? configuracao,
     ConfiguracaoSTMPStep? step,
   }) {
@@ -74,6 +91,13 @@ class ConfiguracaoSTMPState extends Equatable {
           assuntoVerificacaoEmail ?? this.assuntoVerificacaoEmail,
       corpoVerificacaoEmail:
           corpoVerificacaoEmail ?? this.corpoVerificacaoEmail,
+      assuntoPedidoConfirmado:
+          assuntoPedidoConfirmado ?? this.assuntoPedidoConfirmado,
+      corpoPedidoConfirmado:
+          corpoPedidoConfirmado ?? this.corpoPedidoConfirmado,
+      assuntoPedidoEmbalado:
+          assuntoPedidoEmbalado ?? this.assuntoPedidoEmbalado,
+      corpoPedidoEmbalado: corpoPedidoEmbalado ?? this.corpoPedidoEmbalado,
       configuracao: configuracao ?? this.configuracao,
       step: step ?? this.step,
     );
@@ -91,6 +115,10 @@ class ConfiguracaoSTMPState extends Equatable {
         urlVerificacaoEmail,
         assuntoVerificacaoEmail,
         corpoVerificacaoEmail,
+        assuntoPedidoConfirmado,
+        corpoPedidoConfirmado,
+        assuntoPedidoEmbalado,
+        corpoPedidoEmbalado,
         configuracao,
         step,
       ];

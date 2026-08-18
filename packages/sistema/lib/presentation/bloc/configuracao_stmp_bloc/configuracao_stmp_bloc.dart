@@ -68,6 +68,10 @@ class ConfiguracaoSTMPBloc
         urlVerificacaoEmail: event.urlVerificacaoEmail,
         assuntoVerificacaoEmail: event.assuntoVerificacaoEmail,
         corpoVerificacaoEmail: event.corpoVerificacaoEmail,
+        assuntoPedidoConfirmado: event.assuntoPedidoConfirmado,
+        corpoPedidoConfirmado: event.corpoPedidoConfirmado,
+        assuntoPedidoEmbalado: event.assuntoPedidoEmbalado,
+        corpoPedidoEmbalado: event.corpoPedidoEmbalado,
       ),
     );
   }
@@ -94,6 +98,10 @@ class ConfiguracaoSTMPBloc
           urlVerificacaoEmail: state.urlVerificacaoEmail ?? '',
           assuntoVerificacaoEmail: state.assuntoVerificacaoEmail ?? '',
           corpoVerificacaoEmail: state.corpoVerificacaoEmail ?? '',
+          assuntoPedidoConfirmado: state.assuntoPedidoConfirmado ?? '',
+          corpoPedidoConfirmado: state.corpoPedidoConfirmado ?? '',
+          assuntoPedidoEmbalado: state.assuntoPedidoEmbalado ?? '',
+          corpoPedidoEmbalado: state.corpoPedidoEmbalado ?? '',
         );
       } else {
         configuracaoSalva = await atualizarConfiguracao.call(
@@ -107,6 +115,10 @@ class ConfiguracaoSTMPBloc
           urlVerificacaoEmail: state.urlVerificacaoEmail,
           assuntoVerificacaoEmail: state.assuntoVerificacaoEmail,
           corpoVerificacaoEmail: state.corpoVerificacaoEmail,
+          assuntoPedidoConfirmado: state.assuntoPedidoConfirmado,
+          corpoPedidoConfirmado: state.corpoPedidoConfirmado,
+          assuntoPedidoEmbalado: state.assuntoPedidoEmbalado,
+          corpoPedidoEmbalado: state.corpoPedidoEmbalado,
         );
       }
 

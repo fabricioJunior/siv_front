@@ -19,6 +19,10 @@ class AtualizarConfiguracaoSTMP {
     String? urlVerificacaoEmail,
     String? assuntoVerificacaoEmail,
     String? corpoVerificacaoEmail,
+    String? assuntoPedidoConfirmado,
+    String? corpoPedidoConfirmado,
+    String? assuntoPedidoEmbalado,
+    String? corpoPedidoEmbalado,
   }) {
     final configuracaoAtualizada = configuracao.copyWith(
       servidor: servidor,
@@ -38,6 +42,23 @@ class AtualizarConfiguracaoSTMP {
           VerificacaoEmailTemplate.create(
             assunto: assuntoVerificacaoEmail ?? '',
             corpo: corpoVerificacaoEmail ?? '',
+          ),
+      pedidoConfirmadoTemplate: configuracao.pedidoConfirmadoTemplate
+              ?.copyWith(
+            assunto: assuntoPedidoConfirmado,
+            corpo: corpoPedidoConfirmado,
+          ) ??
+          PedidoConfirmadoTemplate.create(
+            assunto: assuntoPedidoConfirmado ?? '',
+            corpo: corpoPedidoConfirmado ?? '',
+          ),
+      pedidoEmbaladoTemplate: configuracao.pedidoEmbaladoTemplate?.copyWith(
+            assunto: assuntoPedidoEmbalado,
+            corpo: corpoPedidoEmbalado,
+          ) ??
+          PedidoEmbaladoTemplate.create(
+            assunto: assuntoPedidoEmbalado ?? '',
+            corpo: corpoPedidoEmbalado ?? '',
           ),
     );
 

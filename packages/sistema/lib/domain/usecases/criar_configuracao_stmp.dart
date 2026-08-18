@@ -19,6 +19,10 @@ class CriarConfiguracaoSTMP {
     required String urlVerificacaoEmail,
     required String assuntoVerificacaoEmail,
     required String corpoVerificacaoEmail,
+    required String assuntoPedidoConfirmado,
+    required String corpoPedidoConfirmado,
+    required String assuntoPedidoEmbalado,
+    required String corpoPedidoEmbalado,
   }) {
     final configuracao = ConfiguracaoSTMP.create(
       id: id,
@@ -34,6 +38,14 @@ class CriarConfiguracaoSTMP {
       verificacaoEmailTemplate: VerificacaoEmailTemplate.create(
         assunto: assuntoVerificacaoEmail,
         corpo: corpoVerificacaoEmail,
+      ),
+      pedidoConfirmadoTemplate: PedidoConfirmadoTemplate.create(
+        assunto: assuntoPedidoConfirmado,
+        corpo: corpoPedidoConfirmado,
+      ),
+      pedidoEmbaladoTemplate: PedidoEmbaladoTemplate.create(
+        assunto: assuntoPedidoEmbalado,
+        corpo: corpoPedidoEmbalado,
       ),
     );
 

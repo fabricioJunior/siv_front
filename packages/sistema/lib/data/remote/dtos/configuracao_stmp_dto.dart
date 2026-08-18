@@ -29,6 +29,12 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
   @override
   final VerificacaoEmailTemplateDto? verificacaoEmailTemplate;
 
+  @override
+  final PedidoConfirmadoTemplateDto? pedidoConfirmadoTemplate;
+
+  @override
+  final PedidoEmbaladoTemplateDto? pedidoEmbaladoTemplate;
+
   ConfiguracaoSTMPDto({
     required this.id,
     required this.servidor,
@@ -38,6 +44,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
     required this.redefinirSenhaTemplate,
     this.urlVerificacaoEmail,
     this.verificacaoEmailTemplate,
+    this.pedidoConfirmadoTemplate,
+    this.pedidoEmbaladoTemplate,
   });
 
   factory ConfiguracaoSTMPDto.fromJson(Map<String, dynamic> json) =>
@@ -54,6 +62,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
     RedefinirSenhaTemplateDto? redefinirSenhaTemplate,
     String? urlVerificacaoEmail,
     VerificacaoEmailTemplateDto? verificacaoEmailTemplate,
+    PedidoConfirmadoTemplateDto? pedidoConfirmadoTemplate,
+    PedidoEmbaladoTemplateDto? pedidoEmbaladoTemplate,
   }) {
     return ConfiguracaoSTMPDto(
       id: id ?? this.id,
@@ -66,6 +76,10 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
       urlVerificacaoEmail: urlVerificacaoEmail ?? this.urlVerificacaoEmail,
       verificacaoEmailTemplate:
           verificacaoEmailTemplate ?? this.verificacaoEmailTemplate,
+      pedidoConfirmadoTemplate:
+          pedidoConfirmadoTemplate ?? this.pedidoConfirmadoTemplate,
+      pedidoEmbaladoTemplate:
+          pedidoEmbaladoTemplate ?? this.pedidoEmbaladoTemplate,
     );
   }
 
@@ -79,6 +93,8 @@ class ConfiguracaoSTMPDto implements ConfiguracaoSTMP {
         redefinirSenhaTemplate,
         urlVerificacaoEmail,
         verificacaoEmailTemplate,
+        pedidoConfirmadoTemplate,
+        pedidoEmbaladoTemplate,
       ];
 
   @override
@@ -155,6 +171,76 @@ class VerificacaoEmailTemplateDto implements VerificacaoEmailTemplate {
   bool? get stringify => true;
 }
 
+@JsonSerializable()
+class PedidoConfirmadoTemplateDto implements PedidoConfirmadoTemplate {
+  @override
+  final String assunto;
+
+  @override
+  final String corpo;
+
+  PedidoConfirmadoTemplateDto({
+    required this.assunto,
+    required this.corpo,
+  });
+
+  factory PedidoConfirmadoTemplateDto.fromJson(Map<String, dynamic> json) =>
+      _$PedidoConfirmadoTemplateDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PedidoConfirmadoTemplateDtoToJson(this);
+
+  PedidoConfirmadoTemplateDto copyWith({
+    String? assunto,
+    String? corpo,
+  }) {
+    return PedidoConfirmadoTemplateDto(
+      assunto: assunto ?? this.assunto,
+      corpo: corpo ?? this.corpo,
+    );
+  }
+
+  @override
+  List<Object?> get props => [assunto, corpo];
+
+  @override
+  bool? get stringify => true;
+}
+
+@JsonSerializable()
+class PedidoEmbaladoTemplateDto implements PedidoEmbaladoTemplate {
+  @override
+  final String assunto;
+
+  @override
+  final String corpo;
+
+  PedidoEmbaladoTemplateDto({
+    required this.assunto,
+    required this.corpo,
+  });
+
+  factory PedidoEmbaladoTemplateDto.fromJson(Map<String, dynamic> json) =>
+      _$PedidoEmbaladoTemplateDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PedidoEmbaladoTemplateDtoToJson(this);
+
+  PedidoEmbaladoTemplateDto copyWith({
+    String? assunto,
+    String? corpo,
+  }) {
+    return PedidoEmbaladoTemplateDto(
+      assunto: assunto ?? this.assunto,
+      corpo: corpo ?? this.corpo,
+    );
+  }
+
+  @override
+  List<Object?> get props => [assunto, corpo];
+
+  @override
+  bool? get stringify => true;
+}
+
 extension ConfiguracaoSTMPToDto on ConfiguracaoSTMP {
   ConfiguracaoSTMPDto toDto() {
     return ConfiguracaoSTMPDto(
@@ -173,6 +259,18 @@ extension ConfiguracaoSTMPToDto on ConfiguracaoSTMP {
           : VerificacaoEmailTemplateDto(
               assunto: verificacaoEmailTemplate!.assunto,
               corpo: verificacaoEmailTemplate!.corpo,
+            ),
+      pedidoConfirmadoTemplate: pedidoConfirmadoTemplate == null
+          ? null
+          : PedidoConfirmadoTemplateDto(
+              assunto: pedidoConfirmadoTemplate!.assunto,
+              corpo: pedidoConfirmadoTemplate!.corpo,
+            ),
+      pedidoEmbaladoTemplate: pedidoEmbaladoTemplate == null
+          ? null
+          : PedidoEmbaladoTemplateDto(
+              assunto: pedidoEmbaladoTemplate!.assunto,
+              corpo: pedidoEmbaladoTemplate!.corpo,
             ),
     );
   }

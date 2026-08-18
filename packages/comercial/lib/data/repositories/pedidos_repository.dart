@@ -169,6 +169,16 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<void> reenviarEmailEmbalado(int id) {
+    return remoteDataSource.reenviarEmailEmbalado(id);
+  }
+
+  @override
+  Future<String> linkCompartilhamento(int id) {
+    return remoteDataSource.linkCompartilhamento(id);
+  }
+
+  @override
   Future<List<PedidoItem>> listarItens(int id) {
     return pedidoItemRemoteDataSource.listarItens(id);
   }

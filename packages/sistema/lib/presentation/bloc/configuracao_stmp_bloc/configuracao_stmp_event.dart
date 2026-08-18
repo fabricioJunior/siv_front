@@ -15,6 +15,10 @@ class ConfiguracaoSTMPEditou extends ConfiguracaoSTMPEvent {
   final String? urlVerificacaoEmail;
   final String? assuntoVerificacaoEmail;
   final String? corpoVerificacaoEmail;
+  final String? assuntoPedidoConfirmado;
+  final String? corpoPedidoConfirmado;
+  final String? assuntoPedidoEmbalado;
+  final String? corpoPedidoEmbalado;
 
   ConfiguracaoSTMPEditou({
     this.id,
@@ -27,6 +31,10 @@ class ConfiguracaoSTMPEditou extends ConfiguracaoSTMPEvent {
     this.urlVerificacaoEmail,
     this.assuntoVerificacaoEmail,
     this.corpoVerificacaoEmail,
+    this.assuntoPedidoConfirmado,
+    this.corpoPedidoConfirmado,
+    this.assuntoPedidoEmbalado,
+    this.corpoPedidoEmbalado,
   });
 }
 

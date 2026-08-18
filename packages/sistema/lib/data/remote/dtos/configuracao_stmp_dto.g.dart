@@ -20,6 +20,14 @@ ConfiguracaoSTMPDto _$ConfiguracaoSTMPDtoFromJson(Map<String, dynamic> json) =>
           ? null
           : VerificacaoEmailTemplateDto.fromJson(
               json['verificacaoEmailTemplate'] as Map<String, dynamic>),
+      pedidoConfirmadoTemplate: json['pedidoConfirmadoTemplate'] == null
+          ? null
+          : PedidoConfirmadoTemplateDto.fromJson(
+              json['pedidoConfirmadoTemplate'] as Map<String, dynamic>),
+      pedidoEmbaladoTemplate: json['pedidoEmbaladoTemplate'] == null
+          ? null
+          : PedidoEmbaladoTemplateDto.fromJson(
+              json['pedidoEmbaladoTemplate'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConfiguracaoSTMPDtoToJson(
@@ -33,6 +41,8 @@ Map<String, dynamic> _$ConfiguracaoSTMPDtoToJson(
       'redefinirSenhaTemplate': instance.redefinirSenhaTemplate,
       'urlVerificacaoEmail': instance.urlVerificacaoEmail,
       'verificacaoEmailTemplate': instance.verificacaoEmailTemplate,
+      'pedidoConfirmadoTemplate': instance.pedidoConfirmadoTemplate,
+      'pedidoEmbaladoTemplate': instance.pedidoEmbaladoTemplate,
     };
 
 RedefinirSenhaTemplateDto _$RedefinirSenhaTemplateDtoFromJson(
@@ -58,6 +68,34 @@ VerificacaoEmailTemplateDto _$VerificacaoEmailTemplateDtoFromJson(
 
 Map<String, dynamic> _$VerificacaoEmailTemplateDtoToJson(
         VerificacaoEmailTemplateDto instance) =>
+    <String, dynamic>{
+      'assunto': instance.assunto,
+      'corpo': instance.corpo,
+    };
+
+PedidoConfirmadoTemplateDto _$PedidoConfirmadoTemplateDtoFromJson(
+        Map<String, dynamic> json) =>
+    PedidoConfirmadoTemplateDto(
+      assunto: json['assunto'] as String,
+      corpo: json['corpo'] as String,
+    );
+
+Map<String, dynamic> _$PedidoConfirmadoTemplateDtoToJson(
+        PedidoConfirmadoTemplateDto instance) =>
+    <String, dynamic>{
+      'assunto': instance.assunto,
+      'corpo': instance.corpo,
+    };
+
+PedidoEmbaladoTemplateDto _$PedidoEmbaladoTemplateDtoFromJson(
+        Map<String, dynamic> json) =>
+    PedidoEmbaladoTemplateDto(
+      assunto: json['assunto'] as String,
+      corpo: json['corpo'] as String,
+    );
+
+Map<String, dynamic> _$PedidoEmbaladoTemplateDtoToJson(
+        PedidoEmbaladoTemplateDto instance) =>
     <String, dynamic>{
       'assunto': instance.assunto,
       'corpo': instance.corpo,

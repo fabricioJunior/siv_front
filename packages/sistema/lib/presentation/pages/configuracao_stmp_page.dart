@@ -260,6 +260,92 @@ class ConfiguracaoSTMPPage extends StatelessWidget {
                                     ),
                               ),
                             ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'E-mail de pedido confirmado',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Assunto do e-mail de pedido confirmado'),
+                            TextFormField(
+                              initialValue: state.assuntoPedidoConfirmado,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o assunto do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        assuntoPedidoConfirmado: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('Corpo do e-mail de pedido confirmado'),
+                            TextFormField(
+                              initialValue: state.corpoPedidoConfirmado,
+                              minLines: 4,
+                              maxLines: 8,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o corpo do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        corpoPedidoConfirmado: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'E-mail de pedido pronto pra retirada',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('Assunto do e-mail de pedido pronto'),
+                            TextFormField(
+                              initialValue: state.assuntoPedidoEmbalado,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o assunto do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        assuntoPedidoEmbalado: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('Corpo do e-mail de pedido pronto'),
+                            TextFormField(
+                              initialValue: state.corpoPedidoEmbalado,
+                              minLines: 4,
+                              maxLines: 8,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Informe o corpo do template';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) => debouncer.run(
+                                () => context.read<ConfiguracaoSTMPBloc>().add(
+                                      ConfiguracaoSTMPEditou(
+                                        corpoPedidoEmbalado: value,
+                                      ),
+                                    ),
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             BlocBuilder<ConfiguracaoSTMPBloc,
                                 ConfiguracaoSTMPState>(

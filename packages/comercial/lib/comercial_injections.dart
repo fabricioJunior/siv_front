@@ -186,6 +186,12 @@ void _useCases() {
   sl.registerFactory<ReenviarEmailPedido>(
     () => ReenviarEmailPedido(repository: sl()),
   );
+  sl.registerFactory<ReenviarEmailEmbaladoPedido>(
+    () => ReenviarEmailEmbaladoPedido(repository: sl()),
+  );
+  sl.registerFactory<LinkCompartilhamentoPedido>(
+    () => LinkCompartilhamentoPedido(repository: sl()),
+  );
   sl.registerFactory<EmbalarPedido>(
     () => EmbalarPedido(repository: sl()),
   );
@@ -377,6 +383,7 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

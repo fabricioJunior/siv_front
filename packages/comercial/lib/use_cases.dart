@@ -42,6 +42,8 @@ export 'domain/use_cases/conferir_item_pedido.dart';
 export 'domain/use_cases/conferir_item_pedido_por_codigo.dart';
 export 'domain/use_cases/assumir_pedido.dart';
 export 'domain/use_cases/reenviar_email_pedido.dart';
+export 'domain/use_cases/reenviar_email_embalado_pedido.dart';
+export 'domain/use_cases/link_compartilhamento_pedido.dart';
 export 'domain/use_cases/recuperar_ecommerces.dart';
 export 'domain/use_cases/recuperar_ecommerce.dart';
 export 'domain/use_cases/salvar_ecommerce.dart';

@@ -23,6 +23,7 @@ class PedidoState extends Equatable {
   final List<PedidoItem> itens;
   final int? pedidoTaxaEntregaCriadoId;
   final PedidoPagamento? ultimoPagamentoAdicionado;
+  final String? linkCompartilhamento;
   final Map<int, String> formasDePagamentoPorId;
   // Outros pedidos do mesmo cliente pendentes de retirada, retornados pelo backend logo após
   // confirmar a retirada de um pedido (ver PedidoBloc._onRetiradaConfirmou) -- usado pra oferecer
@@ -54,6 +55,7 @@ class PedidoState extends Equatable {
     this.itens = const [],
     this.pedidoTaxaEntregaCriadoId,
     this.ultimoPagamentoAdicionado,
+    this.linkCompartilhamento,
     this.formasDePagamentoPorId = const {},
     this.outrosPedidosPendentes = const [],
     this.erro,
@@ -83,6 +85,7 @@ class PedidoState extends Equatable {
         itens = const [],
         pedidoTaxaEntregaCriadoId = null,
         ultimoPagamentoAdicionado = null,
+        linkCompartilhamento = null,
         formasDePagamentoPorId = const {},
         outrosPedidosPendentes = const [],
         erro = null,
@@ -120,6 +123,7 @@ class PedidoState extends Equatable {
         itens = itens ?? const [],
         pedidoTaxaEntregaCriadoId = null,
         ultimoPagamentoAdicionado = null,
+        linkCompartilhamento = null,
         formasDePagamentoPorId = formasDePagamentoPorId ?? const {},
         outrosPedidosPendentes = outrosPedidosPendentes ?? const [],
         erro = null,
@@ -150,6 +154,7 @@ class PedidoState extends Equatable {
     int? pedidoTaxaEntregaCriadoId,
     PedidoPagamento? ultimoPagamentoAdicionado,
     bool limparUltimoPagamentoAdicionado = false,
+    String? linkCompartilhamento,
     Map<int, String>? formasDePagamentoPorId,
     List<Pedido>? outrosPedidosPendentes,
     bool limparOutrosPedidosPendentes = false,
@@ -187,6 +192,7 @@ class PedidoState extends Equatable {
       ultimoPagamentoAdicionado: limparUltimoPagamentoAdicionado
           ? null
           : (ultimoPagamentoAdicionado ?? this.ultimoPagamentoAdicionado),
+      linkCompartilhamento: linkCompartilhamento ?? this.linkCompartilhamento,
       formasDePagamentoPorId:
           formasDePagamentoPorId ?? this.formasDePagamentoPorId,
       outrosPedidosPendentes: limparOutrosPedidosPendentes
@@ -270,6 +276,7 @@ class PedidoState extends Equatable {
         itens,
         pedidoTaxaEntregaCriadoId,
         ultimoPagamentoAdicionado,
+        linkCompartilhamento,
         formasDePagamentoPorId,
         outrosPedidosPendentes,
         erro,
@@ -309,6 +316,7 @@ enum PedidoStep {
   itemRemovido,
   itemConferido,
   emailReenviado,
+  linkCompartilhamentoObtido,
   embalado,
   validacaoInvalida,
   falha,

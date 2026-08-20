@@ -40,6 +40,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final ConferirItemPedidoPorCodigo _conferirItemPedidoPorCodigo;
   final AssumirPedido _assumirPedido;
   final ReenviarEmailPedido _reenviarEmailPedido;
+  final LinkCompartilhamentoPedido _linkCompartilhamentoPedido;
   final EmbalarPedido _embalarPedido;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarFormasDePagamento _recuperarFormasDePagamento;
@@ -72,6 +73,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._conferirItemPedidoPorCodigo,
     this._assumirPedido,
     this._reenviarEmailPedido,
+    this._linkCompartilhamentoPedido,
     this._embalarPedido,
     this._acessoGlobalSessao,
     this._recuperarFormasDePagamento,
@@ -106,6 +108,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoItemConferiuPorCodigo>(_onItemConferiuPorCodigo);
     on<PedidoAssumiu>(_onAssumiu);
     on<PedidoEmailReenviou>(_onEmailReenviou);
+    on<PedidoLinkCompartilhamentoSolicitou>(_onLinkCompartilhamentoSolicitou);
     on<PedidoEmbalou>(_onEmbalou);
   }
 
@@ -850,6 +853,27 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao reenviar e-mail do pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onLinkCompartilhamentoSolicitou(
+    PedidoLinkCompartilhamentoSolicitou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      final link = await _linkCompartilhamentoPedido.call(state.id!);
+      emit(state.copyWith(
+        step: PedidoStep.linkCompartilhamentoObtido,
+        linkCompartilhamento: link,
+      ));
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao gerar link do pedido.')));
       addError(e, s);
     }
   }

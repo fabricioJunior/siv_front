@@ -207,6 +207,8 @@ class PedidoItemConferiu extends PedidoEvent {
 
 class PedidoEmailReenviou extends PedidoEvent {}
 
+class PedidoLinkCompartilhamentoSolicitou extends PedidoEvent {}
+
 class PedidoEmbalou extends PedidoEvent {}
 
 class PedidoItemConferiuPorCodigo extends PedidoEvent {

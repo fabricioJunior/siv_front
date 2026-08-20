@@ -492,6 +492,12 @@ class _PedidoPageState extends State<PedidoPage> {
             );
     if (descontoTotal != (state.pedido?.desconto ?? 0)) {
       bloc.add(PedidoDescontoAlterado(descontoTotal));
+      final descontoResultado = await bloc.stream.firstWhere(
+        (s) =>
+            s.step == PedidoStep.descontoAlterado ||
+            s.step == PedidoStep.falha,
+      );
+      if (descontoResultado.step == PedidoStep.falha) return;
     }
 
     // Troco só pode vir de uma linha em dinheiro -- aplica na primeira
@@ -912,6 +918,17 @@ class _PedidoPageState extends State<PedidoPage> {
             return;
           }
 
+          if (state.step == PedidoStep.linkCompartilhamentoObtido) {
+            final link = state.linkCompartilhamento;
+            if (link != null) {
+              Clipboard.setData(ClipboardData(text: link));
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Link do pedido copiado.')),
+            );
+            return;
+          }
+
           if (state.step == PedidoStep.itemAdicionado) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Produto adicionado ao pedido.')),
@@ -1064,6 +1081,14 @@ class _PedidoPageState extends State<PedidoPage> {
                     ? 'Novo pedido'
                     : 'Pedido #${widget.idPedido}'),
                 actions: [
+                  if (widget.idPedido != null && !carregando)
+                    IconButton(
+                      icon: const Icon(Icons.share),
+                      tooltip: 'Compartilhar link do pedido',
+                      onPressed: () => context
+                          .read<PedidoBloc>()
+                          .add(PedidoLinkCompartilhamentoSolicitou()),
+                    ),
                   if (carregando)
                     const Padding(
                       padding: EdgeInsets.only(right: 16),
@@ -1936,8 +1961,9 @@ class _PedidoPageState extends State<PedidoPage> {
     final nomeForma = formasDePagamentoPorId[pagamento.formaDePagamentoId] ??
         'Forma #${pagamento.formaDePagamentoId ?? '-'}';
     final cobranca = pagamento.cobranca;
-    final linkCobranca =
-        cobranca?.urlDePagamento ?? cobranca?.chavePixCopiaECola;
+    final linkCobranca = cobranca?.urlPagamentoAvulsoSiteEmpresa ??
+        cobranca?.urlDePagamento ??
+        cobranca?.chavePixCopiaECola;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

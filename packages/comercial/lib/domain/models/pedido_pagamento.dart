@@ -1,44 +1,5 @@
 import 'package:core/equals.dart';
 
-abstract class PedidoPagamentoCobranca implements Equatable {
-  String? get qrCodePix;
-  String? get chavePixCopiaECola;
-  String? get urlDePagamento;
-
-  factory PedidoPagamentoCobranca.create({
-    String? qrCodePix,
-    String? chavePixCopiaECola,
-    String? urlDePagamento,
-  }) = _PedidoPagamentoCobrancaImpl;
-
-  @override
-  List<Object?> get props => [qrCodePix, chavePixCopiaECola, urlDePagamento];
-
-  @override
-  bool? get stringify => true;
-}
-
-class _PedidoPagamentoCobrancaImpl implements PedidoPagamentoCobranca {
-  @override
-  final String? qrCodePix;
-  @override
-  final String? chavePixCopiaECola;
-  @override
-  final String? urlDePagamento;
-
-  const _PedidoPagamentoCobrancaImpl({
-    this.qrCodePix,
-    this.chavePixCopiaECola,
-    this.urlDePagamento,
-  });
-
-  @override
-  List<Object?> get props => [qrCodePix, chavePixCopiaECola, urlDePagamento];
-
-  @override
-  bool? get stringify => true;
-}
-
 abstract class PedidoPagamento implements Equatable {
   int? get id;
   int? get pedidoId;
@@ -144,6 +105,52 @@ class _PedidoPagamentoImpl implements PedidoPagamento {
         cobranca,
         estoqueDisponivel,
       ];
+
+  @override
+  bool? get stringify => true;
+}
+
+abstract class PedidoPagamentoCobranca implements Equatable {
+  String? get qrCodePix;
+  String? get chavePixCopiaECola;
+  String? get urlDePagamento;
+  String? get urlPagamentoAvulsoSiteEmpresa;
+
+  factory PedidoPagamentoCobranca.create({
+    String? qrCodePix,
+    String? chavePixCopiaECola,
+    String? urlDePagamento,
+    String? urlPagamentoAvulsoSiteEmpresa,
+  }) = _PedidoPagamentoCobrancaImpl;
+
+  @override
+  List<Object?> get props =>
+      [qrCodePix, chavePixCopiaECola, urlDePagamento, urlPagamentoAvulsoSiteEmpresa];
+
+  @override
+  bool? get stringify => true;
+}
+
+class _PedidoPagamentoCobrancaImpl implements PedidoPagamentoCobranca {
+  @override
+  final String? qrCodePix;
+  @override
+  final String? chavePixCopiaECola;
+  @override
+  final String? urlDePagamento;
+  @override
+  final String? urlPagamentoAvulsoSiteEmpresa;
+
+  const _PedidoPagamentoCobrancaImpl({
+    this.qrCodePix,
+    this.chavePixCopiaECola,
+    this.urlDePagamento,
+    this.urlPagamentoAvulsoSiteEmpresa,
+  });
+
+  @override
+  List<Object?> get props =>
+      [qrCodePix, chavePixCopiaECola, urlDePagamento, urlPagamentoAvulsoSiteEmpresa];
 
   @override
   bool? get stringify => true;

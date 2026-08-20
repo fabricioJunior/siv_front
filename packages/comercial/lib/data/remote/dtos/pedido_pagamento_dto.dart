@@ -7,11 +7,14 @@ class PedidoPagamentoCobrancaDto implements PedidoPagamentoCobranca {
   final String? chavePixCopiaECola;
   @override
   final String? urlDePagamento;
+  @override
+  final String? urlPagamentoAvulsoSiteEmpresa;
 
   const PedidoPagamentoCobrancaDto({
     this.qrCodePix,
     this.chavePixCopiaECola,
     this.urlDePagamento,
+    this.urlPagamentoAvulsoSiteEmpresa,
   });
 
   factory PedidoPagamentoCobrancaDto.fromJson(Map<String, dynamic> json) {
@@ -19,11 +22,14 @@ class PedidoPagamentoCobrancaDto implements PedidoPagamentoCobranca {
       qrCodePix: json['qrCodePix']?.toString(),
       chavePixCopiaECola: json['chavePixCopiaECola']?.toString(),
       urlDePagamento: json['urlDePagamento']?.toString(),
+      urlPagamentoAvulsoSiteEmpresa:
+          json['urlPagamentoAvulsoSiteEmpresa']?.toString(),
     );
   }
 
   @override
-  List<Object?> get props => [qrCodePix, chavePixCopiaECola, urlDePagamento];
+  List<Object?> get props =>
+      [qrCodePix, chavePixCopiaECola, urlDePagamento, urlPagamentoAvulsoSiteEmpresa];
 
   @override
   bool? get stringify => true;

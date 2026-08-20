@@ -336,6 +336,11 @@ void main() {
             RomaneioCriacaoStep.processando,
           )
           .having((state) => state.totalItensProcessados, 'itens', 1),
+      isA<RomaneioCriacaoState>().having(
+        (state) => state.step,
+        'step',
+        RomaneioCriacaoStep.finalizandoVenda,
+      ),
       isA<RomaneioCriacaoState>()
           .having(
             (state) => state.step,
@@ -440,6 +445,11 @@ void main() {
               RomaneioCriacaoStep.processando,
             )
             .having((state) => state.totalItensProcessados, 'itens', 1),
+        isA<RomaneioCriacaoState>().having(
+          (state) => state.step,
+          'step',
+          RomaneioCriacaoStep.carregandoDocumentoFiscal,
+        ),
         isA<RomaneioCriacaoState>()
             .having(
               (state) => state.step,

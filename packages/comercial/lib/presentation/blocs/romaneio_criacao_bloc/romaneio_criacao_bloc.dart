@@ -210,6 +210,17 @@ class RomaneioCriacaoBloc
           }
         }
 
+        emit(
+          state.copyWith(
+            step: RomaneioCriacaoStep.finalizandoVenda,
+            hashLista: event.hashLista,
+            listaCompartilhada: listaCompartilhada,
+            produtosCompartilhados: produtosCompartilhados,
+            erro: null,
+            totalItensProcessados: itens.length,
+          ),
+        );
+
         // Não reenvia descontosItens aqui -- o desconto já foi persistido
         // no romaneio na criação acima (desconto: descontoTotal), e o
         // backend usa romaneio.desconto como base automática ao receber
@@ -231,6 +242,17 @@ class RomaneioCriacaoBloc
         );
         falhaAoReceberNoCaixa = false;
       }
+
+      emit(
+        state.copyWith(
+          step: RomaneioCriacaoStep.carregandoDocumentoFiscal,
+          hashLista: event.hashLista,
+          listaCompartilhada: listaCompartilhada,
+          produtosCompartilhados: produtosCompartilhados,
+          erro: null,
+          totalItensProcessados: itens.length,
+        ),
+      );
 
       final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
       final documentoFiscal = await _carregarUltimoDocumentoFiscal(romaneioId);

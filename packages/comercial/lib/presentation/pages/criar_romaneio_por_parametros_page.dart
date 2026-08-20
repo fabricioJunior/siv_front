@@ -117,7 +117,9 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
 
           final permiteVoltarDireto =
               state.step == RomaneioCriacaoStep.inicial ||
-                  state.step == RomaneioCriacaoStep.processando;
+                  state.step == RomaneioCriacaoStep.processando ||
+                  state.step == RomaneioCriacaoStep.finalizandoVenda ||
+                  state.step == RomaneioCriacaoStep.carregandoDocumentoFiscal;
 
           return PopScope<Object?>(
             canPop: permiteVoltarDireto,
@@ -136,6 +138,18 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                   RomaneioCriacaoStep.processando =>
                     _ProcessandoRomaneioView(
                       quantidadeItens: state.produtosCompartilhados.length,
+                    ),
+                  RomaneioCriacaoStep.finalizandoVenda =>
+                    const _ProcessandoRomaneioView(
+                      quantidadeItens: 0,
+                      mensagem: 'Finalizando venda e emitindo nota fiscal, '
+                          'aguarde... Isso pode levar até 30 segundos.',
+                    ),
+                  RomaneioCriacaoStep.carregandoDocumentoFiscal =>
+                    const _ProcessandoRomaneioView(
+                      quantidadeItens: 0,
+                      mensagem: 'Quase pronto, confirmando emissão da nota '
+                          'fiscal...',
                     ),
                   RomaneioCriacaoStep.falha => _FalhaRomaneioView(
                       erro: state.erro ?? 'Falha ao criar romaneio.',
@@ -190,8 +204,9 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
 
 class _ProcessandoRomaneioView extends StatelessWidget {
   final int quantidadeItens;
+  final String? mensagem;
 
-  const _ProcessandoRomaneioView({required this.quantidadeItens});
+  const _ProcessandoRomaneioView({required this.quantidadeItens, this.mensagem});
 
   @override
   Widget build(BuildContext context) {
@@ -202,9 +217,10 @@ class _ProcessandoRomaneioView extends StatelessWidget {
           const CircularProgressIndicator.adaptive(),
           const SizedBox(height: 16),
           Text(
-            quantidadeItens > 0
-                ? 'Criando romaneio e enviando $quantidadeItens item(ns)...'
-                : 'Criando romaneio a partir da lista compartilhada...',
+            mensagem ??
+                (quantidadeItens > 0
+                    ? 'Criando romaneio e enviando $quantidadeItens item(ns)...'
+                    : 'Criando romaneio a partir da lista compartilhada...'),
             textAlign: TextAlign.center,
           ),
         ],

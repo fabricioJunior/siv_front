@@ -1,6 +1,13 @@
 part of 'romaneio_criacao_bloc.dart';
 
-enum RomaneioCriacaoStep { inicial, processando, sucesso, falha }
+enum RomaneioCriacaoStep {
+  inicial,
+  processando,
+  finalizandoVenda,
+  carregandoDocumentoFiscal,
+  sucesso,
+  falha,
+}
 
 class RomaneioCriacaoState extends Equatable {
   final RomaneioCriacaoStep step;

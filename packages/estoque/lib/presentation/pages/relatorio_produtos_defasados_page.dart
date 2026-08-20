@@ -1,7 +1,10 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:estoque/domain/models/relatorio_produtos_defasados.dart';
 import 'package:estoque/presentation/blocs/relatorio_produtos_defasados_bloc/relatorio_produtos_defasados_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/models.dart';
+import 'package:produtos/presentation.dart';
 
 String _fmtMoeda(double v) {
   final s = v.toStringAsFixed(2);
@@ -34,6 +37,10 @@ class _RelatorioProdutosDefasadosPageState
   late final TextEditingController _buscaController;
   String _tipoMovimentacao = 'ambas';
   String _visualizacao = 'produto';
+  List<Cor> _cores = [];
+  List<Tamanho> _tamanhos = [];
+  ModoAgrupamentoReferencia _modoAgrupamento =
+      ModoAgrupamentoReferencia.todos;
 
   @override
   void initState() {
@@ -59,6 +66,13 @@ class _RelatorioProdutosDefasadosPageState
       dias: dias.clamp(1, 3650),
       tipoMovimentacao: _tipoMovimentacao,
       visualizacao: _visualizacao,
+      corIds: _cores.isEmpty
+          ? null
+          : _cores.map((c) => c.id!).toList(),
+      tamanhoIds: _tamanhos.isEmpty
+          ? null
+          : _tamanhos.map((t) => t.id!).toList(),
+      modoAgrupamentoReferencia: _modoAgrupamento,
       busca: _buscaController.text.trim().isEmpty
           ? null
           : _buscaController.text.trim(),
@@ -149,6 +163,20 @@ class _RelatorioProdutosDefasadosPageState
                           },
                         ),
                         const SizedBox(height: 12),
+                        CorSeletor(
+                          modo: CorSeletorModo.multipla,
+                          coresSelecionadasIniciais: _cores,
+                          onCorChanged: (cores) =>
+                              setState(() => _cores = cores),
+                        ),
+                        const SizedBox(height: 12),
+                        TamanhoSeletor(
+                          modo: TamanhoSeletorModo.multipla,
+                          tamanhosSelecionadosIniciais: _tamanhos,
+                          onTamanhosChanged: (tamanhos) =>
+                              setState(() => _tamanhos = tamanhos),
+                        ),
+                        const SizedBox(height: 12),
                         Text('Visualização',
                             style: Theme.of(context).textTheme.bodySmall),
                         const SizedBox(height: 6),
@@ -170,6 +198,30 @@ class _RelatorioProdutosDefasadosPageState
                             setState(() => _visualizacao = selection.first);
                           },
                         ),
+                        if (_visualizacao == 'referencia') ...[
+                          const SizedBox(height: 12),
+                          Text('Quando a referência conta como defasada',
+                              style: Theme.of(context).textTheme.bodySmall),
+                          const SizedBox(height: 6),
+                          SegmentedButton<ModoAgrupamentoReferencia>(
+                            segments: const [
+                              ButtonSegment<ModoAgrupamentoReferencia>(
+                                value: ModoAgrupamentoReferencia.todos,
+                                label: Text('Todos os produtos defasados'),
+                              ),
+                              ButtonSegment<ModoAgrupamentoReferencia>(
+                                value: ModoAgrupamentoReferencia.qualquer,
+                                label:
+                                    Text('Pelo menos um produto defasado'),
+                              ),
+                            ],
+                            selected: {_modoAgrupamento},
+                            onSelectionChanged: (selection) {
+                              setState(
+                                  () => _modoAgrupamento = selection.first);
+                            },
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,

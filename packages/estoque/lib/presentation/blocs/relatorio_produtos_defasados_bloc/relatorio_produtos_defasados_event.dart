@@ -8,6 +8,9 @@ class RelatorioProdutosDefasadosCarregar
   final String tipoMovimentacao;
   final String visualizacao;
   final String? dataReferencia;
+  final List<int>? corIds;
+  final List<int>? tamanhoIds;
+  final ModoAgrupamentoReferencia modoAgrupamentoReferencia;
   final String? busca;
   final int page;
 
@@ -16,6 +19,9 @@ class RelatorioProdutosDefasadosCarregar
     this.tipoMovimentacao = 'ambas',
     this.visualizacao = 'produto',
     this.dataReferencia,
+    this.corIds,
+    this.tamanhoIds,
+    this.modoAgrupamentoReferencia = ModoAgrupamentoReferencia.todos,
     this.busca,
     this.page = 1,
   });

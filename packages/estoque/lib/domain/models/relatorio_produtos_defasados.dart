@@ -1,3 +1,5 @@
+enum ModoAgrupamentoReferencia { todos, qualquer }
+
 abstract class RelatorioProdutoDefasadoItem {
   int? get produtoId;
   String get produtoIdExterno;

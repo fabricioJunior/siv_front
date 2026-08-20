@@ -31,6 +31,9 @@ class RelatorioProdutosDefasadosBloc extends Bloc<
         tipoMovimentacao: event.tipoMovimentacao,
         visualizacao: event.visualizacao,
         dataReferencia: event.dataReferencia,
+        corIds: event.corIds,
+        tamanhoIds: event.tamanhoIds,
+        modoAgrupamentoReferencia: event.modoAgrupamentoReferencia,
         busca: event.busca,
         page: event.page,
       ));
@@ -40,6 +43,9 @@ class RelatorioProdutosDefasadosBloc extends Bloc<
         tipoMovimentacao: event.tipoMovimentacao,
         visualizacao: event.visualizacao,
         dataReferencia: event.dataReferencia,
+        corIds: event.corIds,
+        tamanhoIds: event.tamanhoIds,
+        modoAgrupamentoReferencia: event.modoAgrupamentoReferencia,
         busca: event.busca,
         page: event.page,
       );

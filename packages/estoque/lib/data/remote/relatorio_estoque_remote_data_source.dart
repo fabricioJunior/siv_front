@@ -22,6 +22,8 @@ class RelatorioEstoqueRemoteDataSource extends RemoteDataSourceBase
     List<int>? categoriaIds,
     List<int>? corIds,
     List<int>? tamanhoIds,
+    ModoAgrupamentoReferencia modoAgrupamentoReferencia =
+        ModoAgrupamentoReferencia.todos,
     String? busca,
     int page = 1,
     int limit = 100,
@@ -43,6 +45,7 @@ class RelatorioEstoqueRemoteDataSource extends RemoteDataSourceBase
         if (corIds != null && corIds.isNotEmpty) 'corIds': corIds.join(','),
         if (tamanhoIds != null && tamanhoIds.isNotEmpty)
           'tamanhoIds': tamanhoIds.join(','),
+        'modoAgrupamentoReferencia': modoAgrupamentoReferencia.name,
         if (busca != null && busca.isNotEmpty) 'busca': busca,
         'page': '$page',
         'limit': '$limit',

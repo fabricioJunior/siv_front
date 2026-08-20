@@ -10,6 +10,9 @@ class RelatorioProdutosDefasadosState {
   final String tipoMovimentacao;
   final String visualizacao;
   final String? dataReferencia;
+  final List<int>? corIds;
+  final List<int>? tamanhoIds;
+  final ModoAgrupamentoReferencia modoAgrupamentoReferencia;
   final String? busca;
   final int page;
   final int totalPages;
@@ -22,6 +25,9 @@ class RelatorioProdutosDefasadosState {
     required this.tipoMovimentacao,
     required this.visualizacao,
     this.dataReferencia,
+    this.corIds,
+    this.tamanhoIds,
+    this.modoAgrupamentoReferencia = ModoAgrupamentoReferencia.todos,
     this.busca,
     required this.page,
     required this.totalPages,
@@ -35,6 +41,9 @@ class RelatorioProdutosDefasadosState {
         tipoMovimentacao = 'ambas',
         visualizacao = 'produto',
         dataReferencia = null,
+        corIds = null,
+        tamanhoIds = null,
+        modoAgrupamentoReferencia = ModoAgrupamentoReferencia.todos,
         busca = null,
         page = 1,
         totalPages = 1;
@@ -47,6 +56,9 @@ class RelatorioProdutosDefasadosState {
     String? tipoMovimentacao,
     String? visualizacao,
     String? dataReferencia,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    ModoAgrupamentoReferencia? modoAgrupamentoReferencia,
     String? busca,
     int? page,
     int? totalPages,
@@ -59,6 +71,10 @@ class RelatorioProdutosDefasadosState {
         tipoMovimentacao: tipoMovimentacao ?? this.tipoMovimentacao,
         visualizacao: visualizacao ?? this.visualizacao,
         dataReferencia: dataReferencia ?? this.dataReferencia,
+        corIds: corIds ?? this.corIds,
+        tamanhoIds: tamanhoIds ?? this.tamanhoIds,
+        modoAgrupamentoReferencia:
+            modoAgrupamentoReferencia ?? this.modoAgrupamentoReferencia,
         busca: busca ?? this.busca,
         page: page ?? this.page,
         totalPages: totalPages ?? this.totalPages,

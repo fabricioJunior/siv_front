@@ -16,6 +16,8 @@ dependencies:
     path: ../core
   financeiro:
     path: ../financeiro
+  produtos:
+    path: ../produtos
   json_annotation: ^4.9.0
   bloc_concurrency: ^0.3.0
 

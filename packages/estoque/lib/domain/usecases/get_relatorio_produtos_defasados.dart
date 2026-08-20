@@ -17,6 +17,8 @@ class GetRelatorioProdutosDefasados {
     List<int>? categoriaIds,
     List<int>? corIds,
     List<int>? tamanhoIds,
+    ModoAgrupamentoReferencia modoAgrupamentoReferencia =
+        ModoAgrupamentoReferencia.todos,
     String? busca,
     int page = 1,
     int limit = 100,
@@ -32,6 +34,7 @@ class GetRelatorioProdutosDefasados {
         categoriaIds: categoriaIds,
         corIds: corIds,
         tamanhoIds: tamanhoIds,
+        modoAgrupamentoReferencia: modoAgrupamentoReferencia,
         busca: busca,
         page: page,
         limit: limit,

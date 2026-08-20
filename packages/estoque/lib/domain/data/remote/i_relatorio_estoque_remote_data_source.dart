@@ -12,6 +12,8 @@ abstract class IRelatorioEstoqueRemoteDataSource {
     List<int>? categoriaIds,
     List<int>? corIds,
     List<int>? tamanhoIds,
+    ModoAgrupamentoReferencia modoAgrupamentoReferencia =
+        ModoAgrupamentoReferencia.todos,
     String? busca,
     int page = 1,
     int limit = 100,

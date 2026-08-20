@@ -1081,24 +1081,18 @@ class PagamentosRealizadosBloc
     }
   }
 
-  // Se, entre todas as opcoes elegiveis de todos os produtos, existir
-  // exatamente 1 promocao distinta (tipo != cupom -- cupom sempre exige
-  // codigo digitado, fluxo manual), aplica ela automaticamente em todo
-  // produto elegivel que ainda nao tenha promocao/desconto manual aplicado.
-  // Defensivo: nunca sobrescreve item com desconto manual ja aplicado.
+  // Para cada produto, se ele tiver exatamente 1 opcao elegivel nao-cupom
+  // (cupom sempre exige codigo digitado, fluxo manual), aplica ela
+  // automaticamente nesse produto -- independente de quantas promocoes
+  // distintas existem no carrinho como um todo. Produto com 2+ opcoes
+  // elegiveis simultaneas (conflito real) continua exigindo escolha manual.
+  // Defensivo: nunca sobrescreve item que ja tem promocao escolhida ou
+  // desconto manual ja aplicado.
   Map<int, OpcaoElegivel> _autoAplicarPromocaoUnica(
     Map<int, List<OpcaoElegivel>> opcoesPorItem,
     Map<int, OpcaoElegivel> promocaoAtual,
     Map<int, double> descontosItensAplicado,
   ) {
-    final promocoesDistintas = <int, OpcaoElegivel>{};
-    for (final opcao in opcoesPorItem.values.expand((lista) => lista)) {
-      if (opcao.ehCupom) continue;
-      promocoesDistintas[opcao.id] = opcao;
-    }
-    if (promocoesDistintas.length != 1) return promocaoAtual;
-
-    final unicaId = promocoesDistintas.keys.first;
     final resultado = Map<int, OpcaoElegivel>.from(promocaoAtual);
 
     for (final entrada in opcoesPorItem.entries) {
@@ -1106,12 +1100,11 @@ class PagamentosRealizadosBloc
       if (resultado.containsKey(produtoId)) continue;
       if ((descontosItensAplicado[produtoId] ?? 0) > 0) continue;
 
-      for (final opcao in entrada.value) {
-        if (opcao.id == unicaId && !opcao.ehCupom) {
-          resultado[produtoId] = opcao;
-          break;
-        }
-      }
+      final naoCupom =
+          entrada.value.where((opcao) => !opcao.ehCupom).toList();
+      if (naoCupom.length != 1) continue;
+
+      resultado[produtoId] = naoCupom.first;
     }
 
     return resultado;

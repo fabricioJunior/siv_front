@@ -8,6 +8,7 @@ import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
 import 'package:core/sessao.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -811,6 +812,7 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
   late final LeitorBuscaBloc _buscaBloc;
   final _textoController = TextEditingController();
   final _textoFocusNode = FocusNode();
+  final _filtrosScrollController = ScrollController();
 
   @override
   void initState() {
@@ -829,7 +831,20 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
     _buscaBloc.close();
     _textoController.dispose();
     _textoFocusNode.dispose();
+    _filtrosScrollController.dispose();
     super.dispose();
+  }
+
+  void _rolarFiltros(double offset) {
+    final destino = (_filtrosScrollController.offset + offset).clamp(
+      0.0,
+      _filtrosScrollController.position.maxScrollExtent,
+    );
+    _filtrosScrollController.animateTo(
+      destino,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _selecionarProduto(LeitorData produto) async {
@@ -908,52 +923,84 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                     if (state.tamanhosDisponiveis.isNotEmpty ||
                         state.coresDisponiveis.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            if (state.tamanhosDisponiveis.isNotEmpty) ...[
-                              Text(
-                                'Tam:',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              const SizedBox(width: 4),
-                              ...state.tamanhosDisponiveis.map(
-                                (t) => Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: FilterChip(
-                                    label: Text(t),
-                                    selected: state.tamanhoFiltro == t,
-                                    onSelected: (sel) => _buscaBloc.add(
-                                      LeitorBuscaTamanhoFiltrado(
-                                          sel ? t : null),
-                                    ),
-                                  ),
+                      Row(
+                        children: [
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: () => _rolarFiltros(-120),
+                          ),
+                          Expanded(
+                            child: ScrollConfiguration(
+                              behavior: ScrollConfiguration.of(context)
+                                  .copyWith(dragDevices: {
+                                PointerDeviceKind.touch,
+                                PointerDeviceKind.mouse,
+                              }),
+                              child: SingleChildScrollView(
+                                controller: _filtrosScrollController,
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    if (state
+                                        .tamanhosDisponiveis.isNotEmpty) ...[
+                                      Text(
+                                        'Tam:',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      ...state.tamanhosDisponiveis.map(
+                                        (t) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 4),
+                                          child: FilterChip(
+                                            label: Text(t),
+                                            selected: state.tamanhoFiltro == t,
+                                            onSelected: (sel) => _buscaBloc.add(
+                                              LeitorBuscaTamanhoFiltrado(
+                                                  sel ? t : null),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    if (state.coresDisponiveis.isNotEmpty) ...[
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Cor:',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      ...state.coresDisponiveis.map(
+                                        (c) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 4),
+                                          child: FilterChip(
+                                            label: Text(c),
+                                            selected: state.corFiltro == c,
+                                            onSelected: (sel) => _buscaBloc.add(
+                                              LeitorBuscaCorFiltrada(
+                                                  sel ? c : null),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
-                            ],
-                            if (state.coresDisponiveis.isNotEmpty) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                'Cor:',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              const SizedBox(width: 4),
-                              ...state.coresDisponiveis.map(
-                                (c) => Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: FilterChip(
-                                    label: Text(c),
-                                    selected: state.corFiltro == c,
-                                    onSelected: (sel) => _buscaBloc.add(
-                                      LeitorBuscaCorFiltrada(sel ? c : null),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                            ),
+                          ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: () => _rolarFiltros(120),
+                          ),
+                        ],
                       ),
                     ],
                     const SizedBox(height: 8),

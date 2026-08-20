@@ -16,7 +16,18 @@ class EcommerceReferenciasPage extends StatelessWidget {
       create: (context) => sl<EcommerceReferenciasBloc>()
         ..add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId)),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Produtos no site')),
+        appBar: AppBar(
+          title: const Text('Produtos no site'),
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.visibility_off_outlined),
+                tooltip: 'Despublicar todas',
+                onPressed: () => _despublicarTodas(context),
+              ),
+            ),
+          ],
+        ),
         floatingActionButton: Builder(
           builder: (context) => FloatingActionButton.extended(
             onPressed: () => _adicionarReferencias(context),
@@ -43,57 +54,65 @@ class EcommerceReferenciasPage extends StatelessWidget {
               );
             }
 
-            return ListView.builder(
-              itemCount: state.referencias.length,
-              itemBuilder: (context, index) {
-                final referencia = state.referencias[index];
-                return ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: referencia.imagemUrl != null
-                          ? Image.network(
-                              referencia.imagemUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _placeholderImagem(context),
-                            )
-                          : _placeholderImagem(context),
-                    ),
-                  ),
-                  title: Text(
-                    referencia.referenciaNome ??
-                        'Referência #${referencia.referenciaId}',
-                  ),
-                  subtitle: Text(
-                    '${referencia.valor != null ? _formatarMoeda(referencia.valor!) : 'Sem preço'} • Estoque: ${referencia.saldo ?? 0}',
-                  ),
-                  trailing: Chip(
-                    label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
-                    backgroundColor: referencia.rascunho
-                        ? Colors.orange.withValues(alpha: 0.2)
-                        : Colors.green.withValues(alpha: 0.2),
-                  ),
-                  onTap: () async {
-                    final bloc = context.read<EcommerceReferenciasBloc>();
-                    await Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => EcommerceReferenciaDetalhePage(
-                          ecommerceId: ecommerceId,
-                          referencia: referencia,
-                        ),
-                      ),
-                    );
-                    bloc.add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId));
-                  },
-                );
-              },
+            return Column(
+              children: [
+                if (state.processandoLote) const LinearProgressIndicator(),
+                Expanded(child: _buildLista(context, state)),
+              ],
             );
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildLista(BuildContext context, EcommerceReferenciasState state) {
+    return ListView.builder(
+      itemCount: state.referencias.length,
+      itemBuilder: (context, index) {
+        final referencia = state.referencias[index];
+        return ListTile(
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: referencia.imagemUrl != null
+                  ? Image.network(
+                      referencia.imagemUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholderImagem(context),
+                    )
+                  : _placeholderImagem(context),
+            ),
+          ),
+          title: Text(
+            referencia.referenciaNome ??
+                'Referência #${referencia.referenciaId}',
+          ),
+          subtitle: Text(
+            '${referencia.valor != null ? _formatarMoeda(referencia.valor!) : 'Sem preço'} • Estoque: ${referencia.saldo ?? 0}',
+          ),
+          trailing: Chip(
+            label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
+            backgroundColor: referencia.rascunho
+                ? Colors.orange.withValues(alpha: 0.2)
+                : Colors.green.withValues(alpha: 0.2),
+          ),
+          onTap: () async {
+            final bloc = context.read<EcommerceReferenciasBloc>();
+            await Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => EcommerceReferenciaDetalhePage(
+                  ecommerceId: ecommerceId,
+                  referencia: referencia,
+                ),
+              ),
+            );
+            bloc.add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId));
+          },
+        );
+      },
     );
   }
 
@@ -147,6 +166,42 @@ class EcommerceReferenciasPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _despublicarTodas(BuildContext context) async {
+    final bloc = context.read<EcommerceReferenciasBloc>();
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Despublicar todas as referências'),
+          content: const Text(
+            'Todas as referências publicadas deste e-commerce vão sair do '
+            'site imediatamente. Essa ação pode ser desfeita depois, '
+            'republicando cada referência.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Despublicar todas'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou == true) {
+      bloc.add(
+        EcommerceReferenciasDespublicarTodasSolicitou(
+          ecommerceId: ecommerceId,
+        ),
+      );
+    }
   }
 
   Widget _placeholderImagem(BuildContext context) {

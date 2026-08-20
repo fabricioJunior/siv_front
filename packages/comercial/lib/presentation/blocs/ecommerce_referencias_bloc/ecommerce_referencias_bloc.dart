@@ -12,13 +12,16 @@ class EcommerceReferenciasBloc
     extends Bloc<EcommerceReferenciasEvent, EcommerceReferenciasState> {
   final RecuperarReferenciasEcommerce _recuperarReferenciasEcommerce;
   final AdicionarReferenciaEcommerce _adicionarReferenciaEcommerce;
+  final AtualizarReferenciaEcommerce _atualizarReferenciaEcommerce;
 
   EcommerceReferenciasBloc(
     this._recuperarReferenciasEcommerce,
     this._adicionarReferenciaEcommerce,
+    this._atualizarReferenciaEcommerce,
   ) : super(const EcommerceReferenciasInitial()) {
     on<EcommerceReferenciasIniciou>(_onIniciou);
     on<EcommerceReferenciaAdicionou>(_onAdicionou);
+    on<EcommerceReferenciasDespublicarTodasSolicitou>(_onDespublicarTodas);
   }
 
   FutureOr<void> _onIniciou(
@@ -64,6 +67,53 @@ class EcommerceReferenciasBloc
     } catch (e, s) {
       emit(
         EcommerceReferenciasAdicionarFalha(
+          ecommerceId: event.ecommerceId,
+          referencias: state.referencias,
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onDespublicarTodas(
+    EcommerceReferenciasDespublicarTodasSolicitou event,
+    Emitter<EcommerceReferenciasState> emit,
+  ) async {
+    final publicadas =
+        state.referencias.where((referencia) => !referencia.rascunho);
+    if (publicadas.isEmpty) return;
+
+    emit(
+      EcommerceReferenciasCarregarSucesso(
+        ecommerceId: event.ecommerceId,
+        referencias: state.referencias,
+        processandoLote: true,
+      ),
+    );
+
+    try {
+      // Sequencial, não Future.wait: um PUT por referência em paralelo tromba
+      // no rate limiter da API (50 req/s por IP) quando o site tem muitas
+      // referências publicadas.
+      for (final referencia in publicadas) {
+        await _atualizarReferenciaEcommerce.call(
+          event.ecommerceId,
+          referencia.id!,
+          rascunho: true,
+        );
+      }
+      final referencias = await _recuperarReferenciasEcommerce.call(
+        event.ecommerceId,
+      );
+      emit(
+        EcommerceReferenciasCarregarSucesso(
+          ecommerceId: event.ecommerceId,
+          referencias: referencias,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        EcommerceReferenciasDespublicarTodasFalha(
           ecommerceId: event.ecommerceId,
           referencias: state.referencias,
         ),

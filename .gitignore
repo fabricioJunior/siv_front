@@ -48,3 +48,5 @@ app.*.map.json
 .fvm/
 # Added by code-review-graph
 .code-review-graph/
+
+packages/*/build/

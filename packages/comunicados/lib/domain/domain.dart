@@ -1,0 +1,11 @@
+export 'models/models.dart';
+export 'data/remote/i_comunicado_remote_data_source.dart';
+export 'data/repositorios/i_comunicado_repository.dart';
+export 'usecases/criar_comunicado.dart';
+export 'usecases/listar_comunicados.dart';
+export 'usecases/buscar_comunicado.dart';
+export 'usecases/listar_destinatarios_comunicado.dart';
+export 'usecases/contar_destinatarios_comunicado.dart';
+export 'usecases/preview_destinatarios_comunicado.dart';
+export 'usecases/reenviar_destinatario_comunicado.dart';
+export 'usecases/enviar_imagem_comunicado.dart';

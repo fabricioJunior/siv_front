@@ -1,0 +1,25 @@
+name: comunicados
+description: "Envio de comunicados por e-mail em massa/segmentado para clientes."
+version: 0.0.1
+publish_to: none
+homepage:
+
+environment:
+  sdk: ^3.10.7
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../core
+  flutter_quill: 11.5.0
+  vsc_quill_delta_to_html: ^1.0.5
+  flutter_quill_extensions: ^11.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:

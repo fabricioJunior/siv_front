@@ -27,6 +27,7 @@ export 'presentation/widgets/pagamentos_realizados_widget.dart';
 export 'presentation/blocs/configuracao_fiscal_bloc/configuracao_fiscal_bloc.dart';
 export 'presentation/blocs/documentos_fiscais_bloc/documentos_fiscais_bloc.dart';
 export 'presentation/blocs/documento_fiscal_detalhe_bloc/documento_fiscal_detalhe_bloc.dart';
+export 'presentation/blocs/relatorio_fiscal_bloc/relatorio_fiscal_bloc.dart';
 export 'presentation/pages/configuracao_fiscal_page.dart';
 export 'presentation/pages/documentos_fiscais_page.dart';
 export 'presentation/pages/documento_fiscal_page.dart';

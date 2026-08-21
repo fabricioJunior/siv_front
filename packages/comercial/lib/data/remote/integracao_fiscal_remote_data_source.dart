@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:comercial/data/remote/dtos/documento_fiscal_dto.dart';
 import 'package:comercial/domain/data/remote/i_integracao_fiscal_remote_data_source.dart';
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 import 'package:core/remote_data_sourcers.dart';
 
 class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
@@ -100,6 +101,32 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
         .map((j) => DocumentoFiscalDto.fromJson(j as Map<String, dynamic>))
         .toList();
     return {'items': items, 'total': (body['total'] as num?)?.toInt() ?? 0};
+  }
+
+  @override
+  Future<ResumoFiscal> getResumo({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/resumo'},
+      queryParameters: {
+        if (romaneioId != null) 'romaneioId': '$romaneioId',
+        if (pedidoId != null) 'pedidoId': '$pedidoId',
+        if (cliente != null && cliente.isNotEmpty) 'cliente': cliente,
+        if (status != null) 'status': status,
+        if (formaPagamento != null && formaPagamento.isNotEmpty)
+          'formaPagamento': formaPagamento,
+        if (dataInicio != null) 'dataInicio': dataInicio.toIso8601String(),
+        if (dataFim != null) 'dataFim': dataFim.toIso8601String(),
+      },
+    );
+    return ResumoFiscalDto.fromJson(response.body as Map<String, dynamic>);
   }
 
   @override

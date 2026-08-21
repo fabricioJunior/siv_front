@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 
 abstract class IIntegracaoFiscalRemoteDataSource {
   Future<List<String>> listarProviders();
@@ -27,6 +28,18 @@ abstract class IIntegracaoFiscalRemoteDataSource {
     int page = 1,
     int limit = 25,
   });
+  /// Saldo consolidado/pendente/total do periodo/filtro (tela de relatorio fiscal), mesmos filtros
+  /// de [listarDocumentos] sem paginacao.
+  Future<ResumoFiscal> getResumo({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  });
+
   Future<DocumentoFiscal> reprocessar(int id);
   Future<DocumentoFiscalDetalhe> getDetalhe(int id);
 

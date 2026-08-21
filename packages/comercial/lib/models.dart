@@ -8,6 +8,7 @@ export 'domain/models/romaneio.dart';
 export 'domain/models/romaneio_item.dart';
 export 'domain/models/romaneio_item_devolvido.dart';
 export 'domain/models/documento_fiscal.dart';
+export 'domain/models/resumo_fiscal.dart';
 export 'domain/models/relatorios.dart';
 export 'domain/models/orcamento_local.dart';
 export 'domain/models/consignacao.dart';

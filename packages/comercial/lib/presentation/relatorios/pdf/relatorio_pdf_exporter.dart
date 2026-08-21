@@ -1,6 +1,9 @@
+import 'package:comercial/domain/models/documento_fiscal.dart';
 import 'package:comercial/domain/models/relatorios.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 import 'package:core/pdf.dart' show PdfPageFormat, PdfColor, PdfColors, PdfService;
 import 'package:core/pdf_widgets.dart' as pw;
+import 'package:core/presentation.dart' show formatarDataHora;
 
 String _fmtMoeda(double v) {
   final s = v.toStringAsFixed(2);
@@ -372,6 +375,80 @@ class RelatorioPdfExporter {
     await PdfService.compartilhar(
       await doc.save(),
       'clientes_ativos_${dias}d.pdf',
+    );
+  }
+
+  static Future<void> exportarRelatorioFiscalPdf(
+    List<DocumentoFiscal> items,
+    ResumoFiscal resumo,
+    String dataInicial,
+    String dataFinal,
+  ) async {
+    final doc = pw.Document();
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => [
+          _cabecalho(
+            'Relatório Fiscal',
+            '${_fmtData(dataInicial)} a ${_fmtData(dataFinal)}',
+            _indigo,
+          ),
+          pw.SizedBox(height: 12),
+          _kpiRow([
+            ('Saldo consolidado', _fmtMoeda(resumo.saldoConsolidado)),
+            ('Saldo pendente', _fmtMoeda(resumo.saldoPendente)),
+            ('Saldo total', _fmtMoeda(resumo.saldoTotal)),
+          ]),
+          pw.SizedBox(height: 12),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(2),
+              1: const pw.FlexColumnWidth(2),
+              2: const pw.FlexColumnWidth(1),
+              3: const pw.FlexColumnWidth(2),
+              4: const pw.FlexColumnWidth(3),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                children: ['Data', 'Tipo', 'Status', 'Valor', 'Cliente']
+                    .map(
+                      (h) => pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text(h,
+                            style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                      ),
+                    )
+                    .toList(),
+              ),
+              for (final item in items)
+                pw.TableRow(
+                  children: [
+                    item.createdAt != null ? formatarDataHora(item.createdAt) : '',
+                    item.tipoDocumentoLabel,
+                    item.status,
+                    _fmtMoeda(item.valorLiquido),
+                    item.clienteMascarado,
+                  ]
+                      .map(
+                        (c) => pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Text(c, style: const pw.TextStyle(fontSize: 8)),
+                        ),
+                      )
+                      .toList(),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+    await PdfService.compartilhar(
+      await doc.save(),
+      'relatorio_fiscal_${dataInicial}_${dataFinal}.pdf',
     );
   }
 }

@@ -13,6 +13,7 @@ export 'presentation/pages/documentos_fiscais_page.dart';
 export 'presentation/pages/documento_fiscal_page.dart';
 export 'presentation/pages/configuracao_fiscal_page.dart';
 export 'presentation/pages/relatorio_faturamento_page.dart';
+export 'presentation/pages/relatorio_fiscal_page.dart';
 export 'presentation/pages/relatorio_curva_abc_page.dart';
 export 'presentation/pages/relatorio_clientes_ativos_page.dart';
 export 'presentation/pages/relatorio_compras_clientes_page.dart';

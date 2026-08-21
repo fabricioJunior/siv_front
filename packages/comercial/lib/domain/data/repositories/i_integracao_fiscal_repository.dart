@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 
 abstract class IIntegracaoFiscalRepository {
   Future<List<String>> listarProviders();
@@ -26,6 +27,16 @@ abstract class IIntegracaoFiscalRepository {
     int page,
     int limit,
   });
+  Future<ResumoFiscal> getResumo({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  });
+
   Future<DocumentoFiscal> reprocessar(int id);
   Future<DocumentoFiscalDetalhe> getDetalhe(int id);
   Future<Uint8List> baixarDanfe(int id);

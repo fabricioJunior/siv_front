@@ -1,4 +1,5 @@
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 import 'package:core/equals.dart';
 
 class DocumentoFiscalDto extends Equatable implements DocumentoFiscal {
@@ -91,6 +92,30 @@ class DocumentoFiscalDto extends Equatable implements DocumentoFiscal {
 
   @override
   List<Object?> get props => [id, status, tentativas];
+}
+
+class ResumoFiscalDto extends Equatable implements ResumoFiscal {
+  @override
+  final double saldoConsolidado;
+  @override
+  final double saldoPendente;
+  @override
+  final double saldoTotal;
+
+  const ResumoFiscalDto({
+    required this.saldoConsolidado,
+    required this.saldoPendente,
+    required this.saldoTotal,
+  });
+
+  factory ResumoFiscalDto.fromJson(Map<String, dynamic> json) => ResumoFiscalDto(
+        saldoConsolidado: (json['saldoConsolidado'] as num?)?.toDouble() ?? 0,
+        saldoPendente: (json['saldoPendente'] as num?)?.toDouble() ?? 0,
+        saldoTotal: (json['saldoTotal'] as num?)?.toDouble() ?? 0,
+      );
+
+  @override
+  List<Object?> get props => [saldoConsolidado, saldoPendente, saldoTotal];
 }
 
 class DocumentoFiscalEventoDto extends Equatable implements DocumentoFiscalEvento {

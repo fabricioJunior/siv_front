@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:comercial/data.dart';
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/resumo_fiscal.dart';
 
 class IntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   final IIntegracaoFiscalRemoteDataSource remoteDataSource;
@@ -52,6 +53,26 @@ class IntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
         dataFim: dataFim,
         page: page,
         limit: limit,
+      );
+
+  @override
+  Future<ResumoFiscal> getResumo({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  }) =>
+      remoteDataSource.getResumo(
+        romaneioId: romaneioId,
+        pedidoId: pedidoId,
+        cliente: cliente,
+        status: status,
+        formaPagamento: formaPagamento,
+        dataInicio: dataInicio,
+        dataFim: dataFim,
       );
 
   @override

@@ -54,6 +54,18 @@ class StubIntegracaoFiscalRepository implements IIntegracaoFiscalRepository {
   Future<List<String>> listarProviders() async => const [];
 
   @override
+  Future<ResumoFiscal> getResumo({
+    int? romaneioId,
+    int? pedidoId,
+    String? cliente,
+    String? status,
+    String? formaPagamento,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
   Future<EmpresaIntegracaoFiscal?> getConfiguracao({int? empresaId}) async =>
       null;
 

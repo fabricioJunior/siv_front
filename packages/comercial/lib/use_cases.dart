@@ -55,6 +55,7 @@ export 'domain/use_cases/atualizar_referencia_ecommerce.dart';
 export 'domain/use_cases/recuperar_produtos_da_referencia_ecommerce.dart';
 export 'domain/use_cases/atualizar_disponibilidade_produto_ecommerce.dart';
 export 'domain/use_cases/listar_documentos_fiscais.dart';
+export 'domain/use_cases/get_resumo_fiscal.dart';
 export 'domain/use_cases/get_configuracao_fiscal.dart';
 export 'domain/use_cases/salvar_configuracao_fiscal.dart';
 export 'domain/use_cases/enviar_certificado_fiscal.dart';

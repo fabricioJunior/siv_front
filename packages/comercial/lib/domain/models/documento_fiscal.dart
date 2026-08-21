@@ -27,6 +27,31 @@ extension DocumentoFiscalAmbiente on DocumentoFiscal {
   bool get emitidaEmHomologacao => ambiente == 2;
 }
 
+extension DocumentoFiscalPayload on DocumentoFiscal {
+  double get valorLiquido => (payload?['valorLiquido'] as num?)?.toDouble() ?? 0;
+  String? get pessoaDocumento => payload?['pessoaDocumento'] as String?;
+
+  String get tipoDocumentoLabel => switch (tipoDocumento) {
+        'nfe_venda' => 'Venda',
+        'nfe_devolucao_venda' => 'Devolução de Venda',
+        'nfe_devolucao_compra' => 'Devolução de Compra',
+        'evento_cancelamento' => 'Cancelamento',
+        _ => tipoDocumento,
+      };
+
+  /// Documento mascarado (`123***`) + nome, se ambos presentes; só um dos dois se só ele existir;
+  /// "Sem cliente" se nenhum.
+  String get clienteMascarado {
+    final doc = pessoaDocumento;
+    final nome = pessoaNome;
+    if (doc != null && doc.length >= 3) {
+      final mascara = '${doc.substring(0, 3)}***';
+      return nome != null ? '$mascara — $nome' : mascara;
+    }
+    return nome ?? 'Sem cliente';
+  }
+}
+
 abstract class DocumentoFiscalFiltros {
   int? get romaneioId;
   int? get pedidoId;

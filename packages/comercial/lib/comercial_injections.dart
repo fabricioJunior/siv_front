@@ -253,6 +253,9 @@ void _useCases() {
   sl.registerFactory<ListarDocumentosFiscais>(
     () => ListarDocumentosFiscais(repository: sl()),
   );
+  sl.registerFactory<GetResumoFiscal>(
+    () => GetResumoFiscal(repository: sl()),
+  );
   sl.registerFactory<GetDocumentoFiscalDetalhe>(
     () => GetDocumentoFiscalDetalhe(sl()),
   );
@@ -524,6 +527,9 @@ void _presentation() {
   );
   sl.registerFactory<DocumentoFiscalDetalheBloc>(
     () => DocumentoFiscalDetalheBloc(sl(), sl(), sl(), sl(), sl()),
+  );
+  sl.registerFactory<RelatorioFiscalBloc>(
+    () => RelatorioFiscalBloc(sl(), sl()),
   );
 
   sl.registerFactory<RelatorioFaturamentoBloc>(

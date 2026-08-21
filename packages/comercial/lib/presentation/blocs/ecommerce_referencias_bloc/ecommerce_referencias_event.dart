@@ -31,6 +31,20 @@ class EcommerceReferenciaAdicionou extends EcommerceReferenciasEvent {
   List<Object?> get props => [ecommerceId, referenciaId, tabelaDePrecoId];
 }
 
+class EcommerceReferenciaPublicarSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+  final int referenciaEcommerceId;
+
+  const EcommerceReferenciaPublicarSolicitou({
+    required this.ecommerceId,
+    required this.referenciaEcommerceId,
+  });
+
+  @override
+  List<Object?> get props => [ecommerceId, referenciaEcommerceId];
+}
+
 class EcommerceReferenciasDespublicarTodasSolicitou
     extends EcommerceReferenciasEvent {
   final int ecommerceId;

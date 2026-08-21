@@ -93,11 +93,30 @@ class EcommerceReferenciasPage extends StatelessWidget {
           subtitle: Text(
             '${referencia.valor != null ? _formatarMoeda(referencia.valor!) : 'Sem preço'} • Estoque: ${referencia.saldo ?? 0}',
           ),
-          trailing: Chip(
-            label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
-            backgroundColor: referencia.rascunho
-                ? Colors.orange.withValues(alpha: 0.2)
-                : Colors.green.withValues(alpha: 0.2),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (referencia.rascunho)
+                IconButton(
+                  icon: const Icon(Icons.publish_outlined),
+                  tooltip: 'Publicar',
+                  color: Colors.green,
+                  onPressed: state.processandoLote
+                      ? null
+                      : () => context.read<EcommerceReferenciasBloc>().add(
+                            EcommerceReferenciaPublicarSolicitou(
+                              ecommerceId: ecommerceId,
+                              referenciaEcommerceId: referencia.id!,
+                            ),
+                          ),
+                ),
+              Chip(
+                label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
+                backgroundColor: referencia.rascunho
+                    ? Colors.orange.withValues(alpha: 0.2)
+                    : Colors.green.withValues(alpha: 0.2),
+              ),
+            ],
           ),
           onTap: () async {
             final bloc = context.read<EcommerceReferenciasBloc>();

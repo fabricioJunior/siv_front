@@ -21,6 +21,7 @@ class EcommerceReferenciasBloc
   ) : super(const EcommerceReferenciasInitial()) {
     on<EcommerceReferenciasIniciou>(_onIniciou);
     on<EcommerceReferenciaAdicionou>(_onAdicionou);
+    on<EcommerceReferenciaPublicarSolicitou>(_onPublicar);
     on<EcommerceReferenciasDespublicarTodasSolicitou>(_onDespublicarTodas);
   }
 
@@ -54,6 +55,45 @@ class EcommerceReferenciasBloc
         event.ecommerceId,
         referenciaId: event.referenciaId,
         tabelaDePrecoId: event.tabelaDePrecoId,
+      );
+      final referencias = await _recuperarReferenciasEcommerce.call(
+        event.ecommerceId,
+      );
+      emit(
+        EcommerceReferenciasCarregarSucesso(
+          ecommerceId: event.ecommerceId,
+          referencias: referencias,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        EcommerceReferenciasAdicionarFalha(
+          ecommerceId: event.ecommerceId,
+          referencias: state.referencias,
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  // Publica direto da lista (card), sem passar pela tela de detalhe -- mesmo use case usado lá.
+  FutureOr<void> _onPublicar(
+    EcommerceReferenciaPublicarSolicitou event,
+    Emitter<EcommerceReferenciasState> emit,
+  ) async {
+    emit(
+      EcommerceReferenciasCarregarSucesso(
+        ecommerceId: event.ecommerceId,
+        referencias: state.referencias,
+        processandoLote: true,
+      ),
+    );
+
+    try {
+      await _atualizarReferenciaEcommerce.call(
+        event.ecommerceId,
+        event.referenciaEcommerceId,
+        rascunho: false,
       );
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,

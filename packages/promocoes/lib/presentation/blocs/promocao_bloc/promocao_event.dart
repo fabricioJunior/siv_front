@@ -11,6 +11,7 @@ class PromocaoIniciou extends PromocaoEvent {
 class PromocaoCampoAlterado extends PromocaoEvent {
   final String? nome;
   final String? descricao;
+  final String? regras;
   final DateTime? dataInicio;
   final DateTime? dataFim;
   final TipoDesconto? tipoDesconto;
@@ -41,6 +42,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   PromocaoCampoAlterado({
     this.nome,
     this.descricao,
+    this.regras,
     this.dataInicio,
     this.dataFim,
     this.tipoDesconto,

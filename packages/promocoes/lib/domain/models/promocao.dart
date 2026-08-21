@@ -63,6 +63,7 @@ abstract class Promocao implements Equatable {
   int? get empresaId;
   String get nome;
   String? get descricao;
+  String? get regras;
   DateTime get dataInicio;
   DateTime get dataFim;
   TipoDesconto get tipoDesconto;
@@ -94,6 +95,7 @@ abstract class Promocao implements Equatable {
     int? empresaId,
     required String nome,
     String? descricao,
+    String? regras,
     required DateTime dataInicio,
     required DateTime dataFim,
     required TipoDesconto tipoDesconto,
@@ -127,6 +129,7 @@ abstract class Promocao implements Equatable {
         empresaId,
         nome,
         descricao,
+        regras,
         dataInicio,
         dataFim,
         tipoDesconto,
@@ -167,6 +170,8 @@ class _PromocaoImpl implements Promocao {
   final String nome;
   @override
   final String? descricao;
+  @override
+  final String? regras;
   @override
   final DateTime dataInicio;
   @override
@@ -223,6 +228,7 @@ class _PromocaoImpl implements Promocao {
     this.empresaId,
     required this.nome,
     this.descricao,
+    this.regras,
     required this.dataInicio,
     required this.dataFim,
     required this.tipoDesconto,
@@ -256,6 +262,7 @@ class _PromocaoImpl implements Promocao {
         empresaId,
         nome,
         descricao,
+        regras,
         dataInicio,
         dataFim,
         tipoDesconto,

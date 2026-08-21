@@ -17,6 +17,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _descricaoController = TextEditingController();
+  final _regrasController = TextEditingController();
   final _limiteUnidadesVendidasController = TextEditingController();
   final _limiteUsosPorClienteController = TextEditingController();
 
@@ -24,6 +25,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
   void dispose() {
     _nomeController.dispose();
     _descricaoController.dispose();
+    _regrasController.dispose();
     _limiteUnidadesVendidasController.dispose();
     _limiteUsosPorClienteController.dispose();
     super.dispose();
@@ -112,6 +114,20 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                           ),
                           onChanged: (value) =>
                               _onCampoAlterado(context, descricao: value),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _regrasController,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: 'Regras da promoção (opcional)',
+                            helperText:
+                                'Condições de troca/regras da ação promocional. '
+                                'Exibido pro cliente no checkout do e-commerce.',
+                            alignLabelWithHint: true,
+                          ),
+                          onChanged: (value) =>
+                              _onCampoAlterado(context, regras: value),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -354,6 +370,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
   void _sincronizarControllers(PromocaoState state) {
     final nome = state.nome ?? '';
     final descricao = state.descricao ?? '';
+    final regras = state.regras ?? '';
     final limite = state.limiteUnidadesVendidas?.toString() ?? '';
     final limitePorCliente = state.limiteUsosPorCliente?.toString() ?? '';
 
@@ -368,6 +385,13 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
       _descricaoController.value = TextEditingValue(
         text: descricao,
         selection: TextSelection.collapsed(offset: descricao.length),
+      );
+    }
+
+    if (_regrasController.text != regras) {
+      _regrasController.value = TextEditingValue(
+        text: regras,
+        selection: TextSelection.collapsed(offset: regras.length),
       );
     }
 
@@ -390,6 +414,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     BuildContext context, {
     String? nome,
     String? descricao,
+    String? regras,
     DateTime? dataInicio,
     DateTime? dataFim,
     TipoDesconto? tipoDesconto,
@@ -416,6 +441,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
           PromocaoCampoAlterado(
             nome: nome,
             descricao: descricao,
+            regras: regras,
             dataInicio: dataInicio,
             dataFim: dataFim,
             tipoDesconto: tipoDesconto,

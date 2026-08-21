@@ -79,6 +79,7 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
       state.copyWith(
         nome: event.nome,
         descricao: event.descricao,
+        regras: event.regras,
         dataInicio: event.dataInicio,
         dataFim: event.dataFim,
         tipoDesconto: event.tipoDesconto,
@@ -189,6 +190,7 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         empresaId: state.promocao?.empresaId,
         nome: nome,
         descricao: state.descricao,
+        regras: state.regras,
         dataInicio: dataInicio,
         dataFim: dataFim,
         tipoDesconto: state.tipoDesconto,

@@ -4,6 +4,7 @@ class PromocaoState extends Equatable {
   final int? id;
   final String? nome;
   final String? descricao;
+  final String? regras;
   final DateTime? dataInicio;
   final DateTime? dataFim;
   final TipoDesconto tipoDesconto;
@@ -35,6 +36,7 @@ class PromocaoState extends Equatable {
     this.id,
     this.nome,
     this.descricao,
+    this.regras,
     this.dataInicio,
     this.dataFim,
     this.tipoDesconto = TipoDesconto.percentual,
@@ -70,6 +72,7 @@ class PromocaoState extends Equatable {
   })  : id = origem.id,
         nome = origem.nome,
         descricao = origem.descricao,
+        regras = origem.regras,
         dataInicio = origem.dataInicio,
         dataFim = origem.dataFim,
         tipoDesconto = origem.tipoDesconto,
@@ -99,6 +102,7 @@ class PromocaoState extends Equatable {
   PromocaoState copyWith({
     String? nome,
     String? descricao,
+    String? regras,
     DateTime? dataInicio,
     DateTime? dataFim,
     TipoDesconto? tipoDesconto,
@@ -131,6 +135,7 @@ class PromocaoState extends Equatable {
       id: id,
       nome: nome ?? this.nome,
       descricao: descricao ?? this.descricao,
+      regras: regras ?? this.regras,
       dataInicio: dataInicio ?? this.dataInicio,
       dataFim: dataFim ?? this.dataFim,
       tipoDesconto: tipoDesconto ?? this.tipoDesconto,
@@ -168,6 +173,7 @@ class PromocaoState extends Equatable {
         id,
         nome,
         descricao,
+        regras,
         dataInicio,
         dataFim,
         tipoDesconto,

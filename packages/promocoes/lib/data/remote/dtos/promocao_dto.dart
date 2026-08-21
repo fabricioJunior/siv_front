@@ -12,6 +12,8 @@ class PromocaoDto implements Promocao {
   @override
   final String? descricao;
   @override
+  final String? regras;
+  @override
   final DateTime dataInicio;
   @override
   final DateTime dataFim;
@@ -67,6 +69,7 @@ class PromocaoDto implements Promocao {
     this.empresaId,
     required this.nome,
     this.descricao,
+    this.regras,
     required this.dataInicio,
     required this.dataFim,
     required this.tipoDesconto,
@@ -100,6 +103,7 @@ class PromocaoDto implements Promocao {
       empresaId: (json['empresaId'] as num?)?.toInt(),
       nome: (json['nome'] as String?) ?? '',
       descricao: json['descricao'] as String?,
+      regras: json['regras'] as String?,
       dataInicio: _parseData(json['dataInicio']),
       dataFim: _parseData(json['dataFim']),
       tipoDesconto: TipoDesconto.fromString(json['tipoDesconto'] as String?),
@@ -145,6 +149,7 @@ class PromocaoDto implements Promocao {
       empresaId: promocao.empresaId,
       nome: promocao.nome,
       descricao: promocao.descricao,
+      regras: promocao.regras,
       dataInicio: promocao.dataInicio,
       dataFim: promocao.dataFim,
       tipoDesconto: promocao.tipoDesconto,
@@ -179,6 +184,7 @@ class PromocaoDto implements Promocao {
     return {
       'nome': nome,
       if (descricao != null) 'descricao': descricao,
+      if (regras != null) 'regras': regras,
       'dataInicio': _formatData(dataInicio),
       'dataFim': _formatData(dataFim),
       'tipoDesconto': tipoDesconto.value,
@@ -218,6 +224,7 @@ class PromocaoDto implements Promocao {
         empresaId,
         nome,
         descricao,
+        regras,
         dataInicio,
         dataFim,
         tipoDesconto,

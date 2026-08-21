@@ -319,6 +319,17 @@ class _HomePageState extends State<HomePage> {
                 ),
               ];
 
+              final comunicacao = <_AccessFlowItem>[
+                const _AccessFlowItem(
+                  icon: Icons.campaign_outlined,
+                  title: 'Comunicados',
+                  subtitle: 'Envio de e-mail em massa e segmentado para clientes.',
+                  color: Colors.deepPurple,
+                  route: '/comunicados',
+                  componentesNecessarios: ['COMFC001'],
+                ),
+              ];
+
               final relatoriosFiscal = <_AccessFlowItem>[
                 const _AccessFlowItem(
                   icon: Icons.receipt_outlined,
@@ -326,6 +337,14 @@ class _HomePageState extends State<HomePage> {
                   subtitle: 'Notas emitidas, pendentes e com falha.',
                   color: Colors.indigo,
                   route: '/documentos_fiscais',
+                  componentesNecessarios: ['FISFM001'],
+                ),
+                const _AccessFlowItem(
+                  icon: Icons.summarize_outlined,
+                  title: 'Relatório Fiscal',
+                  subtitle: 'Saldo consolidado, pendente e notas do período.',
+                  color: Colors.indigo,
+                  route: '/relatorio_fiscal',
                   componentesNecessarios: ['FISFM001'],
                 ),
               ];
@@ -457,6 +476,14 @@ class _HomePageState extends State<HomePage> {
                             title: 'Relatórios de Estoque',
                             subtitle: 'Produtos parados sem movimentação.',
                             items: _permitidos(relatoriosEstoque),
+                          ),
+                        ],
+                        if (_permitidos(comunicacao).isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _AccessSection(
+                            title: 'Comunicação',
+                            subtitle: 'Envio de comunicados por e-mail para clientes.',
+                            items: _permitidos(comunicacao),
                           ),
                         ],
                         if (_permitidos(relatoriosFiscal).isNotEmpty) ...[

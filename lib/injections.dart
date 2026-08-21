@@ -18,6 +18,7 @@ import 'package:entregas/entregas_injections.dart';
 import 'package:estoque/estoque_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
+import 'package:comunicados/comunicados_injections.dart';
 import 'package:promocoes/promocoes_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
@@ -73,6 +74,7 @@ Future<void> resolverDependenciasApp() async {
   resolverPrecosInjection();
   resolverEstoqueInjection();
   resolverEntregasInjections();
+  resolverComunicadosInjection();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }

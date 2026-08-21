@@ -3,6 +3,7 @@ import 'package:autenticacao/models.dart' show TerminalDoUsuario;
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
 import 'package:core/seletores.dart' show SelectData, SeletorData;
@@ -370,6 +371,12 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/documento_fiscal',
       child: DocumentoFiscalPage(documentoId: args['id'] as int),
+    );
+  },
+  '/relatorio_fiscal': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_fiscal',
+      child: const RelatorioFiscalPage(),
     );
   },
   '/configuracao_fiscal': (context) {
@@ -1112,6 +1119,26 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
 
+  // Comunicados:
+  '/comunicados': (context) {
+    return _rotaProtegida(
+      route: '/comunicados',
+      child: const ComunicadosPage(),
+    );
+  },
+  '/comunicados/compor': (context) {
+    return _rotaProtegida(
+      route: '/comunicados/compor',
+      child: const ComporComunicadoPage(),
+    );
+  },
+  '/comunicado': (context) {
+    return _rotaProtegida(
+      route: '/comunicado',
+      child: DetalheComunicadoPage(comunicadoId: args(context)['id']),
+    );
+  },
+
   //CONFIGURACOES:
   '/configuracoes': (context) {
     return const ConfiguracoesPage();
@@ -1187,6 +1214,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/consignacao_extrato': ['CONFC002'],
   '/documentos_fiscais': ['FISFM001'],
   '/documento_fiscal': ['FISFM001'],
+  '/relatorio_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],
   '/configuracao_entrega': ['ENTFM001'],
   '/ecommerces': ['ECOFM001'],
@@ -1241,6 +1269,9 @@ const Map<String, List<String>> _componentesDaRota = {
   '/promocoes': ['PROMFC001'],
   '/promocao/importar_csv': ['PROMFM001'],
   '/cupons': ['CUPFC001'],
+  '/comunicados': ['COMFC001'],
+  '/comunicados/compor': ['COMFM001'],
+  '/comunicado': ['COMFC001'],
 };
 
 class _AcessoNegadoPage extends StatelessWidget {

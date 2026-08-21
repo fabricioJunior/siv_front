@@ -55,6 +55,8 @@ dependencies:
     path: packages/estoque
   entregas:
     path: packages/entregas
+  comunicados:
+    path: packages/comunicados
   core:
     path: packages/core
   # The following adds the Cupertino Icons font to your application.
@@ -65,6 +67,7 @@ dependencies:
   http_interceptor: ^2.0.0
   image_picker: ^1.2.1
   bloc_concurrency: ^0.3.0
+  flutter_quill: 11.5.0
 
 dev_dependencies:
   flutter_test:

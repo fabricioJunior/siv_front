@@ -10,7 +10,14 @@ class AppAutenticou extends AppEvent {
   AppAutenticou({required this.token});
 }
 
-class AppDesautenticou extends AppEvent {}
+class AppDesautenticou extends AppEvent {
+  // false quando disparado por 401 esporádico (AuthHttpInterceptor) -- nesse caso mantém os dados
+  // locais (produtos/estoque/preços/etc), só limpa sessão/token e volta pro login. O wipe total
+  // (apagarTodosOsDados) fica só pro logout explícito do usuário, que troca de licenciado.
+  final bool apagarDadosLocais;
+
+  AppDesautenticou({this.apagarDadosLocais = true});
+}
 
 class AppSelecionouTerminalDaSessao extends AppEvent {
   final TerminalDoUsuario terminal;

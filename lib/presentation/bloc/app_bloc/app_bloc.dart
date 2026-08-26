@@ -55,7 +55,7 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
       (token) => add(AppAutenticou(token: token)),
     );
     _onDesautenticadoSubscription = _onDesautenticado.call().listen(
-      (_) => add(AppDesautenticou()),
+      (_) => add(AppDesautenticou(apagarDadosLocais: false)),
     );
     on<AppIniciou>(_onAppIniciou);
     on<AppAutenticou>(_onAppAutenticou);
@@ -152,7 +152,7 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
     Emitter<AppState> emit,
   ) async {
     try {
-      await _deslogar.call();
+      await _deslogar.call(apagarDadosLocais: event.apagarDadosLocais);
       emit(
         state.copyWith(
           statusAutenticacao: StatusAutenticacao.naoAutenticao,

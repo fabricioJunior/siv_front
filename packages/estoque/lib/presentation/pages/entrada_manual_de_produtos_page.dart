@@ -297,6 +297,7 @@ class _EntradaManualDeProdutosPageState
               child: Opacity(
                 opacity: state.leituraIniciada ? 0.7 : 1,
                 child: Column(
+                  key: ValueKey(state.versaoConfiguracao),
                   children: [
                     widget.funcionariosSeletor(
                       SeletorData(

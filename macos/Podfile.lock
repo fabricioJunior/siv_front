@@ -1,4 +1,21 @@
 PODS:
+  - cloud_firestore (5.6.12):
+    - Firebase/CoreOnly (~> 11.15.0)
+    - Firebase/Firestore (~> 11.15.0)
+    - firebase_core
+    - FlutterMacOS
+  - file_picker (0.0.1):
+    - FlutterMacOS
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
+  - Firebase/CoreOnly (11.15.0):
+    - FirebaseCore (~> 11.15.0)
+  - Firebase/Firestore (11.15.0):
+    - Firebase/CoreOnly
+    - FirebaseFirestore (~> 11.15.0)
+  - firebase_core (3.15.2):
+    - Firebase/CoreOnly (~> 11.15.0)
+    - FlutterMacOS
   - FirebaseCore (11.15.0):
     - FirebaseCoreInternal (~> 11.15.0)
     - GoogleUtilities/Environment (~> 8.1)
@@ -52,17 +69,36 @@ PODS:
     - FlutterMacOS
   - printing_ffi (0.0.2):
     - FlutterMacOS
+  - quill_native_bridge_macos (0.0.1):
+    - FlutterMacOS
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_macos (0.0.1):
+    - FlutterMacOS
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
+  - cloud_firestore (from `Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos`)
+  - file_picker (from `Flutter/ephemeral/.symlinks/plugins/file_picker/macos`)
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
+  - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
   - FirebaseFirestore (from `https://github.com/invertase/firestore-ios-sdk-frameworks.git`, tag `11.15.0`)
   - flutter_image_compress_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - isar_community_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/isar_community_flutter_libs/macos`)
   - printing (from `Flutter/ephemeral/.symlinks/plugins/printing/macos`)
   - printing_ffi (from `Flutter/ephemeral/.symlinks/plugins/printing_ffi/macos`)
+  - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
+  - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
+  - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - video_player_avfoundation (from `Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin`)
 
 SPEC REPOS:
   trunk:
+    - Firebase
     - FirebaseCore
     - FirebaseCoreExtension
     - FirebaseCoreInternal
@@ -78,6 +114,14 @@ SPEC REPOS:
     - nanopb
 
 EXTERNAL SOURCES:
+  cloud_firestore:
+    :path: Flutter/ephemeral/.symlinks/plugins/cloud_firestore/macos
+  file_picker:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_picker/macos
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
+  firebase_core:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
   FirebaseFirestore:
     :git: https://github.com/invertase/firestore-ios-sdk-frameworks.git
     :tag: 11.15.0
@@ -91,6 +135,14 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/printing/macos
   printing_ffi:
     :path: Flutter/ephemeral/.symlinks/plugins/printing_ffi/macos
+  quill_native_bridge_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos
+  sqflite_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin
+  url_launcher_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  video_player_avfoundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
 
 CHECKOUT OPTIONS:
   FirebaseFirestore:
@@ -98,6 +150,11 @@ CHECKOUT OPTIONS:
     :tag: 11.15.0
 
 SPEC CHECKSUMS:
+  cloud_firestore: 92bf414ac4a12c1008efa35a70ffe988f90cf740
+  file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
+  file_selector_macos: 9e9e068e90ebee155097d00e89ae91edb2374db7
+  Firebase: d99ac19b909cd2c548339c2241ecd0d1599ab02e
+  firebase_core: 7667f880631ae8ad10e3d6567ab7582fe0682326
   FirebaseCore: efb3893e5b94f32b86e331e3bd6dadf18b66568e
   FirebaseCoreExtension: edbd30474b5ccf04e5f001470bdf6ea616af2435
   FirebaseCoreInternal: 9afa45b1159304c963da48addb78275ef701c6b4
@@ -117,6 +174,10 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   printing: c4cf83c78fd684f9bc318e6aadc18972aa48f617
   printing_ffi: 58c1e8078d44e4407fdae60fc574bb2d0360f9cf
+  quill_native_bridge_macos: 2b005cb56902bb740e0cd9620aa399dfac6b4882
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
 
 PODFILE CHECKSUM: 53a4d916097e244a9c9b89e202aa3be32436af78
 

@@ -206,7 +206,11 @@ class EntradaManualDeProdutosBloc
     EntradaManualResetSolicitado event,
     Emitter<EntradaManualDeProdutosState> emit,
   ) {
-    emit(const EntradaManualDeProdutosState());
+    emit(
+      EntradaManualDeProdutosState(
+        versaoConfiguracao: state.versaoConfiguracao + 1,
+      ),
+    );
   }
 
   String? _validarSelecoes() {

@@ -31,15 +31,21 @@ void registerSessaoLocalDataSources() {
 
 Future<Box<UsuarioHiveDto>> _getUsuarioBox() {
   return sl<IHiveDatabaseInstance>().getBox<UsuarioHiveDto>(
-    adapters: [StorageEntityAdapter<UsuarioHiveDto>(UsuarioHiveDto.fromStorage)],
+    adapters: [
+      StorageEntityAdapter<UsuarioHiveDto>(UsuarioHiveDto.fromStorage),
+    ],
     isCommonData: true,
+    boxKey: 'UsuarioHiveDto',
   );
 }
 
 Future<Box<EmpresaHiveDto>> _getEmpresaBox() {
   return sl<IHiveDatabaseInstance>().getBox<EmpresaHiveDto>(
-    adapters: [StorageEntityAdapter<EmpresaHiveDto>(EmpresaHiveDto.fromStorage)],
+    adapters: [
+      StorageEntityAdapter<EmpresaHiveDto>(EmpresaHiveDto.fromStorage),
+    ],
     isCommonData: true,
+    boxKey: 'EmpresaHiveDto',
   );
 }
 
@@ -48,6 +54,7 @@ Future<Box<LicenciadoHiveDto>> _getLicenciadoBox() {
     adapters: [
       StorageEntityAdapter<LicenciadoHiveDto>(LicenciadoHiveDto.fromStorage),
     ],
+    boxKey: 'LicenciadoHiveDto',
     isCommonData: true,
   );
 }
@@ -60,5 +67,6 @@ Future<Box<TerminalDaSessaoHiveDto>> _getTerminalDaSessaoBox() {
       ),
     ],
     isCommonData: true,
+    boxKey: 'TerminalDaSessaoHiveDto',
   );
 }

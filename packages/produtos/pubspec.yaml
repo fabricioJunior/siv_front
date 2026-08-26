@@ -21,6 +21,7 @@ dependencies:
   json_annotation: ^4.9.0
   chips_input_autocomplete: ^1.2.2
   barcode_widget: ^2.0.4
+  hive_ce: ^2.19.3
 
 
 dev_dependencies:

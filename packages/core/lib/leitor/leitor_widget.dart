@@ -29,6 +29,7 @@ class LeitorWidget extends StatefulWidget {
   final ILeitorBuscaDataDatasource? buscaDataSource;
   final String rotuloQuantidadeDisponivel;
   final String Function(String descricao)? mensagemQuantidadeIndisponivel;
+  final bool avisarCodigoDuplicado;
 
   const LeitorWidget({
     super.key,
@@ -48,6 +49,7 @@ class LeitorWidget extends StatefulWidget {
     this.buscaDataSource,
     this.rotuloQuantidadeDisponivel = 'Estoque',
     this.mensagemQuantidadeIndisponivel,
+    this.avisarCodigoDuplicado = true,
   });
 
   @override
@@ -732,16 +734,18 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                 final foiAdicao =
                                     registro.tipo == LeitorHistoricoTipo.adicao;
                                 return ListTile(
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(
                                     '${foiAdicao ? 'Adicionado' : 'Removido'} ${registro.quantidade} un. - ${registro.descricao}',
                                     style:
-                                        Theme.of(context).textTheme.titleMedium,
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                   subtitle: Text(
                                     '${registro.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: registro.tamanho, cor: registro.cor)}\n${_formatarDataHora(registro.dataHora)}',
                                     style:
-                                        Theme.of(context).textTheme.bodyMedium,
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
                                 );
                               },
@@ -777,7 +781,10 @@ class _LeitorWidgetState extends State<LeitorWidget> {
         SystemSound.play(SystemSoundType.alert);
       }
 
-      if (state.tokenAviso != previousState.tokenAviso && state.aviso != null) {
+      if (state.tokenAviso != previousState.tokenAviso &&
+          state.aviso != null &&
+          (widget.avisarCodigoDuplicado ||
+              state.avisoTipo != LeitorAvisoTipo.codigoDuplicado)) {
         widget.onAviso?.call(state.aviso!);
         _mostrarMensagem(context, state.aviso!, Colors.orange.shade700);
         SystemSound.play(SystemSoundType.alert);

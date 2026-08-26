@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/data/repositorios/i_comunicado_repository.dart';
 import 'package:comunicados/domain/models/models.dart';
@@ -41,7 +41,8 @@ class _FakeComunicadoRepository implements IComunicadoRepository {
       throw UnimplementedError();
 
   @override
-  Future<String> enviarImagem(File file) => throw UnimplementedError();
+  Future<String> enviarImagem(Uint8List bytes, String fileName) =>
+      throw UnimplementedError();
 
   @override
   Future<({List<ComunicadoDestinatario> items, int total})>

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/models/models.dart';
 
@@ -10,7 +10,7 @@ abstract class IComunicadoRemoteDataSource {
     int limit = 20,
   });
 
-  Future<String> enviarImagem(File file);
+  Future<String> enviarImagem(Uint8List bytes, String fileName);
 
   Future<Comunicado> criar({
     required String assunto,

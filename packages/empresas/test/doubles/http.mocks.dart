@@ -4,7 +4,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
-import 'dart:io' as _i6;
 import 'dart:typed_data' as _i5;
 
 import 'package:core/http/i_http_response.dart' as _i2;
@@ -125,7 +124,8 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
   _i4.Future<_i2.IHttpResponse> postMultipart({
     required Uri? uri,
     required String? field,
-    required _i6.File? file,
+    required _i5.Uint8List? bytes,
+    required String? fileName,
     required _i3.FileType? fileType,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
@@ -136,7 +136,8 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
             Invocation.method(#postMultipart, [], {
               #uri: uri,
               #field: field,
-              #file: file,
+              #bytes: bytes,
+              #fileName: fileName,
               #fileType: fileType,
               #body: body,
               #headers: headers,
@@ -149,7 +150,8 @@ class MockIHttpSource extends _i1.Mock implements _i3.IHttpSource {
                 Invocation.method(#postMultipart, [], {
                   #uri: uri,
                   #field: field,
-                  #file: file,
+                  #bytes: bytes,
+                  #fileName: fileName,
                   #fileType: fileType,
                   #body: body,
                   #headers: headers,

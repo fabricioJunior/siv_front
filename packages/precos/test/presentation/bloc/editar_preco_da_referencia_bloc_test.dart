@@ -29,13 +29,27 @@ class FakeAtualizarPrecoDaReferencia extends Fake
   }
 }
 
+class FakeObterPrecoDaReferencia extends Fake
+    implements ObterPrecoDaReferencia {
+  @override
+  Future<PrecoDaReferencia> call({
+    required int tabelaDePrecoId,
+    required int referenciaId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
 late EditarPrecoDaReferenciaBloc bloc;
 late AtualizarPrecoDaReferencia atualizarPrecoDaReferencia;
 
 void main() {
   setUp(() {
     atualizarPrecoDaReferencia = FakeAtualizarPrecoDaReferencia();
-    bloc = EditarPrecoDaReferenciaBloc(atualizarPrecoDaReferencia);
+    bloc = EditarPrecoDaReferenciaBloc(
+      atualizarPrecoDaReferencia,
+      FakeObterPrecoDaReferencia(),
+    );
   });
 
   group('EditarPrecoDaReferenciaSalvou -', () {

@@ -3,9 +3,11 @@ import 'dart:developer';
 import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/isar_anotacoes.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:siv_front/data/infra/isar_bootstrap.dart';
+import 'package:siv_front/hive_storage_types.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart'
     show FlutterQuillLocalizations;
@@ -32,7 +34,9 @@ void main() async {
 
 Future<void> configs() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initIsarDatabase();
+  await initIsarDatabaseIfNeeded();
+  await Hive.initFlutter();
+  inicializarStorageDoApp();
 
   await resolverDependenciasApp();
 

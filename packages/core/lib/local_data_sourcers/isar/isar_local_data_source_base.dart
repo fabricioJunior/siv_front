@@ -33,13 +33,8 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
   }
 
   @override
-  Future<Iterable<Dto>> fetchWhere(
-    Test<Iterable<Dto>, IsarCollection<Dto>> test,
-  ) async {
-    var isarInstace = await getIsar();
-    return await isarInstace.txn(() async {
-      return test(isarInstace.collection<Dto>());
-    });
+  Future<Iterable<Dto>> fetchWhere(bool Function(Dto) predicate) async {
+    return (await fetchAll()).where(predicate);
   }
 
   @override
@@ -68,10 +63,8 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
     });
   }
 
-  Future<void> deleteWhere(
-    Test<Iterable<Dto>, IsarCollection<Dto>> test,
-  ) async {
-    var toDelete = await fetchWhere(test);
+  Future<void> deleteWhere(bool Function(Dto) predicate) async {
+    var toDelete = await fetchWhere(predicate);
     for (var item in toDelete) {
       await deleteById(item.dataBaseId);
     }
@@ -89,6 +82,3 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
 
   Dto toDto(E entity);
 }
-
-abstract class IsarFind<Dto>
-    implements Test<Iterable<Dto>, IsarCollection<Dto>> {}

@@ -3,13 +3,12 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
-import 'package:autenticacao/data/local/dtos/token_dto.dart' as _i4;
 import 'package:autenticacao/domain/data/data_sourcers/local/i_token_local_data_source.dart'
-    as _i2;
-import 'package:core/data_sourcers.dart' as _i5;
-import 'package:mockito/mockito.dart' as _i1;
+    as _i3;
+import 'package:autenticacao/domain/models/token.dart' as _i1;
+import 'package:mockito/mockito.dart' as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -29,69 +28,67 @@ import 'package:mockito/mockito.dart' as _i1;
 /// A class which mocks [ITokenLocalDataSource].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockITokenLocalDataSource extends _i1.Mock
-    implements _i2.ITokenLocalDataSource {
+class MockITokenLocalDataSource<Dto extends _i1.Token> extends _i2.Mock
+    implements _i3.ITokenLocalDataSource<Dto> {
   MockITokenLocalDataSource() {
-    _i1.throwOnMissingStub(this);
+    _i2.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<void> put(_i4.TokenDto? entity) => (super.noSuchMethod(
+  _i4.Future<void> put(Dto? entity) => (super.noSuchMethod(
         Invocation.method(
           #put,
           [entity],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i3.Future<void> putAll(Iterable<_i4.TokenDto>? entities) =>
-      (super.noSuchMethod(
+  _i4.Future<void> putAll(Iterable<Dto>? entities) => (super.noSuchMethod(
         Invocation.method(
           #putAll,
           [entities],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i3.Future<_i4.TokenDto?> fetchById(int? id) => (super.noSuchMethod(
+  _i4.Future<Dto?> fetchById(int? id) => (super.noSuchMethod(
         Invocation.method(
           #fetchById,
           [id],
         ),
-        returnValue: _i3.Future<_i4.TokenDto?>.value(),
-      ) as _i3.Future<_i4.TokenDto?>);
+        returnValue: _i4.Future<Dto?>.value(),
+      ) as _i4.Future<Dto?>);
 
   @override
-  _i3.Future<Iterable<_i4.TokenDto>> fetchAll() => (super.noSuchMethod(
+  _i4.Future<Iterable<Dto>> fetchAll() => (super.noSuchMethod(
         Invocation.method(
           #fetchAll,
           [],
         ),
-        returnValue: _i3.Future<Iterable<_i4.TokenDto>>.value(<_i4.TokenDto>[]),
-      ) as _i3.Future<Iterable<_i4.TokenDto>>);
+        returnValue: _i4.Future<Iterable<Dto>>.value(<Dto>[]),
+      ) as _i4.Future<Iterable<Dto>>);
 
   @override
-  _i3.Future<Iterable<_i4.TokenDto>> fetchWhere(
-          _i5.Test<dynamic, dynamic>? test) =>
+  _i4.Future<Iterable<Dto>> fetchWhere(bool Function(Dto)? predicate) =>
       (super.noSuchMethod(
         Invocation.method(
           #fetchWhere,
-          [test],
+          [predicate],
         ),
-        returnValue: _i3.Future<Iterable<_i4.TokenDto>>.value(<_i4.TokenDto>[]),
-      ) as _i3.Future<Iterable<_i4.TokenDto>>);
+        returnValue: _i4.Future<Iterable<Dto>>.value(<Dto>[]),
+      ) as _i4.Future<Iterable<Dto>>);
 
   @override
-  _i3.Future<void> deleteAll() => (super.noSuchMethod(
+  _i4.Future<void> deleteAll() => (super.noSuchMethod(
         Invocation.method(
           #deleteAll,
           [],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 }

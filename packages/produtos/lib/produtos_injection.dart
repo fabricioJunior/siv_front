@@ -1,8 +1,5 @@
 import 'package:core/injecoes.dart';
-import 'package:core/isar_anotacoes.dart';
-import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
-import 'package:produtos/data/local/codigos_local_data_source.dart';
-import 'package:produtos/data/local/dtos/codigo_dto.dart';
+import 'package:produtos/data/local/codigos_local_data_sources.dart';
 import 'package:produtos/data/remote/codigos_remote_data_source.dart';
 import 'package:produtos/data/remote/tamanhos_remote_datasource.dart';
 import 'package:produtos/data/remote/referencia_midias_remote_data_source.dart';
@@ -35,7 +32,6 @@ import 'package:produtos/data/repositorios/produtos_repository.dart';
 import 'package:produtos/data/repositorios/etiquetas_repository.dart';
 import 'package:produtos/data/repositorios/impressao_etiquetas_repository.dart';
 import 'package:produtos/data/repositorios/codigos_repository.dart';
-import 'package:produtos/domain/data/local/i_codigos_local_data_source.dart';
 import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
@@ -108,9 +104,7 @@ void _data() {
     () => ReferenciasPendentesNcmRemoteDatasource(informacoesParaRequest: sl()),
   );
 
-  sl.registerFactory<ICodigosLocalDataSource>(
-    () => CodigosLocalDataSource(getIsar: _getIsar),
-  );
+  registerCodigosLocalDataSource();
 
   sl.registerFactory<ICodigosDeBarrasDaReferenciaRemoteDataSource>(
     () => CodigosDeBarrasDaReferenciaRemoteDataSource(
@@ -476,14 +470,3 @@ void _presentantion() {
   );
 }
 
-Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  List<CollectionSchema<dynamic>> schemas = [CodigoDtoSchema];
-
-  return sl<IIsarDatabaseInstance>().getIsar(
-    schemas: schemas,
-    isCommonData: true,
-    isSyncData: isSyncData ?? false,
-    moduleName: 'produtos',
-    showInspection: true,
-  );
-}

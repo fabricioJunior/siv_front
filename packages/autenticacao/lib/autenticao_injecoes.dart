@@ -1,7 +1,4 @@
-import 'package:autenticacao/data/local/dtos/token_dto.dart';
-import 'package:autenticacao/data/local/dtos/permissao_do_usuario_dto.dart';
-import 'package:autenticacao/data/local/permissoes_do_usuario_local_data_source.dart';
-import 'package:autenticacao/data/local_data_sources.dart';
+import 'package:autenticacao/data/local/auth_local_data_sources.dart';
 import 'package:autenticacao/data/remote/vinculo_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/data/remote/grupos_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/data/remote/permissoes_remote_data_source.dart';
@@ -13,7 +10,6 @@ import 'package:autenticacao/data/repositories/licenciados_repository.dart';
 import 'package:autenticacao/data/repositories/permissoes_do_usuario_repository.dart';
 import 'package:autenticacao/data/repositories/token_repository.dart';
 import 'package:autenticacao/data/repositories/usuarios_repository.dart';
-import 'package:autenticacao/domain/data/data_sourcers/local/i_permissoes_do_usuario_local_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_do_usuario_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_grupo_de_acesso_remote_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_licenciados_remote_data_source.dart';
@@ -40,15 +36,12 @@ import 'package:autenticacao/presentation/bloc/usuarios_bloc/usuarios_bloc.dart'
 import 'package:autenticacao/presentation/bloc/vinculos_grupo_de_acesso_usuario_bloc/vinculos_grupo_de_acesso_usuario_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/isar_anotacoes.dart';
-import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:http/http.dart';
 
 import 'data/remote/permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'data/remote/permissoes_do_usuario_remote_data_source.dart';
 import 'data/repositories/permissoes_repository.dart';
-import 'domain/data/data_sourcers/local/i_token_local_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_usuario_remote_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_remote_data_source.dart';
@@ -146,7 +139,7 @@ void _usesCases() {
       usuariosRepository: sl(),
       licenciadosRepository: sl(),
       limparCredenciaisDeAutenticacao: sl(),
-      isarDatabaseInstance: sl(),
+      localDatabaseInstance: sl(),
     ),
   );
 
@@ -398,13 +391,7 @@ void _repositories() {
 }
 
 void _localData() {
-  sl.registerFactory<ITokenLocalDataSource>(
-    () => TokenLocalDataSource(getIsar: _getIsar),
-  );
-
-  sl.registerFactory<IPermissoesDoUsuarioLocalDataSource>(
-    () => PermissoesDoUsuarioLocalDataSource(getIsar: _getIsar),
-  );
+  registerAuthLocalDataSources();
 }
 
 void _remoteData() {
@@ -497,14 +484,3 @@ class _InformacoesParaPrimeiraRequest implements IInformacoesParaRequests {
 //   return '';
 // }
 
-Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  List<CollectionSchema<dynamic>> schemas = [
-    TokenDtoSchema,
-    PermissaoDoUsuarioDtoSchema,
-  ];
-
-  return sl<IIsarDatabaseInstance>().getIsar(
-    schemas: schemas,
-    moduleName: 'autenticacao',
-  );
-}

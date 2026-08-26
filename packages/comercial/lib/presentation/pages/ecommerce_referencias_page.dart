@@ -2,31 +2,96 @@ import 'package:comercial/presentation/blocs/ecommerce_referencias_bloc/ecommerc
 import 'package:comercial/presentation/pages/ecommerce_referencia_detalhe_page.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 
-class EcommerceReferenciasPage extends StatelessWidget {
+class EcommerceReferenciasPage extends StatefulWidget {
   final int ecommerceId;
 
   const EcommerceReferenciasPage({super.key, required this.ecommerceId});
 
   @override
+  State<EcommerceReferenciasPage> createState() =>
+      _EcommerceReferenciasPageState();
+}
+
+class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
+  late final EcommerceReferenciasBloc _bloc;
+  final _buscaController = TextEditingController();
+  final _debouncer = Debouncer(milliseconds: 350);
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = sl<EcommerceReferenciasBloc>()
+      ..add(EcommerceReferenciasIniciou(ecommerceId: widget.ecommerceId));
+  }
+
+  @override
+  void dispose() {
+    _buscaController.dispose();
+    _debouncer.cancel();
+    _bloc.close();
+    super.dispose();
+  }
+
+  void _onBuscaAlterada(String valor) {
+    _debouncer.run(() {
+      _bloc.add(
+        EcommerceReferenciasIniciou(
+          ecommerceId: widget.ecommerceId,
+          busca: valor.trim().isEmpty ? null : valor.trim(),
+        ),
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider<EcommerceReferenciasBloc>(
-      create: (context) => sl<EcommerceReferenciasBloc>()
-        ..add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId)),
+    return BlocProvider<EcommerceReferenciasBloc>.value(
+      value: _bloc,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Produtos no site'),
           actions: [
-            Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.visibility_off_outlined),
-                tooltip: 'Despublicar todas',
-                onPressed: () => _despublicarTodas(context),
-              ),
+            IconButton(
+              icon: const Icon(Icons.visibility_off_outlined),
+              tooltip: 'Despublicar todas',
+              onPressed: () => _despublicarTodas(context),
             ),
           ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: TextField(
+                controller: _buscaController,
+                onChanged: _onBuscaAlterada,
+                decoration: InputDecoration(
+                  hintText: 'Buscar referência...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  isDense: true,
+                  suffixIcon: _buscaController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            _buscaController.clear();
+                            _onBuscaAlterada('');
+                            setState(() {});
+                          },
+                        ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onSubmitted: _onBuscaAlterada,
+              ),
+            ),
+          ),
         ),
         floatingActionButton: Builder(
           builder: (context) => FloatingActionButton.extended(
@@ -49,8 +114,12 @@ class EcommerceReferenciasPage extends StatelessWidget {
             }
 
             if (state.referencias.isEmpty) {
-              return const Center(
-                child: Text('Nenhuma referência vinculada ao e-commerce.'),
+              return Center(
+                child: Text(
+                  (state.busca ?? '').isEmpty
+                      ? 'Nenhuma referência vinculada ao e-commerce.'
+                      : 'Nenhuma referência encontrada pra "${state.busca}".',
+                ),
               );
             }
 
@@ -96,20 +165,24 @@ class EcommerceReferenciasPage extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (referencia.rascunho)
-                IconButton(
-                  icon: const Icon(Icons.publish_outlined),
-                  tooltip: 'Publicar',
-                  color: Colors.green,
-                  onPressed: state.processandoLote
-                      ? null
-                      : () => context.read<EcommerceReferenciasBloc>().add(
-                            EcommerceReferenciaPublicarSolicitou(
-                              ecommerceId: ecommerceId,
-                              referenciaEcommerceId: referencia.id!,
-                            ),
-                          ),
+              IconButton(
+                icon: Icon(
+                  referencia.rascunho
+                      ? Icons.publish_outlined
+                      : Icons.visibility_off_outlined,
                 ),
+                tooltip: referencia.rascunho ? 'Publicar' : 'Despublicar',
+                color: referencia.rascunho ? Colors.green : Colors.orange,
+                onPressed: state.processandoLote
+                    ? null
+                    : () => _bloc.add(
+                          EcommerceReferenciaPublicarSolicitou(
+                            ecommerceId: widget.ecommerceId,
+                            referenciaEcommerceId: referencia.id!,
+                            rascunho: !referencia.rascunho,
+                          ),
+                        ),
+              ),
               Chip(
                 label: Text(referencia.rascunho ? 'Rascunho' : 'Publicado'),
                 backgroundColor: referencia.rascunho
@@ -119,16 +192,20 @@ class EcommerceReferenciasPage extends StatelessWidget {
             ],
           ),
           onTap: () async {
-            final bloc = context.read<EcommerceReferenciasBloc>();
             await Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => EcommerceReferenciaDetalhePage(
-                  ecommerceId: ecommerceId,
+                  ecommerceId: widget.ecommerceId,
                   referencia: referencia,
                 ),
               ),
             );
-            bloc.add(EcommerceReferenciasIniciou(ecommerceId: ecommerceId));
+            _bloc.add(
+              EcommerceReferenciasIniciou(
+                ecommerceId: widget.ecommerceId,
+                busca: state.busca,
+              ),
+            );
           },
         );
       },
@@ -136,7 +213,6 @@ class EcommerceReferenciasPage extends StatelessWidget {
   }
 
   Future<void> _adicionarReferencias(BuildContext context) async {
-    final bloc = context.read<EcommerceReferenciasBloc>();
     List<int> idsSelecionados = [];
 
     await showModalBottomSheet<void>(
@@ -169,9 +245,9 @@ class EcommerceReferenciasPage extends StatelessWidget {
                 onPressed: () async {
                   Navigator.of(dialogContext).pop();
                   for (final referenciaId in idsSelecionados) {
-                    bloc.add(
+                    _bloc.add(
                       EcommerceReferenciaAdicionou(
-                        ecommerceId: ecommerceId,
+                        ecommerceId: widget.ecommerceId,
                         referenciaId: referenciaId,
                       ),
                     );
@@ -188,8 +264,6 @@ class EcommerceReferenciasPage extends StatelessWidget {
   }
 
   Future<void> _despublicarTodas(BuildContext context) async {
-    final bloc = context.read<EcommerceReferenciasBloc>();
-
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -215,9 +289,9 @@ class EcommerceReferenciasPage extends StatelessWidget {
     );
 
     if (confirmou == true) {
-      bloc.add(
+      _bloc.add(
         EcommerceReferenciasDespublicarTodasSolicitou(
-          ecommerceId: ecommerceId,
+          ecommerceId: widget.ecommerceId,
         ),
       );
     }

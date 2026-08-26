@@ -31,7 +31,11 @@ class ListaDeProdutosCompartilhadaLocalDataSource
     OrigemCompartilhadaTipo? origem,
     int? idLista,
   }) {
-    return fetchWhere(FindLista(origem: origem, idLista: idLista));
+    return fetchWhere((dto) {
+      if (origem != null && dto.origemIndex != origem.index) return false;
+      if (idLista != null && dto.idLista != idLista) return false;
+      return true;
+    });
   }
 
   @override
@@ -54,27 +58,5 @@ class ListaDeProdutosCompartilhadaLocalDataSource
       funcionarioNome: entity.funcionarioNome,
       tabelaPrecoNome: entity.tabelaPrecoNome,
     );
-  }
-}
-
-class FindLista
-    implements
-        Test<Iterable<ListaDeProdutosCompartilhadaDto>,
-            IsarCollection<ListaDeProdutosCompartilhadaDto>> {
-  final OrigemCompartilhadaTipo? origem;
-  final int? idLista;
-
-  FindLista({this.origem, this.idLista});
-
-  @override
-  Future<Iterable<ListaDeProdutosCompartilhadaDto>> call(
-    IsarCollection<ListaDeProdutosCompartilhadaDto> collection,
-  ) async {
-    return await collection
-        .filter()
-        .optional(origem != null, (q) => q.origemIndexEqualTo(origem!.index))
-        .and()
-        .optional(idLista != null, (q) => q.idListaEqualTo(idLista!))
-        .findAll();
   }
 }

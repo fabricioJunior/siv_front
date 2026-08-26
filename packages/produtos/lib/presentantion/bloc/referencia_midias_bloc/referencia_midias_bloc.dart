@@ -112,7 +112,7 @@ class ReferenciaMidiasBloc
       final imagem = entry.value;
       final upload = novosUploads[entry.key];
 
-      if (imagem.path == null) {
+      if (imagem.bytes == null) {
         uploadsPendentes = uploadsPendentes
             .where((item) => item.id != upload.id)
             .toList(growable: false);
@@ -131,7 +131,8 @@ class ReferenciaMidiasBloc
 
       try {
         final midiaCriada = await _criarReferenciaMidia.call(
-          filePath: imagem.path!,
+          bytes: imagem.bytes!,
+          fileName: _nomeDoArquivo(imagem),
           referenciaId: event.referenciaId,
           ePrincipal: midiasAtuais.isEmpty && entry.key == 0,
           ePublica: true,
@@ -315,4 +316,11 @@ class ReferenciaMidiasBloc
       addError(e, s);
     }
   }
+}
+
+String _nomeDoArquivo(Imagem imagem) {
+  final path = imagem.path;
+  final extensao =
+      (path != null && path.contains('.')) ? path.substring(path.lastIndexOf('.')) : '.jpg';
+  return 'imagem_${DateTime.now().millisecondsSinceEpoch}$extensao';
 }

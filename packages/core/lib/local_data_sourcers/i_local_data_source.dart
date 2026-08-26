@@ -7,11 +7,7 @@ abstract interface class ILocalDataSource<E> {
 
   Future<Iterable<E>> fetchAll();
 
-  Future<Iterable<E>> fetchWhere(covariant Test test);
+  Future<Iterable<E>> fetchWhere(bool Function(E) predicate);
 
   Future<void> deleteAll();
-}
-
-abstract class Test<E, TestBuilder> {
-  Future<E> call(TestBuilder t);
 }

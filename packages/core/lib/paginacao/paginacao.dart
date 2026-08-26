@@ -1,18 +1,12 @@
-import 'package:core/isar_anotacoes.dart';
-part 'paginacao.g.dart';
-
-@Collection(ignore: {'items'})
-class Paginacao<E> implements IsarDto {
+class Paginacao<E> {
   final String key;
   final int paginaAtual;
   final int totalPaginas;
   final int itensPorPagina;
-  @ignore
   final int itensProcessadosNaPagina;
   final int totalItens;
   final DateTime? dataAtualizacao;
   final bool ended;
-  @ignore
   final List<E>? items;
 
   Paginacao({
@@ -26,9 +20,6 @@ class Paginacao<E> implements IsarDto {
     this.ended = false,
     this.items,
   });
-
-  @override
-  Id get dataBaseId => fastHash(key);
 
   Paginacao copyWith({
     String? key,

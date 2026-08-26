@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
 import 'package:produtos/models.dart';
 
@@ -7,7 +9,8 @@ class CriarReferenciaMidia {
   CriarReferenciaMidia({required this.referenciaMidiasRepository});
 
   Future<ReferenciaMidia> call({
-    required String filePath,
+    required Uint8List bytes,
+    required String fileName,
     required int referenciaId,
     required bool ePrincipal,
     required bool ePublica,
@@ -19,7 +22,8 @@ class CriarReferenciaMidia {
     void Function(int sent, int total)? onSendProgress,
   }) {
     return referenciaMidiasRepository.criarReferenciaMidia(
-      filePath: filePath,
+      bytes: bytes,
+      fileName: fileName,
       referenciaId: referenciaId,
       ePrincipal: ePrincipal,
       ePublica: ePublica,

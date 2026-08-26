@@ -7,7 +7,7 @@ class RecuperarReferenciasEcommerce {
   RecuperarReferenciasEcommerce({required IEcommerceRepository repository})
       : _repository = repository;
 
-  Future<List<EcommerceReferencia>> call(int ecommerceId) {
-    return _repository.recuperarReferencias(ecommerceId);
+  Future<List<EcommerceReferencia>> call(int ecommerceId, {String? busca}) {
+    return _repository.recuperarReferencias(ecommerceId, busca: busca);
   }
 }

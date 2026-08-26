@@ -25,8 +25,9 @@ class ComposicaoFiltroAlterado extends ComposicaoComunicadoEvent {
 class ComposicaoContarDestinatarios extends ComposicaoComunicadoEvent {}
 
 class ComposicaoImagemSolicitada extends ComposicaoComunicadoEvent {
-  final String filePath;
-  ComposicaoImagemSolicitada(this.filePath);
+  final Uint8List bytes;
+  final String fileName;
+  ComposicaoImagemSolicitada(this.bytes, this.fileName);
 }
 
 class ComposicaoImagemConsumida extends ComposicaoComunicadoEvent {}

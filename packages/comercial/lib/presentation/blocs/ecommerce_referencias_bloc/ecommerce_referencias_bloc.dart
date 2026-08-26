@@ -33,11 +33,13 @@ class EcommerceReferenciasBloc
       emit(const EcommerceReferenciasCarregarEmProgresso());
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
+        busca: event.busca,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
+          busca: event.busca,
         ),
       );
     } catch (e, s) {
@@ -58,11 +60,13 @@ class EcommerceReferenciasBloc
       );
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
+        busca: state.busca,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
+          busca: state.busca,
         ),
       );
     } catch (e, s) {
@@ -86,6 +90,7 @@ class EcommerceReferenciasBloc
         ecommerceId: event.ecommerceId,
         referencias: state.referencias,
         processandoLote: true,
+        busca: state.busca,
       ),
     );
 
@@ -93,15 +98,17 @@ class EcommerceReferenciasBloc
       await _atualizarReferenciaEcommerce.call(
         event.ecommerceId,
         event.referenciaEcommerceId,
-        rascunho: false,
+        rascunho: event.rascunho,
       );
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
+        busca: state.busca,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
+          busca: state.busca,
         ),
       );
     } catch (e, s) {
@@ -128,6 +135,7 @@ class EcommerceReferenciasBloc
         ecommerceId: event.ecommerceId,
         referencias: state.referencias,
         processandoLote: true,
+        busca: state.busca,
       ),
     );
 
@@ -144,11 +152,13 @@ class EcommerceReferenciasBloc
       }
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
+        busca: state.busca,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
+          busca: state.busca,
         ),
       );
     } catch (e, s) {

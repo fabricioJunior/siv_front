@@ -3,43 +3,45 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i10;
+import 'dart:async' as _i11;
 
 import 'package:autenticacao/domain/data/repositories/i_empresas_repository.dart'
-    as _i6;
+    as _i7;
 import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart'
     as _i4;
 import 'package:autenticacao/domain/data/repositories/i_token_repository.dart'
     as _i2;
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart'
     as _i3;
-import 'package:autenticacao/domain/models/token.dart' as _i9;
-import 'package:autenticacao/domain/models/usuario.dart' as _i15;
-import 'package:autenticacao/domain/usecases/deslogar.dart' as _i13;
-import 'package:autenticacao/domain/usecases/esta_autenticado.dart' as _i12;
+import 'package:autenticacao/domain/models/token.dart' as _i10;
+import 'package:autenticacao/domain/models/usuario.dart' as _i16;
+import 'package:autenticacao/domain/usecases/deslogar.dart' as _i14;
+import 'package:autenticacao/domain/usecases/esta_autenticado.dart' as _i13;
 import 'package:autenticacao/domain/usecases/limpar_credenciais_de_autenticacao.dart'
     as _i5;
-import 'package:autenticacao/domain/usecases/on_autenticado.dart' as _i8;
-import 'package:autenticacao/domain/usecases/on_desautenticado.dart' as _i11;
+import 'package:autenticacao/domain/usecases/on_autenticado.dart' as _i9;
+import 'package:autenticacao/domain/usecases/on_desautenticado.dart' as _i12;
 import 'package:autenticacao/domain/usecases/recuperar_empresa_da_sessao.dart'
-    as _i16;
+    as _i17;
 import 'package:autenticacao/domain/usecases/recuperar_permissoes_do_usuario.dart'
-    as _i19;
+    as _i20;
 import 'package:autenticacao/domain/usecases/recuperar_usuario_da_sessao.dart'
-    as _i14;
+    as _i15;
 import 'package:autenticacao/domain/usecases/sincronizar_permissoes_do_usuario.dart'
-    as _i18;
-import 'package:autenticacao/models.dart' as _i17;
-import 'package:core/paginacao.dart' as _i20;
-import 'package:core/paginacao/paginacao.dart' as _i22;
-import 'package:estoque/estoque.dart' as _i23;
+    as _i19;
+import 'package:autenticacao/models.dart' as _i18;
+import 'package:core/local_data_sourcers/database_configs/i_local_database_instance.dart'
+    as _i6;
+import 'package:core/paginacao.dart' as _i21;
+import 'package:core/paginacao/paginacao.dart' as _i23;
+import 'package:estoque/estoque.dart' as _i24;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:precos/domain/use_cases/sincronizar_precos.dart' as _i26;
+import 'package:precos/domain/use_cases/sincronizar_precos.dart' as _i27;
 import 'package:precos/domain/use_cases/sincronziar_tabelas_de_preco.dart'
-    as _i24;
-import 'package:precos/models.dart' as _i25;
-import 'package:precos/repositorios.dart' as _i7;
-import 'package:produtos/domain/use_cases/sincronizar_codigos.dart' as _i21;
+    as _i25;
+import 'package:precos/models.dart' as _i26;
+import 'package:precos/repositorios.dart' as _i8;
+import 'package:produtos/domain/use_cases/sincronizar_codigos.dart' as _i22;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -82,21 +84,27 @@ class _FakeLimparCredenciaisDeAutenticacao_3 extends _i1.SmartFake
   ) : super(parent, parentInvocation);
 }
 
-class _FakeIEmpresasRepository_4 extends _i1.SmartFake
-    implements _i6.IEmpresasRepository {
-  _FakeIEmpresasRepository_4(Object parent, Invocation parentInvocation)
+class _FakeILocalDatabaseInstance_4 extends _i1.SmartFake
+    implements _i6.ILocalDatabaseInstance {
+  _FakeILocalDatabaseInstance_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeITabelasDePrecoRepository_5 extends _i1.SmartFake
-    implements _i7.ITabelasDePrecoRepository {
-  _FakeITabelasDePrecoRepository_5(Object parent, Invocation parentInvocation)
+class _FakeIEmpresasRepository_5 extends _i1.SmartFake
+    implements _i7.IEmpresasRepository {
+  _FakeIEmpresasRepository_5(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeIPrecosDeReferenciasRepository_6 extends _i1.SmartFake
-    implements _i7.IPrecosDeReferenciasRepository {
-  _FakeIPrecosDeReferenciasRepository_6(
+class _FakeITabelasDePrecoRepository_6 extends _i1.SmartFake
+    implements _i8.ITabelasDePrecoRepository {
+  _FakeITabelasDePrecoRepository_6(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeIPrecosDeReferenciasRepository_7 extends _i1.SmartFake
+    implements _i8.IPrecosDeReferenciasRepository {
+  _FakeIPrecosDeReferenciasRepository_7(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
@@ -105,7 +113,7 @@ class _FakeIPrecosDeReferenciasRepository_6 extends _i1.SmartFake
 /// A class which mocks [OnAutenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOnAutenticado extends _i1.Mock implements _i8.OnAutenticado {
+class MockOnAutenticado extends _i1.Mock implements _i9.OnAutenticado {
   MockOnAutenticado() {
     _i1.throwOnMissingStub(this);
   }
@@ -122,21 +130,21 @@ class MockOnAutenticado extends _i1.Mock implements _i8.OnAutenticado {
           as _i2.ITokenRepository);
 
   @override
-  set lastToken(_i9.Token? value) => super.noSuchMethod(
+  set lastToken(_i10.Token? value) => super.noSuchMethod(
     Invocation.setter(#lastToken, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i10.Stream<_i9.Token> call() =>
+  _i11.Stream<_i10.Token> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Stream<_i9.Token>.empty(),
+            returnValue: _i11.Stream<_i10.Token>.empty(),
           )
-          as _i10.Stream<_i9.Token>);
+          as _i11.Stream<_i10.Token>);
 
   @override
-  void onTokenPut(_i9.Token? token, _i10.EventSink<dynamic>? sink) =>
+  void onTokenPut(_i10.Token? token, _i11.EventSink<dynamic>? sink) =>
       super.noSuchMethod(
         Invocation.method(#onTokenPut, [token, sink]),
         returnValueForMissingStub: null,
@@ -146,24 +154,24 @@ class MockOnAutenticado extends _i1.Mock implements _i8.OnAutenticado {
 /// A class which mocks [OnDesautenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOnDesautenticado extends _i1.Mock implements _i11.OnDesautenticado {
+class MockOnDesautenticado extends _i1.Mock implements _i12.OnDesautenticado {
   MockOnDesautenticado() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Stream<Null> call() =>
+  _i11.Stream<Null> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Stream<Null>.empty(),
+            returnValue: _i11.Stream<Null>.empty(),
           )
-          as _i10.Stream<Null>);
+          as _i11.Stream<Null>);
 }
 
 /// A class which mocks [EstaAutenticado].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockEstaAutenticado extends _i1.Mock implements _i12.EstaAutenticado {
+class MockEstaAutenticado extends _i1.Mock implements _i13.EstaAutenticado {
   MockEstaAutenticado() {
     _i1.throwOnMissingStub(this);
   }
@@ -180,18 +188,18 @@ class MockEstaAutenticado extends _i1.Mock implements _i12.EstaAutenticado {
           as _i2.ITokenRepository);
 
   @override
-  _i10.Future<bool> call() =>
+  _i11.Future<bool> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Future<bool>.value(false),
+            returnValue: _i11.Future<bool>.value(false),
           )
-          as _i10.Future<bool>);
+          as _i11.Future<bool>);
 }
 
 /// A class which mocks [Deslogar].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDeslogar extends _i1.Mock implements _i13.Deslogar {
+class MockDeslogar extends _i1.Mock implements _i14.Deslogar {
   MockDeslogar() {
     _i1.throwOnMissingStub(this);
   }
@@ -241,20 +249,31 @@ class MockDeslogar extends _i1.Mock implements _i13.Deslogar {
           as _i5.LimparCredenciaisDeAutenticacao);
 
   @override
-  _i10.Future<void> call() =>
+  _i6.ILocalDatabaseInstance get localDatabaseInstance =>
+      (super.noSuchMethod(
+            Invocation.getter(#localDatabaseInstance),
+            returnValue: _FakeILocalDatabaseInstance_4(
+              this,
+              Invocation.getter(#localDatabaseInstance),
+            ),
+          )
+          as _i6.ILocalDatabaseInstance);
+
+  @override
+  _i11.Future<void> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [RecuperarUsuarioDaSessao].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarUsuarioDaSessao extends _i1.Mock
-    implements _i14.RecuperarUsuarioDaSessao {
+    implements _i15.RecuperarUsuarioDaSessao {
   MockRecuperarUsuarioDaSessao() {
     _i1.throwOnMissingStub(this);
   }
@@ -271,195 +290,195 @@ class MockRecuperarUsuarioDaSessao extends _i1.Mock
           as _i3.IUsuariosRepository);
 
   @override
-  _i10.Future<_i15.Usuario?> call() =>
+  _i11.Future<_i16.Usuario?> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Future<_i15.Usuario?>.value(),
+            returnValue: _i11.Future<_i16.Usuario?>.value(),
           )
-          as _i10.Future<_i15.Usuario?>);
+          as _i11.Future<_i16.Usuario?>);
 }
 
 /// A class which mocks [RecuperarEmpresaDaSessao].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarEmpresaDaSessao extends _i1.Mock
-    implements _i16.RecuperarEmpresaDaSessao {
+    implements _i17.RecuperarEmpresaDaSessao {
   MockRecuperarEmpresaDaSessao() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i6.IEmpresasRepository get empresasRepository =>
+  _i7.IEmpresasRepository get empresasRepository =>
       (super.noSuchMethod(
             Invocation.getter(#empresasRepository),
-            returnValue: _FakeIEmpresasRepository_4(
+            returnValue: _FakeIEmpresasRepository_5(
               this,
               Invocation.getter(#empresasRepository),
             ),
           )
-          as _i6.IEmpresasRepository);
+          as _i7.IEmpresasRepository);
 
   @override
-  _i10.Future<_i17.Empresa?> call() =>
+  _i11.Future<_i18.Empresa?> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Future<_i17.Empresa?>.value(),
+            returnValue: _i11.Future<_i18.Empresa?>.value(),
           )
-          as _i10.Future<_i17.Empresa?>);
+          as _i11.Future<_i18.Empresa?>);
 }
 
 /// A class which mocks [SincronizarPermissoesDoUsuario].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSincronizarPermissoesDoUsuario extends _i1.Mock
-    implements _i18.SincronizarPermissoesDoUsuario {
+    implements _i19.SincronizarPermissoesDoUsuario {
   MockSincronizarPermissoesDoUsuario() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Future<Iterable<_i17.PermissaoDoUsuario>> call({
+  _i11.Future<Iterable<_i18.PermissaoDoUsuario>> call({
     required int? idUsuario,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {#idUsuario: idUsuario}),
-            returnValue: _i10.Future<Iterable<_i17.PermissaoDoUsuario>>.value(
-              <_i17.PermissaoDoUsuario>[],
+            returnValue: _i11.Future<Iterable<_i18.PermissaoDoUsuario>>.value(
+              <_i18.PermissaoDoUsuario>[],
             ),
           )
-          as _i10.Future<Iterable<_i17.PermissaoDoUsuario>>);
+          as _i11.Future<Iterable<_i18.PermissaoDoUsuario>>);
 }
 
 /// A class which mocks [RecuperarPermissoesDoUsuario].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRecuperarPermissoesDoUsuario extends _i1.Mock
-    implements _i19.RecuperarPermissoesDoUsuario {
+    implements _i20.RecuperarPermissoesDoUsuario {
   MockRecuperarPermissoesDoUsuario() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Future<Iterable<_i17.PermissaoDoUsuario>> call(int? idUsuario) =>
+  _i11.Future<Iterable<_i18.PermissaoDoUsuario>> call(int? idUsuario) =>
       (super.noSuchMethod(
             Invocation.method(#call, [idUsuario]),
-            returnValue: _i10.Future<Iterable<_i17.PermissaoDoUsuario>>.value(
-              <_i17.PermissaoDoUsuario>[],
+            returnValue: _i11.Future<Iterable<_i18.PermissaoDoUsuario>>.value(
+              <_i18.PermissaoDoUsuario>[],
             ),
           )
-          as _i10.Future<Iterable<_i17.PermissaoDoUsuario>>);
+          as _i11.Future<Iterable<_i18.PermissaoDoUsuario>>);
 }
 
 /// A class which mocks [LimparSincronizacaoIncremental].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockLimparSincronizacaoIncremental extends _i1.Mock
-    implements _i20.LimparSincronizacaoIncremental {
+    implements _i21.LimparSincronizacaoIncremental {
   MockLimparSincronizacaoIncremental() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Future<void> call() =>
+  _i11.Future<void> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [SincronizarCodigos].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSincronizarCodigos extends _i1.Mock
-    implements _i21.SincronizarCodigos {
+    implements _i22.SincronizarCodigos {
   MockSincronizarCodigos() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Stream<_i22.Paginacao<dynamic>> call() =>
+  _i11.Stream<_i23.Paginacao<dynamic>> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Stream<_i22.Paginacao<dynamic>>.empty(),
+            returnValue: _i11.Stream<_i23.Paginacao<dynamic>>.empty(),
           )
-          as _i10.Stream<_i22.Paginacao<dynamic>>);
+          as _i11.Stream<_i23.Paginacao<dynamic>>);
 }
 
 /// A class which mocks [SincronizarEstoque].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSincronizarEstoque extends _i1.Mock
-    implements _i23.SincronizarEstoque {
+    implements _i24.SincronizarEstoque {
   MockSincronizarEstoque() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Stream<_i22.Paginacao<dynamic>> call() =>
+  _i11.Stream<_i23.Paginacao<dynamic>> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
-            returnValue: _i10.Stream<_i22.Paginacao<dynamic>>.empty(),
+            returnValue: _i11.Stream<_i23.Paginacao<dynamic>>.empty(),
           )
-          as _i10.Stream<_i22.Paginacao<dynamic>>);
+          as _i11.Stream<_i23.Paginacao<dynamic>>);
 }
 
 /// A class which mocks [SincronziarTabelasDePreco].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSincronziarTabelasDePreco extends _i1.Mock
-    implements _i24.SincronziarTabelasDePreco {
+    implements _i25.SincronziarTabelasDePreco {
   MockSincronziarTabelasDePreco() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i7.ITabelasDePrecoRepository get tabelasDePrecoRepository =>
+  _i8.ITabelasDePrecoRepository get tabelasDePrecoRepository =>
       (super.noSuchMethod(
             Invocation.getter(#tabelasDePrecoRepository),
-            returnValue: _FakeITabelasDePrecoRepository_5(
+            returnValue: _FakeITabelasDePrecoRepository_6(
               this,
               Invocation.getter(#tabelasDePrecoRepository),
             ),
           )
-          as _i7.ITabelasDePrecoRepository);
+          as _i8.ITabelasDePrecoRepository);
 
   @override
-  _i10.Stream<_i22.Paginacao<_i25.TabelaDePreco>> call() =>
+  _i11.Stream<_i23.Paginacao<_i26.TabelaDePreco>> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
             returnValue:
-                _i10.Stream<_i22.Paginacao<_i25.TabelaDePreco>>.empty(),
+                _i11.Stream<_i23.Paginacao<_i26.TabelaDePreco>>.empty(),
           )
-          as _i10.Stream<_i22.Paginacao<_i25.TabelaDePreco>>);
+          as _i11.Stream<_i23.Paginacao<_i26.TabelaDePreco>>);
 }
 
 /// A class which mocks [SincronizarPrecos].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSincronizarPrecos extends _i1.Mock implements _i26.SincronizarPrecos {
+class MockSincronizarPrecos extends _i1.Mock implements _i27.SincronizarPrecos {
   MockSincronizarPrecos() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i7.IPrecosDeReferenciasRepository get precosDeReferenciasRepository =>
+  _i8.IPrecosDeReferenciasRepository get precosDeReferenciasRepository =>
       (super.noSuchMethod(
             Invocation.getter(#precosDeReferenciasRepository),
-            returnValue: _FakeIPrecosDeReferenciasRepository_6(
+            returnValue: _FakeIPrecosDeReferenciasRepository_7(
               this,
               Invocation.getter(#precosDeReferenciasRepository),
             ),
           )
-          as _i7.IPrecosDeReferenciasRepository);
+          as _i8.IPrecosDeReferenciasRepository);
 
   @override
-  _i10.Stream<_i22.Paginacao<_i25.PrecoDaReferencia>> call() =>
+  _i11.Stream<_i23.Paginacao<_i26.PrecoDaReferencia>> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
             returnValue:
-                _i10.Stream<_i22.Paginacao<_i25.PrecoDaReferencia>>.empty(),
+                _i11.Stream<_i23.Paginacao<_i26.PrecoDaReferencia>>.empty(),
           )
-          as _i10.Stream<_i22.Paginacao<_i25.PrecoDaReferencia>>);
+          as _i11.Stream<_i23.Paginacao<_i26.PrecoDaReferencia>>);
 }

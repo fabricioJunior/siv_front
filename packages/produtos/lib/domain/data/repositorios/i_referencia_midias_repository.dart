@@ -1,10 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:produtos/models.dart';
 
 abstract class IReferenciaMidiasRepository {
   Future<List<ReferenciaMidia>> recuperarReferenciasMidias(int referenciaId);
 
   Future<ReferenciaMidia> criarReferenciaMidia({
-    required String filePath,
+    required Uint8List bytes,
+    required String fileName,
     required int referenciaId,
     required bool ePrincipal,
     required bool ePublica,

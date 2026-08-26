@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:core/http/i_http_source.dart';
 import 'package:core/http/i_http_response.dart';
@@ -70,7 +69,8 @@ abstract class RemoteDataSourceBase {
 
   Future<IHttpResponse> postFile({
     String field = 'file',
-    required File file,
+    required Uint8List bytes,
+    required String fileName,
     Map<String, String>? queryParameters,
     Map<String, dynamic>? pathParameters,
     Map<String, dynamic>? body,
@@ -85,7 +85,8 @@ abstract class RemoteDataSourceBase {
     var libResponse = await httpClient.postMultipart(
       uri: uri,
       field: field,
-      file: file,
+      bytes: bytes,
+      fileName: fileName,
       body: body,
       headers: headers,
       fileType: fileType,

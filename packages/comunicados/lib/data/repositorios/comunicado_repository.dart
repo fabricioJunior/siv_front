@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/data/remote/i_comunicado_remote_data_source.dart';
 import 'package:comunicados/domain/data/repositorios/i_comunicado_repository.dart';
@@ -23,8 +23,8 @@ class ComunicadoRepository implements IComunicadoRepository {
   }
 
   @override
-  Future<String> enviarImagem(File file) {
-    return remoteDataSource.enviarImagem(file);
+  Future<String> enviarImagem(Uint8List bytes, String fileName) {
+    return remoteDataSource.enviarImagem(bytes, fileName);
   }
 
   @override

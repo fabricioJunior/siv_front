@@ -9,11 +9,12 @@ abstract class EcommerceReferenciasEvent extends Equatable {
 
 class EcommerceReferenciasIniciou extends EcommerceReferenciasEvent {
   final int ecommerceId;
+  final String? busca;
 
-  const EcommerceReferenciasIniciou({required this.ecommerceId});
+  const EcommerceReferenciasIniciou({required this.ecommerceId, this.busca});
 
   @override
-  List<Object?> get props => [ecommerceId];
+  List<Object?> get props => [ecommerceId, busca];
 }
 
 class EcommerceReferenciaAdicionou extends EcommerceReferenciasEvent {
@@ -35,14 +36,17 @@ class EcommerceReferenciaPublicarSolicitou
     extends EcommerceReferenciasEvent {
   final int ecommerceId;
   final int referenciaEcommerceId;
+  // false = publicar, true = despublicar (mesmo campo que o backend espera).
+  final bool rascunho;
 
   const EcommerceReferenciaPublicarSolicitou({
     required this.ecommerceId,
     required this.referenciaEcommerceId,
+    this.rascunho = false,
   });
 
   @override
-  List<Object?> get props => [ecommerceId, referenciaEcommerceId];
+  List<Object?> get props => [ecommerceId, referenciaEcommerceId, rascunho];
 }
 
 class EcommerceReferenciasDespublicarTodasSolicitou

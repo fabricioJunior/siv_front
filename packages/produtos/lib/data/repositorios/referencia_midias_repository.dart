@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
 import 'package:produtos/domain/models/referencia_midia.dart';
@@ -17,7 +19,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
 
   @override
   Future<ReferenciaMidia> criarReferenciaMidia({
-    required String filePath,
+    required Uint8List bytes,
+    required String fileName,
     required int referenciaId,
     required bool ePrincipal,
     required bool ePublica,
@@ -29,7 +32,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
     void Function(int sent, int total)? onSendProgress,
   }) {
     return referenciaMidiasRemoteDataSource.criarReferenciaMidia(
-      filePath: filePath,
+      bytes: bytes,
+      fileName: fileName,
       referenciaId: referenciaId,
       ePrincipal: ePrincipal,
       ePublica: ePublica,

@@ -7,25 +7,14 @@ import 'package:core/impressoras/printers/repositories/impressora_preferida_repo
 import 'package:core/impressoras/printers/use_cases/obter_impressora_preferida.dart';
 import 'package:core/impressoras/printers/use_cases/salvar_impressora_preferida.dart';
 import 'package:core/injecoes/api_base_url_config.dart';
-import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
-import 'package:core/local_data_sourcers/database_configs/isar_database_instance.dart';
-import 'package:core/paginacao/i_paginacao_data_source.dart';
-import 'package:core/paginacao/paginacao.dart';
-import 'package:core/paginacao/paginacao_data_source.dart';
+import 'package:core/injecoes/core_local_storage.dart';
 import 'package:core/produtos_compartilhados.dart';
-import 'package:core/produtos_compartilhados/local/dtos/lista_de_produtos_compartilhada_dto.dart';
-import 'package:core/produtos_compartilhados/local/dtos/produto_compartilhado_dto.dart';
-import 'package:core/produtos_compartilhados/local/i_lista_de_produtos_compartilhada_local_data_source.dart';
-import 'package:core/produtos_compartilhados/local/i_produtos_compartilhados_local_data_source.dart';
-import 'package:core/produtos_compartilhados/local/lista_de_produtos_compartilhada_local_data_source.dart';
-import 'package:core/produtos_compartilhados/local/produtos_compartilhados_local_data_source.dart';
 import 'package:core/produtos_compartilhados/repositories/lista_de_produtos_compartilhada_repository.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/arquivos.dart';
 import 'package:core/cep.dart';
 import 'package:core/links.dart';
 import 'package:get_it/get_it.dart';
-import 'package:isar_community/isar.dart';
 
 import '../produtos_compartilhados/repositories/i_lista_de_produtos_compartilhada_repository.dart';
 
@@ -67,13 +56,7 @@ void coreInjections() {
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 
-  sl.registerLazySingleton<IListaDeProdutosCompartilhadaLocalDataSource>(
-    () => ListaDeProdutosCompartilhadaLocalDataSource(getIsar: _getIsar),
-  );
-
-  sl.registerLazySingleton<IProdutosCompartilhadosLocalDataSource>(
-    () => ProdutosCompartilhadosLocalDataSource(getIsar: _getIsar),
-  );
+  registerCoreLocalStorage();
 
   sl.registerLazySingleton<IListaDeProdutosCompartilhadaRepository>(
     () => ListaDeProdutosCompartilhadaRepository(
@@ -104,19 +87,6 @@ void coreInjections() {
   sl.registerFactory<RemoverProdutosDaListaCompartilhada>(
     () => RemoverProdutosDaListaCompartilhada(repository: sl()),
   );
-
-  sl.registerFactory<IPaginacaoDataSource>(
-    () => PaginacaoDataSource(
-      getIsar: _getIsar,
-    ),
-  );
-
-  // Singleton -- precisa acumular as instâncias Isar abertas
-  // (`_openedInstances`) pra `closeAllInstances`/`apagarTodosOsDados`
-  // funcionarem de verdade. Como factory, cada `sl()` criava um objeto novo
-  // com a lista sempre vazia, e essas duas operações nunca fechavam/apagavam
-  // nada de fato.
-  sl.registerLazySingleton<IIsarDatabaseInstance>(() => IsarDatabaseInstance());
 }
 
 class InformacoesParaRequest implements IInformacoesParaRequests {
@@ -135,17 +105,3 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
       );
 }
 
-Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  List<CollectionSchema<dynamic>> schemas = [
-    PaginacaoSchema,
-    ProdutoCompartilhadoDtoSchema,
-    ListaDeProdutosCompartilhadaDtoSchema,
-  ];
-
-  return sl<IIsarDatabaseInstance>().getIsar(
-    schemas: schemas,
-    isSyncData: isSyncData ?? false,
-    isCommonData: true,
-    moduleName: 'core',
-  );
-}

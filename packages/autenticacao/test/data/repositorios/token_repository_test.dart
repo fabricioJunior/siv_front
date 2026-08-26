@@ -25,7 +25,7 @@ void main() {
 
       await tokenRepository.putToken(token);
 
-      verify(tokenLocalDataSource.put(token.toLocalDto()));
+      verify(tokenLocalDataSource.put(token));
     });
 
     test('recuperarToken retorna token armazenado localmente', () async {
@@ -33,7 +33,7 @@ void main() {
       _setupFetchToken(token);
       var resultado = await tokenRepository.recuperarToken();
 
-      expect(resultado!.toLocalDto(), token.toLocalDto());
+      expect(resultado, token);
     });
     test('recuperarToken retorna null quando não token armazenado', () async {
       _setupFetchToken(null);
@@ -79,10 +79,6 @@ void _setupGetToken(
 
 void _setupFetchToken(Token? token) {
   when(tokenLocalDataSource.fetchAll()).thenAnswer(
-    (_) async => token == null
-        ? []
-        : [
-            token.toLocalDto(),
-          ],
+    (_) async => token == null ? [] : [token],
   );
 }

@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:autenticacao/data/local/dtos/token_dto.dart' as local;
 import 'package:autenticacao/domain/data/data_sourcers/local/i_token_local_data_source.dart';
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
 import 'package:autenticacao/domain/data/repositories/i_token_repository.dart';
 import 'package:autenticacao/domain/models/token.dart';
 
 class TokenRepository implements ITokenRepository {
-  final ITokenLocalDataSource localDataSource;
+  final ITokenLocalDataSource<Token> localDataSource;
   final ITokenRemoteDataSource remoteDataSource;
 
   final StreamController<Token> _onTokenPut = StreamController.broadcast();
@@ -22,7 +21,7 @@ class TokenRepository implements ITokenRepository {
 
   @override
   Future<void> putToken(Token token) async {
-    await localDataSource.put(token.toLocalDto());
+    await localDataSource.put(token);
     _onTokenPut.add(token);
   }
 
@@ -61,12 +60,4 @@ class TokenRepository implements ITokenRepository {
 
   @override
   Stream<Null> get onTokenDelete => _onDeleteToken.stream;
-}
-
-extension EntityToDto on Token {
-  local.TokenDto toLocalDto() => local.TokenDto(
-        jwtToken: jwtToken,
-        dataDeCriacao: dataDeCriacao,
-        dataDeExpiracao: dataDeExpiracao,
-      );
 }

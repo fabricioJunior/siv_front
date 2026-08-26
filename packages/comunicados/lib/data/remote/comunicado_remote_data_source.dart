@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/data/remote/i_comunicado_remote_data_source.dart';
 import 'package:comunicados/domain/models/models.dart';
@@ -42,10 +42,11 @@ class ComunicadoRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<String> enviarImagem(File file) async {
+  Future<String> enviarImagem(Uint8List bytes, String fileName) async {
     final response = await postFile(
       field: 'file',
-      file: file,
+      bytes: bytes,
+      fileName: fileName,
       fileType: FileType.image,
       pathParameters: {'path': '/imagens'},
     );

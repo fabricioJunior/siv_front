@@ -85,10 +85,15 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
 
   @override
   Future<List<EcommerceReferencia>> recuperarReferencias(
-    int ecommerceId,
-  ) async {
+    int ecommerceId, {
+    String? busca,
+  }) async {
     final response = await get(
       pathParameters: {'id': '$ecommerceId/referencias'},
+      queryParameters: {
+        'limit': '200',
+        if (busca != null && busca.trim().isNotEmpty) 'search': busca.trim(),
+      },
     );
     final body = response.body as Map<String, dynamic>;
     return (body['items'] as List<dynamic>)

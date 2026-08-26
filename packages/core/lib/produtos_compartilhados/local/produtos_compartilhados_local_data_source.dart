@@ -22,12 +22,12 @@ class ProdutosCompartilhadosLocalDataSource extends IsarLocalDataSourceBase<
 
   @override
   Future<Iterable<ProdutoCompartilhado>> recuperarPorLista(String hashLista) {
-    return fetchWhere(FindProdutoCompartilhado(hashLista: hashLista));
+    return fetchWhere((dto) => dto.hashLista == hashLista);
   }
 
   @override
   Future<void> removerPorLista(String hashLista) {
-    return deleteWhere(FindProdutoCompartilhado(hashLista: hashLista));
+    return deleteWhere((dto) => dto.hashLista == hashLista);
   }
 
   @override
@@ -48,22 +48,5 @@ class ProdutosCompartilhadosLocalDataSource extends IsarLocalDataSourceBase<
   @override
   Future<void> salvarProduto(ProdutoCompartilhado produto) {
     return put(produto);
-  }
-}
-
-class FindProdutoCompartilhado extends IsarFind<ProdutoCompartilhadoDto> {
-  final String? hashLista;
-
-  FindProdutoCompartilhado({this.hashLista});
-  @override
-  Future<Iterable<ProdutoCompartilhadoDto>> call(
-      IsarCollection<ProdutoCompartilhadoDto> t) async {
-    return t
-        .filter()
-        .optional(
-          hashLista != null,
-          (q) => q.hashListaEqualTo(hashLista!),
-        )
-        .findAll();
   }
 }

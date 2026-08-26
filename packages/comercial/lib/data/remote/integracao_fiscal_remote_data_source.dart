@@ -175,7 +175,8 @@ class IntegracaoFiscalRemoteDataSource extends RemoteDataSourceBase
     try {
       final response = await postFile(
         field: 'file',
-        file: File(filePath),
+        bytes: await File(filePath).readAsBytes(),
+        fileName: filePath.split(Platform.pathSeparator).last,
         fileType: FileType.other,
         pathParameters: {'path': '/configuracao/certificado'},
         body: {'senha': senha},

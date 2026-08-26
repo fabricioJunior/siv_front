@@ -8,7 +8,10 @@ abstract class IEcommerceRemoteDataSource {
   Future<void> excluirEcommerce(int id);
   Future<void> restaurarEcommerce(int id);
 
-  Future<List<EcommerceReferencia>> recuperarReferencias(int ecommerceId);
+  Future<List<EcommerceReferencia>> recuperarReferencias(
+    int ecommerceId, {
+    String? busca,
+  });
   Future<EcommerceReferencia> adicionarReferencia(
     int ecommerceId, {
     required int referenciaId,

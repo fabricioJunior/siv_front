@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/models/models.dart';
 import 'package:comunicados/domain/usecases/contar_destinatarios_comunicado.dart';
@@ -83,7 +83,7 @@ class ComposicaoComunicadoBloc
   ) async {
     try {
       emit(state.copyWith(enviandoImagem: true, limparImagemUrl: true));
-      final url = await _enviarImagem.call(File(event.filePath));
+      final url = await _enviarImagem.call(event.bytes, event.fileName);
       emit(state.copyWith(enviandoImagem: false, imagemUrl: url));
     } catch (e, s) {
       emit(

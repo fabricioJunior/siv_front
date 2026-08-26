@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/remote_data_sourcers.dart';
 import 'package:produtos/data/remote/dtos/referencia_midia_dto.dart';
@@ -34,7 +34,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
 
   @override
   Future<ReferenciaMidia> criarReferenciaMidia({
-    required String filePath,
+    required Uint8List bytes,
+    required String fileName,
     required int referenciaId,
     required bool ePrincipal,
     required bool ePublica,
@@ -56,7 +57,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     };
     var response = await postFile(
       field: 'file',
-      file: File(filePath),
+      bytes: bytes,
+      fileName: fileName,
       fileType: FileType.image,
       pathParameters: pathParameters,
       body: body,

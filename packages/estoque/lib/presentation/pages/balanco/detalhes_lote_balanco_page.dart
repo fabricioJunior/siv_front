@@ -190,9 +190,8 @@ class _DetalhesLoteBalancoPageState extends State<DetalhesLoteBalancoPage> {
                                       ListenableBuilder(
                                         listenable: _leitorController,
                                         builder: (context, _) {
-                                          final contados = _leitorController.itens
-                                              .where((i) => i.quantidadeLida > 0)
-                                              .length;
+                                          final contados =
+                                              _leitorController.quantidadeTotalLida;
                                           if (contados == 0) return const SizedBox.shrink();
                                           return Chip(
                                             label: Text('$contados produto(s)'),
@@ -203,13 +202,6 @@ class _DetalhesLoteBalancoPageState extends State<DetalhesLoteBalancoPage> {
                                         },
                                       ),
                                     ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Observação: ${state.lote?.observacao?.trim().isNotEmpty == true ? state.lote!.observacao : '-'}',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
@@ -232,6 +224,7 @@ class _DetalhesLoteBalancoPageState extends State<DetalhesLoteBalancoPage> {
                             produtosPreCarregados: _produtosPreCarregados,
                             campoCodigoHint:
                                 'Bipe ou informe o código do produto',
+                            avisarCodigoDuplicado: false,
                           ),
                         ),
                       ),

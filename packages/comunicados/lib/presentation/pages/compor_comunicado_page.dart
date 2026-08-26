@@ -1,6 +1,7 @@
 import 'package:comunicados/domain/models/models.dart';
 import 'package:comunicados/presentation/blocs/composicao_comunicado_bloc/composicao_comunicado_bloc.dart';
 import 'package:core/bloc.dart';
+import 'package:core/imagens/imagem.dart';
 import 'package:core/imagens/selecionar_imagem.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -117,8 +118,15 @@ class _ComporComunicadoPageState extends State<ComporComunicadoPage> {
   Future<void> _inserirImagem() async {
     final imagens = await showSelecionarImagemModal(context);
     final imagem = (imagens != null && imagens.isNotEmpty) ? imagens.first : null;
-    if (imagem?.path == null || !mounted) return;
-    _bloc.add(ComposicaoImagemSolicitada(imagem!.path!));
+    if (imagem?.bytes == null || !mounted) return;
+    _bloc.add(ComposicaoImagemSolicitada(imagem!.bytes!, _nomeDoArquivo(imagem)));
+  }
+
+  String _nomeDoArquivo(Imagem imagem) {
+    final path = imagem.path;
+    final extensao =
+        (path != null && path.contains('.')) ? path.substring(path.lastIndexOf('.')) : '.jpg';
+    return 'imagem_${DateTime.now().millisecondsSinceEpoch}$extensao';
   }
 
   void _inserirImagemNoEditor(String url) {

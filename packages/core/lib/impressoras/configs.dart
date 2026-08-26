@@ -1,9 +1,1 @@
-import 'dart:io';
-
-import 'package:printing_ffi/printing_ffi.dart';
-
-void initPrintingConfigs() {
-  if (Platform.isWindows) {
-    PrintingFfi.instance.initPdfium();
-  }
-}
+export 'configs_io.dart' if (dart.library.js_interop) 'configs_web.dart';

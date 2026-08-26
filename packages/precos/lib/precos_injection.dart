@@ -1,16 +1,9 @@
 import 'package:core/injecoes.dart';
-import 'package:core/isar_anotacoes.dart';
-import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
-import 'package:precos/data/local/dtos/preco_da_referencia_dto.dart';
-import 'package:precos/data/local/dtos/tabela_de_preco_dto.dart';
-import 'package:precos/data/local/precos_de_referencias_local_data_source.dart';
-import 'package:precos/data/local/tabelas_de_preco_local_data_source.dart';
+import 'package:precos/data/local/precos_local_data_sources.dart';
 import 'package:precos/data/remote/precos_de_referencias_remote_data_source.dart';
 import 'package:precos/data/remote/tabela_de_preco_remote_data_source.dart';
 import 'package:precos/data/repositorios/precos_de_referencias_repository.dart';
 import 'package:precos/data/repositorios/tabelas_de_preco_repository.dart';
-import 'package:precos/domain/data/local/i_precos_de_referencias_local_data_source.dart';
-import 'package:precos/domain/data/local/i_tabelas_de_preco_local_data_source.dart';
 import 'package:precos/domain/data/remote/i_precos_de_referencias_remote_data_source.dart';
 import 'package:precos/domain/data/remote/i_tabelas_de_preco_remote_data_source.dart';
 import 'package:precos/presentation.dart';
@@ -32,12 +25,7 @@ void _dataSources() {
     () => PrecosDeReferenciasRemoteDataSource(informacoesParaRequest: sl()),
   );
 
-  sl.registerFactory<ITabelasDePrecoLocalDataSource>(
-    () => TabelasDePrecoLocalDataSource(getIsar: _getIsar),
-  );
-  sl.registerFactory<IPrecosDeReferenciasLocalDataSource>(
-    () => PrecosDeReferenciasLocalDataSource(getIsar: _getIsar),
-  );
+  registerPrecosLocalDataSources();
 }
 
 void _repositores() {
@@ -105,16 +93,3 @@ void _presentantion() {
   sl.registerFactory<PrecosDaTabelaBloc>(() => PrecosDaTabelaBloc(sl(), sl()));
 }
 
-Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  List<CollectionSchema<dynamic>> schemas = [
-    TabelaDePrecoDtoSchema,
-    PrecoDaReferenciaDtoSchema,
-  ];
-
-  return sl<IIsarDatabaseInstance>().getIsar(
-    schemas: schemas,
-    isCommonData: true,
-    isSyncData: isSyncData ?? false,
-    moduleName: 'precos',
-  );
-}

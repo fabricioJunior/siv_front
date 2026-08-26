@@ -4,11 +4,13 @@ abstract class EcommerceReferenciasState extends Equatable {
   int? get ecommerceId => null;
   List<EcommerceReferencia> get referencias => const [];
   bool get processandoLote => false;
+  String? get busca => null;
 
   const EcommerceReferenciasState();
 
   @override
-  List<Object?> get props => [ecommerceId, referencias, processandoLote];
+  List<Object?> get props =>
+      [ecommerceId, referencias, processandoLote, busca];
 }
 
 class EcommerceReferenciasInitial extends EcommerceReferenciasState {
@@ -27,11 +29,14 @@ class EcommerceReferenciasCarregarSucesso extends EcommerceReferenciasState {
   final List<EcommerceReferencia> referencias;
   @override
   final bool processandoLote;
+  @override
+  final String? busca;
 
   const EcommerceReferenciasCarregarSucesso({
     required this.ecommerceId,
     required this.referencias,
     this.processandoLote = false,
+    this.busca,
   });
 }
 

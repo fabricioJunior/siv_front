@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'paginacao.dart';
+part of 'paginacao_isar_dto.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,13 +9,13 @@ part of 'paginacao.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetPaginacaoCollection on Isar {
-  IsarCollection<Paginacao> get paginacaos => this.collection();
+extension GetPaginacaoIsarDtoCollection on Isar {
+  IsarCollection<PaginacaoIsarDto> get paginacaoIsarDtos => this.collection();
 }
 
-const PaginacaoSchema = CollectionSchema(
-  name: r'Paginacao',
-  id: -3695897472653108223,
+const PaginacaoIsarDtoSchema = CollectionSchema(
+  name: r'PaginacaoIsarDto',
+  id: 8373761600524942808,
   properties: {
     r'dataAtualizacao': PropertySchema(
       id: 0,
@@ -53,22 +53,22 @@ const PaginacaoSchema = CollectionSchema(
       type: IsarType.long,
     )
   },
-  estimateSize: _paginacaoEstimateSize,
-  serialize: _paginacaoSerialize,
-  deserialize: _paginacaoDeserialize,
-  deserializeProp: _paginacaoDeserializeProp,
+  estimateSize: _paginacaoIsarDtoEstimateSize,
+  serialize: _paginacaoIsarDtoSerialize,
+  deserialize: _paginacaoIsarDtoDeserialize,
+  deserializeProp: _paginacaoIsarDtoDeserializeProp,
   idName: r'dataBaseId',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _paginacaoGetId,
-  getLinks: _paginacaoGetLinks,
-  attach: _paginacaoAttach,
+  getId: _paginacaoIsarDtoGetId,
+  getLinks: _paginacaoIsarDtoGetLinks,
+  attach: _paginacaoIsarDtoAttach,
   version: '3.3.2',
 );
 
-int _paginacaoEstimateSize(
-  Paginacao object,
+int _paginacaoIsarDtoEstimateSize(
+  PaginacaoIsarDto object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
@@ -77,8 +77,8 @@ int _paginacaoEstimateSize(
   return bytesCount;
 }
 
-void _paginacaoSerialize(
-  Paginacao object,
+void _paginacaoIsarDtoSerialize(
+  PaginacaoIsarDto object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
@@ -92,13 +92,13 @@ void _paginacaoSerialize(
   writer.writeLong(offsets[6], object.totalPaginas);
 }
 
-Paginacao _paginacaoDeserialize(
+PaginacaoIsarDto _paginacaoIsarDtoDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Paginacao(
+  final object = PaginacaoIsarDto(
     dataAtualizacao: reader.readDateTimeOrNull(offsets[0]),
     ended: reader.readBoolOrNull(offsets[1]) ?? false,
     itensPorPagina: reader.readLong(offsets[2]),
@@ -110,7 +110,7 @@ Paginacao _paginacaoDeserialize(
   return object;
 }
 
-P _paginacaoDeserializeProp<P>(
+P _paginacaoIsarDtoDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -136,29 +136,31 @@ P _paginacaoDeserializeProp<P>(
   }
 }
 
-Id _paginacaoGetId(Paginacao object) {
+Id _paginacaoIsarDtoGetId(PaginacaoIsarDto object) {
   return object.dataBaseId;
 }
 
-List<IsarLinkBase<dynamic>> _paginacaoGetLinks(Paginacao object) {
+List<IsarLinkBase<dynamic>> _paginacaoIsarDtoGetLinks(PaginacaoIsarDto object) {
   return [];
 }
 
-void _paginacaoAttach(IsarCollection<dynamic> col, Id id, Paginacao object) {}
+void _paginacaoIsarDtoAttach(
+    IsarCollection<dynamic> col, Id id, PaginacaoIsarDto object) {}
 
-extension PaginacaoQueryWhereSort
-    on QueryBuilder<Paginacao, Paginacao, QWhere> {
-  QueryBuilder<Paginacao, Paginacao, QAfterWhere> anyDataBaseId() {
+extension PaginacaoIsarDtoQueryWhereSort
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QWhere> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhere>
+      anyDataBaseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension PaginacaoQueryWhere
-    on QueryBuilder<Paginacao, Paginacao, QWhereClause> {
-  QueryBuilder<Paginacao, Paginacao, QAfterWhereClause> dataBaseIdEqualTo(
-      Id dataBaseId) {
+extension PaginacaoIsarDtoQueryWhere
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QWhereClause> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhereClause>
+      dataBaseIdEqualTo(Id dataBaseId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: dataBaseId,
@@ -167,8 +169,8 @@ extension PaginacaoQueryWhere
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterWhereClause> dataBaseIdNotEqualTo(
-      Id dataBaseId) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhereClause>
+      dataBaseIdNotEqualTo(Id dataBaseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -190,9 +192,8 @@ extension PaginacaoQueryWhere
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterWhereClause> dataBaseIdGreaterThan(
-      Id dataBaseId,
-      {bool include = false}) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhereClause>
+      dataBaseIdGreaterThan(Id dataBaseId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: dataBaseId, includeLower: include),
@@ -200,9 +201,8 @@ extension PaginacaoQueryWhere
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterWhereClause> dataBaseIdLessThan(
-      Id dataBaseId,
-      {bool include = false}) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhereClause>
+      dataBaseIdLessThan(Id dataBaseId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: dataBaseId, includeUpper: include),
@@ -210,7 +210,8 @@ extension PaginacaoQueryWhere
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterWhereClause> dataBaseIdBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterWhereClause>
+      dataBaseIdBetween(
     Id lowerDataBaseId,
     Id upperDataBaseId, {
     bool includeLower = true,
@@ -227,9 +228,9 @@ extension PaginacaoQueryWhere
   }
 }
 
-extension PaginacaoQueryFilter
-    on QueryBuilder<Paginacao, Paginacao, QFilterCondition> {
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+extension PaginacaoIsarDtoQueryFilter
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QFilterCondition> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -238,7 +239,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
@@ -247,7 +248,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -257,7 +258,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoGreaterThan(
     DateTime? value, {
     bool include = false,
@@ -271,7 +272,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoLessThan(
     DateTime? value, {
     bool include = false,
@@ -285,7 +286,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataAtualizacaoBetween(
     DateTime? lower,
     DateTime? upper, {
@@ -303,8 +304,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> dataBaseIdEqualTo(
-      Id value) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      dataBaseIdEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'dataBaseId',
@@ -313,7 +314,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       dataBaseIdGreaterThan(
     Id value, {
     bool include = false,
@@ -327,7 +328,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> dataBaseIdLessThan(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      dataBaseIdLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -340,7 +342,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> dataBaseIdBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      dataBaseIdBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -357,8 +360,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> endedEqualTo(
-      bool value) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      endedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'ended',
@@ -367,7 +370,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       itensPorPaginaEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -377,7 +380,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       itensPorPaginaGreaterThan(
     int value, {
     bool include = false,
@@ -391,7 +394,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       itensPorPaginaLessThan(
     int value, {
     bool include = false,
@@ -405,7 +408,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       itensPorPaginaBetween(
     int lower,
     int upper, {
@@ -423,7 +426,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyEqualTo(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -436,7 +440,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyGreaterThan(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -451,7 +456,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyLessThan(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -466,7 +472,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -485,7 +492,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyStartsWith(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -498,7 +506,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyEndsWith(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -511,9 +520,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
         property: r'key',
@@ -523,9 +531,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
         property: r'key',
@@ -535,7 +542,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyIsEmpty() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'key',
@@ -544,7 +552,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> keyIsNotEmpty() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      keyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'key',
@@ -553,8 +562,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> paginaAtualEqualTo(
-      int value) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      paginaAtualEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'paginaAtual',
@@ -563,7 +572,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       paginaAtualGreaterThan(
     int value, {
     bool include = false,
@@ -577,7 +586,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> paginaAtualLessThan(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      paginaAtualLessThan(
     int value, {
     bool include = false,
   }) {
@@ -590,7 +600,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> paginaAtualBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      paginaAtualBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -607,8 +618,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> totalItensEqualTo(
-      int value) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      totalItensEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'totalItens',
@@ -617,7 +628,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       totalItensGreaterThan(
     int value, {
     bool include = false,
@@ -631,7 +642,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> totalItensLessThan(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      totalItensLessThan(
     int value, {
     bool include = false,
   }) {
@@ -644,7 +656,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> totalItensBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      totalItensBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -661,8 +674,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> totalPaginasEqualTo(
-      int value) {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      totalPaginasEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'totalPaginas',
@@ -671,7 +684,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       totalPaginasGreaterThan(
     int value, {
     bool include = false,
@@ -685,7 +698,7 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition>
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
       totalPaginasLessThan(
     int value, {
     bool include = false,
@@ -699,7 +712,8 @@ extension PaginacaoQueryFilter
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterFilterCondition> totalPaginasBetween(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterFilterCondition>
+      totalPaginasBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -717,289 +731,323 @@ extension PaginacaoQueryFilter
   }
 }
 
-extension PaginacaoQueryObject
-    on QueryBuilder<Paginacao, Paginacao, QFilterCondition> {}
+extension PaginacaoIsarDtoQueryObject
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QFilterCondition> {}
 
-extension PaginacaoQueryLinks
-    on QueryBuilder<Paginacao, Paginacao, QFilterCondition> {}
+extension PaginacaoIsarDtoQueryLinks
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QFilterCondition> {}
 
-extension PaginacaoQuerySortBy on QueryBuilder<Paginacao, Paginacao, QSortBy> {
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByDataAtualizacao() {
+extension PaginacaoIsarDtoQuerySortBy
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QSortBy> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByDataAtualizacao() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAtualizacao', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByDataAtualizacaoDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByDataAtualizacaoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAtualizacao', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByEnded() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy> sortByEnded() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ended', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByEndedDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByEndedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ended', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByItensPorPagina() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByItensPorPagina() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itensPorPagina', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByItensPorPaginaDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByItensPorPaginaDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itensPorPagina', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByKey() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy> sortByKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'key', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByKeyDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'key', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByPaginaAtual() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByPaginaAtual() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paginaAtual', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByPaginaAtualDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByPaginaAtualDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paginaAtual', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByTotalItens() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByTotalItens() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItens', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByTotalItensDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByTotalItensDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItens', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByTotalPaginas() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByTotalPaginas() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalPaginas', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> sortByTotalPaginasDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      sortByTotalPaginasDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalPaginas', Sort.desc);
     });
   }
 }
 
-extension PaginacaoQuerySortThenBy
-    on QueryBuilder<Paginacao, Paginacao, QSortThenBy> {
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByDataAtualizacao() {
+extension PaginacaoIsarDtoQuerySortThenBy
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QSortThenBy> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByDataAtualizacao() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAtualizacao', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByDataAtualizacaoDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByDataAtualizacaoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAtualizacao', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByDataBaseId() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByDataBaseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataBaseId', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByDataBaseIdDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByDataBaseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataBaseId', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByEnded() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy> thenByEnded() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ended', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByEndedDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByEndedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ended', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByItensPorPagina() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByItensPorPagina() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itensPorPagina', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByItensPorPaginaDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByItensPorPaginaDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itensPorPagina', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByKey() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy> thenByKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'key', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByKeyDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'key', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByPaginaAtual() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByPaginaAtual() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paginaAtual', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByPaginaAtualDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByPaginaAtualDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paginaAtual', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByTotalItens() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByTotalItens() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItens', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByTotalItensDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByTotalItensDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalItens', Sort.desc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByTotalPaginas() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByTotalPaginas() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalPaginas', Sort.asc);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QAfterSortBy> thenByTotalPaginasDesc() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QAfterSortBy>
+      thenByTotalPaginasDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalPaginas', Sort.desc);
     });
   }
 }
 
-extension PaginacaoQueryWhereDistinct
-    on QueryBuilder<Paginacao, Paginacao, QDistinct> {
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByDataAtualizacao() {
+extension PaginacaoIsarDtoQueryWhereDistinct
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct> {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByDataAtualizacao() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dataAtualizacao');
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByEnded() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByEnded() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ended');
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByItensPorPagina() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByItensPorPagina() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'itensPorPagina');
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByKey(
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct> distinctByKey(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'key', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByPaginaAtual() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByPaginaAtual() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'paginaAtual');
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByTotalItens() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByTotalItens() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalItens');
     });
   }
 
-  QueryBuilder<Paginacao, Paginacao, QDistinct> distinctByTotalPaginas() {
+  QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QDistinct>
+      distinctByTotalPaginas() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalPaginas');
     });
   }
 }
 
-extension PaginacaoQueryProperty
-    on QueryBuilder<Paginacao, Paginacao, QQueryProperty> {
-  QueryBuilder<Paginacao, int, QQueryOperations> dataBaseIdProperty() {
+extension PaginacaoIsarDtoQueryProperty
+    on QueryBuilder<PaginacaoIsarDto, PaginacaoIsarDto, QQueryProperty> {
+  QueryBuilder<PaginacaoIsarDto, int, QQueryOperations> dataBaseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataBaseId');
     });
   }
 
-  QueryBuilder<Paginacao, DateTime?, QQueryOperations>
+  QueryBuilder<PaginacaoIsarDto, DateTime?, QQueryOperations>
       dataAtualizacaoProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataAtualizacao');
     });
   }
 
-  QueryBuilder<Paginacao, bool, QQueryOperations> endedProperty() {
+  QueryBuilder<PaginacaoIsarDto, bool, QQueryOperations> endedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ended');
     });
   }
 
-  QueryBuilder<Paginacao, int, QQueryOperations> itensPorPaginaProperty() {
+  QueryBuilder<PaginacaoIsarDto, int, QQueryOperations>
+      itensPorPaginaProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'itensPorPagina');
     });
   }
 
-  QueryBuilder<Paginacao, String, QQueryOperations> keyProperty() {
+  QueryBuilder<PaginacaoIsarDto, String, QQueryOperations> keyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'key');
     });
   }
 
-  QueryBuilder<Paginacao, int, QQueryOperations> paginaAtualProperty() {
+  QueryBuilder<PaginacaoIsarDto, int, QQueryOperations> paginaAtualProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'paginaAtual');
     });
   }
 
-  QueryBuilder<Paginacao, int, QQueryOperations> totalItensProperty() {
+  QueryBuilder<PaginacaoIsarDto, int, QQueryOperations> totalItensProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalItens');
     });
   }
 
-  QueryBuilder<Paginacao, int, QQueryOperations> totalPaginasProperty() {
+  QueryBuilder<PaginacaoIsarDto, int, QQueryOperations> totalPaginasProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalPaginas');
     });

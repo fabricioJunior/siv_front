@@ -7,10 +7,8 @@ import 'package:autenticacao/domain/data/data_sourcers/remote/i_empresas_remote_
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_usuarios_remote_data_source.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/paginacao.dart';
-import 'package:core/isar_anotacoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
-import 'package:core/local_data_sourcers/database_configs/i_isar_database_instance.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
@@ -33,14 +31,7 @@ import 'package:siv_front/data/infra/local_data_sourcers/leitor/produto_busca_do
 import 'package:siv_front/presentation/acesso_global_sessao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/dtos/empresa_dto.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/dtos/licenciado_dto.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/dtos/terminal_da_sessao_dto.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/dtos/usuario_dto.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/empresa_da_sessao_local_data_source.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/licenciado_da_sessao_local_data_source.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/terminal_da_sessao_local_data_source.dart';
-import 'package:siv_front/data/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/sessao_local_data_sources.dart';
 import 'package:siv_front/data/infra/remote_data_sourcers/empresas_remote_data_source.dart';
 import 'package:siv_front/data/infra/remote_data_sourcers/usuario_da_sessao_remote_data_source.dart';
 import 'package:siv_front/domain/controllers/permissoes_controller.dart';
@@ -97,20 +88,7 @@ void _remoteDataSources() {
 }
 
 void _localDataSource() {
-  sl.registerFactory<IUsuarioDaSessaoLocalDataSource>(
-    () => UsuarioDaSessaoLocalDataSource(getIsar: _getIsar),
-  );
-
-  sl.registerFactory<IEmpresaDaSessaoLocalDataSource>(
-    () => EmpresaDaSessaoLocalDataSource(getIsar: _getIsar),
-  );
-  sl.registerFactory<ILicenciadoDaSessaoLocalDataSource>(
-    () => LicenciadoDaSessaoLocalDataSource(getIsar: _getIsar),
-  );
-
-  sl.registerFactory<ITerminalDaSessaoLocalDataSource>(
-    () => TerminalDaSessaoLocalDataSource(getIsar: _getIsar),
-  );
+  registerSessaoLocalDataSources();
 
   sl.registerFactory<ILeitorDataDatasource>(
     () => ProdutoDoLeitorLocalDataSource(
@@ -180,17 +158,3 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
   Uri get uriBase => Uri.parse(apiBaseUrlConfig.urlBase);
 }
 
-Future<Isar> _getIsar({bool? isSyncData = false}) async {
-  List<CollectionSchema<dynamic>> schemas = [
-    UsuarioDtoSchema,
-    EmpresaDtoSchema,
-    LicenciadoDtoSchema,
-    TerminalDaSessaoDtoSchema,
-  ];
-
-  return sl<IIsarDatabaseInstance>().getIsar(
-    schemas: schemas,
-    isCommonData: true,
-    isSyncData: isSyncData ?? false,
-  );
-}

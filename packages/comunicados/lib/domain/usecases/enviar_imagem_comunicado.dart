@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:comunicados/domain/data/repositorios/i_comunicado_repository.dart';
 
@@ -7,7 +7,7 @@ class EnviarImagemComunicado {
 
   EnviarImagemComunicado({required this.repository});
 
-  Future<String> call(File file) {
-    return repository.enviarImagem(file);
+  Future<String> call(Uint8List bytes, String fileName) {
+    return repository.enviarImagem(bytes, fileName);
   }
 }

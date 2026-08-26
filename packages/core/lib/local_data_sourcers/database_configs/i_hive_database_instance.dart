@@ -6,6 +6,7 @@ import 'i_local_database_instance.dart';
 abstract class IHiveDatabaseInstance implements ILocalDatabaseInstance {
   Future<Box<T>> getBox<T>({
     required List<StorageEntityAdapter> adapters,
+    required String boxKey,
     String? moduleName,
     bool isSyncData = false,
     bool isCommonData = false,

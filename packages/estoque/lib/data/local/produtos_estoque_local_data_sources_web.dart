@@ -15,6 +15,7 @@ void registerProdutosEstoqueLocalDataSource() {
 
 Future<Box<ProdutoEstoqueHiveDto>> _getBox() {
   return sl<IHiveDatabaseInstance>().getBox<ProdutoEstoqueHiveDto>(
+    boxKey: 'ProdutoEstoqueHiveDto',
     adapters: [
       StorageEntityAdapter<ProdutoEstoqueHiveDto>(
         ProdutoEstoqueHiveDto.fromStorage,

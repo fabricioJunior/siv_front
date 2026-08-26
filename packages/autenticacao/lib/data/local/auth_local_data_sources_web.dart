@@ -23,6 +23,7 @@ void registerAuthLocalDataSources() {
 
 Future<Box<TokenHiveDto>> _getTokenBox() {
   return sl<IHiveDatabaseInstance>().getBox<TokenHiveDto>(
+    boxKey: 'TokenHiveDto',
     adapters: [StorageEntityAdapter<TokenHiveDto>(TokenHiveDto.fromStorage)],
     moduleName: 'autenticacao',
   );
@@ -30,6 +31,7 @@ Future<Box<TokenHiveDto>> _getTokenBox() {
 
 Future<Box<PermissaoDoUsuarioHiveDto>> _getPermissaoDoUsuarioBox() {
   return sl<IHiveDatabaseInstance>().getBox<PermissaoDoUsuarioHiveDto>(
+    boxKey: 'PermissaoDoUsuarioHiveDto',
     adapters: [
       StorageEntityAdapter<PermissaoDoUsuarioHiveDto>(
         PermissaoDoUsuarioHiveDto.fromStorage,

@@ -15,6 +15,7 @@ void registerCodigosLocalDataSource() {
 
 Future<Box<CodigoHiveDto>> _getCodigoBox() {
   return sl<IHiveDatabaseInstance>().getBox<CodigoHiveDto>(
+    boxKey: 'CodigoHiveDto',
     adapters: [StorageEntityAdapter<CodigoHiveDto>(CodigoHiveDto.fromStorage)],
     isCommonData: true,
     moduleName: 'produtos',

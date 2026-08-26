@@ -92,6 +92,7 @@ class CredenciaisDeAutenticacaoRepository
 
   Future<Box<CredenciaisHiveDto>> _getBox() {
     return sl<IHiveDatabaseInstance>().getBox<CredenciaisHiveDto>(
+      boxKey: 'CredenciaisHiveDto',
       adapters: [
         StorageEntityAdapter<CredenciaisHiveDto>(
           CredenciaisHiveDto.fromStorage,

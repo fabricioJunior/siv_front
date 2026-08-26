@@ -9,13 +9,16 @@ class HiveDatabaseInstance implements IHiveDatabaseInstance {
   @override
   Future<Box<T>> getBox<T>({
     required List<StorageEntityAdapter> adapters,
+    required String boxKey,
     String? moduleName,
     bool isSyncData = false,
     bool isCommonData = false,
   }) async {
     final instanceName = moduleName ??
         '${isSyncData ? 'sync_' : ''}${isCommonData ? 'common_data' : ''}';
-    final boxName = '${instanceName}_$T';
+    // boxKey precisa ser string literal, não `$T` -- Type.toString() é
+    // instável em build web release/minificado e pode colidir entre DTOs.
+    final boxName = '${instanceName}_$boxKey';
 
     final opened = _openedBoxes[boxName];
     if (opened != null) {

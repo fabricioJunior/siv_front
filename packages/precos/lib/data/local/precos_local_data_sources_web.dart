@@ -21,6 +21,7 @@ void registerPrecosLocalDataSources() {
 
 Future<Box<TabelaDePrecoHiveDto>> _getTabelaDePrecoBox() {
   return sl<IHiveDatabaseInstance>().getBox<TabelaDePrecoHiveDto>(
+    boxKey: 'TabelaDePrecoHiveDto',
     adapters: [
       StorageEntityAdapter<TabelaDePrecoHiveDto>(
         TabelaDePrecoHiveDto.fromStorage,
@@ -33,6 +34,7 @@ Future<Box<TabelaDePrecoHiveDto>> _getTabelaDePrecoBox() {
 
 Future<Box<PrecoDaReferenciaHiveDto>> _getPrecoDaReferenciaBox() {
   return sl<IHiveDatabaseInstance>().getBox<PrecoDaReferenciaHiveDto>(
+    boxKey: 'PrecoDaReferenciaHiveDto',
     adapters: [
       StorageEntityAdapter<PrecoDaReferenciaHiveDto>(
         PrecoDaReferenciaHiveDto.fromStorage,

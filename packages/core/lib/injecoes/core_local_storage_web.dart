@@ -39,6 +39,7 @@ void registerCoreLocalStorage() {
 
 Future<Box<ProdutoCompartilhadoHiveDto>> _getProdutosCompartilhadosBox() {
   return sl<IHiveDatabaseInstance>().getBox<ProdutoCompartilhadoHiveDto>(
+    boxKey: 'ProdutoCompartilhadoHiveDto',
     adapters: [
       StorageEntityAdapter<ProdutoCompartilhadoHiveDto>(
         ProdutoCompartilhadoHiveDto.fromStorage,
@@ -53,6 +54,7 @@ Future<Box<ListaDeProdutosCompartilhadaHiveDto>>
     _getListaDeProdutosCompartilhadaBox() {
   return sl<IHiveDatabaseInstance>()
       .getBox<ListaDeProdutosCompartilhadaHiveDto>(
+    boxKey: 'ListaDeProdutosCompartilhadaHiveDto',
     adapters: [
       StorageEntityAdapter<ListaDeProdutosCompartilhadaHiveDto>(
         ListaDeProdutosCompartilhadaHiveDto.fromStorage,

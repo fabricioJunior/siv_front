@@ -177,7 +177,8 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     if (resultado == null) return;
 
     final candidatoNcm = resultado.subCategoria?.ncm ?? resultado.categoria.ncm;
-    final ncmSugerido = (candidatoNcm != null && candidatoNcm.trim().length == 8)
+    final ncmSugerido =
+        (candidatoNcm != null && candidatoNcm.trim().length == 8)
         ? candidatoNcm
         : null;
 
@@ -426,36 +427,47 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                               },
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Text(
                                   'Produtos da referência',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                Wrap(
+                                  spacing: 4,
+                                  runSpacing: 4,
                                   children: [
                                     TextButton.icon(
                                       onPressed: () {
                                         Navigator.of(context).pushNamed(
                                           '/codigos_de_barras_da_referencia',
                                           arguments: {
-                                            'referenciaId': state.referencia?.id,
+                                            'referenciaId':
+                                                state.referencia?.id,
                                           },
                                         );
                                       },
                                       icon: const Icon(Icons.barcode_reader),
-                                      label: const Text('Ver códigos de barras'),
+                                      label: const Text(
+                                        'Ver códigos de barras',
+                                      ),
                                     ),
                                     TextButton.icon(
                                       onPressed: () async {
-                                        final criou = await Navigator.of(context).pushNamed(
-                                          '/produto',
-                                          arguments: {
-                                            'referenciaId': state.referencia?.id,
-                                          },
-                                        );
+                                        final criou =
+                                            await Navigator.of(
+                                              context,
+                                            ).pushNamed(
+                                              '/produto',
+                                              arguments: {
+                                                'referenciaId':
+                                                    state.referencia?.id,
+                                              },
+                                            );
 
                                         if (!mounted) return;
 
@@ -466,7 +478,9 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                         }
                                       },
                                       icon: const Icon(Icons.add),
-                                      label: const Text('Cadastrar novo produto'),
+                                      label: const Text(
+                                        'Cadastrar novo produto',
+                                      ),
                                     ),
                                   ],
                                 ),

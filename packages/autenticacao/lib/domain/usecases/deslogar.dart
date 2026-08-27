@@ -19,12 +19,19 @@ class Deslogar {
     required this.localDatabaseInstance,
   });
 
-  Future<void> call() async {
+  // apagarDadosLocais=false pro caso de 401 esporádico (sessão caiu sozinha, ex: token expirou
+  // com a aba em background) -- mantém produtos/estoque/preços/etc em cache, só limpa sessão/token.
+  // O wipe total (apagarTodosOsDados) é só pro logout explícito do usuário, que pode trocar de
+  // licenciado -- ver comentário abaixo.
+  Future<void> call({bool apagarDadosLocais = true}) async {
     await licenciadosRepository.limparLicenciadoDaSessao();
     await usuariosRepository.limparTerminalDaSessao();
     await usuariosRepository.apagarUsuarioDaSessao();
     await limparCredenciaisDeAutenticacao.call();
     await tokenRepository.deleteToken(notificarTokenExcluido: false);
+    if (!apagarDadosLocais) {
+      return;
+    }
     // Dados locais (produtos/estoque/preços/etc) não têm licenciadoId pra
     // filtrar na leitura -- sem isso, trocar de licenciado reabre o mesmo
     // banco local com dados do licenciado anterior ainda dentro.

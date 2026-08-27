@@ -218,30 +218,39 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
-            Expanded(
-              child: Text(widget.titulo, style: theme.textTheme.titleMedium),
+            Text(widget.titulo, style: theme.textTheme.titleMedium),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (!widget.onlyView && widget.onCadastrarPressed != null)
+                  TextButton.icon(
+                    onPressed: widget.onCadastrarPressed,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(widget.cadastrarLabel),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                if (!widget.onlyView)
+                  Chip(
+                    label: Text(
+                      widget.modo == SeletorGenericoModo.unica
+                          ? 'Seleção única'
+                          : 'Seleção múltipla',
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
             ),
-            if (!widget.onlyView && widget.onCadastrarPressed != null)
-              TextButton.icon(
-                onPressed: widget.onCadastrarPressed,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(widget.cadastrarLabel),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            if (!widget.onlyView)
-              Chip(
-                label: Text(
-                  widget.modo == SeletorGenericoModo.unica
-                      ? 'Seleção única'
-                      : 'Seleção múltipla',
-                ),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
           ],
         ),
         const SizedBox(height: 6),

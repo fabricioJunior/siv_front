@@ -10,11 +10,24 @@ class ProdutoIniciou extends ProdutoEvent {
   final int? referenciaId;
   final int? corId;
   final int? tamanhoId;
+  final int? estampaId;
 
-  ProdutoIniciou({this.produto, this.referenciaId, this.corId, this.tamanhoId});
+  ProdutoIniciou({
+    this.produto,
+    this.referenciaId,
+    this.corId,
+    this.tamanhoId,
+    this.estampaId,
+  });
 
   @override
-  List<Object?> get props => [produto, referenciaId, corId, tamanhoId];
+  List<Object?> get props => [
+    produto,
+    referenciaId,
+    corId,
+    tamanhoId,
+    estampaId,
+  ];
 }
 
 class ProdutoEditou extends ProdutoEvent {
@@ -22,16 +35,24 @@ class ProdutoEditou extends ProdutoEvent {
   final String? idExterno;
   final int? corId;
   final int? tamanhoId;
+  final int? estampaId;
 
   ProdutoEditou({
     this.referenciaId,
     this.idExterno,
     this.corId,
     this.tamanhoId,
+    this.estampaId,
   });
 
   @override
-  List<Object?> get props => [referenciaId, idExterno, corId, tamanhoId];
+  List<Object?> get props => [
+    referenciaId,
+    idExterno,
+    corId,
+    tamanhoId,
+    estampaId,
+  ];
 }
 
 class ProdutoSalvou extends ProdutoEvent {}
@@ -83,6 +104,15 @@ class ProdutoTamanhosSelecionou extends ProdutoEvent {
   List<Object?> get props => [tamanhos];
 }
 
+class ProdutoEstampasSelecionou extends ProdutoEvent {
+  final List<Estampa> estampas;
+
+  ProdutoEstampasSelecionou({required this.estampas});
+
+  @override
+  List<Object?> get props => [estampas];
+}
+
 class ProdutoCombinacaoSelecionou extends ProdutoEvent {
   final String chave;
   final bool selecionada;
@@ -109,16 +139,18 @@ class ProdutoCombinacaoCodigoBarrasEditou extends ProdutoEvent {
 class ProdutoCombinacaoSelecao extends Equatable {
   final int corId;
   final int tamanhoId;
+  final int? estampaId;
   final String? codigoDeBarras;
 
   const ProdutoCombinacaoSelecao({
     required this.corId,
     required this.tamanhoId,
+    this.estampaId,
     this.codigoDeBarras,
   });
 
   @override
-  List<Object?> get props => [corId, tamanhoId, codigoDeBarras];
+  List<Object?> get props => [corId, tamanhoId, estampaId, codigoDeBarras];
 }
 
 class ProdutoSalvouCombinacoes extends ProdutoEvent {

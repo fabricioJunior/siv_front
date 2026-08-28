@@ -6,6 +6,7 @@ abstract class IProdutosRepository {
     String? idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   });
 
   Future<List<Produto>> criarProdutos(List<NovoProdutoCombinacao> itens);
@@ -16,6 +17,7 @@ abstract class IProdutosRepository {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   });
 
   Future<void> excluirProduto(int id);
@@ -27,5 +29,6 @@ abstract class IProdutosRepository {
     int? referenciaId,
     int idCor,
     int idTamanho,
+    int? idEstampa,
   });
 }

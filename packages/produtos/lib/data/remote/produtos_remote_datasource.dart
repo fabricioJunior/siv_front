@@ -17,6 +17,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
     String? idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   }) async {
     final response = await post(
       body: {
@@ -24,6 +25,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
         if (idExterno != null && idExterno.isNotEmpty) 'idExterno': idExterno,
         'corId': corId,
         'tamanhoId': tamanhoId,
+        if (estampaId != null) 'estampaId': estampaId,
       },
     );
 
@@ -41,6 +43,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
                 'idExterno': item.idExterno,
               'corId': item.corId,
               'tamanhoId': item.tamanhoId,
+              if (item.estampaId != null) 'estampaId': item.estampaId,
               if (item.codigoDeBarras != null && item.codigoDeBarras!.isNotEmpty)
                 'codigoBarras': [
                   {'tipo': 'EAN13', 'codigo': item.codigoDeBarras},
@@ -62,6 +65,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   }) async {
     final response = await put(
       pathParameters: {'id': id.toString()},
@@ -71,6 +75,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
         'idExterno': idExterno,
         'corId': corId,
         'tamanhoId': tamanhoId,
+        if (estampaId != null) 'estampaId': estampaId,
       },
     );
 
@@ -102,6 +107,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
     int? referenciaId,
     int? corId,
     int? tamanhoId,
+    int? estampaId,
   }) async {
     const limitePorPagina = 500;
     var pagina = 1;
@@ -116,6 +122,7 @@ class ProdutosRemoteDatasource extends RemoteDataSourceBase
           if (referenciaId != null) 'referencia': referenciaId.toString(),
           if (corId != null) 'corId': corId.toString(),
           if (tamanhoId != null) 'tamanhoId': tamanhoId.toString(),
+          if (estampaId != null) 'estampaId': estampaId.toString(),
           'page': pagina.toString(),
           'limit': limitePorPagina.toString(),
         },

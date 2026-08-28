@@ -13,10 +13,12 @@ class AtualizarProduto {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   }) async {
     var busca = await _produtosRepository.obterProdutos(
       idCor: corId,
       idTamanho: tamanhoId,
+      idEstampa: estampaId,
       referenciaId: referenciaId,
     );
 
@@ -34,6 +36,7 @@ class AtualizarProduto {
       idExterno: idExterno,
       corId: corId,
       tamanhoId: tamanhoId,
+      estampaId: estampaId,
     );
   }
 }

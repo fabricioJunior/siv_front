@@ -65,6 +65,9 @@ class _ProdutoVisualizacaoModalState extends State<ProdutoVisualizacaoModal> {
           final tamanhoAtual = state.tamanhos
               .where((item) => item.id == state.tamanhoId)
               .firstOrNull;
+          final estampaAtual = state.estampas
+              .where((item) => item.id == state.estampaId)
+              .firstOrNull;
 
           return SizedBox(
             height: MediaQuery.of(context).size.height * 0.92,
@@ -139,9 +142,23 @@ class _ProdutoVisualizacaoModalState extends State<ProdutoVisualizacaoModal> {
                           );
                         },
                       ),
+                      const SizedBox(height: 12),
+                      EstampaSeletor(
+                        titulo: 'Estampa (opcional)',
+                        estampasSelecionadasIniciais:
+                            produto.estampa == null ? [] : [produto.estampa!],
+                        onChanged: (value) {
+                          context.read<ProdutoBloc>().add(
+                            ProdutoEditou(
+                              estampaId: value.isEmpty ? null : value.first.id,
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 8),
                       Text(
-                        'Atual: ${corAtual?.nome ?? produto.cor?.nome ?? '-'} / ${tamanhoAtual?.nome ?? produto.tamanho?.nome ?? '-'}',
+                        'Atual: ${corAtual?.nome ?? produto.cor?.nome ?? '-'} / ${tamanhoAtual?.nome ?? produto.tamanho?.nome ?? '-'}'
+                        '${(estampaAtual ?? produto.estampa) == null ? '' : ' / ${(estampaAtual ?? produto.estampa)!.nome}'}',
                       ),
                       const Spacer(),
                       _buildError(),

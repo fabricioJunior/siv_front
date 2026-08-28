@@ -92,7 +92,9 @@ class ProdutosPage extends StatelessWidget {
           'Referência:  ${produto.referencia?.id ?? '-'} - ${produto.referencia?.nome ?? '-'}',
         ),
         subtitle: Text(
-          'Cor: ${produto.cor?.nome ?? '-'} · Tamanho: ${produto.tamanho?.nome ?? '-'} · ID: ${produto.id ?? '-'} ',
+          'Cor: ${produto.cor?.nome ?? '-'} · Tamanho: ${produto.tamanho?.nome ?? '-'}'
+          '${produto.estampa == null ? '' : ' · Estampa: ${produto.estampa!.nome}'}'
+          ' · ID: ${produto.id ?? '-'} ',
         ),
         isThreeLine: true,
         onTap: () async {

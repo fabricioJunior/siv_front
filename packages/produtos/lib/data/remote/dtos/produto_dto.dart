@@ -1,4 +1,5 @@
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
+import 'package:produtos/data/remote/dtos/estampa_dto.dart';
 import 'package:produtos/data/remote/dtos/referencia_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/models.dart';
@@ -19,15 +20,20 @@ class ProdutoDto implements Produto {
   @override
   final int tamanhoId;
 
+  @override
+  final int? estampaId;
+
   ProdutoDto({
     this.id,
     required this.referenciaId,
     required this.idExterno,
     required this.corId,
     required this.tamanhoId,
+    this.estampaId,
     this.cor,
     this.referencia,
     this.tamanho,
+    this.estampa,
   });
 
   factory ProdutoDto.fromJson(Map<String, dynamic> json) {
@@ -37,11 +43,15 @@ class ProdutoDto implements Produto {
       idExterno: (json['idExterno'] ?? '').toString(),
       corId: (json['corId'] as num?)?.toInt() ?? 0,
       tamanhoId: (json['tamanhoId'] as num?)?.toInt() ?? 0,
+      estampaId: (json['estampaId'] as num?)?.toInt(),
       tamanho: json['tamanho'] != null
           ? TamanhoDto.fromJson(json['tamanho'] as Map<String, dynamic>)
           : null,
       cor: json['cor'] != null
           ? CorDto.fromJson(json['cor'] as Map<String, dynamic>)
+          : null,
+      estampa: json['estampa'] != null
+          ? EstampaDto.fromJson(json['estampa'] as Map<String, dynamic>)
           : null,
       referencia: json['referencia'] != null
           ? ReferenciaDto.fromJson(json['referencia'] as Map<String, dynamic>)
@@ -56,11 +66,19 @@ class ProdutoDto implements Produto {
       'idExterno': idExterno,
       'corId': corId,
       'tamanhoId': tamanhoId,
+      if (estampaId != null) 'estampaId': estampaId,
     };
   }
 
   @override
-  List<Object?> get props => [id, referenciaId, idExterno, corId, tamanhoId];
+  List<Object?> get props => [
+    id,
+    referenciaId,
+    idExterno,
+    corId,
+    tamanhoId,
+    estampaId,
+  ];
 
   @override
   bool? get stringify => true;
@@ -73,6 +91,9 @@ class ProdutoDto implements Produto {
 
   @override
   final TamanhoDto? tamanho;
+
+  @override
+  final EstampaDto? estampa;
 }
 
 extension ProdutoToDto on Produto {
@@ -83,6 +104,7 @@ extension ProdutoToDto on Produto {
       idExterno: idExterno,
       corId: corId,
       tamanhoId: tamanhoId,
+      estampaId: estampaId,
     );
   }
 }

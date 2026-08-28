@@ -338,7 +338,8 @@ class _SelecionarProdutosPageState extends State<SelecionarProdutosPage> {
                             'Ref: ${produto.referencia?.nome ?? '-'}',
                           ),
                           subtitle: Text(
-                            'ID: ${produto.id ?? '-'} | Cor: ${produto.cor?.nome ?? '-'} | Tamanho: ${produto.tamanho?.nome ?? '-'}',
+                            'ID: ${produto.id ?? '-'} | Cor: ${produto.cor?.nome ?? '-'} | Tamanho: ${produto.tamanho?.nome ?? '-'}'
+                            '${produto.estampa == null ? '' : ' | Estampa: ${produto.estampa!.nome}'}',
                           ),
                           secondary: Icon(
                             selecionado ? Icons.check_circle : Icons.radio_button_unchecked,

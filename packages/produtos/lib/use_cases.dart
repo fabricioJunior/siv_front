@@ -10,6 +10,12 @@ export 'domain/use_cases/recuperar_cor.dart';
 export 'domain/use_cases/desativar_cor.dart';
 export 'domain/use_cases/atualizar_cor.dart';
 
+export 'domain/use_cases/criar_estampa.dart';
+export 'domain/use_cases/recuperar_estampas.dart';
+export 'domain/use_cases/recuperar_estampa.dart';
+export 'domain/use_cases/desativar_estampa.dart';
+export 'domain/use_cases/atualizar_estampa.dart';
+
 export 'domain/use_cases/criar_categoria.dart';
 export 'domain/use_cases/recuperar_categorias.dart';
 export 'domain/use_cases/recuperar_categoria.dart';

@@ -8,6 +8,11 @@ export 'package:produtos/presentantion/blocs/cor_bloc/cor_bloc.dart';
 export 'package:produtos/presentantion/modals/cor_modal.dart';
 export 'package:produtos/presentantion/pages/cores_page.dart';
 
+export 'package:produtos/presentantion/blocs/estampas_bloc/estampas_bloc.dart';
+export 'package:produtos/presentantion/blocs/estampa_bloc/estampa_bloc.dart';
+export 'package:produtos/presentantion/modals/estampa_modal.dart';
+export 'package:produtos/presentantion/pages/estampas_page.dart';
+
 export 'package:produtos/presentantion/blocs/categorias_bloc/categorias_bloc.dart';
 export 'package:produtos/presentantion/blocs/categoria_bloc/categoria_bloc.dart';
 export 'package:produtos/presentantion/modals/categoria_modal.dart';
@@ -57,6 +62,7 @@ export 'package:produtos/presentantion/pages/referencias_pendentes_ncm_page.dart
 
 export 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 export 'package:produtos/presentantion/widgets/cor_seletor.dart';
+export 'package:produtos/presentantion/widgets/estampa_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 export 'package:produtos/presentantion/widgets/categoria_seletor.dart';
 export 'package:produtos/presentantion/widgets/etiqueta_seletor.dart';

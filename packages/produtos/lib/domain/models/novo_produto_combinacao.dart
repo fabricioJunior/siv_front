@@ -6,6 +6,7 @@ class NovoProdutoCombinacao {
   final String? idExterno;
   final int corId;
   final int tamanhoId;
+  final int? estampaId;
   final String? codigoDeBarras;
 
   const NovoProdutoCombinacao({
@@ -13,6 +14,7 @@ class NovoProdutoCombinacao {
     this.idExterno,
     required this.corId,
     required this.tamanhoId,
+    this.estampaId,
     this.codigoDeBarras,
   });
 }

@@ -12,6 +12,7 @@ part 'produto_state.dart';
 class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
   final RecuperarCores _recuperarCores;
   final RecuperarTamanhos _recuperarTamanhos;
+  final RecuperarEstampas _recuperarEstampas;
   final CriarProduto _criarProduto;
   final AtualizarProduto _atualizarProduto;
   final CriarCodigoDeBarras _criarCodigoDeBarras;
@@ -20,6 +21,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
   ProdutoBloc(
     this._recuperarCores,
     this._recuperarTamanhos,
+    this._recuperarEstampas,
     this._criarProduto,
     this._atualizarProduto,
     this._criarCodigoDeBarras,
@@ -36,6 +38,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
     on<ProdutoReferenciaSelecionou>(_onProdutoReferenciaSelecionou);
     on<ProdutoCoresSelecionou>(_onProdutoCoresSelecionou);
     on<ProdutoTamanhosSelecionou>(_onProdutoTamanhosSelecionou);
+    on<ProdutoEstampasSelecionou>(_onProdutoEstampasSelecionou);
     on<ProdutoCombinacaoSelecionou>(_onProdutoCombinacaoSelecionou);
     on<ProdutoCombinacaoCodigoBarrasEditou>(
       _onProdutoCombinacaoCodigoBarrasEditou,
@@ -51,6 +54,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
 
       final cores = await _recuperarCores.call(inativo: false);
       final tamanhos = await _recuperarTamanhos.call(inativo: false);
+      final estampas = await _recuperarEstampas.call(inativo: false);
 
       final produto = event.produto;
       final corInicial = event.corId == null
@@ -61,6 +65,11 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
           : tamanhos.firstWhereOrNull(
               (tamanho) => tamanho.id == event.tamanhoId,
             );
+      final estampaInicial = event.estampaId == null
+          ? null
+          : estampas.firstWhereOrNull(
+              (estampa) => estampa.id == event.estampaId,
+            );
 
       if (produto != null) {
         emit(
@@ -69,6 +78,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             step: ProdutoStep.carregado,
             cores: cores,
             tamanhos: tamanhos,
+            estampas: estampas,
           ),
         );
       } else {
@@ -82,9 +92,13 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             tamanhosSelecionados: tamanhoInicial == null
                 ? const []
                 : [tamanhoInicial],
+            estampasSelecionadas: estampaInicial == null
+                ? const []
+                : [estampaInicial],
             combinacoes: _sincronizarCombinacoes(
               corInicial == null ? const [] : [corInicial],
               tamanhoInicial == null ? const [] : [tamanhoInicial],
+              estampaInicial == null ? const [] : [estampaInicial],
               const [],
             ),
             id: null,
@@ -92,8 +106,10 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             idExterno: '',
             corId: event.corId,
             tamanhoId: event.tamanhoId,
+            estampaId: event.estampaId,
             cores: cores,
             tamanhos: tamanhos,
+            estampas: estampas,
             erroMensagem: null,
           ),
         );
@@ -120,6 +136,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         idExterno: event.idExterno,
         corId: event.corId,
         tamanhoId: event.tamanhoId,
+        estampaId: event.estampaId,
       ),
     );
   }
@@ -133,6 +150,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
       final idExterno = state.idExterno.trim();
       final corId = state.corId;
       final tamanhoId = state.tamanhoId;
+      final estampaId = state.estampaId;
 
       if (referenciaId == null || corId == null || tamanhoId == null) {
         emit(
@@ -154,6 +172,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
           idExterno: idExterno.isEmpty ? null : idExterno,
           corId: corId,
           tamanhoId: tamanhoId,
+          estampaId: estampaId,
         );
 
         emit(
@@ -162,6 +181,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             step: ProdutoStep.criado,
             cores: state.cores,
             tamanhos: state.tamanhos,
+            estampas: state.estampas,
           ),
         );
       } else {
@@ -171,6 +191,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
           idExterno: idExterno,
           corId: corId,
           tamanhoId: tamanhoId,
+          estampaId: estampaId,
         );
 
         emit(
@@ -179,6 +200,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             step: ProdutoStep.salvo,
             cores: state.cores,
             tamanhos: state.tamanhos,
+            estampas: state.estampas,
           ),
         );
       }
@@ -231,6 +253,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
             referenciaId: event.referenciaId,
             corId: combinacao.corId,
             tamanhoId: combinacao.tamanhoId,
+            estampaId: combinacao.estampaId,
             codigoDeBarras: (codigoDeBarras?.isNotEmpty ?? false)
                 ? codigoDeBarras
                 : null,
@@ -257,6 +280,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
           step: ProdutoStep.criado,
           cores: state.cores,
           tamanhos: state.tamanhos,
+          estampas: state.estampas,
         ),
       );
     } catch (e, s) {
@@ -311,6 +335,7 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         combinacoes: _sincronizarCombinacoes(
           event.cores,
           state.tamanhosSelecionados,
+          state.estampasSelecionadas,
           state.combinacoes,
         ),
       ),
@@ -327,6 +352,24 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         combinacoes: _sincronizarCombinacoes(
           state.coresSelecionadas,
           event.tamanhos,
+          state.estampasSelecionadas,
+          state.combinacoes,
+        ),
+      ),
+    );
+  }
+
+  FutureOr<void> _onProdutoEstampasSelecionou(
+    ProdutoEstampasSelecionou event,
+    Emitter<ProdutoState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        estampasSelecionadas: event.estampas,
+        combinacoes: _sincronizarCombinacoes(
+          state.coresSelecionadas,
+          state.tamanhosSelecionados,
+          event.estampas,
           state.combinacoes,
         ),
       ),
@@ -363,9 +406,13 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
     emit(state.copyWith(combinacoes: combinacoes));
   }
 
+  // Estampa é a 3a dimensao, opcional: sem estampas selecionadas o produto
+  // continua sendo gerado só por cor x tamanho (comportamento inalterado
+  // pra maioria das referencias, que nao usa estampa).
   List<ProdutoCombinacaoCadastro> _sincronizarCombinacoes(
     List<Cor> cores,
     List<Tamanho> tamanhos,
+    List<Estampa> estampas,
     List<ProdutoCombinacaoCadastro> anteriores,
   ) {
     final statusAnterior = <String, ProdutoCombinacaoCadastro>{
@@ -373,19 +420,29 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
     };
 
     final novas = <ProdutoCombinacaoCadastro>[];
+    final estampasParaGerar = estampas.isEmpty
+        ? const <Estampa?>[null]
+        : estampas;
 
     for (final cor in cores) {
       for (final tamanho in tamanhos) {
-        final chave = ProdutoCombinacaoCadastro.gerarChave(cor, tamanho);
-        final anterior = statusAnterior[chave];
-        novas.add(
-          ProdutoCombinacaoCadastro(
-            cor: cor,
-            tamanho: tamanho,
-            selecionada: anterior?.selecionada ?? true,
-            codigoDeBarras: anterior?.codigoDeBarras ?? '',
-          ),
-        );
+        for (final estampa in estampasParaGerar) {
+          final chave = ProdutoCombinacaoCadastro.gerarChave(
+            cor,
+            tamanho,
+            estampa,
+          );
+          final anterior = statusAnterior[chave];
+          novas.add(
+            ProdutoCombinacaoCadastro(
+              cor: cor,
+              tamanho: tamanho,
+              estampa: estampa,
+              selecionada: anterior?.selecionada ?? true,
+              codigoDeBarras: anterior?.codigoDeBarras ?? '',
+            ),
+          );
+        }
       }
     }
 

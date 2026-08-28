@@ -44,6 +44,14 @@ class MenuProdutosPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ItemMenu(
+            icon: Icons.texture,
+            titulo: 'Estampas',
+            subtitulo: 'Cadastre e mantenha as estampas disponíveis.',
+            componente: 'PRDFM013',
+            onTap: () => Navigator.of(context).pushNamed('/estampas'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
             icon: Icons.category,
             titulo: 'Categorias',
             subtitulo: 'Estruture grupos e classificação dos produtos.',

@@ -7,9 +7,11 @@ abstract class Produto implements Equatable {
   String get idExterno;
   int get corId;
   int get tamanhoId;
+  int? get estampaId;
   Referencia? get referencia;
   Cor? get cor;
   Tamanho? get tamanho;
+  Estampa? get estampa;
 
   factory Produto.create({
     int? id,
@@ -17,13 +19,22 @@ abstract class Produto implements Equatable {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
     Referencia? referencia,
     Cor? cor,
     Tamanho? tamanho,
+    Estampa? estampa,
   }) = _ProdutoImpl;
 
   @override
-  List<Object?> get props => [id, referenciaId, idExterno, corId, tamanhoId];
+  List<Object?> get props => [
+    id,
+    referenciaId,
+    idExterno,
+    corId,
+    tamanhoId,
+    estampaId,
+  ];
 
   @override
   bool? get stringify => true;
@@ -46,6 +57,9 @@ class _ProdutoImpl implements Produto {
   final int tamanhoId;
 
   @override
+  final int? estampaId;
+
+  @override
   final Cor? cor;
 
   @override
@@ -54,15 +68,20 @@ class _ProdutoImpl implements Produto {
   @override
   final Tamanho? tamanho;
 
+  @override
+  final Estampa? estampa;
+
   _ProdutoImpl({
     this.id,
     required this.referenciaId,
     required this.idExterno,
     required this.corId,
     required this.tamanhoId,
+    this.estampaId,
     this.referencia,
     this.cor,
     this.tamanho,
+    this.estampa,
   });
 
   _ProdutoImpl copyWith({
@@ -71,9 +90,11 @@ class _ProdutoImpl implements Produto {
     String? idExterno,
     int? corId,
     int? tamanhoId,
+    int? estampaId,
     Referencia? referencia,
     Cor? cor,
     Tamanho? tamanho,
+    Estampa? estampa,
   }) {
     return _ProdutoImpl(
       id: id ?? this.id,
@@ -81,11 +102,19 @@ class _ProdutoImpl implements Produto {
       idExterno: idExterno ?? this.idExterno,
       corId: corId ?? this.corId,
       tamanhoId: tamanhoId ?? this.tamanhoId,
+      estampaId: estampaId ?? this.estampaId,
     );
   }
 
   @override
-  List<Object?> get props => [id, referenciaId, idExterno, corId, tamanhoId];
+  List<Object?> get props => [
+    id,
+    referenciaId,
+    idExterno,
+    corId,
+    tamanhoId,
+    estampaId,
+  ];
 
   @override
   bool? get stringify => true;
@@ -98,6 +127,7 @@ extension ProdutoCopyWith on Produto {
     String? idExterno,
     int? corId,
     int? tamanhoId,
+    int? estampaId,
   }) {
     if (this is _ProdutoImpl) {
       return (this as _ProdutoImpl).copyWith(
@@ -106,6 +136,7 @@ extension ProdutoCopyWith on Produto {
         idExterno: idExterno,
         corId: corId,
         tamanhoId: tamanhoId,
+        estampaId: estampaId,
       );
     }
 
@@ -115,6 +146,7 @@ extension ProdutoCopyWith on Produto {
       idExterno: idExterno ?? this.idExterno,
       corId: corId ?? this.corId,
       tamanhoId: tamanhoId ?? this.tamanhoId,
+      estampaId: estampaId ?? this.estampaId,
     );
   }
 }

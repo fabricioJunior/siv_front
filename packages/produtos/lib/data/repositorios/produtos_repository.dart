@@ -13,12 +13,14 @@ class ProdutosRepository implements IProdutosRepository {
     String? idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   }) {
     return produtosRemoteDataSource.createProduto(
       referenciaId: referenciaId,
       idExterno: idExterno,
       corId: corId,
       tamanhoId: tamanhoId,
+      estampaId: estampaId,
     );
   }
 
@@ -34,6 +36,7 @@ class ProdutosRepository implements IProdutosRepository {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   }) {
     return produtosRemoteDataSource.atualizarProduto(
       id: id,
@@ -41,6 +44,7 @@ class ProdutosRepository implements IProdutosRepository {
       idExterno: idExterno,
       corId: corId,
       tamanhoId: tamanhoId,
+      estampaId: estampaId,
     );
   }
 
@@ -60,12 +64,14 @@ class ProdutosRepository implements IProdutosRepository {
     int? referenciaId,
     int? idCor,
     int? idTamanho,
+    int? idEstampa,
   }) {
     return produtosRemoteDataSource.fetchProdutos(
       idExterno: idExterno,
       referenciaId: referenciaId,
       corId: idCor,
       tamanhoId: idTamanho,
+      estampaId: idEstampa,
     );
   }
 }

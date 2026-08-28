@@ -6,6 +6,7 @@ abstract class IProdutosRemoteDataSource {
     String? idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   });
 
   Future<List<Produto>> createProdutos(List<NovoProdutoCombinacao> itens);
@@ -16,6 +17,7 @@ abstract class IProdutosRemoteDataSource {
     required String idExterno,
     required int corId,
     required int tamanhoId,
+    int? estampaId,
   });
 
   Future<void> excluirProduto(int id);
@@ -27,5 +29,6 @@ abstract class IProdutosRemoteDataSource {
     int? referenciaId,
     int? corId,
     int? tamanhoId,
+    int? estampaId,
   });
 }

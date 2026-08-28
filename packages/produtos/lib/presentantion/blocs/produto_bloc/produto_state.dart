@@ -17,14 +17,17 @@ class ProdutoState extends Equatable {
   final Referencia? referenciaSelecionada;
   final List<Cor> coresSelecionadas;
   final List<Tamanho> tamanhosSelecionados;
+  final List<Estampa> estampasSelecionadas;
   final List<ProdutoCombinacaoCadastro> combinacoes;
   final int? id;
   final int? referenciaId;
   final String idExterno;
   final int? corId;
   final int? tamanhoId;
+  final int? estampaId;
   final List<Cor> cores;
   final List<Tamanho> tamanhos;
+  final List<Estampa> estampas;
   final String? erroMensagem;
 
   const ProdutoState({
@@ -34,14 +37,17 @@ class ProdutoState extends Equatable {
     this.referenciaSelecionada,
     this.coresSelecionadas = const [],
     this.tamanhosSelecionados = const [],
+    this.estampasSelecionadas = const [],
     this.combinacoes = const [],
     this.id,
     this.referenciaId,
     this.idExterno = '',
     this.corId,
     this.tamanhoId,
+    this.estampaId,
     this.cores = const [],
     this.tamanhos = const [],
+    this.estampas = const [],
     this.erroMensagem,
   });
 
@@ -50,6 +56,7 @@ class ProdutoState extends Equatable {
     ProdutoStep step = ProdutoStep.carregado,
     List<Cor> cores = const [],
     List<Tamanho> tamanhos = const [],
+    List<Estampa> estampas = const [],
   }) {
     return ProdutoState(
       produtoStep: step,
@@ -60,11 +67,15 @@ class ProdutoState extends Equatable {
       tamanhosSelecionados: produto.tamanho == null
           ? const []
           : [produto.tamanho!],
+      estampasSelecionadas: produto.estampa == null
+          ? const []
+          : [produto.estampa!],
       combinacoes: (produto.cor != null && produto.tamanho != null)
           ? [
               ProdutoCombinacaoCadastro(
                 cor: produto.cor!,
                 tamanho: produto.tamanho!,
+                estampa: produto.estampa,
               ),
             ]
           : const [],
@@ -73,8 +84,10 @@ class ProdutoState extends Equatable {
       idExterno: produto.idExterno,
       corId: produto.corId,
       tamanhoId: produto.tamanhoId,
+      estampaId: produto.estampaId,
       cores: cores,
       tamanhos: tamanhos,
+      estampas: estampas,
     );
   }
 
@@ -85,14 +98,17 @@ class ProdutoState extends Equatable {
     Referencia? referenciaSelecionada,
     List<Cor>? coresSelecionadas,
     List<Tamanho>? tamanhosSelecionados,
+    List<Estampa>? estampasSelecionadas,
     List<ProdutoCombinacaoCadastro>? combinacoes,
     int? id,
     int? referenciaId,
     String? idExterno,
     int? corId,
     int? tamanhoId,
+    int? estampaId,
     List<Cor>? cores,
     List<Tamanho>? tamanhos,
+    List<Estampa>? estampas,
     String? erroMensagem,
   }) {
     return ProdutoState(
@@ -105,14 +121,17 @@ class ProdutoState extends Equatable {
           referenciaSelecionada ?? this.referenciaSelecionada,
       coresSelecionadas: coresSelecionadas ?? this.coresSelecionadas,
       tamanhosSelecionados: tamanhosSelecionados ?? this.tamanhosSelecionados,
+      estampasSelecionadas: estampasSelecionadas ?? this.estampasSelecionadas,
       combinacoes: combinacoes ?? this.combinacoes,
       id: id ?? this.id,
       referenciaId: referenciaId ?? this.referenciaId,
       idExterno: idExterno ?? this.idExterno,
       corId: corId ?? this.corId,
       tamanhoId: tamanhoId ?? this.tamanhoId,
+      estampaId: estampaId ?? this.estampaId,
       cores: cores ?? this.cores,
       tamanhos: tamanhos ?? this.tamanhos,
+      estampas: estampas ?? this.estampas,
       erroMensagem: erroMensagem,
     );
   }
@@ -125,14 +144,17 @@ class ProdutoState extends Equatable {
     referenciaSelecionada,
     coresSelecionadas,
     tamanhosSelecionados,
+    estampasSelecionadas,
     combinacoes,
     id,
     referenciaId,
     idExterno,
     corId,
     tamanhoId,
+    estampaId,
     cores,
     tamanhos,
+    estampas,
     erroMensagem,
   ];
 }
@@ -140,17 +162,19 @@ class ProdutoState extends Equatable {
 class ProdutoCombinacaoCadastro extends Equatable {
   final Cor cor;
   final Tamanho tamanho;
+  final Estampa? estampa;
   final bool selecionada;
   final String codigoDeBarras;
 
   const ProdutoCombinacaoCadastro({
     required this.cor,
     required this.tamanho,
+    this.estampa,
     this.selecionada = true,
     this.codigoDeBarras = '',
   });
 
-  String get chave => gerarChave(cor, tamanho);
+  String get chave => gerarChave(cor, tamanho, estampa);
 
   ProdutoCombinacaoCadastro copyWith({
     bool? selecionada,
@@ -159,17 +183,27 @@ class ProdutoCombinacaoCadastro extends Equatable {
     return ProdutoCombinacaoCadastro(
       cor: cor,
       tamanho: tamanho,
+      estampa: estampa,
       selecionada: selecionada ?? this.selecionada,
       codigoDeBarras: codigoDeBarras ?? this.codigoDeBarras,
     );
   }
 
-  static String gerarChave(Cor cor, Tamanho tamanho) {
+  static String gerarChave(Cor cor, Tamanho tamanho, [Estampa? estampa]) {
     final corKey = cor.id?.toString() ?? cor.nome;
     final tamanhoKey = tamanho.id?.toString() ?? tamanho.nome;
-    return '$corKey|$tamanhoKey';
+    final estampaKey = estampa == null
+        ? ''
+        : '|${estampa.id?.toString() ?? estampa.nome}';
+    return '$corKey|$tamanhoKey$estampaKey';
   }
 
   @override
-  List<Object?> get props => [cor, tamanho, selecionada, codigoDeBarras];
+  List<Object?> get props => [
+    cor,
+    tamanho,
+    estampa,
+    selecionada,
+    codigoDeBarras,
+  ];
 }

@@ -809,6 +809,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/cores': (context) {
     return CoresPage();
   },
+  '/estampas': (context) {
+    return EstampasPage();
+  },
   '/marcas': (context) {
     return MarcasPage();
   },

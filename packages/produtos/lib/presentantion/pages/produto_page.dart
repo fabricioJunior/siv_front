@@ -213,6 +213,17 @@ class ProdutoPage extends StatelessWidget {
           },
         ),
         const SizedBox(height: 12),
+        EstampaSeletor(
+          modo: EstampaSeletorModo.multipla,
+          titulo: 'Estampas (opcional)',
+          estampasSelecionadasIniciais: state.estampasSelecionadas,
+          onEstampasChanged: (selecionadas) {
+            context.read<ProdutoBloc>().add(
+              ProdutoEstampasSelecionou(estampas: selecionadas),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
         CheckboxListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Criar código de barras automaticamente'),
@@ -227,7 +238,9 @@ class ProdutoPage extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Prévia: ${state.coresSelecionadas.length} cor(es) x ${state.tamanhosSelecionados.length} tamanho(s) = ${state.coresSelecionadas.length * state.tamanhosSelecionados.length} combinação(ões)',
+          'Prévia: ${state.coresSelecionadas.length} cor(es) x ${state.tamanhosSelecionados.length} tamanho(s)'
+          '${state.estampasSelecionadas.isEmpty ? '' : ' x ${state.estampasSelecionadas.length} estampa(s)'}'
+          ' = ${state.combinacoes.length} combinação(ões)',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
@@ -240,6 +253,8 @@ class ProdutoPage extends StatelessWidget {
         'Nenhuma combinação gerada. Volte e selecione cores e tamanhos.',
       );
     }
+
+    final temEstampa = state.estampasSelecionadas.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,6 +271,7 @@ class ProdutoPage extends StatelessWidget {
               DataColumn(label: Text('Inserir')),
               const DataColumn(label: Text('Cor')),
               const DataColumn(label: Text('Tamanho')),
+              if (temEstampa) const DataColumn(label: Text('Estampa')),
               if (!state.criarCodigoBarrasAutomaticamente)
                 const DataColumn(label: Text('Código de barras')),
             ],
@@ -278,6 +294,7 @@ class ProdutoPage extends StatelessWidget {
                   ),
                   DataCell(Text(item.cor.nome)),
                   DataCell(Text(item.tamanho.nome)),
+                  if (temEstampa) DataCell(Text(item.estampa?.nome ?? '-')),
                   if (!state.criarCodigoBarrasAutomaticamente)
                     DataCell(
                       Row(
@@ -359,7 +376,11 @@ class ProdutoPage extends StatelessWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.check_circle_outline, size: 18),
-            title: Text('${item.cor.nome} / ${item.tamanho.nome}'),
+            title: Text(
+              item.estampa == null
+                  ? '${item.cor.nome} / ${item.tamanho.nome}'
+                  : '${item.cor.nome} / ${item.tamanho.nome} / ${item.estampa!.nome}',
+            ),
           ),
         ),
       ],
@@ -443,6 +464,7 @@ class ProdutoPage extends StatelessWidget {
           (item) => ProdutoCombinacaoSelecao(
             corId: item.cor.id!,
             tamanhoId: item.tamanho.id!,
+            estampaId: item.estampa?.id,
             codigoDeBarras: state.criarCodigoBarrasAutomaticamente
                 ? null
                 : (item.codigoDeBarras.trim().isEmpty

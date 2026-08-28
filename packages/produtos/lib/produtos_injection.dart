@@ -2,6 +2,7 @@ import 'package:core/injecoes.dart';
 import 'package:produtos/data/local/codigos_local_data_sources.dart';
 import 'package:produtos/data/remote/codigos_remote_data_source.dart';
 import 'package:produtos/data/remote/tamanhos_remote_datasource.dart';
+import 'package:produtos/data/remote/estampas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencia_midias_remote_data_source.dart';
 import 'package:produtos/data/repositorios/referencia_midias_repository.dart';
 import 'package:produtos/data/remote/cores_remote_datasource.dart';
@@ -23,6 +24,7 @@ import 'package:produtos/data/repositorios/grade_da_referencia_repository.dart';
 import 'package:produtos/domain/data/remote/i_grade_da_referencia_remote_data_source.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
+import 'package:produtos/data/repositorios/estampas_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
 import 'package:produtos/data/repositorios/categorias_repository.dart';
 import 'package:produtos/data/repositorios/sub_categorias_repository.dart';
@@ -35,6 +37,7 @@ import 'package:produtos/data/repositorios/codigos_repository.dart';
 import 'package:produtos/domain/data/remote/i_codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencia_midias_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_tamanhos_remote_data_source.dart';
+import 'package:produtos/domain/data/remote/i_estampas_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
 import 'package:produtos/domain/data/remote/i_cores_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
@@ -59,6 +62,10 @@ void resolverProdutosInjection() {
 void _data() {
   sl.registerFactory<ITamanhosRemoteDataSource>(
     () => TamanhosRemoteDatasource(informacoesParaRequest: sl()),
+  );
+
+  sl.registerFactory<IEstampasRemoteDataSource>(
+    () => EstampasRemoteDatasource(informacoesParaRequest: sl()),
   );
 
   sl.registerFactory<ICoresRemoteDataSource>(
@@ -120,6 +127,10 @@ void _data() {
 void _repositores() {
   sl.registerFactory<ITamanhosRepository>(
     () => TamanhosRepository(tamanhosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IEstampasRepository>(
+    () => EstampasRepository(estampasRemoteDataSource: sl()),
   );
 
   sl.registerFactory<ICoresRepository>(
@@ -199,6 +210,27 @@ void _usesCases() {
 
   sl.registerFactory<AtualizarTamanho>(
     () => AtualizarTamanho(tamanhosRepository: sl()),
+  );
+
+  // Estampas Use Cases
+  sl.registerFactory<RecuperarEstampas>(
+    () => RecuperarEstampas(estampasRepository: sl()),
+  );
+
+  sl.registerFactory<CriarEstampa>(
+    () => CriarEstampa(estampasRepository: sl()),
+  );
+
+  sl.registerFactory<DesativarEstampa>(
+    () => DesativarEstampa(estampasRepository: sl()),
+  );
+
+  sl.registerFactory<RecuperarEstampa>(
+    () => RecuperarEstampa(estampasRepository: sl()),
+  );
+
+  sl.registerFactory<AtualizarEstampa>(
+    () => AtualizarEstampa(estampasRepository: sl()),
   );
 
   // Cores Use Cases
@@ -400,6 +432,10 @@ void _presentantion() {
 
   sl.registerFactory<TamanhoBloc>(() => TamanhoBloc(sl(), sl(), sl()));
 
+  sl.registerFactory<EstampasBloc>(() => EstampasBloc(sl(), sl()));
+
+  sl.registerFactory<EstampaBloc>(() => EstampaBloc(sl(), sl(), sl()));
+
   sl.registerFactory<CoresBloc>(() => CoresBloc(sl(), sl()));
 
   sl.registerFactory<CorBloc>(() => CorBloc(sl(), sl(), sl()));
@@ -437,7 +473,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ProdutoBloc>(
-    () => ProdutoBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+    () => ProdutoBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ReferenciaCadastroBloc>(

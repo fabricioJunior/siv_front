@@ -91,8 +91,10 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<Pedido>> recuperarPedidos() async {
-    final response = await get();
+  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30}) async {
+    final response = await get(
+      queryParameters: {'page': '$page', 'limit': '$limit'},
+    );
     return (response.body as List<dynamic>)
         .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))
         .toList();

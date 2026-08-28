@@ -25,3 +25,7 @@ class PedidosPedidoCancelou extends PedidosEvent {
 
   PedidosPedidoCancelou(this.pedidoId, {required this.motivoCancelamento});
 }
+
+// Disparado pela tela ao chegar perto do fim da lista (scroll infinito) -- busca a proxima
+// pagina e concatena em `pedidos`, sem recarregar o que ja foi carregado.
+class PedidosCarregarMais extends PedidosEvent {}

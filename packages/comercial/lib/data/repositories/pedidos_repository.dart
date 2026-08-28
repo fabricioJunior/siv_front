@@ -65,8 +65,8 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
-  Future<List<Pedido>> recuperarPedidos() {
-    return remoteDataSource.recuperarPedidos();
+  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30}) {
+    return remoteDataSource.recuperarPedidos(page: page, limit: limit);
   }
 
   @override

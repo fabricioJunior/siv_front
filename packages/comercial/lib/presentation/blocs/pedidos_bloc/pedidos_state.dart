@@ -7,6 +7,9 @@ class PedidosState extends Equatable {
   final Set<String> situacoesFiltro;
   final String? erro;
   final PedidosStep step;
+  final int paginaAtual;
+  final bool temMaisPaginas;
+  final bool carregandoMais;
 
   const PedidosState({
     required this.pedidos,
@@ -15,6 +18,9 @@ class PedidosState extends Equatable {
     required this.step,
     this.situacoesFiltro = const {},
     this.erro,
+    this.paginaAtual = 1,
+    this.temMaisPaginas = false,
+    this.carregandoMais = false,
   });
 
   const PedidosState.initial()
@@ -23,7 +29,10 @@ class PedidosState extends Equatable {
         busca = '',
         situacoesFiltro = const {},
         erro = null,
-        step = PedidosStep.inicial;
+        step = PedidosStep.inicial,
+        paginaAtual = 1,
+        temMaisPaginas = false,
+        carregandoMais = false;
 
   PedidosState copyWith({
     List<Pedido>? pedidos,
@@ -32,6 +41,9 @@ class PedidosState extends Equatable {
     Set<String>? situacoesFiltro,
     String? erro,
     PedidosStep? step,
+    int? paginaAtual,
+    bool? temMaisPaginas,
+    bool? carregandoMais,
   }) {
     return PedidosState(
       pedidos: pedidos ?? this.pedidos,
@@ -40,12 +52,24 @@ class PedidosState extends Equatable {
       situacoesFiltro: situacoesFiltro ?? this.situacoesFiltro,
       erro: erro,
       step: step ?? this.step,
+      paginaAtual: paginaAtual ?? this.paginaAtual,
+      temMaisPaginas: temMaisPaginas ?? this.temMaisPaginas,
+      carregandoMais: carregandoMais ?? this.carregandoMais,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [pedidos, filtrados, busca, situacoesFiltro, erro, step];
+  List<Object?> get props => [
+        pedidos,
+        filtrados,
+        busca,
+        situacoesFiltro,
+        erro,
+        step,
+        paginaAtual,
+        temMaisPaginas,
+        carregandoMais,
+      ];
 }
 
 enum PedidosStep {

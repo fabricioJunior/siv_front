@@ -16,17 +16,27 @@ class _PedidosPageState extends State<PedidosPage> {
   late final PedidosBloc _bloc;
   final _buscaController = TextEditingController();
   final _buscaDebouncer = Debouncer(milliseconds: 350);
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _bloc = sl<PedidosBloc>()..add(PedidosIniciou());
+    // Busca/filtro da tela e' local sobre o que ja foi carregado -- dispara a proxima pagina
+    // um pouco antes de chegar no fim pra rolagem nao "engasgar" esperando a resposta.
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        _bloc.add(PedidosCarregarMais());
+      }
+    });
   }
 
   @override
   void dispose() {
     _buscaController.dispose();
     _buscaDebouncer.cancel();
+    _scrollController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -54,6 +64,7 @@ class _PedidosPageState extends State<PedidosPage> {
             body: RefreshIndicator(
               onRefresh: () async => _bloc.add(PedidosIniciou()),
               child: ListView(
+                controller: _scrollController,
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
                 children: [
                   // Header
@@ -179,6 +190,19 @@ class _PedidosPageState extends State<PedidosPage> {
                             }
                           },
                           onCancelar: () => _cancelarPedido(context, pedido),
+                        ),
+                      ),
+                    ),
+                  if (state.carregandoMais)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2.5,
+                          ),
                         ),
                       ),
                     ),

@@ -8,5 +8,6 @@ class RecuperarPedidos {
     required IPedidosRepository repository,
   }) : _repository = repository;
 
-  Future<List<Pedido>> call() => _repository.recuperarPedidos();
+  Future<List<Pedido>> call({int page = 1, int limit = 30}) =>
+      _repository.recuperarPedidos(page: page, limit: limit);
 }

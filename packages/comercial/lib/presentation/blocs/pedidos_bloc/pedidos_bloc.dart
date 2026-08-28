@@ -10,6 +10,10 @@ part 'pedidos_event.dart';
 part 'pedidos_state.dart';
 
 class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
+  // Busca um item a mais que o solicitado so pra saber se existe proxima pagina, sem precisar
+  // de endpoint de count separado -- mesmo truque ja usado no backend (getMeusPedidos).
+  static const _itensPorPagina = 30;
+
   final RecuperarPedidos _recuperarPedidos;
   final CancelarPedido _cancelarPedido;
 
@@ -19,6 +23,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
     on<PedidosFiltroSituacaoAlterado>(_onFiltroSituacaoAlterado);
     on<PedidosPedidoCancelou>(_onPedidoCancelou);
+    on<PedidosCarregarMais>(_onCarregarMais);
   }
 
   FutureOr<void> _onIniciou(
@@ -28,7 +33,12 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     try {
       emit(state.copyWith(step: PedidosStep.carregando, erro: null));
 
-      final pedidos = await _recuperarPedidos.call();
+      final encontrados = await _recuperarPedidos.call(
+        page: 1,
+        limit: _itensPorPagina + 1,
+      );
+      final temMais = encontrados.length > _itensPorPagina;
+      final pedidos = encontrados.take(_itensPorPagina).toList();
 
       emit(
         state.copyWith(
@@ -36,12 +46,51 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
           filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
           step: PedidosStep.sucesso,
           erro: null,
+          paginaAtual: 1,
+          temMaisPaginas: temMais,
         ),
       );
     } catch (e, s) {
       emit(state.copyWith(
           step: PedidosStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao carregar pedidos.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onCarregarMais(
+    PedidosCarregarMais event,
+    Emitter<PedidosState> emit,
+  ) async {
+    if (!state.temMaisPaginas || state.carregandoMais) {
+      return;
+    }
+
+    try {
+      emit(state.copyWith(carregandoMais: true));
+
+      final proximaPagina = state.paginaAtual + 1;
+      final encontrados = await _recuperarPedidos.call(
+        page: proximaPagina,
+        limit: _itensPorPagina + 1,
+      );
+      final temMais = encontrados.length > _itensPorPagina;
+      final novosPedidos = encontrados.take(_itensPorPagina).toList();
+      final pedidos = [...state.pedidos, ...novosPedidos];
+
+      emit(
+        state.copyWith(
+          pedidos: pedidos,
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
+          paginaAtual: proximaPagina,
+          temMaisPaginas: temMais,
+          carregandoMais: false,
+        ),
+      );
+    } catch (e, s) {
+      // Falha ao carregar mais nao derruba a lista ja exibida -- so para de tentar, usuario
+      // pode rolar de novo ou dar refresh (PedidosIniciou) pra tentar do zero.
+      emit(state.copyWith(carregandoMais: false));
       addError(e, s);
     }
   }
@@ -80,13 +129,21 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
         motivoCancelamento: event.motivoCancelamento,
       );
 
-      final pedidos = await _recuperarPedidos.call();
+      final encontrados = await _recuperarPedidos.call(
+        page: 1,
+        limit: _itensPorPagina + 1,
+      );
+      final temMais = encontrados.length > _itensPorPagina;
+      final pedidos = encontrados.take(_itensPorPagina).toList();
+
       emit(
         state.copyWith(
           pedidos: pedidos,
           filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
           step: PedidosStep.sucesso,
           erro: null,
+          paginaAtual: 1,
+          temMaisPaginas: temMais,
         ),
       );
     } catch (e, s) {

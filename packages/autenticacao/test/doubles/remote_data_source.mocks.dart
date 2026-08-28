@@ -73,4 +73,21 @@ class MockITokenRemoteDataSource extends _i1.Mock
           ),
         )),
       ) as _i4.Future<_i2.Token>);
+
+  @override
+  _i4.Future<_i2.Token?> renovarToken({
+    required String? refreshToken,
+    required int? idEmpresa,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #renovarToken,
+          [],
+          {
+            #refreshToken: refreshToken,
+            #idEmpresa: idEmpresa,
+          },
+        ),
+        returnValue: _i4.Future<_i2.Token?>.value(),
+      ) as _i4.Future<_i2.Token?>);
 }

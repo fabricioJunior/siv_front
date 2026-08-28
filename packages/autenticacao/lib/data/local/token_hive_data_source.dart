@@ -14,6 +14,7 @@ class TokenHiveDataSource extends HiveLocalDataSourceBase<TokenHiveDto, Token>
       dataDeCriacao: entity.dataDeCriacao,
       dataDeExpiracao: entity.dataDeExpiracao,
       idEmpresa: entity.idEmpresa,
+      refreshToken: entity.refreshToken,
     );
   }
 }

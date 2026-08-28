@@ -10,6 +10,7 @@ class TokenDto extends Token implements IsarDto {
     required super.dataDeCriacao,
     required super.dataDeExpiracao,
     super.idEmpresa,
+    super.refreshToken,
   });
 
   @override

@@ -42,8 +42,13 @@ const TokenDtoSchema = CollectionSchema(
       name: r'jwtToken',
       type: IsarType.string,
     ),
-    r'stringify': PropertySchema(
+    r'refreshToken': PropertySchema(
       id: 5,
+      name: r'refreshToken',
+      type: IsarType.string,
+    ),
+    r'stringify': PropertySchema(
+      id: 6,
       name: r'stringify',
       type: IsarType.bool,
     )
@@ -69,6 +74,12 @@ int _tokenDtoEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.jwtToken.length * 3;
+  {
+    final value = object.refreshToken;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -83,7 +94,8 @@ void _tokenDtoSerialize(
   writer.writeLong(offsets[2], object.hashCode);
   writer.writeLong(offsets[3], object.idEmpresa);
   writer.writeString(offsets[4], object.jwtToken);
-  writer.writeBool(offsets[5], object.stringify);
+  writer.writeString(offsets[5], object.refreshToken);
+  writer.writeBool(offsets[6], object.stringify);
 }
 
 TokenDto _tokenDtoDeserialize(
@@ -97,6 +109,7 @@ TokenDto _tokenDtoDeserialize(
     dataDeExpiracao: reader.readDateTime(offsets[1]),
     idEmpresa: reader.readLongOrNull(offsets[3]),
     jwtToken: reader.readString(offsets[4]),
+    refreshToken: reader.readStringOrNull(offsets[5]),
   );
   return object;
 }
@@ -119,6 +132,8 @@ P _tokenDtoDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
       return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -631,6 +646,157 @@ extension TokenDtoQueryFilter
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'refreshToken',
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition>
+      refreshTokenIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'refreshToken',
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition>
+      refreshTokenGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'refreshToken',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition>
+      refreshTokenStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'refreshToken',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> refreshTokenMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'refreshToken',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition>
+      refreshTokenIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'refreshToken',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition>
+      refreshTokenIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'refreshToken',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterFilterCondition> stringifyIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -725,6 +891,18 @@ extension TokenDtoQuerySortBy on QueryBuilder<TokenDto, TokenDto, QSortBy> {
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByRefreshToken() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'refreshToken', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByRefreshTokenDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'refreshToken', Sort.desc);
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterSortBy> sortByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -812,6 +990,18 @@ extension TokenDtoQuerySortThenBy
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByRefreshToken() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'refreshToken', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByRefreshTokenDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'refreshToken', Sort.desc);
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QAfterSortBy> thenByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'stringify', Sort.asc);
@@ -858,6 +1048,13 @@ extension TokenDtoQueryWhereDistinct
     });
   }
 
+  QueryBuilder<TokenDto, TokenDto, QDistinct> distinctByRefreshToken(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'refreshToken', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<TokenDto, TokenDto, QDistinct> distinctByStringify() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'stringify');
@@ -900,6 +1097,12 @@ extension TokenDtoQueryProperty
   QueryBuilder<TokenDto, String, QQueryOperations> jwtTokenProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'jwtToken');
+    });
+  }
+
+  QueryBuilder<TokenDto, String?, QQueryOperations> refreshTokenProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'refreshToken');
     });
   }
 

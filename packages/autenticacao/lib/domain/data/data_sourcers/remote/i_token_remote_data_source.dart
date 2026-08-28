@@ -6,4 +6,10 @@ abstract class ITokenRemoteDataSource {
     required String senha,
     required int? empresaId,
   });
+
+  // Retorna null se o refresh token estiver invalido/expirado -- quem chama decide o fallback.
+  Future<Token?> renovarToken({
+    required String refreshToken,
+    required int? idEmpresa,
+  });
 }

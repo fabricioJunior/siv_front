@@ -8,6 +8,7 @@ class TokenHiveDto extends Token with HiveDto<Token>, StorageEntity {
     required super.dataDeCriacao,
     required super.dataDeExpiracao,
     super.idEmpresa,
+    super.refreshToken,
   });
 
   @override
@@ -19,6 +20,7 @@ class TokenHiveDto extends Token with HiveDto<Token>, StorageEntity {
     'dataDeCriacao': dataDeCriacao,
     'dataDeExpiracao': dataDeExpiracao,
     'idEmpresa': idEmpresa,
+    'refreshToken': refreshToken,
   };
 
   static TokenHiveDto fromStorage(Map<String, dynamic> props) {
@@ -27,6 +29,7 @@ class TokenHiveDto extends Token with HiveDto<Token>, StorageEntity {
       dataDeCriacao: props['dataDeCriacao'] as DateTime,
       dataDeExpiracao: props['dataDeExpiracao'] as DateTime,
       idEmpresa: props['idEmpresa'] as int?,
+      refreshToken: props['refreshToken'] as String?,
     );
   }
 }

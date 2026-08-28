@@ -33,6 +33,29 @@ class TokenRepository implements ITokenRepository {
   }
 
   @override
+  Future<Token?> renovarToken() async {
+    var tokenAtual = await recuperarToken();
+    if (tokenAtual?.refreshToken == null) {
+      return null;
+    }
+
+    var tokenNovo = await remoteDataSource.renovarToken(
+      refreshToken: tokenAtual!.refreshToken!,
+      idEmpresa: tokenAtual.idEmpresa,
+    );
+    if (tokenNovo == null) {
+      return null;
+    }
+
+    // dataBaseId da box e' hash do jwtToken (muda a cada renovacao) -- sem apagar antes, cada
+    // refresh acumularia uma entrada nova na box em vez de substituir (mesmo cuidado do login,
+    // ver CriarTokenDeAutenticacao).
+    await deleteToken(notificarTokenExcluido: false);
+    await putToken(tokenNovo);
+    return tokenNovo;
+  }
+
+  @override
   Future<Token?> recuperarTokenDoServidor(
     String usuario,
     String senha,

@@ -14,6 +14,7 @@ class TokenLocalDataSource extends IsarLocalDataSourceBase<TokenDto, Token>
       dataDeCriacao: entity.dataDeCriacao,
       dataDeExpiracao: entity.dataDeExpiracao,
       idEmpresa: entity.idEmpresa,
+      refreshToken: entity.refreshToken,
     );
   }
 }

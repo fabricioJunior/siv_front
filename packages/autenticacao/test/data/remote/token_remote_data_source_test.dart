@@ -49,7 +49,7 @@ void _setupCreateToken(
   String senha,
 ) {
   var uriToPost = uriBase.replace(
-    path: remoteDatasource.path,
+    path: 'v1/auth/signIn',
   );
   when(
     client.post(

@@ -260,9 +260,11 @@ class MockDeslogar extends _i1.Mock implements _i14.Deslogar {
           as _i6.ILocalDatabaseInstance);
 
   @override
-  _i11.Future<void> call() =>
+  _i11.Future<void> call({bool? apagarDadosLocais = true}) =>
       (super.noSuchMethod(
-            Invocation.method(#call, []),
+            Invocation.method(#call, [], {
+              #apagarDadosLocais: apagarDadosLocais,
+            }),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )

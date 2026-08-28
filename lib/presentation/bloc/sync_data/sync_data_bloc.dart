@@ -14,6 +14,18 @@ part 'sync_data_event.dart';
 part 'sync_data_state.dart';
 
 class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
+  // Ordem em que os 3 modulos "pesados" (paginacao completa do catalogo) sao
+  // sincronizados -- um de cada vez, nunca em paralelo. Disparar os 3 juntos
+  // (como era antes) triplicava a carga simultanea no servidor: cada modulo
+  // pagina sozinho de forma bem-comportada, mas rodar 3 streams concorrentes
+  // multiplicava picos de CPU no backend (confirmado via teste de carga).
+  // precosDaReferencia fica de fora dessa fila -- ja tem encadeamento proprio
+  // em _onModuloConcluido, so depois que tabelasDePreco termina.
+  static const _ordemModulosSequenciais = [
+    SyncModulo.codigos,
+    SyncModulo.estoque,
+    SyncModulo.tabelasDePreco,
+  ];
   final SincronizarCodigos _sincronizarCodigos;
   final SincronizarEstoque _sincronizarEstoque;
   final SincronziarTabelasDePreco _sincronizarTabelasDePreco;
@@ -116,14 +128,36 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       ),
     );
 
-    if (modulosPermitidos.contains(SyncModulo.codigos)) {
-      _iniciarSincronizacaoCodigos();
-    }
-    if (modulosPermitidos.contains(SyncModulo.estoque)) {
-      _iniciarSincronizacaoEstoque();
-    }
-    if (modulosPermitidos.contains(SyncModulo.tabelasDePreco)) {
-      _iniciarSincronizacaoTabelasDePreco();
+    _iniciarProximoModuloSequencial(modulosPermitidos);
+  }
+
+  // Dispara o primeiro modulo da fila (a partir de `apos`, exclusive) que
+  // estiver em `modulosPermitidos` -- os demais so iniciam quando esse
+  // terminar (sucesso ou falha), via _onModuloConcluido/_onModuloFalhou.
+  void _iniciarProximoModuloSequencial(
+    Set<SyncModulo> modulosPermitidos, [
+    SyncModulo? apos,
+  ]) {
+    final indiceInicial = apos == null
+        ? 0
+        : _ordemModulosSequenciais.indexOf(apos) + 1;
+
+    for (var i = indiceInicial; i < _ordemModulosSequenciais.length; i++) {
+      final modulo = _ordemModulosSequenciais[i];
+      if (!modulosPermitidos.contains(modulo)) {
+        continue;
+      }
+      switch (modulo) {
+        case SyncModulo.codigos:
+          _iniciarSincronizacaoCodigos();
+        case SyncModulo.estoque:
+          _iniciarSincronizacaoEstoque();
+        case SyncModulo.tabelasDePreco:
+          _iniciarSincronizacaoTabelasDePreco();
+        case SyncModulo.precosDaReferencia:
+          break;
+      }
+      return;
     }
   }
 
@@ -213,6 +247,13 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       }
     }
 
+    if (_ordemModulosSequenciais.contains(event.modulo)) {
+      _iniciarProximoModuloSequencial(
+        _resolverModulosPermitidos(),
+        event.modulo,
+      );
+    }
+
     _dispararSincronizacaoPendenteSeTudoFinalizado();
   }
 
@@ -252,6 +293,13 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
             : null,
       ),
     );
+
+    if (_ordemModulosSequenciais.contains(event.modulo)) {
+      _iniciarProximoModuloSequencial(
+        _resolverModulosPermitidos(),
+        event.modulo,
+      );
+    }
 
     _dispararSincronizacaoPendenteSeTudoFinalizado();
   }

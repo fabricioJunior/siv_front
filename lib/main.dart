@@ -65,6 +65,13 @@ class MyApp extends StatelessWidget {
   // boot" sem disparar o lint `must_be_immutable`.
   final _aguardandoRestaurarRotaDoBoot = [true];
 
+  // No web, se a URL do boot já apontava pra uma rota específica (F5 numa
+  // tela que não é login/home), a splash cheia de "sincronizando dados" não
+  // precisa bloquear a tela -- ela já está certa, o bootstrap só atualiza
+  // sessão/permissões em segundo plano.
+  bool get _restaurandoRotaEspecifica =>
+      _initialRoute != '/login' && _initialRoute != '/home';
+
   String _resolverRotaInicial() {
     if (kIsWeb) {
       final rotaDaUrl = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
@@ -105,8 +112,7 @@ class MyApp extends StatelessWidget {
             if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
               final restaurandoRotaDoBoot =
                   _aguardandoRestaurarRotaDoBoot[0] &&
-                  _initialRoute != '/login' &&
-                  _initialRoute != '/home';
+                  _restaurandoRotaEspecifica;
               _aguardandoRestaurarRotaDoBoot[0] = false;
               if (restaurandoRotaDoBoot) {
                 return;
@@ -139,7 +145,8 @@ class MyApp extends StatelessWidget {
             bloc: sl<AppBloc>(),
             builder: (context, state) {
               if (state.statusAutenticacao ==
-                  StatusAutenticacao.carregandoDados) {
+                      StatusAutenticacao.carregandoDados &&
+                  !_restaurandoRotaEspecifica) {
                 return AppLoadingView(
                   etapaAtual: state.etapaAtualInicializacao,
                   etapasConcluidas: state.etapasInicializacaoConcluidas,

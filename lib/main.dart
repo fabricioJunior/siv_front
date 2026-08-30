@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:siv_front/data/infra/isar_bootstrap.dart';
@@ -50,6 +51,37 @@ class MyApp extends StatelessWidget {
   MyApp({super.key, this.routeToTest});
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey();
 
+  // No web, um F5 reinicia o app do zero (nova VM/instância) -- sem isso, o
+  // Navigator sempre reabria em '/login' ou '/home', descartando a URL atual
+  // do browser e a tela em que o usuário estava. `defaultRouteName` reflete a
+  // URL corrente só no web (nas outras plataformas vem sempre '/').
+  // `_aguardandoRestaurarRotaDoBoot` garante que esse desvio (não navegar pra
+  // '/home' quando autenticado) só vale pro primeiro AppAutenticou pós-boot --
+  // logins normais depois disso continuam navegando pra '/home' como sempre.
+  late final String _initialRoute = _resolverRotaInicial();
+  // `Cell` mutável dentro de campo final -- StatelessWidget é @immutable, mas
+  // MyApp já é instanciado uma única vez via runApp (comportamento de root
+  // singleton), então precisa de um jeito de guardar "já consumi o desvio de
+  // boot" sem disparar o lint `must_be_immutable`.
+  final _aguardandoRestaurarRotaDoBoot = [true];
+
+  String _resolverRotaInicial() {
+    if (kIsWeb) {
+      final rotaDaUrl = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+      if (rotaDaUrl.isNotEmpty &&
+          rotaDaUrl != '/' &&
+          rotaDaUrl != '/login' &&
+          routes.containsKey(rotaDaUrl)) {
+        return rotaDaUrl;
+      }
+    }
+
+    return sl<AppBloc>().state.statusAutenticacao ==
+            StatusAutenticacao.autenticado
+        ? '/home'
+        : '/login';
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -60,11 +92,7 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: const [Locale('pt', 'BR')],
       locale: const Locale('pt', 'BR'),
-      initialRoute:
-          sl<AppBloc>().state.statusAutenticacao ==
-              StatusAutenticacao.autenticado
-          ? '/home'
-          : '/login',
+      initialRoute: _initialRoute,
       routes: routes,
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
@@ -75,6 +103,15 @@ class MyApp extends StatelessWidget {
               previous.statusAutenticacao != current.statusAutenticacao,
           listener: (context, state) {
             if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
+              final restaurandoRotaDoBoot =
+                  _aguardandoRestaurarRotaDoBoot[0] &&
+                  _initialRoute != '/login' &&
+                  _initialRoute != '/home';
+              _aguardandoRestaurarRotaDoBoot[0] = false;
+              if (restaurandoRotaDoBoot) {
+                return;
+              }
+
               if (routeToTest != null) {
                 _navigateWhenReady(
                   (navigator) => navigator.pushNamed(routeToTest!),

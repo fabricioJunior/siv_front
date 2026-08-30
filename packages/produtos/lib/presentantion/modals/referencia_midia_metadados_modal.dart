@@ -1,5 +1,6 @@
 import 'package:core/imagens.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 
@@ -235,6 +236,9 @@ class _ImagemPendenteCard extends StatelessWidget {
                   CorSeletor(
                     modo: CorSeletorModo.unica,
                     titulo: 'Cor (opcional)',
+                    coresSelecionadasIniciais: imagem.cor == null
+                        ? const []
+                        : [_CorTemporaria(nome: imagem.cor!)],
                     onCorChanged: (cores) {
                       onCorChanged(cores.firstOrNull?.nome);
                     },
@@ -243,6 +247,9 @@ class _ImagemPendenteCard extends StatelessWidget {
                   TamanhoSeletor(
                     modo: TamanhoSeletorModo.unica,
                     titulo: 'Tamanho (opcional)',
+                    tamanhosSelecionadosIniciais: imagem.tamanho == null
+                        ? const []
+                        : [_TamanhoTemporario(nome: imagem.tamanho!)],
                     onTamanhosChanged: (tamanhos) {
                       onTamanhoChanged(tamanhos.firstOrNull?.nome);
                     },
@@ -260,4 +267,42 @@ class _ImagemPendenteCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CorTemporaria implements Cor {
+  @override
+  final int? id = null;
+
+  @override
+  final bool? inativo = false;
+
+  @override
+  final String nome;
+
+  const _CorTemporaria({required this.nome});
+
+  @override
+  List<Object?> get props => [id, nome, inativo];
+
+  @override
+  bool? get stringify => true;
+}
+
+class _TamanhoTemporario implements Tamanho {
+  @override
+  final int? id = null;
+
+  @override
+  final bool inativo = false;
+
+  @override
+  final String nome;
+
+  const _TamanhoTemporario({required this.nome});
+
+  @override
+  List<Object?> get props => [id, nome, inativo];
+
+  @override
+  bool? get stringify => true;
 }

@@ -1,4 +1,5 @@
 import 'package:core/local_data_sourcers/hive/entities_controller.dart';
+import 'package:core/paginacao/paginacao_hive_dto.dart';
 import 'package:core/produtos_compartilhados/local/dtos/lista_de_produtos_compartilhada_hive_dto.dart';
 import 'package:core/produtos_compartilhados/local/dtos/produto_compartilhado_hive_dto.dart';
 import 'package:autenticacao/data/local/dtos/credenciais_hive_dto.dart';
@@ -32,5 +33,6 @@ void inicializarStorageDoApp() {
     TabelaDePrecoHiveDto: 10,
     CodigoHiveDto: 11,
     CredenciaisHiveDto: 12,
+    PaginacaoHiveDto: 13,
   });
 }

@@ -4,7 +4,8 @@ import 'package:core/local_data_sourcers/database_configs/i_local_database_insta
 import 'package:core/local_data_sourcers/database_configs/hive_database_instance.dart';
 import 'package:core/local_data_sourcers/hive/storage_entity_adapter.dart';
 import 'package:core/paginacao/i_paginacao_data_source.dart';
-import 'package:core/paginacao/paginacao.dart';
+import 'package:core/paginacao/paginacao_hive_data_source.dart';
+import 'package:core/paginacao/paginacao_hive_dto.dart';
 import 'package:core/produtos_compartilhados/local/dtos/lista_de_produtos_compartilhada_hive_dto.dart';
 import 'package:core/produtos_compartilhados/local/dtos/produto_compartilhado_hive_dto.dart';
 import 'package:core/produtos_compartilhados/local/i_lista_de_produtos_compartilhada_local_data_source.dart';
@@ -31,10 +32,20 @@ void registerCoreLocalStorage() {
     ),
   );
 
-  // ponytail: sem persistência de progresso de sync incremental no web ainda
-  // (perde o cursor ao recarregar a página, refaz do zero) -- upgrade pra
-  // Hive quando sync incremental precisar sobreviver a reload no navegador.
-  sl.registerLazySingleton<IPaginacaoDataSource>(() => _InMemoryPaginacaoDataSource());
+  sl.registerLazySingleton<IPaginacaoDataSource>(
+    () => PaginacaoHiveDataSource(getBox: _getPaginacaoBox),
+  );
+}
+
+Future<Box<PaginacaoHiveDto>> _getPaginacaoBox() {
+  return sl<IHiveDatabaseInstance>().getBox<PaginacaoHiveDto>(
+    boxKey: 'PaginacaoHiveDto',
+    adapters: [
+      StorageEntityAdapter<PaginacaoHiveDto>(PaginacaoHiveDto.fromStorage),
+    ],
+    isCommonData: true,
+    moduleName: 'core',
+  );
 }
 
 Future<Box<ProdutoCompartilhadoHiveDto>> _getProdutosCompartilhadosBox() {
@@ -63,19 +74,4 @@ Future<Box<ListaDeProdutosCompartilhadaHiveDto>>
     isCommonData: true,
     moduleName: 'core',
   );
-}
-
-class _InMemoryPaginacaoDataSource implements IPaginacaoDataSource {
-  final Map<String, Paginacao> _paginacoes = {};
-
-  @override
-  Future<Paginacao?> buscarPaginacao(String key) async => _paginacoes[key];
-
-  @override
-  Future<void> salvarPaginacao(Paginacao paginacao) async {
-    _paginacoes[paginacao.key] = paginacao;
-  }
-
-  @override
-  Future<void> limparTudo() async => _paginacoes.clear();
 }

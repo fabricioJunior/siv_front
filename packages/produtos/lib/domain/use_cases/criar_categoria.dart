@@ -7,7 +7,7 @@ class CriarCategoria {
   CriarCategoria({required ICategoriasRepository categoriasRepository})
     : _categoriasRepository = categoriasRepository;
 
-  Future<Categoria> call(String nome, {String? ncm}) async {
-    return _categoriasRepository.criarCategoria(nome, ncm: ncm);
+  Future<Categoria> call(String nome, {String? ncm, String? descricao}) async {
+    return _categoriasRepository.criarCategoria(nome, ncm: ncm, descricao: descricao);
   }
 }

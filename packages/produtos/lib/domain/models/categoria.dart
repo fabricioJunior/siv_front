@@ -3,4 +3,6 @@ abstract class Categoria {
   String get nome;
   bool get inativa;
   String? get ncm;
+  String? get descricao;
+  String? get icone;
 }

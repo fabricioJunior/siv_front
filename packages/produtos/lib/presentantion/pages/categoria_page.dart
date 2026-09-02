@@ -1,4 +1,5 @@
 import 'package:core/bloc.dart';
+import 'package:core/imagens.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ class CategoriaPage extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nomeController = TextEditingController();
     final ncmController = TextEditingController();
+    final descricaoController = TextEditingController();
 
     return BlocProvider<CategoriaBloc>(
       create: (context) =>
@@ -73,6 +75,10 @@ class CategoriaPage extends StatelessWidget {
                   if (state.ncm != null && ncmController.text.isEmpty) {
                     ncmController.text = state.ncm!;
                   }
+                  if (state.descricao != null &&
+                      descricaoController.text.isEmpty) {
+                    descricaoController.text = state.descricao!;
+                  }
 
                   return Form(
                     key: formKey,
@@ -108,6 +114,9 @@ class CategoriaPage extends StatelessWidget {
                                 ncm: ncmController.text.trim().isEmpty
                                     ? null
                                     : ncmController.text.trim(),
+                                descricao: descricaoController.text.trim().isEmpty
+                                    ? null
+                                    : descricaoController.text.trim(),
                               ),
                             );
                           },
@@ -140,6 +149,32 @@ class CategoriaPage extends StatelessWidget {
                               CategoriaEditou(
                                 nome: nomeController.text,
                                 ncm: value.trim().isEmpty ? null : value.trim(),
+                                descricao: descricaoController.text.trim().isEmpty
+                                    ? null
+                                    : descricaoController.text.trim(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Descrição'),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: descricaoController,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            hintText: 'Descrição exibida no e-commerce',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            context.read<CategoriaBloc>().add(
+                              CategoriaEditou(
+                                nome: nomeController.text,
+                                ncm: ncmController.text.trim().isEmpty
+                                    ? null
+                                    : ncmController.text.trim(),
+                                descricao: value.trim().isEmpty ? null : value.trim(),
                               ),
                             );
                           },
@@ -161,6 +196,57 @@ class CategoriaPage extends StatelessWidget {
                             ),
                           ),
                         if (state.id != null) ...[
+                          const SizedBox(height: 24),
+                          const Divider(),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Ícone',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (state.icone != null)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    state.icone!,
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.image_outlined),
+                                ),
+                              const SizedBox(width: 16),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final imagens = await showSelecionarImagemModal(
+                                    context,
+                                  );
+                                  final imagem = imagens?.firstOrNull;
+                                  if (imagem?.bytes == null) return;
+                                  // ignore: use_build_context_synchronously
+                                  context.read<CategoriaBloc>().add(
+                                    CategoriaIconeEnviou(
+                                      bytes: imagem!.bytes!,
+                                      fileName: imagem.path ?? 'icone.jpg',
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.upload),
+                                label: const Text('Trocar ícone'),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 24),
                           const Divider(),
                           const SizedBox(height: 16),

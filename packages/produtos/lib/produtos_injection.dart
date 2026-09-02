@@ -270,6 +270,10 @@ void _usesCases() {
     () => AtualizarCategoria(categoriasRepository: sl()),
   );
 
+  sl.registerFactory<EnviarIconeCategoria>(
+    () => EnviarIconeCategoria(categoriasRepository: sl()),
+  );
+
   // Sub-Categorias Use Cases
   sl.registerFactory<RecuperarSubCategorias>(
     () => RecuperarSubCategorias(subCategoriasRepository: sl()),
@@ -442,7 +446,9 @@ void _presentantion() {
 
   sl.registerFactory<CategoriasBloc>(() => CategoriasBloc(sl(), sl()));
 
-  sl.registerFactory<CategoriaBloc>(() => CategoriaBloc(sl(), sl(), sl()));
+  sl.registerFactory<CategoriaBloc>(
+    () => CategoriaBloc(sl(), sl(), sl(), sl()),
+  );
 
   sl.registerFactory<SubCategoriasBloc>(() => SubCategoriasBloc(sl(), sl()));
 

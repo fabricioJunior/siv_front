@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:core/remote_data_sourcers.dart';
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/models/categoria.dart';
@@ -12,23 +14,46 @@ class CategoriasRemoteDatasource extends RemoteDataSourceBase
   String get path => '/v1/categorias/{id}';
 
   @override
-  Future<Categoria> atualizarCategoria(int id, String nome, {String? ncm}) async {
+  Future<Categoria> atualizarCategoria(
+    int id,
+    String nome, {
+    String? ncm,
+    String? descricao,
+  }) async {
     var response = await put(
       pathParameters: {'id': id.toString()},
       body: {
         'nome': nome,
         if (ncm != null) 'ncm': ncm,
+        if (descricao != null) 'descricao': descricao,
       },
     );
     return CategoriaDto.fromJson(response.body);
   }
 
   @override
-  Future<Categoria> createCategoria(String nome, {String? ncm}) async {
+  Future<Categoria> createCategoria(
+    String nome, {
+    String? ncm,
+    String? descricao,
+  }) async {
     var response = await post(body: {
       'nome': nome,
       if (ncm != null) 'ncm': ncm,
+      if (descricao != null) 'descricao': descricao,
     });
+    return CategoriaDto.fromJson(response.body);
+  }
+
+  @override
+  Future<Categoria> enviarIcone(int id, Uint8List bytes, String fileName) async {
+    var response = await httpClient.postMultipart(
+      uri: uriBase.replace(path: '/v1/categorias/$id/icone'),
+      field: 'file',
+      bytes: bytes,
+      fileName: fileName,
+      fileType: FileType.image,
+    );
     return CategoriaDto.fromJson(response.body);
   }
 

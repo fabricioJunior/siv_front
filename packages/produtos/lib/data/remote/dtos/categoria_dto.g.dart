@@ -11,4 +11,6 @@ CategoriaDto _$CategoriaDtoFromJson(Map<String, dynamic> json) => CategoriaDto(
   inativa: json['inativa'] as bool,
   nome: json['nome'] as String,
   ncm: json['ncm'] as String?,
+  descricao: json['descricao'] as String?,
+  icone: json['icone'] as String?,
 );

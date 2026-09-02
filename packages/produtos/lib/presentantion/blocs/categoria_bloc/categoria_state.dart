@@ -16,6 +16,8 @@ class CategoriaState extends Equatable {
   final int? id;
   final bool inativa;
   final String? ncm;
+  final String? descricao;
+  final String? icone;
 
   const CategoriaState({
     required this.categoriaStep,
@@ -23,6 +25,8 @@ class CategoriaState extends Equatable {
     this.id,
     this.inativa = false,
     this.ncm,
+    this.descricao,
+    this.icone,
   });
 
   factory CategoriaState.fromModel(
@@ -35,6 +39,8 @@ class CategoriaState extends Equatable {
       id: categoria.id,
       inativa: categoria.inativa,
       ncm: categoria.ncm,
+      descricao: categoria.descricao,
+      icone: categoria.icone,
     );
   }
 
@@ -44,6 +50,8 @@ class CategoriaState extends Equatable {
     int? id,
     bool? inativa,
     Object? ncm = _sentinel,
+    Object? descricao = _sentinel,
+    Object? icone = _sentinel,
   }) {
     return CategoriaState(
       categoriaStep: categoriaStep ?? this.categoriaStep,
@@ -51,11 +59,14 @@ class CategoriaState extends Equatable {
       id: id ?? this.id,
       inativa: inativa ?? this.inativa,
       ncm: ncm == _sentinel ? this.ncm : ncm as String?,
+      descricao: descricao == _sentinel ? this.descricao : descricao as String?,
+      icone: icone == _sentinel ? this.icone : icone as String?,
     );
   }
 
   @override
-  List<Object?> get props => [categoriaStep, nome, id, inativa, ncm];
+  List<Object?> get props =>
+      [categoriaStep, nome, id, inativa, ncm, descricao, icone];
 }
 
 const _sentinel = Object();

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
@@ -12,15 +13,18 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
   final RecuperarCategoria _recuperarCategoria;
   final CriarCategoria _criarCategoria;
   final AtualizarCategoria _atualizarCategoria;
+  final EnviarIconeCategoria _enviarIconeCategoria;
 
   CategoriaBloc(
     this._recuperarCategoria,
     this._criarCategoria,
     this._atualizarCategoria,
+    this._enviarIconeCategoria,
   ) : super(const CategoriaState(categoriaStep: CategoriaStep.inicial)) {
     on<CategoriaIniciou>(_onCategoriaIniciou);
     on<CategoriaEditou>(_onCategoriaEditou);
     on<CategoriaSalvou>(_onCategoriaSalvou);
+    on<CategoriaIconeEnviou>(_onCategoriaIconeEnviou);
   }
 
   FutureOr<void> _onCategoriaIniciou(
@@ -60,6 +64,7 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
         categoriaStep: CategoriaStep.editando,
         nome: event.nome,
         ncm: event.ncm ?? state.ncm,
+        descricao: event.descricao ?? state.descricao,
       ),
     );
   }
@@ -76,14 +81,36 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
           state.id!,
           state.nome!,
           ncm: state.ncm,
+          descricao: state.descricao,
         );
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.salvo));
       } else {
-        var categoria = await _criarCategoria.call(state.nome!, ncm: state.ncm);
+        var categoria = await _criarCategoria.call(
+          state.nome!,
+          ncm: state.ncm,
+          descricao: state.descricao,
+        );
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.criado));
       }
     } catch (e, s) {
       emit(state.copyWith(categoriaStep: CategoriaStep.falha));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onCategoriaIconeEnviou(
+    CategoriaIconeEnviou event,
+    Emitter<CategoriaState> emit,
+  ) async {
+    if (state.id == null) return;
+    try {
+      var categoria = await _enviarIconeCategoria.call(
+        state.id!,
+        event.bytes,
+        event.fileName,
+      );
+      emit(state.copyWith(icone: categoria.icone));
+    } catch (e, s) {
       addError(e, s);
     }
   }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:produtos/domain/data/remote/i_categorias_remote_data_source.dart';
 import 'package:produtos/domain/data/repositorios/i_categorias_repository.dart';
 import 'package:produtos/domain/models/categoria.dart';
@@ -8,13 +10,32 @@ class CategoriasRepository implements ICategoriasRepository {
   CategoriasRepository({required this.categoriasRemoteDataSource});
 
   @override
-  Future<Categoria> atualizarCategoria(int id, String nome, {String? ncm}) {
-    return categoriasRemoteDataSource.atualizarCategoria(id, nome, ncm: ncm);
+  Future<Categoria> atualizarCategoria(
+    int id,
+    String nome, {
+    String? ncm,
+    String? descricao,
+  }) {
+    return categoriasRemoteDataSource.atualizarCategoria(
+      id,
+      nome,
+      ncm: ncm,
+      descricao: descricao,
+    );
   }
 
   @override
-  Future<Categoria> criarCategoria(String nome, {String? ncm}) {
-    return categoriasRemoteDataSource.createCategoria(nome, ncm: ncm);
+  Future<Categoria> criarCategoria(String nome, {String? ncm, String? descricao}) {
+    return categoriasRemoteDataSource.createCategoria(
+      nome,
+      ncm: ncm,
+      descricao: descricao,
+    );
+  }
+
+  @override
+  Future<Categoria> enviarIconeCategoria(int id, Uint8List bytes, String fileName) {
+    return categoriasRemoteDataSource.enviarIcone(id, bytes, fileName);
   }
 
   @override

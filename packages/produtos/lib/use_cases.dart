@@ -21,6 +21,7 @@ export 'domain/use_cases/recuperar_categorias.dart';
 export 'domain/use_cases/recuperar_categoria.dart';
 export 'domain/use_cases/desativar_categoria.dart';
 export 'domain/use_cases/atualizar_categoria.dart';
+export 'domain/use_cases/enviar_icone_categoria.dart';
 
 export 'domain/use_cases/criar_sub_categoria.dart';
 export 'domain/use_cases/recuperar_sub_categorias.dart';

@@ -76,7 +76,8 @@ class MyApp extends StatelessWidget {
 
   String _resolverRotaInicial() {
     if (kIsWeb) {
-      final rotaDaUrl = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+      final rotaDaUrl =
+          WidgetsBinding.instance.platformDispatcher.defaultRouteName;
       if (rotaDaUrl.isNotEmpty &&
           rotaDaUrl != '/' &&
           rotaDaUrl != '/login' &&
@@ -106,75 +107,77 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       builder: (context, child) {
-        return BlocListener<AppBloc, AppState>(
-          bloc: sl<AppBloc>(),
-          listenWhen: (previous, current) =>
-              previous.statusAutenticacao != current.statusAutenticacao,
-          listener: (context, state) {
-            if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
-              final restaurandoRotaDoBoot =
-                  _aguardandoRestaurarRotaDoBoot[0] &&
-                  _restaurandoRotaEspecifica;
-              _aguardandoRestaurarRotaDoBoot[0] = false;
-              if (restaurandoRotaDoBoot) {
-                return;
-              }
-
-              if (routeToTest != null) {
-                _navigateWhenReady(
-                  (navigator) => navigator.pushNamed(routeToTest!),
-                );
-              } else {
-                _navigateWhenReady(
-                  (navigator) => navigator.pushNamedAndRemoveUntil(
-                    '/home',
-                    (route) => false,
-                  ),
-                );
-              }
-            }
-
-            if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
-              _navigateWhenReady(
-                (navigator) => navigator.pushNamedAndRemoveUntil(
-                  '/login',
-                  (route) => false,
-                ),
-              );
-            }
-          },
-          child: BlocBuilder<AppBloc, AppState>(
-            bloc: sl<AppBloc>(),
-            builder: (context, state) {
-              if (state.statusAutenticacao ==
-                      StatusAutenticacao.carregandoDados &&
-                  !_restaurandoRotaEspecifica) {
-                return AppLoadingView(
-                  etapaAtual: state.etapaAtualInicializacao,
-                  etapasConcluidas: state.etapasInicializacaoConcluidas,
-                );
-              }
-
-              if (state.statusAutenticacao ==
-                  StatusAutenticacao.falhaInicializacao) {
-                return InitializationErrorView(
-                  mensagem:
-                      state.mensagemErroInicializacao ??
-                      'Não foi possível iniciar o aplicativo.',
-                  detalhesTecnicos: state.detalhesErroInicializacao,
-                  onRetry: () => sl<AppBloc>().add(AppIniciou()),
-                );
-              }
-
-              return AppShell(
-                rotaAtual: navigationObserver.rotaAtual,
-                child: child ?? const SizedBox.shrink(),
-              );
-            },
-          ),
+        return Overlay(
+          initialEntries: [
+            OverlayEntry(builder: (context) => _appShellRoot(context, child)),
+          ],
         );
       },
       theme: SivTheme.tema,
+    );
+  }
+
+  Widget _appShellRoot(BuildContext context, Widget? child) {
+    return BlocListener<AppBloc, AppState>(
+      bloc: sl<AppBloc>(),
+      listenWhen: (previous, current) =>
+          previous.statusAutenticacao != current.statusAutenticacao,
+      listener: (context, state) {
+        if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
+          final restaurandoRotaDoBoot =
+              _aguardandoRestaurarRotaDoBoot[0] && _restaurandoRotaEspecifica;
+          _aguardandoRestaurarRotaDoBoot[0] = false;
+          if (restaurandoRotaDoBoot) {
+            return;
+          }
+
+          if (routeToTest != null) {
+            _navigateWhenReady(
+              (navigator) => navigator.pushNamed(routeToTest!),
+            );
+          } else {
+            _navigateWhenReady(
+              (navigator) =>
+                  navigator.pushNamedAndRemoveUntil('/home', (route) => false),
+            );
+          }
+        }
+
+        if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
+          _navigateWhenReady(
+            (navigator) =>
+                navigator.pushNamedAndRemoveUntil('/login', (route) => false),
+          );
+        }
+      },
+      child: BlocBuilder<AppBloc, AppState>(
+        bloc: sl<AppBloc>(),
+        builder: (context, state) {
+          if (state.statusAutenticacao == StatusAutenticacao.carregandoDados &&
+              !_restaurandoRotaEspecifica) {
+            return AppLoadingView(
+              etapaAtual: state.etapaAtualInicializacao,
+              etapasConcluidas: state.etapasInicializacaoConcluidas,
+            );
+          }
+
+          if (state.statusAutenticacao ==
+              StatusAutenticacao.falhaInicializacao) {
+            return InitializationErrorView(
+              mensagem:
+                  state.mensagemErroInicializacao ??
+                  'Não foi possível iniciar o aplicativo.',
+              detalhesTecnicos: state.detalhesErroInicializacao,
+              onRetry: () => sl<AppBloc>().add(AppIniciou()),
+            );
+          }
+
+          return AppShell(
+            rotaAtual: navigationObserver.rotaAtual,
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+      ),
     );
   }
 

@@ -158,7 +158,21 @@ class _AppShellCasca extends StatelessWidget {
 
     return SivScaffold(
       titulo: tituloAtivo ?? 'SIV',
-      acoes: [_BarraTituloInfo(appState: appState)],
+      acoes: [
+        ValueListenableBuilder<List<Widget>>(
+          valueListenable: SivPageAcoes.notifier,
+          builder: (context, acoesDaPagina, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final acao in acoesDaPagina) ...[
+                acao,
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+        _BarraTituloInfo(appState: appState),
+      ],
       secoesMenu: [
         SivMenuLateralSecao(
           titulo: 'OPERAÇÃO',

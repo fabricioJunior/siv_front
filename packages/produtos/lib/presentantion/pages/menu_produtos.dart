@@ -92,6 +92,16 @@ class MenuProdutosPage extends StatelessWidget {
             onTap: () =>
                 Navigator.of(context).pushNamed('/referencias_pendentes_ncm'),
           ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.scale_outlined,
+            titulo: 'Pendência de peso',
+            subtitulo:
+                'Referências sem peso — visualize e atualize em massa.',
+            componente: 'PRDFM004',
+            onTap: () =>
+                Navigator.of(context).pushNamed('/referencias_pendentes_peso'),
+          ),
         ],
       ),
     );

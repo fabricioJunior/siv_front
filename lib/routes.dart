@@ -840,6 +840,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencias_pendentes_ncm': (context) {
     return const ReferenciasPendentesNcmPage();
   },
+  '/referencias_pendentes_peso': (context) {
+    return const ReferenciasPendentesPesoPage();
+  },
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);
   },

@@ -13,6 +13,9 @@ import 'package:produtos/data/remote/referencias_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_pendentes_ncm_remote_datasource.dart';
 import 'package:produtos/data/repositorios/referencias_pendentes_ncm_repository.dart';
 import 'package:produtos/domain/data/remote/i_referencias_pendentes_ncm_remote_data_source.dart';
+import 'package:produtos/data/remote/referencias_pendentes_peso_remote_datasource.dart';
+import 'package:produtos/data/repositorios/referencias_pendentes_peso_repository.dart';
+import 'package:produtos/domain/data/remote/i_referencias_pendentes_peso_remote_data_source.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
@@ -111,6 +114,10 @@ void _data() {
     () => ReferenciasPendentesNcmRemoteDatasource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IReferenciasPendentesPesoRemoteDataSource>(
+    () => ReferenciasPendentesPesoRemoteDatasource(informacoesParaRequest: sl()),
+  );
+
   registerCodigosLocalDataSource();
 
   sl.registerFactory<ICodigosDeBarrasDaReferenciaRemoteDataSource>(
@@ -180,6 +187,10 @@ void _repositores() {
 
   sl.registerFactory<IReferenciasPendentesNcmRepository>(
     () => ReferenciasPendentesNcmRepository(dataSource: sl()),
+  );
+
+  sl.registerFactory<IReferenciasPendentesPesoRepository>(
+    () => ReferenciasPendentesPesoRepository(dataSource: sl()),
   );
 
   sl.registerFactory<ICodigosDeBarrasDaReferenciaRepository>(
@@ -422,6 +433,14 @@ void _usesCases() {
     () => AtualizarNcmEmMassa(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarReferenciasSemPeso>(
+    () => RecuperarReferenciasSemPeso(repository: sl()),
+  );
+
+  sl.registerFactory<AtualizarDadosLogisticosEmMassa>(
+    () => AtualizarDadosLogisticosEmMassa(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarCodigosDeBarrasDaReferencia>(
     () => RecuperarCodigosDeBarrasDaReferencia(repository: sl()),
   );
@@ -498,6 +517,10 @@ void _presentantion() {
 
   sl.registerFactory<ReferenciasPendentesNcmBloc>(
     () => ReferenciasPendentesNcmBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<ReferenciasPendentesPesoBloc>(
+    () => ReferenciasPendentesPesoBloc(sl(), sl()),
   );
 
   sl.registerFactory<CodigosDeBarrasDaReferenciaBloc>(

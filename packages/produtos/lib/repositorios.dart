@@ -10,5 +10,6 @@ export 'domain/data/repositorios/i_codigos_repository.dart';
 export 'domain/data/repositorios/i_etiquetas_repository.dart';
 export 'domain/data/repositorios/i_impressao_etiquetas_repository.dart';
 export 'domain/data/repositorios/i_referencias_pendentes_ncm_repository.dart';
+export 'domain/data/repositorios/i_referencias_pendentes_peso_repository.dart';
 export 'domain/data/repositorios/i_codigos_de_barras_da_referencia_repository.dart';
 export 'domain/data/repositorios/i_grade_da_referencia_repository.dart';

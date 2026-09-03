@@ -9,4 +9,6 @@ export 'presentation/siv_etiqueta.dart';
 export 'presentation/siv_aviso.dart';
 export 'presentation/siv_combo_box.dart';
 export 'presentation/siv_tabela.dart';
+export 'presentation/siv_menu_lateral.dart';
+export 'presentation/siv_scaffold.dart';
 export 'permissoes/componente_controlado_wiget.dart';

@@ -381,6 +381,7 @@ void _presentation() {
     () => PedidosBloc(
       sl(),
       sl(),
+      sl(),
     ),
   );
 

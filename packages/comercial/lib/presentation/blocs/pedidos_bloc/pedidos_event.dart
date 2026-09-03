@@ -29,3 +29,20 @@ class PedidosPedidoCancelou extends PedidosEvent {
 // Disparado pela tela ao chegar perto do fim da lista (scroll infinito) -- busca a proxima
 // pagina e concatena em `pedidos`, sem recarregar o que ja foi carregado.
 class PedidosCarregarMais extends PedidosEvent {}
+
+// Filtro local (mesmo criterio de busca/situacao) sobre `criadoEm` do pedido. Ambos nulos = sem
+// filtro de periodo.
+class PedidosFiltroPeriodoAlterado extends PedidosEvent {
+  final DateTime? dataInicial;
+  final DateTime? dataFinal;
+
+  PedidosFiltroPeriodoAlterado({this.dataInicial, this.dataFinal});
+}
+
+// Selecao de linha na tabela -- carrega os itens do pedido pra alimentar o painel direito.
+// id null limpa a selecao (fecha o painel).
+class PedidosPedidoSelecionou extends PedidosEvent {
+  final int? id;
+
+  PedidosPedidoSelecionou(this.id);
+}

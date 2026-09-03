@@ -16,14 +16,20 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
 
   final RecuperarPedidos _recuperarPedidos;
   final CancelarPedido _cancelarPedido;
+  final ListarItensPedido _listarItensPedido;
 
-  PedidosBloc(this._recuperarPedidos, this._cancelarPedido)
-      : super(const PedidosState.initial()) {
+  PedidosBloc(
+    this._recuperarPedidos,
+    this._cancelarPedido,
+    this._listarItensPedido,
+  ) : super(const PedidosState.initial()) {
     on<PedidosIniciou>(_onIniciou);
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
     on<PedidosFiltroSituacaoAlterado>(_onFiltroSituacaoAlterado);
+    on<PedidosFiltroPeriodoAlterado>(_onFiltroPeriodoAlterado);
     on<PedidosPedidoCancelou>(_onPedidoCancelou);
     on<PedidosCarregarMais>(_onCarregarMais);
+    on<PedidosPedidoSelecionou>(_onPedidoSelecionou);
   }
 
   FutureOr<void> _onIniciou(
@@ -43,7 +49,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
           step: PedidosStep.sucesso,
           erro: null,
           paginaAtual: 1,
@@ -81,7 +87,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
           paginaAtual: proximaPagina,
           temMaisPaginas: temMais,
           carregandoMais: false,
@@ -102,7 +108,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     emit(
       state.copyWith(
         busca: event.busca,
-        filtrados: _filtrar(state.pedidos, event.busca, state.situacoesFiltro),
+        filtrados: _filtrar(state.pedidos, event.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
       ),
     );
   }
@@ -114,7 +120,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     emit(
       state.copyWith(
         situacoesFiltro: event.situacoes,
-        filtrados: _filtrar(state.pedidos, state.busca, event.situacoes),
+        filtrados: _filtrar(state.pedidos, state.busca, event.situacoes, state.dataInicial, state.dataFinal),
       ),
     );
   }
@@ -139,7 +145,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(
         state.copyWith(
           pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro),
+          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
           step: PedidosStep.sucesso,
           erro: null,
           paginaAtual: 1,
@@ -167,14 +173,30 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     });
   }
 
+  bool _bateuPeriodo(
+    Pedido pedido,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  ) {
+    if (dataInicial == null && dataFinal == null) return true;
+    final criadoEm = pedido.criadoEm;
+    if (criadoEm == null) return false;
+    if (dataInicial != null && criadoEm.isBefore(dataInicial)) return false;
+    if (dataFinal != null && criadoEm.isAfter(dataFinal)) return false;
+    return true;
+  }
+
   List<Pedido> _filtrar(
     List<Pedido> pedidos,
     String busca,
-    Set<String> situacoesFiltro,
-  ) {
+    Set<String> situacoesFiltro, [
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  ]) {
     final filtro = busca.trim().toLowerCase();
     final lista = pedidos.where((pedido) {
       if (!_bateSituacaoFiltro(pedido, situacoesFiltro)) return false;
+      if (!_bateuPeriodo(pedido, dataInicial, dataFinal)) return false;
       if (filtro.isEmpty) return true;
 
       final id = (pedido.id ?? 0).toString();
@@ -190,5 +212,56 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     lista.sort((a, b) => (b.criadoEm ?? DateTime(0))
         .compareTo(a.criadoEm ?? DateTime(0)));
     return lista;
+  }
+
+  FutureOr<void> _onFiltroPeriodoAlterado(
+    PedidosFiltroPeriodoAlterado event,
+    Emitter<PedidosState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        dataInicial: event.dataInicial,
+        dataFinal: event.dataFinal,
+        filtrados: _filtrar(
+          state.pedidos,
+          state.busca,
+          state.situacoesFiltro,
+          event.dataInicial,
+          event.dataFinal,
+        ),
+      ),
+    );
+  }
+
+  FutureOr<void> _onPedidoSelecionou(
+    PedidosPedidoSelecionou event,
+    Emitter<PedidosState> emit,
+  ) async {
+    if (event.id == null) {
+      emit(state.copyWith(
+        pedidoSelecionadoId: null,
+        itensDoPedidoSelecionado: const [],
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      pedidoSelecionadoId: event.id,
+      itensDoPedidoSelecionado: const [],
+      carregandoItensDoPedidoSelecionado: true,
+    ));
+
+    try {
+      final itens = await _listarItensPedido.call(event.id!);
+      if (state.pedidoSelecionadoId != event.id) return;
+      emit(state.copyWith(
+        itensDoPedidoSelecionado: itens,
+        carregandoItensDoPedidoSelecionado: false,
+      ));
+    } catch (e, s) {
+      if (state.pedidoSelecionadoId != event.id) return;
+      emit(state.copyWith(carregandoItensDoPedidoSelecionado: false));
+      addError(e, s);
+    }
   }
 }

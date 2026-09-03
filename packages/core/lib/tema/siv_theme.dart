@@ -17,6 +17,12 @@ class SivColors extends ThemeExtension<SivColors> {
   final Color vinho;
   final Color atencao;
   final Color hairline;
+  final Color selecaoFundo;
+  final Color atencaoFundo;
+  final Color atencaoBorda;
+  final Color falhaFundo;
+  final Color falhaBorda;
+  final Color emAndamentoFundo;
 
   const SivColors({
     required this.papel,
@@ -31,6 +37,12 @@ class SivColors extends ThemeExtension<SivColors> {
     required this.vinho,
     required this.atencao,
     required this.hairline,
+    required this.selecaoFundo,
+    required this.atencaoFundo,
+    required this.atencaoBorda,
+    required this.falhaFundo,
+    required this.falhaBorda,
+    required this.emAndamentoFundo,
   });
 
   static const SivColors padrao = SivColors(
@@ -46,6 +58,12 @@ class SivColors extends ThemeExtension<SivColors> {
     vinho: Color(0xFF8A2F2F),
     atencao: Color(0xFF7A5D1D),
     hairline: Color(0x1726282A), // #26282A a 9%
+    selecaoFundo: Color(0xFFF0F5FA),
+    atencaoFundo: Color(0xFFF5EFE0),
+    atencaoBorda: Color(0xFFCBB27A),
+    falhaFundo: Color(0xFFF6E9E9),
+    falhaBorda: Color(0xFFC99B9B),
+    emAndamentoFundo: Color(0xFFD6EBFF),
   );
 
   /// Texto principal sobre papel (100%).
@@ -80,6 +98,12 @@ class SivColors extends ThemeExtension<SivColors> {
     Color? vinho,
     Color? atencao,
     Color? hairline,
+    Color? selecaoFundo,
+    Color? atencaoFundo,
+    Color? atencaoBorda,
+    Color? falhaFundo,
+    Color? falhaBorda,
+    Color? emAndamentoFundo,
   }) {
     return SivColors(
       papel: papel ?? this.papel,
@@ -94,6 +118,12 @@ class SivColors extends ThemeExtension<SivColors> {
       vinho: vinho ?? this.vinho,
       atencao: atencao ?? this.atencao,
       hairline: hairline ?? this.hairline,
+      selecaoFundo: selecaoFundo ?? this.selecaoFundo,
+      atencaoFundo: atencaoFundo ?? this.atencaoFundo,
+      atencaoBorda: atencaoBorda ?? this.atencaoBorda,
+      falhaFundo: falhaFundo ?? this.falhaFundo,
+      falhaBorda: falhaBorda ?? this.falhaBorda,
+      emAndamentoFundo: emAndamentoFundo ?? this.emAndamentoFundo,
     );
   }
 
@@ -117,6 +147,16 @@ class SivColors extends ThemeExtension<SivColors> {
       vinho: Color.lerp(vinho, other.vinho, t)!,
       atencao: Color.lerp(atencao, other.atencao, t)!,
       hairline: Color.lerp(hairline, other.hairline, t)!,
+      selecaoFundo: Color.lerp(selecaoFundo, other.selecaoFundo, t)!,
+      atencaoFundo: Color.lerp(atencaoFundo, other.atencaoFundo, t)!,
+      atencaoBorda: Color.lerp(atencaoBorda, other.atencaoBorda, t)!,
+      falhaFundo: Color.lerp(falhaFundo, other.falhaFundo, t)!,
+      falhaBorda: Color.lerp(falhaBorda, other.falhaBorda, t)!,
+      emAndamentoFundo: Color.lerp(
+        emAndamentoFundo,
+        other.emAndamentoFundo,
+        t,
+      )!,
     );
   }
 }

@@ -33,7 +33,7 @@ class SivEtiqueta extends StatelessWidget {
 
     switch (situacao) {
       case SivEtiquetaSituacao.emAndamento:
-        fundo = const Color(0xFFD6EBFF);
+        fundo = cores.emAndamentoFundo;
         borda = cores.aco;
         textoCor = cores.acoEscuro;
         break;

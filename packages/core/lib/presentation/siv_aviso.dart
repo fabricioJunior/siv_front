@@ -26,13 +26,13 @@ class SivAviso {
         textoCor = cores.textoSobreEscuroTitulo;
         break;
       case SivAvisoTipo.atencao:
-        fundo = const Color(0xFFF5EFE0);
-        borda = const Color(0xFFCBB27A);
+        fundo = cores.atencaoFundo;
+        borda = cores.atencaoBorda;
         textoCor = cores.textoPrincipal;
         break;
       case SivAvisoTipo.falha:
-        fundo = const Color(0xFFF6E9E9);
-        borda = const Color(0xFFC99B9B);
+        fundo = cores.falhaFundo;
+        borda = cores.falhaBorda;
         textoCor = cores.textoPrincipal;
         break;
     }

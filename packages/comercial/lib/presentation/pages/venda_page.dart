@@ -104,8 +104,8 @@ class _VendaPageState extends State<VendaPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<VendaBloc>(
-      create: (_) => sl<VendaBloc>()
-        ..add(const VendaClienteNaoCadastradoSolicitado()),
+      create: (_) =>
+          sl<VendaBloc>()..add(const VendaClienteNaoCadastradoSolicitado()),
       child: BlocConsumer<VendaBloc, VendaState>(
         listenWhen: (previous, current) =>
             (previous.erro != current.erro && current.erro != null) ||
@@ -161,7 +161,8 @@ class _VendaPageState extends State<VendaPage> {
                 : null;
 
             if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
-              SivAviso.mostrar(context, mensagem: 'Venda finalizada com sucesso.');
+              SivAviso.mostrar(context,
+                  mensagem: 'Venda finalizada com sucesso.');
               final orcamentoId = state.orcamentoId;
               if (orcamentoId != null) {
                 context.read<VendaBloc>().add(
@@ -177,7 +178,8 @@ class _VendaPageState extends State<VendaPage> {
             if (resultadoStatus == _resultadoRomaneioStatusFalha) {
               SivAviso.mostrar(
                 context,
-                mensagem: 'Não foi possível concluir a venda. Confira o pagamento e tente de novo.',
+                mensagem:
+                    'Não foi possível concluir a venda. Confira o pagamento e tente de novo.',
                 tipo: SivAvisoTipo.falha,
               );
               return;
@@ -308,10 +310,13 @@ class _VendaPageState extends State<VendaPage> {
           child: BlocConsumer<LeitorBloc, LeitorState>(
             listener: (context, leitorState) {
               _leitorController.syncState(leitorState);
+              _atualizarAcoesDaBarraDeTitulo(context, state);
               if (leitorState.erro != null) {
-                SivAviso.mostrar(context, mensagem: leitorState.erro!, tipo: SivAvisoTipo.falha);
+                SivAviso.mostrar(context,
+                    mensagem: leitorState.erro!, tipo: SivAvisoTipo.falha);
               } else if (leitorState.aviso != null) {
-                SivAviso.mostrar(context, mensagem: leitorState.aviso!, tipo: SivAvisoTipo.atencao);
+                SivAviso.mostrar(context,
+                    mensagem: leitorState.aviso!, tipo: SivAvisoTipo.atencao);
               } else if (leitorState.ultimoProdutoLido != null) {
                 _ultimaLeituraEm = DateTime.now();
               }
@@ -329,14 +334,16 @@ class _VendaPageState extends State<VendaPage> {
                       children: [
                         Expanded(
                           child: SingleChildScrollView(
-                            child: _buildTabelaDeItens(context, leitorState, state),
+                            child: _buildTabelaDeItens(
+                                context, leitorState, state),
                           ),
                         ),
                         const SizedBox(width: SivDimensoes.gapCards),
                         SizedBox(
                           width: 396,
                           child: SingleChildScrollView(
-                            child: _buildPainelDireito(context, state, leitorState),
+                            child: _buildPainelDireito(
+                                context, state, leitorState),
                           ),
                         ),
                       ],
@@ -377,7 +384,8 @@ class _VendaPageState extends State<VendaPage> {
               hintText: _modoRemocao
                   ? 'Bipe para remover 1 unidade do item'
                   : 'Bipe ou informe o código do produto · F2 buscar por nome',
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
             ),
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _submeterCodigo(),
@@ -401,7 +409,9 @@ class _VendaPageState extends State<VendaPage> {
             _solicitarFocoLeitura();
           },
           icon: Icon(
-            _modoRemocao ? Icons.remove_circle_outline : Icons.add_circle_outline,
+            _modoRemocao
+                ? Icons.remove_circle_outline
+                : Icons.add_circle_outline,
           ),
         ),
       ],
@@ -418,7 +428,8 @@ class _VendaPageState extends State<VendaPage> {
     final segundos = _ultimaLeituraEm == null
         ? null
         : DateTime.now().difference(_ultimaLeituraEm!).inSeconds;
-    final nomeTabela = vendaState.tabelaDePrecoSelecionada?.nome ?? 'não selecionada';
+    final nomeTabela =
+        vendaState.tabelaDePrecoSelecionada?.nome ?? 'não selecionada';
 
     return SivTabela(
       colunas: const [
@@ -442,7 +453,9 @@ class _VendaPageState extends State<VendaPage> {
         // hoje) -- REF usa referenciaIdExterno/referenciaId; marca fica TODO
         // até o modelo de produto ganhar esse campo.
         final produto = item.dados['produto'] as ProdutoDoEstoque?;
-        final ref = produto?.referenciaIdExterno ?? produto?.referenciaId.toString() ?? '-';
+        final ref = produto?.referenciaIdExterno ??
+            produto?.referenciaId.toString() ??
+            '-';
         return [
           Text('#$numeroItem', style: context.sivTextos.apoio),
           Column(
@@ -459,7 +472,8 @@ class _VendaPageState extends State<VendaPage> {
             'Cor: ${item.cor.isEmpty ? '-' : item.cor}  •  Tam: ${item.tamanho.isEmpty ? '-' : item.tamanho}',
             style: context.sivTextos.apoio,
           ),
-          Text(_formatarMoeda(item.valorUnitario ?? 0), style: context.sivTextos.corpo),
+          Text(_formatarMoeda(item.valorUnitario ?? 0),
+              style: context.sivTextos.corpo),
           Text('${item.quantidadeLida}', style: context.sivTextos.secao),
           Text(_formatarMoeda(item.valorTotal), style: context.sivTextos.corpo),
         ];
@@ -495,8 +509,9 @@ class _VendaPageState extends State<VendaPage> {
                     onChanged: (selecionados) {
                       context.read<VendaBloc>().add(
                             VendaClienteSelecionado(
-                              clienteSelecionado:
-                                  selecionados.isEmpty ? null : selecionados.first,
+                              clienteSelecionado: selecionados.isEmpty
+                                  ? null
+                                  : selecionados.first,
                             ),
                           );
                       _solicitarFocoLeitura();
@@ -527,8 +542,9 @@ class _VendaPageState extends State<VendaPage> {
                     onChanged: (selecionados) {
                       context.read<VendaBloc>().add(
                             VendaVendedorSelecionado(
-                              vendedorSelecionado:
-                                  selecionados.isEmpty ? null : selecionados.first,
+                              vendedorSelecionado: selecionados.isEmpty
+                                  ? null
+                                  : selecionados.first,
                             ),
                           );
                       _solicitarFocoLeitura();
@@ -543,9 +559,10 @@ class _VendaPageState extends State<VendaPage> {
                 absorbing: true,
                 child: widget.tabelasDePrecoSeletor(
                   SeletorData(
-                    itemsSelecionadosInicial: state.tabelaDePrecoSelecionada == null
-                        ? null
-                        : [state.tabelaDePrecoSelecionada!],
+                    itemsSelecionadosInicial:
+                        state.tabelaDePrecoSelecionada == null
+                            ? null
+                            : [state.tabelaDePrecoSelecionada!],
                     onlyView: true,
                     onChanged: (_) {},
                   ),
@@ -559,7 +576,8 @@ class _VendaPageState extends State<VendaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _linhaResumo(context, 'Subtotal', _formatarMoeda(leitorState.valorTotalLido)),
+              _linhaResumo(context, 'Subtotal',
+                  _formatarMoeda(leitorState.valorTotalLido)),
               // TODO: desconto e entrega só são decididos na tela de
               // pagamento (PagamentosRealizadosWidget, aberta em "Finalizar
               // e ir ao caixa") -- não há valor de rascunho pra mostrar aqui
@@ -575,9 +593,10 @@ class _VendaPageState extends State<VendaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total', style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio)),
+              Text('Total', style: textos.corpo.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
-              Text(_formatarMoeda(leitorState.valorTotalLido), style: textos.display),
+              Text(_formatarMoeda(leitorState.valorTotalLido),
+                  style: textos.display.copyWith(color: Colors.white)),
             ],
           ),
         ),
@@ -1020,14 +1039,16 @@ class _VendaPageState extends State<VendaPage> {
                     const Divider(height: 16),
                     _buildInfoChip(
                       icon: Icons.discount_outlined,
-                      label: 'Desconto aplicado: ${_formatarMoeda(valorDesconto)}',
+                      label:
+                          'Desconto aplicado: ${_formatarMoeda(valorDesconto)}',
                     ),
                     const SizedBox(height: 8),
                   ] else
                     const Divider(height: 16),
                   _buildInfoChip(
                     icon: Icons.account_balance_wallet_outlined,
-                    label: 'Total recebido: ${_formatarMoeda(valorTotalRecebido)}',
+                    label:
+                        'Total recebido: ${_formatarMoeda(valorTotalRecebido)}',
                   ),
                   if (valorTroco > 0) ...[
                     const SizedBox(height: 8),

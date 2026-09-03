@@ -1,0 +1,14 @@
+name: Deploy develop na Vercel
+
+# Trigger via Deploy Hook em vez de depender do campo "Production Branch"
+# do dashboard (não estava aparecendo pra troca de master -> develop).
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispara o deploy hook do projeto siv-front-develop na Vercel
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEVELOP_DEPLOY_HOOK }}"

@@ -32,6 +32,14 @@ class AdministracaoMenuPage extends StatelessWidget {
         route: '/empresas',
       ),
       const _ItemData(
+        icon: Icons.storefront_outlined,
+        titulo: 'E-commerce',
+        subtitulo: 'Configuração da loja, catálogo publicado e banners.',
+        cor: Colors.pink,
+        componente: 'ECOFM001',
+        route: '/ecommerces',
+      ),
+      const _ItemData(
         icon: Icons.settings_outlined,
         titulo: 'Configurações',
         subtitulo: 'SMTP e ajustes sistêmicos da aplicação.',
@@ -166,9 +174,8 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   descricao,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.90),
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white.withValues(alpha: 0.90)),
                 ),
               ],
             ),

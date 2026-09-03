@@ -82,6 +82,13 @@ const _operacoesDoDia = <_OperacaoDoDia>[
     rota: '/chamar_entregador',
     componentesNecessarios: ['ENTFM001'],
   ),
+  _OperacaoDoDia(
+    nome: 'Pessoas',
+    descricao: 'Consultar ou cadastrar clientes.',
+    icone: Icons.people_outline,
+    rota: '/pessoas',
+    componentesNecessarios: ['PESFC001', 'PESFM001'],
+  ),
 ];
 
 /// Painel inicial. A navegação principal do app vive no menu lateral fixo
@@ -110,8 +117,9 @@ class _HomePageState extends State<HomePage> {
     return BlocBuilder<AppBloc, AppState>(
       bloc: sl<AppBloc>(),
       builder: (context, appState) {
-        final operacoesPermitidas =
-            _operacoesDoDia.where((op) => op.permitido).toList();
+        final operacoesPermitidas = _operacoesDoDia
+            .where((op) => op.permitido)
+            .toList();
 
         return ListView(
           padding: const EdgeInsets.all(SivDimensoes.paginaHorizontal),
@@ -151,7 +159,9 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 6),
           Text(
-            caixaAberto ? 'Caixa aberto neste terminal.' : 'Caixa fechado neste terminal.',
+            caixaAberto
+                ? 'Caixa aberto neste terminal.'
+                : 'Caixa fechado neste terminal.',
             style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio),
           ),
           // TODO: linha de contexto ("N pedidos aguardam retirada hoje") sem
@@ -179,7 +189,8 @@ class _HomePageState extends State<HomePage> {
                 context,
                 texto: 'Consultar produto',
                 icone: Icons.search_outlined,
-                onTap: () => Navigator.of(context).pushNamed('/consultar_produto'),
+                onTap: () =>
+                    Navigator.of(context).pushNamed('/consultar_produto'),
               ),
             ],
           ),
@@ -218,7 +229,9 @@ class _HomePageState extends State<HomePage> {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: cores.textoSobreEscuroTitulo,
-        side: BorderSide(color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.4)),
+        side: BorderSide(
+          color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.4),
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SivDimensoes.raio),
         ),
@@ -251,7 +264,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _indicadorCard(BuildContext context, {required String titulo, required String valor}) {
+  Widget _indicadorCard(
+    BuildContext context, {
+    required String titulo,
+    required String valor,
+  }) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
@@ -288,7 +305,10 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Última sincronização', style: textos.apoio.copyWith(color: cores.textoApoio)),
+              Text(
+                'Última sincronização',
+                style: textos.apoio.copyWith(color: cores.textoApoio),
+              ),
               const SizedBox(height: 6),
               Text(valor, style: textos.valor),
             ],
@@ -298,7 +318,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _gridDeOperacoes(BuildContext context, List<_OperacaoDoDia> operacoes) {
+  Widget _gridDeOperacoes(
+    BuildContext context,
+    List<_OperacaoDoDia> operacoes,
+  ) {
     if (operacoes.isEmpty) {
       final cores = context.sivColors;
       return Text(
@@ -312,8 +335,8 @@ class _HomePageState extends State<HomePage> {
         final colunas = constraints.maxWidth >= 1000
             ? 4
             : constraints.maxWidth >= 640
-                ? 2
-                : 1;
+            ? 2
+            : 1;
 
         return GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -333,7 +356,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _operacaoCard(BuildContext context, int numero, _OperacaoDoDia operacao) {
+  Widget _operacaoCard(
+    BuildContext context,
+    int numero,
+    _OperacaoDoDia operacao,
+  ) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
@@ -364,7 +391,10 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(operacao.nome, style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                operacao.nome,
+                style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 4),
               Text(
                 operacao.descricao,

@@ -368,7 +368,7 @@ class SivTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: cores.aco.withValues(alpha: 0.45),
           disabledForegroundColor: Colors.white.withValues(alpha: 0.45),
-          minimumSize: const Size.fromHeight(SivDimensoes.alvoToqueMinimo),
+          minimumSize: const Size(0, SivDimensoes.alvoToqueMinimo),
           textStyle: textos.corpo.copyWith(
             fontFamily: GoogleFonts.barlowCondensed().fontFamily,
             fontWeight: FontWeight.w600,
@@ -382,7 +382,7 @@ class SivTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: cores.acoProfundo,
           side: borda,
-          minimumSize: const Size.fromHeight(SivDimensoes.alvoToqueMinimo),
+          minimumSize: const Size(0, SivDimensoes.alvoToqueMinimo),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(SivDimensoes.raio),
           ),

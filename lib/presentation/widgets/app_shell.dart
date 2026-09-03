@@ -125,9 +125,17 @@ final _itensOperacao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Caixa']!,
   ),
   _ItemDeNavegacao(
+    label: 'Produtos',
+    icone: Icons.checkroom_outlined,
+    rota: '/menu_produtos',
+    componentesNecessarios: componentesPorFluxo['Produtos']!,
+  ),
+  _ItemDeNavegacao(
     label: 'Estoque',
     icone: Icons.inventory_2_outlined,
-    rota: '/estoque',
+    // Menu agregador (entrada/saída manual, histórico, balanço, consulta
+    // de saldo) -- não a tela de saldo direto, que é só um dos fluxos dele.
+    rota: '/gerencia_estoque',
     componentesNecessarios: componentesPorFluxo['Estoque']!,
   ),
   _ItemDeNavegacao(

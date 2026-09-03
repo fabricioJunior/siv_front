@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -169,10 +170,7 @@ class MyApp extends StatelessWidget {
           ),
         );
       },
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: SivTheme.tema,
     );
   }
 

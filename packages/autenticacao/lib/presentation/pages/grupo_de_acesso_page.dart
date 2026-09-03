@@ -221,10 +221,10 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
   }
 
   Widget _corpo(BuildContext context, GrupoDeAcessoState state) {
-    final permissoesDoGrupo = state.permissoesDoGrupo ?? const [];
-    final todas = [
+    final permissoesDoGrupo = state.permissoesDoGrupo ?? const <Permissao>[];
+    final todas = <Permissao>[
       ...permissoesDoGrupo,
-      ...(state.permissoesNaoUtilizadasNoGrupo ?? const []),
+      ...(state.permissoesNaoUtilizadasNoGrupo ?? const <Permissao>[]),
     ];
     final grupoNovoVazio =
         widget.idGrupoDeAcesso == null && permissoesDoGrupo.isEmpty;

@@ -19,6 +19,7 @@ class CategoriasRemoteDatasource extends RemoteDataSourceBase
     String nome, {
     String? ncm,
     String? descricao,
+    int? pesoGramas,
   }) async {
     var response = await put(
       pathParameters: {'id': id.toString()},
@@ -26,6 +27,7 @@ class CategoriasRemoteDatasource extends RemoteDataSourceBase
         'nome': nome,
         if (ncm != null) 'ncm': ncm,
         if (descricao != null) 'descricao': descricao,
+        if (pesoGramas != null) 'pesoGramas': pesoGramas,
       },
     );
     return CategoriaDto.fromJson(response.body);
@@ -36,11 +38,13 @@ class CategoriasRemoteDatasource extends RemoteDataSourceBase
     String nome, {
     String? ncm,
     String? descricao,
+    int? pesoGramas,
   }) async {
     var response = await post(body: {
       'nome': nome,
       if (ncm != null) 'ncm': ncm,
       if (descricao != null) 'descricao': descricao,
+      if (pesoGramas != null) 'pesoGramas': pesoGramas,
     });
     return CategoriaDto.fromJson(response.body);
   }

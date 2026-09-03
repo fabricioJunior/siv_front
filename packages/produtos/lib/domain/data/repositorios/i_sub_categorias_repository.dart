@@ -1,7 +1,12 @@
 import 'package:produtos/models.dart';
 
 abstract class ISubCategoriasRepository {
-  Future<SubCategoria> criarSubCategoria(int categoriaId, String nome, {String? ncm});
+  Future<SubCategoria> criarSubCategoria(
+    int categoriaId,
+    String nome, {
+    String? ncm,
+    int? pesoGramas,
+  });
   Future<List<SubCategoria>> obterSubCategorias(
     int categoriaId, {
     String? nome,
@@ -14,5 +19,6 @@ abstract class ISubCategoriasRepository {
     int id,
     String nome, {
     String? ncm,
+    int? pesoGramas,
   });
 }

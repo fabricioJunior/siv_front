@@ -71,6 +71,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
         subCategoriaStep: SubCategoriaStep.editando,
         nome: event.nome,
         ncm: event.ncm ?? state.ncm,
+        pesoGramas: event.pesoGramas ?? state.pesoGramas,
       ),
     );
   }
@@ -88,6 +89,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
           state.id!,
           state.nome!,
           ncm: state.ncm,
+          pesoGramas: state.pesoGramas,
         );
         emit(
           SubCategoriaState.fromModel(
@@ -100,6 +102,7 @@ class SubCategoriaBloc extends Bloc<SubCategoriaEvent, SubCategoriaState> {
           state.categoriaId,
           state.nome!,
           ncm: state.ncm,
+          pesoGramas: state.pesoGramas,
         );
         emit(
           SubCategoriaState.fromModel(

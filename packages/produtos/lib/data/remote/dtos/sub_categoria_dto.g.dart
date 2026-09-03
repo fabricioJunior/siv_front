@@ -13,6 +13,7 @@ SubCategoriaDto _$SubCategoriaDtoFromJson(Map<String, dynamic> json) =>
       inativa: json['inativa'] as bool,
       nome: json['nome'] as String,
       ncm: json['ncm'] as String?,
+      pesoGramas: (json['pesoGramas'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$SubCategoriaDtoToJson(SubCategoriaDto instance) =>
@@ -22,4 +23,5 @@ Map<String, dynamic> _$SubCategoriaDtoToJson(SubCategoriaDto instance) =>
       'inativa': instance.inativa,
       'nome': instance.nome,
       'ncm': instance.ncm,
+      'pesoGramas': instance.pesoGramas,
     };

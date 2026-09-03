@@ -16,6 +16,7 @@ class CategoriaPage extends StatelessWidget {
     final nomeController = TextEditingController();
     final ncmController = TextEditingController();
     final descricaoController = TextEditingController();
+    final pesoController = TextEditingController();
 
     return BlocProvider<CategoriaBloc>(
       create: (context) =>
@@ -79,6 +80,10 @@ class CategoriaPage extends StatelessWidget {
                       descricaoController.text.isEmpty) {
                     descricaoController.text = state.descricao!;
                   }
+                  if (state.pesoGramas != null &&
+                      pesoController.text.isEmpty) {
+                    pesoController.text = state.pesoGramas!.toString();
+                  }
 
                   return Form(
                     key: formKey,
@@ -117,6 +122,9 @@ class CategoriaPage extends StatelessWidget {
                                 descricao: descricaoController.text.trim().isEmpty
                                     ? null
                                     : descricaoController.text.trim(),
+                                pesoGramas: int.tryParse(
+                                  pesoController.text.trim(),
+                                ),
                               ),
                             );
                           },
@@ -152,6 +160,9 @@ class CategoriaPage extends StatelessWidget {
                                 descricao: descricaoController.text.trim().isEmpty
                                     ? null
                                     : descricaoController.text.trim(),
+                                pesoGramas: int.tryParse(
+                                  pesoController.text.trim(),
+                                ),
                               ),
                             );
                           },
@@ -175,6 +186,38 @@ class CategoriaPage extends StatelessWidget {
                                     ? null
                                     : ncmController.text.trim(),
                                 descricao: value.trim().isEmpty ? null : value.trim(),
+                                pesoGramas: int.tryParse(
+                                  pesoController.text.trim(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Peso (gramas)'),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: pesoController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: 250',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            context.read<CategoriaBloc>().add(
+                              CategoriaEditou(
+                                nome: nomeController.text,
+                                ncm: ncmController.text.trim().isEmpty
+                                    ? null
+                                    : ncmController.text.trim(),
+                                descricao: descricaoController.text.trim().isEmpty
+                                    ? null
+                                    : descricaoController.text.trim(),
+                                pesoGramas: int.tryParse(value.trim()),
                               ),
                             );
                           },

@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:produtos/models.dart';
 
 abstract class ICategoriasRemoteDataSource {
-  Future<Categoria> createCategoria(String nome, {String? ncm, String? descricao});
+  Future<Categoria> createCategoria(
+    String nome, {
+    String? ncm,
+    String? descricao,
+    int? pesoGramas,
+  });
   Future<List<Categoria>> fetchCategorias({String? nome, bool? inativa});
   Future<Categoria?> fetchCategoria(int id);
   Future<void> desativarCategoria(int id);
@@ -12,6 +17,7 @@ abstract class ICategoriasRemoteDataSource {
     String nome, {
     String? ncm,
     String? descricao,
+    int? pesoGramas,
   });
   Future<Categoria> enviarIcone(int id, Uint8List bytes, String fileName);
 }

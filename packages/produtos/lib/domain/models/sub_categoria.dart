@@ -4,4 +4,5 @@ abstract class SubCategoria {
   String get nome;
   bool get inativa;
   String? get ncm;
+  int? get pesoGramas;
 }

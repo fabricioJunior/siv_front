@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:produtos/models.dart';
 
 abstract class ICategoriasRepository {
-  Future<Categoria> criarCategoria(String nome, {String? ncm, String? descricao});
+  Future<Categoria> criarCategoria(
+    String nome, {
+    String? ncm,
+    String? descricao,
+    int? pesoGramas,
+  });
   Future<List<Categoria>> obterCategorias({String? nome, bool? inativa});
   Future<Categoria?> obterCategoria(int id);
   Future<void> desativarCategoria(int id);
@@ -13,6 +18,7 @@ abstract class ICategoriasRepository {
     String nome, {
     String? ncm,
     String? descricao,
+    int? pesoGramas,
   });
 
   Future<Categoria> enviarIconeCategoria(int id, Uint8List bytes, String fileName);

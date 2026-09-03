@@ -15,21 +15,29 @@ class CategoriasRepository implements ICategoriasRepository {
     String nome, {
     String? ncm,
     String? descricao,
+    int? pesoGramas,
   }) {
     return categoriasRemoteDataSource.atualizarCategoria(
       id,
       nome,
       ncm: ncm,
       descricao: descricao,
+      pesoGramas: pesoGramas,
     );
   }
 
   @override
-  Future<Categoria> criarCategoria(String nome, {String? ncm, String? descricao}) {
+  Future<Categoria> criarCategoria(
+    String nome, {
+    String? ncm,
+    String? descricao,
+    int? pesoGramas,
+  }) {
     return categoriasRemoteDataSource.createCategoria(
       nome,
       ncm: ncm,
       descricao: descricao,
+      pesoGramas: pesoGramas,
     );
   }
 

@@ -65,6 +65,7 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
         nome: event.nome,
         ncm: event.ncm ?? state.ncm,
         descricao: event.descricao ?? state.descricao,
+        pesoGramas: event.pesoGramas ?? state.pesoGramas,
       ),
     );
   }
@@ -82,6 +83,7 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
           state.nome!,
           ncm: state.ncm,
           descricao: state.descricao,
+          pesoGramas: state.pesoGramas,
         );
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.salvo));
       } else {
@@ -89,6 +91,7 @@ class CategoriaBloc extends Bloc<CategoriaEvent, CategoriaState> {
           state.nome!,
           ncm: state.ncm,
           descricao: state.descricao,
+          pesoGramas: state.pesoGramas,
         );
         emit(CategoriaState.fromModel(categoria, step: CategoriaStep.criado));
       }

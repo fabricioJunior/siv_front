@@ -30,6 +30,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   }) {
     return referenciasRemoteDataSource.atualizarReferencia(
       id: id,
@@ -43,6 +44,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       composicao: composicao,
       cuidados: cuidados,
       ncm: ncm,
+      pesoGramas: pesoGramas,
     );
   }
 
@@ -59,6 +61,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   }) {
     return referenciasRemoteDataSource.createReferencia(
       id: id,
@@ -72,6 +75,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       composicao: composicao,
       cuidados: cuidados,
       ncm: ncm,
+      pesoGramas: pesoGramas,
     );
   }
 

@@ -17,6 +17,7 @@ class SubCategoriaState extends Equatable {
   final int categoriaId;
   final bool inativa;
   final String? ncm;
+  final int? pesoGramas;
 
   const SubCategoriaState({
     required this.subCategoriaStep,
@@ -25,6 +26,7 @@ class SubCategoriaState extends Equatable {
     this.id,
     this.inativa = false,
     this.ncm,
+    this.pesoGramas,
   });
 
   factory SubCategoriaState.fromModel(
@@ -38,6 +40,7 @@ class SubCategoriaState extends Equatable {
       categoriaId: subCategoria.categoriaId,
       inativa: subCategoria.inativa,
       ncm: subCategoria.ncm,
+      pesoGramas: subCategoria.pesoGramas,
     );
   }
 
@@ -48,6 +51,7 @@ class SubCategoriaState extends Equatable {
     int? categoriaId,
     bool? inativa,
     Object? ncm = _sentinel,
+    Object? pesoGramas = _sentinel,
   }) {
     return SubCategoriaState(
       subCategoriaStep: subCategoriaStep ?? this.subCategoriaStep,
@@ -56,11 +60,14 @@ class SubCategoriaState extends Equatable {
       categoriaId: categoriaId ?? this.categoriaId,
       inativa: inativa ?? this.inativa,
       ncm: ncm == _sentinel ? this.ncm : ncm as String?,
+      pesoGramas:
+          pesoGramas == _sentinel ? this.pesoGramas : pesoGramas as int?,
     );
   }
 
   @override
-  List<Object?> get props => [subCategoriaStep, nome, id, categoriaId, inativa, ncm];
+  List<Object?> get props =>
+      [subCategoriaStep, nome, id, categoriaId, inativa, ncm, pesoGramas];
 }
 
 const _sentinel = Object();

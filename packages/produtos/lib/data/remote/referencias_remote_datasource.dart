@@ -37,6 +37,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   }) async {
     final response = await post(
       body: {
@@ -51,6 +52,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
         if (composicao != null) 'composicao': composicao,
         if (cuidados != null) 'cuidados': cuidados,
         if (ncm != null) 'ncm': ncm,
+        if (pesoGramas != null) 'pesoGramas': pesoGramas,
       },
     );
 
@@ -70,6 +72,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   }) async {
     final response = await put(
       pathParameters: {'id': id.toString()},
@@ -85,6 +88,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
         if (composicao != null) 'composicao': composicao,
         if (cuidados != null) 'cuidados': cuidados,
         if (ncm != null) 'ncm': ncm,
+        if (pesoGramas != null) 'pesoGramas': pesoGramas,
       },
     );
 

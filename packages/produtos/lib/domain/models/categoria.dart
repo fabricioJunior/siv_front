@@ -5,4 +5,5 @@ abstract class Categoria {
   String? get ncm;
   String? get descricao;
   String? get icone;
+  int? get pesoGramas;
 }

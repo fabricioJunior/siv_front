@@ -8,4 +8,5 @@ export 'presentation/siv_card.dart';
 export 'presentation/siv_etiqueta.dart';
 export 'presentation/siv_aviso.dart';
 export 'presentation/siv_combo_box.dart';
+export 'presentation/siv_tabela.dart';
 export 'permissoes/componente_controlado_wiget.dart';

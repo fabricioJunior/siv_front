@@ -35,7 +35,17 @@ class AppShell extends StatelessWidget {
   final ValueListenable<String?> rotaAtual;
   final Widget child;
 
-  const AppShell({super.key, required this.rotaAtual, required this.child});
+  /// Navegação do menu/barra de título usa esta key (não `Navigator.of(context)`
+  /// -- [AppShell] embrulha o [Navigator] em vez de descender dele, então
+  /// não existe um Navigator ancestor pra achar a partir do context daqui).
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  const AppShell({
+    super.key,
+    required this.rotaAtual,
+    required this.child,
+    required this.navigatorKey,
+  });
 
   static const _rotasSemCasca = {
     '/',
@@ -61,7 +71,12 @@ class AppShell extends StatelessWidget {
               return child;
             }
 
-            return _AppShellCasca(rotaAtual: rota, appState: appState, child: child);
+            return _AppShellCasca(
+              rotaAtual: rota,
+              appState: appState,
+              navigatorKey: navigatorKey,
+              child: child,
+            );
           },
         );
       },
@@ -141,11 +156,13 @@ class _AppShellCasca extends StatelessWidget {
   final String rotaAtual;
   final AppState appState;
   final Widget child;
+  final GlobalKey<NavigatorState> navigatorKey;
 
   const _AppShellCasca({
     required this.rotaAtual,
     required this.appState,
     required this.child,
+    required this.navigatorKey,
   });
 
   @override
@@ -171,45 +188,46 @@ class _AppShellCasca extends StatelessWidget {
             ],
           ),
         ),
-        _BarraTituloInfo(appState: appState),
+        _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
       ],
       secoesMenu: [
         SivMenuLateralSecao(
           titulo: 'OPERAÇÃO',
           itens: _itensOperacao
               .where((item) => item.permitido)
-              .map((item) => _mapearItem(context, item))
+              .map(_mapearItem)
               .toList(),
         ),
         SivMenuLateralSecao(
           titulo: 'SISTEMA',
           itens: _itensSistema
               .where((item) => item.permitido)
-              .map((item) => _mapearItem(context, item))
+              .map(_mapearItem)
               .toList(),
         ),
       ],
-      rodapeMenu: _RodapeMenu(appState: appState),
+      rodapeMenu: _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
       corpo: child,
     );
   }
 
-  SivMenuLateralItem _mapearItem(BuildContext context, _ItemDeNavegacao item) {
+  SivMenuLateralItem _mapearItem(_ItemDeNavegacao item) {
     return SivMenuLateralItem(
       label: item.label,
       icone: item.icone,
       selecionado: item.rota == rotaAtual,
       onTap: item.rota == rotaAtual
           ? null
-          : () => Navigator.of(context).pushNamed(item.rota),
+          : () => navigatorKey.currentState?.pushNamed(item.rota),
     );
   }
 }
 
 class _RodapeMenu extends StatelessWidget {
   final AppState appState;
+  final GlobalKey<NavigatorState> navigatorKey;
 
-  const _RodapeMenu({required this.appState});
+  const _RodapeMenu({required this.appState, required this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +243,11 @@ class _RodapeMenu extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2))),
+        border: Border(
+          top: BorderSide(
+            color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -234,7 +256,9 @@ class _RodapeMenu extends StatelessWidget {
             backgroundColor: cores.aco,
             child: Text(
               inicial,
-              style: textos.rotulo.copyWith(color: cores.textoSobreEscuroTitulo),
+              style: textos.rotulo.copyWith(
+                color: cores.textoSobreEscuroTitulo,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -255,7 +279,9 @@ class _RodapeMenu extends StatelessWidget {
                   Text(
                     papel,
                     overflow: TextOverflow.ellipsis,
-                    style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
+                    style: textos.apoio.copyWith(
+                      color: cores.textoSobreEscuroApoio,
+                    ),
                   ),
               ],
             ),
@@ -263,17 +289,26 @@ class _RodapeMenu extends StatelessWidget {
           IconButton(
             key: const Key('sair_button'),
             tooltip: 'Sair',
-            icon: Icon(Icons.logout, size: 18, color: cores.textoSobreEscuroApoio),
-            onPressed: () => _confirmarSaida(context),
+            icon: Icon(
+              Icons.logout,
+              size: 18,
+              color: cores.textoSobreEscuroApoio,
+            ),
+            onPressed: () => _confirmarSaida(),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _confirmarSaida(BuildContext context) async {
+  Future<void> _confirmarSaida() async {
+    final navigatorContext = navigatorKey.currentContext;
+    if (navigatorContext == null) {
+      return;
+    }
+
     final confirmar = await showDialog<bool>(
-      context: context,
+      context: navigatorContext,
       builder: (ctx) => AlertDialog(
         title: const Text('Sair da conta'),
         content: const Text('Deseja encerrar a sessão atual?'),
@@ -290,7 +325,7 @@ class _RodapeMenu extends StatelessWidget {
         ],
       ),
     );
-    if (confirmar == true && context.mounted) {
+    if (confirmar == true && navigatorContext.mounted) {
       sl<AppBloc>().add(AppDesautenticou());
     }
   }
@@ -298,8 +333,9 @@ class _RodapeMenu extends StatelessWidget {
 
 class _BarraTituloInfo extends StatelessWidget {
   final AppState appState;
+  final GlobalKey<NavigatorState> navigatorKey;
 
-  const _BarraTituloInfo({required this.appState});
+  const _BarraTituloInfo({required this.appState, required this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +347,7 @@ class _BarraTituloInfo extends StatelessWidget {
       children: [
         _ChipInfo(
           texto: appState.empresaDaSessao?.nome ?? 'Selecionar empresa',
-          onTap: () => Navigator.of(context).pushNamed(
+          onTap: () => navigatorKey.currentState?.pushNamed(
             '/login',
             arguments: {'trocandoDeEmpresa': true},
           ),
@@ -335,7 +371,9 @@ class _BarraTituloInfo extends StatelessWidget {
           // -- exibe só o status até a sessão carregar o saldo do caixa.
           child: Text(
             caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO',
-            style: context.sivTextos.rotulo.copyWith(color: cores.textoPrincipal),
+            style: context.sivTextos.rotulo.copyWith(
+              color: cores.textoPrincipal,
+            ),
           ),
         ),
       ],
@@ -362,7 +400,7 @@ class _BarraTituloInfo extends StatelessWidget {
       return;
     }
 
-    final resultado = await Navigator.of(context).pushNamed(
+    final resultado = await navigatorKey.currentState?.pushNamed(
       '/selecionar_terminal',
       arguments: {'terminais': terminaisDaEmpresa},
     );

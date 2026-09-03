@@ -174,6 +174,7 @@ class MyApp extends StatelessWidget {
 
           return AppShell(
             rotaAtual: navigationObserver.rotaAtual,
+            navigatorKey: navigatorKey,
             child: child ?? const SizedBox.shrink(),
           );
         },

@@ -1,5 +1,6 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:autenticacao/models.dart' show TerminalDoUsuario;
+import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
@@ -71,6 +72,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/selecionar_empresa': (context) {
     return const SelecionarEmpresaPage();
+  },
+  '/selecionar_licenciado': (context) {
+    final raw = args(context)['licenciados'];
+    final licenciados = raw is List<Licenciado> ? raw : const <Licenciado>[];
+    return SelecionarLicenciadoPage(licenciados: licenciados);
   },
   '/selecionar_terminal': (context) {
     final terminaisArg = args(context)['terminais'];

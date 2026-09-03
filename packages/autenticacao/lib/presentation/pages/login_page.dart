@@ -2,12 +2,13 @@ import 'package:autenticacao/models.dart';
 import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-
   final bool trocandoDeEmpresa;
-  const LoginPage({super.key, this.trocandoDeEmpresa = false,});
+  const LoginPage({super.key, this.trocandoDeEmpresa = false});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -17,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   final bloc = sl<LoginBloc>();
   String? _empresaSelecionadaParaLogin;
+  bool _senhaVisivel = false;
 
   @override
   void initState() {
@@ -30,10 +32,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cores = context.sivColors;
 
     return Scaffold(
       key: const Key('login_page_key'),
+      backgroundColor: cores.papel,
       body: BlocListener<LoginBloc, LoginState>(
         bloc: bloc,
         listener: (context, state) {
@@ -45,18 +48,13 @@ class _LoginPageState extends State<LoginPage> {
                 _empresaSelecionadaParaLogin = null;
               });
             }
-
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(state.erro),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: _isErroDeAviso(state.tipo)
-                      ? Colors.orange.shade700
-                      : theme.colorScheme.error,
-                ),
-              );
+            SivAviso.mostrar(
+              context,
+              mensagem: state.erro,
+              tipo: _isErroDeAviso(state.tipo)
+                  ? SivAvisoTipo.atencao
+                  : SivAvisoTipo.falha,
+            );
           }
 
           if (state is LoginAutenticarSucesso && state.idEmpresa == null) {
@@ -65,7 +63,8 @@ class _LoginPageState extends State<LoginPage> {
               ..showSnackBar(
                 const SnackBar(
                   content: Text(
-                      'Login realizado. Escolha a empresa para continuar.'),
+                    'Login realizado. Escolha a empresa para continuar.',
+                  ),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -75,261 +74,19 @@ class _LoginPageState extends State<LoginPage> {
         child: SafeArea(
           child: Stack(
             children: [
-              BlocBuilder<LoginBloc, LoginState>(
-                bloc: bloc,
-                builder: (context, state) {
-                  if (state is LoginAutenticarSucesso &&
-                      state.idEmpresa != null) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text('Carregando dados'),
-                          CircularProgressIndicator.adaptive(),
-                        ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final duasColunas = constraints.maxWidth >= 900;
+
+                  return Row(
+                    children: [
+                      if (duasColunas)
+                        Expanded(child: _PainelDeMarca(cores: cores)),
+                      SizedBox(
+                        width: duasColunas ? 560 : constraints.maxWidth,
+                        child: _formulario(context),
                       ),
-                    );
-                  }
-                  if(widget.trocandoDeEmpresa){
-                     return Center(child: CircularProgressIndicator.adaptive());
-                  }
-                  return Form(
-                    key: formKey,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 24,
-                          ),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight - 48,
-                            ),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 460),
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.lock_outline_rounded,
-                                          size: 44,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          'SIV',
-                                          textAlign: TextAlign.center,
-                                          style: theme.textTheme.headlineSmall,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Acesse sua conta',
-                                          textAlign: TextAlign.center,
-                                          style: theme.textTheme.bodyMedium,
-                                        ),
-                                        const SizedBox(height: 24),
-                                        TextFormField(
-                                          key: const Key(
-                                              'login_page_user_input'),
-                                          textInputAction: TextInputAction.next,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Usuário',
-                                          ),
-                                          onChanged: (value) {
-                                            bloc.add(
-                                              LoginAdicionouUsuario(
-                                                  usuario: value),
-                                            );
-                                          },
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return 'Informe o usuário';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        const SizedBox(height: 16),
-                                        TextFormField(
-                                          obscureText: true,
-                                          key: const Key(
-                                              'login_page_user_senha'),
-                                          textInputAction: TextInputAction.next,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Senha',
-                                          ),
-                                          onChanged: (value) {
-                                            bloc.add(
-                                              LoginAdicionouSenha(senha: value),
-                                            );
-                                          },
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return 'Informe a senha para continuar';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        const SizedBox(height: 16),
-                                        _licenciadoAutoComplete(),
-                                        const SizedBox(height: 12),
-                                        BlocBuilder<LoginBloc, LoginState>(
-                                          bloc: bloc,
-                                          builder: (context, state) {
-                                            if (state
-                                                is! LoginAutenticarFalha) {
-                                              return const SizedBox.shrink();
-                                            }
-
-                                            final isWarning =
-                                                _isErroDeAviso(state.tipo);
-                                            final foregroundColor = isWarning
-                                                ? Colors.orange.shade900
-                                                : theme.colorScheme.error;
-
-                                            return Container(
-                                              width: double.infinity,
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: isWarning
-                                                    ? Colors.orange.shade50
-                                                    : theme.colorScheme
-                                                        .errorContainer,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: isWarning
-                                                      ? Colors.orange.shade200
-                                                      : theme.colorScheme.error
-                                                          .withValues(
-                                                              alpha: 0.35),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Icon(
-                                                    isWarning
-                                                        ? Icons.info_outline
-                                                        : Icons.error_outline,
-                                                    color: foregroundColor,
-                                                  ),
-                                                  const SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Text(
-                                                      state.erro,
-                                                      style: theme
-                                                          .textTheme.bodySmall
-                                                          ?.copyWith(
-                                                        color: foregroundColor,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  if (state.tipo ==
-                                                      LoginErroTipo
-                                                          .carregamentoLicenciados)
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        bloc.add(
-                                                          LoginCarregouLicenciados(),
-                                                        );
-                                                      },
-                                                      child: const Text(
-                                                        'Tentar novamente',
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(height: 20),
-                                        BlocBuilder<LoginBloc, LoginState>(
-                                          bloc: bloc,
-                                          builder: (context, state) {
-                                            final emProgresso = state
-                                                is LoginAutenticarEmProgresso;
-
-                                            return Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                SizedBox(
-                                                  height: 48,
-                                                  child: ElevatedButton(
-                                                    key: const Key(
-                                                      'login_page_entrar_button',
-                                                    ),
-                                                    onPressed: emProgresso
-                                                        ? null
-                                                        : () {
-                                                            if (formKey
-                                                                    .currentState
-                                                                    ?.validate() ??
-                                                                false) {
-                                                              bloc.add(
-                                                                LoginAutenticou(),
-                                                              );
-                                                            }
-                                                          },
-                                                    child: emProgresso
-                                                        ? const SizedBox(
-                                                            width: 20,
-                                                            height: 20,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                            ),
-                                                          )
-                                                        : const Text('ENTRAR'),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 12),
-                                                OutlinedButton.icon(
-                                                  key: const Key(
-                                                    'login_page_configuracao_dispositivo_button',
-                                                  ),
-                                                  onPressed: emProgresso
-                                                      ? null
-                                                      : () {
-                                                          Navigator.of(context)
-                                                              .pushNamed(
-                                                            '/configuracao_dispositivo',
-                                                          );
-                                                        },
-                                                  icon: const Icon(
-                                                    Icons
-                                                        .phone_android_outlined,
-                                                  ),
-                                                  label: const Text(
-                                                    'Configurações do dispositivo',
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    ],
                   );
                 },
               ),
@@ -338,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 builder: (context, state) {
                   final mostrandoIndicadorFinalizacao =
                       state is LoginAutenticarEmProgresso &&
-                          state.idEmpresa != null;
+                      state.idEmpresa != null;
 
                   if (!mostrandoIndicadorFinalizacao) {
                     return const SizedBox.shrink();
@@ -388,9 +145,253 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _formulario(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return BlocBuilder<LoginBloc, LoginState>(
+      bloc: bloc,
+      builder: (context, state) {
+        if (state is LoginAutenticarSucesso && state.idEmpresa != null) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Carregando dados'),
+                SizedBox(height: 12),
+                CircularProgressIndicator.adaptive(),
+              ],
+            ),
+          );
+        }
+        if (widget.trocandoDeEmpresa) {
+          return const Center(child: CircularProgressIndicator.adaptive());
+        }
+
+        return Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('SIV', style: textos.display.copyWith(fontSize: 40)),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Acesse sua conta pra continuar de onde parou.',
+                    style: textos.corpo.copyWith(color: cores.textoApoio),
+                  ),
+                  const SizedBox(height: 28),
+                  _licenciadoField(context),
+                  const SizedBox(height: 16),
+                  _campoTexto(
+                    context,
+                    key: const Key('login_page_user_input'),
+                    label: 'Usuário',
+                    onChanged: (value) =>
+                        bloc.add(LoginAdicionouUsuario(usuario: value)),
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'Informe o usuário'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _campoSenha(context),
+                  const SizedBox(height: 8),
+                  // TODO: informação de "usuário tem acesso a mais de uma
+                  // empresa" só fica disponível depois do login (lista de
+                  // empresas vem em LoginAutenticarSucesso) -- não há como
+                  // mostrar esse aviso ainda na tela de login.
+                  const SizedBox(height: 12),
+                  BlocBuilder<LoginBloc, LoginState>(
+                    bloc: bloc,
+                    builder: (context, state) {
+                      final emProgresso = state is LoginAutenticarEmProgresso;
+
+                      return SizedBox(
+                        height: 48,
+                        child: FilledButton(
+                          key: const Key('login_page_entrar_button'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: cores.acoEscuro,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                SivDimensoes.raio,
+                              ),
+                            ),
+                          ),
+                          onPressed: emProgresso
+                              ? null
+                              : () {
+                                  if (formKey.currentState?.validate() ??
+                                      false) {
+                                    bloc.add(LoginAutenticou());
+                                  }
+                                },
+                          child: emProgresso
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  'Entrar',
+                                  style: textos.rotulo.copyWith(
+                                    color: cores.textoSobreEscuroTitulo,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      'Esqueceu a senha? Fale com o administrador',
+                      style: textos.apoio.copyWith(color: cores.textoApoio),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      key: const Key(
+                        'login_page_configuracao_dispositivo_button',
+                      ),
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pushNamed('/configuracao_dispositivo'),
+                      child: Text(
+                        'Trocar terminal',
+                        style: textos.apoio.copyWith(color: cores.aco),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _campoTexto(
+    BuildContext context, {
+    required Key key,
+    required String label,
+    required ValueChanged<String> onChanged,
+    String? Function(String?)? validator,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return SizedBox(
+      height: 60,
+      child: TextFormField(
+        key: key,
+        obscureText: obscureText,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(labelText: label, suffixIcon: suffixIcon),
+        onChanged: onChanged,
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _campoSenha(BuildContext context) {
+    return _campoTexto(
+      context,
+      key: const Key('login_page_user_senha'),
+      label: 'Senha',
+      obscureText: !_senhaVisivel,
+      onChanged: (value) => bloc.add(LoginAdicionouSenha(senha: value)),
+      validator: (value) => (value == null || value.isEmpty)
+          ? 'Informe a senha para continuar'
+          : null,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        ),
+        onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
+      ),
+    );
+  }
+
+  Widget _licenciadoField(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return BlocBuilder<LoginBloc, LoginState>(
+      bloc: bloc,
+      builder: (context, state) {
+        if (state is LoginCarregarLicenciadosEmProgresso) {
+          return const SizedBox(
+            height: 60,
+            child: Center(child: CircularProgressIndicator.adaptive()),
+          );
+        }
+
+        final licenciadoSelecionado = state.licenciadoSelecionado;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 60,
+                child: InputDecorator(
+                  decoration: const InputDecoration(labelText: 'Licenciado'),
+                  child: Text(
+                    licenciadoSelecionado?.nome ?? 'Selecione o licenciado',
+                    style: textos.corpo.copyWith(
+                      color: licenciadoSelecionado == null
+                          ? cores.textoDesabilitado
+                          : cores.textoPrincipal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              key: const Key('login_page_trocar_licenciado_button'),
+              onPressed: () => _trocarLicenciado(context, state.licenciados ?? const []),
+              child: Text(
+                'Trocar',
+                style: textos.apoio.copyWith(color: cores.aco),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _trocarLicenciado(
+    BuildContext context,
+    List<Licenciado> licenciados,
+  ) async {
+    final selecionado = await Navigator.of(context).pushNamed(
+      '/selecionar_licenciado',
+      arguments: {'licenciados': licenciados},
+    );
+
+    if (!context.mounted || selecionado is! Licenciado) return;
+
+    bloc.add(LoginSelecionouLicenciado(licenciado: selecionado));
+  }
+
   Future<void> _selecionarEmpresa(BuildContext context) async {
-    final resultado =
-        await Navigator.of(context).pushNamed('/selecionar_empresa');
+    final resultado = await Navigator.of(
+      context,
+    ).pushNamed('/selecionar_empresa');
 
     if (!context.mounted) return;
     if (resultado is! Map) return;
@@ -407,30 +408,42 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
 
-    final terminaisDaEmpresa = await bloc.buscarTerminaisParaEmpresa(idEmpresa);
-
-    if (!context.mounted) return;
-
+    // A tela de seleção de empresa já embute o painel de terminal (etapas 2
+    // e 3 do fluxo, na mesma tela) -- se ela retornou um terminal, não
+    // precisa buscar/perguntar de novo.
+    final idTerminalRetornado = resultado['idTerminal'];
+    final nomeTerminalRetornado = resultado['nomeTerminal'];
     TerminalDoUsuario? terminalSelecionado;
-    if (terminaisDaEmpresa.length == 1) {
-      terminalSelecionado = terminaisDaEmpresa.first;
-    } else if (terminaisDaEmpresa.length > 1) {
-      terminalSelecionado = await _selecionarTerminal(
-        context,
-        terminaisDaEmpresa,
+    if (idTerminalRetornado is int &&
+        nomeTerminalRetornado is String &&
+        nomeTerminalRetornado.trim().isNotEmpty) {
+      terminalSelecionado = _TerminalSelecionado(
+        id: idTerminalRetornado,
+        idEmpresa: idEmpresa,
+        nome: nomeTerminalRetornado,
       );
+    } else {
+      final terminaisDaEmpresa = await bloc.buscarTerminaisParaEmpresa(idEmpresa);
 
-      if (!context.mounted || terminalSelecionado == null) {
-        return;
+      if (!context.mounted) return;
+
+      if (terminaisDaEmpresa.length == 1) {
+        terminalSelecionado = terminaisDaEmpresa.first;
+      } else if (terminaisDaEmpresa.length > 1) {
+        terminalSelecionado = await _selecionarTerminal(
+          context,
+          terminaisDaEmpresa,
+        );
+
+        if (!context.mounted || terminalSelecionado == null) {
+          return;
+        }
       }
     }
 
     bloc.add(
       LoginAutenticou(
-        empresa: _EmpresaSelecionada(
-          id: idEmpresa,
-          nome: nomeEmpresa,
-        ),
+        empresa: _EmpresaSelecionada(id: idEmpresa, nome: nomeEmpresa),
         terminal: terminalSelecionado,
       ),
     );
@@ -468,99 +481,56 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  BlocBuilder<LoginBloc, LoginState> _licenciadoAutoComplete() {
-    return BlocBuilder<LoginBloc, LoginState>(
-      bloc: bloc,
-      builder: (context, state) {
-        if (state is LoginCarregarLicenciadosEmProgresso) {
-          return const Center(
-            child: CircularProgressIndicator.adaptive(),
-          );
-        }
-
-        return FormField<Licenciado>(
-          key: const Key('login_page_licenciado_input'),
-          initialValue: state.licenciadoSelecionado,
-          validator: (value) {
-            if (value == null) {
-              return 'Selecione o licenciado';
-            }
-            return null;
-          },
-          builder: (fieldState) {
-            final licenciadoSelecionado = fieldState.value;
-            final licenciados = state.licenciados ?? [];
-
-            return Autocomplete<Licenciado>(
-              displayStringForOption: (licenciado) => licenciado.nome,
-              initialValue: TextEditingValue(
-                text: licenciadoSelecionado?.nome ?? '',
-              ),
-              optionsBuilder: (textEditingValue) {
-                if (textEditingValue.text.isEmpty) {
-                  return licenciados;
-                }
-
-                return licenciados.where((licenciado) {
-                  return licenciado.nome.toLowerCase().contains(
-                        textEditingValue.text.toLowerCase(),
-                      );
-                });
-              },
-              onSelected: (licenciado) {
-                fieldState.didChange(licenciado);
-                bloc.add(
-                  LoginSelecionouLicenciado(
-                    licenciado: licenciado,
-                  ),
-                );
-              },
-              fieldViewBuilder: (
-                context,
-                textEditingController,
-                focusNode,
-                onFieldSubmitted,
-              ) {
-                if (licenciadoSelecionado != null &&
-                    textEditingController.text != licenciadoSelecionado.nome) {
-                  textEditingController.value = TextEditingValue(
-                    text: licenciadoSelecionado.nome,
-                    selection: TextSelection.collapsed(
-                      offset: licenciadoSelecionado.nome.length,
-                    ),
-                  );
-                }
-
-                return TextFormField(
-                  controller: textEditingController,
-                  focusNode: focusNode,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: 'Licenciado',
-                    hintText: 'Digite para buscar',
-                    errorText: fieldState.errorText,
-                  ),
-                  onFieldSubmitted: (_) {
-                    onFieldSubmitted();
-                  },
-                  onChanged: (value) {
-                    if (licenciadoSelecionado != null &&
-                        value != licenciadoSelecionado.nome) {
-                      fieldState.didChange(null);
-                    }
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
   bool _isErroDeAviso(LoginErroTipo tipo) {
     return tipo == LoginErroTipo.validacao ||
         tipo == LoginErroTipo.carregamentoEmpresas;
+  }
+}
+
+class _PainelDeMarca extends StatelessWidget {
+  final SivColors cores;
+
+  const _PainelDeMarca({required this.cores});
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+
+    return Container(
+      color: cores.acoEscuro,
+      padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Spacer(),
+          Text(
+            'SIV',
+            style: textos.display.copyWith(color: cores.textoSobreEscuroTitulo),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Vale do Ceará',
+            style: textos.secao.copyWith(color: cores.ceu),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Bora vender. Tudo o que a loja precisa, num lugar só.',
+            style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio),
+          ),
+          const Spacer(),
+          Divider(color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2)),
+          const SizedBox(height: 12),
+          // TODO: versão do app, terminal e última sincronização não estão
+          // disponíveis antes do login (dependem de sessão/config de
+          // dispositivo já autenticados) -- exibir aqui quando a fonte
+          // existir.
+          Text(
+            'versão · terminal · última sincronização',
+            style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -571,10 +541,7 @@ class _EmpresaSelecionada implements Empresa {
   @override
   final String nome;
 
-  _EmpresaSelecionada({
-    required this.id,
-    required this.nome,
-  });
+  _EmpresaSelecionada({required this.id, required this.nome});
 }
 
 class _TerminalSelecionado implements TerminalDoUsuario {

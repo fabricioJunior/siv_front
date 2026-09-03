@@ -4,4 +4,7 @@ export 'presentation/filtro_chip.dart';
 export 'presentation/filtro_periodo_sheet.dart';
 export 'presentation/input_formarts.dart';
 export 'presentation/terminal_da_sessao_widget.dart';
+export 'presentation/siv_card.dart';
+export 'presentation/siv_etiqueta.dart';
+export 'presentation/siv_aviso.dart';
 export 'permissoes/componente_controlado_wiget.dart';

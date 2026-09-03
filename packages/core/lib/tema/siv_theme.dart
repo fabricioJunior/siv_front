@@ -289,6 +289,10 @@ abstract final class SivDimensoes {
   static const double gapItemMenu = 3;
   static const double alvoToqueMinimo = 44;
   static const double larguraMenuLateral = 236;
+  static const double larguraMenuLateralRail = 72;
+  static const double larguraBarraSelecionada = 3;
+  static const double breakpointMenuRail = 1100;
+  static const double breakpointMenuDrawer = 820;
 }
 
 /// Tema central do SIV. Nada de cor/raio/espaçamento literal fora daqui.

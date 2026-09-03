@@ -16,6 +16,7 @@ import 'package:flutter_quill/flutter_quill.dart'
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
+import 'package:siv_front/presentation/widgets/app_shell.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -165,7 +166,10 @@ class MyApp extends StatelessWidget {
                 );
               }
 
-              return child ?? const SizedBox.shrink();
+              return AppShell(
+                rotaAtual: navigationObserver.rotaAtual,
+                child: child ?? const SizedBox.shrink(),
+              );
             },
           ),
         );
@@ -450,9 +454,15 @@ class InitializationErrorView extends StatelessWidget {
 }
 
 class NavigationObserver extends RouteObserver<ModalRoute<void>> {
+  /// Nome da rota visível no topo da pilha -- usado pela [AppShell] pra
+  /// destacar o item ativo no menu lateral sem precisar reconstruir a
+  /// árvore de widgets a cada navegação.
+  final ValueNotifier<String?> rotaAtual = ValueNotifier(null);
+
   @override
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
+    rotaAtual.value = route.settings.name;
     var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
     if (usuarioId == null) {
       return;
@@ -487,6 +497,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didPop(Route route, Route? previousRoute) {
     super.didPop(route, previousRoute);
+    rotaAtual.value = previousRoute?.settings.name;
     log('Popped route: ${route.settings.name}', name: 'Navigation');
     _sincronizarAoFinalizarCriarRomaneio(route.settings);
   }
@@ -494,6 +505,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didReplace({Route? newRoute, Route? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    rotaAtual.value = newRoute?.settings.name;
     log(
       'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
       name: 'Navigation',

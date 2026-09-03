@@ -34,6 +34,7 @@ import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
+import 'package:siv_front/presentation/pages/relatorios_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
@@ -281,6 +282,12 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/administracao',
       child: const AdministracaoMenuPage(),
+    );
+  },
+  '/relatorios': (context) {
+    return _rotaProtegida(
+      route: '/relatorios',
+      child: const RelatoriosMenuPage(),
     );
   },
 
@@ -1269,6 +1276,19 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+  '/relatorios': [
+    'RELFC001',
+    'RELFC002',
+    'RELFC003',
+    'RELFC004',
+    'RELFC006',
+    'RELFC007',
+    'RELFC008',
+    'RELFC009',
+    'RELFC010',
+    'ROMFP001',
+    'FCXFP008',
+  ],
   '/promocoes': ['PROMFC001'],
   '/promocao/importar_csv': ['PROMFM001'],
   '/cupons': ['CUPFC001'],

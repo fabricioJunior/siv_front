@@ -131,6 +131,12 @@ final _itensOperacao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Produtos']!,
   ),
   _ItemDeNavegacao(
+    label: 'Fiscal',
+    icone: Icons.receipt_long_outlined,
+    rota: '/documentos_fiscais',
+    componentesNecessarios: componentesPorFluxo['Fiscal']!,
+  ),
+  _ItemDeNavegacao(
     label: 'Estoque',
     icone: Icons.inventory_2_outlined,
     // Menu agregador (entrada/saída manual, histórico, balanço, consulta

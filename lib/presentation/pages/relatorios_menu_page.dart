@@ -16,6 +16,14 @@ class RelatoriosMenuPage extends StatelessWidget {
         route: '/relatorio_faturamento',
       ),
       const _ItemData(
+        icon: Icons.receipt_long_outlined,
+        titulo: 'Fiscal',
+        subtitulo: 'Saldo e movimentação de notas fiscais emitidas.',
+        cor: Colors.blueGrey,
+        componente: 'FISFM001',
+        route: '/relatorio_fiscal',
+      ),
+      const _ItemData(
         icon: Icons.point_of_sale,
         titulo: 'Histórico de vendas',
         subtitulo: 'Consulta por cliente, funcionário, caixa e data.',
@@ -58,7 +66,8 @@ class RelatoriosMenuPage extends StatelessWidget {
       const _ItemData(
         icon: Icons.receipt_long_outlined,
         titulo: 'Movimentações do sistema',
-        subtitulo: 'Todas as operações de produto (venda, devolução, transferência, compra e consignação).',
+        subtitulo:
+            'Todas as operações de produto (venda, devolução, transferência, compra e consignação).',
         cor: Colors.deepOrange,
         componente: 'ROMFP001',
         route: '/romaneios',
@@ -132,7 +141,10 @@ class _SemAcesso extends StatelessWidget {
           children: [
             Icon(Icons.lock_outline, size: 48, color: Colors.grey),
             SizedBox(height: 12),
-            Text('Sem acesso', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              'Sem acesso',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
             SizedBox(height: 6),
             Text(
               'Você não possui permissão para acessar nenhum relatório.',
@@ -212,18 +224,28 @@ class _ItemCard extends StatelessWidget {
                           children: [
                             Text(
                               item.titulo,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               item.subtitulo,
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Icon(Icons.chevron_right, color: cor.withValues(alpha: 0.6), size: 20),
+                      Icon(
+                        Icons.chevron_right,
+                        color: cor.withValues(alpha: 0.6),
+                        size: 20,
+                      ),
                     ],
                   ),
                 ),

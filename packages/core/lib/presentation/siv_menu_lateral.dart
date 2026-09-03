@@ -10,11 +10,17 @@ class SivMenuLateralItem {
   final bool selecionado;
   final VoidCallback? onTap;
 
+  /// Item sem permissão numa prévia de acesso (ver tela de grupo de
+  /// acesso) -- risca o texto e esmaece ícone/texto, sem afetar navegação
+  /// real (essa flag não desabilita [onTap]).
+  final bool desabilitado;
+
   const SivMenuLateralItem({
     required this.label,
     required this.icone,
     this.selecionado = false,
     this.onTap,
+    this.desabilitado = false,
   });
 }
 
@@ -104,41 +110,46 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
-    final conteudo = Container(
-      constraints: const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
-      padding: EdgeInsets.symmetric(
-        horizontal: colapsado ? 0 : SivDimensoes.itemMenuHorizontal,
-        vertical: SivDimensoes.itemMenuVertical,
-      ),
-      child: Row(
-        mainAxisAlignment: colapsado
-            ? MainAxisAlignment.center
-            : MainAxisAlignment.start,
-        children: [
-          Icon(
-            item.icone,
-            size: 20,
-            color: item.selecionado
-                ? cores.textoSobreEscuroTitulo
-                : cores.textoSobreEscuroApoio,
-          ),
-          if (!colapsado) ...[
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                item.label,
-                style: textos.corpo.copyWith(
-                  color: item.selecionado
-                      ? cores.textoSobreEscuroTitulo
-                      : cores.textoSobreEscuroApoio,
-                  fontWeight: item.selecionado
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+    final conteudo = Opacity(
+      opacity: item.desabilitado ? 0.45 : 1,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
+        padding: EdgeInsets.symmetric(
+          horizontal: colapsado ? 0 : SivDimensoes.itemMenuHorizontal,
+          vertical: SivDimensoes.itemMenuVertical,
+        ),
+        child: Row(
+          mainAxisAlignment: colapsado
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
+          children: [
+            Icon(
+              item.icone,
+              size: 20,
+              color: item.selecionado
+                  ? cores.textoSobreEscuroTitulo
+                  : cores.textoSobreEscuroApoio,
+            ),
+            if (!colapsado) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item.label,
+                  style: textos.corpo.copyWith(
+                    color: item.selecionado
+                        ? cores.textoSobreEscuroTitulo
+                        : cores.textoSobreEscuroApoio,
+                    fontWeight: item.selecionado
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    decoration:
+                        item.desabilitado ? TextDecoration.lineThrough : null,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
 

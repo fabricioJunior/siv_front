@@ -22,6 +22,7 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
   final EmpresasBloc _bloc = sl<EmpresasBloc>();
   final LoginBloc _loginBloc = sl<LoginBloc>();
   final TextEditingController _buscaController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _busca = '';
 
   Empresa? _empresaSelecionada;
@@ -38,6 +39,7 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
   @override
   void dispose() {
     _buscaController.dispose();
+    _scrollController.dispose();
     _bloc.close();
     super.dispose();
   }
@@ -65,18 +67,43 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final mostrarPainel =
-                          _empresaSelecionada != null && constraints.maxWidth >= 900;
+                      final largo = constraints.maxWidth >= 900;
 
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: _gridDeEmpresas(context)),
-                          if (mostrarPainel) ...[
-                            const SizedBox(width: 20),
-                            SizedBox(width: 400, child: _painelDeTerminais(context)),
+                      if (largo) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _gridDeEmpresas(context)),
+                            if (_empresaSelecionada != null) ...[
+                              const SizedBox(width: 20),
+                              SizedBox(
+                                width: 400,
+                                child: _painelDeTerminais(context),
+                              ),
+                            ],
                           ],
-                        ],
+                        );
+                      }
+
+                      // Tela estreita: sem espaço pro painel lado a lado --
+                      // empilha grid + painel num scroll único (era o motivo
+                      // do botão "Entrar" nunca aparecer no mobile: o painel
+                      // só existia no branch largo >= 900px).
+                      return SingleChildScrollView(
+                        controller: _scrollController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: constraints.maxHeight,
+                              child: _gridDeEmpresas(context),
+                            ),
+                            if (_empresaSelecionada != null) ...[
+                              const SizedBox(height: 20),
+                              _painelDeTerminais(context),
+                            ],
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -94,18 +121,24 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
     final textos = context.sivTextos;
 
     Widget etapa(String texto, bool ativo) => Text(
-          texto,
-          style: textos.rotulo.copyWith(
-            color: ativo ? cores.acoEscuro : cores.textoDesabilitado,
-          ),
-        );
+      texto,
+      style: textos.rotulo.copyWith(
+        color: ativo ? cores.acoEscuro : cores.textoDesabilitado,
+      ),
+    );
 
     return Row(
       children: [
         etapa('LICENCIADO', false),
-        Text('  ·  ', style: textos.rotulo.copyWith(color: cores.textoDesabilitado)),
+        Text(
+          '  ·  ',
+          style: textos.rotulo.copyWith(color: cores.textoDesabilitado),
+        ),
         etapa('EMPRESA', _empresaSelecionada == null),
-        Text('  ·  ', style: textos.rotulo.copyWith(color: cores.textoDesabilitado)),
+        Text(
+          '  ·  ',
+          style: textos.rotulo.copyWith(color: cores.textoDesabilitado),
+        ),
         etapa('TERMINAL', _empresaSelecionada != null),
       ],
     );
@@ -133,7 +166,9 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
             builder: (context, state) {
               if (state is EmpresasCarregarEmProgresso ||
                   state is EmpresasNaoInicializado) {
-                return const Center(child: CircularProgressIndicator.adaptive());
+                return const Center(
+                  child: CircularProgressIndicator.adaptive(),
+                );
               }
 
               if (state is EmpresasCarregarFalha) {
@@ -143,7 +178,11 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.wifi_off_rounded, size: 40, color: cores.vinho),
+                        Icon(
+                          Icons.wifi_off_rounded,
+                          size: 40,
+                          color: cores.vinho,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'Não foi possível carregar as empresas disponíveis.',
@@ -222,12 +261,18 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
                         Expanded(
                           child: Text(
                             empresa.nome,
-                            style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                            style: textos.corpo.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (selecionada)
-                          Icon(Icons.check_circle, color: cores.acoEscuro, size: 18),
+                          Icon(
+                            Icons.check_circle,
+                            color: cores.acoEscuro,
+                            size: 18,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -274,7 +319,10 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
             children: [
               Icon(Icons.add_business_outlined, color: cores.aco),
               const SizedBox(height: 6),
-              Text('Cadastrar empresa', style: textos.apoio.copyWith(color: cores.aco)),
+              Text(
+                'Cadastrar empresa',
+                style: textos.apoio.copyWith(color: cores.aco),
+              ),
             ],
           ),
         ),
@@ -326,7 +374,9 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
                   borderRadius: BorderRadius.circular(SivDimensoes.raio),
                 ),
               ),
-              onPressed: _terminalSelecionado == null && (_terminaisDaEmpresa ?? const []).isNotEmpty
+              onPressed:
+                  _terminalSelecionado == null &&
+                      (_terminaisDaEmpresa ?? const []).isNotEmpty
                   ? null
                   : () => _confirmarEntrada(empresa),
               child: Text(
@@ -409,6 +459,15 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
       _terminalSelecionado = terminais.length == 1 ? terminais.first : null;
       _carregandoTerminais = false;
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _confirmarEntrada(Empresa empresa) {
@@ -416,7 +475,8 @@ class _SelecionarEmpresaPageState extends State<SelecionarEmpresaPage> {
       'idEmpresa': empresa.id,
       'nomeEmpresa': empresa.nome,
       if (_terminalSelecionado != null) 'idTerminal': _terminalSelecionado!.id,
-      if (_terminalSelecionado != null) 'nomeTerminal': _terminalSelecionado!.nome,
+      if (_terminalSelecionado != null)
+        'nomeTerminal': _terminalSelecionado!.nome,
     });
   }
 

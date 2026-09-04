@@ -23,7 +23,7 @@ class EmpresasRepository implements IEmpresasRepository {
   @override
   Future<Empresa?> getEmpressaDaSessaoSalva() async {
     var result = await empresaDaSessaoLocalDataSource.fetchAll();
-    return result.first;
+    return result.isEmpty ? null : result.first;
   }
 
   @override

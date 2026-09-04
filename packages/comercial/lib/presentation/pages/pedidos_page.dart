@@ -17,7 +17,8 @@ const _situacoesFiltro = [
   'pago',
 ];
 
-SivEtiquetaSituacao _etiquetaSituacao(String? situacao) => switch (situacao?.toLowerCase()) {
+SivEtiquetaSituacao _etiquetaSituacao(String? situacao) =>
+    switch (situacao?.toLowerCase()) {
       'em_andamento' => SivEtiquetaSituacao.emAndamento,
       'conferido' => SivEtiquetaSituacao.conferido,
       'faturado' => SivEtiquetaSituacao.faturado,
@@ -26,7 +27,8 @@ SivEtiquetaSituacao _etiquetaSituacao(String? situacao) => switch (situacao?.toL
       _ => SivEtiquetaSituacao.emAndamento,
     };
 
-String _labelSituacaoPedido(String? situacao) => switch (situacao?.toLowerCase()) {
+String _labelSituacaoPedido(String? situacao) =>
+    switch (situacao?.toLowerCase()) {
       'em_andamento' => 'Em andamento',
       'conferido' => 'Conferido',
       'faturado' => 'Faturado',
@@ -176,11 +178,13 @@ class _PedidosPageState extends State<PedidosPage> {
     );
   }
 
-  Future<void> _abrirFiltroPeriodo(BuildContext context, PedidosState state) async {
+  Future<void> _abrirFiltroPeriodo(
+      BuildContext context, PedidosState state) async {
     final agora = DateTime.now();
     final selecionado = await abrirFiltroPeriodoSheet(
       context: context,
-      dataInicioAtual: state.dataInicial ?? DateTime(agora.year, agora.month, 1),
+      dataInicioAtual:
+          state.dataInicial ?? DateTime(agora.year, agora.month, 1),
       dataFimAtual: state.dataFinal ?? agora,
       permitirHora: false,
     );
@@ -253,7 +257,9 @@ class _PedidosPageState extends State<PedidosPage> {
     if (state.filtrados.isEmpty) {
       return _EstadoVazio(
         icone: Icons.receipt_long_outlined,
-        titulo: state.busca.isNotEmpty ? 'Nenhum resultado pra busca' : 'Nenhum pedido por aqui',
+        titulo: state.busca.isNotEmpty
+            ? 'Nenhum resultado pra busca'
+            : 'Nenhum pedido por aqui',
         descricao: state.busca.isNotEmpty
             ? 'Tente outro termo de busca.'
             : 'Crie um novo pedido pra começar.',
@@ -293,7 +299,9 @@ class _PedidosPageState extends State<PedidosPage> {
                   children: [
                     Text(
                       pedido.pessoaNome?.toUpperCase() ??
-                          (pedido.pessoaId != null ? 'Pessoa #${pedido.pessoaId}' : '-'),
+                          (pedido.pessoaId != null
+                              ? 'Pessoa #${pedido.pessoaId}'
+                              : '-'),
                       style: context.sivTextos.corpo,
                     ),
                     // TODO: cidade do cliente e nome do terminal não estão
@@ -348,7 +356,8 @@ class _PedidosPageState extends State<PedidosPage> {
       itens: state.itensDoPedidoSelecionado,
       carregandoItens: state.carregandoItensDoPedidoSelecionado,
       onAbrirPedido: () async {
-        await Navigator.pushNamed(context, '/pedido', arguments: {'idPedido': pedido.id});
+        await Navigator.pushNamed(context, '/pedido',
+            arguments: {'idPedido': pedido.id});
         if (mounted) _bloc.add(PedidosIniciou());
       },
       onCancelar: () => _cancelarPedido(context, pedido),
@@ -369,7 +378,8 @@ class _PedidosPageState extends State<PedidosPage> {
       onConfirmar: (_) {
         final motivo = motivoController.text.trim();
         if (motivo.isEmpty || pedido.id == null) return;
-        _bloc.add(PedidosPedidoCancelou(pedido.id!, motivoCancelamento: motivo));
+        _bloc
+            .add(PedidosPedidoCancelou(pedido.id!, motivoCancelamento: motivo));
       },
     );
   }
@@ -380,7 +390,8 @@ class _ChipSituacao extends StatelessWidget {
   final bool selecionado;
   final VoidCallback onTap;
 
-  const _ChipSituacao({required this.label, required this.selecionado, required this.onTap});
+  const _ChipSituacao(
+      {required this.label, required this.selecionado, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +457,9 @@ class _PainelPedido extends StatelessWidget {
 
   bool get _podeCancelar {
     final situacao = pedido.situacao?.toLowerCase();
-    return situacao != 'encerrado' && situacao != 'faturado' && situacao != 'cancelado';
+    return situacao != 'encerrado' &&
+        situacao != 'faturado' &&
+        situacao != 'cancelado';
   }
 
   @override
@@ -477,7 +490,9 @@ class _PainelPedido extends StatelessWidget {
               // mostrar aqui.
               const SizedBox(height: 16),
               if (_cancelado)
-                SivEtiqueta(situacao: SivEtiquetaSituacao.cancelado, texto: 'Pedido cancelado')
+                SivEtiqueta(
+                    situacao: SivEtiquetaSituacao.cancelado,
+                    texto: 'Pedido cancelado')
               else
                 _TrilhaDeProgresso(pedido: pedido),
             ],
@@ -488,16 +503,21 @@ class _PainelPedido extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _linha(context, 'Itens', carregandoItens ? '...' : '${itens.length}'),
+              _linha(context, 'Itens',
+                  carregandoItens ? '...' : '${itens.length}'),
               _linha(
                 context,
                 'Entrega',
-                pedido.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada em loja',
+                pedido.modalidadeEntrega == 'entrega'
+                    ? 'Entrega'
+                    : 'Retirada em loja',
               ),
-              _linha(context, 'Pagamento', pedido.situacaoPagamento ?? 'Pendente'),
+              _linha(
+                  context, 'Pagamento', pedido.situacaoPagamento ?? 'Pendente'),
               // TODO: número/status da nota fiscal não está no model Pedido
               // -- pra ver a nota, abre o pedido completo (botão abaixo).
-              _linha(context, 'Nota fiscal', pedido.fiscal == true ? 'Emitida no romaneio' : '-'),
+              _linha(context, 'Nota fiscal',
+                  pedido.fiscal == true ? 'Emitida no romaneio' : '-'),
             ],
           ),
         ),
@@ -533,17 +553,19 @@ class _PainelPedido extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total', style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio)),
+              Text('Total',
+                  style: textos.corpo.copyWith(color: cores.superficie)),
               const SizedBox(height: 4),
-              Text(_moeda(pedido.valorTotal), style: textos.titulo),
+              Text(_moeda(pedido.valorTotal),
+                  style: textos.titulo.copyWith(color: cores.superficie)),
             ],
           ),
         ),
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: onAbrirPedido,
-          icon: const Icon(Icons.point_of_sale_outlined),
-          label: const Text('Receber no caixa'),
+          icon: const Icon(Icons.gif_box_outlined),
+          label: const Text('Detalhes'),
         ),
         const SizedBox(height: 8),
         Row(
@@ -591,7 +613,9 @@ class _TrilhaDeProgresso extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final situacao = pedido.situacao?.toLowerCase();
-    final conferido = pedido.conferidoEm != null || situacao == 'faturado' || situacao == 'encerrado';
+    final conferido = pedido.conferidoEm != null ||
+        situacao == 'faturado' ||
+        situacao == 'encerrado';
     final faturado = situacao == 'faturado' || situacao == 'encerrado';
     final encerrado = situacao == 'encerrado';
 

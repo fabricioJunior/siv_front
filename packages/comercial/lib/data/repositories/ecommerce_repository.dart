@@ -43,8 +43,15 @@ class EcommerceRepository implements IEcommerceRepository {
   Future<List<EcommerceReferencia>> recuperarReferencias(
     int ecommerceId, {
     String? busca,
+    List<int>? categoriaIds,
+    bool? rascunho,
   }) {
-    return remoteDataSource.recuperarReferencias(ecommerceId, busca: busca);
+    return remoteDataSource.recuperarReferencias(
+      ecommerceId,
+      busca: busca,
+      categoriaIds: categoriaIds,
+      rascunho: rascunho,
+    );
   }
 
   @override

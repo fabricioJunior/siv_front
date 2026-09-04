@@ -10,11 +10,18 @@ abstract class EcommerceReferenciasEvent extends Equatable {
 class EcommerceReferenciasIniciou extends EcommerceReferenciasEvent {
   final int ecommerceId;
   final String? busca;
+  final List<int>? categoriaIds;
+  final bool? rascunhoFiltro;
 
-  const EcommerceReferenciasIniciou({required this.ecommerceId, this.busca});
+  const EcommerceReferenciasIniciou({
+    required this.ecommerceId,
+    this.busca,
+    this.categoriaIds,
+    this.rascunhoFiltro,
+  });
 
   @override
-  List<Object?> get props => [ecommerceId, busca];
+  List<Object?> get props => [ecommerceId, busca, categoriaIds, rascunhoFiltro];
 }
 
 class EcommerceReferenciaAdicionou extends EcommerceReferenciasEvent {
@@ -59,4 +66,20 @@ class EcommerceReferenciasDespublicarTodasSolicitou
 
   @override
   List<Object?> get props => [ecommerceId];
+}
+
+class EcommerceReferenciasPublicarEmLoteSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+  final List<int> referenciaEcommerceIds;
+  final bool rascunho;
+
+  const EcommerceReferenciasPublicarEmLoteSolicitou({
+    required this.ecommerceId,
+    required this.referenciaEcommerceIds,
+    required this.rascunho,
+  });
+
+  @override
+  List<Object?> get props => [ecommerceId, referenciaEcommerceIds, rascunho];
 }

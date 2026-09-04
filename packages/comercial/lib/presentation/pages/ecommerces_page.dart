@@ -92,6 +92,15 @@ class EcommercesPage extends StatelessWidget {
                       padding: EdgeInsets.only(right: 8),
                       child: Chip(label: Text('Excluído')),
                     ),
+                  if (!ecommerce.apagado)
+                    IconButton(
+                      tooltip: 'Produtos no site',
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      onPressed: () => Navigator.of(context).pushNamed(
+                        '/ecommerce_referencias',
+                        arguments: {'ecommerceId': ecommerce.id},
+                      ),
+                    ),
                   if (ecommerce.apagado)
                     IconButton(
                       tooltip: 'Restaurar e-commerce',

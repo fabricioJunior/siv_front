@@ -23,6 +23,7 @@ class EcommerceReferenciasBloc
     on<EcommerceReferenciaAdicionou>(_onAdicionou);
     on<EcommerceReferenciaPublicarSolicitou>(_onPublicar);
     on<EcommerceReferenciasDespublicarTodasSolicitou>(_onDespublicarTodas);
+    on<EcommerceReferenciasPublicarEmLoteSolicitou>(_onPublicarEmLote);
   }
 
   FutureOr<void> _onIniciou(
@@ -34,12 +35,16 @@ class EcommerceReferenciasBloc
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
         busca: event.busca,
+        categoriaIds: event.categoriaIds,
+        rascunho: event.rascunhoFiltro,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
           busca: event.busca,
+          categoriaIds: event.categoriaIds,
+          rascunhoFiltro: event.rascunhoFiltro,
         ),
       );
     } catch (e, s) {
@@ -61,12 +66,16 @@ class EcommerceReferenciasBloc
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
         busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunho: state.rascunhoFiltro,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
           busca: state.busca,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
         ),
       );
     } catch (e, s) {
@@ -80,17 +89,32 @@ class EcommerceReferenciasBloc
     }
   }
 
-  // Publica direto da lista (card), sem passar pela tela de detalhe -- mesmo use case usado lá.
+  // Publica direto da lista (card), sem passar pela tela de detalhe -- mesmo
+  // use case usado lá. Update otimista (R5): só troca o item no state local,
+  // sem reload completo nem processandoLote global. Reverte se o PATCH falhar.
   FutureOr<void> _onPublicar(
     EcommerceReferenciaPublicarSolicitou event,
     Emitter<EcommerceReferenciasState> emit,
   ) async {
+    final referenciasOriginais = state.referencias;
+    final index = referenciasOriginais
+        .indexWhere((referencia) => referencia.id == event.referenciaEcommerceId);
+    if (index == -1) return;
+
+    final referenciasOtimistas =
+        List<EcommerceReferencia>.from(referenciasOriginais);
+    referenciasOtimistas[index] = _comRascunho(
+      referenciasOtimistas[index],
+      event.rascunho,
+    );
+
     emit(
       EcommerceReferenciasCarregarSucesso(
         ecommerceId: event.ecommerceId,
-        referencias: state.referencias,
-        processandoLote: true,
+        referencias: referenciasOtimistas,
         busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunhoFiltro: state.rascunhoFiltro,
       ),
     );
 
@@ -100,22 +124,14 @@ class EcommerceReferenciasBloc
         event.referenciaEcommerceId,
         rascunho: event.rascunho,
       );
-      final referencias = await _recuperarReferenciasEcommerce.call(
-        event.ecommerceId,
-        busca: state.busca,
-      );
+    } catch (e, s) {
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
-          referencias: referencias,
+          referencias: referenciasOriginais,
           busca: state.busca,
-        ),
-      );
-    } catch (e, s) {
-      emit(
-        EcommerceReferenciasAdicionarFalha(
-          ecommerceId: event.ecommerceId,
-          referencias: state.referencias,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
         ),
       );
       addError(e, s);
@@ -136,6 +152,8 @@ class EcommerceReferenciasBloc
         referencias: state.referencias,
         processandoLote: true,
         busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunhoFiltro: state.rascunhoFiltro,
       ),
     );
 
@@ -153,12 +171,16 @@ class EcommerceReferenciasBloc
       final referencias = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
         busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunho: state.rascunhoFiltro,
       );
       emit(
         EcommerceReferenciasCarregarSucesso(
           ecommerceId: event.ecommerceId,
           referencias: referencias,
           busca: state.busca,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
         ),
       );
     } catch (e, s) {
@@ -170,5 +192,84 @@ class EcommerceReferenciasBloc
       );
       addError(e, s);
     }
+  }
+
+  // Lote de verdade (R4): loop sequencial (mesmo motivo do
+  // _onDespublicarTodas), acumula falhas sem abortar e só recarrega a lista
+  // uma vez no fim.
+  FutureOr<void> _onPublicarEmLote(
+    EcommerceReferenciasPublicarEmLoteSolicitou event,
+    Emitter<EcommerceReferenciasState> emit,
+  ) async {
+    final ids = event.referenciaEcommerceIds;
+    if (ids.isEmpty) return;
+
+    var publicados = 0;
+    var falharam = 0;
+
+    for (var i = 0; i < ids.length; i++) {
+      emit(
+        EcommerceReferenciasCarregarSucesso(
+          ecommerceId: event.ecommerceId,
+          referencias: state.referencias,
+          processandoLote: true,
+          loteAtual: i + 1,
+          loteTotal: ids.length,
+          busca: state.busca,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
+        ),
+      );
+      try {
+        await _atualizarReferenciaEcommerce.call(
+          event.ecommerceId,
+          ids[i],
+          rascunho: event.rascunho,
+        );
+        publicados++;
+      } catch (e, s) {
+        falharam++;
+        addError(e, s);
+      }
+    }
+
+    try {
+      final referencias = await _recuperarReferenciasEcommerce.call(
+        event.ecommerceId,
+        busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunho: state.rascunhoFiltro,
+      );
+      emit(
+        EcommerceReferenciasLoteConcluiu(
+          ecommerceId: event.ecommerceId,
+          referencias: referencias,
+          busca: state.busca,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
+          publicados: publicados,
+          falharam: falharam,
+        ),
+      );
+    } catch (e, s) {
+      emit(const EcommerceReferenciasCarregarFalha());
+      addError(e, s);
+    }
+  }
+
+  EcommerceReferencia _comRascunho(EcommerceReferencia referencia, bool rascunho) {
+    return EcommerceReferencia.create(
+      id: referencia.id,
+      ecommerceId: referencia.ecommerceId,
+      referenciaId: referencia.referenciaId,
+      tabelaDePrecoId: referencia.tabelaDePrecoId,
+      rascunho: rascunho,
+      referenciaNome: referencia.referenciaNome,
+      valor: referencia.valor,
+      descricao: referencia.descricao,
+      unidadeMedida: referencia.unidadeMedida,
+      imagemUrl: referencia.imagemUrl,
+      saldo: referencia.saldo,
+    );
   }
 }

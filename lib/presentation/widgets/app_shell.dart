@@ -356,13 +356,6 @@ class _BarraTituloInfo extends StatelessWidget {
     final cores = context.sivColors;
     final caixaAberto = appState.caixaIdDaSessao != null;
 
-    // TODO: log temporario pra diagnosticar troca de terminal que nao
-    // reflete na UI -- remover depois de confirmar a causa.
-    debugPrint(
-      '[BarraTituloInfo] build: terminal=${appState.terminalDaSessao?.nome} '
-      'empresa=${appState.empresaDaSessao?.nome}',
-    );
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -426,7 +419,13 @@ class _BarraTituloInfo extends StatelessWidget {
       arguments: {'terminais': terminaisDaEmpresa},
     );
 
-    if (!context.mounted || resultado is! Map) {
+    // NAO checar context.mounted aqui -- '/selecionar_terminal' esta em
+    // _rotasSemCasca, entao o AppShell desmonta este widget (e o context
+    // capturado no onTap) enquanto a rota fica em foco. Ao resolver o
+    // pushNamed o context sempre chega desmontado, e o guard antigo
+    // descartava a selecao em silencio 100% das vezes. Despachar o evento
+    // no AppBloc (singleton) nao depende de context nenhum.
+    if (resultado is! Map) {
       return;
     }
 

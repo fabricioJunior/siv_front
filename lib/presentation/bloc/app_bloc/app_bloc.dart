@@ -11,7 +11,7 @@ import 'package:financeiro/use_cases.dart';
 part 'app_state.dart';
 part 'app_event.dart';
 
-class AppBloc extends Bloc<AppEvent, AppState>  {
+class AppBloc extends Bloc<AppEvent, AppState> {
   final OnAutenticado _onAutenticado;
   final OnDesautenticado _onDesautenticado;
   final EstaAutenticado _estaAutenticado;
@@ -115,7 +115,7 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
       if (event.token.idEmpresa != null) {
         _atualizarEtapaCarregamento(emit, 'Validando terminal ativo');
       }
-   
+
       if (event.token.idEmpresa != null) {
         _atualizarEtapaCarregamento(emit, 'Carregando caixa da sessão');
       }
@@ -221,7 +221,7 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
       if (estaAutenticado) {
         _atualizarEtapaCarregamento(emit, 'Validando terminal ativo');
       }
-      
+
       if (estaAutenticado) {
         _atualizarEtapaCarregamento(emit, 'Carregando caixa da sessão');
       }
@@ -270,7 +270,6 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
     );
   }
 
-
   Future<List<TerminalDoUsuario>> _carregarTerminaisDaEmpresaDaSessao({
     required Usuario? usuarioDaSessao,
     required Empresa? empresaDaSessao,
@@ -300,9 +299,22 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
     AppSelecionouTerminalDaSessao event,
     Emitter<AppState> emit,
   ) async {
+    log(
+      'AppSelecionouTerminalDaSessao recebido: '
+      'terminal=${event.terminal.id}/${event.terminal.nome} '
+      'empresaAtual=${state.empresaDaSessao?.id}',
+      name: 'AppBloc',
+    );
+
     final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
       empresaDaSessao: state.empresaDaSessao,
       terminalDaSessao: event.terminal,
+    );
+
+    log(
+      'AppSelecionouTerminalDaSessao vai emitir: '
+      'terminalDaSessao=${event.terminal.nome} caixaId=$caixaIdDaSessao',
+      name: 'AppBloc',
     );
 
     emit(
@@ -340,18 +352,21 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
         return;
       }
 
-      final usuarioDaSessao = state.usuarioDaSessao ?? await _recuperarUsuarioDaSessao();
-      final licenciadoDaSessao = state.licenciadoDaSessao ?? await _recuperarLicenciadoDaSessao.call();
+      final usuarioDaSessao =
+          state.usuarioDaSessao ?? await _recuperarUsuarioDaSessao();
+      final licenciadoDaSessao =
+          state.licenciadoDaSessao ?? await _recuperarLicenciadoDaSessao.call();
 
       final permissoes = await _sincronizarPermissoesDoUsuario(
         idUsuario: usuarioDaSessao!.id,
       );
       final permissoesMap = _mapPermissoes(permissoes);
 
-      final terminaisDaEmpresaDaSessao = await _carregarTerminaisDaEmpresaDaSessao(
-        usuarioDaSessao: usuarioDaSessao,
-        empresaDaSessao: event.empresa,
-      );
+      final terminaisDaEmpresaDaSessao =
+          await _carregarTerminaisDaEmpresaDaSessao(
+            usuarioDaSessao: usuarioDaSessao,
+            empresaDaSessao: event.empresa,
+          );
 
       await _limparTerminalDaSessao.call();
 
@@ -382,10 +397,7 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
   ) async {
     await _limparTerminalDaSessao.call();
     emit(
-      state.copyWith(
-        terminalDaSessao: () => null,
-        caixaIdDaSessao: () => null,
-      ),
+      state.copyWith(terminalDaSessao: () => null, caixaIdDaSessao: () => null),
     );
   }
 
@@ -453,7 +465,6 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
       ),
     );
   }
-
 
   @override
   Future<void> close() async {

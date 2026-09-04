@@ -356,6 +356,13 @@ class _BarraTituloInfo extends StatelessWidget {
     final cores = context.sivColors;
     final caixaAberto = appState.caixaIdDaSessao != null;
 
+    // TODO: log temporario pra diagnosticar troca de terminal que nao
+    // reflete na UI -- remover depois de confirmar a causa.
+    debugPrint(
+      '[BarraTituloInfo] build: terminal=${appState.terminalDaSessao?.nome} '
+      'empresa=${appState.empresaDaSessao?.nome}',
+    );
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

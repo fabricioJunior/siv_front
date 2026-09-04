@@ -299,22 +299,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppSelecionouTerminalDaSessao event,
     Emitter<AppState> emit,
   ) async {
-    log(
-      'AppSelecionouTerminalDaSessao recebido: '
-      'terminal=${event.terminal.id}/${event.terminal.nome} '
-      'empresaAtual=${state.empresaDaSessao?.id}',
-      name: 'AppBloc',
-    );
-
     final caixaIdDaSessao = await _recuperarCaixaIdDaSessao(
       empresaDaSessao: state.empresaDaSessao,
       terminalDaSessao: event.terminal,
-    );
-
-    log(
-      'AppSelecionouTerminalDaSessao vai emitir: '
-      'terminalDaSessao=${event.terminal.nome} caixaId=$caixaIdDaSessao',
-      name: 'AppBloc',
     );
 
     emit(

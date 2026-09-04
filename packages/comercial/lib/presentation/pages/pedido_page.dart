@@ -139,7 +139,8 @@ class _PedidoPageState extends State<PedidoPage> {
     context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
   }
 
-  Future<void> _reenviarEmailEmbalado(BuildContext context, int idPedido) async {
+  Future<void> _reenviarEmailEmbalado(
+      BuildContext context, int idPedido) async {
     setState(() => _reenviandoEmailEmbalado = true);
     try {
       await sl<ReenviarEmailEmbaladoPedido>().call(idPedido);
@@ -494,8 +495,7 @@ class _PedidoPageState extends State<PedidoPage> {
       bloc.add(PedidoDescontoAlterado(descontoTotal));
       final descontoResultado = await bloc.stream.firstWhere(
         (s) =>
-            s.step == PedidoStep.descontoAlterado ||
-            s.step == PedidoStep.falha,
+            s.step == PedidoStep.descontoAlterado || s.step == PedidoStep.falha,
       );
       if (descontoResultado.step == PedidoStep.falha) return;
     }
@@ -1722,10 +1722,9 @@ class _PedidoPageState extends State<PedidoPage> {
               children: [
                 Text(
                   'Total dos itens',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 Text(
                   'R\$ ${state.valorTotalItens.toStringAsFixed(2)}',

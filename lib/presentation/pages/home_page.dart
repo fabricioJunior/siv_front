@@ -238,7 +238,13 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       ),
       icon: Icon(icone, size: 18),
-      label: Text(texto, style: textos.rotulo.copyWith(fontSize: 13)),
+      label: Text(
+        texto,
+        style: textos.rotulo.copyWith(
+          fontSize: 13,
+          color: cores.textoSobreEscuroTitulo,
+        ),
+      ),
     );
   }
 

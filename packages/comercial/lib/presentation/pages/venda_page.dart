@@ -370,7 +370,10 @@ class _VendaPageState extends State<VendaPage> {
             autofocus: true,
             style: context.sivTextos.secao,
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.barcode_reader, size: 28),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(14),
+                child: _IconeCodigoDeBarras(cor: cores.aco, tamanho: 26),
+              ),
               suffixIcon: leitorState.processando
                   ? const Padding(
                       padding: EdgeInsets.all(16),
@@ -497,28 +500,45 @@ class _VendaPageState extends State<VendaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Cliente', style: textos.rotulo),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Cliente', style: textos.rotulo),
+                  if (state.clienteSelecionado != null)
+                    TextButton.icon(
+                      onPressed: state.processando
+                          ? null
+                          : () => _abrirTrocaCliente(context, state),
+                      icon: const Icon(Icons.swap_horiz, size: 16),
+                      label: const Text('Trocar'),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
-              AbsorbPointer(
-                absorbing: state.processando,
-                child: widget.pessoaSeletor(
-                  SeletorData(
-                    itemsSelecionadosInicial: state.clienteSelecionado == null
-                        ? null
-                        : [state.clienteSelecionado!],
-                    onChanged: (selecionados) {
-                      context.read<VendaBloc>().add(
-                            VendaClienteSelecionado(
-                              clienteSelecionado: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                      _solicitarFocoLeitura();
-                    },
+              if (state.clienteSelecionado != null)
+                Text(
+                  state.clienteSelecionado!.nome.toUpperCase(),
+                  style: textos.secao,
+                )
+              else
+                AbsorbPointer(
+                  absorbing: state.processando,
+                  child: widget.pessoaSeletor(
+                    SeletorData(
+                      itemsSelecionadosInicial: null,
+                      onChanged: (selecionados) {
+                        context.read<VendaBloc>().add(
+                              VendaClienteSelecionado(
+                                clienteSelecionado: selecionados.isEmpty
+                                    ? null
+                                    : selecionados.first,
+                              ),
+                            );
+                        _solicitarFocoLeitura();
+                      },
+                    ),
                   ),
                 ),
-              ),
               // TODO: Pessoa (packages/pessoas/lib/domain/models/pessoa.dart)
               // não expõe cidade, limite de crédito nem situação de débito --
               // sem esses campos não dá pra montar os chips pedidos aqui.
@@ -1186,4 +1206,86 @@ class _VendaPageState extends State<VendaPage> {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
   }
+
+  void _abrirTrocaCliente(BuildContext context, VendaState state) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: SizedBox(
+            width: 420,
+            child: widget.pessoaSeletor(
+              SeletorData(
+                itemsSelecionadosInicial: [state.clienteSelecionado!],
+                onChanged: (selecionados) {
+                  context.read<VendaBloc>().add(
+                        VendaClienteSelecionado(
+                          clienteSelecionado:
+                              selecionados.isEmpty ? null : selecionados.first,
+                        ),
+                      );
+                  Navigator.of(dialogContext).pop();
+                  _solicitarFocoLeitura();
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconeCodigoDeBarras extends StatelessWidget {
+  final Color cor;
+  final double tamanho;
+
+  const _IconeCodigoDeBarras({required this.cor, required this.tamanho});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: tamanho,
+      height: tamanho,
+      child: CustomPaint(
+        painter: _CodigoDeBarrasPainter(cor: cor),
+      ),
+    );
+  }
+}
+
+class _CodigoDeBarrasPainter extends CustomPainter {
+  final Color cor;
+
+  _CodigoDeBarrasPainter({required this.cor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = cor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final escalaX = size.width / 24;
+    final escalaY = size.height / 24;
+    const barras = [
+      (3.0, 5.0, 19.0),
+      (6.0, 5.0, 19.0),
+      (9.5, 5.0, 19.0),
+      (13.0, 5.0, 19.0),
+      (16.5, 5.0, 15.0),
+      (20.0, 5.0, 19.0),
+    ];
+    for (final (x, yInicio, yFim) in barras) {
+      canvas.drawLine(
+        Offset(x * escalaX, yInicio * escalaY),
+        Offset(x * escalaX, yFim * escalaY),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CodigoDeBarrasPainter oldDelegate) =>
+      oldDelegate.cor != cor;
 }

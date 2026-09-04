@@ -5,9 +5,11 @@ import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart' show mensagemDeErroApi;
 import 'package:core/seletores.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
@@ -1142,6 +1144,10 @@ class _PedidoPageState extends State<PedidoPage> {
         _buildCabecalhoPedidoCard(context, state),
         if (state.id != null) ...[
           const SizedBox(height: 16),
+          _TrilhaDeEtapas(situacaoAtual: state.pedido?.situacao),
+          const SizedBox(height: 16),
+          _buildInformacoesPedidoCard(context, state),
+          const SizedBox(height: 16),
           _buildStatusCard(context, state),
         ],
         const SizedBox(height: 16),
@@ -1170,70 +1176,119 @@ class _PedidoPageState extends State<PedidoPage> {
   }
 
   Widget _buildCabecalhoPedidoCard(BuildContext context, PedidoState state) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(context).colorScheme.secondaryContainer,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  child: Text('${state.id ?? widget.idPedido ?? '-'}'),
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                child: Text('${state.id ?? widget.idPedido ?? '-'}'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pedido #${state.id ?? widget.idPedido ?? 'novo'}',
+                      style: textos.secao,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      state.pedido?.situacao?.trim().isNotEmpty == true
+                          ? 'Situação: ${state.pedido?.situacao}'
+                          : 'Situação: em edição',
+                      style: textos.corpo,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pedido #${state.id ?? widget.idPedido ?? 'novo'}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        state.pedido?.situacao?.trim().isNotEmpty == true
-                            ? 'Situação: ${state.pedido?.situacao}'
-                            : 'Situação: em edição',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildInfoChip(
+                context,
+                icon: Icons.shopping_bag_outlined,
+                label: 'Tipo: ${_labelTipo(state.tipo ?? _tipos.first)}',
+              ),
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: cores.hairline)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('TOTAL', style: textos.rotulo),
+                Text(
+                  'R\$ ${state.valorTotalGeral.toStringAsFixed(2).replaceAll('.', ',')}',
+                  style: textos.titulo,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildInfoChip(
-                  context,
-                  icon: Icons.shopping_bag_outlined,
-                  label: 'Tipo: ${_labelTipo(state.tipo ?? _tipos.first)}',
-                ),
-              ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInformacoesPedidoCard(BuildContext context, PedidoState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final situacaoPagamento = state.pedido?.situacaoPagamento;
+    final pendente = situacaoPagamento == 'pendente';
+
+    Widget linha(String rotulo, String valor, {Color? corValor}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(rotulo, style: textos.apoio),
+            Text(
+              valor,
+              style: textos.corpo.copyWith(
+                fontSize: 13.5,
+                color: corValor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
+      );
+    }
+
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          linha('Itens', '${state.itens.length}'),
+          linha(
+            'Entrega',
+            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada',
+          ),
+          linha(
+            'Pagamento',
+            _labelSituacaoPagamento(situacaoPagamento),
+            corValor: pendente ? cores.atencao : null,
+          ),
+          // TODO: Nota fiscal -- Pedido (domain/models/pedido.dart) não expõe
+          // número/status de nota fiscal, sem esse dado no state não dá pra exibir aqui.
+        ],
       ),
     );
   }
@@ -2610,5 +2665,50 @@ class _PedidoPageState extends State<PedidoPage> {
             valorTaxaEntrega: valorTaxaEntrega,
           ),
         );
+  }
+}
+
+const _etapasPedido = ['em_andamento', 'conferido', 'faturado', 'encerrado'];
+const _labelsEtapasPedido = ['Em andamento', 'Conferido', 'Faturado', 'Encerrado'];
+
+class _TrilhaDeEtapas extends StatelessWidget {
+  final String? situacaoAtual;
+
+  const _TrilhaDeEtapas({required this.situacaoAtual});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final indiceAtual = _etapasPedido.indexOf(situacaoAtual ?? '');
+
+    return Row(
+      children: List.generate(_etapasPedido.length, (indice) {
+        final atingida = indiceAtual >= 0 && indice <= indiceAtual;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: indice == 0 ? 0 : 4,
+              right: indice == _etapasPedido.length - 1 ? 0 : 4,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 3,
+                  color: atingida ? cores.aco : cores.hairline,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _labelsEtapasPedido[indice].toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: textos.rotulo.copyWith(fontSize: 11, letterSpacing: 1.1),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

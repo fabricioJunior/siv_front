@@ -11,6 +11,8 @@ abstract class IEcommerceRepository {
   Future<List<EcommerceReferencia>> recuperarReferencias(
     int ecommerceId, {
     String? busca,
+    List<int>? categoriaIds,
+    bool? rascunho,
   });
   Future<EcommerceReferencia> adicionarReferencia(
     int ecommerceId, {

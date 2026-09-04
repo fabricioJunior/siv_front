@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:autenticacao/models.dart';
 import 'package:autenticacao/uses_cases.dart';
@@ -283,7 +284,14 @@ class AppBloc extends Bloc<AppEvent, AppState>  {
         idUsuario: usuarioDaSessao.id,
         idEmpresa: empresaDaSessao.id,
       );
-    } catch (_) {
+    } catch (e, s) {
+      log(
+        'Falha ao carregar terminais da empresa da sessão '
+        '(idUsuario: ${usuarioDaSessao.id}, idEmpresa: ${empresaDaSessao.id})',
+        error: e,
+        stackTrace: s,
+        name: 'AppBloc',
+      );
       return const [];
     }
   }

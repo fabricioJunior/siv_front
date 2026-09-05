@@ -63,6 +63,9 @@ void _remoteDataSources() {
   sl.registerFactory<IEcommerceRemoteDataSource>(
     () => EcommerceRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IEcommerceBannersRemoteDataSource>(
+    () => EcommerceBannersRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -116,6 +119,9 @@ void _repositories() {
 
   sl.registerFactory<IEcommerceRepository>(
     () => EcommerceRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IEcommerceBannersRepository>(
+    () => EcommerceBannersRepository(remoteDataSource: sl()),
   );
 }
 
@@ -380,6 +386,18 @@ void _useCases() {
   sl.registerFactory<AtualizarDisponibilidadeProdutosEmLoteEcommerce>(
     () => AtualizarDisponibilidadeProdutosEmLoteEcommerce(repository: sl()),
   );
+  sl.registerFactory<RecuperarBannersEcommerce>(
+    () => RecuperarBannersEcommerce(repository: sl()),
+  );
+  sl.registerFactory<CriarBannerEcommerce>(
+    () => CriarBannerEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarBannerEcommerce>(
+    () => AtualizarBannerEcommerce(repository: sl()),
+  );
+  sl.registerFactory<ExcluirBannerEcommerce>(
+    () => ExcluirBannerEcommerce(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -590,5 +608,9 @@ void _presentation() {
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(
     () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<EcommerceBannersBloc>(
+    () => EcommerceBannersBloc(sl(), sl(), sl(), sl()),
   );
 }

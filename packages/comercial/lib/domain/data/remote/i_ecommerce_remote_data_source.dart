@@ -8,11 +8,14 @@ abstract class IEcommerceRemoteDataSource {
   Future<void> excluirEcommerce(int id);
   Future<void> restaurarEcommerce(int id);
 
-  Future<List<EcommerceReferencia>> recuperarReferencias(
+  Future<EcommerceReferenciasPagina> recuperarReferencias(
     int ecommerceId, {
     String? busca,
     List<int>? categoriaIds,
     bool? rascunho,
+    bool? publicavel,
+    int page = 1,
+    int limit = 50,
   });
   Future<EcommerceReferencia> adicionarReferencia(
     int ecommerceId, {
@@ -26,6 +29,15 @@ abstract class IEcommerceRemoteDataSource {
     int? tabelaDePrecoId,
   });
 
+  /// `PATCH /v1/e-commerce/{id}/referencias/lote` -- lança [HttpException]
+  /// com `statusCode` 404/405 se o endpoint ainda não existir; quem decide o
+  /// fallback é o repositório.
+  Future<EcommerceLoteResultado> publicarReferenciasEmLote(
+    int ecommerceId, {
+    required List<int> ids,
+    required bool rascunho,
+  });
+
   Future<List<EcommerceReferenciaProduto>> recuperarProdutosDaReferencia(
     int ecommerceId,
     int referenciaId,
@@ -34,6 +46,15 @@ abstract class IEcommerceRemoteDataSource {
     int ecommerceId,
     int referenciaId,
     int produtoId, {
+    required bool disponivel,
+  });
+
+  /// `PUT /v1/e-commerce/{id}/referencias/{refId}/produtos/lote` -- mesmo
+  /// esquema de fallback do lote de referências.
+  Future<void> atualizarDisponibilidadeProdutosEmLote(
+    int ecommerceId,
+    int referenciaId, {
+    required List<int> produtoIds,
     required bool disponivel,
   });
 }

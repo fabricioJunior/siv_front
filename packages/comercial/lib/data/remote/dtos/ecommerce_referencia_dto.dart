@@ -23,6 +23,18 @@ class EcommerceReferenciaDto implements EcommerceReferencia {
   final String? imagemUrl;
   @override
   final num? saldo;
+  @override
+  final String? categoriaNome;
+  @override
+  final int? produtosTotal;
+  @override
+  final int? produtosDisponiveis;
+  @override
+  final bool? publicavel;
+  @override
+  final List<String>? motivosBloqueio;
+  @override
+  final String? tabelaDePrecoNome;
 
   const EcommerceReferenciaDto({
     this.id,
@@ -36,6 +48,12 @@ class EcommerceReferenciaDto implements EcommerceReferencia {
     this.unidadeMedida,
     this.imagemUrl,
     this.saldo,
+    this.categoriaNome,
+    this.produtosTotal,
+    this.produtosDisponiveis,
+    this.publicavel,
+    this.motivosBloqueio,
+    this.tabelaDePrecoNome,
   });
 
   factory EcommerceReferenciaDto.fromJson(Map<String, dynamic> json) {
@@ -54,6 +72,14 @@ class EcommerceReferenciaDto implements EcommerceReferencia {
       unidadeMedida: json['unidadeMedida']?.toString(),
       imagemUrl: json['media_url']?.toString(),
       saldo: num.tryParse(json['saldo']?.toString() ?? ''),
+      categoriaNome: json['categoriaNome']?.toString(),
+      produtosTotal: _toInt(json['produtosTotal']),
+      produtosDisponiveis: _toInt(json['produtosDisponiveis']),
+      publicavel: json['publicavel'] as bool?,
+      motivosBloqueio: (json['motivosBloqueio'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
+      tabelaDePrecoNome: json['tabelaDePrecoNome']?.toString(),
     );
   }
 
@@ -78,6 +104,12 @@ class EcommerceReferenciaDto implements EcommerceReferencia {
         unidadeMedida,
         imagemUrl,
         saldo,
+        categoriaNome,
+        produtosTotal,
+        produtosDisponiveis,
+        publicavel,
+        motivosBloqueio,
+        tabelaDePrecoNome,
       ];
 
   @override

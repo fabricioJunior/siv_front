@@ -12,16 +12,24 @@ class EcommerceReferenciasIniciou extends EcommerceReferenciasEvent {
   final String? busca;
   final List<int>? categoriaIds;
   final bool? rascunhoFiltro;
+  final bool? publicavelFiltro;
 
   const EcommerceReferenciasIniciou({
     required this.ecommerceId,
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.publicavelFiltro,
   });
 
   @override
-  List<Object?> get props => [ecommerceId, busca, categoriaIds, rascunhoFiltro];
+  List<Object?> get props =>
+      [ecommerceId, busca, categoriaIds, rascunhoFiltro, publicavelFiltro];
+}
+
+class EcommerceReferenciasCarregarMaisSolicitou
+    extends EcommerceReferenciasEvent {
+  const EcommerceReferenciasCarregarMaisSolicitou();
 }
 
 class EcommerceReferenciaAdicionou extends EcommerceReferenciasEvent {

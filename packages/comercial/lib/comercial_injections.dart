@@ -374,6 +374,12 @@ void _useCases() {
   sl.registerFactory<AtualizarDisponibilidadeProdutoEcommerce>(
     () => AtualizarDisponibilidadeProdutoEcommerce(repository: sl()),
   );
+  sl.registerFactory<PublicarReferenciasEmLoteEcommerce>(
+    () => PublicarReferenciasEmLoteEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarDisponibilidadeProdutosEmLoteEcommerce>(
+    () => AtualizarDisponibilidadeProdutosEmLoteEcommerce(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -579,7 +585,7 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceReferenciasBloc>(
-    () => EcommerceReferenciasBloc(sl(), sl(), sl()),
+    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(

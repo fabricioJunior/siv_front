@@ -131,6 +131,12 @@ final _itensOperacao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Produtos']!,
   ),
   _ItemDeNavegacao(
+    label: 'E-commerces',
+    icone: Icons.storefront_outlined,
+    rota: '/ecommerces',
+    componentesNecessarios: ['ECOFM001'],
+  ),
+  _ItemDeNavegacao(
     label: 'Fiscal',
     icone: Icons.receipt_long_outlined,
     rota: '/documentos_fiscais',
@@ -187,41 +193,44 @@ class _AppShellCasca extends StatelessWidget {
         .toList();
     final tituloAtivo = itemAtivo.isNotEmpty ? itemAtivo.first.label : null;
 
-    return SivScaffold(
-      titulo: tituloAtivo ?? 'SIV',
-      acoes: [
-        ValueListenableBuilder<List<Widget>>(
-          valueListenable: SivPageAcoes.notifier,
-          builder: (context, acoesDaPagina, _) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final acao in acoesDaPagina) ...[
-                acao,
-                const SizedBox(width: 8),
+    return ValueListenableBuilder<String?>(
+      valueListenable: SivPageTitulo.notifier,
+      builder: (context, tituloPagina, _) => SivScaffold(
+        titulo: tituloPagina ?? tituloAtivo ?? 'SIV',
+        acoes: [
+          ValueListenableBuilder<List<Widget>>(
+            valueListenable: SivPageAcoes.notifier,
+            builder: (context, acoesDaPagina, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final acao in acoesDaPagina) ...[
+                  acao,
+                  const SizedBox(width: 8),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
-      ],
-      secoesMenu: [
-        SivMenuLateralSecao(
-          titulo: 'OPERAÇÃO',
-          itens: _itensOperacao
-              .where((item) => item.permitido)
-              .map(_mapearItem)
-              .toList(),
-        ),
-        SivMenuLateralSecao(
-          titulo: 'SISTEMA',
-          itens: _itensSistema
-              .where((item) => item.permitido)
-              .map(_mapearItem)
-              .toList(),
-        ),
-      ],
-      rodapeMenu: _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
-      corpo: child,
+          _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
+        ],
+        secoesMenu: [
+          SivMenuLateralSecao(
+            titulo: 'OPERAÇÃO',
+            itens: _itensOperacao
+                .where((item) => item.permitido)
+                .map(_mapearItem)
+                .toList(),
+          ),
+          SivMenuLateralSecao(
+            titulo: 'SISTEMA',
+            itens: _itensSistema
+                .where((item) => item.permitido)
+                .map(_mapearItem)
+                .toList(),
+          ),
+        ],
+        rodapeMenu: _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
+        corpo: child,
+      ),
     );
   }
 

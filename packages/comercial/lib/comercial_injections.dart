@@ -589,6 +589,6 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(
-    () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl()),
+    () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl(), sl()),
   );
 }

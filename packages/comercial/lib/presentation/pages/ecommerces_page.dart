@@ -49,7 +49,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cores = context.sivColors;
     return BlocProvider<EcommercesBloc>.value(
       value: _bloc,
       child: BlocBuilder<EcommercesBloc, EcommercesState>(

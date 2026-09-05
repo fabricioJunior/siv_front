@@ -2,7 +2,6 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation/blocs/ecommerce_referencia_detalhe_bloc/ecommerce_referencia_detalhe_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';

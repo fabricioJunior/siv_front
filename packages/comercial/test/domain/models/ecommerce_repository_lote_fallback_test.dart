@@ -1,5 +1,4 @@
 import 'package:comercial/data.dart';
-import 'package:comercial/domain/data/remote/i_ecommerce_remote_data_source.dart';
 import 'package:comercial/models.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:flutter_test/flutter_test.dart';

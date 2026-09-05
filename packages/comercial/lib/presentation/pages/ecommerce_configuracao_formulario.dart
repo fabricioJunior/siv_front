@@ -3,7 +3,6 @@ import 'package:comercial/presentation.dart';
 import 'package:core/arquivos.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
@@ -371,6 +370,7 @@ class _EcommerceBannersCard extends StatelessWidget {
     );
     if (arquivo == null) return;
     if (arquivo.tamanho > 20 * 1024 * 1024) {
+      if (!context.mounted) return;
       SivAviso.mostrar(
         context,
         mensagem: 'Arquivo maior que 20MB — escolha um menor.',

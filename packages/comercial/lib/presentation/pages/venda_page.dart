@@ -370,7 +370,11 @@ class _VendaPageState extends State<VendaPage> {
             autofocus: true,
             style: context.sivTextos.secao,
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.barcode_reader, size: 28),
+              prefixIcon: SizedBox(
+                width: 26,
+                height: 26,
+                child: CustomPaint(painter: _IconeCodigoDeBarras(cores.aco)),
+              ),
               suffixIcon: leitorState.processando
                   ? const Padding(
                       padding: EdgeInsets.all(16),
@@ -499,26 +503,46 @@ class _VendaPageState extends State<VendaPage> {
             children: [
               Text('Cliente', style: textos.rotulo),
               const SizedBox(height: 8),
-              AbsorbPointer(
-                absorbing: state.processando,
-                child: widget.pessoaSeletor(
-                  SeletorData(
-                    itemsSelecionadosInicial: state.clienteSelecionado == null
-                        ? null
-                        : [state.clienteSelecionado!],
-                    onChanged: (selecionados) {
-                      context.read<VendaBloc>().add(
-                            VendaClienteSelecionado(
-                              clienteSelecionado: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                      _solicitarFocoLeitura();
-                    },
+              if (state.clienteSelecionado != null && !_trocandoCliente)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        state.clienteSelecionado!.nome,
+                        style: textos.corpo,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: state.processando
+                          ? null
+                          : () => setState(() => _trocandoCliente = true),
+                      child: const Text('Trocar'),
+                    ),
+                  ],
+                )
+              else
+                AbsorbPointer(
+                  absorbing: state.processando,
+                  child: widget.pessoaSeletor(
+                    SeletorData(
+                      itemsSelecionadosInicial: state.clienteSelecionado == null
+                          ? null
+                          : [state.clienteSelecionado!],
+                      onChanged: (selecionados) {
+                        context.read<VendaBloc>().add(
+                              VendaClienteSelecionado(
+                                clienteSelecionado: selecionados.isEmpty
+                                    ? null
+                                    : selecionados.first,
+                              ),
+                            );
+                        setState(() => _trocandoCliente = false);
+                        _solicitarFocoLeitura();
+                      },
+                    ),
                   ),
                 ),
-              ),
               // TODO: Pessoa (packages/pessoas/lib/domain/models/pessoa.dart)
               // não expõe cidade, limite de crédito nem situação de débito --
               // sem esses campos não dá pra montar os chips pedidos aqui.
@@ -1186,4 +1210,32 @@ class _VendaPageState extends State<VendaPage> {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
   }
+}
+
+class _IconeCodigoDeBarras extends CustomPainter {
+  _IconeCodigoDeBarras(this.cor);
+
+  final Color cor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = cor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final sx = size.width / 24;
+    final sy = size.height / 24;
+    final alturasCheias = [0.0, 0.0, 0.0, 0.0, 4.0, 0.0];
+    final xs = [3.0, 6.0, 9.5, 13.0, 16.5, 20.0];
+    for (var i = 0; i < xs.length; i++) {
+      final x = xs[i] * sx;
+      final topo = 5.0 * sy;
+      final base = (19.0 - alturasCheias[i]) * sy;
+      canvas.drawLine(Offset(x, topo), Offset(x, base), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _IconeCodigoDeBarras oldDelegate) =>
+      oldDelegate.cor != cor;
 }

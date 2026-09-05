@@ -52,6 +52,7 @@ class _VendaPageState extends State<VendaPage> {
   DateTime? _ultimaLeituraEm;
   int _ultimoOrcamentoSalvoContador = 0;
   Timer? _relogio;
+  bool _trocandoCliente = false;
 
   @override
   void initState() {

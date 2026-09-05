@@ -98,7 +98,10 @@ class EcommercesPage extends StatelessWidget {
                       icon: const Icon(Icons.shopping_bag_outlined),
                       onPressed: () => Navigator.of(context).pushNamed(
                         '/ecommerce_referencias',
-                        arguments: {'ecommerceId': ecommerce.id},
+                        arguments: {
+                          'ecommerceId': ecommerce.id,
+                          'titulo': ecommerce.titulo,
+                        },
                       ),
                     ),
                   if (ecommerce.apagado)

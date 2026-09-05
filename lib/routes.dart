@@ -438,6 +438,7 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/ecommerce_referencias',
       child: EcommerceReferenciasPage(
         ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
       ),
     );
   },

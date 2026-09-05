@@ -149,6 +149,14 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
   final List<int>? categoriaIds;
   @override
   final bool? rascunhoFiltro;
+  @override
+  final int? total;
+  @override
+  final int? totalPublicados;
+  @override
+  final int? totalRascunho;
+  @override
+  final int? totalNaoPublicaveis;
   final int publicados;
   final int falharam;
   final List<EcommerceLoteFalha> falhas;
@@ -159,6 +167,10 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.total,
+    this.totalPublicados,
+    this.totalRascunho,
+    this.totalNaoPublicaveis,
     required this.publicados,
     required this.falharam,
     this.falhas = const [],

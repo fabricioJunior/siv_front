@@ -10,6 +10,8 @@ class VendasIniciou extends VendasEvent {
   final bool dataHoraInicialInformada;
   final DateTime? dataHoraFinal;
   final bool dataHoraFinalInformada;
+  final List<int>? funcionarioIds;
+  final bool funcionarioIdsInformado;
 
   VendasIniciou({
     this.searchTerm,
@@ -19,5 +21,7 @@ class VendasIniciou extends VendasEvent {
     this.dataHoraInicialInformada = false,
     this.dataHoraFinal,
     this.dataHoraFinalInformada = false,
+    this.funcionarioIds,
+    this.funcionarioIdsInformado = false,
   });
 }

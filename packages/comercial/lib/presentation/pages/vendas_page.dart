@@ -10,7 +10,9 @@ import 'package:financeiro/presentation/widgets/seletor_caixa.dart';
 import 'package:flutter/material.dart';
 
 class VendasPage extends StatefulWidget {
-  const VendasPage({super.key});
+  final SeletorWidget funcionariosSeletor;
+
+  const VendasPage({super.key, required this.funcionariosSeletor});
 
   @override
   State<VendasPage> createState() => _VendasPageState();
@@ -22,6 +24,7 @@ class _VendasPageState extends State<VendasPage> {
   final TextEditingController _buscaController = TextEditingController();
   final FocusNode _buscaFocusNode = FocusNode();
   List<SelectData>? _caixaSelecionadoInicial;
+  List<SelectData> _funcionariosSelecionados = const [];
 
   @override
   void initState() {
@@ -102,6 +105,16 @@ class _VendasPageState extends State<VendasPage> {
     );
   }
 
+  void _onFuncionariosAlterados(List<SelectData> selecionados) {
+    setState(() => _funcionariosSelecionados = selecionados);
+    _vendasBloc.add(
+      VendasIniciou(
+        funcionarioIds: selecionados.map((f) => f.id).toList(),
+        funcionarioIdsInformado: true,
+      ),
+    );
+  }
+
   void _limparPeriodo() {
     _vendasBloc.add(
       VendasIniciou(
@@ -167,6 +180,13 @@ class _VendasPageState extends State<VendasPage> {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  widget.funcionariosSeletor.call(
+                    SeletorData(
+                      itemsSelecionadosInicial: _funcionariosSelecionados,
+                      onChanged: _onFuncionariosAlterados,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Wrap(

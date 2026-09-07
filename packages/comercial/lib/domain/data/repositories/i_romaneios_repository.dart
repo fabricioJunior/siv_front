@@ -10,6 +10,7 @@ abstract class IRomaneiosRepository {
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
     List<int>? referenciaIds,
+    List<int>? funcionarioIds,
   });
   Future<Romaneio> recuperarRomaneio(int id);
   Future<Romaneio> criarRomaneio(Romaneio romaneio);

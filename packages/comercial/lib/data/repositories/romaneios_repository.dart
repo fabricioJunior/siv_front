@@ -70,6 +70,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
     List<int>? referenciaIds,
+    List<int>? funcionarioIds,
   }) {
     return remoteDataSource.recuperarRomaneios(
       page: page,
@@ -80,6 +81,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
       dataHoraFinal: dataHoraFinal,
       operacoes: operacoes,
       referenciaIds: referenciaIds,
+      funcionarioIds: funcionarioIds,
     );
   }
 

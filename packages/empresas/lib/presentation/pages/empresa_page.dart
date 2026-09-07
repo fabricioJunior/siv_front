@@ -17,7 +17,7 @@ enum _SecaoEmpresa {
   contatoFiscal('Contato e fiscal', Icons.contact_phone_outlined),
   endereco('Endereço', Icons.location_on_outlined),
   terminais('Terminais', Icons.point_of_sale_outlined),
-  parametrosDeVenda('Parâmetros de venda', Icons.tune_outlined),
+  parametrosDeVenda('Parâmetros', Icons.tune_outlined),
   notaFiscalEmail('Nota fiscal / e-mail', Icons.mail_outline),
   configFiscal('Config. fiscal', Icons.receipt_long_outlined),
   configEntrega('Config. entrega', Icons.local_shipping_outlined);
@@ -361,7 +361,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 children: [
                   _cardTerminais(context, resumido: true),
                   const SizedBox(height: SivDimensoes.gapCards),
-                  _cardParametrosDeVenda(context),
+                  _cardParametrosDeVenda(context, empresa),
                 ],
               ),
             ),
@@ -374,7 +374,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
       case _SecaoEmpresa.terminais:
         return _cardTerminais(context, resumido: false);
       case _SecaoEmpresa.parametrosDeVenda:
-        return _cardParametrosDeVenda(context);
+        return _cardParametrosDeVenda(context, empresa);
       case _SecaoEmpresa.notaFiscalEmail:
         return _cardAtalho(
           context,
@@ -825,82 +825,14 @@ class _EmpresaPageState extends State<EmpresaPage> {
     ];
   }
 
-  // Card com os 4 controles pedidos pro redesign. Nenhum deles tem campo
-  // correspondente hoje em Empresa/EmpresaParametro -- CD_PRECO_PADRAO é o
-  // parâmetro mais próximo de "tabela de preço padrão", mas monta um
-  // SivComboBox exigiria a lista de tabelas de preço (fora do escopo desta
-  // etapa/pacote). Fica só de UI, sem persistir, até o contrato existir.
-  // TODO: exigir cliente na venda, desconto máximo do vendedor e imprimir
-  // romaneio ao finalizar não têm campo no backend.
-  Widget _cardParametrosDeVenda(BuildContext context) {
-    return const _ParametrosDeVendaCard();
-  }
-}
-
-class _ParametrosDeVendaCard extends StatefulWidget {
-  const _ParametrosDeVendaCard();
-
-  @override
-  State<_ParametrosDeVendaCard> createState() => _ParametrosDeVendaCardState();
-}
-
-class _ParametrosDeVendaCardState extends State<_ParametrosDeVendaCard> {
-  bool _exigirCliente = false;
-  bool _imprimirRomaneio = true;
-  int? _tabelaSelecionada;
-
-  @override
-  Widget build(BuildContext context) {
-    final textos = context.sivTextos;
-
-    return SivCard(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Parâmetros de venda', style: textos.secao),
-          const SizedBox(height: 4),
-          Text(
-            'Salvos junto com a empresa quando o backend expuser esses campos.',
-            style: textos.apoio,
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Exigir cliente na venda'),
-            value: _exigirCliente,
-            onChanged: (v) => setState(() => _exigirCliente = v),
-          ),
-          const SizedBox(height: 4),
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Desconto máximo do vendedor (%)',
-              helperText: 'Acima disso, exige senha do gerente.',
-              suffixText: '%',
-            ),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          const SizedBox(height: 14),
-          Text('Tabela de preço padrão', style: textos.rotulo),
-          const SizedBox(height: 6),
-          SivComboBox<int>(
-            selecionado: _tabelaSelecionada,
-            itens: const [
-              SivComboBoxItem(valor: 1, label: 'Tabela padrão'),
-              SivComboBoxItem(valor: 2, label: 'Tabela promocional'),
-            ],
-            onSelecionado: (v) => setState(() => _tabelaSelecionada = v),
-          ),
-          const SizedBox(height: 4),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Imprimir romaneio ao finalizar'),
-            value: _imprimirRomaneio,
-            onChanged: (v) => setState(() => _imprimirRomaneio = v),
-          ),
-        ],
-      ),
+  Widget _cardParametrosDeVenda(BuildContext context, Empresa? empresa) {
+    return _cardAtalho(
+      context,
+      titulo: 'Parâmetros',
+      descricao: 'Exigir cliente na venda, desconto máximo do vendedor, '
+          'imprimir romaneio, URL do site da empresa e demais parâmetros.',
+      rota: '/parametros_empresa',
+      empresa: empresa,
     );
   }
 }

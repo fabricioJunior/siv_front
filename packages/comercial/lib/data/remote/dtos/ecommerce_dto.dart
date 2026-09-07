@@ -25,6 +25,10 @@ class EcommerceDto implements Ecommerce {
   final bool apagado;
   @override
   final DateTime? apagadoEm;
+  @override
+  final int? referenciasPublicadas;
+  @override
+  final int? referenciasRascunho;
 
   const EcommerceDto({
     this.id,
@@ -39,6 +43,8 @@ class EcommerceDto implements Ecommerce {
     this.formasDePagamentoIds = const [],
     this.apagado = false,
     this.apagadoEm,
+    this.referenciasPublicadas,
+    this.referenciasRascunho,
   });
 
   factory EcommerceDto.fromJson(Map<String, dynamic> json) {
@@ -58,6 +64,8 @@ class EcommerceDto implements Ecommerce {
           .toList(),
       apagado: json['apagado'] == true,
       apagadoEm: DateTime.tryParse(json['apagadoEm']?.toString() ?? ''),
+      referenciasPublicadas: _toInt(json['referenciasPublicadas']),
+      referenciasRascunho: _toInt(json['referenciasRascunho']),
     );
   }
 
@@ -89,6 +97,8 @@ class EcommerceDto implements Ecommerce {
         formasDePagamentoIds,
         apagado,
         apagadoEm,
+        referenciasPublicadas,
+        referenciasRascunho,
       ];
 
   @override

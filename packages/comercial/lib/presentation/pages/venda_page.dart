@@ -52,6 +52,7 @@ class _VendaPageState extends State<VendaPage> {
   DateTime? _ultimaLeituraEm;
   int _ultimoOrcamentoSalvoContador = 0;
   Timer? _relogio;
+  bool _trocandoCliente = false;
 
   @override
   void initState() {
@@ -370,9 +371,10 @@ class _VendaPageState extends State<VendaPage> {
             autofocus: true,
             style: context.sivTextos.secao,
             decoration: InputDecoration(
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(14),
-                child: _IconeCodigoDeBarras(cor: cores.aco, tamanho: 26),
+              prefixIcon: SizedBox(
+                width: 26,
+                height: 26,
+                child: CustomPaint(painter: _IconeCodigoDeBarras(cores.aco)),
               ),
               suffixIcon: leitorState.processando
                   ? const Padding(
@@ -515,17 +517,32 @@ class _VendaPageState extends State<VendaPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              if (state.clienteSelecionado != null)
-                Text(
-                  state.clienteSelecionado!.nome.toUpperCase(),
-                  style: textos.secao,
+              if (state.clienteSelecionado != null && !_trocandoCliente)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        state.clienteSelecionado!.nome,
+                        style: textos.corpo,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: state.processando
+                          ? null
+                          : () => setState(() => _trocandoCliente = true),
+                      child: const Text('Trocar'),
+                    ),
+                  ],
                 )
               else
                 AbsorbPointer(
                   absorbing: state.processando,
                   child: widget.pessoaSeletor(
                     SeletorData(
-                      itemsSelecionadosInicial: null,
+                      itemsSelecionadosInicial: state.clienteSelecionado == null
+                          ? null
+                          : [state.clienteSelecionado!],
                       onChanged: (selecionados) {
                         context.read<VendaBloc>().add(
                               VendaClienteSelecionado(
@@ -534,6 +551,7 @@ class _VendaPageState extends State<VendaPage> {
                                     : selecionados.first,
                               ),
                             );
+                        setState(() => _trocandoCliente = false);
                         _solicitarFocoLeitura();
                       },
                     ),
@@ -1237,28 +1255,10 @@ class _VendaPageState extends State<VendaPage> {
   }
 }
 
-class _IconeCodigoDeBarras extends StatelessWidget {
+class _IconeCodigoDeBarras extends CustomPainter {
+  _IconeCodigoDeBarras(this.cor);
+
   final Color cor;
-  final double tamanho;
-
-  const _IconeCodigoDeBarras({required this.cor, required this.tamanho});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: tamanho,
-      height: tamanho,
-      child: CustomPaint(
-        painter: _CodigoDeBarrasPainter(cor: cor),
-      ),
-    );
-  }
-}
-
-class _CodigoDeBarrasPainter extends CustomPainter {
-  final Color cor;
-
-  _CodigoDeBarrasPainter({required this.cor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1266,26 +1266,19 @@ class _CodigoDeBarrasPainter extends CustomPainter {
       ..color = cor
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    final escalaX = size.width / 24;
-    final escalaY = size.height / 24;
-    const barras = [
-      (3.0, 5.0, 19.0),
-      (6.0, 5.0, 19.0),
-      (9.5, 5.0, 19.0),
-      (13.0, 5.0, 19.0),
-      (16.5, 5.0, 15.0),
-      (20.0, 5.0, 19.0),
-    ];
-    for (final (x, yInicio, yFim) in barras) {
-      canvas.drawLine(
-        Offset(x * escalaX, yInicio * escalaY),
-        Offset(x * escalaX, yFim * escalaY),
-        paint,
-      );
+    final sx = size.width / 24;
+    final sy = size.height / 24;
+    final alturasCheias = [0.0, 0.0, 0.0, 0.0, 4.0, 0.0];
+    final xs = [3.0, 6.0, 9.5, 13.0, 16.5, 20.0];
+    for (var i = 0; i < xs.length; i++) {
+      final x = xs[i] * sx;
+      final topo = 5.0 * sy;
+      final base = (19.0 - alturasCheias[i]) * sy;
+      canvas.drawLine(Offset(x, topo), Offset(x, base), paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _CodigoDeBarrasPainter oldDelegate) =>
+  bool shouldRepaint(covariant _IconeCodigoDeBarras oldDelegate) =>
       oldDelegate.cor != cor;
 }

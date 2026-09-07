@@ -1,159 +1,280 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pages/ecommerce_configuracao_formulario.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
-class EcommercesPage extends StatelessWidget {
-  const EcommercesPage({super.key});
+class EcommercesPage extends StatefulWidget {
+  final int? ecommerceIdInicial;
+
+  const EcommercesPage({super.key, this.ecommerceIdInicial});
+
+  @override
+  State<EcommercesPage> createState() => _EcommercesPageState();
+}
+
+class _EcommercesPageState extends State<EcommercesPage> {
+  late final EcommercesBloc _bloc;
+  int? _selecionadoId;
+  bool _criandoNovo = false;
+  final _controladores = <Object, EcommerceConfiguracaoFormularioController>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _selecionadoId = widget.ecommerceIdInicial;
+    _bloc = sl<EcommercesBloc>()..add(const EcommercesCarregarSolicitado());
+    SivPageTitulo.definir('E-commerces');
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    SivPageTitulo.limpar();
+    SivPageAcoes.limpar();
+    super.dispose();
+  }
+
+  EcommerceConfiguracaoFormularioController _controladorPara(Object chave) =>
+      _controladores.putIfAbsent(chave, EcommerceConfiguracaoFormularioController.new);
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<EcommercesBloc>(
-      create: (_) => sl<EcommercesBloc>()
-        ..add(const EcommercesCarregarSolicitado()),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('E-commerces')),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => Navigator.of(context)
-              .pushNamed('/configuracao_ecommerce')
-              .then((_) => context
-                  .read<EcommercesBloc>()
-                  .add(const EcommercesCarregarSolicitado())),
-          icon: const Icon(Icons.add),
-          label: const Text('Novo e-commerce'),
-        ),
-        body: BlocBuilder<EcommercesBloc, EcommercesState>(
-          builder: (context, state) {
-            return Column(
+    return BlocProvider<EcommercesBloc>.value(
+      value: _bloc,
+      child: BlocBuilder<EcommercesBloc, EcommercesState>(
+        builder: (context, state) {
+          _atualizarAcoes(context, state);
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SivDimensoes.paginaHorizontal,
+              vertical: SivDimensoes.paginaVertical,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SwitchListTile(
-                  title: const Text('Mostrar excluídos'),
-                  value: state.incluirApagados,
-                  onChanged: (value) => context.read<EcommercesBloc>().add(
-                        EcommercesCarregarSolicitado(incluirApagados: value),
-                      ),
-                ),
-                if (state.erro != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      state.erro!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
-                    ),
-                  ),
-                Expanded(child: _buildLista(context, state)),
+                SizedBox(width: 340, child: _buildLista(context, state)),
+                const SizedBox(width: SivDimensoes.gapCards),
+                Expanded(child: _buildPainel(context, state)),
               ],
-            );
-          },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _atualizarAcoes(BuildContext context, EcommercesState state) {
+    final selecionados =
+        _criandoNovo ? const <Ecommerce>[] : state.ecommerces.where((e) => e.id == _selecionadoId).toList();
+    final selecionado = selecionados.isEmpty ? null : selecionados.first;
+    final chave = _criandoNovo ? 'novo' : (selecionado?.id ?? 'novo');
+
+    SivPageAcoes.definir([
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Checkbox(
+            value: state.incluirApagados,
+            onChanged: (value) => _bloc.add(
+              EcommercesCarregarSolicitado(incluirApagados: value ?? false),
+            ),
+          ),
+          Text('Mostrar excluídos', style: context.sivTextos.corpo),
+        ],
+      ),
+      const SizedBox(width: 12),
+      if (selecionado != null && !selecionado.apagado)
+        OutlinedButton.icon(
+          onPressed: () => _confirmarExclusao(context, selecionado),
+          icon: Icon(Icons.delete_outline, size: 18, color: context.sivColors.vinho),
+          label: Text('Excluir canal', style: TextStyle(color: context.sivColors.vinho)),
+        ),
+      const SizedBox(width: 8),
+      OutlinedButton.icon(
+        onPressed: () => setState(() {
+          _criandoNovo = true;
+          _selecionadoId = null;
+        }),
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('Novo e-commerce'),
+      ),
+      const SizedBox(width: 8),
+      FilledButton.icon(
+        onPressed: (_criandoNovo || selecionado != null)
+            ? () => _controladorPara(chave).salvar()
+            : null,
+        icon: const Icon(Icons.check, size: 18),
+        label: const Text('Salvar configuração'),
+      ),
+    ]);
+  }
+
+  Widget _buildLista(BuildContext context, EcommercesState state) {
+    if (state.status == EcommercesStatus.carregando) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
+    return ListView(
+      children: [
+        for (final ecommerce in state.ecommerces)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _CardCanal(
+              ecommerce: ecommerce,
+              selecionado: !_criandoNovo && ecommerce.id == _selecionadoId,
+              onTap: ecommerce.apagado
+                  ? null
+                  : () => setState(() {
+                        _criandoNovo = false;
+                        _selecionadoId = ecommerce.id;
+                      }),
+              onRestaurar: ecommerce.apagado
+                  ? () => _bloc.add(EcommercesRestaurarSolicitado(id: ecommerce.id!))
+                  : null,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPainel(BuildContext context, EcommercesState state) {
+    if (_criandoNovo) {
+      return EcommerceConfiguracaoFormulario(
+        key: const ValueKey('novo'),
+        controller: _controladorPara('novo'),
+        onSalvou: () {
+          setState(() => _criandoNovo = false);
+          _bloc.add(const EcommercesCarregarSolicitado());
+        },
+      );
+    }
+
+    final selecionado = state.ecommerces.where((e) => e.id == _selecionadoId);
+    if (selecionado.isEmpty) {
+      return Center(
+        child: Text(
+          'Selecione um canal à esquerda ou cadastre um novo.',
+          style: context.sivTextos.corpo,
+        ),
+      );
+    }
+
+    final ecommerce = selecionado.first;
+    return EcommerceConfiguracaoFormulario(
+      key: ValueKey(ecommerce.id),
+      controller: _controladorPara(ecommerce.id ?? 'novo'),
+      ecommerceId: ecommerce.id,
+      empresaId: ecommerce.empresaId,
+      onSalvou: () => _bloc.add(const EcommercesCarregarSolicitado()),
+    );
+  }
+
+  Future<void> _confirmarExclusao(BuildContext context, Ecommerce ecommerce) async {
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Excluir e-commerce',
+      variante: SivDialogoVariante.destrutivo,
+      corpo: const Text(
+        'Excluir este e-commerce? Sites integrados a ele vão parar de '
+        'funcionar corretamente. Essa ação pode ser desfeita depois.',
+      ),
+      textoAcao: 'Excluir',
+      onConfirmar: (_) => _bloc.add(EcommercesExcluirSolicitado(id: ecommerce.id!)),
+    );
+  }
+}
+
+class _CardCanal extends StatelessWidget {
+  final Ecommerce ecommerce;
+  final bool selecionado;
+  final VoidCallback? onTap;
+  final VoidCallback? onRestaurar;
+
+  const _CardCanal({
+    required this.ecommerce,
+    required this.selecionado,
+    required this.onTap,
+    required this.onRestaurar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return Opacity(
+      opacity: ecommerce.apagado ? 0.55 : 1,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: selecionado ? cores.selecaoFundo : cores.superficie,
+            border: Border.all(color: selecionado ? cores.aco : cores.hairline),
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: ecommerce.icone != null
+                      ? Image.network(
+                          ecommerce.icone!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _iniciais(cores, textos),
+                        )
+                      : _iniciais(cores, textos),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(ecommerce.titulo, style: textos.secao),
+                    if (ecommerce.subtitulo != null)
+                      Text(ecommerce.subtitulo!, style: textos.apoio),
+                    if (ecommerce.referenciasPublicadas != null ||
+                        ecommerce.referenciasRascunho != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          [
+                            if (ecommerce.referenciasPublicadas != null)
+                              '${ecommerce.referenciasPublicadas} publicadas',
+                            if (ecommerce.referenciasRascunho != null)
+                              '${ecommerce.referenciasRascunho} rascunho',
+                          ].join(' · '),
+                          style: textos.apoio,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (ecommerce.apagado)
+                TextButton(onPressed: onRestaurar, child: const Text('Restaurar')),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLista(BuildContext context, EcommercesState state) {
-    if (state.status == EcommercesStatus.carregando) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state.ecommerces.isEmpty) {
-      return const Center(child: Text('Nenhum e-commerce cadastrado.'));
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(12),
-      itemCount: state.ecommerces.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final ecommerce = state.ecommerces[index];
-        return Opacity(
-          opacity: ecommerce.apagado ? 0.6 : 1,
-          child: Card(
-            child: ListTile(
-              onTap: ecommerce.apagado
-                  ? null
-                  : () => Navigator.of(context)
-                      .pushNamed(
-                        '/configuracao_ecommerce',
-                        arguments: {'ecommerceId': ecommerce.id},
-                      )
-                      .then((_) => context
-                          .read<EcommercesBloc>()
-                          .add(const EcommercesCarregarSolicitado())),
-              title: Text(ecommerce.titulo),
-              subtitle: ecommerce.subtitulo != null
-                  ? Text(ecommerce.subtitulo!)
-                  : null,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (ecommerce.apagado)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Chip(label: Text('Excluído')),
-                    ),
-                  if (!ecommerce.apagado)
-                    IconButton(
-                      tooltip: 'Produtos no site',
-                      icon: const Icon(Icons.shopping_bag_outlined),
-                      onPressed: () => Navigator.of(context).pushNamed(
-                        '/ecommerce_referencias',
-                        arguments: {'ecommerceId': ecommerce.id},
-                      ),
-                    ),
-                  if (ecommerce.apagado)
-                    IconButton(
-                      tooltip: 'Restaurar e-commerce',
-                      icon: const Icon(Icons.restore),
-                      onPressed: () => context.read<EcommercesBloc>().add(
-                            EcommercesRestaurarSolicitado(id: ecommerce.id!),
-                          ),
-                    )
-                  else
-                    IconButton(
-                      tooltip: 'Excluir e-commerce',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => _confirmarExclusao(context, ecommerce),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  Widget _iniciais(SivColors cores, SivTextStyles textos) {
+    return Container(
+      color: cores.acoEscuro,
+      alignment: Alignment.center,
+      child: Text(
+        ecommerce.titulo.isNotEmpty ? ecommerce.titulo[0].toUpperCase() : '?',
+        style: textos.corpo.copyWith(color: cores.textoSobreEscuroTitulo),
+      ),
     );
-  }
-
-  Future<void> _confirmarExclusao(
-    BuildContext context,
-    Ecommerce ecommerce,
-  ) async {
-    final bloc = context.read<EcommercesBloc>();
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Excluir e-commerce'),
-          content: const Text(
-            'Excluir este e-commerce? Sites integrados a ele vão parar de '
-            'funcionar corretamente. Essa ação pode ser desfeita depois.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Excluir'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmou == true) {
-      bloc.add(EcommercesExcluirSolicitado(id: ecommerce.id!));
-    }
   }
 }

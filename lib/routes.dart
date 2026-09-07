@@ -454,6 +454,7 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/ecommerce_referencias',
       child: EcommerceReferenciasPage(
         ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
       ),
     );
   },
@@ -566,7 +567,19 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(route: '/romaneios', child: const RomaneiosPage());
   },
   '/vendas': (context) {
-    return _rotaProtegida(route: '/vendas', child: const VendasPage());
+    return _rotaProtegida(
+      route: '/vendas',
+      child: VendasPage(
+        funcionariosSeletor:
+            (data) =>
+                FuncionarioSeletor(
+                  modo: FuncionarioSeletorModo.multipla,
+                  onChanged: data.onChanged,
+                  itemsSelecionadosInicial:
+                      data.itemsSelecionadosInicial ?? const [],
+                ),
+      ),
+    );
   },
   '/romaneios_entrada_manual': (context) {
     return _rotaProtegida(

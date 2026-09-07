@@ -28,6 +28,9 @@ class VendasBloc extends Bloc<VendasEvent, VendasState> {
     final dataHoraFinal = event.dataHoraFinalInformada
         ? event.dataHoraFinal
         : state.dataHoraFinal;
+    final funcionarioIds = event.funcionarioIdsInformado
+        ? (event.funcionarioIds ?? const [])
+        : state.funcionarioIds;
 
     try {
       emit(
@@ -40,6 +43,7 @@ class VendasBloc extends Bloc<VendasEvent, VendasState> {
           limparDataHoraInicial: dataHoraInicial == null,
           dataHoraFinal: dataHoraFinal,
           limparDataHoraFinal: dataHoraFinal == null,
+          funcionarioIds: funcionarioIds,
           erro: null,
         ),
       );
@@ -51,6 +55,7 @@ class VendasBloc extends Bloc<VendasEvent, VendasState> {
         caixaId: caixaId,
         dataHoraInicial: dataHoraInicial,
         dataHoraFinal: dataHoraFinal,
+        funcionarioIds: funcionarioIds.isEmpty ? null : funcionarioIds,
         operacoes: const [TipoOperacao.venda],
       );
 

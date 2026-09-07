@@ -240,10 +240,7 @@ class _HomePageState extends State<HomePage> {
       icon: Icon(icone, size: 18),
       label: Text(
         texto,
-        style: textos.rotulo.copyWith(
-          fontSize: 13,
-          color: cores.textoSobreEscuroTitulo,
-        ),
+        style: textos.rotulo.copyWith(fontSize: 13, color: cores.textoSobreEscuroTitulo),
       ),
     );
   }

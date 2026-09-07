@@ -15,11 +15,14 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
       _recuperarProdutosDaReferenciaEcommerce;
   final AtualizarDisponibilidadeProdutoEcommerce
       _atualizarDisponibilidadeProdutoEcommerce;
+  final AtualizarDisponibilidadeProdutosEmLoteEcommerce
+      _atualizarDisponibilidadeProdutosEmLoteEcommerce;
   final AtualizarReferenciaEcommerce _atualizarReferenciaEcommerce;
 
   EcommerceReferenciaDetalheBloc(
     this._recuperarProdutosDaReferenciaEcommerce,
     this._atualizarDisponibilidadeProdutoEcommerce,
+    this._atualizarDisponibilidadeProdutosEmLoteEcommerce,
     this._atualizarReferenciaEcommerce,
   ) : super(
           const EcommerceReferenciaDetalheState(
@@ -31,6 +34,7 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
     on<EcommercePublicacaoAlterou>(_onPublicacaoAlterou);
     on<EcommercePublicarDisponiveisSolicitou>(_onPublicarDisponiveis);
     on<EcommerceRemoverSemEstoqueSolicitou>(_onRemoverSemEstoque);
+    on<EcommerceGradeGrupoAlterou>(_onGradeGrupoAlterou);
   }
 
   FutureOr<void> _onIniciou(
@@ -172,6 +176,22 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
     );
   }
 
+  FutureOr<void> _onGradeGrupoAlterou(
+    EcommerceGradeGrupoAlterou event,
+    Emitter<EcommerceReferenciaDetalheState> emit,
+  ) {
+    return _atualizarEmLote(
+      emit,
+      disponivel: event.disponivel,
+      selecionar: (produto) =>
+          produto.saldo > 0 &&
+          ((event.corNome != null && produto.corNome == event.corNome) ||
+              (event.tamanhoNome != null &&
+                  produto.tamanhoNome == event.tamanhoNome)),
+      mensagemErro: 'Falha ao atualizar disponibilidade em lote.',
+    );
+  }
+
   FutureOr<void> _atualizarEmLote(
     Emitter<EcommerceReferenciaDetalheState> emit, {
     required bool disponivel,
@@ -187,16 +207,15 @@ class EcommerceReferenciaDetalheBloc extends Bloc<
 
     emit(state.copyWith(processandoLote: true, erro: ''));
     try {
-      // Sequencial, não Future.wait: disparar um PUT por produto em paralelo tromba no rate
-      // limiter da API (50 req/s por IP) quando a referência tem muitos produtos sem estoque.
-      for (final produto in alvos) {
-        await _atualizarDisponibilidadeProdutoEcommerce.call(
-          state.ecommerceId!,
-          state.referenciaEcommerceId!,
-          produto.produtoId,
-          disponivel: disponivel,
-        );
-      }
+      // Endpoint de lote quando existir; senão o repositório cai no laço
+      // sequencial de sempre (rate limiter da API não aceita muitos PUTs em
+      // paralelo).
+      await _atualizarDisponibilidadeProdutosEmLoteEcommerce.call(
+        state.ecommerceId!,
+        state.referenciaEcommerceId!,
+        produtoIds: alvos.map((p) => p.produtoId).toList(),
+        disponivel: disponivel,
+      );
       final produtos = state.produtos
           .map(
             (produto) => alvos.contains(produto)

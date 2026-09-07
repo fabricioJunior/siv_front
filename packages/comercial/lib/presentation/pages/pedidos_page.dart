@@ -494,7 +494,7 @@ class _PainelPedido extends StatelessWidget {
                     situacao: SivEtiquetaSituacao.cancelado,
                     texto: 'Pedido cancelado')
               else
-                _TrilhaDeProgresso(pedido: pedido),
+                SivTrilhaDeProgresso(passos: _passosTrilha(pedido)),
             ],
           ),
         ),
@@ -605,54 +605,18 @@ class _PainelPedido extends StatelessWidget {
   }
 }
 
-class _TrilhaDeProgresso extends StatelessWidget {
-  final Pedido pedido;
+List<(String, bool)> _passosTrilha(Pedido pedido) {
+  final situacao = pedido.situacao?.toLowerCase();
+  final conferido = pedido.conferidoEm != null ||
+      situacao == 'faturado' ||
+      situacao == 'encerrado';
+  final faturado = situacao == 'faturado' || situacao == 'encerrado';
+  final encerrado = situacao == 'encerrado';
 
-  const _TrilhaDeProgresso({required this.pedido});
-
-  @override
-  Widget build(BuildContext context) {
-    final situacao = pedido.situacao?.toLowerCase();
-    final conferido = pedido.conferidoEm != null ||
-        situacao == 'faturado' ||
-        situacao == 'encerrado';
-    final faturado = situacao == 'faturado' || situacao == 'encerrado';
-    final encerrado = situacao == 'encerrado';
-
-    final passos = [
-      ('Aberto', true),
-      ('Conferido', conferido),
-      ('Faturado', faturado),
-      ('Encerrado', encerrado),
-    ];
-
-    final cores = context.sivColors;
-    return Row(
-      children: [
-        for (var i = 0; i < passos.length; i++) ...[
-          if (i > 0)
-            Expanded(
-              child: Container(
-                height: 2,
-                color: passos[i].$2 ? cores.aco : cores.hairline,
-              ),
-            ),
-          Column(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: passos[i].$2 ? cores.aco : cores.hairline,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(passos[i].$1, style: context.sivTextos.apoio),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
+  return [
+    ('Aberto', true),
+    ('Conferido', conferido),
+    ('Faturado', faturado),
+    ('Encerrado', encerrado),
+  ];
 }

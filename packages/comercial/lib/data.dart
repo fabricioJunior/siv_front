@@ -47,6 +47,11 @@ export 'domain/data/remote/i_ecommerce_remote_data_source.dart';
 export 'domain/data/repositories/i_ecommerce_repository.dart';
 export 'data/remote/ecommerce_remote_data_source.dart';
 export 'data/repositories/ecommerce_repository.dart';
+export 'domain/data/remote/i_ecommerce_banners_remote_data_source.dart';
+export 'domain/data/repositories/i_ecommerce_banners_repository.dart';
+export 'data/remote/ecommerce_banners_remote_data_source.dart';
+export 'data/repositories/ecommerce_banners_repository.dart';
+
 export 'domain/data/remote/i_lista_personalizada_remote_data_source.dart';
 export 'domain/data/repositories/i_lista_personalizada_repository.dart';
 export 'data/remote/lista_personalizada_remote_data_source.dart';

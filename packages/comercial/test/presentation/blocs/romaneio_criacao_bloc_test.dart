@@ -389,7 +389,7 @@ void main() {
     );
 
     blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
-      'cria romaneio de consignacao_saida com consignacaoId e não tenta receber no caixa',
+      'cria romaneio de consignacao_saida com consignacaoId e recebe no caixa automaticamente',
       build: () => RomaneioCriacaoBloc(
         StubCriarRomaneio((romaneio) async {
           expect(romaneio.operacao, TipoOperacao.consignacao_saida);
@@ -431,7 +431,8 @@ void main() {
             required romaneioId,
             required formasDePagamentoRealizadas,
           }) async {
-            fail('consignação não deve receber no caixa automaticamente');
+            expect(caixaId, 999);
+            expect(romaneioId, 456);
           },
         ),
         const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
@@ -457,6 +458,11 @@ void main() {
               RomaneioCriacaoStep.processando,
             )
             .having((state) => state.totalItensProcessados, 'itens', 1),
+        isA<RomaneioCriacaoState>().having(
+          (state) => state.step,
+          'step',
+          RomaneioCriacaoStep.finalizandoVenda,
+        ),
         isA<RomaneioCriacaoState>().having(
           (state) => state.step,
           'step',

@@ -64,6 +64,7 @@ export 'presentation/blocs/ecommerces_bloc/ecommerces_bloc.dart';
 export 'presentation/blocs/ecommerce_configuracao_bloc/ecommerce_configuracao_bloc.dart';
 export 'presentation/blocs/ecommerce_referencias_bloc/ecommerce_referencias_bloc.dart';
 export 'presentation/blocs/ecommerce_referencia_detalhe_bloc/ecommerce_referencia_detalhe_bloc.dart';
+export 'presentation/blocs/ecommerce_banners_bloc/ecommerce_banners_bloc.dart';
 export 'presentation/pages/ecommerces_page.dart';
 export 'presentation/pages/ecommerce_configuracao_page.dart';
 export 'presentation/pages/ecommerce_referencias_page.dart';

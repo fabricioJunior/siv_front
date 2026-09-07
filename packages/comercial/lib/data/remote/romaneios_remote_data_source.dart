@@ -101,6 +101,7 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
     DateTime? dataHoraFinal,
     List<TipoOperacao>? operacoes,
     List<int>? referenciaIds,
+    List<int>? funcionarioIds,
   }) async {
     final response = await get(
       queryParameters: {
@@ -117,6 +118,8 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
           'operacoes': operacoes.map((o) => o.toJsonValue()).join(','),
         if (referenciaIds != null && referenciaIds.isNotEmpty)
           'referenciaIds': referenciaIds.join(','),
+        if (funcionarioIds != null && funcionarioIds.isNotEmpty)
+          'funcionarioIds': funcionarioIds.join(','),
       },
     );
 

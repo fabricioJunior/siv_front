@@ -9,6 +9,17 @@ abstract class EcommerceReferenciasState extends Equatable {
   String? get busca => null;
   List<int>? get categoriaIds => null;
   bool? get rascunhoFiltro => null;
+  bool? get publicavelFiltro => null;
+
+  /// Contadores do envelope -- `null` quando o backend ainda não os envia.
+  int? get total => null;
+  int? get totalPublicados => null;
+  int? get totalRascunho => null;
+  int? get totalNaoPublicaveis => null;
+
+  int get pagina => 1;
+  bool get temMaisPaginas => false;
+  bool get carregandoMais => false;
 
   const EcommerceReferenciasState();
 
@@ -22,6 +33,14 @@ abstract class EcommerceReferenciasState extends Equatable {
         busca,
         categoriaIds,
         rascunhoFiltro,
+        publicavelFiltro,
+        total,
+        totalPublicados,
+        totalRascunho,
+        totalNaoPublicaveis,
+        pagina,
+        temMaisPaginas,
+        carregandoMais,
       ];
 }
 
@@ -51,6 +70,22 @@ class EcommerceReferenciasCarregarSucesso extends EcommerceReferenciasState {
   final List<int>? categoriaIds;
   @override
   final bool? rascunhoFiltro;
+  @override
+  final bool? publicavelFiltro;
+  @override
+  final int? total;
+  @override
+  final int? totalPublicados;
+  @override
+  final int? totalRascunho;
+  @override
+  final int? totalNaoPublicaveis;
+  @override
+  final int pagina;
+  @override
+  final bool temMaisPaginas;
+  @override
+  final bool carregandoMais;
 
   const EcommerceReferenciasCarregarSucesso({
     required this.ecommerceId,
@@ -61,6 +96,14 @@ class EcommerceReferenciasCarregarSucesso extends EcommerceReferenciasState {
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.publicavelFiltro,
+    this.total,
+    this.totalPublicados,
+    this.totalRascunho,
+    this.totalNaoPublicaveis,
+    this.pagina = 1,
+    this.temMaisPaginas = false,
+    this.carregandoMais = false,
   });
 }
 
@@ -93,6 +136,47 @@ class EcommerceReferenciasDespublicarTodasFalha
   });
 }
 
+// Estado one-shot equivalente ao de publicação em lote, mas pra adição de
+// várias referências de uma vez (R6).
+class EcommerceReferenciasAdicionarLoteConcluiu extends EcommerceReferenciasState {
+  @override
+  final int? ecommerceId;
+  @override
+  final List<EcommerceReferencia> referencias;
+  @override
+  final String? busca;
+  @override
+  final List<int>? categoriaIds;
+  @override
+  final bool? rascunhoFiltro;
+  @override
+  final int? total;
+  @override
+  final int? totalPublicados;
+  @override
+  final int? totalRascunho;
+  @override
+  final int? totalNaoPublicaveis;
+  final int adicionados;
+  final int falharam;
+  final List<EcommerceLoteFalha> falhas;
+
+  const EcommerceReferenciasAdicionarLoteConcluiu({
+    required this.ecommerceId,
+    required this.referencias,
+    this.busca,
+    this.categoriaIds,
+    this.rascunhoFiltro,
+    this.total,
+    this.totalPublicados,
+    this.totalRascunho,
+    this.totalNaoPublicaveis,
+    required this.adicionados,
+    required this.falharam,
+    this.falhas = const [],
+  });
+}
+
 // Estado one-shot: sinaliza fim do lote (R4) pra a página exibir a mensagem
 // "X publicados, Y falharam" via BlocListener. Já vem com a lista recarregada.
 class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
@@ -106,8 +190,17 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
   final List<int>? categoriaIds;
   @override
   final bool? rascunhoFiltro;
+  @override
+  final int? total;
+  @override
+  final int? totalPublicados;
+  @override
+  final int? totalRascunho;
+  @override
+  final int? totalNaoPublicaveis;
   final int publicados;
   final int falharam;
+  final List<EcommerceLoteFalha> falhas;
 
   const EcommerceReferenciasLoteConcluiu({
     required this.ecommerceId,
@@ -115,7 +208,12 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.total,
+    this.totalPublicados,
+    this.totalRascunho,
+    this.totalNaoPublicaveis,
     required this.publicados,
     required this.falharam,
+    this.falhas = const [],
   });
 }

@@ -182,7 +182,9 @@ class RomaneioCriacaoBloc
           operacao == TipoOperacao.manual_entrada ||
           operacao == TipoOperacao.manual_saida ||
           operacao == TipoOperacao.venda ||
-          operacao == TipoOperacao.venda_devolucao) {
+          operacao == TipoOperacao.venda_devolucao ||
+          operacao == TipoOperacao.consignacao_saida ||
+          operacao == TipoOperacao.consignacao_devolucao) {
         falhaAoReceberNoCaixa = true;
         final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
         if (caixaId == null) {

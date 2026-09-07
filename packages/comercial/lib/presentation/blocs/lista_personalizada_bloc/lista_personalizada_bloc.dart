@@ -17,6 +17,7 @@ class ListaPersonalizadaBloc
   final RemoverItensListaPersonalizada _removerItensListaPersonalizada;
   final RecuperarListaPersonalizada _recuperarListaPersonalizada;
   final BuscarLinkListaPersonalizada _buscarLinkListaPersonalizada;
+  final AtualizarTituloListaPersonalizada _atualizarTituloListaPersonalizada;
 
   ListaPersonalizadaBloc(
     this._criarListaPersonalizada,
@@ -24,12 +25,14 @@ class ListaPersonalizadaBloc
     this._removerItensListaPersonalizada,
     this._recuperarListaPersonalizada,
     this._buscarLinkListaPersonalizada,
+    this._atualizarTituloListaPersonalizada,
   ) : super(const ListaPersonalizadaState()) {
     on<ListaPersonalizadaCriou>(_onCriou);
     on<ListaPersonalizadaAbriu>(_onAbriu);
     on<ListaPersonalizadaReferenciasAdicionou>(_onReferenciasAdicionou);
     on<ListaPersonalizadaReferenciasRemoveu>(_onReferenciasRemoveu);
     on<ListaPersonalizadaItensAjustou>(_onItensAjustou);
+    on<ListaPersonalizadaTituloAtualizou>(_onTituloAtualizou);
   }
 
   FutureOr<void> _onCriou(
@@ -41,6 +44,7 @@ class ListaPersonalizadaBloc
       final lista = await _criarListaPersonalizada.call(
         tabelaPrecoId: event.tabelaPrecoId,
         dataExpiracao: event.dataExpiracao,
+        titulo: event.titulo,
       );
       emit(state.copyWith(step: ListaPersonalizadaStep.criada, lista: lista));
       await _carregarLink(lista.id, emit);
@@ -170,6 +174,31 @@ class ListaPersonalizadaBloc
         state.copyWith(
           atualizandoItens: false,
           erro: mensagemDeErroApi(e, 'Falha ao atualizar as referências da lista.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onTituloAtualizou(
+    ListaPersonalizadaTituloAtualizou event,
+    Emitter<ListaPersonalizadaState> emit,
+  ) async {
+    final lista = state.lista;
+    if (lista == null) return;
+
+    emit(state.copyWith(atualizandoTitulo: true, erro: ''));
+    try {
+      final atualizada = await _atualizarTituloListaPersonalizada.call(
+        lista.id,
+        event.titulo,
+      );
+      emit(state.copyWith(lista: atualizada, atualizandoTitulo: false));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          atualizandoTitulo: false,
+          erro: mensagemDeErroApi(e, 'Falha ao atualizar o título da lista.'),
         ),
       );
       addError(e, s);

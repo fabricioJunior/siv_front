@@ -20,6 +20,7 @@ class ListaPersonalizada {
   final int tabelaPrecoId;
   final DateTime dataExpiracao;
   final ListaPersonalizadaSituacao situacao;
+  final String? titulo;
   final List<ListaPersonalizadaItem> itens;
 
   const ListaPersonalizada({
@@ -28,6 +29,7 @@ class ListaPersonalizada {
     required this.tabelaPrecoId,
     required this.dataExpiracao,
     required this.situacao,
+    this.titulo,
     this.itens = const [],
   });
 }

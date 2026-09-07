@@ -420,6 +420,9 @@ void _useCases() {
   sl.registerFactory<BuscarLinkListaPersonalizada>(
     () => BuscarLinkListaPersonalizada(repository: sl()),
   );
+  sl.registerFactory<AtualizarTituloListaPersonalizada>(
+    () => AtualizarTituloListaPersonalizada(repository: sl()),
+  );
   sl.registerFactory<ListarListasPersonalizadas>(
     () => ListarListasPersonalizadas(repository: sl()),
   );
@@ -640,7 +643,7 @@ void _presentation() {
   );
 
   sl.registerFactory<ListaPersonalizadaBloc>(
-    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl()),
+    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ListasPersonalizadasBloc>(

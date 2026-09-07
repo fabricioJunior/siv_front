@@ -13,12 +13,18 @@ class ListaPersonalizadaRepository implements IListaPersonalizadaRepository {
     required int tabelaPrecoId,
     required DateTime dataExpiracao,
     List<int> referenciaIds = const [],
+    String? titulo,
   }) =>
       remoteDataSource.criar(
         tabelaPrecoId: tabelaPrecoId,
         dataExpiracao: dataExpiracao,
         referenciaIds: referenciaIds,
+        titulo: titulo,
       );
+
+  @override
+  Future<ListaPersonalizada> atualizarTitulo(int id, String? titulo) =>
+      remoteDataSource.atualizarTitulo(id, titulo);
 
   @override
   Future<ListaPersonalizada> adicionarItens(int id, List<int> referenciaIds) =>

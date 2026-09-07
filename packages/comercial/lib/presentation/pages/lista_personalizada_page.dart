@@ -20,6 +20,7 @@ class ListaPersonalizadaPage extends StatefulWidget {
 
 class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
   late final ListaPersonalizadaBloc _bloc;
+  final _tituloController = TextEditingController();
   int? _tabelaPrecoId;
   DateTime? _dataExpiracao;
 
@@ -36,6 +37,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
   @override
   void dispose() {
     _bloc.close();
+    _tituloController.dispose();
     SivPageTitulo.limpar();
     super.dispose();
   }
@@ -87,6 +89,12 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
               style: textos.apoio,
             ),
             const SizedBox(height: 16),
+            TextField(
+              controller: _tituloController,
+              maxLength: 255,
+              decoration: const InputDecoration(labelText: 'Título da lista (opcional)'),
+            ),
+            const SizedBox(height: 16),
             TabelasDePrecoSeletor(
               onTabelaDePrecoChanged: (selecionadas) => setState(() {
                 _tabelaPrecoId = selecionadas.isEmpty ? null : selecionadas.first.id;
@@ -122,6 +130,9 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                         ListaPersonalizadaCriou(
                           tabelaPrecoId: _tabelaPrecoId!,
                           dataExpiracao: _dataExpiracao!,
+                          titulo: _tituloController.text.trim().isEmpty
+                              ? null
+                              : _tituloController.text.trim(),
                         ),
                       ),
               icon: state.step == ListaPersonalizadaStep.salvando
@@ -151,6 +162,24 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      lista.titulo?.isNotEmpty == true ? lista.titulo! : 'Sem título',
+                      style: textos.rotulo,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Editar título',
+                    onPressed: state.atualizandoTitulo
+                        ? null
+                        : () => _editarTitulo(context, lista),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text('Link para o cliente', style: textos.rotulo),
               const SizedBox(height: 8),
               Row(
@@ -285,6 +314,26 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
               const SizedBox(height: 16),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Future<void> _editarTitulo(BuildContext context, ListaPersonalizada lista) async {
+    final controller = TextEditingController(text: lista.titulo ?? '');
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Editar título',
+      corpo: TextField(
+        controller: controller,
+        maxLength: 255,
+        decoration: const InputDecoration(labelText: 'Título da lista'),
+      ),
+      textoAcao: 'Salvar',
+      onConfirmar: (_) {
+        final novoTitulo = controller.text.trim();
+        _bloc.add(
+          ListaPersonalizadaTituloAtualizou(titulo: novoTitulo.isEmpty ? null : novoTitulo),
         );
       },
     );

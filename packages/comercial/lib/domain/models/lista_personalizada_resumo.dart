@@ -7,6 +7,7 @@ class ListaPersonalizadaResumo {
   final DateTime dataExpiracao;
   final int quantidadeItens;
   final DateTime criadoEm;
+  final String? titulo;
 
   const ListaPersonalizadaResumo({
     required this.id,
@@ -15,6 +16,7 @@ class ListaPersonalizadaResumo {
     required this.dataExpiracao,
     required this.quantidadeItens,
     required this.criadoEm,
+    this.titulo,
   });
 }
 

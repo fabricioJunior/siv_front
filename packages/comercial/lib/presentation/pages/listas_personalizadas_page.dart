@@ -114,7 +114,7 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         }
         final lista = state.itens[index];
         return ListTile(
-          title: Text(lista.hash),
+          title: Text(lista.titulo?.isNotEmpty == true ? lista.titulo! : lista.hash),
           subtitle: Text(
             '${lista.quantidadeItens} produto(s) · criada em ${_formatarData(lista.criadoEm)}',
           ),

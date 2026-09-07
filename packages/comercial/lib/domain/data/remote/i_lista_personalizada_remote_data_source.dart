@@ -6,7 +6,10 @@ abstract class IListaPersonalizadaRemoteDataSource {
     required int tabelaPrecoId,
     required DateTime dataExpiracao,
     List<int> referenciaIds,
+    String? titulo,
   });
+
+  Future<ListaPersonalizada> atualizarTitulo(int id, String? titulo);
 
   Future<ListaPersonalizada> adicionarItens(int id, List<int> referenciaIds);
 

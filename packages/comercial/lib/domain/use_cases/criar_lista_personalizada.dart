@@ -11,10 +11,12 @@ class CriarListaPersonalizada {
     required int tabelaPrecoId,
     required DateTime dataExpiracao,
     List<int> referenciaIds = const [],
+    String? titulo,
   }) =>
       _repository.criar(
         tabelaPrecoId: tabelaPrecoId,
         dataExpiracao: dataExpiracao,
         referenciaIds: referenciaIds,
+        titulo: titulo,
       );
 }

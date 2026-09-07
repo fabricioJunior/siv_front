@@ -6,6 +6,7 @@ class ListaPersonalizadaState extends Equatable {
   final ListaPersonalizadaStep step;
   final ListaPersonalizada? lista;
   final bool atualizandoItens;
+  final bool atualizandoTitulo;
   final String? link;
   final String? erro;
 
@@ -13,6 +14,7 @@ class ListaPersonalizadaState extends Equatable {
     this.step = ListaPersonalizadaStep.formulario,
     this.lista,
     this.atualizandoItens = false,
+    this.atualizandoTitulo = false,
     this.link,
     this.erro,
   });
@@ -21,6 +23,7 @@ class ListaPersonalizadaState extends Equatable {
     ListaPersonalizadaStep? step,
     ListaPersonalizada? lista,
     bool? atualizandoItens,
+    bool? atualizandoTitulo,
     String? link,
     String? erro,
   }) {
@@ -28,11 +31,13 @@ class ListaPersonalizadaState extends Equatable {
       step: step ?? this.step,
       lista: lista ?? this.lista,
       atualizandoItens: atualizandoItens ?? this.atualizandoItens,
+      atualizandoTitulo: atualizandoTitulo ?? this.atualizandoTitulo,
       link: link ?? this.link,
       erro: erro,
     );
   }
 
   @override
-  List<Object?> get props => [step, lista, atualizandoItens, link, erro];
+  List<Object?> get props =>
+      [step, lista, atualizandoItens, atualizandoTitulo, link, erro];
 }

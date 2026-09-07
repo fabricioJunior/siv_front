@@ -10,14 +10,25 @@ abstract class ListaPersonalizadaEvent extends Equatable {
 class ListaPersonalizadaCriou extends ListaPersonalizadaEvent {
   final int tabelaPrecoId;
   final DateTime dataExpiracao;
+  final String? titulo;
 
   const ListaPersonalizadaCriou({
     required this.tabelaPrecoId,
     required this.dataExpiracao,
+    this.titulo,
   });
 
   @override
-  List<Object?> get props => [tabelaPrecoId, dataExpiracao];
+  List<Object?> get props => [tabelaPrecoId, dataExpiracao, titulo];
+}
+
+class ListaPersonalizadaTituloAtualizou extends ListaPersonalizadaEvent {
+  final String? titulo;
+
+  const ListaPersonalizadaTituloAtualizou({required this.titulo});
+
+  @override
+  List<Object?> get props => [titulo];
 }
 
 class ListaPersonalizadaAbriu extends ListaPersonalizadaEvent {

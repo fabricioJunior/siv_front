@@ -92,6 +92,7 @@ export 'domain/use_cases/fechar_consignacao.dart';
 export 'domain/use_cases/cancelar_consignacao.dart';
 export 'domain/use_cases/verificar_elegibilidade_fidelidade.dart';
 export 'domain/use_cases/criar_lista_personalizada.dart';
+export 'domain/use_cases/atualizar_titulo_lista_personalizada.dart';
 export 'domain/use_cases/adicionar_itens_lista_personalizada.dart';
 export 'domain/use_cases/remover_itens_lista_personalizada.dart';
 export 'domain/use_cases/recuperar_lista_personalizada.dart';

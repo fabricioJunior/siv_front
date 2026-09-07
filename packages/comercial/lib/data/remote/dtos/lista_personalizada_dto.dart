@@ -9,6 +9,7 @@ class ListaPersonalizadaDto {
       dataExpiracao:
           DateTime.tryParse(json['dataExpiracao']?.toString() ?? '') ?? DateTime.now(),
       situacao: situacaoDeJson(json['situacao']?.toString()),
+      titulo: json['titulo']?.toString(),
       itens: (json['itens'] as List<dynamic>? ?? [])
           .map((item) => _item(item as Map<String, dynamic>))
           .toList(),

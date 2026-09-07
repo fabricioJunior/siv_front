@@ -17,6 +17,7 @@ class ListaPersonalizadaRemoteDataSource extends RemoteDataSourceBase
     required int tabelaPrecoId,
     required DateTime dataExpiracao,
     List<int> referenciaIds = const [],
+    String? titulo,
   }) async {
     final response = await post(
       pathParameters: const {'sufixo': ''},
@@ -24,7 +25,17 @@ class ListaPersonalizadaRemoteDataSource extends RemoteDataSourceBase
         'tabelaPrecoId': tabelaPrecoId,
         'dataExpiracao': dataExpiracao.toIso8601String(),
         if (referenciaIds.isNotEmpty) 'referenciaIds': referenciaIds,
+        if (titulo != null && titulo.isNotEmpty) 'titulo': titulo,
       },
+    );
+    return ListaPersonalizadaDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ListaPersonalizada> atualizarTitulo(int id, String? titulo) async {
+    final response = await patch(
+      pathParameters: {'sufixo': '/$id'},
+      body: {'titulo': titulo},
     );
     return ListaPersonalizadaDto.fromJson(response.body as Map<String, dynamic>);
   }

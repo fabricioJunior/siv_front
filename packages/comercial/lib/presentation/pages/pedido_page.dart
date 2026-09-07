@@ -1237,7 +1237,7 @@ class _PedidoPageState extends State<PedidoPage> {
                   style: textos.rotulo,
                 ),
                 Text(
-                  _formatarMoeda(state.valorTotalItens),
+                  _formatarMoeda(state.valorTotalGeral),
                   style: textos.valor,
                 ),
               ],

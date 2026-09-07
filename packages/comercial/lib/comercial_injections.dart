@@ -646,4 +646,12 @@ void _presentation() {
   sl.registerFactory<ListasPersonalizadasBloc>(
     () => ListasPersonalizadasBloc(sl()),
   );
+
+  sl.registerFactory<ListaPersonalizadaBloc>(
+    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListasPersonalizadasBloc>(
+    () => ListasPersonalizadasBloc(sl()),
+  );
 }

@@ -13,8 +13,7 @@ class MenuProdutosPage extends StatelessWidget {
         children: [
           const _MenuHeader(
             titulo: 'Catálogo de produtos',
-            descricao:
-                'Organize referências, variações, categorias e marcas em um fluxo visual mais simples.',
+            descricao: 'Organize referências, variações, categorias e marcas em um fluxo visual mais simples.',
             icon: Icons.shopping_bag_outlined,
             color: Colors.deepPurple,
           ),
@@ -80,14 +79,14 @@ class MenuProdutosPage extends StatelessWidget {
             titulo: 'Impressao de etiquetas',
             subtitulo: 'Monte a pilha por referencia e imprima etiquetas.',
             componente: 'PRDFM003',
-            onTap: () => Navigator.of(context).pushNamed('/impressao_etiquetas'),
+            onTap: () =>
+                Navigator.of(context).pushNamed('/impressao_etiquetas'),
           ),
           const SizedBox(height: 12),
           _ItemMenu(
             icon: Icons.label_off_outlined,
             titulo: 'Pendência de NCM',
-            subtitulo:
-                'Referências sem NCM — visualize e atualize em massa.',
+            subtitulo: 'Referências sem NCM — visualize e atualize em massa.',
             componente: 'PRDFM004',
             onTap: () =>
                 Navigator.of(context).pushNamed('/referencias_pendentes_ncm'),
@@ -96,11 +95,26 @@ class MenuProdutosPage extends StatelessWidget {
           _ItemMenu(
             icon: Icons.scale_outlined,
             titulo: 'Pendência de peso',
-            subtitulo:
-                'Referências sem peso — visualize e atualize em massa.',
+            subtitulo: 'Referências sem peso — visualize e atualize em massa.',
             componente: 'PRDFM004',
             onTap: () =>
                 Navigator.of(context).pushNamed('/referencias_pendentes_peso'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.sell_outlined,
+            titulo: 'Tabelas de preço',
+            subtitulo: 'Cadastre tabelas e associe referências.',
+            componente: 'PRDFM010',
+            onTap: () => Navigator.of(context).pushNamed('/tabelas_de_preco'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.confirmation_number_outlined,
+            titulo: 'Cupons',
+            subtitulo: 'Crie e gerencie cupons de desconto.',
+            componente: 'CUPFC001',
+            onTap: () => Navigator.of(context).pushNamed('/cupons'),
           ),
         ],
       ),
@@ -156,9 +170,8 @@ class _MenuHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   descricao,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.92),
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white.withValues(alpha: 0.92)),
                 ),
               ],
             ),

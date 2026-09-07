@@ -1144,6 +1144,10 @@ class _PedidoPageState extends State<PedidoPage> {
         _buildCabecalhoPedidoCard(context, state),
         if (state.id != null) ...[
           const SizedBox(height: 16),
+          _TrilhaDeEtapas(situacaoAtual: state.pedido?.situacao),
+          const SizedBox(height: 16),
+          _buildInformacoesPedidoCard(context, state),
+          const SizedBox(height: 16),
           _buildStatusCard(context, state),
         ],
         const SizedBox(height: 16),
@@ -1239,6 +1243,53 @@ class _PedidoPageState extends State<PedidoPage> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInformacoesPedidoCard(BuildContext context, PedidoState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final situacaoPagamento = state.pedido?.situacaoPagamento;
+    final pendente = situacaoPagamento == 'pendente';
+
+    Widget linha(String rotulo, String valor, {Color? corValor}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(rotulo, style: textos.apoio),
+            Text(
+              valor,
+              style: textos.corpo.copyWith(
+                fontSize: 13.5,
+                color: corValor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          linha('Itens', '${state.itens.length}'),
+          linha(
+            'Entrega',
+            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada',
+          ),
+          linha(
+            'Pagamento',
+            _labelSituacaoPagamento(situacaoPagamento),
+            corValor: pendente ? cores.atencao : null,
+          ),
+          // TODO: Nota fiscal -- Pedido (domain/models/pedido.dart) não expõe
+          // número/status de nota fiscal, sem esse dado no state não dá pra exibir aqui.
         ],
       ),
     );
@@ -2597,5 +2648,50 @@ class _PedidoPageState extends State<PedidoPage> {
             valorTaxaEntrega: valorTaxaEntrega,
           ),
         );
+  }
+}
+
+const _etapasPedido = ['em_andamento', 'conferido', 'faturado', 'encerrado'];
+const _labelsEtapasPedido = ['Em andamento', 'Conferido', 'Faturado', 'Encerrado'];
+
+class _TrilhaDeEtapas extends StatelessWidget {
+  final String? situacaoAtual;
+
+  const _TrilhaDeEtapas({required this.situacaoAtual});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final indiceAtual = _etapasPedido.indexOf(situacaoAtual ?? '');
+
+    return Row(
+      children: List.generate(_etapasPedido.length, (indice) {
+        final atingida = indiceAtual >= 0 && indice <= indiceAtual;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: indice == 0 ? 0 : 4,
+              right: indice == _etapasPedido.length - 1 ? 0 : 4,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 3,
+                  color: atingida ? cores.aco : cores.hairline,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _labelsEtapasPedido[indice].toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: textos.rotulo.copyWith(fontSize: 11, letterSpacing: 1.1),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

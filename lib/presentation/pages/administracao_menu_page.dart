@@ -32,6 +32,30 @@ class AdministracaoMenuPage extends StatelessWidget {
         route: '/empresas',
       ),
       const _ItemData(
+        icon: Icons.storefront_outlined,
+        titulo: 'E-commerce',
+        subtitulo: 'Configuração da loja, catálogo publicado e banners.',
+        cor: Colors.pink,
+        componente: 'ECOFM001',
+        route: '/ecommerces',
+      ),
+      const _ItemData(
+        icon: Icons.credit_card_outlined,
+        titulo: 'Formas de pagamento',
+        subtitulo: 'Cadastre e mantenha os meios de pagamento aceitos.',
+        cor: Colors.green,
+        componente: 'GERFM001',
+        route: '/formas_de_pagamento',
+      ),
+      const _ItemData(
+        icon: Icons.mail_outline,
+        titulo: 'Comunicados',
+        subtitulo: 'Envie comunicados por e-mail pra base de clientes.',
+        cor: Colors.orange,
+        componente: 'COMFC001',
+        route: '/comunicados',
+      ),
+      const _ItemData(
         icon: Icons.settings_outlined,
         titulo: 'Configurações',
         subtitulo: 'SMTP e ajustes sistêmicos da aplicação.',
@@ -166,9 +190,8 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   descricao,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.90),
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white.withValues(alpha: 0.90)),
                 ),
               ],
             ),

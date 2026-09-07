@@ -502,7 +502,20 @@ class _VendaPageState extends State<VendaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Cliente', style: textos.rotulo),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Cliente', style: textos.rotulo),
+                  if (state.clienteSelecionado != null)
+                    TextButton.icon(
+                      onPressed: state.processando
+                          ? null
+                          : () => _abrirTrocaCliente(context, state),
+                      icon: const Icon(Icons.swap_horiz, size: 16),
+                      label: const Text('Trocar'),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               if (state.clienteSelecionado != null && !_trocandoCliente)
                 Row(
@@ -1210,6 +1223,35 @@ class _VendaPageState extends State<VendaPage> {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
+  }
+
+  void _abrirTrocaCliente(BuildContext context, VendaState state) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: SizedBox(
+            width: 420,
+            child: widget.pessoaSeletor(
+              SeletorData(
+                itemsSelecionadosInicial: [state.clienteSelecionado!],
+                onChanged: (selecionados) {
+                  context.read<VendaBloc>().add(
+                        VendaClienteSelecionado(
+                          clienteSelecionado:
+                              selecionados.isEmpty ? null : selecionados.first,
+                        ),
+                      );
+                  Navigator.of(dialogContext).pop();
+                  _solicitarFocoLeitura();
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:autenticacao/domain/data/repositories/i_token_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_licenciados_repository.dart';
 import 'package:autenticacao/domain/data/repositories/i_usuarios_repository.dart';
 import 'package:autenticacao/domain/usecases/limpar_credenciais_de_autenticacao.dart';
+import 'package:core/local_data_sourcers/database_configs/i_hive_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/i_local_database_instance.dart';
 
 class Deslogar {
@@ -10,6 +11,7 @@ class Deslogar {
   final ILicenciadosRepository licenciadosRepository;
   final LimparCredenciaisDeAutenticacao limparCredenciaisDeAutenticacao;
   final ILocalDatabaseInstance localDatabaseInstance;
+  final IHiveDatabaseInstance hiveDatabaseInstance;
 
   Deslogar({
     required this.tokenRepository,
@@ -17,6 +19,7 @@ class Deslogar {
     required this.licenciadosRepository,
     required this.limparCredenciaisDeAutenticacao,
     required this.localDatabaseInstance,
+    required this.hiveDatabaseInstance,
   });
 
   // apagarDadosLocais=false pro caso de 401 esporádico (sessão caiu sozinha, ex: token expirou
@@ -34,7 +37,10 @@ class Deslogar {
     }
     // Dados locais (produtos/estoque/preços/etc) não têm licenciadoId pra
     // filtrar na leitura -- sem isso, trocar de licenciado reabre o mesmo
-    // banco local com dados do licenciado anterior ainda dentro.
+    // banco local com dados do licenciado anterior ainda dentro. Isar e Hive
+    // guardam DTOs diferentes (ver hive_storage_types.dart), então o wipe
+    // total precisa apagar as duas origens.
     await localDatabaseInstance.apagarTodosOsDados();
+    await hiveDatabaseInstance.apagarTodosOsDados();
   }
 }

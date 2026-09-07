@@ -131,6 +131,12 @@ final _itensOperacao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Produtos']!,
   ),
   _ItemDeNavegacao(
+    label: 'Listas personalizadas',
+    icone: Icons.playlist_add_check_outlined,
+    rota: '/listas_personalizadas',
+    componentesNecessarios: ['ECOFM004'],
+  ),
+  _ItemDeNavegacao(
     label: 'Fiscal',
     icone: Icons.receipt_long_outlined,
     rota: '/documentos_fiscais',

@@ -140,6 +140,7 @@ void _usesCases() {
       licenciadosRepository: sl(),
       limparCredenciaisDeAutenticacao: sl(),
       localDatabaseInstance: sl(),
+      hiveDatabaseInstance: sl(),
     ),
   );
 

@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
@@ -169,6 +170,8 @@ class MyApp extends StatelessWidget {
                   'Não foi possível iniciar o aplicativo.',
               detalhesTecnicos: state.detalhesErroInicializacao,
               onRetry: () => sl<AppBloc>().add(AppIniciou()),
+              onSairELimparDados: () =>
+                  sl<AppBloc>().add(AppDesautenticou()),
             );
           }
 
@@ -352,8 +355,26 @@ class AppInitializationErrorApp extends StatelessWidget {
             'Não foi possível concluir a inicialização do aplicativo. Verifique a configuração e tente novamente.',
         detalhesTecnicos:
             'Origem: ${error.runtimeType}\n\nErro: $error\n\nStack trace:\n$stackTrace',
+        onSairELimparDados: _sairELimparDados,
       ),
     );
+  }
+
+  // Falha ocorreu antes (ou durante) a resolução de dependências -- sem
+  // garantia de que `sl` já tenha o que `Deslogar` precisa. Refaz o boot do
+  // zero (mesmo caminho de `main()`) e só então limpa a sessão/dados locais,
+  // best-effort: se o boot falhar de novo, cai numa nova tela de erro igual
+  // a essa em vez de travar.
+  Future<void> _sairELimparDados() async {
+    try {
+      await sl.reset();
+      await configs();
+      await sl<Deslogar>().call();
+      runApp(MyApp());
+    } catch (e, s) {
+      log('Falha ao limpar dados locais: $e', stackTrace: s, name: 'Startup');
+      runApp(AppInitializationErrorApp(error: e, stackTrace: s));
+    }
   }
 }
 
@@ -361,12 +382,14 @@ class InitializationErrorView extends StatelessWidget {
   final String mensagem;
   final String? detalhesTecnicos;
   final VoidCallback? onRetry;
+  final VoidCallback? onSairELimparDados;
 
   const InitializationErrorView({
     super.key,
     required this.mensagem,
     this.detalhesTecnicos,
     this.onRetry,
+    this.onSairELimparDados,
   });
 
   @override
@@ -418,6 +441,12 @@ class InitializationErrorView extends StatelessWidget {
                         icon: const Icon(Icons.bug_report_outlined),
                         label: const Text('Informações técnicas'),
                       ),
+                      if (onSairELimparDados != null)
+                        OutlinedButton.icon(
+                          onPressed: onSairELimparDados,
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Sair e limpar dados'),
+                        ),
                     ],
                   ),
                 ],

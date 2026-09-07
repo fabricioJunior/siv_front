@@ -66,6 +66,9 @@ void _remoteDataSources() {
   sl.registerFactory<IEcommerceBannersRemoteDataSource>(
     () => EcommerceBannersRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
+    () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -122,6 +125,9 @@ void _repositories() {
   );
   sl.registerFactory<IEcommerceBannersRepository>(
     () => EcommerceBannersRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IListaPersonalizadaRepository>(
+    () => ListaPersonalizadaRepository(remoteDataSource: sl()),
   );
 }
 
@@ -398,6 +404,25 @@ void _useCases() {
   sl.registerFactory<ExcluirBannerEcommerce>(
     () => ExcluirBannerEcommerce(repository: sl()),
   );
+
+  sl.registerFactory<CriarListaPersonalizada>(
+    () => CriarListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<AdicionarItensListaPersonalizada>(
+    () => AdicionarItensListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<RemoverItensListaPersonalizada>(
+    () => RemoverItensListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<RecuperarListaPersonalizada>(
+    () => RecuperarListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<BuscarLinkListaPersonalizada>(
+    () => BuscarLinkListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<ListarListasPersonalizadas>(
+    () => ListarListasPersonalizadas(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -612,5 +637,13 @@ void _presentation() {
 
   sl.registerFactory<EcommerceBannersBloc>(
     () => EcommerceBannersBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListaPersonalizadaBloc>(
+    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListasPersonalizadasBloc>(
+    () => ListasPersonalizadasBloc(sl()),
   );
 }

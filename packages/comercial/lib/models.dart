@@ -19,3 +19,5 @@ export 'domain/models/ecommerce_lote_resultado.dart';
 export 'domain/models/ecommerce_referencia.dart';
 export 'domain/models/ecommerce_referencia_produto.dart';
 export 'domain/models/ecommerce_referencias_pagina.dart';
+export 'domain/models/lista_personalizada.dart';
+export 'domain/models/lista_personalizada_resumo.dart';

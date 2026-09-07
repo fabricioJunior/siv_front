@@ -26,14 +26,32 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await sl.reset();
-    await configs();
+    await _bootstrap();
     initPrintingConfigs();
     runApp(MyApp());
   } catch (e, s) {
     log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
     runApp(AppInitializationErrorApp(error: e, stackTrace: s));
   }
+}
+
+// `sl.reset()` + `configs()` não é reentrante: registro no GetIt não é
+// idempotente, então duas execuções concorrentes (ex: duplo clique em "Sair
+// e limpar dados" na tela de erro) intercalam um `reset` com o `configs` da
+// outra e uma tenta registrar um tipo que a outra acabou de registrar,
+// estourando "already registered". `_bootstrapping` garante que chamadas
+// concorrentes aguardem a mesma execução em vez de rodar em paralelo.
+Future<void>? _bootstrapping;
+
+Future<void> _bootstrap() {
+  return _bootstrapping ??= _runBootstrap().whenComplete(
+    () => _bootstrapping = null,
+  );
+}
+
+Future<void> _runBootstrap() async {
+  await sl.reset();
+  await configs();
 }
 
 Future<void> configs() async {
@@ -367,8 +385,7 @@ class AppInitializationErrorApp extends StatelessWidget {
   // a essa em vez de travar.
   Future<void> _sairELimparDados() async {
     try {
-      await sl.reset();
-      await configs();
+      await _bootstrap();
       await sl<Deslogar>().call();
       runApp(MyApp());
     } catch (e, s) {

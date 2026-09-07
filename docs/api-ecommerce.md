@@ -2,10 +2,12 @@
 
 Este documento lista os campos e endpoints que o `siv_front` já está preparado
 para consumir (leitura tolerante — o app não quebra e não inventa valor
-enquanto o backend não devolver isso), e os três endpoints de lote que ainda
-não existem.
+enquanto o backend não devolver isso).
 
-## 1. `GET /v1/e-commerce/{id}/referencias` — campos novos por item
+> **Status 2026-09-05**: itens 1 a 4 implementados no `apollo-api`
+> (branch `feat/backend-redesign-siv-ecommerce`). Detalhes/regra exata abaixo.
+
+## 1. `GET /v1/e-commerce/{id}/referencias` — campos novos por item (implementado)
 
 | Campo | Tipo | Para quê |
 | --- | --- | --- |
@@ -25,42 +27,56 @@ sem número (nunca contamos a página carregada como se fosse o total).
 o fim. Mantém `search`, `categoriaIds`, `rascunho`. Novo filtro opcional:
 `publicavel` (bool) — usado pelo segmento "Não publicáveis".
 
-Enquanto os campos acima não existirem: os selos de grade/categoria/motivo
-não aparecem, os segmentos mostram só o rótulo (sem número), e o filtro
-"Não publicáveis" fica sem resultado quando `publicavel` não é reconhecido
-pelo backend antigo (não trata como erro).
+**Regra exata de `publicavel`/`motivosBloqueio`** (calculada no backend a
+cada leitura, não persistida — depende de saldo em tempo real):
+- `SEM_PRECO`: referência sem preço cadastrado na tabela de preço do e-commerce.
+- `SEM_MIDIA`: referência sem nenhuma mídia pública (não excluída).
+- `SEM_GRADE_ATIVA`: nenhum produto (SKU) da grade está marcado `disponivel=true`
+  (`produtosDisponiveis === 0`). Tem prioridade sobre `SEM_SALDO` — só é
+  reportado um dos dois, nunca os dois juntos.
+- `SEM_SALDO`: tem SKU disponível na grade, mas a soma do saldo real desses
+  SKUs é zero.
+- `publicavel = true` quando nenhum dos motivos acima se aplica.
 
-## 2. `PATCH /v1/e-commerce/{id}/referencias/lote` — ainda não existe
+Isso bate com a heurística local do client (`valor`, `imagemUrl`,
+`saldo`/`disponivel` dos produtos) — pode substituir a heurística local com
+segurança.
+
+**Paginação implementada**: `page`/`limit` (default 50) reais, calculados em
+memória após aplicar `search`/`categoriaIds`/`comProdutoDisponivel` no banco
+e `rascunho`/`publicavel` (que dependem de saldo dinâmico) em memória —
+catálogos muito grandes por canal (milhares de referências) não foram
+otimizados nesta rodada; ok pro volume atual.
+
+## 2. `PATCH /v1/e-commerce/{id}/referencias/lote` (implementado)
 
 ```
 PATCH /v1/e-commerce/{id}/referencias/lote
 body: { "ids": [12, 44, 91], "rascunho": false }
+     | { "todos": true, "rascunho": false, "filtros": { "search"?: string, "categoriaIds"?: number[] } }
 resposta 200: { "atualizados": 2, "falharam": [ { "id": 91, "motivos": ["SEM_MIDIA"] } ] }
 ```
 
-O client (`EcommerceRepository.publicarReferenciasEmLote`) já tenta esse
-endpoint primeiro. Se a resposta for 404 ou 405, cai automaticamente no laço
-de hoje (`PATCH` individual em série, um por vez) e devolve o mesmo formato
-de resultado (`atualizados` + `falharam` com motivos vazios, já que o laço
-individual não sabe o motivo específico de cada falha — só que falhou).
+Publicar (`rascunho: false`) só aplica nas referências `publicavel`; as
+demais voltam em `falharam` com os `motivosBloqueio` reais (não motivos
+vazios). Voltar pra rascunho (`rascunho: true`) nunca falha.
 
-## 3. `PUT /v1/e-commerce/{id}/referencias/{refId}/produtos/lote` — ainda não existe
+## 3. `PUT /v1/e-commerce/{id}/referencias/{refId}/produtos/lote` (implementado)
 
 ```
 PUT /v1/e-commerce/{id}/referencias/{refId}/produtos/lote
 body: { "produtoIds": [101, 102, 103], "disponivel": true }
+resposta 200: { "atualizados": 3 }
 ```
 
-Mesmo esquema de fallback: usado pela matriz cor × tamanho da tela de
-referência (toque no cabeçalho de linha/coluna alterna o grupo inteiro). Sem
-o endpoint, o client faz um `PUT` por produto em série.
+Usado pela matriz cor × tamanho da tela de referência (toque no cabeçalho de
+linha/coluna alterna o grupo inteiro).
 
-## 4. `GET /v1/e-commerce/` e `GET /v1/e-commerce/{id}` — contadores do canal
+## 4. `GET /v1/e-commerce/` e `GET /v1/e-commerce/{id}` — contadores do canal (implementado)
 
-`referenciasPublicadas` (`int?`) e `referenciasRascunho` (`int?`) por
+`referenciasPublicadas` (`int`) e `referenciasRascunho` (`int`) por
 e-commerce, para os selos "412 publicadas / 18 rascunho" no card do canal em
-`/ecommerces`. Sem eles, o card não mostra selo nenhum — o client **não**
-faz uma chamada de referências por canal só pra contar.
+`/ecommerces`. 1 query agrupada pro lote inteiro (sem N+1 por canal).
 
 ## 5. Banners do carrossel — já implementado, sem pendência
 

@@ -20,6 +20,7 @@ class _EcommercesPageState extends State<EcommercesPage> {
   late final EcommercesBloc _bloc;
   int? _selecionadoId;
   bool _criandoNovo = false;
+  final _controladores = <Object, EcommerceConfiguracaoFormularioController>{};
 
   @override
   void initState() {
@@ -27,16 +28,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
     _selecionadoId = widget.ecommerceIdInicial;
     _bloc = sl<EcommercesBloc>()..add(const EcommercesCarregarSolicitado());
     SivPageTitulo.definir('E-commerces');
-    SivPageAcoes.definir([
-      OutlinedButton.icon(
-        onPressed: () => setState(() {
-          _criandoNovo = true;
-          _selecionadoId = null;
-        }),
-        icon: const Icon(Icons.add, size: 18),
-        label: const Text('Novo e-commerce'),
-      ),
-    ]);
   }
 
   @override
@@ -47,12 +38,16 @@ class _EcommercesPageState extends State<EcommercesPage> {
     super.dispose();
   }
 
+  EcommerceConfiguracaoFormularioController _controladorPara(Object chave) =>
+      _controladores.putIfAbsent(chave, EcommerceConfiguracaoFormularioController.new);
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<EcommercesBloc>.value(
       value: _bloc,
       child: BlocBuilder<EcommercesBloc, EcommercesState>(
         builder: (context, state) {
+          _atualizarAcoes(context, state);
           return Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: SivDimensoes.paginaHorizontal,
@@ -61,25 +56,7 @@ class _EcommercesPageState extends State<EcommercesPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  width: 340,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text('Mostrar excluídos', style: context.sivTextos.corpo),
-                        value: state.incluirApagados,
-                        onChanged: (value) => _bloc.add(
-                          EcommercesCarregarSolicitado(incluirApagados: value ?? false),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(child: _buildLista(context, state)),
-                    ],
-                  ),
-                ),
+                SizedBox(width: 340, child: _buildLista(context, state)),
                 const SizedBox(width: SivDimensoes.gapCards),
                 Expanded(child: _buildPainel(context, state)),
               ],
@@ -90,13 +67,56 @@ class _EcommercesPageState extends State<EcommercesPage> {
     );
   }
 
+  void _atualizarAcoes(BuildContext context, EcommercesState state) {
+    final selecionados =
+        _criandoNovo ? const <Ecommerce>[] : state.ecommerces.where((e) => e.id == _selecionadoId).toList();
+    final selecionado = selecionados.isEmpty ? null : selecionados.first;
+    final chave = _criandoNovo ? 'novo' : (selecionado?.id ?? 'novo');
+
+    SivPageAcoes.definir([
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Checkbox(
+            value: state.incluirApagados,
+            onChanged: (value) => _bloc.add(
+              EcommercesCarregarSolicitado(incluirApagados: value ?? false),
+            ),
+          ),
+          Text('Mostrar excluídos', style: context.sivTextos.corpo),
+        ],
+      ),
+      const SizedBox(width: 12),
+      if (selecionado != null && !selecionado.apagado)
+        OutlinedButton.icon(
+          onPressed: () => _confirmarExclusao(context, selecionado),
+          icon: Icon(Icons.delete_outline, size: 18, color: context.sivColors.vinho),
+          label: Text('Excluir canal', style: TextStyle(color: context.sivColors.vinho)),
+        ),
+      const SizedBox(width: 8),
+      OutlinedButton.icon(
+        onPressed: () => setState(() {
+          _criandoNovo = true;
+          _selecionadoId = null;
+        }),
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('Novo e-commerce'),
+      ),
+      const SizedBox(width: 8),
+      FilledButton.icon(
+        onPressed: (_criandoNovo || selecionado != null)
+            ? () => _controladorPara(chave).salvar()
+            : null,
+        icon: const Icon(Icons.check, size: 18),
+        label: const Text('Salvar configuração'),
+      ),
+    ]);
+  }
+
   Widget _buildLista(BuildContext context, EcommercesState state) {
     if (state.status == EcommercesStatus.carregando) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    final textos = context.sivTextos;
-    final cores = context.sivColors;
-
     return ListView(
       children: [
         for (final ecommerce in state.ecommerces)
@@ -116,27 +136,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
                   : null,
             ),
           ),
-        InkWell(
-          onTap: () => setState(() {
-            _criandoNovo = true;
-            _selecionadoId = null;
-          }),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              border: Border.all(color: cores.hairline),
-              borderRadius: BorderRadius.circular(SivDimensoes.raio),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add, size: 18, color: cores.textoApoio),
-                const SizedBox(width: 8),
-                Text('Cadastrar e-commerce', style: textos.corpo),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -145,6 +144,7 @@ class _EcommercesPageState extends State<EcommercesPage> {
     if (_criandoNovo) {
       return EcommerceConfiguracaoFormulario(
         key: const ValueKey('novo'),
+        controller: _controladorPara('novo'),
         onSalvou: () {
           setState(() => _criandoNovo = false);
           _bloc.add(const EcommercesCarregarSolicitado());
@@ -163,30 +163,12 @@ class _EcommercesPageState extends State<EcommercesPage> {
     }
 
     final ecommerce = selecionado.first;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!ecommerce.apagado)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _confirmarExclusao(context, ecommerce),
-              icon: Icon(Icons.delete_outline, size: 18, color: context.sivColors.vinho),
-              label: Text(
-                'Excluir canal',
-                style: TextStyle(color: context.sivColors.vinho),
-              ),
-            ),
-          ),
-        Expanded(
-          child: EcommerceConfiguracaoFormulario(
-            key: ValueKey(ecommerce.id),
-            ecommerceId: ecommerce.id,
-            empresaId: ecommerce.empresaId,
-            onSalvou: () => _bloc.add(const EcommercesCarregarSolicitado()),
-          ),
-        ),
-      ],
+    return EcommerceConfiguracaoFormulario(
+      key: ValueKey(ecommerce.id),
+      controller: _controladorPara(ecommerce.id ?? 'novo'),
+      ecommerceId: ecommerce.id,
+      empresaId: ecommerce.empresaId,
+      onSalvou: () => _bloc.add(const EcommercesCarregarSolicitado()),
     );
   }
 
@@ -237,11 +219,18 @@ class _CardCanal extends StatelessWidget {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: cores.acoEscuro,
-                child: Text(
-                  ecommerce.titulo.isNotEmpty ? ecommerce.titulo[0].toUpperCase() : '?',
-                  style: TextStyle(color: cores.textoSobreEscuroTitulo),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: ecommerce.icone != null
+                      ? Image.network(
+                          ecommerce.icone!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _iniciais(cores, textos),
+                        )
+                      : _iniciais(cores, textos),
                 ),
               ),
               const SizedBox(width: 12),
@@ -249,7 +238,7 @@ class _CardCanal extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(ecommerce.titulo, style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                    Text(ecommerce.titulo, style: textos.secao),
                     if (ecommerce.subtitulo != null)
                       Text(ecommerce.subtitulo!, style: textos.apoio),
                     if (ecommerce.referenciasPublicadas != null ||
@@ -270,12 +259,21 @@ class _CardCanal extends StatelessWidget {
                 ),
               ),
               if (ecommerce.apagado)
-                TextButton(onPressed: onRestaurar, child: const Text('Restaurar'))
-              else if (selecionado)
-                Icon(Icons.check_circle, color: cores.aco, size: 20),
+                TextButton(onPressed: onRestaurar, child: const Text('Restaurar')),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _iniciais(SivColors cores, SivTextStyles textos) {
+    return Container(
+      color: cores.acoEscuro,
+      alignment: Alignment.center,
+      child: Text(
+        ecommerce.titulo.isNotEmpty ? ecommerce.titulo[0].toUpperCase() : '?',
+        style: textos.corpo.copyWith(color: cores.textoSobreEscuroTitulo),
       ),
     );
   }

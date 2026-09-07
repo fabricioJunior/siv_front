@@ -76,6 +76,23 @@ class EcommerceReferenciasDespublicarTodasSolicitou
   List<Object?> get props => [ecommerceId];
 }
 
+/// Adiciona várias referências de uma vez, reaproveitando a barra de
+/// progresso do lote de publicação -- sem endpoint de lote dedicado ainda,
+/// então o bloc mesmo faz o laço sequencial.
+class EcommerceReferenciasAdicionarEmLoteSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+  final List<int> referenciaIds;
+
+  const EcommerceReferenciasAdicionarEmLoteSolicitou({
+    required this.ecommerceId,
+    required this.referenciaIds,
+  });
+
+  @override
+  List<Object?> get props => [ecommerceId, referenciaIds];
+}
+
 class EcommerceReferenciasPublicarEmLoteSolicitou
     extends EcommerceReferenciasEvent {
   final int ecommerceId;

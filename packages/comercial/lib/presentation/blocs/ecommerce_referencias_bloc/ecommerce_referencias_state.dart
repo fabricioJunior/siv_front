@@ -136,6 +136,47 @@ class EcommerceReferenciasDespublicarTodasFalha
   });
 }
 
+// Estado one-shot equivalente ao de publicação em lote, mas pra adição de
+// várias referências de uma vez (R6).
+class EcommerceReferenciasAdicionarLoteConcluiu extends EcommerceReferenciasState {
+  @override
+  final int? ecommerceId;
+  @override
+  final List<EcommerceReferencia> referencias;
+  @override
+  final String? busca;
+  @override
+  final List<int>? categoriaIds;
+  @override
+  final bool? rascunhoFiltro;
+  @override
+  final int? total;
+  @override
+  final int? totalPublicados;
+  @override
+  final int? totalRascunho;
+  @override
+  final int? totalNaoPublicaveis;
+  final int adicionados;
+  final int falharam;
+  final List<EcommerceLoteFalha> falhas;
+
+  const EcommerceReferenciasAdicionarLoteConcluiu({
+    required this.ecommerceId,
+    required this.referencias,
+    this.busca,
+    this.categoriaIds,
+    this.rascunhoFiltro,
+    this.total,
+    this.totalPublicados,
+    this.totalRascunho,
+    this.totalNaoPublicaveis,
+    required this.adicionados,
+    required this.falharam,
+    this.falhas = const [],
+  });
+}
+
 // Estado one-shot: sinaliza fim do lote (R4) pra a página exibir a mensagem
 // "X publicados, Y falharam" via BlocListener. Já vem com a lista recarregada.
 class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {

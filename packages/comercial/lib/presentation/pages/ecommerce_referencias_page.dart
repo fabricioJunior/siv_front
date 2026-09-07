@@ -1,6 +1,7 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation/blocs/ecommerce_referencias_bloc/ecommerce_referencias_bloc.dart';
 import 'package:comercial/presentation/pages/ecommerce_referencia_detalhe_page.dart';
+import 'package:comercial/presentation/widgets/ecommerce_formatadores.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -10,17 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:produtos/presentantion/widgets/categoria_seletor.dart';
 import 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 
-/// Motivos de bloqueio (`motivosBloqueio`) e o texto exibido pra cada um.
-/// Se o backend mandar um código fora deste mapa, mostra o próprio código.
-const Map<String, String> _textoMotivoBloqueio = {
-  'SEM_PRECO': 'Falta preço na tabela do canal',
-  'SEM_MIDIA': 'Falta mídia — sem imagem cadastrada',
-  'SEM_SALDO': 'Sem saldo em estoque',
-  'SEM_GRADE_ATIVA': 'Nenhum item da grade disponível',
-};
-
-String _formatarMoeda(double valor) =>
-    'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+/// Um único controle pra situação da referência -- nunca dois estados
+/// (segmento + chip) que podem discordar entre si.
+enum _FiltroSituacao { todos, publicados, rascunho, naoPublicaveis }
 
 class EcommerceReferenciasPage extends StatefulWidget {
   final int ecommerceId;
@@ -44,8 +37,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   final _scrollController = ScrollController();
 
   List<int> _categoriaIds = [];
-  bool? _rascunhoFiltro;
-  bool? _publicavelFiltro;
+  _FiltroSituacao _filtroSituacao = _FiltroSituacao.todos;
   String? _tituloCanal;
 
   final Set<int> _idsSelecionados = {};
@@ -58,12 +50,15 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _bloc = sl<EcommerceReferenciasBloc>()
       ..add(EcommerceReferenciasIniciou(ecommerceId: widget.ecommerceId));
     _scrollController.addListener(() {
+      final state = _bloc.state;
+      if (state.carregandoMais || !state.temMaisPaginas) return;
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
         _bloc.add(const EcommerceReferenciasCarregarMaisSolicitou());
       }
     });
     _atualizarTitulo();
+    _atualizarAcoes(_bloc.state);
     if (_tituloCanal == null) _buscarTituloCanal();
   }
 
@@ -102,7 +97,15 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _debouncer.run(() => _recarregar(busca: valor.trim()));
   }
 
+  ({bool? rascunho, bool? publicavel}) get _filtroRequest => switch (_filtroSituacao) {
+        _FiltroSituacao.todos => (rascunho: null, publicavel: null),
+        _FiltroSituacao.publicados => (rascunho: false, publicavel: null),
+        _FiltroSituacao.rascunho => (rascunho: true, publicavel: null),
+        _FiltroSituacao.naoPublicaveis => (rascunho: null, publicavel: false),
+      };
+
   void _recarregar({String? busca}) {
+    final filtro = _filtroRequest;
     _bloc.add(
       EcommerceReferenciasIniciou(
         ecommerceId: widget.ecommerceId,
@@ -110,8 +113,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             ? null
             : (busca ?? _buscaController.text.trim()),
         categoriaIds: _categoriaIds.isEmpty ? null : _categoriaIds,
-        rascunhoFiltro: _rascunhoFiltro,
-        publicavelFiltro: _publicavelFiltro,
+        rascunhoFiltro: filtro.rascunho,
+        publicavelFiltro: filtro.publicavel,
       ),
     );
   }
@@ -123,100 +126,128 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
 
     return BlocProvider<EcommerceReferenciasBloc>.value(
       value: _bloc,
-      child: BlocConsumer<EcommerceReferenciasBloc, EcommerceReferenciasState>(
-        listener: (context, state) {
-          if (state is EcommerceReferenciasLoteConcluiu) {
-            setState(() => _idsSelecionados.clear());
-            if (state.falhas.isNotEmpty) {
-              _mostrarFalhasDoLote(context, state.falhas);
-            } else {
-              SivAviso.mostrar(
-                context,
-                mensagem: '${state.publicados} referência(s) atualizada(s).',
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<EcommerceReferenciasBloc, EcommerceReferenciasState>(
+            listenWhen: (previous, current) =>
+                current is EcommerceReferenciasLoteConcluiu ||
+                current is EcommerceReferenciasAdicionarLoteConcluiu,
+            listener: (context, state) {
+              setState(() => _idsSelecionados.clear());
+              if (state is EcommerceReferenciasLoteConcluiu) {
+                if (state.falhas.isNotEmpty) {
+                  _mostrarFalhasDoLote(context, state, state.falhas);
+                } else {
+                  SivAviso.mostrar(
+                    context,
+                    mensagem:
+                        '${pluralizarEcommerce(state.publicados, 'referência atualizada', 'referências atualizadas')}.',
+                  );
+                }
+              } else if (state is EcommerceReferenciasAdicionarLoteConcluiu) {
+                if (state.falhas.isNotEmpty) {
+                  _mostrarFalhasDoLote(context, state, state.falhas);
+                } else {
+                  SivAviso.mostrar(
+                    context,
+                    mensagem:
+                        '${pluralizarEcommerce(state.adicionados, 'referência adicionada', 'referências adicionadas')}.',
+                  );
+                }
+              }
+            },
+          ),
+          BlocListener<EcommerceReferenciasBloc, EcommerceReferenciasState>(
+            listenWhen: (previous, current) =>
+                previous.totalPublicados != current.totalPublicados ||
+                previous.processandoLote != current.processandoLote ||
+                previous.referencias.length != current.referencias.length,
+            listener: (context, state) => _atualizarAcoes(state),
+          ),
+        ],
+        child: BlocBuilder<EcommerceReferenciasBloc, EcommerceReferenciasState>(
+          builder: (context, state) {
+            if (state is EcommerceReferenciasCarregarEmProgresso ||
+                state is EcommerceReferenciasInitial) {
+              return const Center(child: CircularProgressIndicator.adaptive());
+            }
+
+            if (state is EcommerceReferenciasCarregarFalha) {
+              return Center(
+                child: Text(
+                  'Não foi possível carregar as referências.',
+                  style: textos.corpo,
+                ),
               );
             }
-          }
-          _atualizarAcoes(context, state);
-        },
-        builder: (context, state) {
-          if (state is EcommerceReferenciasCarregarEmProgresso ||
-              state is EcommerceReferenciasInitial) {
-            return const Center(child: CircularProgressIndicator.adaptive());
-          }
 
-          if (state is EcommerceReferenciasCarregarFalha) {
-            return Center(
-              child: Text(
-                'Não foi possível carregar as referências.',
-                style: textos.corpo,
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SivDimensoes.paginaHorizontal,
+                vertical: SivDimensoes.paginaVertical,
               ),
-            );
-          }
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SivDimensoes.paginaHorizontal,
-              vertical: SivDimensoes.paginaVertical,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildFiltros(context, state),
-                const SizedBox(height: SivDimensoes.gapCards),
-                if (state.processandoLote)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        LinearProgressIndicator(color: cores.aco),
-                        if (state.loteTotal != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildFiltros(context, state),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  if (state.processandoLote)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          LinearProgressIndicator(color: cores.aco),
+                          if (state.loteTotal != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                'Processando ${state.loteAtual} de ${state.loteTotal}...',
+                                style: textos.apoio,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  Expanded(
+                    child: state.referencias.isEmpty
+                        ? Center(
                             child: Text(
-                              'Processando ${state.loteAtual} de ${state.loteTotal}...',
-                              style: textos.apoio,
+                              (state.busca ?? '').isEmpty
+                                  ? 'Nenhuma referência vinculada a este e-commerce.'
+                                  : 'Nenhuma referência encontrada pra "${state.busca}".',
+                              style: textos.corpo,
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            controller: _scrollController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildTabela(context, state),
+                                const SizedBox(height: 8),
+                                _buildRodapeTabela(context, state),
+                              ],
                             ),
                           ),
-                      ],
-                    ),
                   ),
-                Expanded(
-                  child: state.referencias.isEmpty
-                      ? Center(
-                          child: Text(
-                            (state.busca ?? '').isEmpty
-                                ? 'Nenhuma referência vinculada a este e-commerce.'
-                                : 'Nenhuma referência encontrada pra "${state.busca}".',
-                            style: textos.corpo,
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          controller: _scrollController,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _buildTabela(context, state),
-                              const SizedBox(height: 8),
-                              _buildRodapeTabela(context, state),
-                            ],
-                          ),
-                        ),
-                ),
-                if (_modoSelecao) _buildBarraSelecao(context, state),
-              ],
-            ),
-          );
-        },
+                  if (_modoSelecao) _buildBarraSelecao(context, state),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  void _atualizarAcoes(BuildContext context, EcommerceReferenciasState state) {
+  void _atualizarAcoes(EcommerceReferenciasState state) {
+    final podeDespublicar = state.totalPublicados != null
+        ? state.totalPublicados! > 0
+        : state.referencias.any((r) => !r.rascunho);
     SivPageAcoes.definir([
       OutlinedButton.icon(
-        onPressed: state.referencias.any((r) => !r.rascunho) &&
-                !state.processandoLote
+        onPressed: podeDespublicar && !state.processandoLote
             ? () => _despublicarTodas(context)
             : null,
         icon: const Icon(Icons.visibility_off_outlined, size: 18),
@@ -271,41 +302,30 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           ],
         ),
         const SizedBox(height: 12),
-        SegmentedButton<bool?>(
+        SegmentedButton<_FiltroSituacao>(
           segments: [
             ButtonSegment(
-              value: null,
+              value: _FiltroSituacao.todos,
               label: Text(_labelSegmento('Todos', state.total)),
             ),
             ButtonSegment(
-              value: false,
+              value: _FiltroSituacao.publicados,
               label: Text(_labelSegmento('Publicados', state.totalPublicados)),
             ),
             ButtonSegment(
-              value: true,
+              value: _FiltroSituacao.rascunho,
               label: Text(_labelSegmento('Rascunho', state.totalRascunho)),
             ),
+            ButtonSegment(
+              value: _FiltroSituacao.naoPublicaveis,
+              label: Text(
+                _labelSegmento('Não publicáveis', state.totalNaoPublicaveis),
+              ),
+            ),
           ],
-          selected: {_rascunhoFiltro},
+          selected: {_filtroSituacao},
           onSelectionChanged: (selecao) {
-            setState(() {
-              _rascunhoFiltro = selecao.first;
-              _publicavelFiltro = null;
-            });
-            _recarregar();
-          },
-        ),
-        const SizedBox(height: 8),
-        FilterChip(
-          label: Text(
-            _labelSegmento('Não publicáveis', state.totalNaoPublicaveis),
-          ),
-          selected: _publicavelFiltro == false,
-          onSelected: (selecionado) {
-            setState(() {
-              _publicavelFiltro = selecionado ? false : null;
-              if (selecionado) _rascunhoFiltro = null;
-            });
+            setState(() => _filtroSituacao = selecao.first);
             _recarregar();
           },
         ),
@@ -319,7 +339,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   Widget _buildTabela(BuildContext context, EcommerceReferenciasState state) {
     return SivTabela(
       colunas: const [
-        SivTabelaColuna(titulo: 'REFERÊNCIA', flex: 4),
+        SivTabelaColuna(titulo: '', flex: 1),
+        SivTabelaColuna(titulo: 'REFERÊNCIA', flex: 3),
         SivTabelaColuna(titulo: 'CATEGORIA', flex: 2),
         SivTabelaColuna.numerica(titulo: 'PREÇO', flex: 1),
         SivTabelaColuna(
@@ -338,11 +359,18 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       linhaBuilder: (context, indice) {
         final referencia = state.referencias[indice];
         return [
+          Checkbox(
+            value: referencia.id != null &&
+                _idsSelecionados.contains(referencia.id),
+            onChanged: referencia.id == null
+                ? null
+                : (_) => _alternarSelecao(referencia.id!),
+          ),
           _buildCelulaReferencia(context, referencia),
           Text(referencia.categoriaNome ?? '-', style: context.sivTextos.apoio),
           Text(
             referencia.valor != null
-                ? _formatarMoeda(referencia.valor!)
+                ? formatarMoedaEcommerce(referencia.valor!)
                 : 'Sem preço',
             style: context.sivTextos.corpo,
           ),
@@ -361,30 +389,25 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final motivos = referencia.motivosBloqueio;
     final naoPublicavel = referencia.publicavel == false;
     final subtitulo = naoPublicavel && motivos != null && motivos.isNotEmpty
-        ? (_textoMotivoBloqueio[motivos.first] ?? motivos.first)
+        ? (textoMotivoBloqueioEcommerce[motivos.first] ?? motivos.first)
         : 'REF ${referencia.referenciaId}';
 
     return Row(
       children: [
-        Checkbox(
-          value: referencia.id != null &&
-              _idsSelecionados.contains(referencia.id),
-          onChanged: referencia.id == null
-              ? null
-              : (_) => _alternarSelecao(referencia.id!),
-        ),
         ClipRRect(
           borderRadius: BorderRadius.circular(SivDimensoes.raio),
           child: SizedBox(
             width: 34,
             height: 34,
-            child: referencia.imagemUrl != null
-                ? Image.network(
-                    referencia.imagemUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderImagem(context),
-                  )
-                : _placeholderImagem(context),
+            child: naoPublicavel
+                ? _iconeMotivo(context, motivos)
+                : referencia.imagemUrl != null
+                    ? Image.network(
+                        referencia.imagemUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _placeholderImagem(context),
+                      )
+                    : _placeholderImagem(context),
           ),
         ),
         const SizedBox(width: 10),
@@ -413,6 +436,24 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
+  /// Miniatura da linha não publicável mostra o que falta em vez da
+  /// imagem -- a linha se explica sem precisar ler o texto de apoio.
+  Widget _iconeMotivo(BuildContext context, List<String>? motivos) {
+    final cores = context.sivColors;
+    final motivo = (motivos == null || motivos.isEmpty) ? null : motivos.first;
+    final icone = switch (motivo) {
+      'SEM_PRECO' => Icons.attach_money,
+      'SEM_MIDIA' => Icons.image_not_supported_outlined,
+      'SEM_SALDO' => Icons.inventory_2_outlined,
+      'SEM_GRADE_ATIVA' => Icons.grid_off_outlined,
+      _ => Icons.error_outline,
+    };
+    return Container(
+      color: cores.atencaoFundo,
+      child: Icon(icone, color: cores.atencao, size: 18),
+    );
+  }
+
   Widget _buildGradeAtiva(BuildContext context, EcommerceReferencia referencia) {
     final total = referencia.produtosTotal;
     final disponiveis = referencia.produtosDisponiveis;
@@ -433,7 +474,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     if (referencia.publicavel == false) {
       return _selo('NÃO PUBLICÁVEL', textos, cores.atencaoFundo, cores.atencaoBorda, cores.atencao);
     }
-    if ((referencia.saldo ?? 0) == 0) {
+    if (referencia.saldo == 0) {
       return _selo('SEM ESTOQUE', textos, null, cores.hairline, cores.textoPrincipal);
     }
     if (!referencia.rascunho) {
@@ -464,7 +505,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final textos = context.sivTextos.apoio;
     final total = state.total;
     final partes = <String>[
-      if (total != null) '$total referências',
+      if (total != null) pluralizarEcommerce(total, 'referência', 'referências'),
       if (state.totalRascunho != null) '${state.totalRascunho} em rascunho',
       if (state.totalNaoPublicaveis != null)
         '${state.totalNaoPublicaveis} não publicáveis',
@@ -472,7 +513,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(partes.isEmpty ? '${state.referencias.length} referências' : partes.join(' · '), style: textos),
+        Text(
+          partes.isEmpty
+              ? pluralizarEcommerce(state.referencias.length, 'referência', 'referências')
+              : partes.join(' · '),
+          style: textos,
+        ),
         Text(
           total == null
               ? 'Mostrando ${state.referencias.length}'
@@ -487,10 +533,23 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final selecionadas = state.referencias
         .where((r) => r.id != null && _idsSelecionados.contains(r.id))
         .toList();
-    final prontas = selecionadas.where((r) => r.publicavel != false).length;
-    final foraDoLote = selecionadas.length - prontas;
+    final prontas = selecionadas.where((r) => r.publicavel == true).length;
+    final bloqueadas = selecionadas.where((r) => r.publicavel == false).length;
+    final indeterminadas = selecionadas.length - prontas - bloqueadas;
     final cores = context.sivColors;
     final textos = context.sivTextos;
+
+    String? mensagem;
+    if (bloqueadas > 0) {
+      mensagem = bloqueadas == selecionadas.length
+          ? 'Nenhuma está pronta pra publicar.'
+          : '$bloqueadas de ${selecionadas.length} não pode ser publicada: falta preço ou mídia.';
+    } else if (indeterminadas > 0) {
+      mensagem = 'Não é possível verificar antes de publicar.';
+    } else if (selecionadas.isNotEmpty) {
+      mensagem =
+          '${pluralizarEcommerce(prontas, 'está pronta', 'estão prontas')} para publicar.';
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -498,16 +557,14 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       child: Row(
         children: [
           Text(
-            '${_idsSelecionados.length} selecionada(s)',
+            pluralizarEcommerce(_idsSelecionados.length, 'selecionada', 'selecionadas'),
             style: textos.corpo.copyWith(color: cores.textoSobreEscuroTitulo),
           ),
           const SizedBox(width: 12),
-          if (foraDoLote > 0)
+          if (mensagem != null)
             Expanded(
               child: Text(
-                foraDoLote == selecionadas.length
-                    ? 'Nenhuma está pronta pra publicar.'
-                    : '$foraDoLote de ${selecionadas.length} não pode ser publicada: falta preço ou mídia.',
+                mensagem,
                 style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
               ),
             )
@@ -535,7 +592,10 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           ),
           const SizedBox(width: 8),
           FilledButton(
-            onPressed: prontas == 0 || state.processandoLote
+            // Bloqueadas (publicavel == false) nunca entram no lote -- nem
+            // indeterminadas quando há bloqueadas junto; a decisão do backend
+            // é a única fonte, não o palpite local.
+            onPressed: (prontas == 0 && indeterminadas == 0) || state.processandoLote
                 ? null
                 : () => _bloc.add(
                       EcommerceReferenciasPublicarEmLoteSolicitou(
@@ -568,14 +628,44 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         builder: (_) => EcommerceReferenciaDetalhePage(
           ecommerceId: widget.ecommerceId,
           referencia: referencia,
+          tituloCanal: _tituloCanal,
         ),
       ),
     );
     if (mounted) _recarregar();
   }
 
+  bool get _telaDesktop =>
+      MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
+
   Future<void> _abrirFiltroCategoria(BuildContext context) async {
     var selecionadas = List<int>.from(_categoriaIds);
+
+    final conteudo = CategoriaSeletor(
+      modo: CategoriaSeletorModo.multipla,
+      titulo: 'Filtrar por categoria',
+      idCategoriasSelecionadasIniciais: _categoriaIds,
+      onCategoriaChanged: (categorias) {
+        selecionadas =
+            categorias.map((categoria) => categoria.id).whereType<int>().toList();
+      },
+    );
+
+    void aplicar() {
+      setState(() => _categoriaIds = selecionadas);
+      _recarregar();
+    }
+
+    if (_telaDesktop) {
+      await SivDialogo.mostrar(
+        context,
+        titulo: 'Filtrar por categoria',
+        corpo: SizedBox(height: 420, child: conteudo),
+        textoAcao: 'Aplicar',
+        onConfirmar: (_) => aplicar(),
+      );
+      return;
+    }
 
     await showModalBottomSheet<void>(
       context: context,
@@ -592,23 +682,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CategoriaSeletor(
-                modo: CategoriaSeletorModo.multipla,
-                titulo: 'Filtrar por categoria',
-                idCategoriasSelecionadasIniciais: _categoriaIds,
-                onCategoriaChanged: (categorias) {
-                  selecionadas = categorias
-                      .map((categoria) => categoria.id)
-                      .whereType<int>()
-                      .toList();
-                },
-              ),
+              conteudo,
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
-                  setState(() => _categoriaIds = selecionadas);
-                  _recarregar();
+                  aplicar();
                 },
                 child: const Text('Aplicar'),
               ),
@@ -623,6 +702,36 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   Future<void> _adicionarReferencias(BuildContext context) async {
     List<int> idsSelecionados = [];
 
+    void adicionar() {
+      if (idsSelecionados.isEmpty) return;
+      _bloc.add(
+        EcommerceReferenciasAdicionarEmLoteSolicitou(
+          ecommerceId: widget.ecommerceId,
+          referenciaIds: idsSelecionados,
+        ),
+      );
+    }
+
+    final conteudo = ReferenciaSeletor(
+      modo: ReferenciaSeletorModo.multipla,
+      permitirCadastro: false,
+      onReferenciaChanged: (selecionadas) {
+        idsSelecionados =
+            selecionadas.map((referencia) => referencia.id).whereType<int>().toList();
+      },
+    );
+
+    if (_telaDesktop) {
+      await SivDialogo.mostrar(
+        context,
+        titulo: 'Adicionar referências',
+        corpo: SizedBox(height: 420, child: conteudo),
+        textoAcao: 'Adicionar',
+        onConfirmar: (_) => adicionar(),
+      );
+      return;
+    }
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -638,28 +747,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ReferenciaSeletor(
-                modo: ReferenciaSeletorModo.multipla,
-                permitirCadastro: false,
-                onReferenciaChanged: (selecionadas) {
-                  idsSelecionados = selecionadas
-                      .map((referencia) => referencia.id)
-                      .whereType<int>()
-                      .toList();
-                },
-              ),
+              conteudo,
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: () async {
+                onPressed: () {
                   Navigator.of(dialogContext).pop();
-                  for (final referenciaId in idsSelecionados) {
-                    _bloc.add(
-                      EcommerceReferenciaAdicionou(
-                        ecommerceId: widget.ecommerceId,
-                        referenciaId: referenciaId,
-                      ),
-                    );
-                  }
+                  adicionar();
                 },
                 child: const Text('Adicionar'),
               ),
@@ -692,6 +785,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
 
   void _mostrarFalhasDoLote(
     BuildContext context,
+    EcommerceReferenciasState state,
     List<EcommerceLoteFalha> falhas,
   ) {
     SivDialogo.mostrar(
@@ -707,14 +801,26 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             for (final falha in falhas)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  'Referência #${falha.id}: ${falha.motivos.map((m) => _textoMotivoBloqueio[m] ?? m).join(', ').ifEmpty('motivo não informado')}',
-                ),
+                child: Text(_textoFalha(state, falha)),
               ),
           ],
         ),
       ),
     );
+  }
+
+  String _textoFalha(EcommerceReferenciasState state, EcommerceLoteFalha falha) {
+    final candidatas =
+        state.referencias.where((r) => r.id == falha.id).toList();
+    final nome = candidatas.isEmpty
+        ? 'Referência #${falha.id}'
+        : (candidatas.first.referenciaNome ??
+            'Referência #${candidatas.first.referenciaId}');
+    final motivos = falha.motivos
+        .map((m) => textoMotivoBloqueioEcommerce[m] ?? m)
+        .join(', ')
+        .ifEmpty('motivo não informado');
+    return '$nome: $motivos';
   }
 
   Widget _placeholderImagem(BuildContext context) {

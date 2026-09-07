@@ -15,6 +15,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:precos/presentation/widgets/tabelas_de_preco_seletor.dart';
 
+/// Aciona o salvar do formulário de fora dele -- o botão primário mora na
+/// barra de título da página (5a), não dentro do painel.
+class EcommerceConfiguracaoFormularioController {
+  VoidCallback? _salvar;
+
+  void _bind(VoidCallback? salvar) => _salvar = salvar;
+
+  void salvar() => _salvar?.call();
+}
+
 /// Formulário de dados/identidade/integração do e-commerce, compartilhado
 /// pelas rotas `/ecommerces` (mestre-detalhe) e `/configuracao_ecommerce`
 /// (atalho que abre o mesmo formulário com o canal selecionado).
@@ -23,6 +33,7 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
   final int? ecommerceId;
   final VoidCallback? onSalvou;
   final VoidCallback? onExcluido;
+  final EcommerceConfiguracaoFormularioController? controller;
 
   const EcommerceConfiguracaoFormulario({
     super.key,
@@ -30,6 +41,7 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
     this.ecommerceId,
     this.onSalvou,
     this.onExcluido,
+    this.controller,
   });
 
   @override
@@ -60,10 +72,27 @@ class _EcommerceConfiguracaoFormularioState
           ecommerceId: widget.ecommerceId,
         ),
       );
+    widget.controller?._bind(_salvar);
+  }
+
+  @override
+  void didUpdateWidget(covariant EcommerceConfiguracaoFormulario oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._bind(null);
+      widget.controller?._bind(_salvar);
+    }
+  }
+
+  void _salvar() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _bloc.add(const EcommerceConfiguracaoSalvou());
+    }
   }
 
   @override
   void dispose() {
+    widget.controller?._bind(null);
     _tituloController.dispose();
     _subtituloController.dispose();
     _descricaoController.dispose();
@@ -219,20 +248,8 @@ class _EcommerceConfiguracaoFormularioState
                         ],
                       ),
                     ),
-                    const SizedBox(height: SivDimensoes.gapCards),
-                    FilledButton.icon(
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          context
-                              .read<EcommerceConfiguracaoBloc>()
-                              .add(const EcommerceConfiguracaoSalvou());
-                        }
-                      },
-                      icon: const Icon(Icons.check),
-                      label: const Text('Salvar configuração'),
-                    ),
                     if (state.id != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SivDimensoes.gapCards),
                       OutlinedButton.icon(
                         onPressed: () => Navigator.of(context).pushNamed(
                           '/ecommerce_referencias',

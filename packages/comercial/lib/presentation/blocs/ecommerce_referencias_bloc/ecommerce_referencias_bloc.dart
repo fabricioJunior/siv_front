@@ -29,6 +29,7 @@ class EcommerceReferenciasBloc
     on<EcommerceReferenciaPublicarSolicitou>(_onPublicar);
     on<EcommerceReferenciasDespublicarTodasSolicitou>(_onDespublicarTodas);
     on<EcommerceReferenciasPublicarEmLoteSolicitou>(_onPublicarEmLote);
+    on<EcommerceReferenciasAdicionarEmLoteSolicitou>(_onAdicionarEmLote);
   }
 
   FutureOr<void> _onIniciou(
@@ -306,6 +307,76 @@ class EcommerceReferenciasBloc
           publicados: resultado.atualizados,
           falharam: resultado.falharam.length,
           falhas: resultado.falharam,
+        ),
+      );
+    } catch (e, s) {
+      emit(const EcommerceReferenciasCarregarFalha());
+      addError(e, s);
+    }
+  }
+
+  // R6: um evento com a lista inteira, com progresso, em vez de um evento
+  // por referência sem barra e sem consolidar falha.
+  FutureOr<void> _onAdicionarEmLote(
+    EcommerceReferenciasAdicionarEmLoteSolicitou event,
+    Emitter<EcommerceReferenciasState> emit,
+  ) async {
+    final ids = event.referenciaIds;
+    if (ids.isEmpty) return;
+
+    emit(
+      _copiarComProgresso(
+        state,
+        processandoLote: true,
+        loteAtual: 0,
+        loteTotal: ids.length,
+      ),
+    );
+
+    var adicionados = 0;
+    final falhas = <EcommerceLoteFalha>[];
+    for (var i = 0; i < ids.length; i++) {
+      emit(
+        _copiarComProgresso(
+          state,
+          processandoLote: true,
+          loteAtual: i + 1,
+          loteTotal: ids.length,
+        ),
+      );
+      try {
+        await _adicionarReferenciaEcommerce.call(
+          event.ecommerceId,
+          referenciaId: ids[i],
+        );
+        adicionados++;
+      } catch (_) {
+        falhas.add(EcommerceLoteFalha(id: ids[i]));
+      }
+    }
+
+    try {
+      final pagina = await _recuperarReferenciasEcommerce.call(
+        event.ecommerceId,
+        busca: state.busca,
+        categoriaIds: state.categoriaIds,
+        rascunho: state.rascunhoFiltro,
+        publicavel: state.publicavelFiltro,
+      );
+      emit(
+        EcommerceReferenciasAdicionarLoteConcluiu(
+          ecommerceId: event.ecommerceId,
+          referencias: pagina.itens,
+          busca: state.busca,
+          categoriaIds: state.categoriaIds,
+          rascunhoFiltro: state.rascunhoFiltro,
+          total: pagina.total,
+          totalPublicados: pagina.totalPublicados,
+          totalRascunho: pagina.totalRascunho,
+          totalNaoPublicaveis: pagina.totalNaoPublicaveis,
+          adicionados: adicionados,
+          falharam: falhas.length,
+          falhas: falhas,
         ),
       );
     } catch (e, s) {

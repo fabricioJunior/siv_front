@@ -140,25 +140,31 @@ class _EcommerceReferenciaDetalhePageState
 
           final checklist = _montarChecklist(state.produtos);
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SivDimensoes.paginaHorizontal,
-              vertical: SivDimensoes.paginaVertical,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildCabecalho(context),
-                const SizedBox(height: SivDimensoes.gapCards),
-                _buildChecklistCard(context, state, checklist),
-                const SizedBox(height: SivDimensoes.gapCards),
-                if (state.processandoLote)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: LinearProgressIndicator(),
-                  ),
-                _buildMatrizCard(context, state),
-              ],
+          // Material cobrindo a página inteira -- SivCard não fornece um, e
+          // a rota não garante ancestral Material/Scaffold nesse contexto
+          // (Switch e InkWell dependem disso).
+          return Material(
+            type: MaterialType.transparency,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SivDimensoes.paginaHorizontal,
+                vertical: SivDimensoes.paginaVertical,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCabecalho(context),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  _buildChecklistCard(context, state, checklist),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  if (state.processandoLote)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: LinearProgressIndicator(),
+                    ),
+                  _buildMatrizCard(context, state),
+                ],
+              ),
             ),
           );
         },
@@ -393,32 +399,32 @@ class _EcommerceReferenciaDetalhePageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Text('Grade', style: context.sivTextos.rotulo),
+          const SizedBox(height: 8),
+          // Wrap -- os dois botões não cabem numa Row em telas de celular
+          // (overflow horizontal observado em teste); quebra linha em vez de
+          // vazar.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Text('Grade', style: context.sivTextos.rotulo),
-              Row(
-                children: [
-                  OutlinedButton(
-                    onPressed: state.processandoLote
-                        ? null
-                        : () => context
-                            .read<EcommerceReferenciaDetalheBloc>()
-                            .add(const EcommercePublicarDisponiveisSolicitou()),
-                    child: const Text('Publicar disponíveis'),
-                  ),
-                  const SizedBox(width: 8),
-                  // Rótulo alinhado ao evento: remove disponibilidade só dos
-                  // itens sem saldo, não "despublica" a referência inteira.
-                  OutlinedButton(
-                    onPressed: state.processandoLote
-                        ? null
-                        : () => context
-                            .read<EcommerceReferenciaDetalheBloc>()
-                            .add(const EcommerceRemoverSemEstoqueSolicitou()),
-                    child: const Text('Remover sem estoque'),
-                  ),
-                ],
+              OutlinedButton(
+                onPressed: state.processandoLote
+                    ? null
+                    : () => context
+                        .read<EcommerceReferenciaDetalheBloc>()
+                        .add(const EcommercePublicarDisponiveisSolicitou()),
+                child: const Text('Publicar disponíveis'),
+              ),
+              // Rótulo alinhado ao evento: remove disponibilidade só dos
+              // itens sem saldo, não "despublica" a referência inteira.
+              OutlinedButton(
+                onPressed: state.processandoLote
+                    ? null
+                    : () => context
+                        .read<EcommerceReferenciaDetalheBloc>()
+                        .add(const EcommerceRemoverSemEstoqueSolicitou()),
+                child: const Text('Remover sem estoque'),
               ),
             ],
           ),
@@ -496,17 +502,24 @@ class _EcommerceReferenciaDetalhePageState
               bottom: BorderSide(color: theme.hairline),
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                texto.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: textos.rotulo,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text('$total disp.', style: textos.apoio.copyWith(fontSize: 10)),
-            ],
+          // FittedBox -- as duas linhas de texto às vezes passam da altura
+          // fixa da célula dependendo da métrica da fonte carregada (2px de
+          // overflow observado em teste); encolher em vez de travar a altura
+          // num número mágico que quebra de novo com outra fonte/idioma.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  texto.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: textos.rotulo,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text('$total disp.', style: textos.apoio.copyWith(fontSize: 10)),
+              ],
+            ),
           ),
         ),
       );
@@ -545,15 +558,18 @@ class _EcommerceReferenciaDetalhePageState
                       produtos.where((p) => p.corNome == cor).length,
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(cor.toUpperCase(), style: textos.rotulo, overflow: TextOverflow.ellipsis),
-                  Text(
-                    '${_totalDisponivel(produtos, corNome: cor)} disp.',
-                    style: textos.apoio.copyWith(fontSize: 10),
-                  ),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(cor.toUpperCase(), style: textos.rotulo, overflow: TextOverflow.ellipsis),
+                    Text(
+                      '${_totalDisponivel(produtos, corNome: cor)} disp.',
+                      style: textos.apoio.copyWith(fontSize: 10),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -591,15 +607,11 @@ class _EcommerceReferenciaDetalhePageState
       ),
     );
 
-    // Material transparente -- os InkWell dos cabeçalhos/células não têm
-    // ancestral Material dentro do SivCard.
-    return Material(
-      type: MaterialType.transparency,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [colunaFixa, Expanded(child: tabelaRolavel)],
-        ),
+    // Ancestral Material agora vem do build() da página inteira.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [colunaFixa, Expanded(child: tabelaRolavel)],
       ),
     );
   }

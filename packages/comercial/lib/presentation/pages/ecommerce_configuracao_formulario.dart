@@ -421,8 +421,11 @@ class _EcommerceBannersCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   Text('Banners do site', style: textos.rotulo),
                   OutlinedButton.icon(

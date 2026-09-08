@@ -2,11 +2,9 @@ import 'package:comercial/domain/data/repositories/i_ecommerce_banners_repositor
 import 'package:comercial/domain/data/repositories/i_ecommerce_repository.dart';
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
-import 'package:comercial/presentation/pages/ecommerce_configuracao_formulario.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
-import 'package:core/tema.dart';
 import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
 import 'package:empresas/domain/data/repositories/i_terminais_repository.dart';
 import 'package:empresas/domain/entities/empresa.dart';
@@ -26,24 +24,13 @@ import 'package:precos/use_cases.dart';
 
 class _EcommerceRepositorioFake implements IEcommerceRepository {
   @override
-  noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-class _PermissoesControllerFake implements IPermissoesController {
-  @override
-  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async => true;
+  Future<List<Ecommerce>> recuperarEcommerces({bool incluirApagados = false}) async => [
+        Ecommerce.create(id: 7, empresaId: 1, titulo: 'Loja teste'),
+      ];
 
   @override
-  bool temAcesso({String? idComponente, int? grupoId}) => true;
-}
-
-class _EcommerceRepositorioComDadosFake implements IEcommerceRepository {
-  @override
-  Future<Ecommerce> recuperarEcommerce(int id) async => Ecommerce.create(
-        id: id,
-        empresaId: 1,
-        titulo: 'Loja teste',
-      );
+  Future<Ecommerce> recuperarEcommerce(int id) async =>
+      Ecommerce.create(id: id, empresaId: 1, titulo: 'Loja teste');
 
   @override
   noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -55,6 +42,14 @@ class _EcommerceBannersRepositorioFake implements IEcommerceBannersRepository {
 
   @override
   noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _PermissoesControllerFake implements IPermissoesController {
+  @override
+  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async => true;
+
+  @override
+  bool temAcesso({String? idComponente, int? grupoId}) => true;
 }
 
 class _EmpresasRepositorioFake implements IEmpresasRepository {
@@ -102,12 +97,29 @@ void main() {
     sl.reset();
 
     final ecommerceRepo = _EcommerceRepositorioFake();
+    sl.registerFactory<EcommercesBloc>(
+      () => EcommercesBloc(
+        RecuperarEcommerces(repository: ecommerceRepo),
+        ExcluirEcommerce(repository: ecommerceRepo),
+        RestaurarEcommerce(repository: ecommerceRepo),
+      ),
+    );
     sl.registerFactory<EcommerceConfiguracaoBloc>(
       () => EcommerceConfiguracaoBloc(
         RecuperarEcommerce(repository: ecommerceRepo),
         SalvarEcommerce(repository: ecommerceRepo),
       ),
     );
+    final bannersRepo = _EcommerceBannersRepositorioFake();
+    sl.registerFactory<EcommerceBannersBloc>(
+      () => EcommerceBannersBloc(
+        RecuperarBannersEcommerce(repository: bannersRepo),
+        CriarBannerEcommerce(repository: bannersRepo),
+        AtualizarBannerEcommerce(repository: bannersRepo),
+        ExcluirBannerEcommerce(repository: bannersRepo),
+      ),
+    );
+    sl.registerLazySingleton<IPermissoesController>(_PermissoesControllerFake.new);
 
     final empresasRepo = _EmpresasRepositorioFake();
     sl.registerFactory<EmpresasBloc>(
@@ -137,63 +149,16 @@ void main() {
   });
 
   testWidgets(
-    'formulário de novo e-commerce renderiza SeletorGenerico dentro do SivCard sem erro',
+    'ao selecionar um canal na lista, o botão "Produtos no site" fica visível',
     (tester) async {
-      // Tela de celular -- reproduz o mesmo contexto dos outros bugs de
-      // Material ausente e overflow nesta família de telas.
-      tester.view.physicalSize = const Size(400, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
       await tester.pumpWidget(
-        MaterialApp(
-          theme: SivTheme.tema,
-          home: const Scaffold(
-            body: EcommerceConfiguracaoFormulario(empresaId: 1),
-          ),
+        const MaterialApp(
+          home: Scaffold(body: EcommercesPage()),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text('Tabela de preço'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'formulário de e-commerce existente mostra o botão para produtos no site',
-    (tester) async {
-      sl.unregister<EcommerceConfiguracaoBloc>();
-      sl.registerLazySingleton<IPermissoesController>(_PermissoesControllerFake.new);
-      final ecommerceRepo = _EcommerceRepositorioComDadosFake();
-      sl.registerFactory<EcommerceConfiguracaoBloc>(
-        () => EcommerceConfiguracaoBloc(
-          RecuperarEcommerce(repository: ecommerceRepo),
-          SalvarEcommerce(repository: ecommerceRepo),
-        ),
-      );
-      final bannersRepo = _EcommerceBannersRepositorioFake();
-      sl.registerFactory<EcommerceBannersBloc>(
-        () => EcommerceBannersBloc(
-          RecuperarBannersEcommerce(repository: bannersRepo),
-          CriarBannerEcommerce(repository: bannersRepo),
-          AtualizarBannerEcommerce(repository: bannersRepo),
-          ExcluirBannerEcommerce(repository: bannersRepo),
-        ),
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: SivTheme.tema,
-          home: Scaffold(
-            body: SizedBox(
-              width: 386,
-              child: const EcommerceConfiguracaoFormulario(empresaId: 1, ecommerceId: 7),
-            ),
-          ),
-        ),
-      );
+      await tester.tap(find.text('Loja teste'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

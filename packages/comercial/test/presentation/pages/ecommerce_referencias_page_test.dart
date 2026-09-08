@@ -3,6 +3,7 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,6 +43,8 @@ void main() {
   Future<void> montarPagina(
     WidgetTester tester, {
     required List<EcommerceReferencia> referencias,
+    bool comBarraDeAcoes = false,
+    Size viewport = const Size(400, 800),
   }) async {
     final repo = _RepositorioFake(referencias);
     sl.registerFactory<EcommerceReferenciasBloc>(
@@ -54,7 +57,7 @@ void main() {
     );
 
     // Tela de celular -- overflow reportado não aparece num viewport largo.
-    tester.view.physicalSize = const Size(400, 800);
+    tester.view.physicalSize = viewport;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -63,7 +66,20 @@ void main() {
       MaterialApp(
         theme: SivTheme.tema,
         home: Scaffold(
-          body: EcommerceReferenciasPage(ecommerceId: 9),
+          body: Column(
+            children: [
+              // Renderiza as ações que a página publica via SivPageAcoes --
+              // no app de verdade é o shell (AppShell) que faz isso; aqui
+              // reproduz só o suficiente pra achar/tocar o botão de verdade,
+              // com o mesmo BuildContext/bloc da página (sem árvore separada).
+              if (comBarraDeAcoes)
+                ValueListenableBuilder<List<Widget>>(
+                  valueListenable: SivPageAcoes.notifier,
+                  builder: (context, acoes, _) => Row(children: acoes),
+                ),
+              Expanded(child: EcommerceReferenciasPage(ecommerceId: 9)),
+            ],
+          ),
         ),
       ),
     );
@@ -93,5 +109,51 @@ void main() {
     await montarPagina(tester, referencias: const []);
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('botão "Publicar aptas" conta só rascunho + publicável',
+      (tester) async {
+    final referencias = [
+      EcommerceReferencia.create(
+        id: 1,
+        ecommerceId: 9,
+        referenciaId: 1,
+        rascunho: true,
+        publicavel: true,
+        referenciaNome: 'Apta',
+        valor: 10,
+      ),
+      EcommerceReferencia.create(
+        id: 2,
+        ecommerceId: 9,
+        referenciaId: 2,
+        rascunho: true,
+        publicavel: false,
+        referenciaNome: 'Bloqueada',
+        valor: 10,
+      ),
+      EcommerceReferencia.create(
+        id: 3,
+        ecommerceId: 9,
+        referenciaId: 3,
+        rascunho: false,
+        publicavel: true,
+        referenciaNome: 'Já publicada',
+        valor: 10,
+      ),
+    ];
+
+    await montarPagina(
+      tester,
+      referencias: referencias,
+      comBarraDeAcoes: true,
+      viewport: const Size(1200, 800),
+    );
+
+    expect(find.text('Publicar aptas (1)'), findsOneWidget);
+    await tester.tap(find.text('Publicar aptas (1)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Publicar todas as aptas'), findsOneWidget);
   });
 }

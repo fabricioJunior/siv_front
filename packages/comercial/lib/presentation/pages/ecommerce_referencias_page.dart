@@ -513,12 +513,20 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          partes.isEmpty
-              ? pluralizarEcommerce(state.referencias.length, 'referência', 'referências')
-              : partes.join(' · '),
-          style: textos,
+        // Expanded + ellipsis -- os contadores concatenados (referências +
+        // rascunho + não publicáveis) não cabem ao lado de "Mostrando X de Y"
+        // em telas estreitas (overflow observado em teste); trunca em vez de
+        // vazar.
+        Expanded(
+          child: Text(
+            partes.isEmpty
+                ? pluralizarEcommerce(state.referencias.length, 'referência', 'referências')
+                : partes.join(' · '),
+            style: textos,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
+        const SizedBox(width: 8),
         Text(
           total == null
               ? 'Mostrando ${state.referencias.length}'

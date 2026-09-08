@@ -140,31 +140,25 @@ class _EcommerceReferenciaDetalhePageState
 
           final checklist = _montarChecklist(state.produtos);
 
-          // Material cobrindo a página inteira -- SivCard não fornece um, e
-          // a rota não garante ancestral Material/Scaffold nesse contexto
-          // (Switch e InkWell dependem disso).
-          return Material(
-            type: MaterialType.transparency,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: SivDimensoes.paginaHorizontal,
-                vertical: SivDimensoes.paginaVertical,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildCabecalho(context),
-                  const SizedBox(height: SivDimensoes.gapCards),
-                  _buildChecklistCard(context, state, checklist),
-                  const SizedBox(height: SivDimensoes.gapCards),
-                  if (state.processandoLote)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: LinearProgressIndicator(),
-                    ),
-                  _buildMatrizCard(context, state),
-                ],
-              ),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SivDimensoes.paginaHorizontal,
+              vertical: SivDimensoes.paginaVertical,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCabecalho(context),
+                const SizedBox(height: SivDimensoes.gapCards),
+                _buildChecklistCard(context, state, checklist),
+                const SizedBox(height: SivDimensoes.gapCards),
+                if (state.processandoLote)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: LinearProgressIndicator(),
+                  ),
+                _buildMatrizCard(context, state),
+              ],
             ),
           );
         },
@@ -201,7 +195,8 @@ class _EcommerceReferenciaDetalhePageState
           _ItemChecklist(
             titulo: 'Pendência de publicação',
             ok: false,
-            pendenciaTexto: 'O backend recusou esta referência sem detalhar o motivo.',
+            pendenciaTexto:
+                'O backend recusou esta referência sem detalhar o motivo.',
           ),
         ],
         bloqueiaSwitch: true,
@@ -211,7 +206,8 @@ class _EcommerceReferenciaDetalhePageState
 
     // 3) O backend confirmou que está tudo certo.
     if (referencia.publicavel == true) {
-      return const _Checklist(itens: [], bloqueiaSwitch: false, estimativa: false);
+      return const _Checklist(
+          itens: [], bloqueiaSwitch: false, estimativa: false);
     }
 
     // 4) Backend antigo, sem publicavel/motivosBloqueio -- estimativa local,
@@ -379,17 +375,21 @@ class _EcommerceReferenciaDetalhePageState
     );
   }
 
-  Widget _buildMatrizCard(BuildContext context, EcommerceReferenciaDetalheState state) {
+  Widget _buildMatrizCard(
+      BuildContext context, EcommerceReferenciaDetalheState state) {
     final textos = context.sivTextos;
-    final comGrade =
-        state.produtos.where((p) => p.corNome != null && p.tamanhoNome != null).toList();
-    final semGrade =
-        state.produtos.where((p) => p.corNome == null || p.tamanhoNome == null).toList();
+    final comGrade = state.produtos
+        .where((p) => p.corNome != null && p.tamanhoNome != null)
+        .toList();
+    final semGrade = state.produtos
+        .where((p) => p.corNome == null || p.tamanhoNome == null)
+        .toList();
 
     final coresGrade = <String>[];
     final tamanhosGrade = <String>[];
     for (final produto in comGrade) {
-      if (!coresGrade.contains(produto.corNome)) coresGrade.add(produto.corNome!);
+      if (!coresGrade.contains(produto.corNome))
+        coresGrade.add(produto.corNome!);
       if (!tamanhosGrade.contains(produto.tamanhoNome)) {
         tamanhosGrade.add(produto.tamanhoNome!);
       }
@@ -430,7 +430,8 @@ class _EcommerceReferenciaDetalhePageState
           ),
           const SizedBox(height: 12),
           if (comGrade.isEmpty)
-            Text('Sem grade com cor e tamanho cadastrados.', style: textos.apoio)
+            Text('Sem grade com cor e tamanho cadastrados.',
+                style: textos.apoio)
           else
             _buildMatriz(context, comGrade, coresGrade, tamanhosGrade),
           if (semGrade.isNotEmpty) ...[
@@ -441,21 +442,23 @@ class _EcommerceReferenciaDetalhePageState
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  produto.corNome ?? produto.tamanhoNome ?? 'Produto #${produto.produtoId}',
+                  produto.corNome ??
+                      produto.tamanhoNome ??
+                      'Produto #${produto.produtoId}',
                   style: textos.corpo,
                 ),
-                subtitle: Text('Estoque: ${produto.saldo}', style: textos.apoio),
+                subtitle:
+                    Text('Estoque: ${produto.saldo}', style: textos.apoio),
                 value: produto.disponivel,
                 onChanged: produto.saldo <= 0 || state.processandoLote
                     ? null
-                    : (disponivel) => context
-                        .read<EcommerceReferenciaDetalheBloc>()
-                        .add(
-                          EcommerceProdutoDisponibilidadeAlterou(
-                            produtoId: produto.produtoId,
-                            disponivel: disponivel,
-                          ),
-                        ),
+                    : (disponivel) =>
+                        context.read<EcommerceReferenciaDetalheBloc>().add(
+                              EcommerceProdutoDisponibilidadeAlterou(
+                                produtoId: produto.produtoId,
+                                disponivel: disponivel,
+                              ),
+                            ),
               ),
           ],
         ],
@@ -517,7 +520,8 @@ class _EcommerceReferenciaDetalhePageState
                   style: textos.rotulo,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text('$total disp.', style: textos.apoio.copyWith(fontSize: 10)),
+                Text('$total disp.',
+                    style: textos.apoio.copyWith(fontSize: 10)),
               ],
             ),
           ),
@@ -563,7 +567,8 @@ class _EcommerceReferenciaDetalhePageState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(cor.toUpperCase(), style: textos.rotulo, overflow: TextOverflow.ellipsis),
+                    Text(cor.toUpperCase(),
+                        style: textos.rotulo, overflow: TextOverflow.ellipsis),
                     Text(
                       '${_totalDisponivel(produtos, corNome: cor)} disp.',
                       style: textos.apoio.copyWith(fontSize: 10),
@@ -589,8 +594,11 @@ class _EcommerceReferenciaDetalhePageState
                   () => bloc.add(
                     EcommerceGradeGrupoAlterou(
                       tamanhoNome: tamanho,
-                      disponivel: _totalDisponivel(produtos, tamanhoNome: tamanho) !=
-                          produtos.where((p) => p.tamanhoNome == tamanho).length,
+                      disponivel:
+                          _totalDisponivel(produtos, tamanhoNome: tamanho) !=
+                              produtos
+                                  .where((p) => p.tamanhoNome == tamanho)
+                                  .length,
                     ),
                   ),
                 ),
@@ -607,7 +615,7 @@ class _EcommerceReferenciaDetalhePageState
       ),
     );
 
-    // Ancestral Material agora vem do build() da página inteira.
+    // Ancestral Material vem do SivCard que envolve este bloco.
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,13 +632,15 @@ class _EcommerceReferenciaDetalhePageState
   ) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final encontrados =
-        produtos.where((p) => p.corNome == cor && p.tamanhoNome == tamanho).toList();
+    final encontrados = produtos
+        .where((p) => p.corNome == cor && p.tamanhoNome == tamanho)
+        .toList();
 
     // Não existe cruzamento cor × tamanho na grade -- vazio, sem borda
     // interna, não confundir com "sem saldo" ou "indisponível".
     if (encontrados.isEmpty) {
-      return const SizedBox(height: _alturaLinhaMatriz, width: _larguraCelulaMatriz);
+      return const SizedBox(
+          height: _alturaLinhaMatriz, width: _larguraCelulaMatriz);
     }
 
     final item = encontrados.first;
@@ -642,7 +652,9 @@ class _EcommerceReferenciaDetalhePageState
       width: _larguraCelulaMatriz,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: semSaldo ? null : (indisponivel ? cores.superficieRecuada : cores.selecaoFundo),
+        color: semSaldo
+            ? null
+            : (indisponivel ? cores.superficieRecuada : cores.selecaoFundo),
         border: Border(
           right: BorderSide(color: cores.hairline),
           bottom: BorderSide(color: cores.hairline),
@@ -697,10 +709,12 @@ class _HachuraPainter extends CustomPainter {
       ..strokeWidth = 1;
     const passo = 8.0;
     for (var x = -size.height; x < size.width; x += passo) {
-      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+      canvas.drawLine(
+          Offset(x, size.height), Offset(x + size.height, 0), paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _HachuraPainter oldDelegate) => oldDelegate.cor != cor;
+  bool shouldRepaint(covariant _HachuraPainter oldDelegate) =>
+      oldDelegate.cor != cor;
 }

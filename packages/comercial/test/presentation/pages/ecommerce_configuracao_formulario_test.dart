@@ -1,0 +1,132 @@
+import 'package:comercial/domain/data/repositories/i_ecommerce_repository.dart';
+import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pages/ecommerce_configuracao_formulario.dart';
+import 'package:comercial/use_cases.dart';
+import 'package:core/injecoes.dart';
+import 'package:core/tema.dart';
+import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
+import 'package:empresas/domain/data/repositories/i_terminais_repository.dart';
+import 'package:empresas/domain/entities/empresa.dart';
+import 'package:empresas/domain/entities/terminal.dart';
+import 'package:empresas/presentation.dart';
+import 'package:empresas/use_cases.dart';
+import 'package:financeiro/domain/data/repositories/i_formas_de_pagamento_repository.dart';
+import 'package:financeiro/domain/models/forma_de_pagamento.dart';
+import 'package:financeiro/presentation.dart';
+import 'package:financeiro/use_cases.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:precos/models.dart';
+import 'package:precos/presentation.dart';
+import 'package:precos/repositorios.dart';
+import 'package:precos/use_cases.dart';
+
+class _EcommerceRepositorioFake implements IEcommerceRepository {
+  @override
+  noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _EmpresasRepositorioFake implements IEmpresasRepository {
+  @override
+  Future<List<Empresa>> getEmpresas() async => const [];
+
+  @override
+  noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _TerminaisRepositorioFake implements ITerminaisRepository {
+  @override
+  Future<List<Terminal>> recuperarTerminais({
+    required int empresaId,
+    String? nome,
+    bool? inativo,
+  }) async =>
+      [];
+
+  @override
+  noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _FormasDePagamentoRepositorioFake implements IFormasDePagamentoRepository {
+  @override
+  Future<List<FormaDePagamento>> recuperarFormasDePagamento({String? filtro}) async =>
+      const [];
+
+  @override
+  noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _TabelasDePrecoRepositorioFake implements ITabelasDePrecoRepository {
+  @override
+  Future<List<TabelaDePreco>> obterTabelasDePreco({String? nome, bool? inativa}) async => [
+        TabelaDePreco.create(id: 1, nome: 'Padrão', padrao: true, inativa: false),
+      ];
+
+  @override
+  noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+void main() {
+  setUp(() {
+    sl.reset();
+
+    final ecommerceRepo = _EcommerceRepositorioFake();
+    sl.registerFactory<EcommerceConfiguracaoBloc>(
+      () => EcommerceConfiguracaoBloc(
+        RecuperarEcommerce(repository: ecommerceRepo),
+        SalvarEcommerce(repository: ecommerceRepo),
+      ),
+    );
+
+    final empresasRepo = _EmpresasRepositorioFake();
+    sl.registerFactory<EmpresasBloc>(
+      () => EmpresasBloc(RecuperarEmpresas(empresasRepository: empresasRepo)),
+    );
+
+    final terminaisRepo = _TerminaisRepositorioFake();
+    sl.registerFactory<TerminaisBloc>(
+      () => TerminaisBloc(
+        RecuperarTerminais(repository: terminaisRepo),
+        DesativarTerminal(repository: terminaisRepo),
+      ),
+    );
+
+    final formasRepo = _FormasDePagamentoRepositorioFake();
+    sl.registerFactory<FormasDePagamentoBloc>(
+      () => FormasDePagamentoBloc(RecuperarFormasDePagamento(repository: formasRepo)),
+    );
+
+    final tabelasRepo = _TabelasDePrecoRepositorioFake();
+    sl.registerFactory<TabelasDePrecoBloc>(
+      () => TabelasDePrecoBloc(
+        RecuperarTabelasDePreco(tabelasDePrecoRepository: tabelasRepo),
+        DesativarTabelaDePreco(tabelasDePrecoRepository: tabelasRepo),
+      ),
+    );
+  });
+
+  testWidgets(
+    'formulário de novo e-commerce renderiza SeletorGenerico dentro do SivCard sem erro',
+    (tester) async {
+      // Tela de celular -- reproduz o mesmo contexto dos outros bugs de
+      // Material ausente e overflow nesta família de telas.
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: SivTheme.tema,
+          home: const Scaffold(
+            body: EcommerceConfiguracaoFormulario(empresaId: 1),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tabela de preço'), findsOneWidget);
+    },
+  );
+}

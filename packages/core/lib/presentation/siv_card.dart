@@ -28,22 +28,29 @@ class SivCard extends StatelessWidget {
       style: TextStyle(
         color: destaque ? cores.textoSobreEscuroTitulo : cores.textoPrincipal,
       ),
-      child: Container(
-        padding: padding ?? const EdgeInsets.all(SivDimensoes.paddingCard),
-        decoration: BoxDecoration(
-          color: destaque ? cores.acoEscuro : cores.superficie,
-          borderRadius: BorderRadius.circular(SivDimensoes.raio),
-          boxShadow: destaque
-              ? null
-              : const [
-                  BoxShadow(
-                    color: Color(0x0D26282A),
-                    blurRadius: 3,
-                    offset: Offset(0, 1),
-                  ),
-                ],
+      // Material(transparency) -- mesmo esquema do Card nativo do Flutter:
+      // garante ancestral Material pra InkWell/Switch/TextField/InputChip
+      // dentro do card, sem depender de o chamador prover um (rota via
+      // MaterialPageRoute sem Scaffold, dialog, teste isolado etc.).
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(SivDimensoes.paddingCard),
+          decoration: BoxDecoration(
+            color: destaque ? cores.acoEscuro : cores.superficie,
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            boxShadow: destaque
+                ? null
+                : const [
+                    BoxShadow(
+                      color: Color(0x0D26282A),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+          ),
+          child: child,
         ),
-        child: child,
       ),
     );
   }

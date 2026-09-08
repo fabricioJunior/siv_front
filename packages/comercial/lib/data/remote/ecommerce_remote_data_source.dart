@@ -84,24 +84,82 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<EcommerceReferencia>> recuperarReferencias(
+  Future<EcommerceReferenciasPagina> recuperarReferencias(
     int ecommerceId, {
     String? busca,
+    List<int>? categoriaIds,
+    bool? rascunho,
+    bool? publicavel,
+    int page = 1,
+    int limit = 50,
   }) async {
     final response = await get(
       pathParameters: {'id': '$ecommerceId/referencias'},
       queryParameters: {
-        'limit': '200',
+        'page': page.toString(),
+        'limit': limit.toString(),
         if (busca != null && busca.trim().isNotEmpty) 'search': busca.trim(),
+        if (categoriaIds != null && categoriaIds.isNotEmpty)
+          'categoriaIds': categoriaIds.join(','),
+        if (rascunho != null) 'rascunho': rascunho.toString(),
+        if (publicavel != null) 'publicavel': publicavel.toString(),
       },
     );
     final body = response.body as Map<String, dynamic>;
-    return (body['items'] as List<dynamic>)
-        .map(
-          (json) =>
-              EcommerceReferenciaDto.fromJson(json as Map<String, dynamic>),
-        )
-        .toList();
+    return EcommerceReferenciasPagina(
+      itens: (body['items'] as List<dynamic>)
+          .map(
+            (json) =>
+                EcommerceReferenciaDto.fromJson(json as Map<String, dynamic>),
+          )
+          .toList(),
+      total: _toInt(body['total']),
+      totalPublicados: _toInt(body['totalPublicados']),
+      totalRascunho: _toInt(body['totalRascunho']),
+      totalNaoPublicaveis: _toInt(body['totalNaoPublicaveis']),
+    );
+  }
+
+  @override
+  Future<EcommerceLoteResultado> publicarReferenciasEmLote(
+    int ecommerceId, {
+    required List<int> ids,
+    required bool rascunho,
+  }) async {
+    final response = await patch(
+      pathParameters: {'id': '$ecommerceId/referencias/lote'},
+      body: {'ids': ids, 'rascunho': rascunho},
+    );
+    final body = response.body as Map<String, dynamic>;
+    return EcommerceLoteResultado(
+      atualizados: _toInt(body['atualizados']) ?? 0,
+      falharam: ((body['falharam'] as List?) ?? const [])
+          .map((e) {
+            final falha = e as Map<String, dynamic>;
+            return EcommerceLoteFalha(
+              id: _toInt(falha['id']) ?? 0,
+              motivos: ((falha['motivos'] as List?) ?? const [])
+                  .map((m) => m.toString())
+                  .toList(),
+            );
+          })
+          .toList(),
+    );
+  }
+
+  @override
+  Future<void> atualizarDisponibilidadeProdutosEmLote(
+    int ecommerceId,
+    int referenciaId, {
+    required List<int> produtoIds,
+    required bool disponivel,
+  }) async {
+    await put(
+      pathParameters: {
+        'id': '$ecommerceId/referencias/$referenciaId/produtos/lote',
+      },
+      body: {'produtoIds': produtoIds, 'disponivel': disponivel},
+    );
   }
 
   @override
@@ -175,3 +233,5 @@ class EcommerceRemoteDataSource extends RemoteDataSourceBase
     );
   }
 }
+
+int? _toInt(dynamic value) => int.tryParse(value?.toString() ?? '');

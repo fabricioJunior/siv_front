@@ -19,6 +19,7 @@ class AtualizarReferencia {
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   }) async {
     return _referenciasRepository.atualizarReferencia(
       id: id,
@@ -32,6 +33,7 @@ class AtualizarReferencia {
       composicao: composicao,
       cuidados: cuidados,
       ncm: ncm,
+      pesoGramas: pesoGramas,
     );
   }
 }

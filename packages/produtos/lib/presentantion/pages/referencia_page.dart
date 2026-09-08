@@ -26,6 +26,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   late final TextEditingController _composicaoController;
   late final TextEditingController _cuidadosController;
   late final TextEditingController _ncmController;
+  late final TextEditingController _pesoController;
 
   bool _salvando = false;
   bool _abrindoPreco = false;
@@ -48,6 +49,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _composicaoController = TextEditingController();
     _cuidadosController = TextEditingController();
     _ncmController = TextEditingController();
+    _pesoController = TextEditingController();
   }
 
   @override
@@ -61,6 +63,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _composicaoController.dispose();
     _cuidadosController.dispose();
     _ncmController.dispose();
+    _pesoController.dispose();
     super.dispose();
   }
 
@@ -74,6 +77,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     _composicaoController.text = referencia.composicao ?? '';
     _cuidadosController.text = referencia.cuidados ?? '';
     _ncmController.text = referencia.ncm ?? '';
+    _pesoController.text = referencia.pesoGramas?.toString() ?? '';
     _categoriaSelecionada = referencia.categoria;
     _subCategoriaSelecionada = referencia.subCategoria;
   }
@@ -126,6 +130,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         composicao: _sanitizeOptional(_composicaoController.text),
         cuidados: _sanitizeOptional(_cuidadosController.text),
         ncm: _sanitizeOptional(_ncmController.text),
+        pesoGramas: int.tryParse(_pesoController.text.trim()),
       );
 
       if (!mounted) return;
@@ -181,6 +186,8 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         (candidatoNcm != null && candidatoNcm.trim().length == 8)
         ? candidatoNcm
         : null;
+    final pesoSugerido =
+        resultado.subCategoria?.pesoGramas ?? resultado.categoria.pesoGramas;
 
     setState(() {
       _categoriaSelecionada = resultado.categoria;
@@ -193,6 +200,9 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
       );
       if (ncmSugerido != null && _ncmController.text.trim().isEmpty) {
         _ncmController.text = ncmSugerido;
+      }
+      if (pesoSugerido != null && _pesoController.text.trim().isEmpty) {
+        _pesoController.text = pesoSugerido.toString();
       }
     });
   }
@@ -425,6 +435,19 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                 }
                                 return null;
                               },
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _pesoController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: const InputDecoration(
+                                labelText: 'Peso (gramas)',
+                                hintText: 'Ex: 250',
+                                border: OutlineInputBorder(),
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Wrap(

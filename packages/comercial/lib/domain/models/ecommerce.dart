@@ -14,6 +14,11 @@ abstract class Ecommerce implements Equatable {
   bool get apagado;
   DateTime? get apagadoEm;
 
+  /// Tolerantes -- `null` quando o backend ainda não devolve. Sem eles, o
+  /// selo de contagem no card do canal simplesmente não aparece.
+  int? get referenciasPublicadas;
+  int? get referenciasRascunho;
+
   factory Ecommerce.create({
     int? id,
     required int empresaId,
@@ -27,6 +32,8 @@ abstract class Ecommerce implements Equatable {
     List<int> formasDePagamentoIds,
     bool apagado,
     DateTime? apagadoEm,
+    int? referenciasPublicadas,
+    int? referenciasRascunho,
   }) = _EcommerceImpl;
 
   @override
@@ -46,6 +53,8 @@ abstract class Ecommerce implements Equatable {
         formasDePagamentoIds,
         apagado,
         apagadoEm,
+        referenciasPublicadas,
+        referenciasRascunho,
       ];
 }
 
@@ -74,6 +83,10 @@ class _EcommerceImpl implements Ecommerce {
   final bool apagado;
   @override
   final DateTime? apagadoEm;
+  @override
+  final int? referenciasPublicadas;
+  @override
+  final int? referenciasRascunho;
 
   const _EcommerceImpl({
     this.id,
@@ -88,6 +101,8 @@ class _EcommerceImpl implements Ecommerce {
     this.formasDePagamentoIds = const [],
     this.apagado = false,
     this.apagadoEm,
+    this.referenciasPublicadas,
+    this.referenciasRascunho,
   });
 
   @override
@@ -107,5 +122,7 @@ class _EcommerceImpl implements Ecommerce {
         formasDePagamentoIds,
         apagado,
         apagadoEm,
+        referenciasPublicadas,
+        referenciasRascunho,
       ];
 }

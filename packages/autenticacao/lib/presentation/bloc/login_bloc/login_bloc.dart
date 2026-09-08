@@ -172,6 +172,21 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       final licenciados = await _recuperarLicenciados.call();
 
       emit(LoginCarregarLicenciadosSucesso(state, licenciados: licenciados));
+
+      // Terminal memoriza a última licença usada -- pré-seleciona pra pular
+      // a etapa de escolha nos acessos seguintes (só troca via "Trocar
+      // licenciado").
+      final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
+      if (licenciadoDaSessao != null &&
+          licenciados.any((item) => item.id == licenciadoDaSessao.id)) {
+        _apiBaseUrlConfig.atualizar(licenciadoDaSessao.urlApi);
+        emit(
+          LoginSelecionarLicenciadoSucesso(
+            state,
+            licenciadoSelecionado: licenciadoDaSessao,
+          ),
+        );
+      }
     } catch (e, s) {
       emit(
         _criarEstadoDeFalha(

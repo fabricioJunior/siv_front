@@ -1,9 +1,11 @@
 import 'dart:developer';
 
+import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -15,6 +17,7 @@ import 'package:flutter_quill/flutter_quill.dart'
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
+import 'package:siv_front/presentation/widgets/app_shell.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -23,14 +26,32 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await sl.reset();
-    await configs();
+    await _bootstrap();
     initPrintingConfigs();
     runApp(MyApp());
   } catch (e, s) {
     log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
     runApp(AppInitializationErrorApp(error: e, stackTrace: s));
   }
+}
+
+// `sl.reset()` + `configs()` não é reentrante: registro no GetIt não é
+// idempotente, então duas execuções concorrentes (ex: duplo clique em "Sair
+// e limpar dados" na tela de erro) intercalam um `reset` com o `configs` da
+// outra e uma tenta registrar um tipo que a outra acabou de registrar,
+// estourando "already registered". `_bootstrapping` garante que chamadas
+// concorrentes aguardem a mesma execução em vez de rodar em paralelo.
+Future<void>? _bootstrapping;
+
+Future<void> _bootstrap() {
+  return _bootstrapping ??= _runBootstrap().whenComplete(
+    () => _bootstrapping = null,
+  );
+}
+
+Future<void> _runBootstrap() async {
+  await sl.reset();
+  await configs();
 }
 
 Future<void> configs() async {
@@ -74,7 +95,8 @@ class MyApp extends StatelessWidget {
 
   String _resolverRotaInicial() {
     if (kIsWeb) {
-      final rotaDaUrl = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+      final rotaDaUrl =
+          WidgetsBinding.instance.platformDispatcher.defaultRouteName;
       if (rotaDaUrl.isNotEmpty &&
           rotaDaUrl != '/' &&
           rotaDaUrl != '/login' &&
@@ -104,74 +126,79 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       builder: (context, child) {
-        return BlocListener<AppBloc, AppState>(
-          bloc: sl<AppBloc>(),
-          listenWhen: (previous, current) =>
-              previous.statusAutenticacao != current.statusAutenticacao,
-          listener: (context, state) {
-            if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
-              final restaurandoRotaDoBoot =
-                  _aguardandoRestaurarRotaDoBoot[0] &&
-                  _restaurandoRotaEspecifica;
-              _aguardandoRestaurarRotaDoBoot[0] = false;
-              if (restaurandoRotaDoBoot) {
-                return;
-              }
-
-              if (routeToTest != null) {
-                _navigateWhenReady(
-                  (navigator) => navigator.pushNamed(routeToTest!),
-                );
-              } else {
-                _navigateWhenReady(
-                  (navigator) => navigator.pushNamedAndRemoveUntil(
-                    '/home',
-                    (route) => false,
-                  ),
-                );
-              }
-            }
-
-            if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
-              _navigateWhenReady(
-                (navigator) => navigator.pushNamedAndRemoveUntil(
-                  '/login',
-                  (route) => false,
-                ),
-              );
-            }
-          },
-          child: BlocBuilder<AppBloc, AppState>(
-            bloc: sl<AppBloc>(),
-            builder: (context, state) {
-              if (state.statusAutenticacao ==
-                      StatusAutenticacao.carregandoDados &&
-                  !_restaurandoRotaEspecifica) {
-                return AppLoadingView(
-                  etapaAtual: state.etapaAtualInicializacao,
-                  etapasConcluidas: state.etapasInicializacaoConcluidas,
-                );
-              }
-
-              if (state.statusAutenticacao ==
-                  StatusAutenticacao.falhaInicializacao) {
-                return InitializationErrorView(
-                  mensagem:
-                      state.mensagemErroInicializacao ??
-                      'Não foi possível iniciar o aplicativo.',
-                  detalhesTecnicos: state.detalhesErroInicializacao,
-                  onRetry: () => sl<AppBloc>().add(AppIniciou()),
-                );
-              }
-
-              return child ?? const SizedBox.shrink();
-            },
-          ),
+        return Overlay(
+          initialEntries: [
+            OverlayEntry(builder: (context) => _appShellRoot(context, child)),
+          ],
         );
       },
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      theme: SivTheme.tema,
+    );
+  }
+
+  Widget _appShellRoot(BuildContext context, Widget? child) {
+    return BlocListener<AppBloc, AppState>(
+      bloc: sl<AppBloc>(),
+      listenWhen: (previous, current) =>
+          previous.statusAutenticacao != current.statusAutenticacao,
+      listener: (context, state) {
+        if (state.statusAutenticacao == StatusAutenticacao.autenticado) {
+          final restaurandoRotaDoBoot =
+              _aguardandoRestaurarRotaDoBoot[0] && _restaurandoRotaEspecifica;
+          _aguardandoRestaurarRotaDoBoot[0] = false;
+          if (restaurandoRotaDoBoot) {
+            return;
+          }
+
+          if (routeToTest != null) {
+            _navigateWhenReady(
+              (navigator) => navigator.pushNamed(routeToTest!),
+            );
+          } else {
+            _navigateWhenReady(
+              (navigator) =>
+                  navigator.pushNamedAndRemoveUntil('/home', (route) => false),
+            );
+          }
+        }
+
+        if (state.statusAutenticacao == StatusAutenticacao.naoAutenticao) {
+          _navigateWhenReady(
+            (navigator) =>
+                navigator.pushNamedAndRemoveUntil('/login', (route) => false),
+          );
+        }
+      },
+      child: BlocBuilder<AppBloc, AppState>(
+        bloc: sl<AppBloc>(),
+        builder: (context, state) {
+          if (state.statusAutenticacao == StatusAutenticacao.carregandoDados &&
+              !_restaurandoRotaEspecifica) {
+            return AppLoadingView(
+              etapaAtual: state.etapaAtualInicializacao,
+              etapasConcluidas: state.etapasInicializacaoConcluidas,
+            );
+          }
+
+          if (state.statusAutenticacao ==
+              StatusAutenticacao.falhaInicializacao) {
+            return InitializationErrorView(
+              mensagem:
+                  state.mensagemErroInicializacao ??
+                  'Não foi possível iniciar o aplicativo.',
+              detalhesTecnicos: state.detalhesErroInicializacao,
+              onRetry: () => sl<AppBloc>().add(AppIniciou()),
+              onSairELimparDados: () =>
+                  sl<AppBloc>().add(AppDesautenticou()),
+            );
+          }
+
+          return AppShell(
+            rotaAtual: navigationObserver.rotaAtual,
+            navigatorKey: navigatorKey,
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       ),
     );
   }
@@ -346,8 +373,25 @@ class AppInitializationErrorApp extends StatelessWidget {
             'Não foi possível concluir a inicialização do aplicativo. Verifique a configuração e tente novamente.',
         detalhesTecnicos:
             'Origem: ${error.runtimeType}\n\nErro: $error\n\nStack trace:\n$stackTrace',
+        onSairELimparDados: _sairELimparDados,
       ),
     );
+  }
+
+  // Falha ocorreu antes (ou durante) a resolução de dependências -- sem
+  // garantia de que `sl` já tenha o que `Deslogar` precisa. Refaz o boot do
+  // zero (mesmo caminho de `main()`) e só então limpa a sessão/dados locais,
+  // best-effort: se o boot falhar de novo, cai numa nova tela de erro igual
+  // a essa em vez de travar.
+  Future<void> _sairELimparDados() async {
+    try {
+      await _bootstrap();
+      await sl<Deslogar>().call();
+      runApp(MyApp());
+    } catch (e, s) {
+      log('Falha ao limpar dados locais: $e', stackTrace: s, name: 'Startup');
+      runApp(AppInitializationErrorApp(error: e, stackTrace: s));
+    }
   }
 }
 
@@ -355,12 +399,14 @@ class InitializationErrorView extends StatelessWidget {
   final String mensagem;
   final String? detalhesTecnicos;
   final VoidCallback? onRetry;
+  final VoidCallback? onSairELimparDados;
 
   const InitializationErrorView({
     super.key,
     required this.mensagem,
     this.detalhesTecnicos,
     this.onRetry,
+    this.onSairELimparDados,
   });
 
   @override
@@ -412,6 +458,12 @@ class InitializationErrorView extends StatelessWidget {
                         icon: const Icon(Icons.bug_report_outlined),
                         label: const Text('Informações técnicas'),
                       ),
+                      if (onSairELimparDados != null)
+                        OutlinedButton.icon(
+                          onPressed: onSairELimparDados,
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Sair e limpar dados'),
+                        ),
                     ],
                   ),
                 ],
@@ -452,9 +504,15 @@ class InitializationErrorView extends StatelessWidget {
 }
 
 class NavigationObserver extends RouteObserver<ModalRoute<void>> {
+  /// Nome da rota visível no topo da pilha -- usado pela [AppShell] pra
+  /// destacar o item ativo no menu lateral sem precisar reconstruir a
+  /// árvore de widgets a cada navegação.
+  final ValueNotifier<String?> rotaAtual = ValueNotifier(null);
+
   @override
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
+    rotaAtual.value = route.settings.name;
     var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
     if (usuarioId == null) {
       return;
@@ -489,6 +547,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didPop(Route route, Route? previousRoute) {
     super.didPop(route, previousRoute);
+    rotaAtual.value = previousRoute?.settings.name;
     log('Popped route: ${route.settings.name}', name: 'Navigation');
     _sincronizarAoFinalizarCriarRomaneio(route.settings);
   }
@@ -496,6 +555,7 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didReplace({Route? newRoute, Route? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    rotaAtual.value = newRoute?.settings.name;
     log(
       'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
       name: 'Navigation',

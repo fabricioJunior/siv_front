@@ -13,4 +13,5 @@ CategoriaDto _$CategoriaDtoFromJson(Map<String, dynamic> json) => CategoriaDto(
   ncm: json['ncm'] as String?,
   descricao: json['descricao'] as String?,
   icone: json['icone'] as String?,
+  pesoGramas: (json['pesoGramas'] as num?)?.toInt(),
 );

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../tema.dart';
 import 'i_seletor.dart';
 
 /// Define o comportamento de seleção do [SeletorGenerico].
@@ -88,6 +89,10 @@ class SeletorGenerico<T> extends StatefulWidget {
   /// widget pai buscar mais itens no servidor com o texto digitado.
   final ValueChanged<String>? onBuscaChanged;
 
+  /// Quando informada, o campo entra em estado de erro: borda vinho e a
+  /// mensagem exibida abaixo do campo.
+  final String? mensagemErro;
+
   const SeletorGenerico({
     super.key,
     required this.itens,
@@ -108,11 +113,16 @@ class SeletorGenerico<T> extends StatefulWidget {
     this.onCadastrarPressed,
     this.cadastrarLabel = 'Cadastrar novo',
     this.onBuscaChanged,
+    this.mensagemErro,
   });
 
   @override
   State<SeletorGenerico<T>> createState() => _SeletorGenericoState<T>();
 }
+
+/// Nome do design system para [SeletorGenerico]. Mesma API, mesma classe --
+/// só um alias para telas novas que seguem a nomenclatura `Siv*`.
+typedef SivSeletor<T> = SeletorGenerico<T>;
 
 class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   late List<T> _selecionados;
@@ -198,7 +208,9 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final emErro = widget.mensagemErro != null;
 
     final busca = _buscaController.text.trim();
     final sugestoes = busca.isEmpty
@@ -224,7 +236,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
           spacing: 8,
           runSpacing: 4,
           children: [
-            Text(widget.titulo, style: theme.textTheme.titleMedium),
+            Text(widget.titulo, style: textos.secao),
             Wrap(
               spacing: 4,
               runSpacing: 4,
@@ -261,14 +273,19 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             duration: const Duration(milliseconds: 120),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _buscaFocusNode.hasFocus
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outlineVariant,
-                width: _buscaFocusNode.hasFocus ? 1.6 : 1,
-              ),
+              color:
+                  widget.onlyView ? cores.superficieRecuada : cores.superficie,
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+              border: widget.onlyView
+                  ? null
+                  : Border.all(
+                      color: emErro
+                          ? cores.vinho
+                          : _buscaFocusNode.hasFocus
+                              ? cores.aco
+                              : cores.hairline,
+                      width: _buscaFocusNode.hasFocus || emErro ? 2 : 1,
+                    ),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -295,8 +312,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                             isCollapsed: true,
                             border: InputBorder.none,
                             hintText: _hintText(),
-                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            hintStyle: textos.corpo.copyWith(
+                              color: cores.textoApoio,
                             ),
                           ),
                           textInputAction: TextInputAction.done,
@@ -342,6 +359,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             ),
           ),
         ),
+        if (emErro) ...[
+          const SizedBox(height: 4),
+          Text(
+            widget.mensagemErro!,
+            style: textos.apoio.copyWith(color: cores.vinho),
+          ),
+        ],
       ],
     );
   }
@@ -676,7 +700,12 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   }
 
   Widget _buildSugestoesOverlay(BuildContext context) {
-    final theme = Theme.of(context);
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final busca = _buscaController.text.trim();
+    final exibirCadastrar = !widget.onlyView &&
+        widget.onCadastrarPressed != null &&
+        busca.isNotEmpty;
 
     return Positioned.fill(
       child: Stack(
@@ -705,10 +734,10 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             offset: Offset(0, _abrirSugestoesParaCima ? -6 : 6),
             child: Material(
               elevation: 4,
-              color: theme.colorScheme.surface,
+              color: cores.superficie,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: theme.colorScheme.outlineVariant),
+                borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                side: BorderSide(color: cores.hairline),
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -716,22 +745,37 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                   minWidth: _larguraCampo,
                   maxWidth: _larguraCampo,
                 ),
-                child: _sugestoesAtuais.isEmpty
+                child: _sugestoesAtuais.isEmpty && !exibirCadastrar
                     ? Padding(
                         padding: const EdgeInsets.all(12),
                         child: Text(
                           'Nenhum item encontrado.',
-                          style: theme.textTheme.bodySmall,
+                          style: textos.apoio,
                         ),
                       )
                     : ListView.separated(
                         shrinkWrap: true,
-                        itemCount: _sugestoesAtuais.length,
-                        separatorBuilder: (_, __) => Divider(
-                          height: 1,
-                          color: theme.colorScheme.outlineVariant,
-                        ),
+                        itemCount:
+                            _sugestoesAtuais.length + (exibirCadastrar ? 1 : 0),
+                        separatorBuilder: (_, __) =>
+                            Divider(height: 1, color: cores.hairline),
                         itemBuilder: (context, index) {
+                          if (index >= _sugestoesAtuais.length) {
+                            return ExcludeFocus(
+                              child: ListTile(
+                                dense: true,
+                                leading: const Icon(Icons.add, size: 18),
+                                title: Text(
+                                  'Cadastrar "$busca" como novo',
+                                  style: textos.corpo.copyWith(
+                                    color: cores.acoProfundo,
+                                  ),
+                                ),
+                                onTap: widget.onCadastrarPressed,
+                              ),
+                            );
+                          }
+
                           final item = _sugestoesAtuais[index];
                           return ExcludeFocus(
                             child: ListTile(
@@ -744,7 +788,10 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                                 context,
                                 item,
                               ),
-                              title: Text(widget.itemLabel(item)),
+                              title: Text(
+                                widget.itemLabel(item),
+                                style: textos.corpo,
+                              ),
                               onTap: () => _selecionarItem(item),
                             ),
                           );

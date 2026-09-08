@@ -63,6 +63,12 @@ void _remoteDataSources() {
   sl.registerFactory<IEcommerceRemoteDataSource>(
     () => EcommerceRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IEcommerceBannersRemoteDataSource>(
+    () => EcommerceBannersRemoteDataSource(informacoesParaRequest: sl()),
+  );
+  sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
+    () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -116,6 +122,12 @@ void _repositories() {
 
   sl.registerFactory<IEcommerceRepository>(
     () => EcommerceRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IEcommerceBannersRepository>(
+    () => EcommerceBannersRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IListaPersonalizadaRepository>(
+    () => ListaPersonalizadaRepository(remoteDataSource: sl()),
   );
 }
 
@@ -374,11 +386,52 @@ void _useCases() {
   sl.registerFactory<AtualizarDisponibilidadeProdutoEcommerce>(
     () => AtualizarDisponibilidadeProdutoEcommerce(repository: sl()),
   );
+  sl.registerFactory<PublicarReferenciasEmLoteEcommerce>(
+    () => PublicarReferenciasEmLoteEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarDisponibilidadeProdutosEmLoteEcommerce>(
+    () => AtualizarDisponibilidadeProdutosEmLoteEcommerce(repository: sl()),
+  );
+  sl.registerFactory<RecuperarBannersEcommerce>(
+    () => RecuperarBannersEcommerce(repository: sl()),
+  );
+  sl.registerFactory<CriarBannerEcommerce>(
+    () => CriarBannerEcommerce(repository: sl()),
+  );
+  sl.registerFactory<AtualizarBannerEcommerce>(
+    () => AtualizarBannerEcommerce(repository: sl()),
+  );
+  sl.registerFactory<ExcluirBannerEcommerce>(
+    () => ExcluirBannerEcommerce(repository: sl()),
+  );
+
+  sl.registerFactory<CriarListaPersonalizada>(
+    () => CriarListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<AdicionarItensListaPersonalizada>(
+    () => AdicionarItensListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<RemoverItensListaPersonalizada>(
+    () => RemoverItensListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<RecuperarListaPersonalizada>(
+    () => RecuperarListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<BuscarLinkListaPersonalizada>(
+    () => BuscarLinkListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<AtualizarTituloListaPersonalizada>(
+    () => AtualizarTituloListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<ListarListasPersonalizadas>(
+    () => ListarListasPersonalizadas(repository: sl()),
+  );
 }
 
 void _presentation() {
   sl.registerFactory<PedidosBloc>(
     () => PedidosBloc(
+      sl(),
       sl(),
       sl(),
     ),
@@ -578,10 +631,22 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceReferenciasBloc>(
-    () => EcommerceReferenciasBloc(sl(), sl(), sl()),
+    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(
-    () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl()),
+    () => EcommerceReferenciaDetalheBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<EcommerceBannersBloc>(
+    () => EcommerceBannersBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListaPersonalizadaBloc>(
+    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListasPersonalizadasBloc>(
+    () => ListasPersonalizadasBloc(sl()),
   );
 }

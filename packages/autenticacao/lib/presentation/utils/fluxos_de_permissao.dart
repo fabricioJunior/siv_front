@@ -1,4 +1,5 @@
 import 'package:autenticacao/domain/models/permissao.dart';
+import 'package:flutter/material.dart' show IconData, Icons;
 
 /// Agrupa componentes de permissão por FLUXO DE NEGÓCIO (não pelo módulo
 /// do backend, que é só o prefixo de 3 letras do código -- ex: PRD, ROM,
@@ -216,3 +217,66 @@ List<String> componentesDoCargo(String cargo) {
   }
   return codigos.toList();
 }
+
+/// Item do menu lateral pra prévia "O que este grupo enxerga" na tela de
+/// grupo de acesso. Réplica enxuta dos itens de `_itensOperacao`/
+/// `_itensSistema` de `lib/presentation/widgets/app_shell.dart` -- não dá
+/// pra importar o widget de lá aqui porque o app principal depende deste
+/// package, não o contrário. Item sem [componentesNecessarios] é sempre
+/// visível (ex: Início, Sincronização).
+class ItemPreviewMenu {
+  final String label;
+  final IconData icone;
+  final List<String> componentesNecessarios;
+
+  const ItemPreviewMenu({
+    required this.label,
+    required this.icone,
+    this.componentesNecessarios = const [],
+  });
+}
+
+const List<ItemPreviewMenu> itensPreviewMenu = [
+  ItemPreviewMenu(label: 'Início', icone: Icons.home_outlined),
+  ItemPreviewMenu(
+    label: 'Venda',
+    icone: Icons.shopping_cart_checkout_outlined,
+    componentesNecessarios: ['PEDFC001', 'ROMFP001', 'ROMFP002', 'ROMFP003'],
+  ),
+  ItemPreviewMenu(
+    label: 'Pedidos',
+    icone: Icons.receipt_long_outlined,
+    componentesNecessarios: [
+      'PEDFC001', 'PEDFC002', 'PEDFC003', 'PEDFM001', 'PEDFM002', 'PEDFM003',
+      'PEDFM004', 'PEDFM005', 'PEDFM006', 'PEDFM007', 'PEDFM008',
+    ],
+  ),
+  ItemPreviewMenu(
+    label: 'Caixa',
+    icone: Icons.point_of_sale_outlined,
+    componentesNecessarios: [
+      'FCXFM001', 'FCXFP008', 'FCXFP006', 'FCXFP001', 'FCXFP009', 'FCXFP002',
+      'FCXFP003', 'FCXFP004', 'FCXFM003', 'FCXFP005', 'FCXFL001', 'FCXFM004',
+      'FCXFP007', 'FCXFM002',
+    ],
+  ),
+  ItemPreviewMenu(
+    label: 'Estoque',
+    icone: Icons.inventory_2_outlined,
+    componentesNecessarios: ['PRDFL001'],
+  ),
+  ItemPreviewMenu(
+    label: 'Relatórios',
+    icone: Icons.bar_chart_outlined,
+    componentesNecessarios: [
+      'RELFC001', 'RELFC002', 'RELFC003', 'RELFC004', 'RELFC006', 'RELFC007',
+      'RELFC008', 'RELFC009', 'RELFC010', 'FCXFP008',
+    ],
+  ),
+  ItemPreviewMenu(
+    label: 'Administração',
+    icone: Icons.admin_panel_settings_outlined,
+    componentesNecessarios: ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+  ),
+  ItemPreviewMenu(label: 'Sincronização', icone: Icons.sync),
+];

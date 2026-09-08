@@ -19,6 +19,7 @@ class SubCategoriaPage extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nomeController = TextEditingController();
     final ncmController = TextEditingController();
+    final pesoController = TextEditingController();
 
     return BlocProvider<SubCategoriaBloc>(
       create: (context) => sl<SubCategoriaBloc>()
@@ -55,6 +56,9 @@ class SubCategoriaPage extends StatelessWidget {
                 }
                 if (state.ncm != null && ncmController.text.isEmpty) {
                   ncmController.text = state.ncm!;
+                }
+                if (state.pesoGramas != null && pesoController.text.isEmpty) {
+                  pesoController.text = state.pesoGramas!.toString();
                 }
 
                 return Column(
@@ -145,6 +149,9 @@ class SubCategoriaPage extends StatelessWidget {
                                       ncm: ncmController.text.trim().isEmpty
                                           ? null
                                           : ncmController.text.trim(),
+                                      pesoGramas: int.tryParse(
+                                        pesoController.text.trim(),
+                                      ),
                                     ),
                                   );
                                 },
@@ -185,6 +192,41 @@ class SubCategoriaPage extends StatelessWidget {
                                       ncm: value.trim().isEmpty
                                           ? null
                                           : value.trim(),
+                                      pesoGramas: int.tryParse(
+                                        pesoController.text.trim(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Peso (gramas)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: pesoController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                textInputAction: TextInputAction.done,
+                                decoration: const InputDecoration(
+                                  hintText: 'Ex: 250',
+                                  border: OutlineInputBorder(),
+                                ),
+                                onChanged: (value) {
+                                  context.read<SubCategoriaBloc>().add(
+                                    SubCategoriaEditou(
+                                      nome: nomeController.text,
+                                      ncm: ncmController.text.trim().isEmpty
+                                          ? null
+                                          : ncmController.text.trim(),
+                                      pesoGramas: int.tryParse(value.trim()),
                                     ),
                                   );
                                 },

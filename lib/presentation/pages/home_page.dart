@@ -1,12 +1,99 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
-import 'package:autenticacao/models.dart';
-import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 
+class _OperacaoDoDia {
+  final String nome;
+  final String descricao;
+  final IconData icone;
+  final String rota;
+  final List<String> componentesNecessarios;
+
+  const _OperacaoDoDia({
+    required this.nome,
+    required this.descricao,
+    required this.icone,
+    required this.rota,
+    required this.componentesNecessarios,
+  });
+
+  bool get permitido =>
+      componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
+}
+
+const _operacoesDoDia = <_OperacaoDoDia>[
+  _OperacaoDoDia(
+    nome: 'Venda',
+    descricao: 'Bipar produtos e fechar uma venda.',
+    icone: Icons.shopping_cart_checkout_outlined,
+    rota: '/venda',
+    componentesNecessarios: ['PEDFC001', 'ROMFP001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Pedidos',
+    descricao: 'Acompanhar pedidos abertos e retiradas.',
+    icone: Icons.receipt_long_outlined,
+    rota: '/pedidos',
+    componentesNecessarios: ['PEDFC001', 'PEDFM001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Caixa',
+    descricao: 'Abrir, sangrar ou fechar o caixa do terminal.',
+    icone: Icons.point_of_sale_outlined,
+    rota: '/fluxo_de_caixa',
+    componentesNecessarios: ['FCXFP001', 'FCXFP002', 'FCXFL001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Troca e devolução',
+    descricao: 'Registrar troca ou devolução de um produto.',
+    icone: Icons.assignment_return_outlined,
+    rota: '/devolucao',
+    componentesNecessarios: ['PEDFC001', 'ROMFP001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Consignações',
+    descricao: 'Abrir, acompanhar e acertar consignações.',
+    icone: Icons.card_giftcard_outlined,
+    rota: '/consignacoes',
+    componentesNecessarios: ['CONFC001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Pagamentos',
+    descricao: 'Lançar pagamentos avulsos do dia.',
+    icone: Icons.payments_outlined,
+    rota: '/pagamentos_avulsos',
+    componentesNecessarios: ['PAGFM001', 'PAGFP005'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Consultar produto',
+    descricao: 'Ver preço e estoque de um produto.',
+    icone: Icons.search_outlined,
+    rota: '/consultar_produto',
+    componentesNecessarios: ['PRDFL002'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Chamar entregador',
+    descricao: 'Solicitar entregador pra um pedido pronto.',
+    icone: Icons.delivery_dining_outlined,
+    rota: '/chamar_entregador',
+    componentesNecessarios: ['ENTFM001'],
+  ),
+  _OperacaoDoDia(
+    nome: 'Pessoas',
+    descricao: 'Consultar ou cadastrar clientes.',
+    icone: Icons.people_outline,
+    rota: '/pessoas',
+    componentesNecessarios: ['PESFC001', 'PESFM001'],
+  ),
+];
+
+/// Painel inicial. A navegação principal do app vive no menu lateral fixo
+/// (ver `AppShell`) -- esta tela mostra o resumo do dia e as operações mais
+/// usadas, filtradas por permissão.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,667 +112,85 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _confirmarSaida(BuildContext context) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sair da conta'),
-        content: const Text('Deseja encerrar a sessão atual?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sair'),
-          ),
-        ],
-      ),
-    );
-    if (confirmar == true && context.mounted) {
-      sl<AppBloc>().add(AppDesautenticou());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.deepPurple.shade50,
-              Colors.blue.shade50,
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: BlocBuilder<AppBloc, AppState>(
-            bloc: sl<AppBloc>(),
-            builder: (context, state) {
-              // Operações do dia — Comercial expandido diretamente (remove sub-menu)
-              final operacoes = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.point_of_sale_outlined,
-                  title: 'Caixa',
-                  subtitle: 'Abertura, sangrias, suprimentos e fechamento.',
-                  color: Colors.teal,
-                  route: '/fluxo_de_caixa',
-                  componentesNecessarios: ['FCXFP001', 'FCXFP002', 'FCXFL001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.shopping_cart_checkout_outlined,
-                  title: 'Venda',
-                  subtitle: 'Seleção de cliente, contagem e envio ao caixa.',
-                  color: Colors.deepOrange,
-                  route: '/venda',
-                  precisaDeTerminal: true,
-                  precisaDeCaixaAberto: true,
-                  componentesNecessarios: ['PEDFC001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.receipt_long_outlined,
-                  title: 'Pedidos',
-                  subtitle: 'Retirada ou entrega com pagamento pendente.',
-                  color: Colors.indigoAccent,
-                  route: '/pedidos',
-                  componentesNecessarios: ['PEDFC001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.sync_alt,
-                  title: 'Troca e devolução',
-                  subtitle:
-                      'Seleção do romaneio original e recebimento no caixa.',
-                  color: Colors.redAccent,
-                  route: '/devolucao',
-                  precisaDeCaixaAberto: true,
-                  componentesNecessarios: ['PEDFC001'],
-                ),
+    return BlocBuilder<AppBloc, AppState>(
+      bloc: sl<AppBloc>(),
+      builder: (context, appState) {
+        final operacoesPermitidas = _operacoesDoDia
+            .where((op) => op.permitido)
+            .toList();
 
-                const _AccessFlowItem(
-                  icon: Icons.inventory_outlined,
-                  title: 'Consignações',
-                  subtitle: 'Remessas, movimentações e acerto com o cliente.',
-                  color: Colors.indigo,
-                  route: '/consignacoes',
-                  componentesNecessarios: ['CONFC001'],
-                ),
-
-                const _AccessFlowItem(
-                  icon: Icons.payment,
-                  title: 'Pagamentos',
-                  subtitle: 'Recebimentos avulsos e controle rápido.',
-                  color: Colors.teal,
-                  route: '/pagamentos_avulsos',
-                  componentesNecessarios: ['PAGFM001', 'PAGFP005'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.qr_code_scanner,
-                  title: 'Consultar Produto',
-                  subtitle: 'Bipe ou busque um produto e veja preço e grade.',
-                  color: Colors.deepPurple,
-                  route: '/consultar_produto',
-                  componentesNecessarios: ['PRDFL002'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.two_wheeler_outlined,
-                  title: 'Chamar Entregador',
-                  subtitle: 'Entrega avulsa fora do fluxo de pedido/romaneio.',
-                  color: Colors.deepOrange,
-                  route: '/chamar_entregador',
-                  componentesNecessarios: ['ENTFM001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.storefront_outlined,
-                  title: 'E-commerces',
-                  subtitle: 'Dados do site, estoque, tabela e pagamento.',
-                  color: Colors.teal,
-                  route: '/ecommerces',
-                  componentesNecessarios: ['ECOFM001'],
-                ),
-              ];
-
-              final cadastros = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.people,
-                  title: 'Pessoas',
-                  subtitle: 'Clientes, fornecedores e cadastros gerais.',
-                  color: Colors.pink,
-                  route: '/pessoas',
-                  componentesNecessarios: [' PESFC001, PESFC002', 'PESFM003'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.shopping_bag,
-                  title: 'Produtos',
-                  subtitle:
-                      'Referências, cores, tamanhos, marcas e categorias.',
-                  color: Colors.deepPurple,
-                  route: '/menu_produtos',
-                  componentesNecessarios: [
-                    'PRDFM001',
-                    'PRDFM003',
-                    'PRDFM004',
-                    'PRDFM006',
-                  ],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: 'Financeiro',
-                  subtitle: 'Formas de pagamento, preços e cobranças.',
-                  color: Colors.brown,
-                  route: '/financeiro',
-                  componentesNecessarios: [
-                    'GERFM001',
-                    'FCXFP001',
-                    'PRDFM010',
-                    'PAGFM001',
-                  ],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Estoque',
-                  subtitle: 'Saldo, filtros e acompanhamento do estoque.',
-                  color: Colors.indigo,
-                  route: '/estoque',
-                  componentesNecessarios: ['PRDFL001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.warehouse_outlined,
-                  title: 'Gerência de Estoque',
-                  subtitle: 'Entrada manual, consulta, histórico e balanço.',
-                  color: Colors.indigo,
-                  route: '/gerencia_estoque',
-                  componentesNecessarios: ['ROMFP001', 'PRDFL001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.local_offer_outlined,
-                  title: 'Promoções',
-                  subtitle: 'Descontos automáticos por referência, combo ou aniversário.',
-                  color: Colors.deepOrange,
-                  route: '/promocoes',
-                  componentesNecessarios: ['PROMFC001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.confirmation_number_outlined,
-                  title: 'Cupons',
-                  subtitle: 'Cupons de desconto com código para o caixa.',
-                  color: Colors.deepOrange,
-                  route: '/cupons',
-                  componentesNecessarios: ['CUPFC001'],
-                ),
-              ];
-
-              final relatoriosVendas = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.trending_up,
-                  title: 'Faturamento e Ticket',
-                  subtitle:
-                      'Consolidado de vendas, ticket médio e por vendedor.',
-                  color: Colors.green,
-                  route: '/relatorio_faturamento',
-                  componentesNecessarios: ['RELFC001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.point_of_sale,
-                  title: 'Histórico de vendas',
-                  subtitle: 'Consulta por cliente, funcionário, caixa e data.',
-                  color: Colors.green,
-                  route: '/vendas',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.badge_outlined,
-                  title: 'Vendas por Funcionário',
-                  subtitle:
-                      'Vendas de funcionários selecionados em um período.',
-                  color: Colors.teal,
-                  route: '/relatorio_vendas_por_funcionario',
-                  componentesNecessarios: ['RELFC004'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.bar_chart,
-                  title: 'Curva ABC',
-                  subtitle:
-                      'Classificação de produtos por participação no faturamento.',
-                  color: Colors.indigo,
-                  route: '/relatorio_curva_abc',
-                  componentesNecessarios: ['RELFC002'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.people_outline,
-                  title: 'Clientes Ativos',
-                  subtitle:
-                      'Clientes com compra recente no período selecionado.',
-                  color: Colors.purple,
-                  route: '/relatorio_clientes_ativos',
-                  componentesNecessarios: ['RELFC003'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.shopping_bag_outlined,
-                  title: 'Compras de Clientes',
-                  subtitle:
-                      'Clientes vs. categoria, referência ou produto comprado.',
-                  color: Colors.purple,
-                  route: '/relatorio_compras_clientes',
-                  componentesNecessarios: ['RELFC007'],
-                ),
-              ];
-
-              final relatoriosMovimentacoes = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.receipt_long_outlined,
-                  title: 'Movimentações do sistema',
-                  subtitle:
-                      'Todas as operações de produto (venda, devolução, transferência, compra e consignação).',
-                  color: Colors.deepOrange,
-                  route: '/romaneios',
-                  componentesNecessarios: ['ROMFP001'],
-                ),
-              ];
-
-              final relatoriosClientes = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.cake_outlined,
-                  title: 'Aniversariantes',
-                  subtitle: 'Clientes que fazem aniversário no mês.',
-                  color: Colors.pink,
-                  route: '/relatorio_clientes_aniversariantes',
-                  componentesNecessarios: ['RELFC009'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.stars_outlined,
-                  title: 'Pontos de Fidelidade',
-                  subtitle: 'Saldo, último crédito e cadastro no portal.',
-                  color: Colors.amber,
-                  route: '/relatorio_pontos_fidelidade',
-                  componentesNecessarios: ['RELFC006'],
-                ),
-              ];
-
-              final relatoriosEstoque = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Produtos Defasados',
-                  subtitle:
-                      'Produtos ou referências sem movimentação recente.',
-                  color: Colors.blueGrey,
-                  route: '/relatorio_produtos_defasados',
-                  componentesNecessarios: ['RELFC008'],
-                ),
-              ];
-
-              final comunicacao = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.campaign_outlined,
-                  title: 'Comunicados',
-                  subtitle: 'Envio de e-mail em massa e segmentado para clientes.',
-                  color: Colors.deepPurple,
-                  route: '/comunicados',
-                  componentesNecessarios: ['COMFC001'],
-                ),
-              ];
-
-              final relatoriosFiscal = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.receipt_outlined,
-                  title: 'Documentos Fiscais',
-                  subtitle: 'Notas emitidas, pendentes e com falha.',
-                  color: Colors.indigo,
-                  route: '/documentos_fiscais',
-                  componentesNecessarios: ['FISFM001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.summarize_outlined,
-                  title: 'Relatório Fiscal',
-                  subtitle: 'Saldo consolidado, pendente e notas do período.',
-                  color: Colors.indigo,
-                  route: '/relatorio_fiscal',
-                  componentesNecessarios: ['FISFM001'],
-                ),
-              ];
-
-              final relatoriosCaixa = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.history,
-                  title: 'Histórico de Caixas',
-                  subtitle:
-                      'Caixas abertos, em contagem e fechados por período.',
-                  color: Colors.brown,
-                  route: '/historico_de_caixas',
-                  componentesNecessarios: ['FCXFP008'],
-                ),
-              ];
-
-              final administracao = <_AccessFlowItem>[
-                const _AccessFlowItem(
-                  icon: Icons.admin_panel_settings_outlined,
-                  title: 'Administração',
-                  subtitle: 'Usuários, grupos, empresas e configurações.',
-                  color: Colors.blueGrey,
-                  route: '/administracao',
-                  componentesNecessarios: ['ADMFM001', 'ADMFM004', 'SYSFM001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.tune_outlined,
-                  title: 'Config. Fiscal',
-                  subtitle: 'Gateway de emissão de NF-e por empresa.',
-                  color: Colors.indigo,
-                  route: '/configuracao_fiscal',
-                  componentesNecessarios: ['FISFM001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.local_shipping_outlined,
-                  title: 'Config. Entrega',
-                  subtitle: 'Integração com provider de entregador avulso.',
-                  color: Colors.indigo,
-                  route: '/configuracao_entrega',
-                  componentesNecessarios: ['ENTFM001'],
-                ),
-                const _AccessFlowItem(
-                  icon: Icons.sync,
-                  title: 'Sincronização',
-                  subtitle: 'Acompanhe e execute a atualização de dados.',
-                  color: Colors.lightBlue,
-                  route: '/sincronizacao',
-                ),
-              ];
-
-              // Filtra apenas itens com permissão — remove ruído visual de itens bloqueados
-              List<_AccessFlowItem> _permitidos(List<_AccessFlowItem> items) =>
-                  items
-                      .where(
-                        (item) =>
-                            item.componentesNecessarios.isEmpty ||
-                            item.componentesNecessarios.any(
-                              PermissaoPorNome.acessoPermitido,
-                            ),
-                      )
-                      .toList();
-
-              final userName = state.usuarioDaSessao?.nome ?? 'Usuário';
-              final userInitial = userName.isNotEmpty ? userName[0] : 'U';
-              final empresaNome =
-                  state.empresaDaSessao?.nome ?? 'Nenhuma empresa selecionada';
-
-              return Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _buildHeroCard(
-                          context,
-                          userName: userName,
-                          userInitial: userInitial,
-                          empresaNome: empresaNome,
-                        ),
-                        if (state.caixaIdDaSessao == null) ...[
-                          const SizedBox(height: 12),
-                          _buildAbrirCaixaBanner(context),
-                        ],
-                        const SizedBox(height: 20),
-                        _AccessSection(
-                          title: 'Operações do dia',
-                          subtitle: 'Fluxos mais usados na rotina operacional.',
-                          items: _permitidos(operacoes),
-                        ),
-                        const SizedBox(height: 20),
-                        _AccessSection(
-                          title: 'Cadastros e catálogo',
-                          subtitle:
-                              'Organize os cadastros principais do sistema.',
-                          items: _permitidos(cadastros),
-                        ),
-                        if (_permitidos(relatoriosVendas).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Relatórios de Vendas',
-                            subtitle:
-                                'Faturamento, ticket médio, curva ABC e histórico.',
-                            items: _permitidos(relatoriosVendas),
-                          ),
-                        ],
-                        if (_permitidos(
-                          relatoriosMovimentacoes,
-                        ).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Movimentações',
-                            subtitle:
-                                'Auditoria de romaneios — todas as operações de produto.',
-                            items: _permitidos(relatoriosMovimentacoes),
-                          ),
-                        ],
-                        if (_permitidos(relatoriosClientes).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Relatórios de Clientes',
-                            subtitle:
-                                'Aniversariantes e pontos de fidelidade.',
-                            items: _permitidos(relatoriosClientes),
-                          ),
-                        ],
-                        if (_permitidos(relatoriosEstoque).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Relatórios de Estoque',
-                            subtitle: 'Produtos parados sem movimentação.',
-                            items: _permitidos(relatoriosEstoque),
-                          ),
-                        ],
-                        if (_permitidos(comunicacao).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Comunicação',
-                            subtitle: 'Envio de comunicados por e-mail para clientes.',
-                            items: _permitidos(comunicacao),
-                          ),
-                        ],
-                        if (_permitidos(relatoriosFiscal).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Relatórios Fiscais',
-                            subtitle: 'Notas emitidas, pendentes e com falha.',
-                            items: _permitidos(relatoriosFiscal),
-                          ),
-                        ],
-                        if (_permitidos(relatoriosCaixa).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Relatórios de Caixa',
-                            subtitle: 'Acompanhamento de caixas por período.',
-                            items: _permitidos(relatoriosCaixa),
-                          ),
-                        ],
-                        if (_permitidos(administracao).isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          _AccessSection(
-                            title: 'Administração e suporte',
-                            subtitle:
-                                'Permissões, empresas, configurações e apoio operacional.',
-                            items: _permitidos(administracao),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                  // Sair: ação secundária — menos proeminente, com confirmação
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          key: const Key('sair_button'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red.shade400,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                          ),
-                          onPressed: () => _confirmarSaida(context),
-                          icon: const Icon(Icons.logout, size: 18),
-                          label: const Text(
-                            'Sair',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
+        return ListView(
+          padding: const EdgeInsets.all(SivDimensoes.paginaHorizontal),
+          children: [
+            _faixaDeDestaque(context, appState),
+            const SizedBox(height: SivDimensoes.gapCards),
+            _indicadores(context),
+            const SizedBox(height: SivDimensoes.gapCards * 1.5),
+            Text('Operações do dia', style: context.sivTextos.secao),
+            const SizedBox(height: 12),
+            _gridDeOperacoes(context, operacoesPermitidas),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildAbrirCaixaBanner(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.point_of_sale_rounded, color: Colors.orange.shade700),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Nenhum caixa aberto neste terminal',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Abra o caixa para iniciar vendas e recebimentos.',
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          FilledButton(
-            onPressed: () => Navigator.pushNamed(context, '/fluxo_de_caixa'),
-            child: const Text('Abrir caixa'),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _faixaDeDestaque(BuildContext context, AppState appState) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final nome = appState.usuarioDaSessao?.nome ?? 'Usuário';
+    final primeiroNome = nome.split(' ').first;
+    final caixaAberto = appState.caixaIdDaSessao != null;
 
-  Widget _buildHeroCard(
-    BuildContext context, {
-    required String userName,
-    required String userInitial,
-    required String empresaNome,
-  }) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple.shade500, Colors.blue.shade500],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.deepPurple.withValues(alpha: 0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: cores.acoEscuro,
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.white.withValues(alpha: 0.18),
-                child: Text(
-                  userInitial.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      empresaNome,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    const TerminalDaSessaoWidget(titulo: 'Terminal atual'),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            'Bora, $primeiroNome',
+            style: textos.titulo.copyWith(color: cores.textoSobreEscuroTitulo),
           ),
-          const SizedBox(height: 14),
-          // Hero actions: apenas configurações de sessão (sem Sincronização — já está na lista)
+          const SizedBox(height: 6),
+          Text(
+            caixaAberto
+                ? 'Caixa aberto neste terminal.'
+                : 'Caixa fechado neste terminal.',
+            style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio),
+          ),
+          // TODO: linha de contexto ("N pedidos aguardam retirada hoje") sem
+          // fonte de dado hoje -- nenhum bloc/estado atual expõe contagem de
+          // pedidos aguardando retirada.
+          const SizedBox(height: 20),
           Wrap(
-            spacing: 10,
-            runSpacing: 8,
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              FilledButton.tonalIcon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.16),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/login',
-                    arguments: {'trocandoDeEmpresa': true},
-                  );
-                },
-                icon: const Icon(Icons.swap_horiz, size: 18),
-                label: const Text('Trocar empresa'),
+              _acaoRapida(
+                context,
+                texto: 'Iniciar venda',
+                icone: Icons.shopping_cart_checkout_outlined,
+                primaria: true,
+                onTap: () => Navigator.of(context).pushNamed('/venda'),
               ),
-              FilledButton.tonalIcon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.16),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  _trocarTerminal(context);
-                },
-                icon: const Icon(Icons.point_of_sale_outlined, size: 18),
-                label: const Text('Trocar terminal'),
+              _acaoRapida(
+                context,
+                texto: 'Sangria',
+                icone: Icons.arrow_upward_outlined,
+                onTap: () => Navigator.of(context).pushNamed('/sangrias'),
+              ),
+              _acaoRapida(
+                context,
+                texto: 'Consultar produto',
+                icone: Icons.search_outlined,
+                onTap: () =>
+                    Navigator.of(context).pushNamed('/consultar_produto'),
               ),
             ],
           ),
@@ -694,304 +199,211 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _trocarTerminal(BuildContext context) async {
-    final appState = sl<AppBloc>().state;
+  Widget _acaoRapida(
+    BuildContext context, {
+    required String texto,
+    required IconData icone,
+    required VoidCallback onTap,
+    bool primaria = false,
+  }) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
 
-    if (appState.usuarioDaSessao == null || appState.empresaDaSessao == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuário ou empresa da sessão não encontrados.'),
+    if (primaria) {
+      return FilledButton.icon(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: cores.ceu,
+          foregroundColor: cores.acoEscuro,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         ),
+        icon: Icon(icone, size: 18),
+        label: Text(texto, style: textos.rotulo.copyWith(fontSize: 13)),
       );
-      return;
     }
 
-    final terminaisDaEmpresa = appState.terminaisDaEmpresaDaSessao;
-
-    if (terminaisDaEmpresa.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nenhum terminal disponivel para a empresa da sessao.'),
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cores.textoSobreEscuroTitulo,
+        side: BorderSide(
+          color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.4),
         ),
-      );
-      return;
-    }
-
-    final resultado = await Navigator.of(context).pushNamed(
-      '/selecionar_terminal',
-      arguments: {'terminais': terminaisDaEmpresa},
-    );
-
-    if (!context.mounted || resultado is! Map) {
-      return;
-    }
-
-    final idTerminal = resultado['idTerminal'];
-    final idEmpresa = resultado['idEmpresa'];
-    final nomeTerminal = resultado['nomeTerminal'];
-
-    if (idTerminal is! int || idEmpresa is! int || nomeTerminal is! String) {
-      return;
-    }
-
-    sl<AppBloc>().add(
-      AppSelecionouTerminalDaSessao(
-        terminal: _TerminalSelecionado(
-          id: idTerminal,
-          idEmpresa: idEmpresa,
-          nome: nomeTerminal,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      ),
+      icon: Icon(icone, size: 18),
+      label: Text(
+        texto,
+        style: textos.rotulo.copyWith(fontSize: 13, color: cores.textoSobreEscuroTitulo),
       ),
     );
   }
-}
 
-class _TerminalSelecionado implements TerminalDoUsuario {
-  @override
-  final int id;
-
-  @override
-  final int idEmpresa;
-
-  @override
-  final String nome;
-
-  _TerminalSelecionado({
-    required this.id,
-    required this.idEmpresa,
-    required this.nome,
-  });
-
-  @override
-  List<Object?> get props => [id, idEmpresa, nome];
-
-  @override
-  bool? get stringify => true;
-}
-
-class _AccessSection extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final List<_AccessFlowItem> items;
-
-  const _AccessSection({
-    required this.title,
-    required this.subtitle,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
-        ),
-        const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 1100
-                ? 3
-                : constraints.maxWidth >= 700
-                ? 2
-                : 1;
-            const spacing = 10.0;
-            final itemWidth =
-                (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: items
-                  .map(
-                    (item) => SizedBox(
-                      width: itemWidth,
-                      child: _AccessFlowCard(item: item),
-                    ),
-                  )
-                  .toList(),
-            );
-          },
-        ),
-      ],
+  Widget _indicadores(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final colunas = constraints.maxWidth >= 700 ? 4 : 2;
+        return GridView.count(
+          crossAxisCount: colunas,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: SivDimensoes.gapCards,
+          crossAxisSpacing: SivDimensoes.gapCards,
+          childAspectRatio: 1.9,
+          children: [
+            _indicadorCard(context, titulo: 'Vendido hoje', valor: '—'),
+            _indicadorCard(context, titulo: 'Ticket médio', valor: '—'),
+            _indicadorCard(context, titulo: 'Pedidos abertos', valor: '—'),
+            _indicadorSincronizacao(context),
+          ],
+        );
+      },
     );
   }
-}
 
-class _AccessFlowItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final String route;
-  final List<String> componentesNecessarios;
-  final bool precisaDeCaixaAberto;
-  final bool precisaDeTerminal;
+  Widget _indicadorCard(
+    BuildContext context, {
+    required String titulo,
+    required String valor,
+  }) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
 
-  const _AccessFlowItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.route,
-    this.precisaDeCaixaAberto = false,
-    this.precisaDeTerminal = false,
-    this.componentesNecessarios = const [],
-  });
-}
+    // TODO: "vendido hoje" (com comparativo), "ticket médio" e "pedidos
+    // abertos" não têm fonte de dado no AppState/blocs atuais -- ligar
+    // quando existir um use case/bloc de indicadores do dia.
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(titulo, style: textos.apoio.copyWith(color: cores.textoApoio)),
+          const SizedBox(height: 6),
+          Text(valor, style: textos.valor),
+        ],
+      ),
+    );
+  }
 
-class _AccessFlowCard extends StatelessWidget {
-  final _AccessFlowItem item;
+  Widget _indicadorSincronizacao(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
 
-  const _AccessFlowCard({required this.item});
+    return BlocBuilder<SyncDataBloc, SyncDataState>(
+      bloc: sl<SyncDataBloc>(),
+      builder: (context, syncState) {
+        final finalizadoEm = syncState.finalizadoEm;
+        final valor = finalizadoEm == null
+            ? '—'
+            : '${finalizadoEm.hour.toString().padLeft(2, '0')}:${finalizadoEm.minute.toString().padLeft(2, '0')}';
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () async {
-          if (item.precisaDeCaixaAberto &&
-              sl<IAcessoGlobalSessao>().caixaIdDaSessao == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Esta funcionalidade requer um caixa aberto nesse terminal.',
-                ),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          if (item.precisaDeTerminal &&
-              sl<IAcessoGlobalSessao>().terminalIdDaSessao == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Selecione um terminal antes de iniciar uma venda.',
-                ),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-
-            final appState = sl<AppBloc>().state;
-            final terminaisDaEmpresa = appState.terminaisDaEmpresaDaSessao;
-            if (terminaisDaEmpresa.isEmpty) {
-              return;
-            }
-
-            final resultado = await Navigator.of(context).pushNamed(
-              '/selecionar_terminal',
-              arguments: {'terminais': terminaisDaEmpresa},
-            );
-
-            if (!context.mounted || resultado is! Map) {
-              return;
-            }
-
-            final idTerminal = resultado['idTerminal'];
-            final idEmpresa = resultado['idEmpresa'];
-            final nomeTerminal = resultado['nomeTerminal'];
-
-            if (idTerminal is! int ||
-                idEmpresa is! int ||
-                nomeTerminal is! String) {
-              return;
-            }
-
-            sl<AppBloc>().add(
-              AppSelecionouTerminalDaSessao(
-                terminal: _TerminalSelecionado(
-                  id: idTerminal,
-                  idEmpresa: idEmpresa,
-                  nome: nomeTerminal,
-                ),
-              ),
-            );
-            return;
-          }
-
-          Navigator.pushNamed(context, item.route);
-        },
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        return SivCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Strip colorida lateral — padrão dashboard
-              Container(
-                width: 5,
-                decoration: BoxDecoration(
-                  color: item.color,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
-                ),
+              Text(
+                'Última sincronização',
+                style: textos.apoio.copyWith(color: cores.textoApoio),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 44,
-                        width: 44,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: item.color.withValues(alpha: 0.10),
-                        ),
-                        child: Icon(item.icon, color: item.color, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              item.title,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              item.subtitle,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        Icons.chevron_right,
-                        color: item.color.withValues(alpha: 0.6),
-                        size: 20,
-                      ),
-                    ],
+              const SizedBox(height: 6),
+              Text(valor, style: textos.valor),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _gridDeOperacoes(
+    BuildContext context,
+    List<_OperacaoDoDia> operacoes,
+  ) {
+    if (operacoes.isEmpty) {
+      final cores = context.sivColors;
+      return Text(
+        'Nenhuma operação liberada pra este usuário.',
+        style: context.sivTextos.corpo.copyWith(color: cores.textoApoio),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final colunas = constraints.maxWidth >= 1000
+            ? 4
+            : constraints.maxWidth >= 640
+            ? 2
+            : 1;
+
+        return GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: colunas,
+            mainAxisSpacing: SivDimensoes.gapCards,
+            crossAxisSpacing: SivDimensoes.gapCards,
+            childAspectRatio: 1.5,
+          ),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: operacoes.length,
+          itemBuilder: (context, index) {
+            return _operacaoCard(context, index + 1, operacoes[index]);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _operacaoCard(
+    BuildContext context,
+    int numero,
+    _OperacaoDoDia operacao,
+  ) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return Material(
+      color: cores.superficie,
+      borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      child: InkWell(
+        key: Key('home_operacao_${operacao.rota}'),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        onTap: () => Navigator.of(context).pushNamed(operacao.rota),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            border: Border.all(color: cores.hairline),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    numero.toString().padLeft(2, '0'),
+                    style: textos.secao.copyWith(color: cores.aco),
                   ),
-                ),
+                  const Spacer(),
+                  Icon(operacao.icone, color: cores.acoEscuro),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                operacao.nome,
+                style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                operacao.descricao,
+                style: textos.apoio.copyWith(color: cores.textoApoio),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
             ],
           ),

@@ -798,6 +798,28 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   }
 }
 
+/// Abre o mesmo diálogo de busca manual de produto usado internamente pelo
+/// [LeitorWidget] (por texto, com filtro de tamanho/cor), sem exigir que o
+/// leitor completo esteja montado -- usado por telas que constroem sua
+/// própria UI de leitura em cima de um [LeitorBloc] próprio.
+Future<({LeitorData produto, int quantidade})?> abrirBuscaManualDeProduto({
+  required BuildContext context,
+  required ILeitorBuscaDataDatasource buscaDataSource,
+  int? tabelaDePrecoId,
+  bool modoRemocao = false,
+  String rotuloQuantidadeDisponivel = 'Estoque',
+}) {
+  return showDialog<({LeitorData produto, int quantidade})>(
+    context: context,
+    builder: (dialogContext) => _BuscaProdutoDialog(
+      buscaDataSource: buscaDataSource,
+      tabelaDePrecoId: tabelaDePrecoId,
+      modoRemocao: modoRemocao,
+      rotuloQuantidadeDisponivel: rotuloQuantidadeDisponivel,
+    ),
+  );
+}
+
 class _BuscaProdutoDialog extends StatefulWidget {
   final ILeitorBuscaDataDatasource buscaDataSource;
   final int? tabelaDePrecoId;

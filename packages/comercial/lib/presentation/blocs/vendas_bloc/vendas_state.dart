@@ -6,6 +6,7 @@ class VendasState extends Equatable {
   final int? caixaId;
   final DateTime? dataHoraInicial;
   final DateTime? dataHoraFinal;
+  final List<int> funcionarioIds;
   final String? erro;
   final VendasStep step;
 
@@ -15,6 +16,7 @@ class VendasState extends Equatable {
     this.caixaId,
     this.dataHoraInicial,
     this.dataHoraFinal,
+    this.funcionarioIds = const [],
     required this.step,
     this.erro,
   });
@@ -25,6 +27,7 @@ class VendasState extends Equatable {
         caixaId = null,
         dataHoraInicial = null,
         dataHoraFinal = null,
+        funcionarioIds = const [],
         erro = null,
         step = VendasStep.inicial;
 
@@ -40,6 +43,7 @@ class VendasState extends Equatable {
     bool limparDataHoraInicial = false,
     DateTime? dataHoraFinal,
     bool limparDataHoraFinal = false,
+    List<int>? funcionarioIds,
     String? erro,
     VendasStep? step,
   }) {
@@ -52,6 +56,7 @@ class VendasState extends Equatable {
           : (dataHoraInicial ?? this.dataHoraInicial),
       dataHoraFinal:
           limparDataHoraFinal ? null : (dataHoraFinal ?? this.dataHoraFinal),
+      funcionarioIds: funcionarioIds ?? this.funcionarioIds,
       erro: erro,
       step: step ?? this.step,
     );
@@ -64,6 +69,7 @@ class VendasState extends Equatable {
         caixaId,
         dataHoraInicial,
         dataHoraFinal,
+        funcionarioIds,
         erro,
         step,
       ];

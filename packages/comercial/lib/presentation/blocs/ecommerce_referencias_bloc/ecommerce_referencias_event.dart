@@ -10,11 +10,26 @@ abstract class EcommerceReferenciasEvent extends Equatable {
 class EcommerceReferenciasIniciou extends EcommerceReferenciasEvent {
   final int ecommerceId;
   final String? busca;
+  final List<int>? categoriaIds;
+  final bool? rascunhoFiltro;
+  final bool? publicavelFiltro;
 
-  const EcommerceReferenciasIniciou({required this.ecommerceId, this.busca});
+  const EcommerceReferenciasIniciou({
+    required this.ecommerceId,
+    this.busca,
+    this.categoriaIds,
+    this.rascunhoFiltro,
+    this.publicavelFiltro,
+  });
 
   @override
-  List<Object?> get props => [ecommerceId, busca];
+  List<Object?> get props =>
+      [ecommerceId, busca, categoriaIds, rascunhoFiltro, publicavelFiltro];
+}
+
+class EcommerceReferenciasCarregarMaisSolicitou
+    extends EcommerceReferenciasEvent {
+  const EcommerceReferenciasCarregarMaisSolicitou();
 }
 
 class EcommerceReferenciaAdicionou extends EcommerceReferenciasEvent {
@@ -59,4 +74,37 @@ class EcommerceReferenciasDespublicarTodasSolicitou
 
   @override
   List<Object?> get props => [ecommerceId];
+}
+
+/// Adiciona várias referências de uma vez, reaproveitando a barra de
+/// progresso do lote de publicação -- sem endpoint de lote dedicado ainda,
+/// então o bloc mesmo faz o laço sequencial.
+class EcommerceReferenciasAdicionarEmLoteSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+  final List<int> referenciaIds;
+
+  const EcommerceReferenciasAdicionarEmLoteSolicitou({
+    required this.ecommerceId,
+    required this.referenciaIds,
+  });
+
+  @override
+  List<Object?> get props => [ecommerceId, referenciaIds];
+}
+
+class EcommerceReferenciasPublicarEmLoteSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+  final List<int> referenciaEcommerceIds;
+  final bool rascunho;
+
+  const EcommerceReferenciasPublicarEmLoteSolicitou({
+    required this.ecommerceId,
+    required this.referenciaEcommerceIds,
+    required this.rascunho,
+  });
+
+  @override
+  List<Object?> get props => [ecommerceId, referenciaEcommerceIds, rascunho];
 }

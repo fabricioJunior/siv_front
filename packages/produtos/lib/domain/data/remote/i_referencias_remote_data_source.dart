@@ -17,6 +17,7 @@ abstract class IReferenciasRemoteDataSource {
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   });
 
   Future<Referencia> atualizarReferencia({
@@ -31,6 +32,7 @@ abstract class IReferenciasRemoteDataSource {
     String? composicao,
     String? cuidados,
     String? ncm,
+    int? pesoGramas,
   });
 
   Future<List<Referencia>> fetchReferencias({String? nome, bool? inativo});

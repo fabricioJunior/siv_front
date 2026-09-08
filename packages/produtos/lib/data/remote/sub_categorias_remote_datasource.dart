@@ -17,6 +17,7 @@ class SubCategoriasRemoteDatasource extends RemoteDataSourceBase
     int id,
     String nome, {
     String? ncm,
+    int? pesoGramas,
   }) async {
     var response = await put(
       pathParameters: {
@@ -26,18 +27,25 @@ class SubCategoriasRemoteDatasource extends RemoteDataSourceBase
       body: {
         'nome': nome,
         if (ncm != null) 'ncm': ncm,
+        if (pesoGramas != null) 'pesoGramas': pesoGramas,
       },
     );
     return SubCategoriaDto.fromJson(response.body);
   }
 
   @override
-  Future<SubCategoria> createSubCategoria(int categoriaId, String nome, {String? ncm}) async {
+  Future<SubCategoria> createSubCategoria(
+    int categoriaId,
+    String nome, {
+    String? ncm,
+    int? pesoGramas,
+  }) async {
     var response = await post(
       pathParameters: {'categoriaId': categoriaId.toString()},
       body: {
         'nome': nome,
         if (ncm != null) 'ncm': ncm,
+        if (pesoGramas != null) 'pesoGramas': pesoGramas,
       },
     );
     return SubCategoriaDto.fromJson(response.body);

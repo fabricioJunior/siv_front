@@ -13,6 +13,15 @@ abstract class EcommerceReferencia implements Equatable {
   String? get imagemUrl;
   num? get saldo;
 
+  /// Campos tolerantes -- podem não vir do backend ainda. Nunca deduzir
+  /// valor local quando nulos; a UI trata ausência como "sem informação".
+  String? get categoriaNome;
+  int? get produtosTotal;
+  int? get produtosDisponiveis;
+  bool? get publicavel;
+  List<String>? get motivosBloqueio;
+  String? get tabelaDePrecoNome;
+
   factory EcommerceReferencia.create({
     int? id,
     required int ecommerceId,
@@ -25,6 +34,12 @@ abstract class EcommerceReferencia implements Equatable {
     String? unidadeMedida,
     String? imagemUrl,
     num? saldo,
+    String? categoriaNome,
+    int? produtosTotal,
+    int? produtosDisponiveis,
+    bool? publicavel,
+    List<String>? motivosBloqueio,
+    String? tabelaDePrecoNome,
   }) = _EcommerceReferenciaImpl;
 
   @override
@@ -43,6 +58,12 @@ abstract class EcommerceReferencia implements Equatable {
         unidadeMedida,
         imagemUrl,
         saldo,
+        categoriaNome,
+        produtosTotal,
+        produtosDisponiveis,
+        publicavel,
+        motivosBloqueio,
+        tabelaDePrecoNome,
       ];
 }
 
@@ -69,6 +90,18 @@ class _EcommerceReferenciaImpl implements EcommerceReferencia {
   final String? imagemUrl;
   @override
   final num? saldo;
+  @override
+  final String? categoriaNome;
+  @override
+  final int? produtosTotal;
+  @override
+  final int? produtosDisponiveis;
+  @override
+  final bool? publicavel;
+  @override
+  final List<String>? motivosBloqueio;
+  @override
+  final String? tabelaDePrecoNome;
 
   const _EcommerceReferenciaImpl({
     this.id,
@@ -82,6 +115,12 @@ class _EcommerceReferenciaImpl implements EcommerceReferencia {
     this.unidadeMedida,
     this.imagemUrl,
     this.saldo,
+    this.categoriaNome,
+    this.produtosTotal,
+    this.produtosDisponiveis,
+    this.publicavel,
+    this.motivosBloqueio,
+    this.tabelaDePrecoNome,
   });
 
   @override
@@ -100,5 +139,11 @@ class _EcommerceReferenciaImpl implements EcommerceReferencia {
         unidadeMedida,
         imagemUrl,
         saldo,
+        categoriaNome,
+        produtosTotal,
+        produtosDisponiveis,
+        publicavel,
+        motivosBloqueio,
+        tabelaDePrecoNome,
       ];
 }

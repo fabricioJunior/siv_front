@@ -13,18 +13,30 @@ class SubCategoriasRepository implements ISubCategoriasRepository {
     int id,
     String nome, {
     String? ncm,
+    int? pesoGramas,
   }) {
     return subCategoriasRemoteDataSource.atualizarSubCategoria(
       categoriaId,
       id,
       nome,
       ncm: ncm,
+      pesoGramas: pesoGramas,
     );
   }
 
   @override
-  Future<SubCategoria> criarSubCategoria(int categoriaId, String nome, {String? ncm}) {
-    return subCategoriasRemoteDataSource.createSubCategoria(categoriaId, nome, ncm: ncm);
+  Future<SubCategoria> criarSubCategoria(
+    int categoriaId,
+    String nome, {
+    String? ncm,
+    int? pesoGramas,
+  }) {
+    return subCategoriasRemoteDataSource.createSubCategoria(
+      categoriaId,
+      nome,
+      ncm: ncm,
+      pesoGramas: pesoGramas,
+    );
   }
 
   @override

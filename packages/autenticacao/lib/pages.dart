@@ -8,3 +8,4 @@ export 'presentation/pages/terminais_do_usuario_page.dart';
 export 'presentation/pages/grupo_de_acesso_page.dart';
 export 'presentation/pages/vinculos_grupo_de_acesso_com_usuario_page.dart';
 export 'presentation/pages/selecionar_empresa_page.dart';
+export 'presentation/pages/selecionar_licenciado_page.dart';

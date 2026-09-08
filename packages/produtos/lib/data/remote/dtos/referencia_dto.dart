@@ -48,6 +48,9 @@ class ReferenciaDto implements Referencia {
   final String? ncm;
 
   @override
+  final int? pesoGramas;
+
+  @override
   @JsonKey(includeToJson: false)
   final CategoriaDto? categoria;
 
@@ -69,6 +72,7 @@ class ReferenciaDto implements Referencia {
     this.composicao,
     this.cuidados,
     this.ncm,
+    this.pesoGramas,
     this.categoria,
     this.subCategoria,
   });
@@ -93,6 +97,7 @@ class ReferenciaDto implements Referencia {
     composicao,
     cuidados,
     ncm,
+    pesoGramas,
     categoria,
     subCategoria,
   ];

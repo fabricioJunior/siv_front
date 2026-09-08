@@ -23,6 +23,9 @@ class CategoriaDto implements Categoria {
   @override
   final String? icone;
 
+  @override
+  final int? pesoGramas;
+
   CategoriaDto({
     required this.id,
     required this.inativa,
@@ -30,6 +33,7 @@ class CategoriaDto implements Categoria {
     this.ncm,
     this.descricao,
     this.icone,
+    this.pesoGramas,
   });
 
   factory CategoriaDto.fromJson(Map<String, dynamic> json) =>

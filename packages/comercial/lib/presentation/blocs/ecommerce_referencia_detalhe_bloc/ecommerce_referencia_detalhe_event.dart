@@ -60,3 +60,20 @@ class EcommerceRemoverSemEstoqueSolicitou
     extends EcommerceReferenciaDetalheEvent {
   const EcommerceRemoverSemEstoqueSolicitou();
 }
+
+/// Alterna a disponibilidade de todos os produtos de uma linha (cor) ou
+/// coluna (tamanho) da matriz -- exatamente um dos dois deve vir preenchido.
+class EcommerceGradeGrupoAlterou extends EcommerceReferenciaDetalheEvent {
+  final String? corNome;
+  final String? tamanhoNome;
+  final bool disponivel;
+
+  const EcommerceGradeGrupoAlterou({
+    this.corNome,
+    this.tamanhoNome,
+    required this.disponivel,
+  });
+
+  @override
+  List<Object?> get props => [corNome, tamanhoNome, disponivel];
+}

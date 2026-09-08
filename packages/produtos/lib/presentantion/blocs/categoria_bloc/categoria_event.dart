@@ -18,11 +18,17 @@ class CategoriaEditou extends CategoriaEvent {
   final String nome;
   final String? ncm;
   final String? descricao;
+  final int? pesoGramas;
 
-  CategoriaEditou({required this.nome, this.ncm, this.descricao});
+  CategoriaEditou({
+    required this.nome,
+    this.ncm,
+    this.descricao,
+    this.pesoGramas,
+  });
 
   @override
-  List<Object?> get props => [nome, ncm, descricao];
+  List<Object?> get props => [nome, ncm, descricao, pesoGramas];
 }
 
 class CategoriaSalvou extends CategoriaEvent {

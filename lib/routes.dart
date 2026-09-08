@@ -1,5 +1,6 @@
 import 'package:autenticacao/pages.dart' hide SelecionarEmpresaPage;
 import 'package:autenticacao/models.dart' show TerminalDoUsuario;
+import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
@@ -34,6 +35,7 @@ import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
+import 'package:siv_front/presentation/pages/relatorios_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
@@ -70,6 +72,11 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/selecionar_empresa': (context) {
     return const SelecionarEmpresaPage();
+  },
+  '/selecionar_licenciado': (context) {
+    final raw = args(context)['licenciados'];
+    final licenciados = raw is List<Licenciado> ? raw : const <Licenciado>[];
+    return SelecionarLicenciadoPage(licenciados: licenciados);
   },
   '/selecionar_terminal': (context) {
     final terminaisArg = args(context)['terminais'];
@@ -283,6 +290,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const AdministracaoMenuPage(),
     );
   },
+  '/relatorios': (context) {
+    return _rotaProtegida(
+      route: '/relatorios',
+      child: const RelatoriosMenuPage(),
+    );
+  },
 
   ///COMERCIAL:
   '/comercial': (context) {
@@ -419,12 +432,29 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/listas_personalizadas': (context) {
+    return _rotaProtegida(
+      route: '/listas_personalizadas',
+      child: const ListasPersonalizadasPage(),
+    );
+  },
+  '/lista_personalizada': (context) {
+    final routeArgs = args(context);
+    final idArg = routeArgs['id'];
+    return _rotaProtegida(
+      route: '/listas_personalizadas',
+      child: ListaPersonalizadaPage(
+        listaId: idArg is int ? idArg : int.tryParse(idArg?.toString() ?? ''),
+      ),
+    );
+  },
   '/ecommerce_referencias': (context) {
     final routeArgs = args(context);
     return _rotaProtegida(
       route: '/ecommerce_referencias',
       child: EcommerceReferenciasPage(
         ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
       ),
     );
   },
@@ -537,7 +567,19 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(route: '/romaneios', child: const RomaneiosPage());
   },
   '/vendas': (context) {
-    return _rotaProtegida(route: '/vendas', child: const VendasPage());
+    return _rotaProtegida(
+      route: '/vendas',
+      child: VendasPage(
+        funcionariosSeletor:
+            (data) =>
+                FuncionarioSeletor(
+                  modo: FuncionarioSeletorModo.multipla,
+                  onChanged: data.onChanged,
+                  itemsSelecionadosInicial:
+                      data.itemsSelecionadosInicial ?? const [],
+                ),
+      ),
+    );
   },
   '/romaneios_entrada_manual': (context) {
     return _rotaProtegida(
@@ -826,6 +868,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/referencias_pendentes_ncm': (context) {
     return const ReferenciasPendentesNcmPage();
+  },
+  '/referencias_pendentes_peso': (context) {
+    return const ReferenciasPendentesPesoPage();
   },
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);
@@ -1223,6 +1268,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/listas_personalizadas': ['ECOFM004'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],
@@ -1269,6 +1315,19 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+  '/relatorios': [
+    'RELFC001',
+    'RELFC002',
+    'RELFC003',
+    'RELFC004',
+    'RELFC006',
+    'RELFC007',
+    'RELFC008',
+    'RELFC009',
+    'RELFC010',
+    'ROMFP001',
+    'FCXFP008',
+  ],
   '/promocoes': ['PROMFC001'],
   '/promocao/importar_csv': ['PROMFM001'],
   '/cupons': ['CUPFC001'],

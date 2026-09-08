@@ -5,9 +5,11 @@ import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart' show mensagemDeErroApi;
 import 'package:core/seletores.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
@@ -139,7 +141,8 @@ class _PedidoPageState extends State<PedidoPage> {
     context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
   }
 
-  Future<void> _reenviarEmailEmbalado(BuildContext context, int idPedido) async {
+  Future<void> _reenviarEmailEmbalado(
+      BuildContext context, int idPedido) async {
     setState(() => _reenviandoEmailEmbalado = true);
     try {
       await sl<ReenviarEmailEmbaladoPedido>().call(idPedido);
@@ -494,8 +497,7 @@ class _PedidoPageState extends State<PedidoPage> {
       bloc.add(PedidoDescontoAlterado(descontoTotal));
       final descontoResultado = await bloc.stream.firstWhere(
         (s) =>
-            s.step == PedidoStep.descontoAlterado ||
-            s.step == PedidoStep.falha,
+            s.step == PedidoStep.descontoAlterado || s.step == PedidoStep.falha,
       );
       if (descontoResultado.step == PedidoStep.falha) return;
     }
@@ -1142,6 +1144,10 @@ class _PedidoPageState extends State<PedidoPage> {
         _buildCabecalhoPedidoCard(context, state),
         if (state.id != null) ...[
           const SizedBox(height: 16),
+          _TrilhaDeEtapas(situacaoAtual: state.pedido?.situacao),
+          const SizedBox(height: 16),
+          _buildInformacoesPedidoCard(context, state),
+          const SizedBox(height: 16),
           _buildStatusCard(context, state),
         ],
         const SizedBox(height: 16),
@@ -1170,133 +1176,202 @@ class _PedidoPageState extends State<PedidoPage> {
   }
 
   Widget _buildCabecalhoPedidoCard(BuildContext context, PedidoState state) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(context).colorScheme.secondaryContainer,
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 24,
+                child: Text('${state.id ?? widget.idPedido ?? '-'}'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pedido #${state.id ?? widget.idPedido ?? 'novo'}',
+                      style: textos.secao,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      state.pedido?.situacao?.trim().isNotEmpty == true
+                          ? 'Situação: ${state.pedido?.situacao}'
+                          : 'Situação: em edição',
+                      style: textos.apoio,
+                    ),
+                  ],
+                ),
+              ),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildInfoChip(
+                context,
+                icon: Icons.shopping_bag_outlined,
+                label: 'Tipo: ${_labelTipo(state.tipo ?? _tipos.first)}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: cores.hairline)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  child: Text('${state.id ?? widget.idPedido ?? '-'}'),
+                Text(
+                  'TOTAL',
+                  style: textos.rotulo,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pedido #${state.id ?? widget.idPedido ?? 'novo'}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        state.pedido?.situacao?.trim().isNotEmpty == true
-                            ? 'Situação: ${state.pedido?.situacao}'
-                            : 'Situação: em edição',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+                Text(
+                  _formatarMoeda(state.valorTotalGeral),
+                  style: textos.valor,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildInfoChip(
-                  context,
-                  icon: Icons.shopping_bag_outlined,
-                  label: 'Tipo: ${_labelTipo(state.tipo ?? _tipos.first)}',
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildInformacoesPedidoCard(BuildContext context, PedidoState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final situacaoPagamento = state.pedido?.situacaoPagamento;
+    final pendente = situacaoPagamento == 'pendente';
+
+    Widget linha(String rotulo, String valor, {Color? corValor}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(rotulo, style: textos.apoio),
+            Text(
+              valor,
+              style: textos.corpo.copyWith(
+                fontSize: 13.5,
+                color: corValor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          linha('Itens', '${state.itens.length}'),
+          linha(
+            'Entrega',
+            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada',
+          ),
+          linha(
+            'Pagamento',
+            _labelSituacaoPagamento(situacaoPagamento),
+            corValor: pendente ? cores.atencao : null,
+          ),
+          // TODO: Nota fiscal -- Pedido (domain/models/pedido.dart) não expõe
+          // número/status de nota fiscal, sem esse dado no state não dá pra exibir aqui.
+        ],
+      ),
+    );
+  }
+
+  String _formatarMoeda(double valor) =>
+      'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
 
   Widget _buildStatusCard(BuildContext context, PedidoState state) {
     final situacaoPagamento = state.pedido?.situacaoPagamento;
-    final situacaoEntrega = state.pedido?.situacaoEntrega;
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTituloSecao(context, 'Status', Icons.info_outline),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildStatusChip(
-                  context,
-                  label:
-                      'Pagamento: ${_labelSituacaoPagamento(situacaoPagamento)}',
-                  cor: _corSituacaoPagamento(situacaoPagamento),
-                ),
-                if (state.modalidadeEntrega == 'entrega')
-                  _buildStatusChip(
-                    context,
-                    label: 'Entrega: ${_labelSituacaoEntrega(situacaoEntrega)}',
-                    cor: _corSituacaoEntrega(situacaoEntrega),
-                  ),
-              ],
-            ),
-            if (!state.podeFechar && state.pedido?.situacao != 'encerrado') ...[
-              const SizedBox(height: 8),
-              Text(
-                state.motivoNaoPodeFechar,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _linhaInfo(context, 'Itens', '${state.itens.length}'),
+          _linhaInfo(
+            context,
+            'Entrega',
+            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada em loja',
+          ),
+          _linhaInfo(
+            context,
+            'Pagamento',
+            _labelSituacaoPagamento(situacaoPagamento),
+            valorCor: situacaoPagamento == 'pago' ? null : cores.atencao,
+          ),
+          _linhaInfo(
+            context,
+            'Nota fiscal',
+            state.fiscal == true ? 'Emitida' : '-',
+          ),
+          if (!state.podeFechar && state.pedido?.situacao != 'encerrado') ...[
+            const SizedBox(height: 8),
+            Text(state.motivoNaoPodeFechar, style: textos.apoio),
           ],
-        ),
+          const SizedBox(height: 4),
+          if (state.pedido != null &&
+              state.pedido!.situacao?.toLowerCase() != 'cancelado')
+            SivTrilhaDeProgresso(passos: _passosTrilhaPedido(state.pedido!)),
+        ],
       ),
     );
   }
 
-  Widget _buildStatusChip(
-    BuildContext context, {
-    required String label,
-    required Color cor,
+  Widget _linhaInfo(
+    BuildContext context,
+    String rotulo,
+    String valor, {
+    Color? valorCor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: cor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: cor, fontWeight: FontWeight.w600),
+    final textos = context.sivTextos;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(rotulo, style: textos.apoio),
+          Text(
+            valor,
+            style: textos.corpo.copyWith(fontSize: 13.5, color: valorCor),
+          ),
+        ],
       ),
     );
+  }
+
+  List<(String, bool)> _passosTrilhaPedido(Pedido pedido) {
+    final situacao = pedido.situacao?.toLowerCase();
+    final conferido = pedido.conferidoEm != null ||
+        situacao == 'faturado' ||
+        situacao == 'encerrado';
+    final faturado = situacao == 'faturado' || situacao == 'encerrado';
+    final encerrado = situacao == 'encerrado';
+    return [
+      ('Aberto', true),
+      ('Conferido', conferido),
+      ('Faturado', faturado),
+      ('Encerrado', encerrado),
+    ];
   }
 
   String _labelSituacaoPagamento(String? situacao) {
@@ -1309,43 +1384,6 @@ class _PedidoPageState extends State<PedidoPage> {
         return 'Pago';
       default:
         return situacao ?? '-';
-    }
-  }
-
-  Color _corSituacaoPagamento(String? situacao) {
-    switch (situacao) {
-      case 'pago':
-        return Colors.green;
-      case 'parcial':
-        return Colors.orange;
-      default:
-        return Colors.blueGrey;
-    }
-  }
-
-  String _labelSituacaoEntrega(String? situacao) {
-    switch (situacao) {
-      case 'nao_aplicavel':
-        return 'Não aplicável';
-      case 'aguardando_chamada':
-        return 'Aguardando chamada';
-      case 'chamado':
-        return 'Entregador chamado';
-      case 'entregue':
-        return 'Entregue';
-      default:
-        return situacao ?? '-';
-    }
-  }
-
-  Color _corSituacaoEntrega(String? situacao) {
-    switch (situacao) {
-      case 'entregue':
-        return Colors.green;
-      case 'chamado':
-        return Colors.orange;
-      default:
-        return Colors.blueGrey;
     }
   }
 
@@ -1722,10 +1760,9 @@ class _PedidoPageState extends State<PedidoPage> {
               children: [
                 Text(
                   'Total dos itens',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 Text(
                   'R\$ ${state.valorTotalItens.toStringAsFixed(2)}',
@@ -2611,5 +2648,50 @@ class _PedidoPageState extends State<PedidoPage> {
             valorTaxaEntrega: valorTaxaEntrega,
           ),
         );
+  }
+}
+
+const _etapasPedido = ['em_andamento', 'conferido', 'faturado', 'encerrado'];
+const _labelsEtapasPedido = ['Em andamento', 'Conferido', 'Faturado', 'Encerrado'];
+
+class _TrilhaDeEtapas extends StatelessWidget {
+  final String? situacaoAtual;
+
+  const _TrilhaDeEtapas({required this.situacaoAtual});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final indiceAtual = _etapasPedido.indexOf(situacaoAtual ?? '');
+
+    return Row(
+      children: List.generate(_etapasPedido.length, (indice) {
+        final atingida = indiceAtual >= 0 && indice <= indiceAtual;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: indice == 0 ? 0 : 4,
+              right: indice == _etapasPedido.length - 1 ? 0 : 4,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 3,
+                  color: atingida ? cores.aco : cores.hairline,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _labelsEtapasPedido[indice].toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: textos.rotulo.copyWith(fontSize: 11, letterSpacing: 1.1),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

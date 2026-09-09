@@ -149,7 +149,9 @@ class ConsignacaoAcertoBloc
         caixaId: caixa.id,
         romaneioId: romaneioId,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+        desconto: event.desconto,
         descontosItens: event.descontosItens,
+        descontosPromocao: event.descontosPromocao,
         incluirCpfNaNota: event.incluirCpfNaNota,
         cpfNaNota: event.cpfNaNota,
       );

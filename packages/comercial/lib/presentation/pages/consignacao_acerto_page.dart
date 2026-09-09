@@ -69,6 +69,12 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
         listener: (context, state) async {
           if (state.step == ConsignacaoAcertoStep.aguardandoPagamento &&
               !_dialogoAberto) {
+            if (state.erro != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.erro!)),
+              );
+            }
+
             _dialogoAberto = true;
             final resultado = await showDialog<Map<String, dynamic>>(
               context: context,
@@ -119,6 +125,20 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                 .whereType<Map<String, dynamic>>()
                 .map((item) => Map<String, dynamic>.from(item))
                 .toList();
+            final desconto =
+                (resultado['desconto'] as num?)?.toDouble() ?? 0;
+            final descontosItensRaw =
+                resultado['descontosItens'] as List<dynamic>? ?? const [];
+            final descontosItens = descontosItensRaw
+                .whereType<Map<String, dynamic>>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
+            final descontosPromocaoRaw =
+                resultado['descontosPromocao'] as List<dynamic>? ?? const [];
+            final descontosPromocao = descontosPromocaoRaw
+                .whereType<Map<String, dynamic>>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
             final incluirCpfNaNota =
                 resultado['incluirCpfNaNota'] as bool? ?? true;
             final cpfNaNota = resultado['cpfNaNota']?.toString() ?? '';
@@ -126,6 +146,9 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
             context.read<ConsignacaoAcertoBloc>().add(
                   ConsignacaoAcertoPagamentoConfirmado(
                     formasDePagamentoRealizadas: formas,
+                    desconto: desconto,
+                    descontosItens: descontosItens,
+                    descontosPromocao: descontosPromocao,
                     incluirCpfNaNota: incluirCpfNaNota,
                     cpfNaNota: cpfNaNota,
                   ),

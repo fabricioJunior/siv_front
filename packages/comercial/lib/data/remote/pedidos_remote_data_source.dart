@@ -91,9 +91,31 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30}) async {
+  Future<List<Pedido>> recuperarPedidos({
+    int page = 1,
+    int limit = 30,
+    String? searchTerm,
+    List<String>? situacoes,
+    List<String>? situacoesPagamento,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  }) async {
     final response = await get(
-      queryParameters: {'page': '$page', 'limit': '$limit'},
+      queryParameters: {
+        'page': '$page',
+        'limit': '$limit',
+        if (searchTerm != null && searchTerm.isNotEmpty)
+          'searchTerm': searchTerm,
+        // Bracket notation com indice -- qs.parse (configurado em main.ts) monta array só assim,
+        // já que PedidoFilter.situacoes não tem @Transform pra aceitar string separada por vírgula.
+        if (situacoes != null && situacoes.isNotEmpty)
+          for (var i = 0; i < situacoes.length; i++) 'situacoes[$i]': situacoes[i],
+        if (situacoesPagamento != null && situacoesPagamento.isNotEmpty)
+          for (var i = 0; i < situacoesPagamento.length; i++)
+            'situacoesPagamento[$i]': situacoesPagamento[i],
+        if (dataInicial != null) 'dataInicial': dataInicial.toIso8601String(),
+        if (dataFinal != null) 'dataFinal': dataFinal.toIso8601String(),
+      },
     );
     return (response.body as List<dynamic>)
         .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))

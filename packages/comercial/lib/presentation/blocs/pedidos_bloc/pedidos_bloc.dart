@@ -9,6 +9,16 @@ import 'package:core/remote_data_sourcers.dart';
 part 'pedidos_event.dart';
 part 'pedidos_state.dart';
 
+// 'pago' e' um chip de situacaoPagamento (PedidoFilter.situacoesPagamento), dimensao separada
+// de situacao (PedidoFilter.situacoes) -- os demais chips da UI mapeiam pra situacao.
+const _situacoesBackend = {
+  'em_andamento',
+  'conferido',
+  'faturado',
+  'encerrado',
+  'cancelado',
+};
+
 class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
   // Busca um item a mais que o solicitado so pra saber se existe proxima pagina, sem precisar
   // de endpoint de count separado -- mesmo truque ja usado no backend (getMeusPedidos).
@@ -36,24 +46,47 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     PedidosIniciou event,
     Emitter<PedidosState> emit,
   ) async {
+    await _carregarPrimeiraPagina(emit);
+  }
+
+  FutureOr<void> _onBuscaAlterada(
+    PedidosBuscaAlterada event,
+    Emitter<PedidosState> emit,
+  ) async {
+    emit(state.copyWith(busca: event.busca));
+    await _carregarPrimeiraPagina(emit);
+  }
+
+  FutureOr<void> _onFiltroSituacaoAlterado(
+    PedidosFiltroSituacaoAlterado event,
+    Emitter<PedidosState> emit,
+  ) async {
+    emit(state.copyWith(situacoesFiltro: event.situacoes));
+    await _carregarPrimeiraPagina(emit);
+  }
+
+  FutureOr<void> _onFiltroPeriodoAlterado(
+    PedidosFiltroPeriodoAlterado event,
+    Emitter<PedidosState> emit,
+  ) async {
+    emit(state.copyWith(
+      dataInicial: event.dataInicial,
+      dataFinal: event.dataFinal,
+    ));
+    await _carregarPrimeiraPagina(emit);
+  }
+
+  Future<void> _carregarPrimeiraPagina(Emitter<PedidosState> emit) async {
     try {
       emit(state.copyWith(step: PedidosStep.carregando, erro: null));
-
-      final encontrados = await _recuperarPedidos.call(
-        page: 1,
-        limit: _itensPorPagina + 1,
-      );
-      final temMais = encontrados.length > _itensPorPagina;
-      final pedidos = encontrados.take(_itensPorPagina).toList();
-
+      final pedidos = await _buscarPagina(1);
       emit(
         state.copyWith(
-          pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
+          pedidos: pedidos.itens,
           step: PedidosStep.sucesso,
           erro: null,
           paginaAtual: 1,
-          temMaisPaginas: temMais,
+          temMaisPaginas: pedidos.temMais,
         ),
       );
     } catch (e, s) {
@@ -76,20 +109,13 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(state.copyWith(carregandoMais: true));
 
       final proximaPagina = state.paginaAtual + 1;
-      final encontrados = await _recuperarPedidos.call(
-        page: proximaPagina,
-        limit: _itensPorPagina + 1,
-      );
-      final temMais = encontrados.length > _itensPorPagina;
-      final novosPedidos = encontrados.take(_itensPorPagina).toList();
-      final pedidos = [...state.pedidos, ...novosPedidos];
+      final pedidos = await _buscarPagina(proximaPagina);
 
       emit(
         state.copyWith(
-          pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
+          pedidos: [...state.pedidos, ...pedidos.itens],
           paginaAtual: proximaPagina,
-          temMaisPaginas: temMais,
+          temMaisPaginas: pedidos.temMais,
           carregandoMais: false,
         ),
       );
@@ -101,28 +127,25 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     }
   }
 
-  FutureOr<void> _onBuscaAlterada(
-    PedidosBuscaAlterada event,
-    Emitter<PedidosState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        busca: event.busca,
-        filtrados: _filtrar(state.pedidos, event.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
-      ),
-    );
-  }
+  Future<({List<Pedido> itens, bool temMais})> _buscarPagina(int page) async {
+    final busca = state.busca.trim();
+    final temPago = state.situacoesFiltro.contains('pago');
+    final situacoesBackend =
+        state.situacoesFiltro.where(_situacoesBackend.contains).toList();
 
-  FutureOr<void> _onFiltroSituacaoAlterado(
-    PedidosFiltroSituacaoAlterado event,
-    Emitter<PedidosState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        situacoesFiltro: event.situacoes,
-        filtrados: _filtrar(state.pedidos, state.busca, event.situacoes, state.dataInicial, state.dataFinal),
-      ),
+    final encontrados = await _recuperarPedidos.call(
+      page: page,
+      limit: _itensPorPagina + 1,
+      searchTerm: busca.isEmpty ? null : busca,
+      situacoes: situacoesBackend.isEmpty ? null : situacoesBackend,
+      situacoesPagamento: temPago ? const ['pago'] : null,
+      dataInicial: state.dataInicial,
+      dataFinal: state.dataFinal,
     );
+
+    final temMais = encontrados.length > _itensPorPagina;
+    final itens = encontrados.take(_itensPorPagina).toList();
+    return (itens: itens, temMais: temMais);
   }
 
   FutureOr<void> _onPedidoCancelou(
@@ -134,103 +157,13 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
         event.pedidoId,
         motivoCancelamento: event.motivoCancelamento,
       );
-
-      final encontrados = await _recuperarPedidos.call(
-        page: 1,
-        limit: _itensPorPagina + 1,
-      );
-      final temMais = encontrados.length > _itensPorPagina;
-      final pedidos = encontrados.take(_itensPorPagina).toList();
-
-      emit(
-        state.copyWith(
-          pedidos: pedidos,
-          filtrados: _filtrar(pedidos, state.busca, state.situacoesFiltro, state.dataInicial, state.dataFinal),
-          step: PedidosStep.sucesso,
-          erro: null,
-          paginaAtual: 1,
-          temMaisPaginas: temMais,
-        ),
-      );
+      await _carregarPrimeiraPagina(emit);
     } catch (e, s) {
       emit(state.copyWith(
           step: PedidosStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao cancelar pedido.')));
       addError(e, s);
     }
-  }
-
-  // 'pago' e um chip a mais que checa situacaoPagamento, os demais checam situacao -- Set com
-  // qualquer um marcado entra no resultado (OR), nao AND (pedido nao pode ser em_andamento E
-  // encerrado ao mesmo tempo).
-  bool _bateSituacaoFiltro(Pedido pedido, Set<String> situacoesFiltro) {
-    if (situacoesFiltro.isEmpty) return true;
-    return situacoesFiltro.any((filtro) {
-      if (filtro == 'pago') {
-        return (pedido.situacaoPagamento ?? '').toLowerCase() == 'pago';
-      }
-      return (pedido.situacao ?? '').toLowerCase() == filtro;
-    });
-  }
-
-  bool _bateuPeriodo(
-    Pedido pedido,
-    DateTime? dataInicial,
-    DateTime? dataFinal,
-  ) {
-    if (dataInicial == null && dataFinal == null) return true;
-    final criadoEm = pedido.criadoEm;
-    if (criadoEm == null) return false;
-    if (dataInicial != null && criadoEm.isBefore(dataInicial)) return false;
-    if (dataFinal != null && criadoEm.isAfter(dataFinal)) return false;
-    return true;
-  }
-
-  List<Pedido> _filtrar(
-    List<Pedido> pedidos,
-    String busca,
-    Set<String> situacoesFiltro, [
-    DateTime? dataInicial,
-    DateTime? dataFinal,
-  ]) {
-    final filtro = busca.trim().toLowerCase();
-    final lista = pedidos.where((pedido) {
-      if (!_bateSituacaoFiltro(pedido, situacoesFiltro)) return false;
-      if (!_bateuPeriodo(pedido, dataInicial, dataFinal)) return false;
-      if (filtro.isEmpty) return true;
-
-      final id = (pedido.id ?? 0).toString();
-      final pessoaId = (pedido.pessoaId ?? 0).toString();
-      final pessoaNome = (pedido.pessoaNome ?? '').toLowerCase();
-      final situacao = (pedido.situacao ?? '').toLowerCase();
-      return id.contains(filtro) ||
-          pessoaId.contains(filtro) ||
-          pessoaNome.contains(filtro) ||
-          situacao.contains(filtro);
-    }).toList();
-
-    lista.sort((a, b) => (b.criadoEm ?? DateTime(0))
-        .compareTo(a.criadoEm ?? DateTime(0)));
-    return lista;
-  }
-
-  FutureOr<void> _onFiltroPeriodoAlterado(
-    PedidosFiltroPeriodoAlterado event,
-    Emitter<PedidosState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        dataInicial: event.dataInicial,
-        dataFinal: event.dataFinal,
-        filtrados: _filtrar(
-          state.pedidos,
-          state.busca,
-          state.situacoesFiltro,
-          event.dataInicial,
-          event.dataFinal,
-        ),
-      ),
-    );
   }
 
   FutureOr<void> _onPedidoSelecionou(

@@ -1,7 +1,15 @@
 import 'package:comercial/models.dart';
 
 abstract class IPedidosRepository {
-  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30});
+  Future<List<Pedido>> recuperarPedidos({
+    int page = 1,
+    int limit = 30,
+    String? searchTerm,
+    List<String>? situacoes,
+    List<String>? situacoesPagamento,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  });
   Future<Pedido> recuperarPedido(int id);
   Future<Pedido> criarPedido(Pedido pedido);
   Future<Pedido> atualizarPedido(Pedido pedido);

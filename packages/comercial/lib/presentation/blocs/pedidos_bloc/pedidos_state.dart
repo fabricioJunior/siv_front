@@ -2,7 +2,6 @@ part of 'pedidos_bloc.dart';
 
 class PedidosState extends Equatable {
   final List<Pedido> pedidos;
-  final List<Pedido> filtrados;
   final String busca;
   final Set<String> situacoesFiltro;
   final DateTime? dataInicial;
@@ -18,7 +17,6 @@ class PedidosState extends Equatable {
 
   const PedidosState({
     required this.pedidos,
-    required this.filtrados,
     required this.busca,
     required this.step,
     this.situacoesFiltro = const {},
@@ -35,7 +33,6 @@ class PedidosState extends Equatable {
 
   const PedidosState.initial()
       : pedidos = const [],
-        filtrados = const [],
         busca = '',
         situacoesFiltro = const {},
         dataInicial = null,
@@ -59,7 +56,6 @@ class PedidosState extends Equatable {
 
   PedidosState copyWith({
     List<Pedido>? pedidos,
-    List<Pedido>? filtrados,
     String? busca,
     Set<String>? situacoesFiltro,
     Object? dataInicial = _naoInformado,
@@ -75,7 +71,6 @@ class PedidosState extends Equatable {
   }) {
     return PedidosState(
       pedidos: pedidos ?? this.pedidos,
-      filtrados: filtrados ?? this.filtrados,
       busca: busca ?? this.busca,
       situacoesFiltro: situacoesFiltro ?? this.situacoesFiltro,
       dataInicial: identical(dataInicial, _naoInformado)
@@ -103,7 +98,6 @@ class PedidosState extends Equatable {
   @override
   List<Object?> get props => [
         pedidos,
-        filtrados,
         busca,
         situacoesFiltro,
         dataInicial,

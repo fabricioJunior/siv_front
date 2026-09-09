@@ -13,13 +13,17 @@ class ConsignacaoAcertoIniciado extends ConsignacaoAcertoEvent {
 
 class ConsignacaoAcertoPagamentoConfirmado extends ConsignacaoAcertoEvent {
   final List<Map<String, dynamic>> formasDePagamentoRealizadas;
+  final double desconto;
   final List<Map<String, dynamic>> descontosItens;
+  final List<Map<String, dynamic>> descontosPromocao;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
 
   const ConsignacaoAcertoPagamentoConfirmado({
     required this.formasDePagamentoRealizadas,
+    this.desconto = 0,
     this.descontosItens = const [],
+    this.descontosPromocao = const [],
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
   });
@@ -27,7 +31,9 @@ class ConsignacaoAcertoPagamentoConfirmado extends ConsignacaoAcertoEvent {
   @override
   List<Object?> get props => [
         formasDePagamentoRealizadas,
+        desconto,
         descontosItens,
+        descontosPromocao,
         incluirCpfNaNota,
         cpfNaNota,
       ];

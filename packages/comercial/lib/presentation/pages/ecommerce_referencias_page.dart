@@ -245,7 +245,16 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final podeDespublicar = state.totalPublicados != null
         ? state.totalPublicados! > 0
         : state.referencias.any((r) => !r.rascunho);
+    final aptasIds = _idsAptasParaPublicar(state);
     SivPageAcoes.definir([
+      OutlinedButton.icon(
+        onPressed: aptasIds.isEmpty || state.processandoLote
+            ? null
+            : () => _publicarAptas(context, aptasIds),
+        icon: const Icon(Icons.publish_outlined, size: 18),
+        label: Text('Publicar aptas (${aptasIds.length})'),
+      ),
+      const SizedBox(width: 8),
       OutlinedButton.icon(
         onPressed: podeDespublicar && !state.processandoLote
             ? () => _despublicarTodas(context)
@@ -769,6 +778,33 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           ),
         );
       },
+    );
+  }
+
+  // Só considera as referências já carregadas (mesma limitação de
+  // _despublicarTodas) -- não busca páginas restantes.
+  List<int> _idsAptasParaPublicar(EcommerceReferenciasState state) {
+    return state.referencias
+        .where((r) => r.id != null && r.rascunho && r.publicavel == true)
+        .map((r) => r.id!)
+        .toList();
+  }
+
+  Future<void> _publicarAptas(BuildContext context, List<int> ids) async {
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Publicar todas as aptas',
+      corpo: Text(
+        '${pluralizarEcommerce(ids.length, 'referência será publicada', 'referências serão publicadas')} no site.',
+      ),
+      textoAcao: 'Publicar',
+      onConfirmar: (_) => _bloc.add(
+        EcommerceReferenciasPublicarEmLoteSolicitou(
+          ecommerceId: widget.ecommerceId,
+          referenciaEcommerceIds: ids,
+          rascunho: false,
+        ),
+      ),
     );
   }
 

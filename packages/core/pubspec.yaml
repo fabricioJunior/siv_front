@@ -46,6 +46,7 @@ dependencies:
   hive_ce: ^2.19.3
   hive_ce_flutter: ^2.3.4
   google_fonts: ^6.2.1
+  mobile_scanner: ^7.4.0
 
 dev_dependencies:
   flutter_test:

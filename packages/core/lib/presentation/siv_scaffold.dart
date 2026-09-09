@@ -87,10 +87,17 @@ class SivScaffold extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(titulo, style: textos.secao),
+                                Text(
+                                  titulo,
+                                  style: textos.secao,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 if (subtitulo != null)
                                   Text(
                                     subtitulo!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: textos.apoio.copyWith(
                                       color: cores.textoApoio,
                                     ),
@@ -99,14 +106,19 @@ class SivScaffold extends StatelessWidget {
                             ),
                           ),
                           if (acoes.isNotEmpty)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                for (var i = 0; i < acoes.length; i++) ...[
-                                  if (i > 0) const SizedBox(width: 8),
-                                  acoes[i],
-                                ],
-                              ],
+                            Flexible(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    for (var i = 0; i < acoes.length; i++) ...[
+                                      if (i > 0) const SizedBox(width: 8),
+                                      acoes[i],
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
                         ],
                       ),

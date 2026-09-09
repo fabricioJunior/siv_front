@@ -149,7 +149,11 @@ class ConsignacaoAcertoBloc
         caixaId: caixa.id,
         romaneioId: romaneioId,
         formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-        desconto: event.desconto,
+        // Não manda "desconto" (geral) aqui -- o widget de pagamento já distribui
+        // esse valor entre os itens (ver comentário em
+        // pagamentos_realizados_state.dart:146-151), então já está embutido em
+        // descontosItens. Mandar os dois soma o desconto em dobro (mesmo bug já
+        // corrigido em RomaneioCriacaoBloc pra venda).
         descontosItens: event.descontosItens,
         descontosPromocao: event.descontosPromocao,
         incluirCpfNaNota: event.incluirCpfNaNota,

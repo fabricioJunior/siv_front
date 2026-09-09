@@ -125,8 +125,6 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                 .whereType<Map<String, dynamic>>()
                 .map((item) => Map<String, dynamic>.from(item))
                 .toList();
-            final desconto =
-                (resultado['desconto'] as num?)?.toDouble() ?? 0;
             final descontosItensRaw =
                 resultado['descontosItens'] as List<dynamic>? ?? const [];
             final descontosItens = descontosItensRaw
@@ -146,7 +144,6 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
             context.read<ConsignacaoAcertoBloc>().add(
                   ConsignacaoAcertoPagamentoConfirmado(
                     formasDePagamentoRealizadas: formas,
-                    desconto: desconto,
                     descontosItens: descontosItens,
                     descontosPromocao: descontosPromocao,
                     incluirCpfNaNota: incluirCpfNaNota,

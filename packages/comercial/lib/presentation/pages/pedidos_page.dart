@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 // Enum real do backend (SituacaoPedido): em_andamento, conferido, faturado, encerrado, cancelado.
@@ -63,6 +64,7 @@ class _PedidosPageState extends State<PedidosPage> {
   final _buscaController = TextEditingController();
   final _buscaDebouncer = Debouncer(milliseconds: 350);
   final _scrollController = ScrollController();
+  final _chipsScrollController = ScrollController();
 
   @override
   void initState() {
@@ -91,6 +93,7 @@ class _PedidosPageState extends State<PedidosPage> {
     _buscaController.dispose();
     _buscaDebouncer.cancel();
     _scrollController.dispose();
+    _chipsScrollController.dispose();
     _bloc.close();
     SivPageAcoes.limpar();
     super.dispose();
@@ -236,33 +239,75 @@ class _PedidosPageState extends State<PedidosPage> {
     }).length;
   }
 
+  // Usuário não descobre sozinho que dá pra arrastar a lista com o mouse (drag-to-scroll não
+  // vem habilitado por padrão pra ponteiro de mouse no Flutter, só toque/trackpad) -- habilita
+  // via ScrollConfiguration e soma botões de seta como alternativa explícita e descobrível.
+  void _rolarChips(double delta) {
+    final posicao = _chipsScrollController.position;
+    final destino = (posicao.pixels + delta).clamp(
+      posicao.minScrollExtent,
+      posicao.maxScrollExtent,
+    );
+    _chipsScrollController.animateTo(
+      destino,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
   Widget _buildChipsSituacao(BuildContext context, PedidosState state) {
     return SizedBox(
       height: 36,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          _ChipSituacao(
-            label: 'Todos (${state.pedidos.length})',
-            selecionado: state.situacoesFiltro.isEmpty,
-            onTap: () => _bloc.add(PedidosFiltroSituacaoAlterado(const {})),
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Rolar filtros pra esquerda',
+            onPressed: () => _rolarChips(-150),
           ),
-          for (final situacao in _situacoesFiltro)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: _ChipSituacao(
-                label:
-                    '${_labelFiltroSituacao(situacao)} (${_contarSituacao(state.pedidos, situacao)})',
-                selecionado: state.situacoesFiltro.contains(situacao),
-                onTap: () {
-                  final atualizado = Set<String>.from(state.situacoesFiltro);
-                  if (!atualizado.remove(situacao)) {
-                    atualizado.add(situacao);
-                  }
-                  _bloc.add(PedidosFiltroSituacaoAlterado(atualizado));
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  ...PointerDeviceKind.values,
                 },
               ),
+              child: ListView(
+                controller: _chipsScrollController,
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _ChipSituacao(
+                    label: 'Todos (${state.pedidos.length})',
+                    selecionado: state.situacoesFiltro.isEmpty,
+                    onTap: () =>
+                        _bloc.add(PedidosFiltroSituacaoAlterado(const {})),
+                  ),
+                  for (final situacao in _situacoesFiltro)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _ChipSituacao(
+                        label:
+                            '${_labelFiltroSituacao(situacao)} (${_contarSituacao(state.pedidos, situacao)})',
+                        selecionado: state.situacoesFiltro.contains(situacao),
+                        onTap: () {
+                          final atualizado =
+                              Set<String>.from(state.situacoesFiltro);
+                          if (!atualizado.remove(situacao)) {
+                            atualizado.add(situacao);
+                          }
+                          _bloc.add(PedidosFiltroSituacaoAlterado(atualizado));
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Rolar filtros pra direita',
+            onPressed: () => _rolarChips(150),
+          ),
         ],
       ),
     );

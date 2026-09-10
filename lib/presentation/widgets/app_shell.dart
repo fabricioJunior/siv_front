@@ -218,6 +218,14 @@ class _AppShellCasca extends StatelessWidget {
           ),
           _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
         ],
+        floatingActionButton: ValueListenableBuilder<Widget?>(
+          valueListenable: SivPageFab.notifier,
+          builder: (context, fab, _) => fab ?? const SizedBox.shrink(),
+        ), // SivScaffold repassa direto ao Scaffold.floatingActionButton --
+        // SizedBox.shrink() (sem tamanho, sem hit-test) equivale a "nenhum
+        // FAB" visualmente, mas mantém o slot como Widget não-nulo (evita
+        // remontar o subtree do ValueListenableBuilder a cada troca null/
+        // widget, que já causava um pequeno flash ao navegar entre páginas).
         secoesMenu: [
           SivMenuLateralSecao(
             titulo: 'OPERAÇÃO',

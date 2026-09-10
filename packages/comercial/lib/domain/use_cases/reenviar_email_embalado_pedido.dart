@@ -6,5 +6,6 @@ class ReenviarEmailEmbaladoPedido {
   ReenviarEmailEmbaladoPedido({required IPedidosRepository repository})
       : _repository = repository;
 
-  Future<void> call(int id) => _repository.reenviarEmailEmbalado(id);
+  Future<void> call(int id, {String? email}) =>
+      _repository.reenviarEmailEmbalado(id, email: email);
 }

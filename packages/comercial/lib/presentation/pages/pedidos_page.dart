@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 // Enum real do backend (SituacaoPedido): em_andamento, conferido, faturado, encerrado, cancelado.
@@ -63,6 +64,7 @@ class _PedidosPageState extends State<PedidosPage> {
   final _buscaController = TextEditingController();
   final _buscaDebouncer = Debouncer(milliseconds: 350);
   final _scrollController = ScrollController();
+  final _chipsScrollController = ScrollController();
 
   @override
   void initState() {
@@ -91,38 +93,47 @@ class _PedidosPageState extends State<PedidosPage> {
     _buscaController.dispose();
     _buscaDebouncer.cancel();
     _scrollController.dispose();
+    _chipsScrollController.dispose();
     _bloc.close();
     SivPageAcoes.limpar();
     super.dispose();
   }
 
+  bool get _telaDesktop =>
+      MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
+
+  // ponytail: "novo pedido" já acessível em qualquer largura via
+  // SivPageAcoes na barra de título (SivScaffold), sem FAB adicional.
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PedidosBloc>.value(
       value: _bloc,
       child: BlocBuilder<PedidosBloc, PedidosState>(
         builder: (context, state) {
+          final desktop = _telaDesktop;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildBuscaEPeriodo(context, state),
+              _buildBuscaEPeriodo(context, state, desktop: desktop),
               const SizedBox(height: 12),
               _buildChipsSituacao(context, state),
               const SizedBox(height: SivDimensoes.gapCards),
               Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: _buildConteudoTabela(context, state)),
-                    const SizedBox(width: SivDimensoes.gapCards),
-                    SizedBox(
-                      width: 400,
-                      child: SingleChildScrollView(
-                        child: _buildPainelDireito(context, state),
-                      ),
-                    ),
-                  ],
-                ),
+                child: desktop
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: _buildConteudoTabela(context, state)),
+                          const SizedBox(width: SivDimensoes.gapCards),
+                          SizedBox(
+                            width: 400,
+                            child: SingleChildScrollView(
+                              child: _buildPainelDireito(context, state),
+                            ),
+                          ),
+                        ],
+                      )
+                    : _buildListaMobile(context, state),
               ),
             ],
           );
@@ -131,49 +142,71 @@ class _PedidosPageState extends State<PedidosPage> {
     );
   }
 
-  Widget _buildBuscaEPeriodo(BuildContext context, PedidosState state) {
+  Widget _buildBuscaEPeriodo(BuildContext context, PedidosState state,
+      {required bool desktop}) {
     final temPeriodo = state.dataInicial != null || state.dataFinal != null;
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _buscaController,
-            decoration: InputDecoration(
-              hintText: 'Buscar por ID, pessoa ou situação',
-              prefixIcon: const Icon(Icons.search_outlined),
-              suffixIcon: _buscaController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _buscaController.clear();
-                        setState(() {});
-                        _bloc.add(PedidosBuscaAlterada(''));
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (v) {
-              setState(() {});
-              _buscaDebouncer.run(() => _bloc.add(PedidosBuscaAlterada(v)));
-            },
-          ),
-        ),
-        const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: () => _abrirFiltroPeriodo(context, state),
-          icon: const Icon(Icons.date_range_outlined, size: 18),
-          label: Text(
-            temPeriodo
-                ? '${_data(state.dataInicial)} — ${_data(state.dataFinal)}'
-                : 'Período',
-          ),
-        ),
-        if (temPeriodo)
-          IconButton(
+    final busca = TextField(
+      controller: _buscaController,
+      decoration: InputDecoration(
+        hintText: 'Buscar por ID, pessoa ou situação',
+        prefixIcon: const Icon(Icons.search_outlined),
+        suffixIcon: _buscaController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _buscaController.clear();
+                  setState(() {});
+                  _bloc.add(PedidosBuscaAlterada(''));
+                },
+              )
+            : null,
+      ),
+      onChanged: (v) {
+        setState(() {});
+        _buscaDebouncer.run(() => _bloc.add(PedidosBuscaAlterada(v)));
+      },
+    );
+
+    final botaoPeriodo = OutlinedButton.icon(
+      onPressed: () => _abrirFiltroPeriodo(context, state),
+      icon: const Icon(Icons.date_range_outlined, size: 18),
+      label: Text(
+        temPeriodo
+            ? '${_data(state.dataInicial)} — ${_data(state.dataFinal)}'
+            : 'Período',
+      ),
+    );
+
+    final botaoLimpar = temPeriodo
+        ? IconButton(
             tooltip: 'Limpar período',
             icon: const Icon(Icons.close, size: 18),
             onPressed: () => _bloc.add(PedidosFiltroPeriodoAlterado()),
+          )
+        : null;
+
+    if (!desktop) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          busca,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: botaoPeriodo),
+              if (botaoLimpar != null) botaoLimpar,
+            ],
           ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: busca),
+        const SizedBox(width: 12),
+        botaoPeriodo,
+        if (botaoLimpar != null) botaoLimpar,
       ],
     );
   }
@@ -206,33 +239,75 @@ class _PedidosPageState extends State<PedidosPage> {
     }).length;
   }
 
+  // Usuário não descobre sozinho que dá pra arrastar a lista com o mouse (drag-to-scroll não
+  // vem habilitado por padrão pra ponteiro de mouse no Flutter, só toque/trackpad) -- habilita
+  // via ScrollConfiguration e soma botões de seta como alternativa explícita e descobrível.
+  void _rolarChips(double delta) {
+    final posicao = _chipsScrollController.position;
+    final destino = (posicao.pixels + delta).clamp(
+      posicao.minScrollExtent,
+      posicao.maxScrollExtent,
+    );
+    _chipsScrollController.animateTo(
+      destino,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
   Widget _buildChipsSituacao(BuildContext context, PedidosState state) {
     return SizedBox(
       height: 36,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          _ChipSituacao(
-            label: 'Todos (${state.pedidos.length})',
-            selecionado: state.situacoesFiltro.isEmpty,
-            onTap: () => _bloc.add(PedidosFiltroSituacaoAlterado(const {})),
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Rolar filtros pra esquerda',
+            onPressed: () => _rolarChips(-150),
           ),
-          for (final situacao in _situacoesFiltro)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: _ChipSituacao(
-                label:
-                    '${_labelFiltroSituacao(situacao)} (${_contarSituacao(state.pedidos, situacao)})',
-                selecionado: state.situacoesFiltro.contains(situacao),
-                onTap: () {
-                  final atualizado = Set<String>.from(state.situacoesFiltro);
-                  if (!atualizado.remove(situacao)) {
-                    atualizado.add(situacao);
-                  }
-                  _bloc.add(PedidosFiltroSituacaoAlterado(atualizado));
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  ...PointerDeviceKind.values,
                 },
               ),
+              child: ListView(
+                controller: _chipsScrollController,
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _ChipSituacao(
+                    label: 'Todos (${state.pedidos.length})',
+                    selecionado: state.situacoesFiltro.isEmpty,
+                    onTap: () =>
+                        _bloc.add(PedidosFiltroSituacaoAlterado(const {})),
+                  ),
+                  for (final situacao in _situacoesFiltro)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _ChipSituacao(
+                        label:
+                            '${_labelFiltroSituacao(situacao)} (${_contarSituacao(state.pedidos, situacao)})',
+                        selecionado: state.situacoesFiltro.contains(situacao),
+                        onTap: () {
+                          final atualizado =
+                              Set<String>.from(state.situacoesFiltro);
+                          if (!atualizado.remove(situacao)) {
+                            atualizado.add(situacao);
+                          }
+                          _bloc.add(PedidosFiltroSituacaoAlterado(atualizado));
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Rolar filtros pra direita',
+            onPressed: () => _rolarChips(150),
+          ),
         ],
       ),
     );
@@ -254,7 +329,7 @@ class _PedidosPageState extends State<PedidosPage> {
         ),
       );
     }
-    if (state.filtrados.isEmpty) {
+    if (state.pedidos.isEmpty) {
       return _EstadoVazio(
         icone: Icons.receipt_long_outlined,
         titulo: state.busca.isNotEmpty
@@ -279,13 +354,13 @@ class _PedidosPageState extends State<PedidosPage> {
               SivTabelaColuna(titulo: 'ENTREGA', flex: 2),
               SivTabelaColuna.numerica(titulo: 'VALOR', flex: 2),
             ],
-            quantidadeLinhas: state.filtrados.length,
+            quantidadeLinhas: state.pedidos.length,
             linhaSelecionada: (indice) =>
-                state.filtrados[indice].id == state.pedidoSelecionadoId,
+                state.pedidos[indice].id == state.pedidoSelecionadoId,
             onLinhaTap: (indice) =>
-                _bloc.add(PedidosPedidoSelecionou(state.filtrados[indice].id)),
+                _bloc.add(PedidosPedidoSelecionou(state.pedidos[indice].id)),
             linhaBuilder: (context, indice) {
-              final pedido = state.filtrados[indice];
+              final pedido = state.pedidos[indice];
               final cancelado = pedido.situacao?.toLowerCase() == 'cancelado';
               final entrega = pedido.modalidadeEntrega == 'entrega'
                   ? 'Entrega · ${_data(pedido.previsaoDeEntrega)}'
@@ -337,6 +412,85 @@ class _PedidosPageState extends State<PedidosPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildListaMobile(BuildContext context, PedidosState state) {
+    if (state.step == PedidosStep.carregando) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
+    if (state.step == PedidosStep.falha) {
+      return _EstadoVazio(
+        icone: Icons.error_outline,
+        titulo: 'Falha ao carregar',
+        descricao: state.erro ?? 'Não foi possível carregar os pedidos.',
+        acao: TextButton.icon(
+          icon: const Icon(Icons.refresh),
+          label: const Text('Tentar novamente'),
+          onPressed: () => _bloc.add(PedidosIniciou()),
+        ),
+      );
+    }
+    if (state.pedidos.isEmpty) {
+      return _EstadoVazio(
+        icone: Icons.receipt_long_outlined,
+        titulo: state.busca.isNotEmpty
+            ? 'Nenhum resultado pra busca'
+            : 'Nenhum pedido por aqui',
+        descricao: state.busca.isNotEmpty
+            ? 'Tente outro termo de busca.'
+            : 'Crie um novo pedido pra começar.',
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: state.pedidos.length + (state.carregandoMais ? 1 : 0),
+      itemBuilder: (context, indice) {
+        if (indice == state.pedidos.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2.5),
+              ),
+            ),
+          );
+        }
+        final pedido = state.pedidos[indice];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _CardPedido(
+            pedido: pedido,
+            onTap: () {
+              _bloc.add(PedidosPedidoSelecionou(pedido.id));
+              _abrirDetalheMobile(context);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _abrirDetalheMobile(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Detalhes do pedido')),
+          body: BlocProvider<PedidosBloc>.value(
+            value: _bloc,
+            child: BlocBuilder<PedidosBloc, PedidosState>(
+              builder: (context, state) => SingleChildScrollView(
+                padding: const EdgeInsets.all(SivDimensoes.paginaHorizontal),
+                child: _buildPainelDireito(context, state),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -395,10 +549,80 @@ class _ChipSituacao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selecionado,
-      onSelected: (_) => onTap(),
+    return SizedBox(
+      height: 44,
+      child: Center(
+        child: ChoiceChip(
+          label: Text(label),
+          selected: selecionado,
+          onSelected: (_) => onTap(),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardPedido extends StatelessWidget {
+  final Pedido pedido;
+  final VoidCallback onTap;
+
+  const _CardPedido({required this.pedido, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    final cancelado = pedido.situacao?.toLowerCase() == 'cancelado';
+    final entrega = pedido.modalidadeEntrega == 'entrega'
+        ? 'Entrega · ${_data(pedido.previsaoDeEntrega)}'
+        : 'Retirada · ${_data(pedido.previsaoDeEntrega)}';
+
+    return Opacity(
+      opacity: cancelado ? 0.6 : 1,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: cores.hairline),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('#${pedido.id ?? '-'}', style: textos.corpo),
+                  const SizedBox(width: 8),
+                  SivEtiqueta(
+                    situacao: _etiquetaSituacao(pedido.situacao),
+                    texto: _labelSituacaoPedido(pedido.situacao),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                pedido.pessoaNome?.toUpperCase() ??
+                    (pedido.pessoaId != null
+                        ? 'Pessoa #${pedido.pessoaId}'
+                        : '-'),
+                style: textos.corpo,
+              ),
+              const SizedBox(height: 2),
+              Text(pedido.funcionarioNome?.toUpperCase() ?? '-',
+                  style: textos.apoio),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(entrega, style: textos.apoio),
+                  Text(_moeda(pedido.valorTotal), style: textos.corpo),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

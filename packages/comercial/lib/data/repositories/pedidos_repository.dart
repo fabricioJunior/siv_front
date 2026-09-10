@@ -65,8 +65,24 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
-  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30}) {
-    return remoteDataSource.recuperarPedidos(page: page, limit: limit);
+  Future<List<Pedido>> recuperarPedidos({
+    int page = 1,
+    int limit = 30,
+    String? searchTerm,
+    List<String>? situacoes,
+    List<String>? situacoesPagamento,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  }) {
+    return remoteDataSource.recuperarPedidos(
+      page: page,
+      limit: limit,
+      searchTerm: searchTerm,
+      situacoes: situacoes,
+      situacoesPagamento: situacoesPagamento,
+      dataInicial: dataInicial,
+      dataFinal: dataFinal,
+    );
   }
 
   @override
@@ -169,8 +185,8 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
-  Future<void> reenviarEmailEmbalado(int id) {
-    return remoteDataSource.reenviarEmailEmbalado(id);
+  Future<void> reenviarEmailEmbalado(int id, {String? email}) {
+    return remoteDataSource.reenviarEmailEmbalado(id, email: email);
   }
 
   @override

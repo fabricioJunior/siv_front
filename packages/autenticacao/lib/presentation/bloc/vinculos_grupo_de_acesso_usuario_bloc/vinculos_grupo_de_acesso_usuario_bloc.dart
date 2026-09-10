@@ -64,6 +64,10 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
     VinculosGrupoDeAcessoVinculou event,
     Emitter<VinculosGrupoDeAcessoUsuarioState> emit,
   ) async {
+    // Captura antes de emitir o EmProgresso -- esse estado não carrega
+    // empresas (cai no default [] da classe base), então ler state.empresas
+    // depois do emit sempre voltava vazio.
+    final empresas = state.empresas;
     try {
       emit(
         VinculosGrupoDeAcessoUsuarioVincularEmProgresso(
@@ -84,7 +88,7 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
         VinculosGrupoDeAcessoUsuarioVincularSucesso(
           vinculos: vinculosDoUsuario,
           idUsuario: state.idUsuario!,
-          empresas: state.empresas,
+          empresas: empresas,
         ),
       );
     } catch (e, s) {
@@ -99,6 +103,8 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
     VinculosGrupoDeAcessoDesvinculou event,
     Emitter<VinculosGrupoDeAcessoUsuarioState> emit,
   ) async {
+    // Mesmo motivo do vincular acima -- captura antes do EmProgresso.
+    final empresas = state.empresas;
     try {
       emit(
         VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso(
@@ -121,7 +127,7 @@ class VinculosGrupoDeAcessoUsuarioBloc extends Bloc<
         VinculosGrupoDeAcessoUsuarioDesvincularSucesso(
           vinculos: vinculosDoUsuario,
           idUsuario: state.idUsuario!,
-          empresas: state.empresas,
+          empresas: empresas,
         ),
       );
     } catch (e, s) {

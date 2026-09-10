@@ -7,7 +7,9 @@ import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
+import 'package:core/services/camera_scanner_service.dart';
 import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -319,6 +321,23 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _solicitarFoco();
   }
 
+  Future<void> _escanearComCamera() async {
+    if (widget.desativado) return;
+
+    final codigo =
+        await CameraScannerService().escanearCodigoDeBarras(context);
+    if (codigo == null || !mounted) {
+      _solicitarFoco();
+      return;
+    }
+
+    if (_modoRemocao) {
+      _controller.removerQuantidade(codigo);
+    } else {
+      _controller.lerCodigo(codigo);
+    }
+  }
+
   Widget _gradePorReferencia(LeitorState state) {
     if (state.itens.isEmpty) {
       return Center(
@@ -450,6 +469,80 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
+  Widget _construirAreaDeBipagem(BuildContext context, LeitorState state) {
+    final ehMobile =
+        MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+    if (!ehMobile) {
+      return Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _codigoController,
+              focusNode: _codigoFocusNode,
+              autofocus: widget.desativado ? false : widget.autofocus,
+              enabled: !widget.desativado,
+              decoration: InputDecoration(
+                labelText:
+                    _modoRemocao ? 'Código para remover' : 'Código de barras',
+                hintText: _modoRemocao
+                    ? 'Bipe para remover 1 unidade do item'
+                    : widget.campoCodigoHint,
+                suffixIcon: state.processando
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
+              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submeterCodigo(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton.icon(
+            onPressed:
+                state.processando || widget.desativado ? null : _submeterCodigo,
+            icon: Icon(
+              _modoRemocao ? Icons.remove_circle_outline : Icons.qr_code,
+            ),
+            label: Text(_modoRemocao ? 'Remover' : 'Ler'),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: state.processando || widget.desativado
+                ? null
+                : _escanearComCamera,
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            label: const Text('Escanear código'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: widget.buscaDataSource == null ||
+                    state.processando ||
+                    widget.desativado
+                ? null
+                : _abrirBuscaManual,
+            icon: const Icon(Icons.search_outlined),
+            label: const Text('Buscar'),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_sincronizando) {
@@ -498,53 +591,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _codigoController,
-                          focusNode: _codigoFocusNode,
-                          autofocus:
-                              widget.desativado ? false : widget.autofocus,
-                          enabled: !widget.desativado,
-                          decoration: InputDecoration(
-                            labelText: _modoRemocao
-                                ? 'Código para remover'
-                                : 'Código de barras',
-                            hintText: _modoRemocao
-                                ? 'Bipe para remover 1 unidade do item'
-                                : widget.campoCodigoHint,
-                            suffixIcon: state.processando
-                                ? const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submeterCodigo(),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      FilledButton.icon(
-                        onPressed: state.processando || widget.desativado
-                            ? null
-                            : _submeterCodigo,
-                        icon: Icon(
-                          _modoRemocao
-                              ? Icons.remove_circle_outline
-                              : Icons.qr_code,
-                        ),
-                        label: Text(_modoRemocao ? 'Remover' : 'Ler'),
-                      ),
-                    ],
-                  ),
+                  _construirAreaDeBipagem(context, state),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,

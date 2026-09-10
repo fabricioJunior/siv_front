@@ -143,9 +143,73 @@ class _PedidoPageState extends State<PedidoPage> {
 
   Future<void> _reenviarEmailEmbalado(
       BuildContext context, int idPedido) async {
+    final emailController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Reenviar código de retirada'),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'O e-mail com o código de retirada será enviado pro '
+                      'e-mail cadastrado do cliente. Preencha abaixo apenas '
+                      'se quiser enviar pra um e-mail diferente.',
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: emailController,
+                      autofocus: true,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'E-mail alternativo (opcional)',
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) return null;
+                        final valido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                            .hasMatch(value.trim());
+                        return valido ? null : 'E-mail inválido';
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    if (!(formKey.currentState?.validate() ?? false)) return;
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text('Enviar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmou != true) return;
+
+    final email = emailController.text.trim();
+
     setState(() => _reenviandoEmailEmbalado = true);
     try {
-      await sl<ReenviarEmailEmbaladoPedido>().call(idPedido);
+      await sl<ReenviarEmailEmbaladoPedido>()
+          .call(idPedido, email: email.isEmpty ? null : email);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('E-mail reenviado com sucesso.')),

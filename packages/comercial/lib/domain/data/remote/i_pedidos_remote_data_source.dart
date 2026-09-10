@@ -1,7 +1,15 @@
 import 'package:comercial/models.dart';
 
 abstract class IPedidosRemoteDataSource {
-  Future<List<Pedido>> recuperarPedidos({int page = 1, int limit = 30});
+  Future<List<Pedido>> recuperarPedidos({
+    int page = 1,
+    int limit = 30,
+    String? searchTerm,
+    List<String>? situacoes,
+    List<String>? situacoesPagamento,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  });
   Future<Pedido> recuperarPedido(int id);
   Future<Pedido> criarPedido(Pedido pedido);
   Future<Pedido> atualizarPedido(Pedido pedido);
@@ -42,6 +50,6 @@ abstract class IPedidosRemoteDataSource {
   });
   Future<List<PedidoEvento>> listarEventos(int id);
   Future<void> reenviarEmail(int id);
-  Future<void> reenviarEmailEmbalado(int id);
+  Future<void> reenviarEmailEmbalado(int id, {String? email});
   Future<String> linkCompartilhamento(int id);
 }

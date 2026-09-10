@@ -640,30 +640,37 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ],
                   ),
                   const Divider(),
-                  SegmentedButton<_LeitorVisualizacao>(
-                    segments: const [
-                      ButtonSegment<_LeitorVisualizacao>(
-                        value: _LeitorVisualizacao.porProduto,
-                        icon: Icon(Icons.inventory_2_outlined),
-                        label: Text('Por produto'),
-                      ),
-                      ButtonSegment<_LeitorVisualizacao>(
-                        value: _LeitorVisualizacao.grade,
-                        icon: Icon(Icons.grid_view_outlined),
-                        label: Text('Grade'),
-                      ),
-                      ButtonSegment<_LeitorVisualizacao>(
-                        value: _LeitorVisualizacao.historico,
-                        icon: Icon(Icons.history_outlined),
-                        label: Text('Histórico'),
-                      ),
-                    ],
-                    selected: {_visualizacao},
-                    onSelectionChanged: (selection) {
-                      setState(() {
-                        _visualizacao = selection.first;
-                      });
-                    },
+                  // Em telas estreitas os 3 segmentos (ícone+texto) somam mais largura
+                  // que a disponível -- estourava RenderFlex bem em cima da lista,
+                  // corrompendo visualmente o resto da tela. Scroll horizontal cobre
+                  // qualquer largura sem precisar truncar rótulo nem quebrar layout.
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<_LeitorVisualizacao>(
+                      segments: const [
+                        ButtonSegment<_LeitorVisualizacao>(
+                          value: _LeitorVisualizacao.porProduto,
+                          icon: Icon(Icons.inventory_2_outlined),
+                          label: Text('Por produto'),
+                        ),
+                        ButtonSegment<_LeitorVisualizacao>(
+                          value: _LeitorVisualizacao.grade,
+                          icon: Icon(Icons.grid_view_outlined),
+                          label: Text('Grade'),
+                        ),
+                        ButtonSegment<_LeitorVisualizacao>(
+                          value: _LeitorVisualizacao.historico,
+                          icon: Icon(Icons.history_outlined),
+                          label: Text('Histórico'),
+                        ),
+                      ],
+                      selected: {_visualizacao},
+                      onSelectionChanged: (selection) {
+                        setState(() {
+                          _visualizacao = selection.first;
+                        });
+                      },
+                    ),
                   ),
                   const Divider(),
                   if (state.ultimoProdutoLido != null)

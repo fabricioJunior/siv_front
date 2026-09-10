@@ -311,32 +311,48 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           ],
         ),
         const SizedBox(height: 12),
-        SegmentedButton<_FiltroSituacao>(
-          segments: [
-            ButtonSegment(
-              value: _FiltroSituacao.todos,
-              label: Text(_labelSegmento('Todos', state.total)),
-            ),
-            ButtonSegment(
-              value: _FiltroSituacao.publicados,
-              label: Text(_labelSegmento('Publicados', state.totalPublicados)),
-            ),
-            ButtonSegment(
-              value: _FiltroSituacao.rascunho,
-              label: Text(_labelSegmento('Rascunho', state.totalRascunho)),
-            ),
-            ButtonSegment(
-              value: _FiltroSituacao.naoPublicaveis,
-              label: Text(
-                _labelSegmento('Não publicáveis', state.totalNaoPublicaveis),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SegmentedButton<_FiltroSituacao>(
+            segments: [
+              ButtonSegment(
+                value: _FiltroSituacao.todos,
+                label: Text(_labelSegmento('Todos', state.total)),
               ),
-            ),
-          ],
-          selected: {_filtroSituacao},
-          onSelectionChanged: (selecao) {
-            setState(() => _filtroSituacao = selecao.first);
-            _recarregar();
-          },
+              ButtonSegment(
+                value: _FiltroSituacao.publicados,
+                label: Text(
+                  _labelSegmento(
+                    _telaDesktop ? 'Publicados' : 'Public.',
+                    state.totalPublicados,
+                  ),
+                ),
+              ),
+              ButtonSegment(
+                value: _FiltroSituacao.rascunho,
+                label: Text(
+                  _labelSegmento(
+                    _telaDesktop ? 'Rascunho' : 'Rasc.',
+                    state.totalRascunho,
+                  ),
+                ),
+              ),
+              ButtonSegment(
+                value: _FiltroSituacao.naoPublicaveis,
+                label: Text(
+                  _labelSegmento(
+                    _telaDesktop ? 'Não publicáveis' : 'Bloq.',
+                    state.totalNaoPublicaveis,
+                  ),
+                ),
+              ),
+            ],
+            selected: {_filtroSituacao},
+            onSelectionChanged: (selecao) {
+              setState(() => _filtroSituacao = selecao.first);
+              _recarregar();
+            },
+          ),
         ),
       ],
     );
@@ -346,6 +362,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       contagem == null ? rotulo : '$rotulo $contagem';
 
   Widget _buildTabela(BuildContext context, EcommerceReferenciasState state) {
+    if (!_telaDesktop) return _buildListaCartoes(context, state);
     return SivTabela(
       colunas: const [
         SivTabelaColuna(titulo: '', flex: 1),
@@ -390,6 +407,102 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
+  Widget _buildListaCartoes(BuildContext context, EcommerceReferenciasState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final referencia in state.referencias)
+          _buildCartaoReferencia(context, referencia),
+      ],
+    );
+  }
+
+  Widget _buildCartaoReferencia(
+    BuildContext context,
+    EcommerceReferencia referencia,
+  ) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final selecionada =
+        referencia.id != null && _idsSelecionados.contains(referencia.id);
+
+    return InkWell(
+      onTap: () => _abrirDetalhe(context, referencia),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: cores.hairline)),
+          color: selecionada ? cores.superficieRecuada : null,
+        ),
+        child: Row(
+          children: [
+            Checkbox(
+              value: selecionada,
+              onChanged: referencia.id == null
+                  ? null
+                  : (_) => _alternarSelecao(referencia.id!),
+            ),
+            _buildMiniatura(context, referencia),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    referencia.referenciaNome ??
+                        'Referência #${referencia.referenciaId}',
+                    style: textos.corpo,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    referencia.categoriaNome ?? '-',
+                    style: textos.apoio,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  referencia.valor != null
+                      ? formatarMoedaEcommerce(referencia.valor!)
+                      : 'Sem preço',
+                  style: textos.corpo,
+                ),
+                const SizedBox(height: 6),
+                _buildSituacao(context, referencia),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniatura(BuildContext context, EcommerceReferencia referencia) {
+    final naoPublicavel = referencia.publicavel == false;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      child: SizedBox(
+        width: 34,
+        height: 34,
+        child: naoPublicavel
+            ? _iconeMotivo(context, referencia.motivosBloqueio)
+            : referencia.imagemUrl != null
+                ? Image.network(
+                    referencia.imagemUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholderImagem(context),
+                  )
+                : _placeholderImagem(context),
+      ),
+    );
+  }
+
   Widget _buildCelulaReferencia(
     BuildContext context,
     EcommerceReferencia referencia,
@@ -403,22 +516,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
 
     return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(SivDimensoes.raio),
-          child: SizedBox(
-            width: 34,
-            height: 34,
-            child: naoPublicavel
-                ? _iconeMotivo(context, motivos)
-                : referencia.imagemUrl != null
-                    ? Image.network(
-                        referencia.imagemUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _placeholderImagem(context),
-                      )
-                    : _placeholderImagem(context),
-          ),
-        ),
+        _buildMiniatura(context, referencia),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -583,6 +681,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
               child: Text(
                 mensagem,
                 style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
+                overflow: TextOverflow.ellipsis,
               ),
             )
           else

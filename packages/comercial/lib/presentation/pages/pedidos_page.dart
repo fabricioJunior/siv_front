@@ -579,47 +579,52 @@ class _CardPedido extends StatelessWidget {
 
     return Opacity(
       opacity: cancelado ? 0.6 : 1,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: cores.hairline),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text('#${pedido.id ?? '-'}', style: textos.corpo),
-                  const SizedBox(width: 8),
-                  SivEtiqueta(
-                    situacao: _etiquetaSituacao(pedido.situacao),
-                    texto: _labelSituacaoPedido(pedido.situacao),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                pedido.pessoaNome?.toUpperCase() ??
-                    (pedido.pessoaId != null
-                        ? 'Pessoa #${pedido.pessoaId}'
-                        : '-'),
-                style: textos.corpo,
-              ),
-              const SizedBox(height: 2),
-              Text(pedido.funcionarioNome?.toUpperCase() ?? '-',
-                  style: textos.apoio),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(entrega, style: textos.apoio),
-                  Text(_moeda(pedido.valorTotal), style: textos.corpo),
-                ],
-              ),
-            ],
+      // InkWell precisa de Material ancestor -- mesmo bug já corrigido em
+      // ecommerces_page.dart/ecommerce_referencias_page.dart.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('#${pedido.id ?? '-'}', style: textos.corpo),
+                    const SizedBox(width: 8),
+                    SivEtiqueta(
+                      situacao: _etiquetaSituacao(pedido.situacao),
+                      texto: _labelSituacaoPedido(pedido.situacao),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  pedido.pessoaNome?.toUpperCase() ??
+                      (pedido.pessoaId != null
+                          ? 'Pessoa #${pedido.pessoaId}'
+                          : '-'),
+                  style: textos.corpo,
+                ),
+                const SizedBox(height: 2),
+                Text(pedido.funcionarioNome?.toUpperCase() ?? '-',
+                    style: textos.apoio),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(entrega, style: textos.apoio),
+                    Text(_moeda(pedido.valorTotal), style: textos.corpo),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

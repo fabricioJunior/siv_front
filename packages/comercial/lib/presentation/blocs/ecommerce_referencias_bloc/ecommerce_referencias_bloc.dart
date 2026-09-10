@@ -36,8 +36,16 @@ class EcommerceReferenciasBloc
     EcommerceReferenciasIniciou event,
     Emitter<EcommerceReferenciasState> emit,
   ) async {
+    // Busca/filtro reusa esse mesmo evento pra recarregar -- só mostra o
+    // spinner de tela cheia na carga inicial. Numa busca já com lista
+    // carregada, emitir CarregarEmProgresso desmontava a tela toda
+    // (inclusive o campo de busca, perdendo foco) a cada pausa de digitação,
+    // dando impressão de reload a cada letra.
+    final jaTinhaDados = state is EcommerceReferenciasCarregarSucesso;
     try {
-      emit(const EcommerceReferenciasCarregarEmProgresso());
+      if (!jaTinhaDados) {
+        emit(const EcommerceReferenciasCarregarEmProgresso());
+      }
       final pagina = await _recuperarReferenciasEcommerce.call(
         event.ecommerceId,
         busca: event.busca,
@@ -64,7 +72,11 @@ class EcommerceReferenciasBloc
         ),
       );
     } catch (e, s) {
-      emit(const EcommerceReferenciasCarregarFalha());
+      // Numa busca/filtro que falha com lista já carregada, mantém a lista
+      // atual visível em vez de trocar por tela de erro cheia.
+      if (!jaTinhaDados) {
+        emit(const EcommerceReferenciasCarregarFalha());
+      }
       addError(e, s);
     }
   }

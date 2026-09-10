@@ -58,7 +58,9 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       }
     });
     _atualizarTitulo();
-    _atualizarAcoes(_bloc.state);
+    // Não chama _atualizarAcoes aqui -- ela lê _telaDesktop (MediaQuery),
+    // proibido durante initState (context ainda não montado). O primeiro
+    // build do BlocBuilder já chama _atualizarAcoes(state) sozinho.
     if (_tituloCanal == null) _buscarTituloCanal();
   }
 
@@ -97,7 +99,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _debouncer.run(() => _recarregar(busca: valor.trim()));
   }
 
-  ({bool? rascunho, bool? publicavel}) get _filtroRequest => switch (_filtroSituacao) {
+  ({bool? rascunho, bool? publicavel}) get _filtroRequest =>
+      switch (_filtroSituacao) {
         _FiltroSituacao.todos => (rascunho: null, publicavel: null),
         _FiltroSituacao.publicados => (rascunho: false, publicavel: null),
         _FiltroSituacao.rascunho => (rascunho: true, publicavel: null),
@@ -167,6 +170,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         ],
         child: BlocBuilder<EcommerceReferenciasBloc, EcommerceReferenciasState>(
           builder: (context, state) {
+            // SivPageAcoes é compartilhado/global -- EcommercesPage (que
+            // fica montada por trás, no shell) reafirma os botões dela em
+            // todo build próprio. Se essa página não reafirma os seus a
+            // cada build também, um rebuild da página de baixo (ex:
+            // resize de janela via MediaQuery) rouba a barra de volta.
+            _atualizarAcoes(state);
             if (state is EcommerceReferenciasCarregarEmProgresso ||
                 state is EcommerceReferenciasInitial) {
               return const Center(child: CircularProgressIndicator.adaptive());
@@ -181,59 +190,88 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
               );
             }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: SivDimensoes.paginaHorizontal,
-                vertical: SivDimensoes.paginaVertical,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildFiltros(context, state),
-                  const SizedBox(height: SivDimensoes.gapCards),
-                  if (state.processandoLote)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          LinearProgressIndicator(color: cores.aco),
-                          if (state.loteTotal != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
+            // Scaffold próprio (não só Padding+Column) -- o body do Scaffold
+            // sempre recebe altura limitada calculada internamente, não
+            // depende do ancestral garantir isso. Sem ele, o Expanded/
+            // SingleChildScrollView abaixo podia herdar altura ilimitada
+            // dependendo de onde a página é montada, causando RenderFlex
+            // overflow gigante (visto em produção). bottomNavigationBar
+            // cobre a barra de seleção/rodapé fixo sem gymnastics de Column.
+            return Scaffold(
+              backgroundColor: cores.superficie,
+              floatingActionButton: _telaDesktop || _modoSelecao
+                  ? null
+                  : FloatingActionButton(
+                      onPressed: () => _adicionarReferencias(context),
+                      tooltip: 'Adicionar referências',
+                      child: const Icon(Icons.add),
+                    ),
+              body: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SivDimensoes.paginaHorizontal,
+                  vertical: SivDimensoes.paginaVertical,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildFiltros(context, state),
+                    const SizedBox(height: SivDimensoes.gapCards),
+                    if (state.processandoLote)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            LinearProgressIndicator(color: cores.aco),
+                            if (state.loteTotal != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Processando ${state.loteAtual} de ${state.loteTotal}...',
+                                  style: textos.apoio,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: state.referencias.isEmpty
+                          ? Center(
                               child: Text(
-                                'Processando ${state.loteAtual} de ${state.loteTotal}...',
-                                style: textos.apoio,
+                                (state.busca ?? '').isEmpty
+                                    ? 'Nenhuma referência vinculada a este e-commerce.'
+                                    : 'Nenhuma referência encontrada pra "${state.busca}".',
+                                style: textos.corpo,
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              controller: _scrollController,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildTabela(context, state),
+                                  if (_telaDesktop)
+                                    _buildRodapeTabelaDesktop(context, state)
+                                  else ...[
+                                    const SizedBox(height: 8),
+                                    _buildRodapeTabela(context, state),
+                                  ],
+                                ],
                               ),
                             ),
-                        ],
-                      ),
                     ),
-                  Expanded(
-                    child: state.referencias.isEmpty
-                        ? Center(
-                            child: Text(
-                              (state.busca ?? '').isEmpty
-                                  ? 'Nenhuma referência vinculada a este e-commerce.'
-                                  : 'Nenhuma referência encontrada pra "${state.busca}".',
-                              style: textos.corpo,
-                            ),
-                          )
-                        : SingleChildScrollView(
-                            controller: _scrollController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _buildTabela(context, state),
-                                const SizedBox(height: 8),
-                                _buildRodapeTabela(context, state),
-                              ],
-                            ),
-                          ),
-                  ),
-                  if (_modoSelecao) _buildBarraSelecao(context, state),
-                ],
+                  ],
+                ),
               ),
+              bottomNavigationBar: _modoSelecao
+                  ? _buildBarraSelecao(context, state)
+                  : (!_telaDesktop
+                      // Fora do modo seleção -- no desktop "Publicar aptas"
+                      // já vive em SivPageAcoes (cabe no topo); no mobile
+                      // essas ações dividem espaço com o título e ficam
+                      // pouco descobríveis, daí o rodapé complementar.
+                      ? _buildRodapeFixo(context, state)
+                      : null),
             );
           },
         ),
@@ -242,6 +280,15 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   }
 
   void _atualizarAcoes(EcommerceReferenciasState state) {
+    // Mobile: barra de título não tem espaço pra 3 botões (mesmo com Wrap,
+    // fica poluído numa tela estreita) -- some com a barra de ações e usa
+    // FAB só pra a ação primária (adicionar). "Publicar aptas" continua
+    // acessível no rodapé fixo (_buildRodapeFixo) e na barra de seleção.
+    if (!_telaDesktop) {
+      SivPageAcoes.definir(const []);
+      return;
+    }
+
     final podeDespublicar = state.totalPublicados != null
         ? state.totalPublicados! > 0
         : state.referencias.any((r) => !r.rascunho);
@@ -283,7 +330,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                 onChanged: _onBuscaAlterada,
                 onSubmitted: _onBuscaAlterada,
                 decoration: InputDecoration(
-                  hintText: 'Buscar referência...',
+                  hintText: 'Buscar referência por nome ou código',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _buscaController.text.isEmpty
                       ? null
@@ -301,65 +348,125 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             const SizedBox(width: 8),
             OutlinedButton.icon(
               onPressed: () => _abrirFiltroCategoria(context),
-              icon: const Icon(Icons.filter_list, size: 18),
+              icon: const Icon(Icons.filter_alt_outlined, size: 15),
               label: Text(
                 _categoriaIds.isEmpty
-                    ? 'Categoria'
-                    : 'Categoria (${_categoriaIds.length})',
+                    ? 'Categorias'
+                    : 'Categorias · ${_categoriaIds.length}',
+                style: const TextStyle(fontSize: 12.5),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                iconSize: 15,
+                visualDensity: VisualDensity.compact,
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SegmentedButton<_FiltroSituacao>(
-            segments: [
-              ButtonSegment(
-                value: _FiltroSituacao.todos,
-                label: Text(_labelSegmento('Todos', state.total)),
-              ),
-              ButtonSegment(
-                value: _FiltroSituacao.publicados,
-                label: Text(
-                  _labelSegmento(
-                    _telaDesktop ? 'Publicados' : 'Public.',
-                    state.totalPublicados,
-                  ),
-                ),
-              ),
-              ButtonSegment(
-                value: _FiltroSituacao.rascunho,
-                label: Text(
-                  _labelSegmento(
-                    _telaDesktop ? 'Rascunho' : 'Rasc.',
-                    state.totalRascunho,
-                  ),
-                ),
-              ),
-              ButtonSegment(
-                value: _FiltroSituacao.naoPublicaveis,
-                label: Text(
-                  _labelSegmento(
-                    _telaDesktop ? 'Não publicáveis' : 'Bloq.',
-                    state.totalNaoPublicaveis,
-                  ),
-                ),
-              ),
-            ],
-            selected: {_filtroSituacao},
-            onSelectionChanged: (selecao) {
-              setState(() => _filtroSituacao = selecao.first);
-              _recarregar();
-            },
-          ),
-        ),
+        _buildFiltroSituacao(context, state),
       ],
     );
   }
 
   String _labelSegmento(String rotulo, int? contagem) =>
       contagem == null ? rotulo : '$rotulo $contagem';
+
+  // Segmentos retangulares com preenchimento sólido no selecionado (visual
+  // "blueprint") -- SegmentedButton padrão do Material não estica os
+  // segmentos em partes iguais nem aceita fundo 100% sólido sem borda
+  // residual, por isso vira um Row customizado em vez de tentar forçar o
+  // estilo do widget pronto.
+  Widget _buildFiltroSituacao(
+      BuildContext context, EcommerceReferenciasState state) {
+    final cores = context.sivColors;
+    final segmentos = [
+      (_FiltroSituacao.todos, 'Todos', state.total),
+      (
+        _FiltroSituacao.publicados,
+        _telaDesktop ? 'Publicados' : 'Public.',
+        state.totalPublicados,
+      ),
+      (
+        _FiltroSituacao.rascunho,
+        _telaDesktop ? 'Rascunho' : 'Rasc.',
+        state.totalRascunho,
+      ),
+      (
+        _FiltroSituacao.naoPublicaveis,
+        _telaDesktop ? 'Não publicáveis' : 'Bloq.',
+        state.totalNaoPublicaveis,
+      ),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < segmentos.length; i++)
+            Expanded(
+              child: _segmentoSituacao(
+                context,
+                rotulo: segmentos[i].$2,
+                contagem: segmentos[i].$3,
+                selecionado: _filtroSituacao == segmentos[i].$1,
+                comBordaEsquerda: i > 0,
+                onTap: () {
+                  setState(() => _filtroSituacao = segmentos[i].$1);
+                  _recarregar();
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _segmentoSituacao(
+    BuildContext context, {
+    required String rotulo,
+    required int? contagem,
+    required bool selecionado,
+    required bool comBordaEsquerda,
+    required VoidCallback onTap,
+  }) {
+    final cores = context.sivColors;
+    // InkWell precisa de um Material ancestor pra pintar o ripple --
+    // SegmentedButton (widget anterior) já carregava o dele embutido; este
+    // Row customizado não, então declara explicitamente (transparent, não
+    // adiciona nenhuma superfície visual nova).
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selecionado ? cores.aco : null,
+            border: comBordaEsquerda
+                ? Border(left: BorderSide(color: cores.hairline))
+                : null,
+          ),
+          child: Text(
+            _labelSegmento(rotulo.toUpperCase(), contagem),
+            textAlign: TextAlign.center,
+            style: context.sivTextos.rotulo.copyWith(
+              color: selecionado ? cores.textoSobreEscuroTitulo : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildTabela(BuildContext context, EcommerceReferenciasState state) {
     if (!_telaDesktop) return _buildListaCartoes(context, state);
@@ -374,7 +481,11 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           alinhamento: TextAlign.center,
           flex: 1,
         ),
-        SivTabelaColuna(titulo: 'SITUAÇÃO', flex: 1),
+        SivTabelaColuna(
+          titulo: 'SITUAÇÃO',
+          alinhamento: TextAlign.right,
+          flex: 1,
+        ),
       ],
       quantidadeLinhas: state.referencias.length,
       linhaSelecionada: (indice) {
@@ -407,7 +518,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  Widget _buildListaCartoes(BuildContext context, EcommerceReferenciasState state) {
+  Widget _buildListaCartoes(
+      BuildContext context, EcommerceReferenciasState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -425,59 +537,84 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final textos = context.sivTextos;
     final selecionada =
         referencia.id != null && _idsSelecionados.contains(referencia.id);
+    final naoPublicavel = referencia.publicavel == false;
+    final motivos = referencia.motivosBloqueio;
+    final subtitulo = naoPublicavel && motivos != null && motivos.isNotEmpty
+        ? (textoMotivoBloqueioEcommerce[motivos.first] ?? motivos.first)
+        : 'REF ${referencia.referenciaId}'
+            '${referencia.categoriaNome != null ? ' · ${referencia.categoriaNome}' : ''}';
 
-    return InkWell(
-      onTap: () => _abrirDetalhe(context, referencia),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: cores.hairline)),
-          color: selecionada ? cores.superficieRecuada : null,
-        ),
-        child: Row(
-          children: [
-            Checkbox(
-              value: selecionada,
-              onChanged: referencia.id == null
-                  ? null
-                  : (_) => _alternarSelecao(referencia.id!),
-            ),
-            _buildMiniatura(context, referencia),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    referencia.referenciaNome ??
-                        'Referência #${referencia.referenciaId}',
-                    style: textos.corpo,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    referencia.categoriaNome ?? '-',
-                    style: textos.apoio,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: () => _abrirDetalhe(context, referencia),
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              // Alerta laranja pra não publicável reaproveita os tokens já
+              // usados no selo (atencaoFundo/atencaoBorda) -- bate perto o
+              // suficiente do mock pra não justificar cor nova hardcoded.
+              color: naoPublicavel
+                  ? cores.atencaoFundo
+                  : (selecionada ? cores.selecaoFundo : cores.superficie),
+              border: Border.all(
+                color: naoPublicavel
+                    ? cores.atencaoBorda
+                    : (selecionada ? cores.aco : cores.hairline),
               ),
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
             ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Row(
               children: [
-                Text(
-                  referencia.valor != null
-                      ? formatarMoedaEcommerce(referencia.valor!)
-                      : 'Sem preço',
-                  style: textos.corpo,
+                Checkbox(
+                  value: selecionada,
+                  onChanged: referencia.id == null
+                      ? null
+                      : (_) => _alternarSelecao(referencia.id!),
                 ),
-                const SizedBox(height: 6),
-                _buildSituacao(context, referencia),
+                _buildMiniatura(context, referencia),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        referencia.referenciaNome ??
+                            'Referência #${referencia.referenciaId}',
+                        style: textos.corpo,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        subtitulo,
+                        style: textos.apoio.copyWith(
+                          color: naoPublicavel ? cores.atencao : null,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      referencia.valor != null
+                          ? formatarMoedaEcommerce(referencia.valor!)
+                          : 'Sem preço',
+                      style: textos.corpo,
+                    ),
+                    const SizedBox(height: 6),
+                    _buildSituacao(context, referencia),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -561,7 +698,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  Widget _buildGradeAtiva(BuildContext context, EcommerceReferencia referencia) {
+  Widget _buildGradeAtiva(
+      BuildContext context, EcommerceReferencia referencia) {
     final total = referencia.produtosTotal;
     final disponiveis = referencia.produtosDisponiveis;
     if (total == null || disponiveis == null) {
@@ -579,15 +717,23 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     final textos = context.sivTextos.rotulo;
 
     if (referencia.publicavel == false) {
-      return _selo('NÃO PUBLICÁVEL', textos, cores.atencaoFundo, cores.atencaoBorda, cores.atencao);
+      // Selo em vinho (não no laranja de alerta do card) -- o mock isola a
+      // urgência da tag do aviso geral do card, cores.vinho já bate exato
+      // com o vermelho pedido (#8a2f2f).
+      final fundoVinho = cores.vinho.withValues(alpha: 0.12);
+      return _selo(
+          'NÃO PUBLICÁVEL', textos, fundoVinho, fundoVinho, cores.vinho);
     }
     if (referencia.saldo == 0) {
-      return _selo('SEM ESTOQUE', textos, null, cores.hairline, cores.textoPrincipal);
+      return _selo(
+          'SEM ESTOQUE', textos, null, cores.hairline, cores.textoPrincipal);
     }
     if (!referencia.rascunho) {
-      return _selo('PUBLICADO', textos, cores.acoEscuro, cores.acoEscuro, cores.textoSobreEscuroTitulo);
+      return _selo('PUBLICADO', textos, cores.acoEscuro, cores.acoEscuro,
+          cores.textoSobreEscuroTitulo);
     }
-    return _selo('RASCUNHO', textos, null, cores.hairline, cores.textoPrincipal);
+    return _selo(
+        'RASCUNHO', textos, null, cores.hairline, cores.textoPrincipal);
   }
 
   Widget _selo(
@@ -608,11 +754,13 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  Widget _buildRodapeTabela(BuildContext context, EcommerceReferenciasState state) {
+  Widget _buildRodapeTabela(
+      BuildContext context, EcommerceReferenciasState state) {
     final textos = context.sivTextos.apoio;
     final total = state.total;
     final partes = <String>[
-      if (total != null) pluralizarEcommerce(total, 'referência', 'referências'),
+      if (total != null)
+        pluralizarEcommerce(total, 'referência', 'referências'),
       if (state.totalRascunho != null) '${state.totalRascunho} em rascunho',
       if (state.totalNaoPublicaveis != null)
         '${state.totalNaoPublicaveis} não publicáveis',
@@ -627,7 +775,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         Expanded(
           child: Text(
             partes.isEmpty
-                ? pluralizarEcommerce(state.referencias.length, 'referência', 'referências')
+                ? pluralizarEcommerce(
+                    state.referencias.length, 'referência', 'referências')
                 : partes.join(' · '),
             style: textos,
             overflow: TextOverflow.ellipsis,
@@ -644,7 +793,58 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  Widget _buildBarraSelecao(BuildContext context, EcommerceReferenciasState state) {
+  // Desktop: rodapé emendado embaixo da SivTabela (borda superior + fundo
+  // recuado), como no mock. Mobile mantém o rodapé solto sem esse invólucro
+  // -- já aprovado, não mexe.
+  Widget _buildRodapeTabelaDesktop(
+      BuildContext context, EcommerceReferenciasState state) {
+    final cores = context.sivColors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SivDimensoes.cabecalhoTabelaHorizontal,
+        vertical: SivDimensoes.cabecalhoTabelaVertical,
+      ),
+      margin: const EdgeInsets.only(top: 1),
+      decoration: BoxDecoration(
+        color: cores.superficieRecuada,
+        border: Border(top: BorderSide(color: cores.hairline)),
+      ),
+      child: _buildRodapeTabela(context, state),
+    );
+  }
+
+  Widget _buildRodapeFixo(
+      BuildContext context, EcommerceReferenciasState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final total = state.total;
+    final aptasIds = _idsAptasParaPublicar(state);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      decoration:
+          BoxDecoration(border: Border(top: BorderSide(color: cores.hairline))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            total == null
+                ? 'Mostrando ${state.referencias.length}'
+                : 'Mostrando ${state.referencias.length} de $total',
+            style: textos.apoio,
+          ),
+          FilledButton(
+            onPressed: aptasIds.isEmpty || state.processandoLote
+                ? null
+                : () => _publicarAptas(context, aptasIds),
+            child: Text('PUBLICAR APTAS (${aptasIds.length})'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarraSelecao(
+      BuildContext context, EcommerceReferenciasState state) {
     final selecionadas = state.referencias
         .where((r) => r.id != null && _idsSelecionados.contains(r.id))
         .toList();
@@ -672,15 +872,17 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       child: Row(
         children: [
           Text(
-            pluralizarEcommerce(_idsSelecionados.length, 'selecionada', 'selecionadas'),
-            style: textos.corpo.copyWith(color: cores.textoSobreEscuroTitulo),
+            pluralizarEcommerce(
+                _idsSelecionados.length, 'selecionada', 'selecionadas'),
+            style: textos.secao.copyWith(color: cores.textoSobreEscuroTitulo),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           if (mensagem != null)
             Expanded(
               child: Text(
                 mensagem,
-                style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
+                style:
+                    textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
                 overflow: TextOverflow.ellipsis,
               ),
             )
@@ -688,10 +890,11 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             const Spacer(),
           TextButton(
             onPressed: () => setState(() => _idsSelecionados.clear()),
-            child: Text(
-              'Limpar seleção',
-              style: TextStyle(color: cores.textoSobreEscuroTitulo),
-            ),
+            // #BDD8F2 hardcoded -- sem token exato pra esse azul claro sobre
+            // aço escuro (textoSobreEscuroApoio/ceu é #94BCE3, mais escuro
+            // que o pedido no mock).
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFBDD8F2)),
+            child: const Text('Limpar seleção'),
           ),
           const SizedBox(width: 8),
           OutlinedButton(
@@ -704,6 +907,10 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                         rascunho: true,
                       ),
                     ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: cores.textoSobreEscuroTitulo,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+            ),
             child: const Text('Despublicar'),
           ),
           const SizedBox(width: 8),
@@ -711,18 +918,25 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             // Bloqueadas (publicavel == false) nunca entram no lote -- nem
             // indeterminadas quando há bloqueadas junto; a decisão do backend
             // é a única fonte, não o palpite local.
-            onPressed: (prontas == 0 && indeterminadas == 0) || state.processandoLote
-                ? null
-                : () => _bloc.add(
-                      EcommerceReferenciasPublicarEmLoteSolicitou(
-                        ecommerceId: widget.ecommerceId,
-                        referenciaEcommerceIds: selecionadas
-                            .where((r) => r.publicavel != false)
-                            .map((r) => r.id!)
-                            .toList(),
-                        rascunho: false,
-                      ),
-                    ),
+            onPressed:
+                (prontas == 0 && indeterminadas == 0) || state.processandoLote
+                    ? null
+                    : () => _bloc.add(
+                          EcommerceReferenciasPublicarEmLoteSolicitou(
+                            ecommerceId: widget.ecommerceId,
+                            referenciaEcommerceIds: selecionadas
+                                .where((r) => r.publicavel != false)
+                                .map((r) => r.id!)
+                                .toList(),
+                            rascunho: false,
+                          ),
+                        ),
+            style: FilledButton.styleFrom(
+              backgroundColor: cores.ceu,
+              foregroundColor: cores.acoEscuro,
+              disabledBackgroundColor: cores.ceu.withValues(alpha: 0.35),
+              disabledForegroundColor: cores.acoEscuro.withValues(alpha: 0.5),
+            ),
             child: const Text('Publicar selecionadas'),
           ),
         ],
@@ -738,7 +952,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     });
   }
 
-  void _abrirDetalhe(BuildContext context, EcommerceReferencia referencia) async {
+  void _abrirDetalhe(
+      BuildContext context, EcommerceReferencia referencia) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => EcommerceReferenciaDetalhePage(
@@ -762,8 +977,10 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       titulo: 'Filtrar por categoria',
       idCategoriasSelecionadasIniciais: _categoriaIds,
       onCategoriaChanged: (categorias) {
-        selecionadas =
-            categorias.map((categoria) => categoria.id).whereType<int>().toList();
+        selecionadas = categorias
+            .map((categoria) => categoria.id)
+            .whereType<int>()
+            .toList();
       },
     );
 
@@ -832,8 +1049,10 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       modo: ReferenciaSeletorModo.multipla,
       permitirCadastro: false,
       onReferenciaChanged: (selecionadas) {
-        idsSelecionados =
-            selecionadas.map((referencia) => referencia.id).whereType<int>().toList();
+        idsSelecionados = selecionadas
+            .map((referencia) => referencia.id)
+            .whereType<int>()
+            .toList();
       },
     );
 
@@ -952,7 +1171,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  String _textoFalha(EcommerceReferenciasState state, EcommerceLoteFalha falha) {
+  String _textoFalha(
+      EcommerceReferenciasState state, EcommerceLoteFalha falha) {
     final candidatas =
         state.referencias.where((r) => r.id == falha.id).toList();
     final nome = candidatas.isEmpty

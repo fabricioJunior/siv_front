@@ -6,7 +6,7 @@ abstract class VinculosGrupoDeAcessoUsuarioState extends Equatable {
   List<Empresa> get empresas => [];
 
   @override
-  List<Object?> get props => [vinculos, idUsuario];
+  List<Object?> get props => [vinculos, idUsuario, empresas];
 }
 
 class VinculosGrupoDeAcessoUsuarioInitial

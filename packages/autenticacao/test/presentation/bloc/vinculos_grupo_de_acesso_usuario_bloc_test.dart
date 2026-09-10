@@ -114,6 +114,45 @@ void main() {
       ),
     ],
   );
+
+  // Regressão: desvincular emitia EmProgresso (sem empresas, cai no default
+  // [] da classe base) e depois lia state.empresas -- perdia a lista sempre.
+  blocTest<VinculosGrupoDeAcessoUsuarioBloc, VinculosGrupoDeAcessoUsuarioState>(
+    'mantém a lista de empresas após desvincular o usuário de um grupo de acesso',
+    build: () => bloc,
+    seed: () => VinculosGrupoDeAcessoUsuarioCarregarSucesso(
+      vinculos: vinculos,
+      idUsuario: idUsuario,
+      empresas: empresas,
+    ),
+    setUp: () {
+      _setupRecuperarVinculosGrupoDeAcessoDoUsuarioSucesso(
+        idUsuario: idUsuario,
+        retorno: [vinculo2],
+      );
+      _setupDesvincularUsuarioDoGrupoDeAcessoSucesso(
+        idEmpresa: empresa1.id,
+        idGrupoDeAcesso: vinculo1.grupoDeAcesso!.id!,
+        idUser: idUsuario,
+      );
+    },
+    act: (bloc) => bloc.add(
+      VinculosGrupoDeAcessoDesvinculou(
+        idGrupoDeAcesso: vinculo1.grupoDeAcesso!.id!,
+        idEmpresa: empresa1.id,
+      ),
+    ),
+    expect: () => [
+      VinculosGrupoDeAcessoUsuarioDesvincularEmProgresso(
+        idUsuario: idUsuario,
+      ),
+      VinculosGrupoDeAcessoUsuarioDesvincularSucesso(
+        vinculos: [vinculo2],
+        idUsuario: idUsuario,
+        empresas: empresas,
+      ),
+    ],
+  );
 }
 
 void _setupRecuperarVinculosGrupoDeAcessoDoUsuarioSucesso({
@@ -136,6 +175,18 @@ void _setupVincularUsuarioAoGrupoDeAcessoSucesso({
     idGrupoDeAcesso: idGrupoDeAcesso,
     idEmpresa: idEmpresa,
   )).thenAnswer((_) async => retorno);
+}
+
+void _setupDesvincularUsuarioDoGrupoDeAcessoSucesso({
+  required int idUser,
+  required int idGrupoDeAcesso,
+  required int idEmpresa,
+}) {
+  when(desvincularUsuarioDoGrupoDeAcesso.call(
+    idUsuario: idUser,
+    idGrupoDeAcesso: idGrupoDeAcesso,
+    idEmpresa: idEmpresa,
+  )).thenAnswer((_) async {});
 }
 
 void _setupEmpresas() {

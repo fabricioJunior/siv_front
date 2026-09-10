@@ -112,56 +112,59 @@ class _EcommerceReferenciaDetalhePageState
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<EcommerceReferenciaDetalheBloc>.value(
-      value: _bloc,
-      child: BlocConsumer<EcommerceReferenciaDetalheBloc,
-          EcommerceReferenciaDetalheState>(
-        listenWhen: (previous, current) =>
-            current.step == EcommerceReferenciaDetalheStep.falha ||
-            (previous.processandoLote && !current.processandoLote),
-        listener: (context, state) {
-          // Falha primeiro, sem depender de erro != null -- senão uma falha
-          // sem mensagem cai no "deu certo" (bug 1.4 do handoff).
-          if (state.step == EcommerceReferenciaDetalheStep.falha) {
-            SivAviso.mostrar(
-              context,
-              mensagem: state.erro ?? 'Falha ao atualizar.',
-              tipo: SivAvisoTipo.falha,
+    return Scaffold(
+      appBar: AppBar(),
+      body: BlocProvider<EcommerceReferenciaDetalheBloc>.value(
+        value: _bloc,
+        child: BlocConsumer<EcommerceReferenciaDetalheBloc,
+            EcommerceReferenciaDetalheState>(
+          listenWhen: (previous, current) =>
+              current.step == EcommerceReferenciaDetalheStep.falha ||
+              (previous.processandoLote && !current.processandoLote),
+          listener: (context, state) {
+            // Falha primeiro, sem depender de erro != null -- senão uma falha
+            // sem mensagem cai no "deu certo" (bug 1.4 do handoff).
+            if (state.step == EcommerceReferenciaDetalheStep.falha) {
+              SivAviso.mostrar(
+                context,
+                mensagem: state.erro ?? 'Falha ao atualizar.',
+                tipo: SivAvisoTipo.falha,
+              );
+            } else if (!state.processandoLote) {
+              SivAviso.mostrar(context, mensagem: 'Produtos atualizados.');
+            }
+          },
+          builder: (context, state) {
+            if (state.step == EcommerceReferenciaDetalheStep.carregando ||
+                state.step == EcommerceReferenciaDetalheStep.inicial) {
+              return const Center(child: CircularProgressIndicator.adaptive());
+            }
+
+            final checklist = _montarChecklist(state.produtos);
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SivDimensoes.paginaHorizontal,
+                vertical: SivDimensoes.paginaVertical,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCabecalho(context),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  _buildChecklistCard(context, state, checklist),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  if (state.processandoLote)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: LinearProgressIndicator(),
+                    ),
+                  _buildMatrizCard(context, state),
+                ],
+              ),
             );
-          } else if (!state.processandoLote) {
-            SivAviso.mostrar(context, mensagem: 'Produtos atualizados.');
-          }
-        },
-        builder: (context, state) {
-          if (state.step == EcommerceReferenciaDetalheStep.carregando ||
-              state.step == EcommerceReferenciaDetalheStep.inicial) {
-            return const Center(child: CircularProgressIndicator.adaptive());
-          }
-
-          final checklist = _montarChecklist(state.produtos);
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SivDimensoes.paginaHorizontal,
-              vertical: SivDimensoes.paginaVertical,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildCabecalho(context),
-                const SizedBox(height: SivDimensoes.gapCards),
-                _buildChecklistCard(context, state, checklist),
-                const SizedBox(height: SivDimensoes.gapCards),
-                if (state.processandoLote)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: LinearProgressIndicator(),
-                  ),
-                _buildMatrizCard(context, state),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

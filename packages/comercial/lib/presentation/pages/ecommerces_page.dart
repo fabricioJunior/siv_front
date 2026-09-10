@@ -39,7 +39,8 @@ class _EcommercesPageState extends State<EcommercesPage> {
   }
 
   EcommerceConfiguracaoFormularioController _controladorPara(Object chave) =>
-      _controladores.putIfAbsent(chave, EcommerceConfiguracaoFormularioController.new);
+      _controladores.putIfAbsent(
+          chave, EcommerceConfiguracaoFormularioController.new);
 
   @override
   Widget build(BuildContext context) {
@@ -48,14 +49,16 @@ class _EcommercesPageState extends State<EcommercesPage> {
       child: BlocBuilder<EcommercesBloc, EcommercesState>(
         builder: (context, state) {
           _atualizarAcoes(context, state);
-          final mobile =
-              MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+          final mobile = MediaQuery.sizeOf(context).width <
+              SivDimensoes.breakpointMenuDrawer;
           return Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: SivDimensoes.paginaHorizontal,
               vertical: SivDimensoes.paginaVertical,
             ),
-            child: mobile ? _buildConteudoMobile(context, state) : _buildConteudoDesktop(context, state),
+            child: mobile
+                ? _buildConteudoMobile(context, state)
+                : _buildConteudoDesktop(context, state),
           );
         },
       ),
@@ -95,8 +98,9 @@ class _EcommercesPageState extends State<EcommercesPage> {
   }
 
   void _atualizarAcoes(BuildContext context, EcommercesState state) {
-    final selecionados =
-        _criandoNovo ? const <Ecommerce>[] : state.ecommerces.where((e) => e.id == _selecionadoId).toList();
+    final selecionados = _criandoNovo
+        ? const <Ecommerce>[]
+        : state.ecommerces.where((e) => e.id == _selecionadoId).toList();
     final selecionado = selecionados.isEmpty ? null : selecionados.first;
     final chave = _criandoNovo ? 'novo' : (selecionado?.id ?? 'novo');
 
@@ -117,8 +121,10 @@ class _EcommercesPageState extends State<EcommercesPage> {
       if (selecionado != null && !selecionado.apagado)
         OutlinedButton.icon(
           onPressed: () => _confirmarExclusao(context, selecionado),
-          icon: Icon(Icons.delete_outline, size: 18, color: context.sivColors.vinho),
-          label: Text('Excluir canal', style: TextStyle(color: context.sivColors.vinho)),
+          icon: Icon(Icons.delete_outline,
+              size: 18, color: context.sivColors.vinho),
+          label: Text('Excluir canal',
+              style: TextStyle(color: context.sivColors.vinho)),
         ),
       const SizedBox(width: 8),
       OutlinedButton.icon(
@@ -159,13 +165,17 @@ class _EcommercesPageState extends State<EcommercesPage> {
                         _selecionadoId = ecommerce.id;
                       }),
               onRestaurar: ecommerce.apagado
-                  ? () => _bloc.add(EcommercesRestaurarSolicitado(id: ecommerce.id!))
+                  ? () => _bloc
+                      .add(EcommercesRestaurarSolicitado(id: ecommerce.id!))
                   : null,
               onVerProdutos: ecommerce.id == null
                   ? null
                   : () => Navigator.of(context).pushNamed(
                         '/ecommerce_referencias',
-                        arguments: {'ecommerceId': ecommerce.id, 'titulo': ecommerce.titulo},
+                        arguments: {
+                          'ecommerceId': ecommerce.id,
+                          'titulo': ecommerce.titulo
+                        },
                       ),
             ),
           ),
@@ -201,11 +211,13 @@ class _EcommercesPageState extends State<EcommercesPage> {
       controller: _controladorPara(ecommerce.id ?? 'novo'),
       ecommerceId: ecommerce.id,
       empresaId: ecommerce.empresaId,
+      referenciasPublicadas: ecommerce.referenciasPublicadas,
       onSalvou: () => _bloc.add(const EcommercesCarregarSolicitado()),
     );
   }
 
-  Future<void> _confirmarExclusao(BuildContext context, Ecommerce ecommerce) async {
+  Future<void> _confirmarExclusao(
+      BuildContext context, Ecommerce ecommerce) async {
     await SivDialogo.mostrar(
       context,
       titulo: 'Excluir e-commerce',
@@ -215,7 +227,8 @@ class _EcommercesPageState extends State<EcommercesPage> {
         'funcionar corretamente. Essa ação pode ser desfeita depois.',
       ),
       textoAcao: 'Excluir',
-      onConfirmar: (_) => _bloc.add(EcommercesExcluirSolicitado(id: ecommerce.id!)),
+      onConfirmar: (_) =>
+          _bloc.add(EcommercesExcluirSolicitado(id: ecommerce.id!)),
     );
   }
 }
@@ -239,81 +252,184 @@ class _CardCanal extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
+    // Sem token de "acento de canto" no tema; aproxima com aco em opacidade
+    // reduzida (mesma cor já usada pra bordas de destaque no design system).
+    final corCanto = cores.aco.withValues(alpha: 0.4);
 
     return Opacity(
       opacity: ecommerce.apagado ? 0.55 : 1,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(SivDimensoes.raio),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: selecionado ? cores.selecaoFundo : cores.superficie,
-            border: Border.all(color: selecionado ? cores.aco : cores.hairline),
-            borderRadius: BorderRadius.circular(SivDimensoes.raio),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      // InkWell precisa de um Material ancestor pra pintar o ripple --
+      // widgets prontos do Material (Button, Checkbox etc) já carregam o
+      // deles embutido, mas InkWell cru não. Mesmo bug já corrigido em
+      // ecommerce_referencias_page.dart (_segmentoSituacao).
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(SivDimensoes.raio),
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: ecommerce.icone != null
-                          ? Image.network(
-                              ecommerce.icone!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _iniciais(cores, textos),
-                            )
-                          : _iniciais(cores, textos),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: selecionado ? cores.selecaoFundo : cores.superficie,
+                  border: Border.all(
+                      color: selecionado ? cores.aco : cores.hairline),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
-                        Text(ecommerce.titulo, style: textos.secao),
-                        if (ecommerce.subtitulo != null)
-                          Text(ecommerce.subtitulo!, style: textos.apoio),
-                        // TODO: contador de referências bloqueadas por canal não
-                        // disponível em Ecommerce/EcommercesState hoje.
-                        if (ecommerce.referenciasPublicadas != null ||
-                            ecommerce.referenciasRascunho != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              [
-                                if (ecommerce.referenciasPublicadas != null)
-                                  '${ecommerce.referenciasPublicadas} publicadas',
-                                if (ecommerce.referenciasRascunho != null)
-                                  '${ecommerce.referenciasRascunho} rascunho',
-                              ].join(' · '),
-                              style: textos.apoio,
-                            ),
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(SivDimensoes.raio),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: ecommerce.icone != null
+                                ? Image.network(
+                                    ecommerce.icone!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _iniciais(cores, textos),
+                                  )
+                                : _iniciais(cores, textos),
                           ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  ecommerce.titulo,
+                                  style: textos.secao.copyWith(fontSize: 17),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _tagStatus(cores, textos),
+                            ],
+                          ),
+                        ),
+                        if (ecommerce.apagado)
+                          TextButton(
+                              onPressed: onRestaurar,
+                              child: const Text('Restaurar')),
                       ],
                     ),
-                  ),
-                  if (ecommerce.apagado)
-                    TextButton(onPressed: onRestaurar, child: const Text('Restaurar')),
-                ],
-              ),
-              if (onVerProdutos != null) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: onVerProdutos,
-                    icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                    label: const Text('Ver produtos no site'),
-                  ),
+                    if (ecommerce.subtitulo != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          ecommerce.subtitulo!,
+                          style: textos.apoio.copyWith(fontSize: 11.5),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
+                        children: [
+                          _metrica(cores, textos, 'Publicadas',
+                              ecommerce.referenciasPublicadas),
+                          const SizedBox(width: 16),
+                          _metrica(cores, textos, 'Rascunho',
+                              ecommerce.referenciasRascunho),
+                          const SizedBox(width: 16),
+                          // TODO: contador de referências bloqueadas por canal não
+                          // disponível em Ecommerce/EcommercesState hoje.
+                          _metrica(cores, textos, 'Bloqueadas', null,
+                              corValor: cores.vinho),
+                        ],
+                      ),
+                    ),
+                    if (onVerProdutos != null) ...[
+                      const SizedBox(height: 11),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: onVerProdutos,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            textStyle: textos.apoio.copyWith(
+                              fontSize: 13.5,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          child: const Text('VER PRODUTOS NO SITE'),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              _cantoBlueprint(corCanto, top: true, left: true),
+              _cantoBlueprint(corCanto, top: true, left: false),
+              _cantoBlueprint(corCanto, top: false, left: true),
+              _cantoBlueprint(corCanto, top: false, left: false),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tagStatus(SivColors cores, SivTextStyles textos) {
+    final cor = ecommerce.apagado ? cores.vinho : cores.acoProfundo;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        border: Border.all(color: cor),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Text(
+        ecommerce.apagado ? 'APAGADO' : 'ATIVO',
+        style: textos.rotulo.copyWith(fontSize: 10.5, color: cor),
+      ),
+    );
+  }
+
+  Widget _metrica(
+    SivColors cores,
+    SivTextStyles textos,
+    String rotulo,
+    int? valor, {
+    Color? corValor,
+  }) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+              text: '$rotulo ', style: textos.apoio.copyWith(fontSize: 12.5)),
+          TextSpan(
+            text: valor?.toString() ?? '—',
+            style: textos.secao.copyWith(fontSize: 16, color: corValor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cantoBlueprint(Color cor, {required bool top, required bool left}) {
+    const tamanho = 8.0;
+    return Positioned(
+      top: top ? 0 : null,
+      bottom: top ? null : 0,
+      left: left ? 0 : null,
+      right: left ? null : 0,
+      child: Container(
+        width: tamanho,
+        height: tamanho,
+        decoration: BoxDecoration(
+          border: Border(
+            top: top ? BorderSide(color: cor) : BorderSide.none,
+            bottom: !top ? BorderSide(color: cor) : BorderSide.none,
+            left: left ? BorderSide(color: cor) : BorderSide.none,
+            right: !left ? BorderSide(color: cor) : BorderSide.none,
           ),
         ),
       ),

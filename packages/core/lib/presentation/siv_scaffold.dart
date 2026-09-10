@@ -20,6 +20,7 @@ class SivScaffold extends StatelessWidget {
   final Widget? cabecalhoMenu;
   final Widget? rodapeMenu;
   final Widget corpo;
+  final Widget? floatingActionButton;
 
   const SivScaffold({
     super.key,
@@ -30,6 +31,7 @@ class SivScaffold extends StatelessWidget {
     this.acoes = const [],
     this.cabecalhoMenu,
     this.rodapeMenu,
+    this.floatingActionButton,
   });
 
   @override
@@ -53,6 +55,7 @@ class SivScaffold extends StatelessWidget {
 
         return Scaffold(
           drawer: emDrawer ? Drawer(width: 280, child: SafeArea(child: menu)) : null,
+          floatingActionButton: floatingActionButton,
           body: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -62,66 +65,83 @@ class SivScaffold extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      height: SivDimensoes.alturaBarraTitulo,
+                      constraints: const BoxConstraints(
+                        minHeight: SivDimensoes.alturaBarraTitulo,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal:
                             SivDimensoes.paddingBarraTituloHorizontal,
+                        vertical: 12,
                       ),
                       decoration: BoxDecoration(
                         color: cores.superficie,
                         border: Border(bottom: BorderSide(color: cores.hairline)),
                       ),
-                      child: Row(
-                        children: [
-                          if (emDrawer)
-                            Builder(
-                              builder: (context) => IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () =>
-                                    Scaffold.of(context).openDrawer(),
-                              ),
-                            ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
+                      // Título e ações NUNCA disputam a mesma linha -- com
+                      // breadcrumb longo (ex: "E-commerces / Canal / Produtos
+                      // no site") + 3 botões, dividir a largura entre os dois
+                      // (mesmo com Wrap nas ações) só sobrava espaço real em
+                      // telas bem largas; em telas intermediárias apertava a
+                      // ponto de sumir/estourar. Empilhado sempre que há
+                      // ações: cada um usa a largura inteira, sem cálculo de
+                      // quanto sobra pra cada lado.
+                      child: acoes.isEmpty
+                          ? Row(
                               children: [
-                                Text(
-                                  titulo,
-                                  style: textos.secao,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (subtitulo != null)
-                                  Text(
-                                    subtitulo!,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: textos.apoio.copyWith(
-                                      color: cores.textoApoio,
+                                if (emDrawer)
+                                  Builder(
+                                    builder: (context) => IconButton(
+                                      icon: const Icon(Icons.menu),
+                                      onPressed: () =>
+                                          Scaffold.of(context).openDrawer(),
                                     ),
                                   ),
+                                Expanded(
+                                  child: _SivScaffoldTitulo(
+                                    titulo: titulo,
+                                    subtitulo: subtitulo,
+                                    textos: textos,
+                                    cores: cores,
+                                  ),
+                                ),
                               ],
-                            ),
-                          ),
-                          if (acoes.isNotEmpty)
-                            Flexible(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
                                   children: [
-                                    for (var i = 0; i < acoes.length; i++) ...[
-                                      if (i > 0) const SizedBox(width: 8),
-                                      acoes[i],
-                                    ],
+                                    if (emDrawer)
+                                      Builder(
+                                        builder: (context) => IconButton(
+                                          icon: const Icon(Icons.menu),
+                                          onPressed: () => Scaffold.of(context)
+                                              .openDrawer(),
+                                        ),
+                                      ),
+                                    Expanded(
+                                      child: _SivScaffoldTitulo(
+                                        titulo: titulo,
+                                        subtitulo: subtitulo,
+                                        textos: textos,
+                                        cores: cores,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  alignment: WrapAlignment.end,
+                                  crossAxisAlignment:
+                                      WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: acoes,
+                                ),
+                              ],
                             ),
-                        ],
-                      ),
                     ),
                     Expanded(
                       child: Padding(
@@ -139,6 +159,44 @@ class SivScaffold extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _SivScaffoldTitulo extends StatelessWidget {
+  final String titulo;
+  final String? subtitulo;
+  final SivTextStyles textos;
+  final SivColors cores;
+
+  const _SivScaffoldTitulo({
+    required this.titulo,
+    required this.subtitulo,
+    required this.textos,
+    required this.cores,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          titulo,
+          style: textos.secao,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (subtitulo != null)
+          Text(
+            subtitulo!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textos.apoio.copyWith(color: cores.textoApoio),
+          ),
+      ],
     );
   }
 }

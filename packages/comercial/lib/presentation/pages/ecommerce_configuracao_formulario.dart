@@ -31,6 +31,7 @@ class EcommerceConfiguracaoFormularioController {
 class EcommerceConfiguracaoFormulario extends StatefulWidget {
   final int? empresaId;
   final int? ecommerceId;
+  final int? referenciasPublicadas;
   final VoidCallback? onSalvou;
   final VoidCallback? onExcluido;
   final EcommerceConfiguracaoFormularioController? controller;
@@ -39,6 +40,7 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
     super.key,
     this.empresaId,
     this.ecommerceId,
+    this.referenciasPublicadas,
     this.onSalvou,
     this.onExcluido,
     this.controller,
@@ -51,6 +53,11 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
 
 class _EcommerceConfiguracaoFormularioState
     extends State<EcommerceConfiguracaoFormulario> {
+  // Largura mínima da área do painel pra caber as 2 colunas lado a lado --
+  // menor que o breakpoint de página (SivDimensoes.breakpointMenuDrawer)
+  // porque aqui já é só a coluna direita do mestre-detalhe.
+  static const double _breakpointGrid = 640;
+
   final _formKey = GlobalKey<FormState>();
   final _tituloController = TextEditingController();
   final _subtituloController = TextEditingController();
@@ -136,6 +143,152 @@ class _EcommerceConfiguracaoFormularioState
               _iconeController.text = state.icone!;
             }
 
+            final colunaA = _BlueprintBox(
+              titulo: 'Identidade do canal',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(labelText: 'Título'),
+                    validator: (value) => (value == null || value.trim().isEmpty)
+                        ? 'Informe o título'
+                        : null,
+                    onChanged: (value) => _emitirEdicao(context, state),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _subtituloController,
+                    decoration: const InputDecoration(labelText: 'Subtítulo'),
+                    onChanged: (value) => _emitirEdicao(context, state),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _descricaoController,
+                    decoration: const InputDecoration(labelText: 'Descrição'),
+                    maxLines: 3,
+                    onChanged: (value) => _emitirEdicao(context, state),
+                  ),
+                  const SizedBox(height: 12),
+                  // Não há uploader de imagem reutilizável no projeto -- fallback simples
+                  // de URL até existir uma tela/serviço de upload dedicado.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _iconePreview(context),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _iconeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Ícone (URL)',
+                            hintText: 'https://...',
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                            _emitirEdicao(context, state);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+
+            final colunaB = Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _BlueprintBox(
+                  titulo: 'De onde o site puxa',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      EmpresaSeletor(
+                        titulo: 'Empresa de estoque',
+                        itemsSelecionadosInicial: _idInicial(state.empresaEstoqueId),
+                        onEmpresaChanged: (selecionadas) => _emitirEdicao(
+                          context,
+                          state,
+                          empresaEstoqueId:
+                              selecionadas.isEmpty ? null : selecionadas.first.id,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TabelasDePrecoSeletor(
+                        itemsSelecionadosInicial: _idInicial(state.tabelaDePrecoId),
+                        onTabelaDePrecoChanged: (selecionadas) => _emitirEdicao(
+                          context,
+                          state,
+                          tabelaDePrecoId:
+                              selecionadas.isEmpty ? null : selecionadas.first.id,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TerminalSeletor(
+                        empresaId: _empresaId,
+                        tipoFiltro: 'ecommerce',
+                        itemsSelecionadosInicial: _idInicial(state.terminalId),
+                        onTerminalChanged: (selecionadas) => _emitirEdicao(
+                          context,
+                          state,
+                          terminalId: selecionadas.isEmpty ? null : selecionadas.first.id,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Só terminais do tipo e-commerce',
+                          style: context.sivTextos.apoio,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FormasDePagamentoSeletor(
+                        modo: FormasDePagamentoSeletorModo.multipla,
+                        tipoOperacaoFiltro: TipoOperacaoFormaPagamento.online,
+                        itemsSelecionadosInicial: state.formasDePagamentoIds
+                            .map((id) => SelectData(id: id, nome: '', data: const {}))
+                            .toList(),
+                        onFormaDePagamentoChanged: (selecionadas) => _emitirEdicao(
+                          context,
+                          state,
+                          formasDePagamentoIds: selecionadas
+                              .map((forma) => forma.id)
+                              .whereType<int>()
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (state.id != null) ...[
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  _BlueprintBox(
+                    titulo: 'Atalhos',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _linhaAtalho(
+                          context,
+                          label: 'Produtos no site',
+                          valor: widget.referenciasPublicadas != null
+                              ? '${widget.referenciasPublicadas} referências'
+                              : '—',
+                          onTap: () => Navigator.of(context).pushNamed(
+                            '/ecommerce_referencias',
+                            arguments: {'ecommerceId': state.id, 'titulo': state.titulo},
+                          ),
+                        ),
+                        // TODO: "Promoções exclusivas do site" não tem como filtrar por
+                        // canal hoje -- Promocao.canal é genérico (loja/ecommerce), sem
+                        // ecommerceId específico. Omitido até existir esse dado.
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            );
+
             return Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -150,115 +303,30 @@ class _EcommerceConfiguracaoFormularioState
                       _CardIntegracao(ecommerceId: state.id!),
                       const SizedBox(height: SivDimensoes.gapCards),
                     ],
-                    SivCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('Identidade do canal', style: context.sivTextos.rotulo),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _tituloController,
-                            decoration: const InputDecoration(labelText: 'Título'),
-                            validator: (value) => (value == null || value.trim().isEmpty)
-                                ? 'Informe o título'
-                                : null,
-                            onChanged: (value) => _emitirEdicao(context, state),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _subtituloController,
-                            decoration: const InputDecoration(labelText: 'Subtítulo'),
-                            onChanged: (value) => _emitirEdicao(context, state),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _descricaoController,
-                            decoration: const InputDecoration(labelText: 'Descrição'),
-                            maxLines: 3,
-                            onChanged: (value) => _emitirEdicao(context, state),
-                          ),
-                          const SizedBox(height: 12),
-                          // Não há uploader de imagem reutilizável no projeto -- fallback simples
-                          // de URL até existir uma tela/serviço de upload dedicado.
-                          TextFormField(
-                            controller: _iconeController,
-                            decoration: const InputDecoration(
-                              labelText: 'Ícone (URL)',
-                              hintText: 'https://...',
-                            ),
-                            onChanged: (value) => _emitirEdicao(context, state),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: SivDimensoes.gapCards),
-                    SivCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('De onde o site puxa', style: context.sivTextos.rotulo),
-                          const SizedBox(height: 12),
-                          EmpresaSeletor(
-                            titulo: 'Empresa de estoque',
-                            itemsSelecionadosInicial: _idInicial(state.empresaEstoqueId),
-                            onEmpresaChanged: (selecionadas) => _emitirEdicao(
-                              context,
-                              state,
-                              empresaEstoqueId:
-                                  selecionadas.isEmpty ? null : selecionadas.first.id,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TabelasDePrecoSeletor(
-                            itemsSelecionadosInicial: _idInicial(state.tabelaDePrecoId),
-                            onTabelaDePrecoChanged: (selecionadas) => _emitirEdicao(
-                              context,
-                              state,
-                              tabelaDePrecoId:
-                                  selecionadas.isEmpty ? null : selecionadas.first.id,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TerminalSeletor(
-                            empresaId: _empresaId,
-                            tipoFiltro: 'ecommerce',
-                            itemsSelecionadosInicial: _idInicial(state.terminalId),
-                            onTerminalChanged: (selecionadas) => _emitirEdicao(
-                              context,
-                              state,
-                              terminalId: selecionadas.isEmpty ? null : selecionadas.first.id,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FormasDePagamentoSeletor(
-                            modo: FormasDePagamentoSeletorModo.multipla,
-                            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.online,
-                            itemsSelecionadosInicial: state.formasDePagamentoIds
-                                .map((id) => SelectData(id: id, nome: '', data: const {}))
-                                .toList(),
-                            onFormaDePagamentoChanged: (selecionadas) => _emitirEdicao(
-                              context,
-                              state,
-                              formasDePagamentoIds: selecionadas
-                                  .map((forma) => forma.id)
-                                  .whereType<int>()
-                                  .toList(),
-                            ),
-                          ),
-                        ],
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        if (constraints.maxWidth < _breakpointGrid) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              colunaA,
+                              const SizedBox(height: SivDimensoes.gapCards),
+                              colunaB,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: colunaA),
+                            const SizedBox(width: SivDimensoes.gapCards),
+                            Expanded(child: colunaB),
+                          ],
+                        );
+                      },
                     ),
                     if (state.id != null) ...[
                       const SizedBox(height: SivDimensoes.gapCards),
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.of(context).pushNamed(
-                          '/ecommerce_referencias',
-                          arguments: {'ecommerceId': state.id, 'titulo': state.titulo},
-                        ),
-                        icon: const Icon(Icons.shopping_bag_outlined),
-                        label: const Text('Produtos no site'),
-                      ),
-                      const SizedBox(height: 12),
                       PermissaoPorNome(
                         idComponente: 'ECOFM003',
                         child: _EcommerceBannersBloco(ecommerceId: state.id!),
@@ -276,6 +344,61 @@ class _EcommerceConfiguracaoFormularioState
 
   List<SelectData> _idInicial(int? id) =>
       id == null ? const [] : [SelectData(id: id, nome: '', data: const {})];
+
+  Widget _iconePreview(BuildContext context) {
+    final cores = context.sivColors;
+    final url = _iconeController.text;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      child: Container(
+        width: 56,
+        height: 56,
+        color: cores.superficieRecuada,
+        child: url.isEmpty
+            ? Icon(Icons.image_outlined, color: cores.textoApoio)
+            : Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.broken_image_outlined, color: cores.textoApoio),
+              ),
+      ),
+    );
+  }
+
+  Widget _linhaAtalho(
+    BuildContext context, {
+    required String label,
+    required String valor,
+    required VoidCallback onTap,
+  }) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '$label · ', style: textos.corpo),
+                  TextSpan(
+                    text: valor,
+                    style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onTap,
+            child: Text('Abrir →', style: TextStyle(color: cores.aco)),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _emitirEdicao(
     BuildContext context,
@@ -319,13 +442,11 @@ class _CardIntegracao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textos = context.sivTextos;
-    return SivCard(
+    return _BlueprintBox(
+      titulo: 'Dados para integração',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Dados para integração', style: textos.rotulo),
-          const SizedBox(height: 12),
           _linha(
             context,
             label: 'ID do e-commerce (use este, não o da empresa)',
@@ -358,6 +479,72 @@ class _CardIntegracao extends StatelessWidget {
           onPressed: () => _copiar(context, valor, label),
         ),
       ],
+    );
+  }
+}
+
+// Container "blueprint": borda reta + cantos em L decorativos. Mesmo estilo
+// visual do _CardCanal em ecommerces_page.dart, duplicado aqui (widget
+// privado, ~30 linhas) pra não acoplar os dois arquivos por causa de um
+// detalhe de estilo.
+class _BlueprintBox extends StatelessWidget {
+  final String titulo;
+  final Widget child;
+
+  const _BlueprintBox({required this.titulo, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final corCanto = cores.aco.withValues(alpha: 0.4);
+
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(SivDimensoes.paddingCard),
+          decoration: BoxDecoration(
+            color: cores.superficie,
+            border: Border.all(color: cores.hairline),
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(titulo, style: textos.rotulo),
+              const SizedBox(height: 12),
+              child,
+            ],
+          ),
+        ),
+        _canto(corCanto, top: true, left: true),
+        _canto(corCanto, top: true, left: false),
+        _canto(corCanto, top: false, left: true),
+        _canto(corCanto, top: false, left: false),
+      ],
+    );
+  }
+
+  Widget _canto(Color cor, {required bool top, required bool left}) {
+    const tamanho = 8.0;
+    return Positioned(
+      top: top ? 0 : null,
+      bottom: top ? null : 0,
+      left: left ? 0 : null,
+      right: left ? null : 0,
+      child: Container(
+        width: tamanho,
+        height: tamanho,
+        decoration: BoxDecoration(
+          border: Border(
+            top: top ? BorderSide(color: cor) : BorderSide.none,
+            bottom: !top ? BorderSide(color: cor) : BorderSide.none,
+            left: left ? BorderSide(color: cor) : BorderSide.none,
+            right: !left ? BorderSide(color: cor) : BorderSide.none,
+          ),
+        ),
+      ),
     );
   }
 }

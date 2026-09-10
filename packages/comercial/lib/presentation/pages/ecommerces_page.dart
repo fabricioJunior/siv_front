@@ -48,22 +48,49 @@ class _EcommercesPageState extends State<EcommercesPage> {
       child: BlocBuilder<EcommercesBloc, EcommercesState>(
         builder: (context, state) {
           _atualizarAcoes(context, state);
+          final mobile =
+              MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
           return Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: SivDimensoes.paginaHorizontal,
               vertical: SivDimensoes.paginaVertical,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(width: 340, child: _buildLista(context, state)),
-                const SizedBox(width: SivDimensoes.gapCards),
-                Expanded(child: _buildPainel(context, state)),
-              ],
-            ),
+            child: mobile ? _buildConteudoMobile(context, state) : _buildConteudoDesktop(context, state),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildConteudoDesktop(BuildContext context, EcommercesState state) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(width: 340, child: _buildLista(context, state)),
+        const SizedBox(width: SivDimensoes.gapCards),
+        Expanded(child: _buildPainel(context, state)),
+      ],
+    );
+  }
+
+  Widget _buildConteudoMobile(BuildContext context, EcommercesState state) {
+    if (!_criandoNovo && _selecionadoId == null) {
+      return _buildLista(context, state);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextButton.icon(
+          onPressed: () => setState(() {
+            _criandoNovo = false;
+            _selecionadoId = null;
+          }),
+          icon: const Icon(Icons.arrow_back, size: 18),
+          label: const Text('Voltar para os canais'),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: _buildPainel(context, state)),
+      ],
     );
   }
 
@@ -134,6 +161,12 @@ class _EcommercesPageState extends State<EcommercesPage> {
               onRestaurar: ecommerce.apagado
                   ? () => _bloc.add(EcommercesRestaurarSolicitado(id: ecommerce.id!))
                   : null,
+              onVerProdutos: ecommerce.id == null
+                  ? null
+                  : () => Navigator.of(context).pushNamed(
+                        '/ecommerce_referencias',
+                        arguments: {'ecommerceId': ecommerce.id, 'titulo': ecommerce.titulo},
+                      ),
             ),
           ),
       ],
@@ -192,12 +225,14 @@ class _CardCanal extends StatelessWidget {
   final bool selecionado;
   final VoidCallback? onTap;
   final VoidCallback? onRestaurar;
+  final VoidCallback? onVerProdutos;
 
   const _CardCanal({
     required this.ecommerce,
     required this.selecionado,
     required this.onTap,
     required this.onRestaurar,
+    this.onVerProdutos,
   });
 
   @override
@@ -217,49 +252,67 @@ class _CardCanal extends StatelessWidget {
             border: Border.all(color: selecionado ? cores.aco : cores.hairline),
             borderRadius: BorderRadius.circular(SivDimensoes.raio),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(SivDimensoes.raio),
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: ecommerce.icone != null
-                      ? Image.network(
-                          ecommerce.icone!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _iniciais(cores, textos),
-                        )
-                      : _iniciais(cores, textos),
-                ),
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: ecommerce.icone != null
+                          ? Image.network(
+                              ecommerce.icone!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _iniciais(cores, textos),
+                            )
+                          : _iniciais(cores, textos),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(ecommerce.titulo, style: textos.secao),
+                        if (ecommerce.subtitulo != null)
+                          Text(ecommerce.subtitulo!, style: textos.apoio),
+                        // TODO: contador de referências bloqueadas por canal não
+                        // disponível em Ecommerce/EcommercesState hoje.
+                        if (ecommerce.referenciasPublicadas != null ||
+                            ecommerce.referenciasRascunho != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              [
+                                if (ecommerce.referenciasPublicadas != null)
+                                  '${ecommerce.referenciasPublicadas} publicadas',
+                                if (ecommerce.referenciasRascunho != null)
+                                  '${ecommerce.referenciasRascunho} rascunho',
+                              ].join(' · '),
+                              style: textos.apoio,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (ecommerce.apagado)
+                    TextButton(onPressed: onRestaurar, child: const Text('Restaurar')),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(ecommerce.titulo, style: textos.secao),
-                    if (ecommerce.subtitulo != null)
-                      Text(ecommerce.subtitulo!, style: textos.apoio),
-                    if (ecommerce.referenciasPublicadas != null ||
-                        ecommerce.referenciasRascunho != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          [
-                            if (ecommerce.referenciasPublicadas != null)
-                              '${ecommerce.referenciasPublicadas} publicadas',
-                            if (ecommerce.referenciasRascunho != null)
-                              '${ecommerce.referenciasRascunho} rascunho',
-                          ].join(' · '),
-                          style: textos.apoio,
-                        ),
-                      ),
-                  ],
+              if (onVerProdutos != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: onVerProdutos,
+                    icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                    label: const Text('Ver produtos no site'),
+                  ),
                 ),
-              ),
-              if (ecommerce.apagado)
-                TextButton(onPressed: onRestaurar, child: const Text('Restaurar')),
+              ],
             ],
           ),
         ),

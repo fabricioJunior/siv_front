@@ -50,7 +50,7 @@ abstract class IPedidosRepository {
   });
   Future<List<PedidoEvento>> listarEventos(int id);
   Future<void> reenviarEmail(int id);
-  Future<void> reenviarEmailEmbalado(int id);
+  Future<void> reenviarEmailEmbalado(int id, {String? email});
   Future<String> linkCompartilhamento(int id);
 
   Future<List<PedidoItem>> listarItens(int id);

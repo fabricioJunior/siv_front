@@ -269,10 +269,10 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<void> reenviarEmailEmbalado(int id) async {
+  Future<void> reenviarEmailEmbalado(int id, {String? email}) async {
     await put(
       pathParameters: {'id': '$id/reenviar-email-embalado'},
-      body: {},
+      body: {if (email != null) 'email': email},
     );
   }
 

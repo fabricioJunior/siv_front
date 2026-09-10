@@ -185,8 +185,8 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
-  Future<void> reenviarEmailEmbalado(int id) {
-    return remoteDataSource.reenviarEmailEmbalado(id);
+  Future<void> reenviarEmailEmbalado(int id, {String? email}) {
+    return remoteDataSource.reenviarEmailEmbalado(id, email: email);
   }
 
   @override

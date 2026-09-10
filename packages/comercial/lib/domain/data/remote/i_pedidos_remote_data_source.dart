@@ -50,6 +50,6 @@ abstract class IPedidosRemoteDataSource {
   });
   Future<List<PedidoEvento>> listarEventos(int id);
   Future<void> reenviarEmail(int id);
-  Future<void> reenviarEmailEmbalado(int id);
+  Future<void> reenviarEmailEmbalado(int id, {String? email});
   Future<String> linkCompartilhamento(int id);
 }

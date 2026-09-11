@@ -18,12 +18,14 @@ class EcommerceBannersRepository implements IEcommerceBannersRepository {
     int ecommerceId, {
     required Uint8List bytes,
     required String nomeArquivo,
+    required EcommerceBannerDispositivo dispositivo,
     void Function(int enviado, int total)? onProgresso,
   }) =>
       remoteDataSource.criarBanner(
         ecommerceId,
         bytes: bytes,
         nomeArquivo: nomeArquivo,
+        dispositivo: dispositivo,
         onProgresso: onProgresso,
       );
 

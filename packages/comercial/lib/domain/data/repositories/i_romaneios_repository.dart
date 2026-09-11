@@ -44,4 +44,21 @@ abstract class IRomaneiosRepository {
     required int romaneioId,
     required List<Map<String, dynamic>> pagamentos,
   });
+  Future<Romaneio> criarVendaCompleta({
+    required int caixaId,
+    int? pessoaId,
+    required int funcionarioId,
+    required int tabelaPrecoId,
+    required List<RomaneioItem> itens,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    List<Map<String, dynamic>> descontosPromocao = const [],
+    Map<String, dynamic>? cupom,
+    double? valorTaxaEntrega,
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
+    bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
+  });
 }

@@ -19,14 +19,16 @@ class EcommerceBannersIniciou extends EcommerceBannersEvent {
 class EcommerceBannerAdicionou extends EcommerceBannersEvent {
   final Uint8List bytes;
   final String nomeArquivo;
+  final EcommerceBannerDispositivo dispositivo;
 
   const EcommerceBannerAdicionou({
     required this.bytes,
     required this.nomeArquivo,
+    required this.dispositivo,
   });
 
   @override
-  List<Object?> get props => [nomeArquivo, bytes.length];
+  List<Object?> get props => [nomeArquivo, bytes.length, dispositivo];
 }
 
 class EcommerceBannerAtivoAlterou extends EcommerceBannersEvent {

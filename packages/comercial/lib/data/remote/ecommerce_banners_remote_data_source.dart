@@ -27,6 +27,7 @@ class EcommerceBannersRemoteDataSource extends RemoteDataSourceBase
     int ecommerceId, {
     required Uint8List bytes,
     required String nomeArquivo,
+    required EcommerceBannerDispositivo dispositivo,
     void Function(int enviado, int total)? onProgresso,
   }) async {
     final response = await postFile(
@@ -35,6 +36,7 @@ class EcommerceBannersRemoteDataSource extends RemoteDataSourceBase
       fileName: nomeArquivo,
       fileType: _tipoPorExtensao(nomeArquivo),
       pathParameters: {'id': '$ecommerceId/banners'},
+      body: {'dispositivo': dispositivo.name},
       onSendProgress: onProgresso,
     );
     return EcommerceBannerDto.fromJson(response.body as Map<String, dynamic>);

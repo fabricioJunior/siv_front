@@ -26,6 +26,7 @@ class RomaneioCriacaoBloc
   final RemoverProdutoCompartilhado _removerProdutoCompartilhado;
   final AtualizarListaCompartilhada _atualizarListaCompartilhada;
   final ReceberRomaneioNoCaixa _receberRomaneioNoCaixa;
+  final CriarVendaCompleta _criarVendaCompleta;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarCaixaAberto _recuperarCaixaAberto;
   final ListarDocumentosFiscais _listarDocumentosFiscais;
@@ -46,6 +47,7 @@ class RomaneioCriacaoBloc
     this._removerProdutoCompartilhado,
     this._atualizarListaCompartilhada,
     this._receberRomaneioNoCaixa,
+    this._criarVendaCompleta,
     this._acessoGlobalSessao,
     this._recuperarCaixaAberto,
     this._listarDocumentosFiscais,
@@ -139,6 +141,120 @@ class RomaneioCriacaoBloc
       );
 
       bool precisaCriarRomaneio = listaCompartilhada!.idLista == null;
+
+      // Venda nova (sem idLista prévio) usa 1 request só (criar + itens + receber no caixa) em
+      // vez do fluxo de baixo (criar, N x adicionar item, receber) -- ver CriarVendaCompleta/
+      // ReceberService.vendaCompleta no backend. Demais operações (transferência, consignação,
+      // devolução, ou venda retomando um romaneio já existente) seguem o fluxo de sempre.
+      if (operacao == TipoOperacao.venda && precisaCriarRomaneio) {
+        final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
+        if (caixaId == null) {
+          throw StateError(
+            'Não foi possível receber romaneio: caixa da sessão não encontrado.',
+          );
+        }
+
+        final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+        final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
+        if (empresaId != null && terminalId != null) {
+          final caixa = await _recuperarCaixaAberto.call(
+            idEmpresa: empresaId,
+            idTerminal: terminalId,
+          );
+
+          final contagemJaEncerrada = caixa?.contagem?.encerrada == true;
+          if (caixa == null ||
+              (caixa.situacao != SituacaoCaixa.aberto &&
+                  !contagemJaEncerrada)) {
+            throw StateError(
+              'Não foi possível receber romaneio: o caixa está em contagem ou fechado. '
+              'Finalize a contagem ou abra outro caixa antes de continuar.',
+            );
+          }
+        }
+
+        emit(
+          state.copyWith(
+            step: RomaneioCriacaoStep.finalizandoVenda,
+            hashLista: event.hashLista,
+            listaCompartilhada: listaCompartilhada,
+            produtosCompartilhados: produtosCompartilhados,
+            erro: null,
+            totalItensProcessados: itens.length,
+          ),
+        );
+
+        // Não manda descontosItens aqui -- descontoTotal já é o desconto escalar do romaneio
+        // (mesmo motivo do fluxo de baixo: mandar os dois soma em dobro).
+        final romaneioRecebido = await _criarVendaCompleta.call(
+          caixaId: caixaId,
+          pessoaId: listaCompartilhada.pessoaId,
+          funcionarioId: listaCompartilhada.funcionarioId!,
+          tabelaPrecoId: listaCompartilhada.tabelaPrecoId!,
+          itens: itens,
+          formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+          descontosItens: [
+            {'valor': descontoTotal},
+          ],
+          descontosPromocao: event.descontosPromocao,
+          cupom: event.cupom,
+          valorTaxaEntrega: event.valorTaxaEntrega,
+          incluirCpfNaNota: event.incluirCpfNaNota,
+          cpfNaNota: event.cpfNaNota,
+          pontuarFidelidade: event.pontuarFidelidade,
+          enviarNotaPorEmail: event.enviarNotaPorEmail,
+          emailNota: event.emailNota,
+        );
+
+        final romaneioId = romaneioRecebido.id;
+        if (romaneioId == null) {
+          throw StateError('A API não retornou o id do romaneio criado.');
+        }
+
+        listaCompartilhada = listaCompartilhada.copyWith(
+          idLista: romaneioId,
+          processada: true,
+        );
+        await _atualizarListaCompartilhada.call(listaCompartilhada);
+
+        for (final item in produtosCompartilhados) {
+          await _removerProdutoCompartilhado.call(item.hash);
+        }
+        await _removerListaCompartilhadaSeNecessario(event.hashLista);
+
+        emit(
+          state.copyWith(
+            step: RomaneioCriacaoStep.carregandoDocumentoFiscal,
+            hashLista: event.hashLista,
+            listaCompartilhada: listaCompartilhada,
+            produtosCompartilhados: produtosCompartilhados,
+            erro: null,
+            totalItensProcessados: itens.length,
+          ),
+        );
+
+        final documentoFiscal = await _carregarUltimoDocumentoFiscal(romaneioId);
+        emit(
+          state.copyWith(
+            step: RomaneioCriacaoStep.sucesso,
+            hashLista: event.hashLista,
+            listaCompartilhada: listaCompartilhada,
+            produtosCompartilhados: produtosCompartilhados,
+            romaneio: romaneioRecebido,
+            erro: null,
+            totalItensProcessados: itens.length,
+            documentoFiscal: documentoFiscal,
+            itensCriados: itens,
+          ),
+        );
+
+        if (event.enviarNotaPorEmail &&
+            _statusDocumentoFiscalEhTransitorio(documentoFiscal?.status)) {
+          _iniciarPollingDocumentoFiscal(romaneioId);
+        }
+        return;
+      }
+
       final criado = precisaCriarRomaneio
           ? await _criarRomaneio.call(
               Romaneio.create(

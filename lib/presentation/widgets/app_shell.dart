@@ -107,6 +107,15 @@ class _ItemDeNavegacao {
 final _itensOperacao = <_ItemDeNavegacao>[
   _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
   _ItemDeNavegacao(
+    label: 'Comercial',
+    icone: Icons.local_mall_outlined,
+    // Menu agregador (venda, devolução, pedidos, romaneios, histórico de
+    // vendas, consignações, promoções, cupons) -- mesma permissão da rota
+    // protegida em routes.dart.
+    rota: '/comercial',
+    componentesNecessarios: ['PEDFC001', 'ROMFP001'],
+  ),
+  _ItemDeNavegacao(
     label: 'Venda',
     icone: Icons.shopping_cart_checkout_outlined,
     rota: '/venda',
@@ -203,21 +212,6 @@ class _AppShellCasca extends StatelessWidget {
       valueListenable: SivPageTitulo.notifier,
       builder: (context, tituloPagina, _) => SivScaffold(
         titulo: tituloPagina ?? tituloAtivo ?? 'SIV',
-        acoes: [
-          ValueListenableBuilder<List<Widget>>(
-            valueListenable: SivPageAcoes.notifier,
-            builder: (context, acoesDaPagina, _) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final acao in acoesDaPagina) ...[
-                  acao,
-                  const SizedBox(width: 8),
-                ],
-              ],
-            ),
-          ),
-          _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
-        ],
         floatingActionButton: ValueListenableBuilder<Widget?>(
           valueListenable: SivPageFab.notifier,
           builder: (context, fab, _) => fab ?? const SizedBox.shrink(),
@@ -242,7 +236,13 @@ class _AppShellCasca extends StatelessWidget {
                 .toList(),
           ),
         ],
-        rodapeMenu: _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
+        rodapeMenu: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
+            _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
+          ],
+        ),
         corpo: child,
       ),
     );
@@ -379,41 +379,53 @@ class _BarraTituloInfo extends StatelessWidget {
     final cores = context.sivColors;
     final caixaAberto = appState.caixaIdDaSessao != null;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ChipInfo(
-          texto: appState.empresaDaSessao?.nome ?? 'Selecionar empresa',
-          onTap: () => navigatorKey.currentState?.pushNamed(
-            '/login',
-            arguments: {'trocandoDeEmpresa': true},
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2),
           ),
         ),
-        const SizedBox(width: 8),
-        _ChipInfo(
-          texto: appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
-          onTap: () => _trocarTerminal(context),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: caixaAberto ? cores.emAndamentoFundo : cores.falhaFundo,
-            border: Border.all(
-              color: caixaAberto ? cores.aco : cores.falhaBorda,
-            ),
-            borderRadius: BorderRadius.circular(SivDimensoes.raio),
-          ),
-          // TODO: valor em caixa (R$ x) não está disponível no AppState hoje
-          // -- exibe só o status até a sessão carregar o saldo do caixa.
-          child: Text(
-            caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO',
-            style: context.sivTextos.rotulo.copyWith(
-              color: cores.textoPrincipal,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ChipInfo(
+            texto: appState.empresaDaSessao?.nome ?? 'Selecionar empresa',
+            onTap: () => navigatorKey.currentState?.pushNamed(
+              '/login',
+              arguments: {'trocandoDeEmpresa': true},
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          _ChipInfo(
+            texto: appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
+            onTap: () => _trocarTerminal(context),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: caixaAberto ? cores.emAndamentoFundo : cores.falhaFundo,
+              border: Border.all(
+                color: caixaAberto ? cores.aco : cores.falhaBorda,
+              ),
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            ),
+            // TODO: valor em caixa (R$ x) não está disponível no AppState hoje
+            // -- exibe só o status até a sessão carregar o saldo do caixa.
+            child: Text(
+              caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO',
+              style: context.sivTextos.rotulo.copyWith(
+                color: cores.textoPrincipal,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -481,23 +493,38 @@ class _ChipInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cores = context.sivColors;
-    return InkWell(
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(SivDimensoes.raio),
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: cores.hairline),
+          border: Border.all(
+            color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.3),
+          ),
           borderRadius: BorderRadius.circular(SivDimensoes.raio),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(texto, style: context.sivTextos.apoio),
+            Expanded(
+              child: Text(
+                texto,
+                overflow: TextOverflow.ellipsis,
+                style: context.sivTextos.apoio.copyWith(
+                  color: cores.textoSobreEscuroApoio,
+                ),
+              ),
+            ),
             const SizedBox(width: 4),
-            Icon(Icons.swap_horiz, size: 14, color: cores.textoApoio),
+            Icon(Icons.swap_horiz,
+                size: 14, color: cores.textoSobreEscuroApoio),
           ],
         ),
+      ),
       ),
     );
   }

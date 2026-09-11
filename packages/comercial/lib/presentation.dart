@@ -69,6 +69,7 @@ export 'presentation/pages/ecommerces_page.dart';
 export 'presentation/pages/ecommerce_configuracao_page.dart';
 export 'presentation/pages/ecommerce_referencias_page.dart';
 export 'presentation/pages/ecommerce_referencia_detalhe_page.dart';
+export 'presentation/pages/ecommerce_banner_preview_page.dart';
 export 'presentation/blocs/lista_personalizada_bloc/lista_personalizada_bloc.dart';
 export 'presentation/blocs/listas_personalizadas_bloc/listas_personalizadas_bloc.dart';
 export 'presentation/pages/lista_personalizada_page.dart';

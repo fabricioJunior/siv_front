@@ -15,7 +15,6 @@ import 'siv_menu_lateral.dart';
 class SivScaffold extends StatelessWidget {
   final String titulo;
   final String? subtitulo;
-  final List<Widget> acoes;
   final List<SivMenuLateralSecao> secoesMenu;
   final Widget? cabecalhoMenu;
   final Widget? rodapeMenu;
@@ -28,7 +27,6 @@ class SivScaffold extends StatelessWidget {
     required this.secoesMenu,
     required this.corpo,
     this.subtitulo,
-    this.acoes = const [],
     this.cabecalhoMenu,
     this.rodapeMenu,
     this.floatingActionButton,
@@ -68,86 +66,51 @@ class SivScaffold extends StatelessWidget {
                       constraints: const BoxConstraints(
                         minHeight: SivDimensoes.alturaBarraTitulo,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal:
-                            SivDimensoes.paddingBarraTituloHorizontal,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: emDrawer
+                            ? 16
+                            : SivDimensoes.paddingBarraTituloHorizontal,
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
                         color: cores.superficie,
                         border: Border(bottom: BorderSide(color: cores.hairline)),
                       ),
-                      // Título e ações NUNCA disputam a mesma linha -- com
-                      // breadcrumb longo (ex: "E-commerces / Canal / Produtos
-                      // no site") + 3 botões, dividir a largura entre os dois
-                      // (mesmo com Wrap nas ações) só sobrava espaço real em
-                      // telas bem largas; em telas intermediárias apertava a
-                      // ponto de sumir/estourar. Empilhado sempre que há
-                      // ações: cada um usa a largura inteira, sem cálculo de
-                      // quanto sobra pra cada lado.
-                      child: acoes.isEmpty
-                          ? Row(
-                              children: [
-                                if (emDrawer)
-                                  Builder(
-                                    builder: (context) => IconButton(
-                                      icon: const Icon(Icons.menu),
-                                      onPressed: () =>
-                                          Scaffold.of(context).openDrawer(),
-                                    ),
-                                  ),
-                                Expanded(
-                                  child: _SivScaffoldTitulo(
-                                    titulo: titulo,
-                                    subtitulo: subtitulo,
-                                    textos: textos,
-                                    cores: cores,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    if (emDrawer)
-                                      Builder(
-                                        builder: (context) => IconButton(
-                                          icon: const Icon(Icons.menu),
-                                          onPressed: () => Scaffold.of(context)
-                                              .openDrawer(),
-                                        ),
-                                      ),
-                                    Expanded(
-                                      child: _SivScaffoldTitulo(
-                                        titulo: titulo,
-                                        subtitulo: subtitulo,
-                                        textos: textos,
-                                        cores: cores,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  alignment: WrapAlignment.end,
-                                  crossAxisAlignment:
-                                      WrapCrossAlignment.center,
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: acoes,
-                                ),
-                              ],
+                      // Barra de título só mostra título/subtítulo -- botões
+                      // de ação são responsabilidade de cada tela, renderizados
+                      // no topo do próprio corpo.
+                      child: Row(
+                        children: [
+                          if (emDrawer)
+                            Builder(
+                              builder: (context) => IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () =>
+                                    Scaffold.of(context).openDrawer(),
+                              ),
                             ),
+                          Expanded(
+                            child: _SivScaffoldTitulo(
+                              titulo: titulo,
+                              subtitulo: subtitulo,
+                              textos: textos,
+                              cores: cores,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: SivDimensoes.paginaHorizontal,
-                          vertical: SivDimensoes.paginaVertical,
+                        // Padding fixo (28/30, pensado pra desktop) comia
+                        // proporcionalmente demais numa tela de ~390px --
+                        // conteúdo ficava espremido mesmo sobrando espaço
+                        // real. Mobile (emDrawer) encosta nos 4 lados (0);
+                        // cada tela decide seu próprio respiro interno se
+                        // precisar.
+                        padding: EdgeInsets.symmetric(
+                          horizontal: emDrawer ? 0 : SivDimensoes.paginaHorizontal,
+                          vertical: emDrawer ? 0 : SivDimensoes.paginaVertical,
                         ),
                         child: corpo,
                       ),

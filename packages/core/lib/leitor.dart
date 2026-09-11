@@ -6,3 +6,4 @@ export 'leitor/data_source/leitor_busca_restrita_data_source.dart';
 export 'leitor/leitor_bloc/leitor_bloc.dart';
 export 'leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 export 'leitor/leitor_widget.dart';
+export 'leitor/icone_codigo_de_barras.dart';

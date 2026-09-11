@@ -3,7 +3,6 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,7 +42,6 @@ void main() {
   Future<void> montarPagina(
     WidgetTester tester, {
     required List<EcommerceReferencia> referencias,
-    bool comBarraDeAcoes = false,
     Size viewport = const Size(400, 800),
   }) async {
     final repo = _RepositorioFake(referencias);
@@ -66,20 +64,7 @@ void main() {
       MaterialApp(
         theme: SivTheme.tema,
         home: Scaffold(
-          body: Column(
-            children: [
-              // Renderiza as ações que a página publica via SivPageAcoes --
-              // no app de verdade é o shell (AppShell) que faz isso; aqui
-              // reproduz só o suficiente pra achar/tocar o botão de verdade,
-              // com o mesmo BuildContext/bloc da página (sem árvore separada).
-              if (comBarraDeAcoes)
-                ValueListenableBuilder<List<Widget>>(
-                  valueListenable: SivPageAcoes.notifier,
-                  builder: (context, acoes, _) => Row(children: acoes),
-                ),
-              Expanded(child: EcommerceReferenciasPage(ecommerceId: 9)),
-            ],
-          ),
+          body: EcommerceReferenciasPage(ecommerceId: 9),
         ),
       ),
     );
@@ -146,7 +131,6 @@ void main() {
     await montarPagina(
       tester,
       referencias: referencias,
-      comBarraDeAcoes: true,
       viewport: const Size(1200, 800),
     );
 

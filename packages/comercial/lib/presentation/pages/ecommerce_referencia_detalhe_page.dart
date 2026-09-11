@@ -74,14 +74,12 @@ class _EcommerceReferenciaDetalhePageState
         ),
       );
     _atualizarTitulo();
-    SivPageAcoes.definir([_botaoEditar(context)]);
   }
 
   @override
   void dispose() {
     _bloc.close();
     SivPageTitulo.limpar();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
@@ -113,7 +111,9 @@ class _EcommerceReferenciaDetalhePageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [_botaoEditar(context), const SizedBox(width: 12)],
+      ),
       body: BlocProvider<EcommerceReferenciaDetalheBloc>.value(
         value: _bloc,
         child: BlocConsumer<EcommerceReferenciaDetalheBloc,

@@ -107,6 +107,15 @@ class _ItemDeNavegacao {
 final _itensOperacao = <_ItemDeNavegacao>[
   _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
   _ItemDeNavegacao(
+    label: 'Comercial',
+    icone: Icons.local_mall_outlined,
+    // Menu agregador (venda, devolução, pedidos, romaneios, histórico de
+    // vendas, consignações, promoções, cupons) -- mesma permissão da rota
+    // protegida em routes.dart.
+    rota: '/comercial',
+    componentesNecessarios: ['PEDFC001', 'ROMFP001'],
+  ),
+  _ItemDeNavegacao(
     label: 'Venda',
     icone: Icons.shopping_cart_checkout_outlined,
     rota: '/venda',

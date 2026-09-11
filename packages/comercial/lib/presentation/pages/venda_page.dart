@@ -6,6 +6,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
+import 'package:core/leitor/icone_codigo_de_barras.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_widget.dart';
 import 'package:core/presentation.dart';
@@ -72,7 +73,6 @@ class _VendaPageState extends State<VendaPage> {
     _leitorBloc?.close();
     _codigoController.dispose();
     _codigoFocusNode.dispose();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
@@ -222,9 +222,6 @@ class _VendaPageState extends State<VendaPage> {
         builder: (context, state) {
           if (state.leituraIniciada) {
             _garantirLeitorBloc(state.tabelaDePrecoId);
-            _atualizarAcoesDaBarraDeTitulo(context, state);
-          } else {
-            SivPageAcoes.limpar();
           }
 
           return Column(
@@ -250,10 +247,10 @@ class _VendaPageState extends State<VendaPage> {
     );
   }
 
-  void _atualizarAcoesDaBarraDeTitulo(BuildContext context, VendaState state) {
+  List<Widget> _acoesTopo(BuildContext context, VendaState state) {
     final temItens = _leitorController.itens.isNotEmpty;
 
-    SivPageAcoes.definir([
+    return [
       OutlinedButton.icon(
         onPressed: temItens && !state.processando
             ? () => _confirmarReinicio(context)
@@ -287,7 +284,7 @@ class _VendaPageState extends State<VendaPage> {
             : const Icon(Icons.assignment_outlined, size: 18),
         label: const Text('Salvar como pedido'),
       ),
-    ]);
+    ];
   }
 
   Widget _buildLeituraAtiva(BuildContext context, VendaState state) {
@@ -311,7 +308,6 @@ class _VendaPageState extends State<VendaPage> {
           child: BlocConsumer<LeitorBloc, LeitorState>(
             listener: (context, leitorState) {
               _leitorController.syncState(leitorState);
-              _atualizarAcoesDaBarraDeTitulo(context, state);
               if (leitorState.erro != null) {
                 SivAviso.mostrar(context,
                     mensagem: leitorState.erro!, tipo: SivAvisoTipo.falha);
@@ -327,6 +323,16 @@ class _VendaPageState extends State<VendaPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _acoesTopo(context, state),
+                    ),
+                  ),
                   _buildCampoDeLeitura(context, leitorState),
                   const SizedBox(height: SivDimensoes.gapCards),
                   Expanded(
@@ -361,65 +367,67 @@ class _VendaPageState extends State<VendaPage> {
 
   Widget _buildCampoDeLeitura(BuildContext context, LeitorState leitorState) {
     final cores = context.sivColors;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _codigoController,
-            focusNode: _codigoFocusNode,
-            autofocus: true,
-            style: context.sivTextos.secao,
-            decoration: InputDecoration(
-              prefixIcon: SizedBox(
-                width: 26,
-                height: 26,
-                child: CustomPaint(painter: _IconeCodigoDeBarras(cores.aco)),
+    // TextField/IconButton precisam de Material ancestor -- essa página não
+    // tem Scaffold próprio (mesmo bug já corrigido em vários InkWell nesta
+    // sessão, aqui pega TextField e IconButton juntos).
+    return Material(
+      type: MaterialType.transparency,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _codigoController,
+              focusNode: _codigoFocusNode,
+              autofocus: true,
+              style: context.sivTextos.secao,
+              decoration: InputDecoration(
+                prefixIcon: IconeCodigoDeBarras(cor: cores.aco),
+                suffixIcon: leitorState.processando
+                    ? const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
+                hintText: _modoRemocao
+                    ? 'Bipe para remover 1 unidade do item'
+                    : 'Bipe ou informe o código do produto · F2 buscar por nome',
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
               ),
-              suffixIcon: leitorState.processando
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
-              hintText: _modoRemocao
-                  ? 'Bipe para remover 1 unidade do item'
-                  : 'Bipe ou informe o código do produto · F2 buscar por nome',
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-            ),
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submeterCodigo(),
-          ),
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          tooltip: _modoRemocao
-              ? 'Voltar ao modo leitura'
-              : 'Ativar remoção por leitura',
-          isSelected: _modoRemocao,
-          style: IconButton.styleFrom(
-            side: BorderSide(color: cores.hairline),
-            minimumSize: const Size.square(SivDimensoes.alvoToqueMinimo + 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submeterCodigo(),
             ),
           ),
-          onPressed: () {
-            setState(() => _modoRemocao = !_modoRemocao);
-            _solicitarFocoLeitura();
-          },
-          icon: Icon(
-            _modoRemocao
-                ? Icons.remove_circle_outline
-                : Icons.add_circle_outline,
+          const SizedBox(width: 10),
+          IconButton(
+            tooltip: _modoRemocao
+                ? 'Voltar ao modo leitura'
+                : 'Ativar remoção por leitura',
+            isSelected: _modoRemocao,
+            style: IconButton.styleFrom(
+              side: BorderSide(color: cores.hairline),
+              minimumSize: const Size.square(SivDimensoes.alvoToqueMinimo + 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(SivDimensoes.raio),
+              ),
+            ),
+            onPressed: () {
+              setState(() => _modoRemocao = !_modoRemocao);
+              _solicitarFocoLeitura();
+            },
+            icon: Icon(
+              _modoRemocao
+                  ? Icons.remove_circle_outline
+                  : Icons.add_circle_outline,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1203,7 +1211,6 @@ class _VendaPageState extends State<VendaPage> {
     _leitorController.limpar();
     _ultimoOrcamentoSalvoContador = 0;
     _ultimaLeituraEm = null;
-    SivPageAcoes.limpar();
     context.read<VendaBloc>().add(const VendaResetSolicitado());
     _solicitarFocoLeitura();
   }
@@ -1253,32 +1260,4 @@ class _VendaPageState extends State<VendaPage> {
       ),
     );
   }
-}
-
-class _IconeCodigoDeBarras extends CustomPainter {
-  _IconeCodigoDeBarras(this.cor);
-
-  final Color cor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = cor
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-    final sx = size.width / 24;
-    final sy = size.height / 24;
-    final alturasCheias = [0.0, 0.0, 0.0, 0.0, 4.0, 0.0];
-    final xs = [3.0, 6.0, 9.5, 13.0, 16.5, 20.0];
-    for (var i = 0; i < xs.length; i++) {
-      final x = xs[i] * sx;
-      final topo = 5.0 * sy;
-      final base = (19.0 - alturasCheias[i]) * sy;
-      canvas.drawLine(Offset(x, topo), Offset(x, base), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _IconeCodigoDeBarras oldDelegate) =>
-      oldDelegate.cor != cor;
 }

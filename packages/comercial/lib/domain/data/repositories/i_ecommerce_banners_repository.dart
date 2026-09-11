@@ -9,6 +9,7 @@ abstract class IEcommerceBannersRepository {
     int ecommerceId, {
     required Uint8List bytes,
     required String nomeArquivo,
+    required EcommerceBannerDispositivo dispositivo,
     void Function(int enviado, int total)? onProgresso,
   });
 

@@ -67,6 +67,7 @@ class EcommerceBannersBloc extends Bloc<EcommerceBannersEvent, EcommerceBannersS
         ecommerceId,
         bytes: event.bytes,
         nomeArquivo: event.nomeArquivo,
+        dispositivo: event.dispositivo,
         onProgresso: (enviado, total) => emit(
           state.copyWith(
             enviando: true,
@@ -148,21 +149,36 @@ class EcommerceBannersBloc extends Bloc<EcommerceBannersEvent, EcommerceBannersS
     if (ecommerceId == null) return;
 
     final banners = List<EcommerceBanner>.from(state.banners);
-    final indice = banners.indexWhere((b) => b.id == event.id);
+    final atualIndice = banners.indexWhere((b) => b.id == event.id);
+    if (atualIndice == -1) return;
+    final atualBanner = banners[atualIndice];
+
+    // Ordem é independente por dispositivo -- vizinho tem que ser do mesmo
+    // dispositivo, senão troca ordem entre sequências diferentes.
+    final doMesmoDispositivo =
+        banners.where((b) => b.dispositivo == atualBanner.dispositivo).toList()
+          ..sort((a, b) => a.ordem.compareTo(b.ordem));
+    final indice = doMesmoDispositivo.indexWhere((b) => b.id == event.id);
     final indiceVizinho = event.paraCima ? indice - 1 : indice + 1;
-    if (indice == -1 || indiceVizinho < 0 || indiceVizinho >= banners.length) {
+    if (indiceVizinho < 0 || indiceVizinho >= doMesmoDispositivo.length) {
       return;
     }
 
-    final atual = banners[indice];
-    final vizinho = banners[indiceVizinho];
+    final atual = doMesmoDispositivo[indice];
+    final vizinho = doMesmoDispositivo[indiceVizinho];
     final ordemAtual = atual.ordem;
     final ordemVizinho = vizinho.ordem;
 
-    banners[indice] = atual.copyWith(ordem: ordemVizinho);
-    banners[indiceVizinho] = vizinho.copyWith(ordem: ordemAtual);
-    banners.sort((a, b) => a.ordem.compareTo(b.ordem));
-    emit(state.copyWith(banners: banners));
+    final atualizados = [
+      for (final b in banners)
+        if (b.id == atual.id)
+          atual.copyWith(ordem: ordemVizinho)
+        else if (b.id == vizinho.id)
+          vizinho.copyWith(ordem: ordemAtual)
+        else
+          b,
+    ]..sort((a, b) => a.ordem.compareTo(b.ordem));
+    emit(state.copyWith(banners: atualizados));
 
     try {
       await _atualizarBannerEcommerce.call(ecommerceId, atual.id, ordem: ordemVizinho);

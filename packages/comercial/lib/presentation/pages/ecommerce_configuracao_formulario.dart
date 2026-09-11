@@ -559,13 +559,53 @@ class _EcommerceBannersBloco extends StatelessWidget {
     return BlocProvider<EcommerceBannersBloc>(
       create: (_) => sl<EcommerceBannersBloc>()
         ..add(EcommerceBannersIniciou(ecommerceId: ecommerceId)),
-      child: const _EcommerceBannersCard(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: Builder(
+              builder: (context) => OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EcommerceBannerPreviewPage(
+                      banners: context.read<EcommerceBannersBloc>().state.banners,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.visibility_outlined, size: 18),
+                label: const Text('Visualizar no site'),
+              ),
+            ),
+          ),
+          const SizedBox(height: SivDimensoes.gapCards),
+          const _EcommerceBannersCard(
+            dispositivo: EcommerceBannerDispositivo.desktop,
+            titulo: 'Banners do site — Desktop',
+            ajudaResolucao: 'Recomendado: 1920x672px (proporção 20:7)',
+          ),
+          const SizedBox(height: SivDimensoes.gapCards),
+          const _EcommerceBannersCard(
+            dispositivo: EcommerceBannerDispositivo.mobile,
+            titulo: 'Banners do site — Mobile',
+            ajudaResolucao: 'Recomendado: 1080x720px (proporção 3:2)',
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _EcommerceBannersCard extends StatelessWidget {
-  const _EcommerceBannersCard();
+  final EcommerceBannerDispositivo dispositivo;
+  final String titulo;
+  final String ajudaResolucao;
+
+  const _EcommerceBannersCard({
+    required this.dispositivo,
+    required this.titulo,
+    required this.ajudaResolucao,
+  });
 
   Future<void> _adicionar(BuildContext context) async {
     final bloc = context.read<EcommerceBannersBloc>();
@@ -582,7 +622,13 @@ class _EcommerceBannersCard extends StatelessWidget {
       );
       return;
     }
-    bloc.add(EcommerceBannerAdicionou(bytes: arquivo.bytes, nomeArquivo: arquivo.nome));
+    bloc.add(
+      EcommerceBannerAdicionou(
+        bytes: arquivo.bytes,
+        nomeArquivo: arquivo.nome,
+        dispositivo: dispositivo,
+      ),
+    );
   }
 
   Future<void> _excluir(BuildContext context, int id) async {
@@ -613,6 +659,9 @@ class _EcommerceBannersCard extends StatelessWidget {
           SivAviso.mostrar(context, mensagem: state.erro!, tipo: SivAvisoTipo.falha);
         },
         builder: (context, state) {
+          final banners = state.banners.where((b) => b.dispositivo == dispositivo).toList()
+            ..sort((a, b) => a.ordem.compareTo(b.ordem));
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -622,7 +671,7 @@ class _EcommerceBannersCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  Text('Banners do site', style: textos.rotulo),
+                  Text(titulo, style: textos.rotulo),
                   OutlinedButton.icon(
                     onPressed: state.enviando ? null : () => _adicionar(context),
                     icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
@@ -631,7 +680,7 @@ class _EcommerceBannersCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text('Arraste pra reordenar', style: textos.apoio),
+              Text(ajudaResolucao, style: textos.apoio),
               if (state.enviando) ...[
                 const SizedBox(height: 8),
                 LinearProgressIndicator(value: state.progressoEnvio, color: cores.aco),
@@ -639,19 +688,19 @@ class _EcommerceBannersCard extends StatelessWidget {
               const SizedBox(height: 12),
               if (state.step == EcommerceBannersStep.carregando)
                 const Center(child: CircularProgressIndicator.adaptive())
-              else if (state.banners.isEmpty)
+              else if (banners.isEmpty)
                 Text('Nenhum banner cadastrado.', style: textos.apoio)
               else
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
                   children: [
-                    for (var i = 0; i < state.banners.length; i++)
+                    for (var i = 0; i < banners.length; i++)
                       _CardBanner(
-                        banner: state.banners[i],
+                        banner: banners[i],
                         podeSubir: i > 0,
-                        podeDescer: i < state.banners.length - 1,
-                        onExcluir: () => _excluir(context, state.banners[i].id),
+                        podeDescer: i < banners.length - 1,
+                        onExcluir: () => _excluir(context, banners[i].id),
                       ),
                   ],
                 ),

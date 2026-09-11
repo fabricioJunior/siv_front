@@ -21,6 +21,7 @@ class _RepositorioFake implements IEcommerceBannersRepository {
     int ecommerceId, {
     required Uint8List bytes,
     required String nomeArquivo,
+    required EcommerceBannerDispositivo dispositivo,
     void Function(int enviado, int total)? onProgresso,
   }) =>
       throw UnimplementedError();
@@ -37,8 +38,24 @@ class _RepositorioFake implements IEcommerceBannersRepository {
 void main() {
   test('EcommerceBannerMoveu troca ordem com o vizinho de cima', () async {
     final repo = _RepositorioFake([
-      EcommerceBanner(id: 1, ecommerceId: 9, type: EcommerceBannerTipo.imagem, url: 'a', ordem: 1, ativo: true),
-      EcommerceBanner(id: 2, ecommerceId: 9, type: EcommerceBannerTipo.imagem, url: 'b', ordem: 2, ativo: true),
+      EcommerceBanner(
+        id: 1,
+        ecommerceId: 9,
+        type: EcommerceBannerTipo.imagem,
+        dispositivo: EcommerceBannerDispositivo.desktop,
+        url: 'a',
+        ordem: 1,
+        ativo: true,
+      ),
+      EcommerceBanner(
+        id: 2,
+        ecommerceId: 9,
+        type: EcommerceBannerTipo.imagem,
+        dispositivo: EcommerceBannerDispositivo.desktop,
+        url: 'b',
+        ordem: 2,
+        ativo: true,
+      ),
     ]);
     final bloc = EcommerceBannersBloc(
       RecuperarBannersEcommerce(repository: repo),

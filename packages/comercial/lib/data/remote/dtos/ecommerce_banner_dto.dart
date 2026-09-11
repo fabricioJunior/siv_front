@@ -8,6 +8,9 @@ class EcommerceBannerDto {
       type: json['type']?.toString().toLowerCase() == 'video'
           ? EcommerceBannerTipo.video
           : EcommerceBannerTipo.imagem,
+      dispositivo: json['dispositivo']?.toString().toLowerCase() == 'mobile'
+          ? EcommerceBannerDispositivo.mobile
+          : EcommerceBannerDispositivo.desktop,
       url: json['url']?.toString() ?? '',
       ordem: int.tryParse(json['ordem']?.toString() ?? '') ?? 0,
       ativo: json['ativo'] as bool? ?? true,

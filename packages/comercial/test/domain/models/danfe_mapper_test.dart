@@ -304,7 +304,7 @@ void main() {
         expect(dados.pagamentos.single.valor, 149.0);
       });
 
-      test('referenciaDescricao preenchida tem prioridade sobre referenciaNome', () {
+      test('usa referenciaNome mesmo com referenciaDescricao preenchida -- descricao e texto de marketing, nao vai na nota', () {
         final doc = documentoGenerico(itens: [
           {
             'produtoIdExterno': '1',
@@ -318,7 +318,7 @@ void main() {
 
         final dados = construirDanfeLayoutData(doc);
 
-        expect(dados.itens.single.descricao, 'CONJUNTO BRUNA MODAL POLO');
+        expect(dados.itens.single.descricao, 'CONJUNTO');
       });
     });
   });

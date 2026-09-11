@@ -156,10 +156,11 @@ List<DanfeItem> _itens(Map<String, dynamic>? webmaniaPayload) {
 
 /// Itens a partir do formato genérico (`documento.payload.itens`, presente
 /// em qualquer provider -- ver `IntegracaoFiscalService.buildPayload`).
-/// Campos batem com o que o backend monta pro romaneio (`referenciaNome`/
-/// `referenciaDescricao`, `valorUnitario`, `valorTotalLiquido`,
-/// `valorTotalDesconto`, `tamanhoNome` como unidade -- mesmo shape usado
-/// na montagem do XML da NFe, ver `sefaz-fiscal.gateway.ts`).
+/// Campos batem com o que o backend monta pro romaneio (`referenciaNome`,
+/// `valorUnitario`, `valorTotalLiquido`, `valorTotalDesconto`, `tamanhoNome`
+/// como unidade -- mesmo shape usado na montagem do XML da NFe, ver
+/// `sefaz-fiscal.gateway.ts`). Usa só `referenciaNome` -- `referenciaDescricao`
+/// e' o texto de marketing do e-commerce, nao deve aparecer na nota.
 List<DanfeItem> _itensGenerico(Map<String, dynamic>? payload) {
   final itens = payload?['itens'];
   if (itens is! List) return const [];
@@ -169,10 +170,7 @@ List<DanfeItem> _itensGenerico(Map<String, dynamic>? payload) {
     final valorTotal =
         (item['valorTotalLiquido'] as num?) ?? (valorUnitario * quantidade);
     final desconto = item['valorTotalDesconto'] as num?;
-    final descricaoCompleta = item['referenciaDescricao'] as String?;
-    final descricao = (descricaoCompleta?.isNotEmpty ?? false)
-        ? descricaoCompleta!
-        : (item['referenciaNome']?.toString() ?? '-');
+    final descricao = item['referenciaNome']?.toString() ?? '-';
     return DanfeItem(
       codigo: (item['produtoIdExterno'] ?? item['produtoId'])?.toString(),
       descricao: descricao,

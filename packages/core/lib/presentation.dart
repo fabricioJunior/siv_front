@@ -14,7 +14,6 @@ export 'presentation/siv_menu_lateral.dart';
 export 'presentation/siv_scaffold.dart';
 export 'presentation/siv_dialogo.dart';
 export 'presentation/siv_modal.dart';
-export 'presentation/siv_page_acoes.dart';
 export 'presentation/siv_page_fab.dart';
 export 'presentation/siv_page_titulo.dart';
 export 'permissoes/componente_controlado_wiget.dart';

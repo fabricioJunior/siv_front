@@ -62,15 +62,14 @@ class _EmpresaPageState extends State<EmpresaPage> {
   void dispose() {
     _bloc.close();
     _terminaisBloc.close();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
-  void _atualizarAcoesDaBarraDeTitulo(EmpresaState state) {
+  List<Widget> _acoesDaBarra(EmpresaState state) {
     final editando = state is EmpresaEditarEmProgresso;
     final salvando = state is EmpresaSalvarEmProgresso;
 
-    SivPageAcoes.definir([
+    return [
       if (editando)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -98,7 +97,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
             : const Icon(Icons.check, size: 18),
         label: const Text('Salvar empresa'),
       ),
-    ]);
+    ];
   }
 
   @override
@@ -120,7 +119,6 @@ class _EmpresaPageState extends State<EmpresaPage> {
           if (state is EmpresaSalvarSucesso) {
             SivAviso.mostrar(context, mensagem: 'Empresa salva.');
           }
-          _atualizarAcoesDaBarraDeTitulo(state);
         },
         buildWhen: (previous, current) =>
             previous is! EmpresaEditarEmProgresso,
@@ -150,17 +148,23 @@ class _EmpresaPageState extends State<EmpresaPage> {
               ),
             );
           }
-          return _conteudo(context, state.empresa);
+          return _conteudo(context, state);
         },
       ),
     );
   }
 
-  Widget _conteudo(BuildContext context, Empresa? empresa) {
+  Widget _conteudo(BuildContext context, EmpresaState state) {
+    final acoes = _acoesDaBarra(state);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _faixaResumo(context, empresa),
+        if (acoes.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+            child: Row(mainAxisAlignment: MainAxisAlignment.end, children: acoes),
+          ),
+        _faixaResumo(context, state.empresa),
         const SizedBox(height: SivDimensoes.gapCards),
         Expanded(
           child: Row(
@@ -173,7 +177,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
                   child: Form(
                     key: _formKey,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
-                    child: _secaoConteudo(context, empresa),
+                    child: _secaoConteudo(context, state.empresa),
                   ),
                 ),
               ),

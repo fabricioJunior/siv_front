@@ -76,16 +76,6 @@ class _PedidosPageState extends State<PedidosPage> {
         _bloc.add(PedidosCarregarMais());
       }
     });
-    SivPageAcoes.definir([
-      FilledButton.icon(
-        onPressed: () async {
-          await Navigator.pushNamed(context, '/pedido');
-          if (mounted) _bloc.add(PedidosIniciou());
-        },
-        icon: const Icon(Icons.add, size: 18),
-        label: const Text('Novo pedido'),
-      ),
-    ]);
   }
 
   @override
@@ -95,15 +85,21 @@ class _PedidosPageState extends State<PedidosPage> {
     _scrollController.dispose();
     _chipsScrollController.dispose();
     _bloc.close();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
   bool get _telaDesktop =>
       MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
 
-  // ponytail: "novo pedido" já acessível em qualquer largura via
-  // SivPageAcoes na barra de título (SivScaffold), sem FAB adicional.
+  Widget _botaoNovoPedido(BuildContext context) => FilledButton.icon(
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/pedido');
+          if (mounted) _bloc.add(PedidosIniciou());
+        },
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('Novo pedido'),
+      );
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PedidosBloc>.value(
@@ -114,6 +110,13 @@ class _PedidosPageState extends State<PedidosPage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [_botaoNovoPedido(context)],
+                ),
+              ),
               _buildBuscaEPeriodo(context, state, desktop: desktop),
               const SizedBox(height: 12),
               _buildChipsSituacao(context, state),

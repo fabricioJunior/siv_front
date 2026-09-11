@@ -91,7 +91,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _scrollController.dispose();
     _bloc.close();
     SivPageTitulo.limpar();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
@@ -160,22 +159,9 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
               }
             },
           ),
-          BlocListener<EcommerceReferenciasBloc, EcommerceReferenciasState>(
-            listenWhen: (previous, current) =>
-                previous.totalPublicados != current.totalPublicados ||
-                previous.processandoLote != current.processandoLote ||
-                previous.referencias.length != current.referencias.length,
-            listener: (context, state) => _atualizarAcoes(state),
-          ),
         ],
         child: BlocBuilder<EcommerceReferenciasBloc, EcommerceReferenciasState>(
           builder: (context, state) {
-            // SivPageAcoes é compartilhado/global -- EcommercesPage (que
-            // fica montada por trás, no shell) reafirma os botões dela em
-            // todo build próprio. Se essa página não reafirma os seus a
-            // cada build também, um rebuild da página de baixo (ex:
-            // resize de janela via MediaQuery) rouba a barra de volta.
-            _atualizarAcoes(state);
             if (state is EcommerceReferenciasCarregarEmProgresso ||
                 state is EcommerceReferenciasInitial) {
               return const Center(child: CircularProgressIndicator.adaptive());
@@ -214,6 +200,17 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_telaDesktop)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: SivDimensoes.gapCards),
+                        child: Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _acoesDaBarra(context, state),
+                        ),
+                      ),
                     _buildFiltros(context, state),
                     const SizedBox(height: SivDimensoes.gapCards),
                     if (state.processandoLote)
@@ -267,9 +264,9 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                   ? _buildBarraSelecao(context, state)
                   : (!_telaDesktop
                       // Fora do modo seleção -- no desktop "Publicar aptas"
-                      // já vive em SivPageAcoes (cabe no topo); no mobile
-                      // essas ações dividem espaço com o título e ficam
-                      // pouco descobríveis, daí o rodapé complementar.
+                      // já vive na faixa de ações no topo; no mobile essas
+                      // ações ficam pouco descobríveis, daí o rodapé
+                      // complementar.
                       ? _buildRodapeFixo(context, state)
                       : null),
             );
@@ -279,21 +276,16 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     );
   }
 
-  void _atualizarAcoes(EcommerceReferenciasState state) {
-    // Mobile: barra de título não tem espaço pra 3 botões (mesmo com Wrap,
-    // fica poluído numa tela estreita) -- some com a barra de ações e usa
-    // FAB só pra a ação primária (adicionar). "Publicar aptas" continua
-    // acessível no rodapé fixo (_buildRodapeFixo) e na barra de seleção.
-    if (!_telaDesktop) {
-      SivPageAcoes.definir(const []);
-      return;
-    }
-
+  // Chamado só com _telaDesktop == true -- no mobile a ação primária vira
+  // FAB, "Publicar aptas" continua acessível no rodapé fixo e na barra de
+  // seleção.
+  List<Widget> _acoesDaBarra(
+      BuildContext context, EcommerceReferenciasState state) {
     final podeDespublicar = state.totalPublicados != null
         ? state.totalPublicados! > 0
         : state.referencias.any((r) => !r.rascunho);
     final aptasIds = _idsAptasParaPublicar(state);
-    SivPageAcoes.definir([
+    return [
       OutlinedButton.icon(
         onPressed: aptasIds.isEmpty || state.processandoLote
             ? null
@@ -301,7 +293,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         icon: const Icon(Icons.publish_outlined, size: 18),
         label: Text('Publicar aptas (${aptasIds.length})'),
       ),
-      const SizedBox(width: 8),
       OutlinedButton.icon(
         onPressed: podeDespublicar && !state.processandoLote
             ? () => _despublicarTodas(context)
@@ -309,13 +300,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         icon: const Icon(Icons.visibility_off_outlined, size: 18),
         label: const Text('Despublicar todas'),
       ),
-      const SizedBox(width: 8),
       FilledButton.icon(
         onPressed: () => _adicionarReferencias(context),
         icon: const Icon(Icons.add, size: 18),
         label: const Text('Adicionar referências'),
       ),
-    ]);
+    ];
   }
 
   Widget _buildFiltros(BuildContext context, EcommerceReferenciasState state) {
@@ -586,6 +576,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                         referencia.referenciaNome ??
                             'Referência #${referencia.referenciaId}',
                         style: textos.corpo,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(

@@ -34,7 +34,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
   void dispose() {
     _bloc.close();
     SivPageTitulo.limpar();
-    SivPageAcoes.limpar();
     super.dispose();
   }
 
@@ -48,7 +47,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
       value: _bloc,
       child: BlocBuilder<EcommercesBloc, EcommercesState>(
         builder: (context, state) {
-          _atualizarAcoes(context, state);
           final mobile = MediaQuery.sizeOf(context).width <
               SivDimensoes.breakpointMenuDrawer;
           return Padding(
@@ -56,9 +54,27 @@ class _EcommercesPageState extends State<EcommercesPage> {
               horizontal: SivDimensoes.paginaHorizontal,
               vertical: SivDimensoes.paginaVertical,
             ),
-            child: mobile
-                ? _buildConteudoMobile(context, state)
-                : _buildConteudoDesktop(context, state),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _acoesDaBarra(context, state),
+                  ),
+                ),
+                Expanded(
+                  child: mobile
+                      ? _buildConteudoMobile(context, state)
+                      : _buildConteudoDesktop(context, state),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -97,14 +113,14 @@ class _EcommercesPageState extends State<EcommercesPage> {
     );
   }
 
-  void _atualizarAcoes(BuildContext context, EcommercesState state) {
+  List<Widget> _acoesDaBarra(BuildContext context, EcommercesState state) {
     final selecionados = _criandoNovo
         ? const <Ecommerce>[]
         : state.ecommerces.where((e) => e.id == _selecionadoId).toList();
     final selecionado = selecionados.isEmpty ? null : selecionados.first;
     final chave = _criandoNovo ? 'novo' : (selecionado?.id ?? 'novo');
 
-    SivPageAcoes.definir([
+    return [
       Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -117,7 +133,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
           Text('Mostrar excluídos', style: context.sivTextos.corpo),
         ],
       ),
-      const SizedBox(width: 12),
       if (selecionado != null && !selecionado.apagado)
         OutlinedButton.icon(
           onPressed: () => _confirmarExclusao(context, selecionado),
@@ -126,7 +141,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
           label: Text('Excluir canal',
               style: TextStyle(color: context.sivColors.vinho)),
         ),
-      const SizedBox(width: 8),
       OutlinedButton.icon(
         onPressed: () => setState(() {
           _criandoNovo = true;
@@ -135,7 +149,6 @@ class _EcommercesPageState extends State<EcommercesPage> {
         icon: const Icon(Icons.add, size: 18),
         label: const Text('Novo e-commerce'),
       ),
-      const SizedBox(width: 8),
       FilledButton.icon(
         onPressed: (_criandoNovo || selecionado != null)
             ? () => _controladorPara(chave).salvar()
@@ -143,7 +156,7 @@ class _EcommercesPageState extends State<EcommercesPage> {
         icon: const Icon(Icons.check, size: 18),
         label: const Text('Salvar configuração'),
       ),
-    ]);
+    ];
   }
 
   Widget _buildLista(BuildContext context, EcommercesState state) {

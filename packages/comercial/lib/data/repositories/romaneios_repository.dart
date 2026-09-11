@@ -6,11 +6,13 @@ class RomaneiosRepository implements IRomaneiosRepository {
   final IReceberRomaneioNoCaixaRemoteDataSource caixasRemoteDataSource;
   final ICorrigirFormaDePagamentoRemoteDataSource
       corrigirFormaDePagamentoRemoteDataSource;
+  final ICriarVendaCompletaRemoteDataSource criarVendaCompletaRemoteDataSource;
 
   RomaneiosRepository({
     required this.remoteDataSource,
     required this.caixasRemoteDataSource,
     required this.corrigirFormaDePagamentoRemoteDataSource,
+    required this.criarVendaCompletaRemoteDataSource,
   });
 
   @override
@@ -133,6 +135,43 @@ class RomaneiosRepository implements IRomaneiosRepository {
       caixaId: caixaId,
       romaneioId: romaneioId,
       pagamentos: pagamentos,
+    );
+  }
+
+  @override
+  Future<Romaneio> criarVendaCompleta({
+    required int caixaId,
+    int? pessoaId,
+    required int funcionarioId,
+    required int tabelaPrecoId,
+    required List<RomaneioItem> itens,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    List<Map<String, dynamic>> descontosPromocao = const [],
+    Map<String, dynamic>? cupom,
+    double? valorTaxaEntrega,
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
+    bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
+  }) {
+    return criarVendaCompletaRemoteDataSource.criarVendaCompleta(
+      caixaId: caixaId,
+      pessoaId: pessoaId,
+      funcionarioId: funcionarioId,
+      tabelaPrecoId: tabelaPrecoId,
+      itens: itens,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+      descontosItens: descontosItens,
+      descontosPromocao: descontosPromocao,
+      cupom: cupom,
+      valorTaxaEntrega: valorTaxaEntrega,
+      incluirCpfNaNota: incluirCpfNaNota,
+      cpfNaNota: cpfNaNota,
+      pontuarFidelidade: pontuarFidelidade,
+      enviarNotaPorEmail: enviarNotaPorEmail,
+      emailNota: emailNota,
     );
   }
 }

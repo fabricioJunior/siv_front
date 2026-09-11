@@ -242,6 +242,33 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
   }
 }
 
+class StubCriarVendaCompleta implements CriarVendaCompleta {
+  final Future<Romaneio> Function() onCall;
+
+  StubCriarVendaCompleta(this.onCall);
+
+  @override
+  Future<Romaneio> call({
+    required int caixaId,
+    int? pessoaId,
+    required int funcionarioId,
+    required int tabelaPrecoId,
+    required List<RomaneioItem> itens,
+    required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+    List<Map<String, dynamic>> descontosItens = const [],
+    List<Map<String, dynamic>> descontosPromocao = const [],
+    Map<String, dynamic>? cupom,
+    double? valorTaxaEntrega,
+    bool incluirCpfNaNota = true,
+    String cpfNaNota = '',
+    bool pontuarFidelidade = false,
+    bool enviarNotaPorEmail = false,
+    String emailNota = '',
+  }) {
+    return onCall();
+  }
+}
+
 class FakeAcessoGlobalSessao implements IAcessoGlobalSessao {
   @override
   final int? caixaIdDaSessao;
@@ -325,6 +352,7 @@ void main() {
           throw Exception('erro ao receber no caixa');
         },
       ),
+      StubCriarVendaCompleta(() async => throw UnimplementedError()),
       const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
       RecuperarCaixaAberto(repository: StubCaixaRepository()),
       ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
@@ -435,6 +463,7 @@ void main() {
             expect(romaneioId, 456);
           },
         ),
+        StubCriarVendaCompleta(() async => throw UnimplementedError()),
         const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
         RecuperarCaixaAberto(repository: StubCaixaRepository()),
         ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),

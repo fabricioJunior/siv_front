@@ -603,7 +603,15 @@ class _EcommerceBannersCard extends StatelessWidget {
     final cores = context.sivColors;
 
     return SivCard(
-      child: BlocBuilder<EcommerceBannersBloc, EcommerceBannersState>(
+      // BlocBuilder sozinho nunca mostrava `state.erro` pro usuário -- falha ao
+      // enviar/excluir/reordenar banner ficava muda (sem toast, sem log visível),
+      // parecia "não fez nada" mesmo quando o upload realmente falhava.
+      child: BlocConsumer<EcommerceBannersBloc, EcommerceBannersState>(
+        listenWhen: (previous, current) =>
+            current.erro != null && current.erro!.isNotEmpty && current.erro != previous.erro,
+        listener: (context, state) {
+          SivAviso.mostrar(context, mensagem: state.erro!, tipo: SivAvisoTipo.falha);
+        },
         builder: (context, state) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

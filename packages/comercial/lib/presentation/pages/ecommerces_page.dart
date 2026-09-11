@@ -335,11 +335,15 @@ class _CardCanal extends StatelessWidget {
                               child: const Text('Restaurar')),
                       ],
                     ),
-                    if (ecommerce.subtitulo != null)
+                    if (ecommerce.id != null || ecommerce.subtitulo != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          ecommerce.subtitulo!,
+                          [
+                            if (ecommerce.id != null) '#${ecommerce.id}',
+                            if (ecommerce.subtitulo != null)
+                              ecommerce.subtitulo!,
+                          ].join(' · '),
                           style: textos.apoio.copyWith(fontSize: 11.5),
                         ),
                       ),

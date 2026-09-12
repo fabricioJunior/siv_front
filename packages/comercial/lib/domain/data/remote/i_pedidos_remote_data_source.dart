@@ -10,6 +10,11 @@ abstract class IPedidosRemoteDataSource {
     DateTime? dataInicial,
     DateTime? dataFinal,
   });
+  Future<ContagemPedidosPorSituacao> contarPorSituacao({
+    String? searchTerm,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  });
   Future<Pedido> recuperarPedido(int id);
   Future<Pedido> criarPedido(Pedido pedido);
   Future<Pedido> atualizarPedido(Pedido pedido);

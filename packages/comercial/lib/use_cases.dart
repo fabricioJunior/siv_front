@@ -21,6 +21,7 @@ export 'domain/use_cases/recuperar_itens_romaneio.dart';
 export 'domain/use_cases/recuperar_itens_devolvidos_romaneio.dart';
 export 'domain/use_cases/recuperar_pedido.dart';
 export 'domain/use_cases/recuperar_pedidos.dart';
+export 'domain/use_cases/contar_pedidos_por_situacao.dart';
 export 'domain/use_cases/recuperar_romaneio.dart';
 export 'domain/use_cases/recuperar_romaneios.dart';
 export 'domain/use_cases/remover_item_romaneio.dart';

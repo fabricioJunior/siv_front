@@ -1,3 +1,4 @@
+export 'domain/models/contagem_pedidos_por_situacao.dart';
 export 'domain/models/pedido.dart';
 export 'domain/models/pedido_item.dart';
 export 'domain/models/pedido_pagamento.dart';

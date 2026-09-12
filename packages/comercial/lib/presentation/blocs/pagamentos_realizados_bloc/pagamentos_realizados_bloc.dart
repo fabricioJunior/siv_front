@@ -1081,11 +1081,18 @@ class PagamentosRealizadosBloc
     }
   }
 
-  // Para cada produto, se ele tiver exatamente 1 opcao elegivel nao-cupom
-  // (cupom sempre exige codigo digitado, fluxo manual), aplica ela
-  // automaticamente nesse produto -- independente de quantas promocoes
-  // distintas existem no carrinho como um todo. Produto com 2+ opcoes
-  // elegiveis simultaneas (conflito real) continua exigindo escolha manual.
+  // Para cada produto, se ele tiver exatamente 1 opcao elegivel nao-cupom,
+  // aplica ela automaticamente nesse produto -- independente de quantas
+  // promocoes distintas existem no carrinho como um todo. Produto com 2+
+  // opcoes elegiveis simultaneas (conflito real) continua exigindo escolha
+  // manual (dialog de promocoes globais, que so lista nao-cupom).
+  //
+  // Cupom cai no mesmo auto-apply quando o produto NAO tem nenhuma opcao
+  // nao-cupom (senao a promoção normal, que tem seletor manual pra resolver
+  // conflito, ganharia prioridade) -- nao existe em lugar nenhum da tela um
+  // seletor manual pra cupom por item (o campo de código só valida o cupom,
+  // ver _CupomField/_onCupomInformado), então sem isso aqui o cupom validava
+  // com sucesso e nunca descontava nada.
   // Defensivo: nunca sobrescreve item que ja tem promocao escolhida ou
   // desconto manual ja aplicado.
   Map<int, OpcaoElegivel> _autoAplicarPromocaoUnica(
@@ -1102,9 +1109,16 @@ class PagamentosRealizadosBloc
 
       final naoCupom =
           entrada.value.where((opcao) => !opcao.ehCupom).toList();
-      if (naoCupom.length != 1) continue;
+      if (naoCupom.length == 1) {
+        resultado[produtoId] = naoCupom.first;
+        continue;
+      }
+      if (naoCupom.isNotEmpty) continue;
 
-      resultado[produtoId] = naoCupom.first;
+      final cupons = entrada.value.where((opcao) => opcao.ehCupom).toList();
+      if (cupons.length == 1) {
+        resultado[produtoId] = cupons.first;
+      }
     }
 
     return resultado;

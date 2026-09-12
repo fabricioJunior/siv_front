@@ -19,6 +19,7 @@ class PromocaoState extends Equatable {
   final List<ItemComboKit>? comboKit;
   final int? quantidadeLeva;
   final int? quantidadePaga;
+  final List<PromocaoFaixa>? faixas;
   final int? limiteUnidadesVendidas;
   final int? limiteUsosPorCliente;
   final PeriodoLimiteCliente? periodoLimiteCliente;
@@ -51,6 +52,7 @@ class PromocaoState extends Equatable {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.faixas,
     this.limiteUnidadesVendidas,
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,
@@ -87,6 +89,7 @@ class PromocaoState extends Equatable {
         comboKit = origem.comboKit,
         quantidadeLeva = origem.quantidadeLeva,
         quantidadePaga = origem.quantidadePaga,
+        faixas = origem.faixas,
         limiteUnidadesVendidas = origem.limiteUnidadesVendidas,
         limiteUsosPorCliente = origem.limiteUsosPorCliente,
         periodoLimiteCliente = origem.periodoLimiteCliente,
@@ -117,6 +120,7 @@ class PromocaoState extends Equatable {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<PromocaoFaixa>? faixas,
     bool limparEscopo = false,
     int? limiteUnidadesVendidas,
     int? limiteUsosPorCliente,
@@ -150,6 +154,7 @@ class PromocaoState extends Equatable {
       comboKit: limparEscopo ? null : (comboKit ?? this.comboKit),
       quantidadeLeva: limparEscopo ? null : (quantidadeLeva ?? this.quantidadeLeva),
       quantidadePaga: limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
+      faixas: limparEscopo ? null : (faixas ?? this.faixas),
       limiteUnidadesVendidas:
           limiteUnidadesVendidas ?? this.limiteUnidadesVendidas,
       limiteUsosPorCliente: limiteUsosPorCliente ?? this.limiteUsosPorCliente,
@@ -188,6 +193,7 @@ class PromocaoState extends Equatable {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        faixas,
         limiteUnidadesVendidas,
         limiteUsosPorCliente,
         periodoLimiteCliente,

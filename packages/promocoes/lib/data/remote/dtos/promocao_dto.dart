@@ -42,6 +42,8 @@ class PromocaoDto implements Promocao {
   @override
   final int? quantidadePaga;
   @override
+  final List<PromocaoFaixa>? faixas;
+  @override
   final int? limiteUnidadesVendidas;
   @override
   final int unidadesVendidas;
@@ -84,6 +86,7 @@ class PromocaoDto implements Promocao {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.faixas,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
     this.limiteUsosPorCliente,
@@ -122,6 +125,9 @@ class PromocaoDto implements Promocao {
           .toList(),
       quantidadeLeva: (json['quantidadeLeva'] as num?)?.toInt(),
       quantidadePaga: (json['quantidadePaga'] as num?)?.toInt(),
+      faixas: (json['faixas'] as List<dynamic>?)
+          ?.map((e) => PromocaoFaixa.fromJson(e as Map<String, dynamic>))
+          .toList(),
       limiteUnidadesVendidas:
           (json['limiteUnidadesVendidas'] as num?)?.toInt(),
       unidadesVendidas: (json['unidadesVendidas'] as num?)?.toInt() ?? 0,
@@ -164,6 +170,7 @@ class PromocaoDto implements Promocao {
       comboKit: promocao.comboKit,
       quantidadeLeva: promocao.quantidadeLeva,
       quantidadePaga: promocao.quantidadePaga,
+      faixas: promocao.faixas,
       limiteUnidadesVendidas: promocao.limiteUnidadesVendidas,
       unidadesVendidas: promocao.unidadesVendidas,
       limiteUsosPorCliente: promocao.limiteUsosPorCliente,
@@ -201,6 +208,8 @@ class PromocaoDto implements Promocao {
         'comboKit': comboKit!.map((item) => item.toJson()).toList(),
       if (quantidadeLeva != null) 'quantidadeLeva': quantidadeLeva,
       if (quantidadePaga != null) 'quantidadePaga': quantidadePaga,
+      if (faixas != null)
+        'faixas': faixas!.map((faixa) => faixa.toJson()).toList(),
       if (limiteUnidadesVendidas != null)
         'limiteUnidadesVendidas': limiteUnidadesVendidas,
       if (limiteUsosPorCliente != null)
@@ -239,6 +248,7 @@ class PromocaoDto implements Promocao {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,
         limiteUsosPorCliente,

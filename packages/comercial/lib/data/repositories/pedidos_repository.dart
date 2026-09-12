@@ -86,6 +86,19 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<ContagemPedidosPorSituacao> contarPorSituacao({
+    String? searchTerm,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  }) {
+    return remoteDataSource.contarPorSituacao(
+      searchTerm: searchTerm,
+      dataInicial: dataInicial,
+      dataFinal: dataFinal,
+    );
+  }
+
+  @override
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
     required int formaDePagamentoId,

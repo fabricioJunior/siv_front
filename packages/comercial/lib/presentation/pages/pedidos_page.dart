@@ -242,6 +242,14 @@ class _PedidosPageState extends State<PedidosPage> {
     }).length;
   }
 
+  int? _contarSituacaoDaContagem(
+    ContagemPedidosPorSituacao? contagem,
+    String filtro,
+  ) {
+    if (contagem == null) return null;
+    return filtro == 'pago' ? contagem.pago : contagem.contar(filtro);
+  }
+
   // Usuário não descobre sozinho que dá pra arrastar a lista com o mouse (drag-to-scroll não
   // vem habilitado por padrão pra ponteiro de mouse no Flutter, só toque/trackpad) -- habilita
   // via ScrollConfiguration e soma botões de seta como alternativa explícita e descobrível.
@@ -280,7 +288,8 @@ class _PedidosPageState extends State<PedidosPage> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   _ChipSituacao(
-                    label: 'Todos (${state.pedidos.length})',
+                    label:
+                        'Todos (${state.contagem?.total ?? state.pedidos.length})',
                     selecionado: state.situacoesFiltro.isEmpty,
                     onTap: () =>
                         _bloc.add(PedidosFiltroSituacaoAlterado(const {})),
@@ -289,8 +298,8 @@ class _PedidosPageState extends State<PedidosPage> {
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: _ChipSituacao(
-                        label:
-                            '${_labelFiltroSituacao(situacao)} (${_contarSituacao(state.pedidos, situacao)})',
+                        label: '${_labelFiltroSituacao(situacao)} '
+                            '(${_contarSituacaoDaContagem(state.contagem, situacao) ?? _contarSituacao(state.pedidos, situacao)})',
                         selecionado: state.situacoesFiltro.contains(situacao),
                         onTap: () {
                           final atualizado =

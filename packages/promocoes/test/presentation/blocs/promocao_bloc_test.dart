@@ -201,4 +201,96 @@ void main() {
       );
     },
   );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'bloqueia salvar de faixaQuantidade com menos de 2 faixas',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo faixas',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          tipoEscopo: TipoEscopo.faixaQuantidade,
+          faixas: const [PromocaoFaixa(quantidadeMinima: 2, valorDesconto: 10)],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    skip: 3,
+    expect: () => [
+      isA<PromocaoState>().having(
+        (s) => s.step,
+        'step',
+        PromocaoStep.validacaoInvalida,
+      ),
+    ],
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'bloqueia salvar de faixaQuantidade com quantidadeMinima duplicada',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo faixas',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          tipoEscopo: TipoEscopo.faixaQuantidade,
+          faixas: const [
+            PromocaoFaixa(quantidadeMinima: 2, valorDesconto: 10),
+            PromocaoFaixa(quantidadeMinima: 2, valorDesconto: 15),
+          ],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    skip: 3,
+    expect: () => [
+      isA<PromocaoState>().having(
+        (s) => s.step,
+        'step',
+        PromocaoStep.validacaoInvalida,
+      ),
+    ],
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'salva faixaQuantidade valida',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo faixas',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          tipoEscopo: TipoEscopo.faixaQuantidade,
+          faixas: const [
+            PromocaoFaixa(quantidadeMinima: 2, valorDesconto: 10),
+            PromocaoFaixa(quantidadeMinima: 3, valorDesconto: 15),
+          ],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    verify: (bloc) {
+      expect(bloc.state.step, PromocaoStep.criado);
+      expect(bloc.state.faixas, const [
+        PromocaoFaixa(quantidadeMinima: 2, valorDesconto: 10),
+        PromocaoFaixa(quantidadeMinima: 3, valorDesconto: 15),
+      ]);
+    },
+  );
 }

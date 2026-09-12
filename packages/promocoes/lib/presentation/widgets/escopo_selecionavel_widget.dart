@@ -13,10 +13,12 @@ class EscopoSelecionavelWidget extends StatefulWidget {
   final List<ItemComboKit> comboKitInicial;
   final int? quantidadeLevaInicial;
   final int? quantidadePagaInicial;
+  final List<PromocaoFaixa> faixasInicial;
   final ValueChanged<List<int>> onReferenciaIdsChanged;
   final ValueChanged<List<ItemComboKit>> onComboKitChanged;
   final ValueChanged<int?> onQuantidadeLevaChanged;
   final ValueChanged<int?> onQuantidadePagaChanged;
+  final ValueChanged<List<PromocaoFaixa>> onFaixasChanged;
 
   const EscopoSelecionavelWidget({
     super.key,
@@ -25,10 +27,12 @@ class EscopoSelecionavelWidget extends StatefulWidget {
     this.comboKitInicial = const [],
     this.quantidadeLevaInicial,
     this.quantidadePagaInicial,
+    this.faixasInicial = const [],
     required this.onReferenciaIdsChanged,
     required this.onComboKitChanged,
     required this.onQuantidadeLevaChanged,
     required this.onQuantidadePagaChanged,
+    required this.onFaixasChanged,
   });
 
   @override
@@ -38,6 +42,7 @@ class EscopoSelecionavelWidget extends StatefulWidget {
 
 class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
   late List<_ComboKitLinha> _linhasComboKit;
+  late List<_FaixaLinha> _linhasFaixa;
   late List<int> _referenciaIds;
   int _referenciaSeletorVersao = 0;
 
@@ -49,6 +54,14 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
           (item) => _ComboKitLinha(
             referenciaId: item.referenciaId,
             quantidade: item.quantidadeExigida,
+          ),
+        )
+        .toList();
+    _linhasFaixa = widget.faixasInicial
+        .map(
+          (faixa) => _FaixaLinha(
+            quantidadeMinima: faixa.quantidadeMinima,
+            valorDesconto: faixa.valorDesconto,
           ),
         )
         .toList();
@@ -91,6 +104,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
         return _buildLevePague(context);
       case TipoEscopo.comboKit:
         return _buildComboKit(context);
+      case TipoEscopo.faixaQuantidade:
+        return _buildFaixaQuantidade(context);
     }
   }
 
@@ -212,6 +227,98 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
     );
   }
 
+  Widget _buildFaixaQuantidade(BuildContext context) {
+    final linhasOrdenadas = List<_FaixaLinha>.from(_linhasFaixa)
+      ..sort(
+        (a, b) => (a.quantidadeMinima ?? 0).compareTo(b.quantidadeMinima ?? 0),
+      );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.multipla,
+          idReferenciasSelecionadasIniciais: widget.referenciaIdsIniciais,
+          titulo: 'Referências elegíveis (opcional -- vazio aplica no '
+              'carrinho inteiro)',
+          onReferenciaChanged: (referencias) => widget.onReferenciaIdsChanged(
+            referencias
+                .where((referencia) => referencia.id != null)
+                .map((referencia) => referencia.id!)
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text('Faixas progressivas', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        for (final linha in linhasOrdenadas)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: linha.quantidadeMinima?.toString() ?? '',
+                    decoration:
+                        const InputDecoration(labelText: 'Quantidade mínima'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      linha.quantidadeMinima = int.tryParse(value);
+                      _notificarFaixas();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: linha.valorDesconto?.toString() ?? '',
+                    decoration: const InputDecoration(labelText: 'Desconto'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (value) {
+                      linha.valorDesconto = double.tryParse(value);
+                      _notificarFaixas();
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () {
+                    setState(() => _linhasFaixa.remove(linha));
+                    _notificarFaixas();
+                  },
+                ),
+              ],
+            ),
+          ),
+        OutlinedButton.icon(
+          onPressed: () => setState(() => _linhasFaixa.add(_FaixaLinha())),
+          icon: const Icon(Icons.add),
+          label: const Text('Adicionar faixa'),
+        ),
+      ],
+    );
+  }
+
+  void _notificarFaixas() {
+    final faixas = _linhasFaixa
+        .where(
+          (linha) =>
+              linha.quantidadeMinima != null &&
+              linha.quantidadeMinima! > 0 &&
+              linha.valorDesconto != null &&
+              linha.valorDesconto! > 0,
+        )
+        .map(
+          (linha) => PromocaoFaixa(
+            quantidadeMinima: linha.quantidadeMinima!,
+            valorDesconto: linha.valorDesconto!,
+          ),
+        )
+        .toList();
+    widget.onFaixasChanged(faixas);
+  }
+
   void _notificarComboKit() {
     final itens = _linhasComboKit
         .where(
@@ -238,6 +345,15 @@ class _ComboKitLinha {
   int? quantidade;
 
   _ComboKitLinha({this.referenciaId, this.quantidade = 1});
+}
+
+// Estado efemero de UI enquanto a faixa e montada -- so vira PromocaoFaixa
+// (imutavel) quando quantidadeMinima e valorDesconto estao preenchidos.
+class _FaixaLinha {
+  int? quantidadeMinima;
+  double? valorDesconto;
+
+  _FaixaLinha({this.quantidadeMinima, this.valorDesconto});
 }
 
 // Dialogo de selecao em massa: escolhe categorias, mostra previa com

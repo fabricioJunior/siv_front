@@ -26,6 +26,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final List<ItemComboKit>? comboKit;
   final int? quantidadeLeva;
   final int? quantidadePaga;
+  final List<PromocaoFaixa>? faixas;
   final int? limiteUnidadesVendidas;
   final int? limiteUsosPorCliente;
   final PeriodoLimiteCliente? periodoLimiteCliente;
@@ -57,6 +58,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.faixas,
     this.limiteUnidadesVendidas,
     this.limiteUsosPorCliente,
     this.periodoLimiteCliente,

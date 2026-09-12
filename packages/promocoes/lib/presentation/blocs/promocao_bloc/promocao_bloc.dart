@@ -94,6 +94,7 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         comboKit: event.comboKit,
         quantidadeLeva: event.quantidadeLeva,
         quantidadePaga: event.quantidadePaga,
+        faixas: event.faixas,
         limparEscopo: event.limparEscopo,
         limiteUnidadesVendidas: event.limiteUnidadesVendidas,
         limiteUsosPorCliente: event.limiteUsosPorCliente,
@@ -205,6 +206,7 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         comboKit: state.comboKit,
         quantidadeLeva: state.quantidadeLeva,
         quantidadePaga: state.quantidadePaga,
+        faixas: state.faixas,
         limiteUnidadesVendidas: state.limiteUnidadesVendidas,
         unidadesVendidas: state.promocao?.unidadesVendidas ?? 0,
         limiteUsosPorCliente: state.limiteUsosPorCliente,
@@ -283,6 +285,16 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         }
         if (state.quantidadePaga == null || state.quantidadePaga! <= 0) {
           return 'Informe a quantidade que o cliente paga.';
+        }
+        return null;
+      case TipoEscopo.faixaQuantidade:
+        if (state.faixas == null || state.faixas!.length < 2) {
+          return 'Cadastre pelo menos 2 faixas.';
+        }
+        final quantidades =
+            state.faixas!.map((f) => f.quantidadeMinima).toSet();
+        if (quantidades.length != state.faixas!.length) {
+          return 'Não pode haver faixas com a mesma quantidade mínima.';
         }
         return null;
     }

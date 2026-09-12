@@ -2299,6 +2299,16 @@ class _PedidoPageState extends State<PedidoPage> {
                   OutlinedButton.icon(
                     onPressed: carregando
                         ? null
+                        : () =>
+                            context.read<PedidoBloc>().add(PedidoEmbalou()),
+                    icon: const Icon(Icons.inventory_2_outlined),
+                    label: const Text('Marcar embalado'),
+                  ),
+                if (state.modalidadeEntrega == 'entrega' &&
+                    state.pedido?.situacaoEntrega == 'embalado')
+                  OutlinedButton.icon(
+                    onPressed: carregando
+                        ? null
                         : () => context
                             .read<PedidoBloc>()
                             .add(PedidoEntregadorChamou()),

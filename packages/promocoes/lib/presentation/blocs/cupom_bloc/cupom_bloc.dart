@@ -228,6 +228,9 @@ class CupomBloc extends Bloc<CupomEvent, CupomState> {
           return 'Informe a quantidade que o cliente paga.';
         }
         return null;
+      case TipoEscopo.faixaQuantidade:
+        // Cupom nao oferece esse escopo -- inalcancavel a partir do form.
+        return null;
     }
   }
 }

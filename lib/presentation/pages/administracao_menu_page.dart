@@ -32,14 +32,6 @@ class AdministracaoMenuPage extends StatelessWidget {
         route: '/empresas',
       ),
       const _ItemData(
-        icon: Icons.storefront_outlined,
-        titulo: 'E-commerce',
-        subtitulo: 'Configuração da loja, catálogo publicado e banners.',
-        cor: Colors.pink,
-        componente: 'ECOFM001',
-        route: '/ecommerces',
-      ),
-      const _ItemData(
         icon: Icons.credit_card_outlined,
         titulo: 'Formas de pagamento',
         subtitulo: 'Cadastre e mantenha os meios de pagamento aceitos.',

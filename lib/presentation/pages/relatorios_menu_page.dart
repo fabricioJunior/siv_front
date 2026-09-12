@@ -122,14 +122,6 @@ const _todosOsRelatorios = <_ItemData>[
     route: '/relatorio_faturamento',
   ),
   _ItemData(
-    icon: Icons.point_of_sale,
-    titulo: 'Histórico de vendas',
-    subtitulo: 'Consulta por cliente, funcionário, caixa e data.',
-    grupo: GrupoRelatorio.vendas,
-    componente: 'ROMFP001',
-    route: '/vendas',
-  ),
-  _ItemData(
     icon: Icons.badge_outlined,
     titulo: 'Vendas por Funcionário',
     subtitulo: 'Vendas de funcionários selecionados em um período.',
@@ -138,7 +130,7 @@ const _todosOsRelatorios = <_ItemData>[
     route: '/relatorio_vendas_por_funcionario',
   ),
   _ItemData(
-    icon: Icons.bar_chart,
+    icon: Icons.leaderboard_outlined,
     titulo: 'Curva ABC',
     subtitulo: 'Classificação de produtos por participação no faturamento.',
     grupo: GrupoRelatorio.vendas,
@@ -178,20 +170,12 @@ const _todosOsRelatorios = <_ItemData>[
     route: '/relatorio_clientes_aniversariantes',
   ),
   _ItemData(
-    icon: Icons.inventory_2_outlined,
+    icon: Icons.trending_down_outlined,
     titulo: 'Produtos Defasados',
     subtitulo: 'Produtos ou referências sem movimentação recente.',
     grupo: GrupoRelatorio.estoque,
     componente: 'RELFC008',
     route: '/relatorio_produtos_defasados',
-  ),
-  _ItemData(
-    icon: Icons.receipt_long_outlined,
-    titulo: 'Movimentações do sistema',
-    subtitulo: 'Venda, devolução, transferência, compra e consignação.',
-    grupo: GrupoRelatorio.estoque,
-    componente: 'ROMFP001',
-    route: '/romaneios',
   ),
   _ItemData(
     icon: Icons.history,

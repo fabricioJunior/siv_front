@@ -219,11 +219,11 @@ List<String> componentesDoCargo(String cargo) {
 }
 
 /// Item do menu lateral pra prévia "O que este grupo enxerga" na tela de
-/// grupo de acesso. Réplica enxuta dos itens de `_itensOperacao`/
-/// `_itensSistema` de `lib/presentation/widgets/app_shell.dart` -- não dá
-/// pra importar o widget de lá aqui porque o app principal depende deste
-/// package, não o contrário. Item sem [componentesNecessarios] é sempre
-/// visível (ex: Início, Sincronização).
+/// grupo de acesso. Réplica enxuta dos itens de `_itensDiaADia`/
+/// `_itensGestao`/`_itensSistema` de `lib/presentation/widgets/app_shell.dart`
+/// -- não dá pra importar o widget de lá aqui porque o app principal
+/// depende deste package, não o contrário. Item sem [componentesNecessarios]
+/// é sempre visível (ex: Início, Sincronização).
 class ItemPreviewMenu {
   final String label;
   final IconData icone;
@@ -244,14 +244,6 @@ const List<ItemPreviewMenu> itensPreviewMenu = [
     componentesNecessarios: ['PEDFC001', 'ROMFP001', 'ROMFP002', 'ROMFP003'],
   ),
   ItemPreviewMenu(
-    label: 'Pedidos',
-    icone: Icons.receipt_long_outlined,
-    componentesNecessarios: [
-      'PEDFC001', 'PEDFC002', 'PEDFC003', 'PEDFM001', 'PEDFM002', 'PEDFM003',
-      'PEDFM004', 'PEDFM005', 'PEDFM006', 'PEDFM007', 'PEDFM008',
-    ],
-  ),
-  ItemPreviewMenu(
     label: 'Caixa',
     icone: Icons.point_of_sale_outlined,
     componentesNecessarios: [
@@ -261,9 +253,30 @@ const List<ItemPreviewMenu> itensPreviewMenu = [
     ],
   ),
   ItemPreviewMenu(
+    label: 'Comercial',
+    icone: Icons.local_mall_outlined,
+    componentesNecessarios: [
+      'PEDFC001', 'ROMFP001', 'CONFC001', 'PROMFC001', 'CUPFC001',
+      'ECOFM001', 'ECOFM004',
+    ],
+  ),
+  ItemPreviewMenu(
+    label: 'Produtos',
+    icone: Icons.checkroom_outlined,
+    componentesNecessarios: [
+      'PRDFM001', 'PRDFM002', 'PRDFM003', 'PRDFM004', 'PRDFM005', 'PRDFM006',
+      'PRDFM007', 'PRDFM008', 'PRDFM009',
+    ],
+  ),
+  ItemPreviewMenu(
     label: 'Estoque',
     icone: Icons.inventory_2_outlined,
-    componentesNecessarios: ['PRDFL001'],
+    componentesNecessarios: ['ROMFP001', 'PRDFL001'],
+  ),
+  ItemPreviewMenu(
+    label: 'Notas fiscais',
+    icone: Icons.description_outlined,
+    componentesNecessarios: ['FISFM001'],
   ),
   ItemPreviewMenu(
     label: 'Relatórios',

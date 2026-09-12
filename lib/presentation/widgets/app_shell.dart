@@ -104,28 +104,32 @@ class _ItemDeNavegacao {
       componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
 }
 
-final _itensOperacao = <_ItemDeNavegacao>[
+/// Componentes exigidos pela página agregadora `ComercialMenuPage` -- união
+/// de todos os itens que ela lista (venda, devolução, pedidos, romaneios,
+/// histórico de vendas, consignações, promoções, cupons, e-commerce e
+/// minhas listas). Precisa cobrir todo o conteúdo, senão o item do menu
+/// fica invisível pra quem só tem permissão de um dos fluxos internos.
+const _componentesComercial = [
+  'PEDFC001',
+  'ROMFP001',
+  'CONFC001',
+  'PROMFC001',
+  'CUPFC001',
+  'ECOFM001',
+  'ECOFM004',
+];
+
+/// Componentes exigidos pela página agregadora `GerenciaEstoqueMenuPage`
+/// (entrada/saída manual, histórico, balanço, consulta de saldo).
+const _componentesEstoque = ['ROMFP001', 'PRDFL001'];
+
+final _itensDiaADia = <_ItemDeNavegacao>[
   _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
-  _ItemDeNavegacao(
-    label: 'Comercial',
-    icone: Icons.local_mall_outlined,
-    // Menu agregador (venda, devolução, pedidos, romaneios, histórico de
-    // vendas, consignações, promoções, cupons) -- mesma permissão da rota
-    // protegida em routes.dart.
-    rota: '/comercial',
-    componentesNecessarios: ['PEDFC001', 'ROMFP001'],
-  ),
   _ItemDeNavegacao(
     label: 'Venda',
     icone: Icons.shopping_cart_checkout_outlined,
     rota: '/venda',
     componentesNecessarios: componentesPorFluxo['Vendas']!,
-  ),
-  _ItemDeNavegacao(
-    label: 'Pedidos',
-    icone: Icons.receipt_long_outlined,
-    rota: '/pedidos',
-    componentesNecessarios: componentesPorFluxo['Pedidos']!,
   ),
   _ItemDeNavegacao(
     label: 'Caixa',
@@ -134,28 +138,22 @@ final _itensOperacao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Caixa']!,
   ),
   _ItemDeNavegacao(
+    label: 'Comercial',
+    icone: Icons.local_mall_outlined,
+    // Menu agregador (venda, devolução, pedidos, romaneios, histórico de
+    // vendas, consignações, promoções, cupons, e-commerce, minhas listas)
+    // -- mesma permissão da rota protegida em routes.dart.
+    rota: '/comercial',
+    componentesNecessarios: _componentesComercial,
+  ),
+];
+
+final _itensGestao = <_ItemDeNavegacao>[
+  _ItemDeNavegacao(
     label: 'Produtos',
     icone: Icons.checkroom_outlined,
     rota: '/menu_produtos',
     componentesNecessarios: componentesPorFluxo['Produtos']!,
-  ),
-  _ItemDeNavegacao(
-    label: 'E-commerces',
-    icone: Icons.storefront_outlined,
-    rota: '/ecommerces',
-    componentesNecessarios: ['ECOFM001'],
-  ),
-  _ItemDeNavegacao(
-    label: 'Listas personalizadas',
-    icone: Icons.playlist_add_check_outlined,
-    rota: '/listas_personalizadas',
-    componentesNecessarios: ['ECOFM004'],
-  ),
-  _ItemDeNavegacao(
-    label: 'Fiscal',
-    icone: Icons.receipt_long_outlined,
-    rota: '/documentos_fiscais',
-    componentesNecessarios: componentesPorFluxo['Fiscal']!,
   ),
   _ItemDeNavegacao(
     label: 'Estoque',
@@ -163,7 +161,13 @@ final _itensOperacao = <_ItemDeNavegacao>[
     // Menu agregador (entrada/saída manual, histórico, balanço, consulta
     // de saldo) -- não a tela de saldo direto, que é só um dos fluxos dele.
     rota: '/gerencia_estoque',
-    componentesNecessarios: componentesPorFluxo['Estoque']!,
+    componentesNecessarios: _componentesEstoque,
+  ),
+  _ItemDeNavegacao(
+    label: 'Notas fiscais',
+    icone: Icons.description_outlined,
+    rota: '/documentos_fiscais',
+    componentesNecessarios: componentesPorFluxo['Fiscal']!,
   ),
   _ItemDeNavegacao(
     label: 'Relatórios',
@@ -187,6 +191,28 @@ final _itensSistema = <_ItemDeNavegacao>[
   ),
 ];
 
+/// Rotas filhas de páginas agregadoras (`ComercialMenuPage`,
+/// `GerenciaEstoqueMenuPage`) mapeadas pra rota do item pai no menu raiz --
+/// usado pra manter o destaque e o título ativos quando o usuário navega
+/// pra dentro do agregador (`/venda` fica de fora: já é item próprio).
+const _rotaFilhaParaRotaRaiz = <String, String>{
+  '/devolucao': '/comercial',
+  '/pedidos': '/comercial',
+  '/romaneios': '/comercial',
+  '/vendas': '/comercial',
+  '/consignacoes': '/comercial',
+  '/promocoes': '/comercial',
+  '/cupons': '/comercial',
+  '/ecommerces': '/comercial',
+  '/listas_personalizadas': '/comercial',
+  '/entrada_manual_de_produtos': '/gerencia_estoque',
+  '/saida_manual_de_produtos': '/gerencia_estoque',
+  '/estoque': '/gerencia_estoque',
+  '/historico_estoque': '/gerencia_estoque',
+  '/romaneios_entrada_manual': '/gerencia_estoque',
+  '/balancos': '/gerencia_estoque',
+};
+
 class _AppShellCasca extends StatelessWidget {
   final String rotaAtual;
   final AppState appState;
@@ -202,9 +228,10 @@ class _AppShellCasca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itensTodos = [..._itensOperacao, ..._itensSistema];
+    final itensTodos = [..._itensDiaADia, ..._itensGestao, ..._itensSistema];
+    final rotaSelecao = _rotaFilhaParaRotaRaiz[rotaAtual] ?? rotaAtual;
     final itemAtivo = itensTodos
-        .where((item) => item.rota == rotaAtual)
+        .where((item) => item.rota == rotaSelecao)
         .toList();
     final tituloAtivo = itemAtivo.isNotEmpty ? itemAtivo.first.label : null;
 
@@ -222,17 +249,24 @@ class _AppShellCasca extends StatelessWidget {
         // widget, que já causava um pequeno flash ao navegar entre páginas).
         secoesMenu: [
           SivMenuLateralSecao(
-            titulo: 'OPERAÇÃO',
-            itens: _itensOperacao
+            titulo: 'DIA A DIA',
+            itens: _itensDiaADia
                 .where((item) => item.permitido)
-                .map(_mapearItem)
+                .map((item) => _mapearItem(item, rotaSelecao))
+                .toList(),
+          ),
+          SivMenuLateralSecao(
+            titulo: 'GESTÃO',
+            itens: _itensGestao
+                .where((item) => item.permitido)
+                .map((item) => _mapearItem(item, rotaSelecao))
                 .toList(),
           ),
           SivMenuLateralSecao(
             titulo: 'SISTEMA',
             itens: _itensSistema
                 .where((item) => item.permitido)
-                .map(_mapearItem)
+                .map((item) => _mapearItem(item, rotaSelecao))
                 .toList(),
           ),
         ],
@@ -248,11 +282,11 @@ class _AppShellCasca extends StatelessWidget {
     );
   }
 
-  SivMenuLateralItem _mapearItem(_ItemDeNavegacao item) {
+  SivMenuLateralItem _mapearItem(_ItemDeNavegacao item, String rotaSelecao) {
     return SivMenuLateralItem(
       label: item.label,
       icone: item.icone,
-      selecionado: item.rota == rotaAtual,
+      selecionado: item.rota == rotaSelecao,
       onTap: item.rota == rotaAtual
           ? null
           : () => navigatorKey.currentState?.pushNamed(item.rota),

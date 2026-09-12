@@ -158,12 +158,6 @@ Map<String, Widget Function(BuildContext)> routes = {
           sl<RecuperarProvidersPagamentosAvulsos>().call(),
     );
   },
-  '/financeiro': (context) {
-    return _rotaProtegida(
-      route: '/financeiro',
-      child: const FinanceiroMenuPage(),
-    );
-  },
   '/fluxo_de_caixa': (context) {
     final sessao = sl<IAcessoGlobalSessao>();
     final empresaIdArg = args(context)['empresaId'];
@@ -1249,7 +1243,15 @@ Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
 const Map<String, List<String>> _componentesDaRota = {
   '/recibo_fechamento_caixa': ['FCXFP010'],
   '/historico_de_caixas': ['FCXFP008'],
-  '/comercial': ['PEDFC001', 'ROMFP001'],
+  '/comercial': [
+    'PEDFC001',
+    'ROMFP001',
+    'CONFC001',
+    'PROMFC001',
+    'CUPFC001',
+    'ECOFM001',
+    'ECOFM004',
+  ],
   '/venda': ['PEDFC001', 'ROMFP001'],
   '/orcamentos': ['PEDFC001', 'ROMFP001'],
   '/devolucao': ['PEDFC001', 'ROMFP001'],
@@ -1308,7 +1310,6 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
-  '/financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],
   '/formas_de_pagamento': ['GERFM001'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],

@@ -25,7 +25,7 @@ class ComercialMenuPage extends StatelessWidget {
         route: '/devolucao',
       ),
       const _ItemData(
-        icon: Icons.receipt_long,
+        icon: Icons.receipt_long_outlined,
         titulo: 'Pedidos',
         subtitulo: 'Criação, conferência, faturamento e acompanhamento.',
         cor: Colors.orange,
@@ -41,7 +41,7 @@ class ComercialMenuPage extends StatelessWidget {
         route: '/romaneios',
       ),
       const _ItemData(
-        icon: Icons.point_of_sale_outlined,
+        icon: Icons.list_alt_outlined,
         titulo: 'Histórico de vendas',
         subtitulo: 'Consulta de vendas por caixa, data/hora e cliente.',
         cor: Colors.teal,
@@ -71,6 +71,22 @@ class ComercialMenuPage extends StatelessWidget {
         cor: Colors.purple,
         componente: 'CUPFC001',
         route: '/cupons',
+      ),
+      const _ItemData(
+        icon: Icons.storefront_outlined,
+        titulo: 'E-commerce',
+        subtitulo: 'Configuração da loja, catálogo publicado e banners.',
+        cor: Colors.pink,
+        componente: 'ECOFM001',
+        route: '/ecommerces',
+      ),
+      const _ItemData(
+        icon: Icons.playlist_add_check_outlined,
+        titulo: 'Minhas listas',
+        subtitulo: 'Listas personalizadas de produtos pra compartilhar.',
+        cor: Colors.blueGrey,
+        componente: 'ECOFM004',
+        route: '/listas_personalizadas',
       ),
     ];
 

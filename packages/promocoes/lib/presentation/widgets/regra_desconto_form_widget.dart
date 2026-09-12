@@ -11,6 +11,7 @@ class RegraDescontoFormWidget extends StatelessWidget {
   final double? valorMinimoCompra;
   final int? quantidadeMinima;
   final double? precoFixo;
+  final bool ocultarCamposDeValor;
   final ValueChanged<TipoDesconto> onTipoDescontoChanged;
   final ValueChanged<double?> onValorPercentualChanged;
   final ValueChanged<double?> onValorDescontoMaximoChanged;
@@ -28,6 +29,7 @@ class RegraDescontoFormWidget extends StatelessWidget {
     this.valorMinimoCompra,
     this.quantidadeMinima,
     this.precoFixo,
+    this.ocultarCamposDeValor = false,
     required this.onTipoDescontoChanged,
     required this.onValorPercentualChanged,
     required this.onValorDescontoMaximoChanged,
@@ -64,7 +66,7 @@ class RegraDescontoFormWidget extends StatelessWidget {
               onTipoDescontoChanged(selecionados.first),
         ),
         const SizedBox(height: 12),
-        if (tipoDesconto == TipoDesconto.percentual) ...[
+        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.percentual) ...[
           TextFormField(
             key: ValueKey('valorPercentual-$valorPercentual'),
             initialValue: valorPercentual?.toString() ?? '',
@@ -93,7 +95,7 @@ class RegraDescontoFormWidget extends StatelessWidget {
                 onValorDescontoMaximoChanged(double.tryParse(value)),
           ),
         ],
-        if (tipoDesconto == TipoDesconto.valorFixo) ...[
+        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.valorFixo) ...[
           TextFormField(
             key: ValueKey('valorFixo-$valorFixo'),
             initialValue: valorFixo?.toString() ?? '',
@@ -132,7 +134,7 @@ class RegraDescontoFormWidget extends StatelessWidget {
                 onQuantidadeMinimaChanged(int.tryParse(value)),
           ),
         ],
-        if (tipoDesconto == TipoDesconto.precoFixo)
+        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.precoFixo)
           TextFormField(
             key: ValueKey('precoFixo-$precoFixo'),
             initialValue: precoFixo?.toString() ?? '',

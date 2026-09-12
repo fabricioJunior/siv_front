@@ -27,11 +27,13 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
   final RecuperarPedidos _recuperarPedidos;
   final CancelarPedido _cancelarPedido;
   final ListarItensPedido _listarItensPedido;
+  final ContarPedidosPorSituacao _contarPedidosPorSituacao;
 
   PedidosBloc(
     this._recuperarPedidos,
     this._cancelarPedido,
     this._listarItensPedido,
+    this._contarPedidosPorSituacao,
   ) : super(const PedidosState.initial()) {
     on<PedidosIniciou>(_onIniciou);
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
@@ -46,7 +48,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     PedidosIniciou event,
     Emitter<PedidosState> emit,
   ) async {
-    await _carregarPrimeiraPagina(emit);
+    await Future.wait([_carregarPrimeiraPagina(emit), _recuperarContagem(emit)]);
   }
 
   FutureOr<void> _onBuscaAlterada(
@@ -54,7 +56,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     Emitter<PedidosState> emit,
   ) async {
     emit(state.copyWith(busca: event.busca));
-    await _carregarPrimeiraPagina(emit);
+    await Future.wait([_carregarPrimeiraPagina(emit), _recuperarContagem(emit)]);
   }
 
   FutureOr<void> _onFiltroSituacaoAlterado(
@@ -73,7 +75,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       dataInicial: event.dataInicial,
       dataFinal: event.dataFinal,
     ));
-    await _carregarPrimeiraPagina(emit);
+    await Future.wait([_carregarPrimeiraPagina(emit), _recuperarContagem(emit)]);
   }
 
   Future<void> _carregarPrimeiraPagina(Emitter<PedidosState> emit) async {
@@ -93,6 +95,21 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       emit(state.copyWith(
           step: PedidosStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao carregar pedidos.')));
+      addError(e, s);
+    }
+  }
+
+  Future<void> _recuperarContagem(Emitter<PedidosState> emit) async {
+    try {
+      final busca = state.busca.trim();
+      final contagem = await _contarPedidosPorSituacao.call(
+        searchTerm: busca.isEmpty ? null : busca,
+        dataInicial: state.dataInicial,
+        dataFinal: state.dataFinal,
+      );
+      emit(state.copyWith(contagem: contagem));
+    } catch (e, s) {
+      // Falha na contagem nao pode derrubar a tela -- chips so ficam sem numero atualizado.
       addError(e, s);
     }
   }

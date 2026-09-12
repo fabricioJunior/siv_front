@@ -35,7 +35,8 @@ enum TipoEscopo {
   geral,
   referencias,
   comboKit,
-  comboLevePague;
+  comboLevePague,
+  faixaQuantidade;
 
   static TipoEscopo fromString(String? value) {
     switch (value) {
@@ -45,6 +46,8 @@ enum TipoEscopo {
         return TipoEscopo.comboKit;
       case 'combo_leve_pague':
         return TipoEscopo.comboLevePague;
+      case 'faixa_quantidade':
+        return TipoEscopo.faixaQuantidade;
       case 'geral':
       default:
         return TipoEscopo.geral;
@@ -59,6 +62,8 @@ enum TipoEscopo {
         return 'combo_kit';
       case TipoEscopo.comboLevePague:
         return 'combo_leve_pague';
+      case TipoEscopo.faixaQuantidade:
+        return 'faixa_quantidade';
       case TipoEscopo.geral:
         return 'geral';
     }
@@ -89,6 +94,36 @@ class ItemComboKit extends Equatable {
 
   @override
   List<Object?> get props => [referenciaId, quantidadeExigida];
+
+  @override
+  bool? get stringify => true;
+}
+
+// Faixa de desconto progressivo, usada quando tipoEscopo=faixaQuantidade.
+// A unidade de valorDesconto e definida pelo tipoDesconto da promocao.
+class PromocaoFaixa extends Equatable {
+  final int quantidadeMinima;
+  final double valorDesconto;
+
+  const PromocaoFaixa({
+    required this.quantidadeMinima,
+    required this.valorDesconto,
+  });
+
+  factory PromocaoFaixa.fromJson(Map<String, dynamic> json) {
+    return PromocaoFaixa(
+      quantidadeMinima: (json['quantidadeMinima'] as num).toInt(),
+      valorDesconto: (json['valorDesconto'] as num).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'quantidadeMinima': quantidadeMinima,
+        'valorDesconto': valorDesconto,
+      };
+
+  @override
+  List<Object?> get props => [quantidadeMinima, valorDesconto];
 
   @override
   bool? get stringify => true;

@@ -206,6 +206,9 @@ class _CupomFormPageState extends State<CupomFormPage> {
                             context,
                             quantidadePaga: valor,
                           ),
+                          // Cupom nao oferece o escopo faixaQuantidade --
+                          // callback inalcancavel a partir deste form.
+                          onFaixasChanged: (_) {},
                         ),
                         const SizedBox(height: 20),
                         Text(

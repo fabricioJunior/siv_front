@@ -78,6 +78,7 @@ abstract class Promocao implements Equatable {
   List<ItemComboKit>? get comboKit;
   int? get quantidadeLeva;
   int? get quantidadePaga;
+  List<PromocaoFaixa>? get faixas;
   int? get limiteUnidadesVendidas;
   int get unidadesVendidas;
   int? get limiteUsosPorCliente;
@@ -110,6 +111,7 @@ abstract class Promocao implements Equatable {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<PromocaoFaixa>? faixas,
     int? limiteUnidadesVendidas,
     int unidadesVendidas,
     int? limiteUsosPorCliente,
@@ -144,6 +146,7 @@ abstract class Promocao implements Equatable {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,
         limiteUsosPorCliente,
@@ -201,6 +204,8 @@ class _PromocaoImpl implements Promocao {
   @override
   final int? quantidadePaga;
   @override
+  final List<PromocaoFaixa>? faixas;
+  @override
   final int? limiteUnidadesVendidas;
   @override
   final int unidadesVendidas;
@@ -243,6 +248,7 @@ class _PromocaoImpl implements Promocao {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.faixas,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
     this.limiteUsosPorCliente,
@@ -277,6 +283,7 @@ class _PromocaoImpl implements Promocao {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,
         limiteUsosPorCliente,

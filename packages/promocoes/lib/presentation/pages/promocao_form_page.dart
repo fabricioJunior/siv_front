@@ -160,6 +160,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                           valorMinimoCompra: state.valorMinimoCompra,
                           quantidadeMinima: state.quantidadeMinima,
                           precoFixo: state.precoFixo,
+                          ocultarCamposDeValor:
+                              state.tipoEscopo == TipoEscopo.faixaQuantidade,
                           onTipoDescontoChanged: (tipo) =>
                               _onCampoAlterado(context, tipoDesconto: tipo),
                           onValorPercentualChanged: (valor) => _onCampoAlterado(
@@ -204,6 +206,10 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                               value: TipoEscopo.comboLevePague,
                               label: Text('Leve e pague'),
                             ),
+                            ButtonSegment(
+                              value: TipoEscopo.faixaQuantidade,
+                              label: Text('Faixas progressivas'),
+                            ),
                           ],
                           selected: {state.tipoEscopo},
                           onSelectionChanged: (selecionados) => context
@@ -223,6 +229,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                           comboKitInicial: state.comboKit ?? const [],
                           quantidadeLevaInicial: state.quantidadeLeva,
                           quantidadePagaInicial: state.quantidadePaga,
+                          faixasInicial: state.faixas ?? const [],
                           onReferenciaIdsChanged: (ids) =>
                               _onCampoAlterado(context, referenciaIds: ids),
                           onComboKitChanged: (itens) =>
@@ -235,6 +242,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                             context,
                             quantidadePaga: valor,
                           ),
+                          onFaixasChanged: (faixas) =>
+                              _onCampoAlterado(context, faixas: faixas),
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -428,6 +437,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<PromocaoFaixa>? faixas,
     int? limiteUnidadesVendidas,
     int? limiteUsosPorCliente,
     PeriodoLimiteCliente? periodoLimiteCliente,
@@ -455,6 +465,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             comboKit: comboKit,
             quantidadeLeva: quantidadeLeva,
             quantidadePaga: quantidadePaga,
+            faixas: faixas,
             limiteUnidadesVendidas: limiteUnidadesVendidas,
             limiteUsosPorCliente: limiteUsosPorCliente,
             periodoLimiteCliente: periodoLimiteCliente,

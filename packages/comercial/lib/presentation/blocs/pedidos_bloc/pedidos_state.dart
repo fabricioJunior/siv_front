@@ -14,6 +14,7 @@ class PedidosState extends Equatable {
   final int? pedidoSelecionadoId;
   final List<PedidoItem> itensDoPedidoSelecionado;
   final bool carregandoItensDoPedidoSelecionado;
+  final ContagemPedidosPorSituacao? contagem;
 
   const PedidosState({
     required this.pedidos,
@@ -29,6 +30,7 @@ class PedidosState extends Equatable {
     this.pedidoSelecionadoId,
     this.itensDoPedidoSelecionado = const [],
     this.carregandoItensDoPedidoSelecionado = false,
+    this.contagem,
   });
 
   const PedidosState.initial()
@@ -44,7 +46,8 @@ class PedidosState extends Equatable {
         carregandoMais = false,
         pedidoSelecionadoId = null,
         itensDoPedidoSelecionado = const [],
-        carregandoItensDoPedidoSelecionado = false;
+        carregandoItensDoPedidoSelecionado = false,
+        contagem = null;
 
   Pedido? get pedidoSelecionado {
     if (pedidoSelecionadoId == null) return null;
@@ -68,6 +71,7 @@ class PedidosState extends Equatable {
     Object? pedidoSelecionadoId = _naoInformado,
     List<PedidoItem>? itensDoPedidoSelecionado,
     bool? carregandoItensDoPedidoSelecionado,
+    Object? contagem = _naoInformado,
   }) {
     return PedidosState(
       pedidos: pedidos ?? this.pedidos,
@@ -92,6 +96,9 @@ class PedidosState extends Equatable {
       carregandoItensDoPedidoSelecionado:
           carregandoItensDoPedidoSelecionado ??
               this.carregandoItensDoPedidoSelecionado,
+      contagem: identical(contagem, _naoInformado)
+          ? this.contagem
+          : contagem as ContagemPedidosPorSituacao?,
     );
   }
 
@@ -110,6 +117,7 @@ class PedidosState extends Equatable {
         pedidoSelecionadoId,
         itensDoPedidoSelecionado,
         carregandoItensDoPedidoSelecionado,
+        contagem,
       ];
 }
 

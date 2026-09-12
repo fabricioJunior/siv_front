@@ -139,6 +139,8 @@ void _repositories() {
 void _useCases() {
   sl.registerFactory<RecuperarPedidos>(
       () => RecuperarPedidos(repository: sl()));
+  sl.registerFactory<ContarPedidosPorSituacao>(
+      () => ContarPedidosPorSituacao(repository: sl()));
   sl.registerFactory<RecuperarPedido>(() => RecuperarPedido(repository: sl()));
   sl.registerFactory<CriarPedido>(() => CriarPedido(repository: sl()));
   sl.registerFactory<AtualizarPedido>(() => AtualizarPedido(repository: sl()));
@@ -439,6 +441,7 @@ void _useCases() {
 void _presentation() {
   sl.registerFactory<PedidosBloc>(
     () => PedidosBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

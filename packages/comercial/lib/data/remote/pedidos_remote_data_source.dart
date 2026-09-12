@@ -1,3 +1,4 @@
+import 'package:comercial/data/remote/dtos/contagem_pedidos_por_situacao_dto.dart';
 import 'package:comercial/data/remote/dtos/pedido_dto.dart';
 import 'package:comercial/data/remote/dtos/pedido_evento_dto.dart';
 import 'package:comercial/data/remote/dtos/pedido_pagamento_dto.dart';
@@ -120,6 +121,26 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
     return (response.body as List<dynamic>)
         .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<ContagemPedidosPorSituacao> contarPorSituacao({
+    String? searchTerm,
+    DateTime? dataInicial,
+    DateTime? dataFinal,
+  }) async {
+    final response = await get(
+      pathParameters: {'id': 'contagem-por-situacao'},
+      queryParameters: {
+        if (searchTerm != null && searchTerm.isNotEmpty)
+          'searchTerm': searchTerm,
+        if (dataInicial != null) 'dataInicial': dataInicial.toIso8601String(),
+        if (dataFinal != null) 'dataFinal': dataFinal.toIso8601String(),
+      },
+    );
+    return ContagemPedidosPorSituacaoDto.fromJson(
+      response.body as Map<String, dynamic>,
+    );
   }
 
   @override

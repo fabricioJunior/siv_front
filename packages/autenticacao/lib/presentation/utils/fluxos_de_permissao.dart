@@ -44,10 +44,16 @@ const Map<String, List<String>> componentesPorFluxo = {
   ],
   'Fiscal': ['FISFM001'],
   'Relatórios': ['RELFC001', 'RELFC002', 'RELFC003', 'RELFC004'],
+  // Lista completa de PEDFC*/PEDFM* -- ficou parada em PEDFM008 por um
+  // tempo e cada permissão nova de pedido (PEDFM009 em diante) caía em
+  // "Outros" e não entrava no "selecionar tudo" do fluxo (bug: PEDFM020 e
+  // PEDFM022 não eram aplicados ao marcar "Pedidos" inteiro num grupo).
   'Pedidos': [
     'PEDFC001',
     'PEDFC002',
     'PEDFC003',
+    'PEDFC004',
+    'PEDFC005',
     'PEDFM001',
     'PEDFM002',
     'PEDFM003',
@@ -56,6 +62,20 @@ const Map<String, List<String>> componentesPorFluxo = {
     'PEDFM006',
     'PEDFM007',
     'PEDFM008',
+    'PEDFM009',
+    'PEDFM010',
+    'PEDFM011',
+    'PEDFM012',
+    'PEDFM013',
+    'PEDFM014',
+    'PEDFM015',
+    'PEDFM016',
+    'PEDFM017',
+    'PEDFM018',
+    'PEDFM019',
+    'PEDFM020',
+    'PEDFM021',
+    'PEDFM022',
   ],
   'Estoque': ['PRDFL001'],
   'Balanço de estoque': [

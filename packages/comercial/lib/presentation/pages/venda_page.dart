@@ -253,8 +253,7 @@ class _VendaPageState extends State<VendaPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                  padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
                   child: Wrap(
                     alignment: WrapAlignment.end,
                     spacing: 8,
@@ -526,94 +525,95 @@ class _VendaPageState extends State<VendaPage> {
     }
 
     final campos = [
-          Text(
-            'Iniciar venda',
-            style: textos.secao.copyWith(fontSize: ehMobile ? 19 : 22),
+      Text(
+        'Iniciar venda',
+        style: textos.secao.copyWith(fontSize: ehMobile ? 19 : 22),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        ehMobile
+            ? 'Selecione vendedor e tabela de preço pra habilitar a leitura.'
+            : 'Selecione o vendedor e a tabela de preço pra habilitar a leitura. Cliente pode ser identificado depois.',
+        style: textos.apoio.copyWith(color: cores.textoApoio),
+      ),
+      SizedBox(height: ehMobile ? 20 : 26),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('CLIENTE',
+              style: textos.rotulo.copyWith(color: cores.textoApoio)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            ),
+            child: Text(
+              'Opcional',
+              style: textos.apoio.copyWith(color: cores.textoApoio),
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            ehMobile
-                ? 'Selecione vendedor e tabela de preço pra habilitar a leitura.'
-                : 'Selecione o vendedor e a tabela de preço pra habilitar a leitura. Cliente pode ser identificado depois.',
-            style: textos.apoio.copyWith(color: cores.textoApoio),
-          ),
-          SizedBox(height: ehMobile ? 20 : 26),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('CLIENTE', style: textos.rotulo.copyWith(color: cores.textoApoio)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  border: Border.all(color: cores.hairline),
-                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
-                ),
-                child: Text(
-                  'Opcional',
-                  style: textos.apoio.copyWith(color: cores.textoApoio),
-                ),
+        ],
+      ),
+      const SizedBox(height: 7),
+      widget.pessoaSeletor(
+        SeletorData(
+          compacto: false,
+          itemsSelecionadosInicial: state.clienteSelecionado == null
+              ? null
+              : [state.clienteSelecionado!],
+          onChanged: (selecionados) {
+            bloc.add(
+              VendaClienteSelecionado(
+                clienteSelecionado:
+                    selecionados.isEmpty ? null : selecionados.first,
               ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          widget.pessoaSeletor(
-            SeletorData(
-              compacto: true,
-              itemsSelecionadosInicial: state.clienteSelecionado == null
-                  ? null
-                  : [state.clienteSelecionado!],
-              onChanged: (selecionados) {
-                bloc.add(
-                  VendaClienteSelecionado(
-                    clienteSelecionado:
-                        selecionados.isEmpty ? null : selecionados.first,
-                  ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: ehMobile ? 16 : 18),
-          Text('VENDEDOR', style: textos.rotulo.copyWith(color: cores.textoApoio)),
-          const SizedBox(height: 7),
-          widget.vendedoresSeletor(
-            SeletorData(
-              compacto: true,
-              itemsSelecionadosInicial: state.vendedorSelecionado == null
-                  ? null
-                  : [state.vendedorSelecionado!],
-              onChanged: (selecionados) {
-                bloc.add(
-                  VendaVendedorSelecionado(
-                    vendedorSelecionado:
-                        selecionados.isEmpty ? null : selecionados.first,
-                  ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: ehMobile ? 16 : 28),
-          Text(
-            'TABELA DE PREÇO',
-            style: textos.rotulo.copyWith(color: cores.textoApoio),
-          ),
-          const SizedBox(height: 7),
-          widget.tabelasDePrecoSeletor(
-            SeletorData(
-              compacto: true,
-              itemsSelecionadosInicial: state.tabelaDePrecoSelecionada == null
-                  ? null
-                  : [state.tabelaDePrecoSelecionada!],
-              onChanged: (selecionados) {
-                bloc.add(
-                  VendaTabelaDePrecoSelecionada(
-                    tabelaDePrecoSelecionada:
-                        selecionados.isEmpty ? null : selecionados.first,
-                  ),
-                );
-              },
-            ),
-          ),
-        ];
+            );
+          },
+        ),
+      ),
+      SizedBox(height: ehMobile ? 16 : 18),
+      Text('VENDEDOR', style: textos.rotulo.copyWith(color: cores.textoApoio)),
+      const SizedBox(height: 7),
+      widget.vendedoresSeletor(
+        SeletorData(
+          compacto: false,
+          itemsSelecionadosInicial: state.vendedorSelecionado == null
+              ? null
+              : [state.vendedorSelecionado!],
+          onChanged: (selecionados) {
+            bloc.add(
+              VendaVendedorSelecionado(
+                vendedorSelecionado:
+                    selecionados.isEmpty ? null : selecionados.first,
+              ),
+            );
+          },
+        ),
+      ),
+      SizedBox(height: ehMobile ? 16 : 28),
+      Text(
+        'TABELA DE PREÇO',
+        style: textos.rotulo.copyWith(color: cores.textoApoio),
+      ),
+      const SizedBox(height: 7),
+      widget.tabelasDePrecoSeletor(
+        SeletorData(
+          compacto: true,
+          itemsSelecionadosInicial: state.tabelaDePrecoSelecionada == null
+              ? null
+              : [state.tabelaDePrecoSelecionada!],
+          onChanged: (selecionados) {
+            bloc.add(
+              VendaTabelaDePrecoSelecionada(
+                tabelaDePrecoSelecionada:
+                    selecionados.isEmpty ? null : selecionados.first,
+              ),
+            );
+          },
+        ),
+      ),
+    ];
 
     if (ehMobile) {
       return Padding(

@@ -20,6 +20,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
   final TipoFuncionario? tipoFuncionario;
 
   final bool onlyView;
+  final bool compacto;
 
   const FuncionarioSeletor({
     super.key,
@@ -31,6 +32,7 @@ class FuncionarioSeletor extends StatefulWidget implements ISeletor {
     this.tipoFuncionario,
     this.onChanged,
     this.onlyView = false,
+    this.compacto = false,
   });
 
   @override
@@ -115,7 +117,7 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
             );
           }
 
-          return SeletorGenerico<Funcionario>(
+          final seletorGenerico = SeletorGenerico<Funcionario>(
             toSelectData: (item) => SelectData(
               id: item.id,
               nome: item.nome.toUpperCase(),
@@ -164,6 +166,10 @@ class _FuncionarioSeletorState extends State<FuncionarioSeletor> {
             },
             confirmarEmSeparadores: const [',', ';'],
           );
+
+          return widget.compacto
+              ? SeletorGenericoCompacto<Funcionario>(seletor: seletorGenerico)
+              : seletorGenerico;
         },
       ),
     );

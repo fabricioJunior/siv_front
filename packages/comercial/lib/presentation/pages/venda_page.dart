@@ -1,19 +1,14 @@
-import 'dart:async';
-
 import 'package:comercial/presentation.dart';
 import 'package:comercial/models.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
-import 'package:core/leitor/icone_codigo_de_barras.dart';
-import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_widget.dart';
 import 'package:core/presentation.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
-import 'package:estoque/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -45,62 +40,23 @@ enum _VendaAcao { finalizar }
 
 class _VendaPageState extends State<VendaPage> {
   late final LeitorController _leitorController;
-  final _codigoController = TextEditingController();
-  final _codigoFocusNode = FocusNode();
-  LeitorBloc? _leitorBloc;
-  int? _leitorBlocTabelaId;
-  bool _modoRemocao = false;
-  DateTime? _ultimaLeituraEm;
   int _ultimoOrcamentoSalvoContador = 0;
-  Timer? _relogio;
   bool _trocandoCliente = false;
 
   @override
   void initState() {
     super.initState();
     _leitorController = LeitorController();
-    // ponytail: tick de 1s pra "Última leitura há Xs" no rodapé da tabela --
-    // custo desprezível numa tela única de POS, sem precisar de outro bloc.
-    _relogio = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void dispose() {
-    _relogio?.cancel();
+    SivPageFab.limpar();
     _leitorController.dispose();
-    _leitorBloc?.close();
-    _codigoController.dispose();
-    _codigoFocusNode.dispose();
     super.dispose();
   }
 
-  void _solicitarFocoLeitura() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _codigoFocusNode.requestFocus();
-    });
-  }
-
-  void _garantirLeitorBloc(int? tabelaDePrecoId) {
-    if (_leitorBloc != null && _leitorBlocTabelaId == tabelaDePrecoId) {
-      return;
-    }
-    final estadoAnterior = _leitorBloc?.state;
-    if (_leitorBloc != null) {
-      _leitorController.unbind(_leitorBloc!);
-      _leitorBloc!.close();
-    }
-    _leitorBloc = LeitorBloc(
-      dataSource: sl<ILeitorDataDatasource>(),
-      controlarQuantidade: true,
-      tabelaDePrecoId: tabelaDePrecoId,
-      aceitarApenasProdutosComPreco: true,
-      estadoInicial: estadoAnterior,
-    );
-    _leitorBlocTabelaId = tabelaDePrecoId;
-    _leitorController.bind(_leitorBloc!);
-  }
+  void _solicitarFocoLeitura() {}
 
   @override
   Widget build(BuildContext context) {
@@ -220,25 +176,12 @@ class _VendaPageState extends State<VendaPage> {
           }
         },
         builder: (context, state) {
-          if (state.leituraIniciada) {
-            _garantirLeitorBloc(state.tabelaDePrecoId);
-          }
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (!state.leituraIniciada) ...[
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildConfiguracaoCard(context, state),
-                      ],
-                    ),
-                  ),
-                ),
-              ] else
+              if (!state.leituraIniciada)
+                Expanded(child: _buildConfiguracaoCard(context, state))
+              else
                 Expanded(child: _buildLeituraAtiva(context, state)),
             ],
           );
@@ -288,7 +231,7 @@ class _VendaPageState extends State<VendaPage> {
   }
 
   Widget _buildLeituraAtiva(BuildContext context, VendaState state) {
-    final leitorBloc = _leitorBloc!;
+    SivPageFab.limpar();
     return CallbackShortcuts(
       bindings: {
         LogicalKeySet(LogicalKeyboardKey.f2): () =>
@@ -303,205 +246,61 @@ class _VendaPageState extends State<VendaPage> {
       },
       child: Focus(
         autofocus: true,
-        child: BlocProvider.value(
-          value: leitorBloc,
-          child: BlocConsumer<LeitorBloc, LeitorState>(
-            listener: (context, leitorState) {
-              _leitorController.syncState(leitorState);
-              if (leitorState.erro != null) {
-                SivAviso.mostrar(context,
-                    mensagem: leitorState.erro!, tipo: SivAvisoTipo.falha);
-              } else if (leitorState.aviso != null) {
-                SivAviso.mostrar(context,
-                    mensagem: leitorState.aviso!, tipo: SivAvisoTipo.atencao);
-              } else if (leitorState.ultimoProdutoLido != null) {
-                _ultimaLeituraEm = DateTime.now();
-              }
-              _solicitarFocoLeitura();
-            },
-            builder: (context, leitorState) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: SivDimensoes.gapCards),
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _acoesTopo(context, state),
-                    ),
+        child: ListenableBuilder(
+          listenable: _leitorController,
+          builder: (context, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _acoesTopo(context, state),
                   ),
-                  _buildCampoDeLeitura(context, leitorState),
-                  const SizedBox(height: SivDimensoes.gapCards),
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: _buildTabelaDeItens(
-                                context, leitorState, state),
-                          ),
+                ),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: LeitorWidget(
+                          controller: _leitorController,
+                          dataSource: sl<ILeitorDataDatasource>(),
+                          controlarQuantidade: true,
+                          tabelaDePrecoId: state.tabelaDePrecoId,
+                          aceitarApenasProdutosComPreco: true,
+                          buscaDataSource: sl<ILeitorBuscaDataDatasource>(),
+                          campoCodigoHint:
+                              'Bipe ou informe o código do produto',
+                          nomeTabelaDePreco:
+                              state.tabelaDePrecoSelecionada?.nome,
                         ),
-                        const SizedBox(width: SivDimensoes.gapCards),
-                        SizedBox(
-                          width: 396,
-                          child: SingleChildScrollView(
-                            child: _buildPainelDireito(
-                                context, state, leitorState),
-                          ),
+                      ),
+                      const SizedBox(width: SivDimensoes.gapCards),
+                      SizedBox(
+                        width: 396,
+                        child: SingleChildScrollView(
+                          child: _buildPainelDireito(context, state),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildCampoDeLeitura(BuildContext context, LeitorState leitorState) {
-    final cores = context.sivColors;
-    // TextField/IconButton precisam de Material ancestor -- essa página não
-    // tem Scaffold próprio (mesmo bug já corrigido em vários InkWell nesta
-    // sessão, aqui pega TextField e IconButton juntos).
-    return Material(
-      type: MaterialType.transparency,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _codigoController,
-              focusNode: _codigoFocusNode,
-              autofocus: true,
-              style: context.sivTextos.secao,
-              decoration: InputDecoration(
-                prefixIcon: IconeCodigoDeBarras(cor: cores.aco),
-                suffixIcon: leitorState.processando
-                    ? const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    : null,
-                hintText: _modoRemocao
-                    ? 'Bipe para remover 1 unidade do item'
-                    : 'Bipe ou informe o código do produto · F2 buscar por nome',
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-              ),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submeterCodigo(),
-            ),
-          ),
-          const SizedBox(width: 10),
-          IconButton(
-            tooltip: _modoRemocao
-                ? 'Voltar ao modo leitura'
-                : 'Ativar remoção por leitura',
-            isSelected: _modoRemocao,
-            style: IconButton.styleFrom(
-              side: BorderSide(color: cores.hairline),
-              minimumSize: const Size.square(SivDimensoes.alvoToqueMinimo + 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(SivDimensoes.raio),
-              ),
-            ),
-            onPressed: () {
-              setState(() => _modoRemocao = !_modoRemocao);
-              _solicitarFocoLeitura();
-            },
-            icon: Icon(
-              _modoRemocao
-                  ? Icons.remove_circle_outline
-                  : Icons.add_circle_outline,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabelaDeItens(
-    BuildContext context,
-    LeitorState leitorState,
-    VendaState vendaState,
-  ) {
-    final itensExibicao = leitorState.itens.reversed.toList(growable: false);
-    final totalPecas = leitorState.quantidadeTotalLida;
-    final segundos = _ultimaLeituraEm == null
-        ? null
-        : DateTime.now().difference(_ultimaLeituraEm!).inSeconds;
-    final nomeTabela =
-        vendaState.tabelaDePrecoSelecionada?.nome ?? 'não selecionada';
-
-    return SivTabela(
-      colunas: const [
-        SivTabelaColuna.numerica(titulo: 'ITEM', flex: 1),
-        SivTabelaColuna(titulo: 'PRODUTO', flex: 4),
-        SivTabelaColuna(titulo: 'GRADE', flex: 2),
-        SivTabelaColuna.numerica(titulo: 'UNITÁRIO', flex: 2),
-        SivTabelaColuna.numerica(titulo: 'QTD.', flex: 1),
-        SivTabelaColuna.numerica(titulo: 'TOTAL', flex: 2),
-      ],
-      quantidadeLinhas: itensExibicao.length,
-      linhaSelecionada: (indice) => indice == 0,
-      rodape: itensExibicao.isEmpty
-          ? 'Sem tabela não dá pra bipar — o preço vem dela. Selecione a tabela de preço e bora vender.'
-          : '${itensExibicao.length} referência${itensExibicao.length == 1 ? '' : 's'} · $totalPecas peça${totalPecas == 1 ? '' : 's'} bipada${totalPecas == 1 ? '' : 's'}  ·  '
-              '${segundos == null ? 'Tudo pronto pra bipar' : 'Última leitura há ${segundos}s'}  ·  Tabela $nomeTabela',
-      linhaBuilder: (context, indice) {
-        final item = itensExibicao[indice];
-        final numeroItem = itensExibicao.length - indice;
-        // ponytail: dados['produto'] é ProdutoDoEstoque (sem marca cadastrada
-        // hoje) -- REF usa referenciaIdExterno/referenciaId; marca fica TODO
-        // até o modelo de produto ganhar esse campo.
-        final produto = item.dados['produto'] as ProdutoDoEstoque?;
-        final ref = produto?.referenciaIdExterno ??
-            produto?.referenciaId.toString() ??
-            '-';
-        return [
-          Text('#$numeroItem', style: context.sivTextos.apoio),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(item.descricao, style: context.sivTextos.corpo),
-              // TODO: marca não existe em ProdutoDoEstoque hoje -- exibindo
-              // só REF até o backend/model trazer a marca da referência.
-              Text('REF $ref', style: context.sivTextos.apoio),
-            ],
-          ),
-          Text(
-            'Cor: ${item.cor.isEmpty ? '-' : item.cor}  •  Tam: ${item.tamanho.isEmpty ? '-' : item.tamanho}',
-            style: context.sivTextos.apoio,
-          ),
-          Text(_formatarMoeda(item.valorUnitario ?? 0),
-              style: context.sivTextos.corpo),
-          Text('${item.quantidadeLida}', style: context.sivTextos.secao),
-          Text(_formatarMoeda(item.valorTotal), style: context.sivTextos.corpo),
-        ];
-      },
-    );
-  }
-
-  Widget _buildPainelDireito(
-    BuildContext context,
-    VendaState state,
-    LeitorState leitorState,
-  ) {
-    final cores = context.sivColors;
+  Widget _buildPainelDireito(BuildContext context, VendaState state) {
     final textos = context.sivTextos;
-    final temItens = leitorState.itens.isNotEmpty;
+    final temItens = _leitorController.itens.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -623,7 +422,7 @@ class _VendaPageState extends State<VendaPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _linhaResumo(context, 'Subtotal',
-                  _formatarMoeda(leitorState.valorTotalLido)),
+                  _formatarMoeda(_leitorController.valorTotalLido)),
               // TODO: desconto e entrega só são decididos na tela de
               // pagamento (PagamentosRealizadosWidget, aberta em "Finalizar
               // e ir ao caixa") -- não há valor de rascunho pra mostrar aqui
@@ -641,7 +440,7 @@ class _VendaPageState extends State<VendaPage> {
             children: [
               Text('Total', style: textos.corpo.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
-              Text(_formatarMoeda(leitorState.valorTotalLido),
+              Text(_formatarMoeda(_leitorController.valorTotalLido),
                   style: textos.display.copyWith(color: Colors.white)),
             ],
           ),
@@ -692,134 +491,235 @@ class _VendaPageState extends State<VendaPage> {
 
   Widget _buildConfiguracaoCard(BuildContext context, VendaState state) {
     final bloc = context.read<VendaBloc>();
-    final theme = Theme.of(context);
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final ehMobile =
+        MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Iniciar venda', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            AbsorbPointer(
-              absorbing: state.processando,
+    final iconeIniciar = state.verificandoCaixa
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.play_arrow_outlined);
+    final rotuloIniciar =
+        state.verificandoCaixa ? 'Verificando caixa...' : 'Iniciar leitura';
+    final onPressedIniciar = state.podeIniciarLeitura
+        ? () => bloc.add(const VendaLeituraSolicitada())
+        : null;
+
+    // Mobile define o FAB via SivPageFab (a página não tem Scaffold próprio,
+    // quem monta o Scaffold é o AppShell) -- limpo assim que sair dessa etapa
+    // (ver _buildLeituraAtiva/dispose) pra não deixar o botão da configuração
+    // sobrando na tela de leitura.
+    if (ehMobile) {
+      SivPageFab.definir(
+        FloatingActionButton.extended(
+          onPressed: onPressedIniciar,
+          icon: iconeIniciar,
+          label: Text(rotuloIniciar),
+        ),
+      );
+    } else {
+      SivPageFab.limpar();
+    }
+
+    final campos = [
+          Text(
+            'Iniciar venda',
+            style: textos.secao.copyWith(fontSize: ehMobile ? 19 : 22),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            ehMobile
+                ? 'Selecione vendedor e tabela de preço pra habilitar a leitura.'
+                : 'Selecione o vendedor e a tabela de preço pra habilitar a leitura. Cliente pode ser identificado depois.',
+            style: textos.apoio.copyWith(color: cores.textoApoio),
+          ),
+          SizedBox(height: ehMobile ? 20 : 26),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('CLIENTE', style: textos.rotulo.copyWith(color: cores.textoApoio)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  border: Border.all(color: cores.hairline),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Text(
+                  'Opcional',
+                  style: textos.apoio.copyWith(color: cores.textoApoio),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          widget.pessoaSeletor(
+            SeletorData(
+              compacto: true,
+              itemsSelecionadosInicial: state.clienteSelecionado == null
+                  ? null
+                  : [state.clienteSelecionado!],
+              onChanged: (selecionados) {
+                bloc.add(
+                  VendaClienteSelecionado(
+                    clienteSelecionado:
+                        selecionados.isEmpty ? null : selecionados.first,
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: ehMobile ? 16 : 18),
+          Text('VENDEDOR', style: textos.rotulo.copyWith(color: cores.textoApoio)),
+          const SizedBox(height: 7),
+          widget.vendedoresSeletor(
+            SeletorData(
+              compacto: true,
+              itemsSelecionadosInicial: state.vendedorSelecionado == null
+                  ? null
+                  : [state.vendedorSelecionado!],
+              onChanged: (selecionados) {
+                bloc.add(
+                  VendaVendedorSelecionado(
+                    vendedorSelecionado:
+                        selecionados.isEmpty ? null : selecionados.first,
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: ehMobile ? 16 : 28),
+          Text(
+            'TABELA DE PREÇO',
+            style: textos.rotulo.copyWith(color: cores.textoApoio),
+          ),
+          const SizedBox(height: 7),
+          widget.tabelasDePrecoSeletor(
+            SeletorData(
+              compacto: true,
+              itemsSelecionadosInicial: state.tabelaDePrecoSelecionada == null
+                  ? null
+                  : [state.tabelaDePrecoSelecionada!],
+              onChanged: (selecionados) {
+                bloc.add(
+                  VendaTabelaDePrecoSelecionada(
+                    tabelaDePrecoSelecionada:
+                        selecionados.isEmpty ? null : selecionados.first,
+                  ),
+                );
+              },
+            ),
+          ),
+        ];
+
+    if (ehMobile) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: AbsorbPointer(
+          absorbing: state.processando,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: campos,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton.icon(
+                  onPressed: state.estadoInicial
+                      ? () => _abrirOrcamentos(context)
+                      : null,
+                  icon: const Icon(Icons.description_outlined, size: 16),
+                  label: const Text('Ver orçamentos salvos'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final conteudoDesktop = AbsorbPointer(
+      absorbing: state.processando,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
               child: Column(
-                children: [
-                  widget.pessoaSeletor(
-                    SeletorData(
-                      itemsSelecionadosInicial: state.clienteSelecionado == null
-                          ? null
-                          : [state.clienteSelecionado!],
-                      onChanged: (selecionados) {
-                        bloc.add(
-                          VendaClienteSelecionado(
-                            clienteSelecionado: selecionados.isEmpty
-                                ? null
-                                : selecionados.first,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  widget.vendedoresSeletor(
-                    SeletorData(
-                      itemsSelecionadosInicial:
-                          state.vendedorSelecionado == null
-                              ? null
-                              : [state.vendedorSelecionado!],
-                      onChanged: (selecionados) {
-                        bloc.add(
-                          VendaVendedorSelecionado(
-                            vendedorSelecionado: selecionados.isEmpty
-                                ? null
-                                : selecionados.first,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  widget.tabelasDePrecoSeletor(
-                    SeletorData(
-                      itemsSelecionadosInicial:
-                          state.tabelaDePrecoSelecionada == null
-                              ? null
-                              : [state.tabelaDePrecoSelecionada!],
-                      onChanged: (selecionados) {
-                        bloc.add(
-                          VendaTabelaDePrecoSelecionada(
-                            tabelaDePrecoSelecionada: selecionados.isEmpty
-                                ? null
-                                : selecionados.first,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: campos,
               ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton.icon(
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
                   onPressed: state.estadoInicial
                       ? () => _abrirOrcamentos(context)
                       : null,
                   icon: const Icon(Icons.description_outlined),
                   label: const Text('Orçamentos'),
                 ),
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: state.podeIniciarLeitura
-                      ? () => bloc.add(const VendaLeituraSolicitada())
-                      : null,
-                  icon: state.verificandoCaixa
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.play_arrow_outlined),
-                  label: Text(
-                    state.verificandoCaixa
-                        ? 'Verificando caixa...'
-                        : 'Bora vender',
-                  ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onPressedIniciar,
+                  icon: iconeIniciar,
+                  label: Text(rotuloIniciar),
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 540),
+        child: Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(34),
+              decoration: BoxDecoration(
+                color: cores.superficie,
+                borderRadius: BorderRadius.circular(4),
+                boxShadow: [
+                  BoxShadow(
+                    color: cores.textoPrincipal.withValues(alpha: 0.06),
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+              child: conteudoDesktop,
             ),
+            ...sivCantosBlueprint(cores.aco),
           ],
         ),
       ),
     );
   }
 
-  void _submeterCodigo() {
-    final codigo = _codigoController.text.trim();
-    if (codigo.isEmpty) {
-      _solicitarFocoLeitura();
-      return;
-    }
-
-    _codigoController.clear();
-    if (_modoRemocao) {
-      _leitorController.removerQuantidade(codigo);
-    } else {
-      _leitorController.lerCodigo(codigo);
-    }
-    _solicitarFocoLeitura();
-  }
-
   Future<void> _abrirBuscaManual(BuildContext context, VendaState state) async {
+    final modoRemocao = _leitorController.modoRemocao;
     final resultado = await abrirBuscaManualDeProduto(
       context: context,
       buscaDataSource: sl<ILeitorBuscaDataDatasource>(),
       tabelaDePrecoId: state.tabelaDePrecoId,
-      modoRemocao: _modoRemocao,
+      modoRemocao: modoRemocao,
     );
 
     if (resultado == null) {
@@ -827,7 +727,7 @@ class _VendaPageState extends State<VendaPage> {
       return;
     }
 
-    if (_modoRemocao) {
+    if (modoRemocao) {
       _leitorController.removerQuantidade(
         resultado.produto.codigoDeBarras,
         quantidade: resultado.quantidade,
@@ -1210,7 +1110,6 @@ class _VendaPageState extends State<VendaPage> {
   void _reiniciarFluxo(BuildContext context) {
     _leitorController.limpar();
     _ultimoOrcamentoSalvoContador = 0;
-    _ultimaLeituraEm = null;
     context.read<VendaBloc>().add(const VendaResetSolicitado());
     _solicitarFocoLeitura();
   }

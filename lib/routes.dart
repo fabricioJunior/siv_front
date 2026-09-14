@@ -311,6 +311,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                 onChanged: data.onChanged,
                 onlyView: data.onlyView,
                 clienteOuFuncionario: true,
+                compacto: data.compacto,
               ),
           vendedoresSeletor:
               (data) =>
@@ -322,6 +323,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                     onChanged: data.onChanged,
                     onlyView: data.onlyView,
                     titulo: 'Vendedor',
+                    compacto: data.compacto,
                   ),
           tabelasDePrecoSeletor:
               (data) =>
@@ -331,6 +333,7 @@ Map<String, Widget Function(BuildContext)> routes = {
                     itemsSelecionadosInicial: data.itemsSelecionadosInicial,
                     onChanged: data.onChanged,
                     onlyView: data.onlyView,
+                    compacto: data.compacto,
                   ),
           formasDePagamentoSeletor:
               (data) =>

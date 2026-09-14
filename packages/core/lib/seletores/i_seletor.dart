@@ -8,11 +8,17 @@ class SeletorData {
   final bool onlyView;
   final Set<int>? idsPermitidos;
 
+  /// Quando true, o seletor renderiza como campo fechado (ícone + valor +
+  /// chevron) que abre a busca real num modal, em vez da busca inline
+  /// sempre visível. Ver [SeletorGenericoCompacto].
+  final bool compacto;
+
   const SeletorData({
     this.itemsSelecionadosInicial,
     this.onChanged,
     this.onlyView = false,
     this.idsPermitidos,
+    this.compacto = false,
   });
 }
 

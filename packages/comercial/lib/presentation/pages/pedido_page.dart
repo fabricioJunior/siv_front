@@ -360,8 +360,10 @@ class _PedidoPageState extends State<PedidoPage> {
     final id = int.tryParse('${selecionado['id']}');
     if (id == null) return;
 
+    final complemento = (selecionado['complemento'] as String? ?? '').trim();
     final resumo =
         '${selecionado['logradouro'] ?? ''}, ${selecionado['numero'] ?? ''}'
+        '${complemento.isNotEmpty ? ' - $complemento' : ''}'
         ' - ${selecionado['bairro'] ?? ''}';
 
     setState(() {

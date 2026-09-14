@@ -50,8 +50,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
   @override
   void initState() {
     super.initState();
-    _bloc = sl<EmpresaBloc>()
-      ..add(EmpresaIniciou(idEmpresa: widget.idEmpresa));
+    _bloc = sl<EmpresaBloc>()..add(EmpresaIniciou(idEmpresa: widget.idEmpresa));
     _terminaisBloc = sl<TerminaisBloc>();
     if (widget.idEmpresa != null) {
       _terminaisBloc.add(TerminaisIniciou(empresaId: widget.idEmpresa!));
@@ -120,8 +119,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
             SivAviso.mostrar(context, mensagem: 'Empresa salva.');
           }
         },
-        buildWhen: (previous, current) =>
-            previous is! EmpresaEditarEmProgresso,
+        buildWhen: (previous, current) => previous is! EmpresaEditarEmProgresso,
         builder: (context, state) {
           if (state is EmpresaCarregarEmProgresso ||
               state is EmpresaNaoInicializada) {
@@ -162,7 +160,10 @@ class _EmpresaPageState extends State<EmpresaPage> {
         if (acoes.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
-            child: Row(mainAxisAlignment: MainAxisAlignment.end, children: acoes),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: acoes,
+            ),
           ),
         _faixaResumo(context, state.empresa),
         const SizedBox(height: SivDimensoes.gapCards),
@@ -200,7 +201,10 @@ class _EmpresaPageState extends State<EmpresaPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: cores.superficieRecuada,
                   borderRadius: BorderRadius.circular(SivDimensoes.raio),
@@ -238,7 +242,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                   builder: (context, state) => _indicador(
                     context,
                     label: 'Terminais',
-                    valor: state.terminais.isEmpty && state is! TerminaisCarregarSucesso
+                    valor:
+                        state.terminais.isEmpty &&
+                            state is! TerminaisCarregarSucesso
                         ? '—'
                         : state.terminais.length.toString(),
                   ),
@@ -261,7 +267,11 @@ class _EmpresaPageState extends State<EmpresaPage> {
               // Empresa nem no EmpresaBloc -- falta o contrato dessa
               // informação vir de configuração fiscal.
               Expanded(
-                child: _indicador(context, label: 'Situação da NF-e', valor: '—'),
+                child: _indicador(
+                  context,
+                  label: 'Situação da NF-e',
+                  valor: '—',
+                ),
               ),
             ],
           ),
@@ -270,7 +280,11 @@ class _EmpresaPageState extends State<EmpresaPage> {
     );
   }
 
-  Widget _indicador(BuildContext context, {required String label, required String valor}) {
+  Widget _indicador(
+    BuildContext context, {
+    required String label,
+    required String valor,
+  }) {
     final textos = context.sivTextos;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,16 +297,16 @@ class _EmpresaPageState extends State<EmpresaPage> {
   }
 
   String _labelRegime(TipoRegimeEmpresa? regime) => switch (regime) {
-        TipoRegimeEmpresa.normal => 'Normal',
-        TipoRegimeEmpresa.microEmpresa => 'Micro Empresa',
-        TipoRegimeEmpresa.epp => 'EPP',
-        TipoRegimeEmpresa.lucroReal => 'Lucro Real',
-        TipoRegimeEmpresa.lucroPresumido => 'Lucro Presumido',
-        TipoRegimeEmpresa.mei => 'MEI',
-        TipoRegimeEmpresa.eireli => 'Eireli',
-        TipoRegimeEmpresa.outros => 'Outros',
-        null => '—',
-      };
+    TipoRegimeEmpresa.normal => 'Normal',
+    TipoRegimeEmpresa.microEmpresa => 'Micro Empresa',
+    TipoRegimeEmpresa.epp => 'EPP',
+    TipoRegimeEmpresa.lucroReal => 'Lucro Real',
+    TipoRegimeEmpresa.lucroPresumido => 'Lucro Presumido',
+    TipoRegimeEmpresa.mei => 'MEI',
+    TipoRegimeEmpresa.eireli => 'Eireli',
+    TipoRegimeEmpresa.outros => 'Outros',
+    null => '—',
+  };
 
   String _cnpjMascarado(String? cnpj) {
     if (cnpj == null || cnpj.isEmpty) return 'CNPJ não informado';
@@ -308,8 +322,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final secao in _SecaoEmpresa.values)
-            _itemSubNav(context, secao),
+          for (final secao in _SecaoEmpresa.values) _itemSubNav(context, secao),
         ],
       ),
     );
@@ -333,7 +346,11 @@ class _EmpresaPageState extends State<EmpresaPage> {
               color: selecionado ? cores.aco : Colors.transparent,
             ),
             const SizedBox(width: 8),
-            Icon(secao.icone, size: 18, color: selecionado ? cores.acoProfundo : cores.textoApoio),
+            Icon(
+              secao.icone,
+              size: 18,
+              color: selecionado ? cores.acoProfundo : cores.textoApoio,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -425,10 +442,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
           OutlinedButton.icon(
             onPressed: !habilitado
                 ? null
-                : () => Navigator.of(context).pushNamed(
-                      rota,
-                      arguments: {'empresaId': empresa!.id},
-                    ),
+                : () => Navigator.of(
+                    context,
+                  ).pushNamed(rota, arguments: {'empresaId': empresa!.id}),
             icon: const Icon(Icons.open_in_new, size: 18),
             label: Text(habilitado ? 'Abrir tela' : 'Salve a empresa primeiro'),
           ),
@@ -447,7 +463,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
           _campo(
             label: 'Nome',
             valorInicial: empresa?.nome ?? '',
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe um nome' : null,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Informe um nome' : null,
             onChanged: (v) => _bloc.add(EmpresaEditou(nome: v)),
             fieldKey: const Key('nome_empresa_text_field'),
           ),
@@ -468,8 +485,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'Nome fantasia',
                   valorInicial: empresa?.nomeFantasia ?? '',
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Informe um nome fantasia' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Informe um nome fantasia'
+                      : null,
                   onChanged: (v) => _bloc.add(EmpresaEditou(nomeFantasia: v)),
                   fieldKey: const Key('nome_fantasia_empresa'),
                 ),
@@ -483,7 +501,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'CNPJ',
                   valorInicial: empresa?.cnpj ?? '',
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o CNPJ' : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Informe o CNPJ' : null,
                   onChanged: (v) => _bloc.add(EmpresaEditou(cnpj: v)),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
@@ -498,9 +517,11 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'Inscrição estadual',
                   valorInicial: empresa?.inscricaoEstadual ?? '',
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Informe a inscrição estadual' : null,
-                  onChanged: (v) => _bloc.add(EmpresaEditou(inscricaoEstadual: v)),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Informe a inscrição estadual'
+                      : null,
+                  onChanged: (v) =>
+                      _bloc.add(EmpresaEditou(inscricaoEstadual: v)),
                   fieldKey: const Key('inscricao_estadual_empresa'),
                 ),
               ),
@@ -513,7 +534,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'E-mail',
                   valorInicial: empresa?.email ?? '',
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o e-mail' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Informe o e-mail'
+                      : null,
                   onChanged: (v) => _bloc.add(EmpresaEditou(email: v)),
                   keyboardType: TextInputType.emailAddress,
                   fieldKey: const Key('email_empresa'),
@@ -524,7 +547,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'Telefone',
                   valorInicial: empresa?.telefone ?? '',
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o telefone' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Informe o telefone'
+                      : null,
                   onChanged: (v) => _bloc.add(EmpresaEditou(telefone: v)),
                   keyboardType: TextInputType.phone,
                   fieldKey: const Key('telefone_empresa'),
@@ -548,7 +573,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
   String _enderecoResumido(Empresa? empresa) {
     if (empresa == null) return '';
     final partes = [
-      if ((empresa.logradouro ?? '').isNotEmpty) '${empresa.logradouro}, ${empresa.numero ?? 's/n'}',
+      if ((empresa.logradouro ?? '').isNotEmpty)
+        '${empresa.logradouro}, ${empresa.numero ?? 's/n'}',
       if ((empresa.bairro ?? '').isNotEmpty) empresa.bairro!,
       if ((empresa.municipio ?? '').isNotEmpty) empresa.municipio!,
       if ((empresa.uf ?? '').isNotEmpty) empresa.uf!,
@@ -580,7 +606,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
           _campo(
             label: 'Código de natureza jurídica',
             valorInicial: empresa?.codigoDeNaturezaJuridica ?? '',
-            onChanged: (v) => _bloc.add(EmpresaEditou(codigoDeNaturezaJuridica: v)),
+            onChanged: (v) =>
+                _bloc.add(EmpresaEditou(codigoDeNaturezaJuridica: v)),
             fieldKey: const Key('codigo_de_natureza_juridica_empresa'),
           ),
           const SizedBox(height: 14),
@@ -609,7 +636,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
               TipoDeSubstituicaoTributaria.calcula: 'Calcula',
               TipoDeSubstituicaoTributaria.naoCalcula: 'Não calcula',
             },
-            onChanged: (v) => _bloc.add(EmpresaEditou(substituicaoTributaria: v)),
+            onChanged: (v) =>
+                _bloc.add(EmpresaEditou(substituicaoTributaria: v)),
           ),
         ],
       ),
@@ -623,7 +651,10 @@ class _EmpresaPageState extends State<EmpresaPage> {
         children: [
           Text('Endereço', style: context.sivTextos.secao),
           const SizedBox(height: 4),
-          Text('Usado na emissão de notas fiscais (SEFAZ).', style: context.sivTextos.apoio),
+          Text(
+            'Usado na emissão de notas fiscais (SEFAZ).',
+            style: context.sivTextos.apoio,
+          ),
           const SizedBox(height: 16),
           _campo(
             label: 'Logradouro',
@@ -671,7 +702,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _dropdown<String>(
                   context,
                   label: 'UF',
-                  valorInicial: (empresa?.uf?.isEmpty ?? true) ? null : empresa!.uf,
+                  valorInicial: (empresa?.uf?.isEmpty ?? true)
+                      ? null
+                      : empresa!.uf,
                   itens: {
                     for (var i = 0; i < Estados.listaEstadosSigla.length; i++)
                       Estados.listaEstadosSigla[i]:
@@ -689,7 +722,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 child: _campo(
                   label: 'Código IBGE do município',
                   valorInicial: empresa?.codigoMunicipioIbge ?? '',
-                  onChanged: (v) => _bloc.add(EmpresaEditou(codigoMunicipioIbge: v)),
+                  onChanged: (v) =>
+                      _bloc.add(EmpresaEditou(codigoMunicipioIbge: v)),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(7),
@@ -721,7 +755,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
           const SizedBox(height: 14),
           _campo(
             label: 'Coordenadas (copie do Google Maps ou digite lat, lng)',
-            valorInicial: empresa?.latitude != null && empresa?.longitude != null
+            valorInicial:
+                empresa?.latitude != null && empresa?.longitude != null
                 ? '${empresa!.latitude}, ${empresa.longitude}'
                 : '',
             helperText: 'Ex: 2°54\'49.7"S 41°45\'15.6"W ou -2.9138, -41.7543',
@@ -734,7 +769,12 @@ class _EmpresaPageState extends State<EmpresaPage> {
             },
             onChanged: (v) {
               final coordenadas = parseCoordenadas(v);
-              _bloc.add(EmpresaEditou(latitude: coordenadas?.$1, longitude: coordenadas?.$2));
+              _bloc.add(
+                EmpresaEditou(
+                  latitude: coordenadas?.$1,
+                  longitude: coordenadas?.$2,
+                ),
+              );
             },
             fieldKey: const Key('coordenadas_empresa'),
           ),
@@ -757,7 +797,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('Terminais', style: context.sivTextos.secao)),
+              Expanded(
+                child: Text('Terminais', style: context.sivTextos.secao),
+              ),
               IconButton(
                 tooltip: 'Adicionar terminal',
                 onPressed: empresaId == null
@@ -768,7 +810,9 @@ class _EmpresaPageState extends State<EmpresaPage> {
                           empresaId: empresaId,
                         );
                         if (resultado == true) {
-                          _terminaisBloc.add(TerminaisIniciou(empresaId: empresaId));
+                          _terminaisBloc.add(
+                            TerminaisIniciou(empresaId: empresaId),
+                          );
                         }
                       },
                 icon: const Icon(Icons.add),
@@ -791,10 +835,15 @@ class _EmpresaPageState extends State<EmpresaPage> {
                 );
               }
               if (state.terminais.isEmpty) {
-                return Text('Nenhum terminal cadastrado.', style: context.sivTextos.apoio);
+                return Text(
+                  'Nenhum terminal cadastrado.',
+                  style: context.sivTextos.apoio,
+                );
               }
 
-              final terminais = resumido ? state.terminais.take(4).toList() : state.terminais;
+              final terminais = resumido
+                  ? state.terminais.take(4).toList()
+                  : state.terminais;
 
               return SivTabela(
                 colunas: const [
@@ -805,7 +854,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
                   SivTabelaColuna(titulo: 'STATUS'),
                 ],
                 quantidadeLinhas: terminais.length,
-                linhaBuilder: (context, i) => _linhaTerminal(context, terminais[i]),
+                linhaBuilder: (context, i) =>
+                    _linhaTerminal(context, terminais[i]),
                 rodape: resumido && state.terminais.length > terminais.length
                     ? '+${state.terminais.length - terminais.length} terminais'
                     : '${terminais.length} terminal(is)',
@@ -833,7 +883,8 @@ class _EmpresaPageState extends State<EmpresaPage> {
     return _cardAtalho(
       context,
       titulo: 'Parâmetros',
-      descricao: 'Exigir cliente na venda, desconto máximo do vendedor, '
+      descricao:
+          'Exigir cliente na venda, desconto máximo do vendedor, '
           'imprimir romaneio, URL do site da empresa e demais parâmetros.',
       rota: '/parametros_empresa',
       empresa: empresa,
@@ -855,12 +906,18 @@ Widget _campo({
   return TextFormField(
     key: fieldKey,
     readOnly: readOnly,
-    controller: TextEditingController.fromValue(TextEditingValue(text: valorInicial)),
+    controller: TextEditingController.fromValue(
+      TextEditingValue(text: valorInicial),
+    ),
     validator: validator,
     onChanged: onChanged,
     inputFormatters: inputFormatters,
     keyboardType: keyboardType,
-    decoration: InputDecoration(labelText: label, helperText: helperText, helperMaxLines: 2),
+    decoration: InputDecoration(
+      labelText: label,
+      helperText: helperText,
+      helperMaxLines: 2,
+    ),
   );
 }
 

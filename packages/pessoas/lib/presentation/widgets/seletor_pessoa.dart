@@ -23,6 +23,7 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
   final bool? eFuncionario;
   final bool? eFornecedor;
   final bool? clienteOuFuncionario;
+  final bool compacto;
 
   @override
   final List<SelectData>? itemsSelecionadosInicial;
@@ -47,6 +48,7 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
     this.eFuncionario,
     this.eFornecedor,
     this.clienteOuFuncionario,
+    this.compacto = false,
   });
 
   @override
@@ -159,11 +161,7 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
             ),
           ];
 
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SeletorGenerico<Pessoa>(
+          final seletorGenerico = SeletorGenerico<Pessoa>(
                 toSelectData: _toSelectData,
                 itens: pessoasDisponiveis,
                 itemLabel: (pessoa) => pessoa.id != null
@@ -218,7 +216,15 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                   );
                 },
                 confirmarEmSeparadores: const [',', ';'],
-              ),
+              );
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              widget.compacto
+                  ? SeletorGenericoCompacto<Pessoa>(seletor: seletorGenerico)
+                  : seletorGenerico,
               if (buscandoNoServidor)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),

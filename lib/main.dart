@@ -188,8 +188,7 @@ class MyApp extends StatelessWidget {
                   'Não foi possível iniciar o aplicativo.',
               detalhesTecnicos: state.detalhesErroInicializacao,
               onRetry: () => sl<AppBloc>().add(AppIniciou()),
-              onSairELimparDados: () =>
-                  sl<AppBloc>().add(AppDesautenticou()),
+              onSairELimparDados: () => sl<AppBloc>().add(AppDesautenticou()),
             );
           }
 

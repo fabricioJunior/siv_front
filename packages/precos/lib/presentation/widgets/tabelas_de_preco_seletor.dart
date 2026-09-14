@@ -22,6 +22,7 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
   final String? titulo;
 
   final bool onlyView;
+  final bool compacto;
 
   const TabelasDePrecoSeletor({
     super.key,
@@ -32,6 +33,7 @@ class TabelasDePrecoSeletor extends StatefulWidget implements ISeletor {
     this.titulo,
     this.onChanged,
     this.onlyView = false,
+    this.compacto = false,
   });
 
   @override
@@ -153,7 +155,7 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
             );
           }
 
-          return SeletorGenerico<TabelaDePreco>(
+          final seletorGenerico = SeletorGenerico<TabelaDePreco>(
             toSelectData: (item) => SelectData(
               id: item.id ?? 0,
               nome: item.nome,
@@ -215,6 +217,10 @@ class _TabelasDePrecoSeletorState extends State<TabelasDePrecoSeletor> {
             },
             confirmarEmSeparadores: const [',', ';'],
           );
+
+          return widget.compacto
+              ? SeletorGenericoCompacto<TabelaDePreco>(seletor: seletorGenerico)
+              : seletorGenerico;
         },
       ),
     );

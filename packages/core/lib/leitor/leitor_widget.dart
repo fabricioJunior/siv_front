@@ -8,6 +8,7 @@ import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
+import 'package:core/presentation/siv_cantos_blueprint.dart';
 import 'package:core/services/camera_scanner_service.dart';
 import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
@@ -271,15 +272,6 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
-  String _formatarDataHora(DateTime dataHora) {
-    final dia = dataHora.day.toString().padLeft(2, '0');
-    final mes = dataHora.month.toString().padLeft(2, '0');
-    final hora = dataHora.hour.toString().padLeft(2, '0');
-    final minuto = dataHora.minute.toString().padLeft(2, '0');
-    final segundo = dataHora.second.toString().padLeft(2, '0');
-    return '$dia/$mes $hora:$minuto:$segundo';
-  }
-
   String _formatarHora(DateTime dataHora) {
     final hora = dataHora.hour.toString().padLeft(2, '0');
     final minuto = dataHora.minute.toString().padLeft(2, '0');
@@ -429,270 +421,131 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     }).toList();
   }
 
-  Widget _gradePorReferencia(LeitorState state) {
-    if (state.itens.isEmpty) {
-      return Center(
-        child: Text(
-          'Nenhum produto lido ainda.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      );
-    }
+  Widget _construirAreaDeBipagem(BuildContext context, LeitorState state) {
+    final ehMobile =
+        MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final fonteCampo = ehMobile ? 19.0 : 24.0;
 
-    final referenciasAgrupadas = _agruparPorReferencia(state);
-
-    return ListView.separated(
-      itemCount: referenciasAgrupadas.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final referencia = referenciasAgrupadas[index];
-        final cores = referencia.cores;
-        final tamanhos = referencia.tamanhos;
-        final gradeQuantidade = referencia.gradeQuantidade;
-
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+    // No mobile o campo de código já cobre "escanear" (autofocus/teclado com
+    // leitor físico) e "buscar" -- os dois ícones aqui só dão acesso rápido às
+    // mesmas ações que existiam como botões separados antes, sem abrir mão do
+    // visual blueprint que já era exclusivo do desktop.
+    return Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: ehMobile ? 14 : 20,
+            vertical: ehMobile ? 12 : 18,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          decoration: BoxDecoration(
+            color: cores.superficie,
+            border: Border.all(color: cores.aco),
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            boxShadow: [
+              BoxShadow(
+                color: cores.textoPrincipal.withValues(alpha: 0.06),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+              BoxShadow(
+                color: cores.aco.withValues(alpha: 0.1),
+                blurRadius: 0,
+                spreadRadius: 3,
+              ),
+            ],
+          ),
+          child: Row(
             children: [
-              Text(
-                'Referência ${referencia.referencia}',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                referencia.nome,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  defaultColumnWidth: const IntrinsicColumnWidth(),
-                  border: TableBorder.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    width: 0.8,
-                  ),
+              IconeCodigoDeBarras(cor: cores.aco, tamanho: ehMobile ? 22 : 26),
+              SizedBox(width: ehMobile ? 10 : 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TableRow(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                      ),
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text(
-                            'Cor \\ Tam',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        ...tamanhos.map(
-                          (tamanho) => Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(
-                              tamanho,
-                              textAlign: TextAlign.center,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      _modoRemocao ? 'CÓDIGO PARA REMOVER' : 'BIPE O PRODUTO',
+                      style: textos.rotulo.copyWith(color: cores.aco),
                     ),
-                    ...cores.map(
-                      (cor) => TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(cor),
-                          ),
-                          ...tamanhos.map(
-                            (tamanho) => Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                '${gradeQuantidade[cor]?[tamanho] ?? 0}',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ],
+                    TextField(
+                      controller: _codigoController,
+                      focusNode: _codigoFocusNode,
+                      autofocus: widget.desativado ? false : widget.autofocus,
+                      enabled: !widget.desativado,
+                      style: textos.secao.copyWith(
+                        fontSize: fonteCampo,
+                        color: cores.textoPrincipal,
                       ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        isCollapsed: true,
+                        // Tema global (InputDecorationTheme) define
+                        // contentPadding horizontal:14 -- isCollapsed
+                        // deveria anular, mas força explícito pra garantir
+                        // que o texto alinha exatamente com o rótulo
+                        // "BIPE O PRODUTO" acima (mesma margem esquerda).
+                        contentPadding: EdgeInsets.zero,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        hintText: _modoRemocao
+                            ? 'Bipe para remover 1 unidade do item'
+                            : widget.campoCodigoHint,
+                        hintStyle: textos.secao.copyWith(
+                          fontSize: fonteCampo,
+                          color: cores.textoDesabilitado,
+                        ),
+                      ),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submeterCodigo(),
                     ),
                   ],
                 ),
               ),
+              if (ehMobile) ...[
+                IconButton(
+                  tooltip: 'Escanear com a câmera',
+                  onPressed: state.processando || widget.desativado
+                      ? null
+                      : _escanearComCamera,
+                  icon: Icon(Icons.qr_code_scanner_outlined, color: cores.aco),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                ),
+                if (widget.buscaDataSource != null)
+                  IconButton(
+                    tooltip: 'Busca manual',
+                    onPressed: state.processando || widget.desativado
+                        ? null
+                        : _abrirBuscaManual,
+                    icon: Icon(Icons.search_outlined, color: cores.aco),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+              ],
+              // Sem botão de submit -- confirma só por onSubmitted (Enter),
+              // igual ao mock (só ícone+campo, sem seta). Spinner de
+              // processando continua, não é um botão, é feedback de estado.
+              if (state.processando) ...[
+                const SizedBox(width: 12),
+                const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ],
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget _construirAreaDeBipagem(BuildContext context, LeitorState state) {
-    final ehMobile =
-        MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
-
-    if (!ehMobile) {
-      final cores = context.sivColors;
-      final textos = context.sivTextos;
-
-      return Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            decoration: BoxDecoration(
-              color: cores.superficie,
-              border: Border.all(color: cores.aco),
-              borderRadius: BorderRadius.circular(SivDimensoes.raio),
-              boxShadow: [
-                BoxShadow(
-                  color: cores.textoPrincipal.withValues(alpha: 0.06),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-                BoxShadow(
-                  color: cores.aco.withValues(alpha: 0.1),
-                  blurRadius: 0,
-                  spreadRadius: 3,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                IconeCodigoDeBarras(cor: cores.aco, tamanho: 26),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _modoRemocao ? 'CÓDIGO PARA REMOVER' : 'BIPE O PRODUTO',
-                        style: textos.rotulo.copyWith(color: cores.aco),
-                      ),
-                      TextField(
-                        controller: _codigoController,
-                        focusNode: _codigoFocusNode,
-                        autofocus: widget.desativado ? false : widget.autofocus,
-                        enabled: !widget.desativado,
-                        style: textos.secao.copyWith(
-                          fontSize: 24,
-                          color: cores.textoPrincipal,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          isCollapsed: true,
-                          // Tema global (InputDecorationTheme) define
-                          // contentPadding horizontal:14 -- isCollapsed
-                          // deveria anular, mas força explícito pra garantir
-                          // que o texto alinha exatamente com o rótulo
-                          // "BIPE O PRODUTO" acima (mesma margem esquerda).
-                          contentPadding: EdgeInsets.zero,
-                          filled: false,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          hintText: _modoRemocao
-                              ? 'Bipe para remover 1 unidade do item'
-                              : widget.campoCodigoHint,
-                          hintStyle: textos.secao.copyWith(
-                            fontSize: 24,
-                            color: cores.textoDesabilitado,
-                          ),
-                        ),
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _submeterCodigo(),
-                      ),
-                    ],
-                  ),
-                ),
-                // Sem botão de submit -- confirma só por onSubmitted (Enter),
-                // igual ao mock (só ícone+campo, sem seta). Spinner de
-                // processando continua, não é um botão, é feedback de estado.
-                if (state.processando) ...[
-                  const SizedBox(width: 12),
-                  const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          ..._cantosBlueprint(cores.aco),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: state.processando || widget.desativado
-                ? null
-                : _escanearComCamera,
-            icon: const Icon(Icons.qr_code_scanner_outlined),
-            label: const Text('Escanear código'),
-          ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: widget.buscaDataSource == null ||
-                    state.processando ||
-                    widget.desativado
-                ? null
-                : _abrirBuscaManual,
-            icon: const Icon(Icons.search_outlined),
-            label: const Text('Buscar'),
-          ),
-        ),
+        ...sivCantosBlueprint(cores.aco),
       ],
     );
-  }
-
-  List<Widget> _cantosBlueprint(Color cor) {
-    const tamanho = 8.0;
-    Widget canto({required bool top, required bool left}) {
-      return Positioned(
-        top: top ? 0 : null,
-        bottom: top ? null : 0,
-        left: left ? 0 : null,
-        right: left ? null : 0,
-        child: Container(
-          width: tamanho,
-          height: tamanho,
-          decoration: BoxDecoration(
-            border: Border(
-              top: top ? BorderSide(color: cor) : BorderSide.none,
-              bottom: !top ? BorderSide(color: cor) : BorderSide.none,
-              left: left ? BorderSide(color: cor) : BorderSide.none,
-              right: !left ? BorderSide(color: cor) : BorderSide.none,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return [
-      canto(top: true, left: true),
-      canto(top: true, left: false),
-      canto(top: false, left: true),
-      canto(top: false, left: false),
-    ];
   }
 
   Widget _seletorVisualizacaoDesktop(BuildContext context) {
@@ -759,6 +612,87 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     : cores.textoApoio,
               ),
               const SizedBox(width: 7),
+              Text(
+                rotulo,
+                style: textos.rotulo.copyWith(
+                  color: selecionado
+                      ? cores.textoSobreEscuroTitulo
+                      : cores.textoApoio,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _seletorVisualizacaoMobile(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    const segmentos = [
+      (_LeitorVisualizacao.historico, Icons.view_list_outlined, 'LISTA'),
+      (_LeitorVisualizacao.grade, Icons.grid_view_outlined, 'GRADE'),
+      (_LeitorVisualizacao.porProduto, Icons.bar_chart_outlined, 'QTDES'),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          for (var i = 0; i < segmentos.length; i++)
+            Expanded(
+              child: _segmentoMobile(
+                cores: cores,
+                textos: textos,
+                valor: segmentos[i].$1,
+                icone: segmentos[i].$2,
+                rotulo: segmentos[i].$3,
+                comBordaEsquerda: i > 0,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _segmentoMobile({
+    required SivColors cores,
+    required SivTextStyles textos,
+    required _LeitorVisualizacao valor,
+    required IconData icone,
+    required String rotulo,
+    required bool comBordaEsquerda,
+  }) {
+    final selecionado = _visualizacao == valor;
+    return Container(
+      decoration: BoxDecoration(
+        color: selecionado ? cores.aco : Colors.transparent,
+        border: comBordaEsquerda
+            ? Border(left: BorderSide(color: cores.hairline))
+            : null,
+      ),
+      child: InkWell(
+        onTap: () => setState(() => _visualizacao = valor),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icone,
+                size: 14,
+                color: selecionado
+                    ? cores.textoSobreEscuroTitulo
+                    : cores.textoApoio,
+              ),
+              const SizedBox(width: 5),
               Text(
                 rotulo,
                 style: textos.rotulo.copyWith(
@@ -1114,7 +1048,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
             ],
           ),
         ),
-        if (destacado) ..._cantosBlueprint(cores.aco),
+        if (destacado) ...sivCantosBlueprint(cores.aco),
       ],
     );
   }
@@ -1269,6 +1203,190 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
+  String _rotuloCorTamanhoQuantidadeMobile({
+    required String tamanho,
+    required String cor,
+    required int quantidade,
+  }) {
+    final tamanhoNormalizado = tamanho.trim();
+    final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
+    if (tamanhoNormalizado.isEmpty || tamanhoNormalizado == '-') {
+      return '$corNormalizada ×$quantidade';
+    }
+    return '$corNormalizada · $tamanhoNormalizado ×$quantidade';
+  }
+
+  Widget _listaMobile(BuildContext context, LeitorState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    if (state.historico.isEmpty) {
+      return Center(
+        child: Text('Nenhuma movimentação registrada ainda.', style: textos.corpo),
+      );
+    }
+
+    final registros = state.historico.reversed.toList();
+
+    return ListView.separated(
+      itemCount: registros.length,
+      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      itemBuilder: (context, index) {
+        final registro = registros[index];
+        final item = _itemPorCodigo(state, registro.codigoDeBarras);
+        final valorUnitario = item?.valorUnitario;
+        final total = valorUnitario != null ? valorUnitario * registro.quantidade : null;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 48,
+                child: Text(
+                  _formatarHora(registro.dataHora),
+                  style: textos.codigo.copyWith(fontSize: 11, color: cores.textoApoio),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      registro.descricao,
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      _rotuloCorTamanhoQuantidadeMobile(
+                        tamanho: registro.tamanho,
+                        cor: registro.cor,
+                        quantidade: registro.quantidade,
+                      ),
+                      style: textos.apoio.copyWith(color: cores.textoApoio),
+                    ),
+                  ],
+                ),
+              ),
+              if (widget.tabelaDePrecoId != null)
+                Text(
+                  total != null ? _formatarMoeda(total) : '—',
+                  style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _gradeMobile(BuildContext context, LeitorState state) {
+    if (state.itens.isEmpty) {
+      return Center(
+        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+      );
+    }
+
+    final referenciasAgrupadas = _agruparPorReferencia(state);
+    int? referenciaRecente;
+    if (state.historico.isNotEmpty) {
+      referenciaRecente =
+          _itemPorCodigo(state, state.historico.last.codigoDeBarras)?.idReferencia;
+    }
+
+    return ListView.separated(
+      itemCount: referenciasAgrupadas.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
+      itemBuilder: (context, index) => _cardReferenciaDesktop(
+        context,
+        referenciasAgrupadas[index],
+        destacado: referenciasAgrupadas[index].referencia == referenciaRecente,
+      ),
+    );
+  }
+
+  Widget _quantidadesMobile(BuildContext context, LeitorState state) {
+    if (state.itens.isEmpty) {
+      return Center(
+        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+      );
+    }
+
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final itensOrdenados = [...state.itens]
+      ..sort((a, b) => b.quantidadeLida.compareTo(a.quantidadeLida));
+
+    return ListView.separated(
+      itemCount: itensOrdenados.length,
+      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      itemBuilder: (context, index) {
+        final item = itensOrdenados[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 40,
+                child: Text(
+                  '×${item.quantidadeLida}',
+                  textAlign: TextAlign.center,
+                  style: textos.secao.copyWith(fontSize: 20, color: cores.acoAtivo),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.descricao,
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor)} · REF ${item.idReferencia}',
+                      style: textos.apoio.copyWith(color: cores.textoApoio),
+                    ),
+                  ],
+                ),
+              ),
+              if (widget.tabelaDePrecoId != null)
+                Text(
+                  _formatarMoeda(item.valorTotal),
+                  style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                ),
+              IconButton(
+                tooltip: 'Remover uma unidade',
+                onPressed: widget.desativado
+                    ? null
+                    : () => _controller.removerQuantidade(item.codigoDeBarras),
+                icon: const Icon(Icons.remove_circle_outline, size: 18),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                tooltip: 'Excluir item da contagem',
+                onPressed: widget.desativado
+                    ? null
+                    : () => _controller.removerItem(item.codigoDeBarras),
+                icon: const Icon(Icons.delete_outline, size: 18),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_sincronizando) {
@@ -1348,6 +1466,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                 setState(() {
                                   _modoRemocao = !_modoRemocao;
                                 });
+                                _controller.modoRemocao = _modoRemocao;
                                 _solicitarFoco();
                               },
                       ),
@@ -1370,39 +1489,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                   ),
                   const Divider(),
                   if (ehMobile)
-                    // Em telas estreitas os 3 segmentos (ícone+texto) somam mais
-                    // largura que a disponível -- estourava RenderFlex bem em
-                    // cima da lista, corrompendo visualmente o resto da tela.
-                    // Scroll horizontal cobre qualquer largura sem precisar
-                    // truncar rótulo nem quebrar layout.
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SegmentedButton<_LeitorVisualizacao>(
-                        segments: const [
-                          ButtonSegment<_LeitorVisualizacao>(
-                            value: _LeitorVisualizacao.porProduto,
-                            icon: Icon(Icons.inventory_2_outlined),
-                            label: Text('Por produto'),
-                          ),
-                          ButtonSegment<_LeitorVisualizacao>(
-                            value: _LeitorVisualizacao.grade,
-                            icon: Icon(Icons.grid_view_outlined),
-                            label: Text('Grade'),
-                          ),
-                          ButtonSegment<_LeitorVisualizacao>(
-                            value: _LeitorVisualizacao.historico,
-                            icon: Icon(Icons.history_outlined),
-                            label: Text('Histórico'),
-                          ),
-                        ],
-                        selected: {_visualizacao},
-                        onSelectionChanged: (selection) {
-                          setState(() {
-                            _visualizacao = selection.first;
-                          });
-                        },
-                      ),
-                    )
+                    _seletorVisualizacaoMobile(context)
                   else
                     _seletorVisualizacaoDesktop(context),
                   const Divider(),
@@ -1457,96 +1544,12 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                               _quantidadesDesktop(context, state),
                           }
                         : switch (_visualizacao) {
-                      _LeitorVisualizacao.porProduto => state.itens.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Nenhum produto lido ainda.',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: state.itens.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(height: 1),
-                              itemBuilder: (context, index) {
-                                final item = state.itens[index];
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    item.descricao,
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  subtitle: Text(
-                                    '${item.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: item.tamanho, cor: item.cor)}\nLidos: ${item.quantidadeLida}${state.controlarQuantidade ? '  •  ${widget.rotuloQuantidadeDisponivel}: ${item.estoqueDisponivel}' : ''}${widget.tabelaDePrecoId != null ? '\n${_descricaoPreco(item)}' : ''}',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                  trailing: Wrap(
-                                    spacing: 4,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        tooltip: 'Remover uma unidade',
-                                        onPressed: widget.desativado
-                                            ? null
-                                            : () =>
-                                                _controller.removerQuantidade(
-                                                  item.codigoDeBarras,
-                                                ),
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        tooltip: 'Excluir item da contagem',
-                                        onPressed: widget.desativado
-                                            ? null
-                                            : () => _controller.removerItem(
-                                                  item.codigoDeBarras,
-                                                ),
-                                        icon: const Icon(Icons.delete_outline),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                      _LeitorVisualizacao.historico => state.historico.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Nenhuma movimentação registrada ainda.',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: state.historico.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(height: 1),
-                              itemBuilder: (context, index) {
-                                final registro = state.historico[
-                                    state.historico.length - 1 - index];
-                                final foiAdicao =
-                                    registro.tipo == LeitorHistoricoTipo.adicao;
-                                return ListTile(
-                                  dense: true,
-                                  visualDensity: VisualDensity.compact,
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    '${foiAdicao ? 'Adicionado' : 'Removido'} ${registro.quantidade} un. - ${registro.descricao}',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                  subtitle: Text(
-                                    '${registro.codigoDeBarras}  •  ${_rotuloTamanhoCor(tamanho: registro.tamanho, cor: registro.cor)}\n${_formatarDataHora(registro.dataHora)}',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                );
-                              },
-                            ),
-                      _LeitorVisualizacao.grade => _gradePorReferencia(state),
+                            _LeitorVisualizacao.porProduto =>
+                              _quantidadesMobile(context, state),
+                            _LeitorVisualizacao.historico =>
+                              _listaMobile(context, state),
+                            _LeitorVisualizacao.grade =>
+                              _gradeMobile(context, state),
                           },
                   ),
                 ],
@@ -2006,6 +2009,14 @@ class LeitorController extends ChangeNotifier {
   double get valorTotalLido => _state.valorTotalLido;
   int get quantidadeItensDistintos => _state.itens.length;
   bool get controlarQuantidade => _state.controlarQuantidade;
+
+  bool _modoRemocao = false;
+  bool get modoRemocao => _modoRemocao;
+  set modoRemocao(bool valor) {
+    if (_modoRemocao == valor) return;
+    _modoRemocao = valor;
+    notifyListeners();
+  }
 
   List<Map<String, dynamic>> get dadosAtuais {
     return _state.itens

@@ -47,7 +47,7 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
       'itemsPorPagina': _pageSize.toString(),
     };
     if (busca != null && busca.isNotEmpty) {
-      query['searchTerm'] = busca;
+      query['procurarPor'] = busca;
     }
     if (eCliente != null) {
       query['eCliente'] = eCliente.toString();

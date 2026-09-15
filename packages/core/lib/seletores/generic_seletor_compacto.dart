@@ -156,6 +156,7 @@ class _SeletorGenericoCompactoState<T>
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: cores.superficie,
       builder: (modalContext) {
         return StatefulBuilder(
           builder: (modalContext, setModalState) {

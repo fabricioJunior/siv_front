@@ -29,33 +29,37 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
       cor: cor,
     );
 
-    List<LeitorData> leitorDataList = [];
-    for (var produto in produtos) {
-      var codigos = await codigosLocalDataSource.recuperarCodigosPorProdutoId(
-        produto.produtoId.toInt(),
-      );
-      if (codigos.isEmpty) {
-        continue;
-      }
-      var preco = tabelaDePrecoId != null
-          ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
-              tabelaDePrecoId: tabelaDePrecoId,
-              referenciaId: produto.referenciaId.toInt(),
-            )
-          : null; 
-      if(tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
-        continue; // Pula produtos sem preço se tabelaDePrecoId for fornecida
-
-      }
-      leitorDataList.add(
-        ProdutoDoLeitorData(
+    // Um `await` por produto (codigo + preco) em sequencia vira N round-trips
+    // um atras do outro -- no Hive era barato (tudo em RAM), no IndexedDB
+    // (web) cada `await` e uma transacao de verdade do browser. `Future.wait`
+    // dispara todas em paralelo, já que nenhuma depende do resultado da outra.
+    final resultados = await Future.wait(
+      produtos.map((produto) async {
+        final codigos =
+            await codigosLocalDataSource.recuperarCodigosPorProdutoId(
+          produto.produtoId.toInt(),
+        );
+        if (codigos.isEmpty) {
+          return null;
+        }
+        final preco = tabelaDePrecoId != null
+            ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
+                tabelaDePrecoId: tabelaDePrecoId,
+                referenciaId: produto.referenciaId.toInt(),
+              )
+            : null;
+        // Pula produtos sem preço se tabelaDePrecoId for fornecida.
+        if (tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
+          return null;
+        }
+        return ProdutoDoLeitorData(
           codigo: codigos.first,
           produto: produto,
           precoDaReferencia: preco,
-        ),
-      );
-     }
-    return leitorDataList;
+        );
+      }),
+    );
+    return resultados.whereType<ProdutoDoLeitorData>().toList();
   }
 }
 

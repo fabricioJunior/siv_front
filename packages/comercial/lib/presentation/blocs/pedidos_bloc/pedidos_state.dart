@@ -4,6 +4,7 @@ class PedidosState extends Equatable {
   final List<Pedido> pedidos;
   final String busca;
   final Set<String> situacoesFiltro;
+  final bool somenteEcommerceFiltro;
   final DateTime? dataInicial;
   final DateTime? dataFinal;
   final String? erro;
@@ -21,6 +22,7 @@ class PedidosState extends Equatable {
     required this.busca,
     required this.step,
     this.situacoesFiltro = const {},
+    this.somenteEcommerceFiltro = false,
     this.dataInicial,
     this.dataFinal,
     this.erro,
@@ -37,6 +39,7 @@ class PedidosState extends Equatable {
       : pedidos = const [],
         busca = '',
         situacoesFiltro = const {},
+        somenteEcommerceFiltro = false,
         dataInicial = null,
         dataFinal = null,
         erro = null,
@@ -61,6 +64,7 @@ class PedidosState extends Equatable {
     List<Pedido>? pedidos,
     String? busca,
     Set<String>? situacoesFiltro,
+    bool? somenteEcommerceFiltro,
     Object? dataInicial = _naoInformado,
     Object? dataFinal = _naoInformado,
     String? erro,
@@ -77,6 +81,8 @@ class PedidosState extends Equatable {
       pedidos: pedidos ?? this.pedidos,
       busca: busca ?? this.busca,
       situacoesFiltro: situacoesFiltro ?? this.situacoesFiltro,
+      somenteEcommerceFiltro:
+          somenteEcommerceFiltro ?? this.somenteEcommerceFiltro,
       dataInicial: identical(dataInicial, _naoInformado)
           ? this.dataInicial
           : dataInicial as DateTime?,
@@ -107,6 +113,7 @@ class PedidosState extends Equatable {
         pedidos,
         busca,
         situacoesFiltro,
+        somenteEcommerceFiltro,
         dataInicial,
         dataFinal,
         erro,

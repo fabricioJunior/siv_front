@@ -7,11 +7,13 @@ abstract class IPedidosRepository {
     String? searchTerm,
     List<String>? situacoes,
     List<String>? situacoesPagamento,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   });
   Future<ContagemPedidosPorSituacao> contarPorSituacao({
     String? searchTerm,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   });

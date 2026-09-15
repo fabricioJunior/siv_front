@@ -10,11 +10,13 @@ class ContarPedidosPorSituacao {
 
   Future<ContagemPedidosPorSituacao> call({
     String? searchTerm,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) =>
       _repository.contarPorSituacao(
         searchTerm: searchTerm,
+        origens: origens,
         dataInicial: dataInicial,
         dataFinal: dataFinal,
       );

@@ -15,7 +15,7 @@ dependencies:
   core: 
     path: ../core
   json_annotation: ^4.9.0
-  hive_ce: ^2.19.3
+  idb_shim: ^2.9.9
 
 dev_dependencies:
   flutter_test:

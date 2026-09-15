@@ -5,10 +5,11 @@ import 'package:autenticacao/data/local/dtos/credenciais_hive_dto.dart';
 import 'package:autenticacao/domain/data/repositories/i_credenciais_de_autenticacao_repository.dart';
 import 'package:autenticacao/domain/models/credenciais_de_autenticacao.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/local_data_sourcers/database_configs/i_hive_database_instance.dart';
-import 'package:core/local_data_sourcers/hive/storage_entity_adapter.dart';
+import 'package:core/local_data_sourcers/database_configs/i_indexeddb_database_instance.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:hive_ce/hive.dart';
+import 'package:idb_shim/idb_shim.dart';
+
+const _storeName = 'autenticacao_CredenciaisHiveDto';
 
 class CredenciaisDeAutenticacaoRepository
     implements ICredenciaisDeAutenticacaoRepository {
@@ -23,7 +24,6 @@ class CredenciaisDeAutenticacaoRepository
 
   @override
   Future<void> salvar(CredenciaisDeAutenticacao credenciais) async {
-    final box = await _getBox();
     final secretKey = await _deriveSecretKey();
     final algorithm = AesGcm.with256bits();
     final nonce = _randomBytes(12);
@@ -41,23 +41,33 @@ class CredenciaisDeAutenticacaoRepository
       nonce: nonce,
     );
 
-    await box.put(
-      CredenciaisHiveDto.chaveUnica,
-      CredenciaisHiveDto(
-        nonce: base64Encode(encryptedBox.nonce),
-        cipherText: base64Encode(encryptedBox.cipherText),
-        mac: base64Encode(encryptedBox.mac.bytes),
-      ),
+    final dto = CredenciaisHiveDto(
+      nonce: base64Encode(encryptedBox.nonce),
+      cipherText: base64Encode(encryptedBox.cipherText),
+      mac: base64Encode(encryptedBox.mac.bytes),
     );
+
+    final db = await sl<IIndexedDbDatabaseInstance>().getDatabase();
+    final txn = db.transaction(_storeName, idbModeReadWrite);
+    await txn
+        .objectStore(_storeName)
+        .put(dto.storageProperties, CredenciaisHiveDto.chaveUnica);
+    await txn.completed;
   }
 
   @override
   Future<CredenciaisDeAutenticacao?> recuperar() async {
-    final box = await _getBox();
-    final payload = box.get(CredenciaisHiveDto.chaveUnica);
-    if (payload == null) {
+    final db = await sl<IIndexedDbDatabaseInstance>().getDatabase();
+    final txn = db.transaction(_storeName, idbModeReadOnly);
+    final raw =
+        await txn.objectStore(_storeName).getObject(CredenciaisHiveDto.chaveUnica);
+    await txn.completed;
+    if (raw == null) {
       return null;
     }
+    final payload = CredenciaisHiveDto.fromStorage(
+      Map<String, dynamic>.from(raw as Map),
+    );
 
     try {
       final nonce = base64Decode(payload.nonce);
@@ -86,20 +96,10 @@ class CredenciaisDeAutenticacaoRepository
 
   @override
   Future<void> limpar() async {
-    final box = await _getBox();
-    await box.delete(CredenciaisHiveDto.chaveUnica);
-  }
-
-  Future<Box<CredenciaisHiveDto>> _getBox() {
-    return sl<IHiveDatabaseInstance>().getBox<CredenciaisHiveDto>(
-      boxKey: 'CredenciaisHiveDto',
-      adapters: [
-        StorageEntityAdapter<CredenciaisHiveDto>(
-          CredenciaisHiveDto.fromStorage,
-        ),
-      ],
-      moduleName: 'autenticacao',
-    );
+    final db = await sl<IIndexedDbDatabaseInstance>().getDatabase();
+    final txn = db.transaction(_storeName, idbModeReadWrite);
+    await txn.objectStore(_storeName).delete(CredenciaisHiveDto.chaveUnica);
+    await txn.completed;
   }
 
   Future<SecretKey> _deriveSecretKey() async {

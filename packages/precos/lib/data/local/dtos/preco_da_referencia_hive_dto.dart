@@ -50,7 +50,9 @@ class PrecoDaReferenciaHiveDto
 
   @override
   Map<String, dynamic> get storageProperties => {
-    'atualizadoEm': atualizadoEm,
+    // IndexedDB (web) exige valor "structured-clone safe" -- `DateTime` vira
+    // ISO-8601 (Hive aceitava o objeto binário direto).
+    'atualizadoEm': atualizadoEm?.toIso8601String(),
     'tabelaDePrecoId': tabelaDePrecoId,
     'referenciaId': referenciaId,
     'referenciaIdExterno': referenciaIdExterno,
@@ -61,7 +63,9 @@ class PrecoDaReferenciaHiveDto
 
   static PrecoDaReferenciaHiveDto fromStorage(Map<String, dynamic> props) {
     return PrecoDaReferenciaHiveDto(
-      atualizadoEm: props['atualizadoEm'] as DateTime?,
+      atualizadoEm: (props['atualizadoEm'] as String?) == null
+          ? null
+          : DateTime.parse(props['atualizadoEm'] as String),
       tabelaDePrecoId: props['tabelaDePrecoId'] as int,
       referenciaId: props['referenciaId'] as int,
       referenciaIdExterno: props['referenciaIdExterno'] as String,

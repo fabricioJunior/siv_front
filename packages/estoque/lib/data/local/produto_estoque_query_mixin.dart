@@ -10,7 +10,17 @@ mixin ProdutoEstoqueQueryMixin<Dto extends ProdutoDoEstoque>
   Future<SaldoDoEstoque> obterSaldo({
     required FiltroProdutoDoEstoque filtro,
   }) async {
-    final produtos = await fetchAll();
+    return obterSaldoDe(await fetchAll(), filtro);
+  }
+
+  /// Mesma lógica de `obterSaldo`, mas recebendo os candidatos já prontos
+  /// em vez de chamar `fetchAll()` -- permite que uma engine com índice
+  /// (ex: IndexedDB) pré-filtre por `empresaId`/`referenciaId`/`produtoId`
+  /// antes de cair aqui, sem duplicar filtro de texto/data/sort/paginação.
+  Future<SaldoDoEstoque> obterSaldoDe(
+    Iterable<Dto> produtos,
+    FiltroProdutoDoEstoque filtro,
+  ) async {
     final termosBusca = <String>{
       ...filtro.produtoIdExternos,
       ...filtro.referenciaIdExternos,

@@ -1,13 +1,18 @@
 import 'package:core/local_data_sourcers/hive/hive_hash.dart';
-import 'package:core/local_data_sourcers/hive/hive_local_data_source_base.dart';
+import 'package:core/local_data_sourcers/indexeddb/indexeddb_local_data_source_base.dart';
 import 'package:produtos/domain/data/local/i_codigos_local_data_source.dart';
 import 'package:produtos/domain/models/codigo.dart';
 
 import 'dtos/codigo_hive_dto.dart';
 
-class CodigosHiveDataSource extends HiveLocalDataSourceBase<CodigoHiveDto, Codigo>
+class CodigosIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<CodigoHiveDto, Codigo>
     implements ICodigosLocalDataSource {
-  CodigosHiveDataSource({required super.getBox});
+  CodigosIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'produtos_CodigoHiveDto',
+          fromStorage: CodigoHiveDto.fromStorage,
+        );
 
   @override
   Future<Codigo?> recuperarCodigo(String codigo) {
@@ -30,6 +35,6 @@ class CodigosHiveDataSource extends HiveLocalDataSourceBase<CodigoHiveDto, Codig
 
   @override
   Future<Iterable<Codigo>> recuperarCodigosPorProdutoId(int produtoId) {
-    return fetchWhere((dto) => dto.produtoId == produtoId);
+    return fetchByIndex('produtoId', produtoId);
   }
 }

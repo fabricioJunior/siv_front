@@ -5,10 +5,14 @@ import 'package:core/produtos_compartilhados/local/i_produtos_compartilhados_loc
 import 'dtos/produto_compartilhado_hive_dto.dart';
 import '../models/produto_compartilhado.dart';
 
-class ProdutosCompartilhadosHiveDataSource extends HiveLocalDataSourceBase<
+class ProdutosCompartilhadosIndexedDbDataSource extends IndexedDbLocalDataSourceBase<
     ProdutoCompartilhadoHiveDto,
     ProdutoCompartilhado> implements IProdutosCompartilhadosLocalDataSource {
-  ProdutosCompartilhadosHiveDataSource({required super.getBox});
+  ProdutosCompartilhadosIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'core_ProdutoCompartilhadoHiveDto',
+          fromStorage: ProdutoCompartilhadoHiveDto.fromStorage,
+        );
 
   @override
   Future<void> deletarPorHash(String hash) {

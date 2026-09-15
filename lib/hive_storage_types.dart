@@ -14,7 +14,7 @@ import 'data/infra/local_data_sourcers/dtos/empresa_hive_dto.dart';
 import 'data/infra/local_data_sourcers/dtos/licenciado_hive_dto.dart';
 import 'data/infra/local_data_sourcers/dtos/terminal_da_sessao_hive_dto.dart';
 import 'data/infra/local_data_sourcers/dtos/usuario_hive_dto.dart';
-import 'presentation/pages/relatorios_menu_page.dart' show RelatoriosMenuPrefsHiveDto;
+import 'data/infra/local_data_sourcers/dtos/relatorios_menu_prefs_hive_dto.dart';
 
 /// typeId global (não por box) de cada `StorageEntity` do app -- nunca
 /// reusar um id já alocado por outro tipo. Chamado uma vez no bootstrap

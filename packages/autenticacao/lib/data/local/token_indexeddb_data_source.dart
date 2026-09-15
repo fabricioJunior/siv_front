@@ -3,9 +3,14 @@ import 'package:autenticacao/domain/data/data_sourcers/local/i_token_local_data_
 import 'package:autenticacao/models.dart';
 import 'package:core/data_sourcers.dart';
 
-class TokenHiveDataSource extends HiveLocalDataSourceBase<TokenHiveDto, Token>
+class TokenIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<TokenHiveDto, Token>
     implements ITokenLocalDataSource<TokenHiveDto> {
-  TokenHiveDataSource({required super.getBox});
+  TokenIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'autenticacao_TokenHiveDto',
+          fromStorage: TokenHiveDto.fromStorage,
+        );
 
   @override
   TokenHiveDto toDto(Token entity) {

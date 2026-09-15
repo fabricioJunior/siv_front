@@ -102,7 +102,9 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     'tamanhoId': tamanhoId,
     'tamanhoNome': tamanhoNome,
     'unidadeMedida': unidadeMedida,
-    'atualizadoEm': atualizadoEm,
+    // IndexedDB (web) exige valor "structured-clone safe" -- `DateTime` vira
+    // ISO-8601 (Hive aceitava o objeto binário direto).
+    'atualizadoEm': atualizadoEm?.toIso8601String(),
   };
 
   static ProdutoEstoqueHiveDto fromStorage(Map<String, dynamic> props) {
@@ -119,7 +121,9 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
       tamanhoId: props['tamanhoId'] as int,
       tamanhoNome: props['tamanhoNome'] as String,
       unidadeMedida: props['unidadeMedida'] as String?,
-      atualizadoEm: props['atualizadoEm'] as DateTime?,
+      atualizadoEm: (props['atualizadoEm'] as String?) == null
+          ? null
+          : DateTime.parse(props['atualizadoEm'] as String),
     );
   }
 }

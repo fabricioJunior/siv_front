@@ -4,10 +4,14 @@ import 'package:precos/models.dart';
 
 import 'dtos/preco_da_referencia_hive_dto.dart';
 
-class PrecosDeReferenciasHiveDataSource extends HiveLocalDataSourceBase<
+class PrecosDeReferenciasIndexedDbDataSource extends IndexedDbLocalDataSourceBase<
     PrecoDaReferenciaHiveDto,
     PrecoDaReferencia> implements IPrecosDeReferenciasLocalDataSource {
-  PrecosDeReferenciasHiveDataSource({required super.getBox});
+  PrecosDeReferenciasIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'precos_PrecoDaReferenciaHiveDto',
+          fromStorage: PrecoDaReferenciaHiveDto.fromStorage,
+        );
 
   @override
   Future<void> limparPrecosDasReferencias() {
@@ -31,9 +35,7 @@ class PrecosDeReferenciasHiveDataSource extends HiveLocalDataSourceBase<
   Future<List<PrecoDaReferencia>> obterPrecosDasReferencias({
     required int tabelaDePrecoId,
   }) async {
-    return (await fetchWhere(
-      (dto) => dto.tabelaDePrecoId == tabelaDePrecoId,
-    )).toList();
+    return (await fetchByIndex('tabelaDePrecoId', tabelaDePrecoId)).toList();
   }
 
   @override

@@ -1,11 +1,10 @@
-import 'package:core/hive_anotacoes.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/local_data_sourcers/database_configs/i_hive_database_instance.dart';
-import 'package:core/local_data_sourcers/hive/storage_entity_adapter.dart';
 import 'package:core/presentation.dart';
 import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/dtos/relatorios_menu_prefs_hive_dto.dart';
+import 'package:siv_front/data/infra/local_data_sourcers/i_relatorios_menu_prefs_local_data_source.dart';
 
 /// Largura mínima pro layout de grade em 2 colunas (9a). Abaixo disso, lista
 /// em seções (9b) -- ver [RelatoriosMenuPage].
@@ -28,50 +27,6 @@ const _infoPorGrupo = {
   GrupoRelatorio.estoque: _GrupoInfo('ESTOQUE E PRODUTOS', 'O que saiu do estoque?'),
   GrupoRelatorio.caixaFiscal: _GrupoInfo('CAIXA E FISCAL', 'O caixa e o fisco fecham?'),
 };
-
-/// DTO Hive dos relatórios fixados pelo usuário -- única persistência nova
-/// desta tela (item "Fixados por você"). Segue o padrão manual
-/// `StorageEntity`/`fromStorage` de `lib/hive_storage_types.dart`, sem
-/// codegen. Chave = id do usuário (preferência é por pessoa, não por
-/// empresa/terminal).
-class RelatoriosMenuPrefsHiveDto implements HiveDto, StorageEntity {
-  final int usuarioId;
-  final List<String> rotasFixadas;
-
-  RelatoriosMenuPrefsHiveDto({
-    required this.usuarioId,
-    this.rotasFixadas = const [],
-  });
-
-  @override
-  int get dataBaseId => usuarioId;
-
-  @override
-  Map<String, dynamic> get storageProperties => {
-    'usuarioId': usuarioId,
-    'rotasFixadas': rotasFixadas,
-  };
-
-  static RelatoriosMenuPrefsHiveDto fromStorage(Map<String, dynamic> props) {
-    return RelatoriosMenuPrefsHiveDto(
-      usuarioId: props['usuarioId'] as int,
-      rotasFixadas:
-          (props['rotasFixadas'] as List?)?.cast<String>() ?? const [],
-    );
-  }
-}
-
-Future<Box<RelatoriosMenuPrefsHiveDto>> _getRelatoriosMenuPrefsBox() {
-  return sl<IHiveDatabaseInstance>().getBox<RelatoriosMenuPrefsHiveDto>(
-    boxKey: 'RelatoriosMenuPrefsHiveDto',
-    adapters: [
-      StorageEntityAdapter<RelatoriosMenuPrefsHiveDto>(
-        RelatoriosMenuPrefsHiveDto.fromStorage,
-      ),
-    ],
-    isCommonData: true,
-  );
-}
 
 // Acentos não deveriam importar na busca ("caixa" == "caixa" mesmo digitando
 // "cáixa"). Mesma tabela usada em generic_seletor.dart -- duplicada aqui por
@@ -226,8 +181,7 @@ class _RelatoriosMenuPageState extends State<RelatoriosMenuPage> {
   Future<void> _carregarFixados() async {
     final usuarioId = _usuarioId;
     if (usuarioId == null) return;
-    final box = await _getRelatoriosMenuPrefsBox();
-    final dto = box.get(usuarioId);
+    final dto = await sl<IRelatoriosMenuPrefsLocalDataSource>().obter(usuarioId);
     if (dto == null || !mounted) return;
     setState(() => _fixados = dto.rotasFixadas.toSet());
   }
@@ -235,9 +189,7 @@ class _RelatoriosMenuPageState extends State<RelatoriosMenuPage> {
   Future<void> _salvarFixados() async {
     final usuarioId = _usuarioId;
     if (usuarioId == null) return;
-    final box = await _getRelatoriosMenuPrefsBox();
-    await box.put(
-      usuarioId,
+    await sl<IRelatoriosMenuPrefsLocalDataSource>().salvar(
       RelatoriosMenuPrefsHiveDto(
         usuarioId: usuarioId,
         rotasFixadas: _fixados.toList(),

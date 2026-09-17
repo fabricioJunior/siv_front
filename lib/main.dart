@@ -4,10 +4,10 @@ import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/impressora.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:siv_front/data/infra/isar_bootstrap.dart';
 import 'package:siv_front/hive_storage_types.dart';
@@ -22,17 +22,31 @@ import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+// DSN vazio = SDK do Sentry desabilitado automaticamente (comportamento
+// documentado do pacote, sem log de erro nem envio) -- passa em build/CI
+// via `--dart-define=SENTRY_DSN=<dsn>` quando o projeto Sentry existir.
+const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
-  try {
-    await _bootstrap();
-    initPrintingConfigs();
-    runApp(MyApp());
-  } catch (e, s) {
-    log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
-    runApp(AppInitializationErrorApp(error: e, stackTrace: s));
-  }
+void main() async {
+  await SentryFlutter.init(
+    (options) => options.dsn = _sentryDsn,
+    appRunner: () async {
+      // Precisa rodar DENTRO do appRunner, não antes do SentryFlutter.init --
+      // o binding e o runApp precisam estar na mesma zone, senão o Flutter
+      // acusa "Zone mismatch" (SentryFlutter.init cria uma zone própria pro
+      // appRunner).
+      WidgetsFlutterBinding.ensureInitialized();
+      try {
+        await _bootstrap();
+        initPrintingConfigs();
+        runApp(MyApp());
+      } catch (e, s) {
+        log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
+        await Sentry.captureException(e, stackTrace: s);
+        runApp(AppInitializationErrorApp(error: e, stackTrace: s));
+      }
+    },
+  );
 }
 
 // `sl.reset()` + `configs()` não é reentrante: registro no GetIt não é
@@ -512,35 +526,6 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
     rotaAtual.value = route.settings.name;
-    var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
-    if (usuarioId == null) {
-      return;
-    }
-    if (route.settings.name == '/entrada_manual_de_produtos' ||
-        route.settings.name == '/saida_manual_de_produtos') {
-      sl<SyncDataBloc>().add(
-        const SyncDataSolicitouSincronizacao(
-          origem: SyncDataOrigem.entradaDeProdutos,
-        ),
-      );
-    }
-    if (route.settings.name == '/criar_romaneio_por_parametros') {
-      sl<SyncDataBloc>().add(
-        const SyncDataSolicitouSincronizacao(
-          origem: SyncDataOrigem.criarRomaneio,
-        ),
-      );
-    }
-    if (route.settings.name == '/venda') {
-      sl<SyncDataBloc>().add(
-        const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.vendas),
-      );
-    }
-    if (route.settings.name == '/estoque') {
-      sl<SyncDataBloc>().add(
-        const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.estoque),
-      );
-    }
   }
 
   @override
@@ -548,7 +533,6 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
     super.didPop(route, previousRoute);
     rotaAtual.value = previousRoute?.settings.name;
     log('Popped route: ${route.settings.name}', name: 'Navigation');
-    _sincronizarAoFinalizarCriarRomaneio(route.settings);
   }
 
   @override
@@ -558,29 +542,6 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
     log(
       'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
       name: 'Navigation',
-    );
-    _sincronizarAoFinalizarCriarRomaneio(oldRoute?.settings);
-  }
-
-  // A tela '/criar_romaneio_por_parametros' é compartilhada entre venda,
-  // entrada manual e saída manual de produtos. Termina de duas formas: um pop
-  // simples (botão "Voltar") ou um pushReplacement pra '/romaneio' (botão
-  // "Abrir romaneio criado") — precisa cobrir as duas, independente da
-  // operação de origem.
-  void _sincronizarAoFinalizarCriarRomaneio(RouteSettings? settings) {
-    if (settings?.name != '/criar_romaneio_por_parametros') {
-      return;
-    }
-
-    var usuarioId = sl<IAcessoGlobalSessao>().usuarioIdDaSessao;
-    if (usuarioId == null) {
-      return;
-    }
-
-    sl<SyncDataBloc>().add(
-      const SyncDataSolicitouSincronizacao(
-        origem: SyncDataOrigem.criarRomaneio,
-      ),
     );
   }
 }

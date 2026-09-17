@@ -14,6 +14,7 @@ import 'package:core/remote_data_sourcers.dart';
 import 'package:core/arquivos.dart';
 import 'package:core/cep.dart';
 import 'package:core/links.dart';
+import 'package:core/sync.dart';
 import 'package:get_it/get_it.dart';
 
 import '../produtos_compartilhados/repositories/i_lista_de_produtos_compartilhada_repository.dart';
@@ -53,6 +54,8 @@ void coreInjections() {
   sl.registerLazySingleton<ArquivoService>(() => ArquivoService());
 
   sl.registerLazySingleton<LinkService>(() => LinkService());
+
+  sl.registerLazySingleton<SyncWebSocketService>(() => SyncWebSocketService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 

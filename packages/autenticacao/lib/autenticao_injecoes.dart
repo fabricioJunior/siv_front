@@ -133,6 +133,11 @@ void _usesCases() {
       tokenRepository: sl(),
     ),
   );
+  sl.registerFactory<RecuperarTokenJwt>(
+    () => RecuperarTokenJwt(
+      tokenRepository: sl(),
+    ),
+  );
   sl.registerFactory<Deslogar>(
     () => Deslogar(
       tokenRepository: sl(),

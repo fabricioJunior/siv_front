@@ -1,4 +1,6 @@
 import 'package:core/injecoes.dart';
+import 'package:core/local_data_sourcers/database_configs/hive_database_instance.dart';
+import 'package:core/local_data_sourcers/database_configs/i_hive_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/i_indexeddb_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/i_local_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/indexeddb_database_instance.dart';
@@ -16,6 +18,13 @@ void registerCoreLocalStorage() {
   sl.registerLazySingleton<ILocalDatabaseInstance>(
     () => sl<IIndexedDbDatabaseInstance>(),
   );
+
+  // Faltava aqui -- Hive.initFlutter() já roda pra todas as plataformas
+  // (main.dart), inclusive web (hive_ce suporta), mas o registro no GetIt
+  // só existia no branch io. Deslogar (autenticacao_injecoes.dart) exige
+  // IHiveDatabaseInstance incondicionalmente, quebrando o boot inteiro na
+  // web com "not registered inside GetIt".
+  sl.registerLazySingleton<IHiveDatabaseInstance>(() => HiveDatabaseInstance());
 
   sl.registerLazySingleton<IListaDeProdutosCompartilhadaLocalDataSource>(
     () => ListaDeProdutosCompartilhadaIndexedDbDataSource(

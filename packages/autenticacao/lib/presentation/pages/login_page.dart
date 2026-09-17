@@ -250,6 +250,16 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                   ),
+                  const SizedBox(height: 8),
+                  // TEMPORÁRIO: só pra confirmar que o evento chega no
+                  // dashboard do Sentry após o wizard. Remover depois de
+                  // validar.
+                  Center(
+                    child: TextButton(
+                      onPressed: () => throw StateError('This is test exception'),
+                      child: const Text('Verify Sentry Setup'),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   Center(
                     child: Text(

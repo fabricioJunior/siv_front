@@ -170,6 +170,7 @@ class PagamentosRealizadosBloc
             state.copyWith(
               clienteElegivelFidelidade: elegivel,
               carregandoElegibilidadeFidelidade: false,
+              erroElegibilidadeFidelidade: false,
               pontuarFidelidade: elegivel && state.pontuarFidelidade,
             ),
           );
@@ -178,6 +179,7 @@ class PagamentosRealizadosBloc
             state.copyWith(
               clienteElegivelFidelidade: false,
               carregandoElegibilidadeFidelidade: false,
+              erroElegibilidadeFidelidade: true,
               pontuarFidelidade: false,
             ),
           );

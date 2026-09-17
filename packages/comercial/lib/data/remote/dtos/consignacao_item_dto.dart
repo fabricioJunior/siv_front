@@ -14,6 +14,12 @@ class ConsignacaoItemDto implements ConsignacaoItem {
   @override
   final int? produtoId;
   @override
+  final String? referenciaNome;
+  @override
+  final String? corNome;
+  @override
+  final String? tamanhoNome;
+  @override
   final double? solicitado;
   @override
   final double? valorSolicitado;
@@ -39,6 +45,9 @@ class ConsignacaoItemDto implements ConsignacaoItem {
     this.romaneioId,
     this.sequencia,
     this.produtoId,
+    this.referenciaNome,
+    this.corNome,
+    this.tamanhoNome,
     this.solicitado,
     this.valorSolicitado,
     this.devolvido,
@@ -58,6 +67,9 @@ class ConsignacaoItemDto implements ConsignacaoItem {
       romaneioId: _toInt(json['romaneioId']),
       sequencia: _toInt(json['sequencia']),
       produtoId: _toInt(json['produtoId']),
+      referenciaNome: json['referenciaNome'] as String?,
+      corNome: json['corNome'] as String?,
+      tamanhoNome: json['tamanhoNome'] as String?,
       solicitado: _toDouble(json['solicitado']),
       valorSolicitado: _toDouble(json['valorSolicitado']),
       devolvido: _toDouble(json['devolvido']),
@@ -78,6 +90,9 @@ class ConsignacaoItemDto implements ConsignacaoItem {
         romaneioId,
         sequencia,
         produtoId,
+        referenciaNome,
+        corNome,
+        tamanhoNome,
         solicitado,
         valorSolicitado,
         devolvido,

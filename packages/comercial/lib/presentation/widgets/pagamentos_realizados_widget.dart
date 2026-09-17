@@ -405,7 +405,9 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                     ? Text(
                         state.carregandoElegibilidadeFidelidade
                             ? 'Consultando elegibilidade do cliente...'
-                            : 'Cliente sem cadastro no portal de pontos.',
+                            : state.erroElegibilidadeFidelidade
+                                ? 'Erro ao consultar elegibilidade -- tente novamente.'
+                                : 'Cliente sem cadastro no portal de pontos.',
                         style: theme.textTheme.bodySmall,
                       )
                     : null,

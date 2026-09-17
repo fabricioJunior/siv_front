@@ -38,6 +38,10 @@ class PagamentosRealizadosState extends Equatable {
   final bool pontuarFidelidade;
   final bool clienteElegivelFidelidade;
   final bool carregandoElegibilidadeFidelidade;
+  // Distingue "cliente não elegível de verdade" de "erro na consulta"
+  // (rede, permissão, etc) -- os dois zeravam clienteElegivelFidelidade
+  // igual, e a UI mostrava sempre "cliente sem cadastro", mascarando o erro.
+  final bool erroElegibilidadeFidelidade;
   final bool clienteGenerico;
   final bool permiteNotaFiscalEmail;
   final bool enviarNotaPorEmail;
@@ -79,6 +83,7 @@ class PagamentosRealizadosState extends Equatable {
     this.pontuarFidelidade = false,
     this.clienteElegivelFidelidade = false,
     this.carregandoElegibilidadeFidelidade = false,
+    this.erroElegibilidadeFidelidade = false,
     this.clienteGenerico = false,
     this.permiteNotaFiscalEmail = false,
     this.enviarNotaPorEmail = false,
@@ -219,6 +224,7 @@ class PagamentosRealizadosState extends Equatable {
     bool? pontuarFidelidade,
     bool? clienteElegivelFidelidade,
     bool? carregandoElegibilidadeFidelidade,
+    bool? erroElegibilidadeFidelidade,
     bool? clienteGenerico,
     bool? permiteNotaFiscalEmail,
     bool? enviarNotaPorEmail,
@@ -269,6 +275,8 @@ class PagamentosRealizadosState extends Equatable {
           clienteElegivelFidelidade ?? this.clienteElegivelFidelidade,
       carregandoElegibilidadeFidelidade: carregandoElegibilidadeFidelidade ??
           this.carregandoElegibilidadeFidelidade,
+      erroElegibilidadeFidelidade:
+          erroElegibilidadeFidelidade ?? this.erroElegibilidadeFidelidade,
       clienteGenerico: clienteGenerico ?? this.clienteGenerico,
       permiteNotaFiscalEmail:
           permiteNotaFiscalEmail ?? this.permiteNotaFiscalEmail,
@@ -319,6 +327,7 @@ class PagamentosRealizadosState extends Equatable {
         pontuarFidelidade,
         clienteElegivelFidelidade,
         carregandoElegibilidadeFidelidade,
+        erroElegibilidadeFidelidade,
         clienteGenerico,
         permiteNotaFiscalEmail,
         enviarNotaPorEmail,

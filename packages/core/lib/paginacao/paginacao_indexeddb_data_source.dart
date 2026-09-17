@@ -4,10 +4,14 @@ import 'i_paginacao_data_source.dart';
 import 'paginacao.dart';
 import 'paginacao_hive_dto.dart';
 
-class PaginacaoHiveDataSource
-    extends HiveLocalDataSourceBase<PaginacaoHiveDto, Paginacao>
+class PaginacaoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<PaginacaoHiveDto, Paginacao>
     implements IPaginacaoDataSource {
-  PaginacaoHiveDataSource({required super.getBox});
+  PaginacaoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'core_PaginacaoHiveDto',
+          fromStorage: PaginacaoHiveDto.fromStorage,
+        );
 
   @override
   Future<Paginacao?> buscarPaginacao(String key) {

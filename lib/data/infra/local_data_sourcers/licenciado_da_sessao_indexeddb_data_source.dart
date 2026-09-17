@@ -4,10 +4,14 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/licenciado_hive_dto.dart';
 
-class LicenciadoDaSessaoHiveDataSource
-    extends HiveLocalDataSourceBase<LicenciadoHiveDto, Licenciado>
+class LicenciadoDaSessaoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<LicenciadoHiveDto, Licenciado>
     implements ILicenciadoDaSessaoLocalDataSource<LicenciadoHiveDto> {
-  LicenciadoDaSessaoHiveDataSource({required super.getBox});
+  LicenciadoDaSessaoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'common_data_LicenciadoHiveDto',
+          fromStorage: LicenciadoHiveDto.fromStorage,
+        );
 
   @override
   LicenciadoHiveDto toDto(Licenciado entity) {

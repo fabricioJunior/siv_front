@@ -71,6 +71,7 @@ class PedidosRepository implements IPedidosRepository {
     String? searchTerm,
     List<String>? situacoes,
     List<String>? situacoesPagamento,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) {
@@ -80,6 +81,7 @@ class PedidosRepository implements IPedidosRepository {
       searchTerm: searchTerm,
       situacoes: situacoes,
       situacoesPagamento: situacoesPagamento,
+      origens: origens,
       dataInicial: dataInicial,
       dataFinal: dataFinal,
     );
@@ -88,11 +90,13 @@ class PedidosRepository implements IPedidosRepository {
   @override
   Future<ContagemPedidosPorSituacao> contarPorSituacao({
     String? searchTerm,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) {
     return remoteDataSource.contarPorSituacao(
       searchTerm: searchTerm,
+      origens: origens,
       dataInicial: dataInicial,
       dataFinal: dataFinal,
     );

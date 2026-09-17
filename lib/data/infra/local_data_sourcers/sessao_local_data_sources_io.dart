@@ -11,7 +11,14 @@ import 'package:siv_front/data/infra/local_data_sourcers/licenciado_da_sessao_lo
 import 'package:siv_front/data/infra/local_data_sourcers/terminal_da_sessao_local_data_source.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/usuario_da_sessao_local_data_source.dart';
 
+import 'i_relatorios_menu_prefs_local_data_source.dart';
+import 'relatorios_menu_prefs_local_data_source_io.dart';
+
 void registerSessaoLocalDataSources() {
+  sl.registerLazySingleton<IRelatoriosMenuPrefsLocalDataSource>(
+    () => RelatoriosMenuPrefsLocalDataSource(),
+  );
+
   sl.registerFactory<IUsuarioDaSessaoLocalDataSource>(
     () => UsuarioDaSessaoLocalDataSource(getIsar: _getIsar),
   );

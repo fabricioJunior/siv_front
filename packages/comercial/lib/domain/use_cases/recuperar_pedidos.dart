@@ -14,6 +14,7 @@ class RecuperarPedidos {
     String? searchTerm,
     List<String>? situacoes,
     List<String>? situacoesPagamento,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) =>
@@ -23,6 +24,7 @@ class RecuperarPedidos {
         searchTerm: searchTerm,
         situacoes: situacoes,
         situacoesPagamento: situacoesPagamento,
+        origens: origens,
         dataInicial: dataInicial,
         dataFinal: dataFinal,
       );

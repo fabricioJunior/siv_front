@@ -3,3 +3,5 @@ library data_sourcers;
 export 'local_data_sourcers/i_local_data_source.dart';
 export 'local_data_sourcers/isar/isar_local_data_source_base.dart';
 export 'local_data_sourcers/hive/hive_local_data_source_base.dart';
+export 'local_data_sourcers/indexeddb/indexeddb_local_data_source_base.dart';
+export 'local_data_sourcers/database_configs/i_indexeddb_database_instance.dart';

@@ -50,3 +50,5 @@ app.*.map.json
 .code-review-graph/
 
 packages/*/build/
+
+sentry.properties

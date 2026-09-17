@@ -16,6 +16,14 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
     required this.codigosLocalDataSource,
     required this.precosDeReferenciasLocalDataSource,
   });
+  // Termo curto/comum (ex: 1 letra) pode bater em milhares de SKUs no
+  // catálogo inteiro (buscarProdutosPorTexto varre tudo sem índice) --
+  // sem limite, o enriquecimento abaixo (Future.wait) dispara uma query de
+  // código + uma de preço EM PARALELO por resultado, e RAM explode (~4GB
+  // observado). Usuário não consegue ler uma lista de milhares de itens
+  // mesmo, os primeiros já bastam pra ele refinar a busca.
+  static const _limiteResultados = 60;
+
   @override
   Future<List<LeitorData>> buscarPorTexto(
     String texto, {
@@ -23,39 +31,48 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
     String? cor,
     int? tabelaDePrecoId,
   }) async {
-    var produtos = await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
+    var produtos = (await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
       texto,
       tamanho: tamanho,
       cor: cor,
-    );
+    )).take(_limiteResultados);
 
-    List<LeitorData> leitorDataList = [];
-    for (var produto in produtos) {
-      var codigos = await codigosLocalDataSource.recuperarCodigosPorProdutoId(
-        produto.produtoId.toInt(),
-      );
-      if (codigos.isEmpty) {
+    // Antes: um `await` por produto (codigo + preco), N * 2 transações
+    // IndexedDB separadas -- cada transação tem overhead real no browser.
+    // Agora: 2 buscas em lote (todos os códigos, todos os preços) pra
+    // materializar os candidatos, depois monta a lista em memória sem mais
+    // round-trip por item.
+    final produtoIds = produtos.map((p) => p.produtoId.toInt()).toList();
+    final codigosPorProdutoId =
+        await codigosLocalDataSource.recuperarCodigosPorProdutoIds(produtoIds);
+    final precosPorReferenciaId = tabelaDePrecoId != null
+        ? await precosDeReferenciasLocalDataSource
+            .obterPrecosDasReferenciasPorIds(
+              tabelaDePrecoId: tabelaDePrecoId,
+              referenciaIds: produtos.map((p) => p.referenciaId.toInt()),
+            )
+        : const <int, PrecoDaReferencia?>{};
+
+    final resultados = <ProdutoDoLeitorData>[];
+    for (final produto in produtos) {
+      final codigos = codigosPorProdutoId[produto.produtoId.toInt()];
+      if (codigos == null || codigos.isEmpty) {
         continue;
       }
-      var preco = tabelaDePrecoId != null
-          ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
-              tabelaDePrecoId: tabelaDePrecoId,
-              referenciaId: produto.referenciaId.toInt(),
-            )
-          : null; 
-      if(tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
-        continue; // Pula produtos sem preço se tabelaDePrecoId for fornecida
-
+      final preco = tabelaDePrecoId != null
+          ? precosPorReferenciaId[produto.referenciaId.toInt()]
+          : null;
+      // Pula produtos sem preço se tabelaDePrecoId for fornecida.
+      if (tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
+        continue;
       }
-      leitorDataList.add(
-        ProdutoDoLeitorData(
-          codigo: codigos.first,
-          produto: produto,
-          precoDaReferencia: preco,
-        ),
-      );
-     }
-    return leitorDataList;
+      resultados.add(ProdutoDoLeitorData(
+        codigo: codigos.first,
+        produto: produto,
+        precoDaReferencia: preco,
+      ));
+    }
+    return resultados;
   }
 }
 

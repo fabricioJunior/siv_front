@@ -4,10 +4,14 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/permissao_do_usuario_hive_dto.dart';
 
-class PermissoesDoUsuarioHiveDataSource extends HiveLocalDataSourceBase<
+class PermissoesDoUsuarioIndexedDbDataSource extends IndexedDbLocalDataSourceBase<
     PermissaoDoUsuarioHiveDto,
     PermissaoDoUsuario> implements IPermissoesDoUsuarioLocalDataSource<PermissaoDoUsuarioHiveDto> {
-  PermissoesDoUsuarioHiveDataSource({required super.getBox});
+  PermissoesDoUsuarioIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'autenticacao_PermissaoDoUsuarioHiveDto',
+          fromStorage: PermissaoDoUsuarioHiveDto.fromStorage,
+        );
 
   @override
   Future<List<Permissao>> getPermissoesPor({

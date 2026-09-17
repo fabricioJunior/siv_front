@@ -19,6 +19,14 @@ class PedidosFiltroSituacaoAlterado extends PedidosEvent {
   PedidosFiltroSituacaoAlterado(this.situacoes);
 }
 
+// Filtro de origem = e-commerce -- dimensao separada de situacao/situacaoPagamento (não entra no
+// mesmo Set), já que junta com AND na query (origem E situacao), não OR.
+class PedidosFiltroOrigemEcommerceAlterado extends PedidosEvent {
+  final bool somenteEcommerce;
+
+  PedidosFiltroOrigemEcommerceAlterado(this.somenteEcommerce);
+}
+
 class PedidosPedidoCancelou extends PedidosEvent {
   final int pedidoId;
   final String motivoCancelamento;

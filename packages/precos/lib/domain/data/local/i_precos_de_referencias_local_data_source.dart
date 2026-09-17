@@ -12,6 +12,11 @@ abstract class IPrecosDeReferenciasLocalDataSource {
     required int tabelaDePrecoId,
   });
 
+  Future<Map<int, PrecoDaReferencia?>> obterPrecosDasReferenciasPorIds({
+    required int tabelaDePrecoId,
+    required Iterable<int> referenciaIds,
+  });
+
   Future<void> salvarPrecosDasReferencias(List<PrecoDaReferencia> precos);
 
   Future<void> limparPrecosDasReferencias();

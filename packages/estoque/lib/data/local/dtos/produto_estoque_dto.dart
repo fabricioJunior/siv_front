@@ -20,6 +20,13 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
   @override
   final String nome;
 
+  /// Tokens de `nome` (lowercase, sem pontuação) -- indexado pra busca de
+  /// texto sem carregar a coleção inteira em memória, ver
+  /// `ProdutosEstoqueLocalDatasource.buscarProdutosPorTexto` e
+  /// `tokenizarNomeDoProduto`.
+  @Index(type: IndexType.value)
+  final List<String> nomePalavras;
+
   @override
   @ignore
   BigInt get produtoId => BigInt.from(idDoProduto);
@@ -79,6 +86,7 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
     required this.referenciaIdExterno,
     required this.produtoIdExterno,
     required this.nome,
+    required this.nomePalavras,
     required this.corId,
     required this.corNome,
     required this.tamanhoId,

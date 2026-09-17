@@ -4,10 +4,14 @@ import 'package:precos/models.dart';
 
 import 'dtos/tabela_de_preco_hive_dto.dart';
 
-class TabelasDePrecoHiveDataSource
-    extends HiveLocalDataSourceBase<TabelaDePrecoHiveDto, TabelaDePreco>
+class TabelasDePrecoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<TabelaDePrecoHiveDto, TabelaDePreco>
     implements ITabelasDePrecoLocalDataSource {
-  TabelasDePrecoHiveDataSource({required super.getBox});
+  TabelasDePrecoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'precos_TabelaDePrecoHiveDto',
+          fromStorage: TabelaDePrecoHiveDto.fromStorage,
+        );
 
   @override
   TabelaDePrecoHiveDto toDto(TabelaDePreco entity) {

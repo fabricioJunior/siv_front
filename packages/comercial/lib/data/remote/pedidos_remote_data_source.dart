@@ -98,6 +98,7 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
     String? searchTerm,
     List<String>? situacoes,
     List<String>? situacoesPagamento,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) async {
@@ -114,6 +115,8 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
         if (situacoesPagamento != null && situacoesPagamento.isNotEmpty)
           for (var i = 0; i < situacoesPagamento.length; i++)
             'situacoesPagamento[$i]': situacoesPagamento[i],
+        if (origens != null && origens.isNotEmpty)
+          for (var i = 0; i < origens.length; i++) 'origens[$i]': origens[i],
         if (dataInicial != null) 'dataInicial': dataInicial.toIso8601String(),
         if (dataFinal != null) 'dataFinal': dataFinal.toIso8601String(),
       },
@@ -126,6 +129,7 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<ContagemPedidosPorSituacao> contarPorSituacao({
     String? searchTerm,
+    List<String>? origens,
     DateTime? dataInicial,
     DateTime? dataFinal,
   }) async {
@@ -134,6 +138,8 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
       queryParameters: {
         if (searchTerm != null && searchTerm.isNotEmpty)
           'searchTerm': searchTerm,
+        if (origens != null && origens.isNotEmpty)
+          for (var i = 0; i < origens.length; i++) 'origens[$i]': origens[i],
         if (dataInicial != null) 'dataInicial': dataInicial.toIso8601String(),
         if (dataFinal != null) 'dataFinal': dataFinal.toIso8601String(),
       },

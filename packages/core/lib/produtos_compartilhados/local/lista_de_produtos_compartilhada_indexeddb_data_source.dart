@@ -5,11 +5,15 @@ import '../models/lista_de_produtos_compartilhada.dart';
 import 'dtos/lista_de_produtos_compartilhada_hive_dto.dart';
 import 'i_lista_de_produtos_compartilhada_local_data_source.dart';
 
-class ListaDeProdutosCompartilhadaHiveDataSource
-    extends HiveLocalDataSourceBase<ListaDeProdutosCompartilhadaHiveDto,
+class ListaDeProdutosCompartilhadaIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<ListaDeProdutosCompartilhadaHiveDto,
         ListaDeProdutosCompartilhada>
     implements IListaDeProdutosCompartilhadaLocalDataSource {
-  ListaDeProdutosCompartilhadaHiveDataSource({required super.getBox});
+  ListaDeProdutosCompartilhadaIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'core_ListaDeProdutosCompartilhadaHiveDto',
+          fromStorage: ListaDeProdutosCompartilhadaHiveDto.fromStorage,
+        );
 
   @override
   Future<void> apagar(String hash) {

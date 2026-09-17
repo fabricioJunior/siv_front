@@ -38,6 +38,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
     on<PedidosIniciou>(_onIniciou);
     on<PedidosBuscaAlterada>(_onBuscaAlterada);
     on<PedidosFiltroSituacaoAlterado>(_onFiltroSituacaoAlterado);
+    on<PedidosFiltroOrigemEcommerceAlterado>(_onFiltroOrigemEcommerceAlterado);
     on<PedidosFiltroPeriodoAlterado>(_onFiltroPeriodoAlterado);
     on<PedidosPedidoCancelou>(_onPedidoCancelou);
     on<PedidosCarregarMais>(_onCarregarMais);
@@ -65,6 +66,14 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
   ) async {
     emit(state.copyWith(situacoesFiltro: event.situacoes));
     await _carregarPrimeiraPagina(emit);
+  }
+
+  FutureOr<void> _onFiltroOrigemEcommerceAlterado(
+    PedidosFiltroOrigemEcommerceAlterado event,
+    Emitter<PedidosState> emit,
+  ) async {
+    emit(state.copyWith(somenteEcommerceFiltro: event.somenteEcommerce));
+    await Future.wait([_carregarPrimeiraPagina(emit), _recuperarContagem(emit)]);
   }
 
   FutureOr<void> _onFiltroPeriodoAlterado(
@@ -104,6 +113,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       final busca = state.busca.trim();
       final contagem = await _contarPedidosPorSituacao.call(
         searchTerm: busca.isEmpty ? null : busca,
+        origens: state.somenteEcommerceFiltro ? const ['ecommerce'] : null,
         dataInicial: state.dataInicial,
         dataFinal: state.dataFinal,
       );
@@ -156,6 +166,7 @@ class PedidosBloc extends Bloc<PedidosEvent, PedidosState> {
       searchTerm: busca.isEmpty ? null : busca,
       situacoes: situacoesBackend.isEmpty ? null : situacoesBackend,
       situacoesPagamento: temPago ? const ['pago'] : null,
+      origens: state.somenteEcommerceFiltro ? const ['ecommerce'] : null,
       dataInicial: state.dataInicial,
       dataFinal: state.dataFinal,
     );

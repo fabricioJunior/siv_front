@@ -4,10 +4,14 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/usuario_hive_dto.dart';
 
-class UsuarioDaSessaoHiveDataSource
-    extends HiveLocalDataSourceBase<UsuarioHiveDto, Usuario>
+class UsuarioDaSessaoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<UsuarioHiveDto, Usuario>
     implements IUsuarioDaSessaoLocalDataSource<UsuarioHiveDto> {
-  UsuarioDaSessaoHiveDataSource({required super.getBox});
+  UsuarioDaSessaoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'common_data_UsuarioHiveDto',
+          fromStorage: UsuarioHiveDto.fromStorage,
+        );
 
   @override
   UsuarioHiveDto toDto(Usuario entity) {

@@ -17,8 +17,10 @@ class TokenHiveDto extends Token with HiveDto<Token>, StorageEntity {
   @override
   Map<String, dynamic> get storageProperties => {
     'jwtToken': jwtToken,
-    'dataDeCriacao': dataDeCriacao,
-    'dataDeExpiracao': dataDeExpiracao,
+    // IndexedDB (web) exige valor "structured-clone safe" -- `DateTime` vira
+    // ISO-8601 (Hive aceitava o objeto binário direto).
+    'dataDeCriacao': dataDeCriacao.toIso8601String(),
+    'dataDeExpiracao': dataDeExpiracao.toIso8601String(),
     'idEmpresa': idEmpresa,
     'refreshToken': refreshToken,
   };
@@ -26,8 +28,8 @@ class TokenHiveDto extends Token with HiveDto<Token>, StorageEntity {
   static TokenHiveDto fromStorage(Map<String, dynamic> props) {
     return TokenHiveDto(
       jwtToken: props['jwtToken'] as String,
-      dataDeCriacao: props['dataDeCriacao'] as DateTime,
-      dataDeExpiracao: props['dataDeExpiracao'] as DateTime,
+      dataDeCriacao: DateTime.parse(props['dataDeCriacao'] as String),
+      dataDeExpiracao: DateTime.parse(props['dataDeExpiracao'] as String),
       idEmpresa: props['idEmpresa'] as int?,
       refreshToken: props['refreshToken'] as String?,
     );

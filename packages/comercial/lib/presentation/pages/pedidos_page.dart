@@ -311,6 +311,18 @@ class _PedidosPageState extends State<PedidosPage> {
                         },
                       ),
                     ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: _ChipSituacao(
+                      label: 'E-commerce',
+                      selecionado: state.somenteEcommerceFiltro,
+                      onTap: () => _bloc.add(
+                        PedidosFiltroOrigemEcommerceAlterado(
+                          !state.somenteEcommerceFiltro,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -5,7 +5,9 @@ import 'package:autenticacao/domain/usecases/recuperar_permissoes_do_usuario.dar
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/paginacao.dart';
+import 'package:core/sync.dart';
 import 'package:estoque/estoque.dart';
 import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
@@ -35,11 +37,34 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   final RecuperarEmpresaDaSessao _recuperarEmpresaDaSessao;
   final RecuperarPermissoesDoUsuario _recuperarPermissoesDoUsuario;
   final LimparSincronizacaoIncremental _limparSincronizacaoIncremental;
+  final SyncWebSocketService _syncWebSocketService;
+  final RecuperarTokenJwt _recuperarTokenJwt;
+  final ApiBaseUrlConfig _apiBaseUrlConfig;
+  final OnDesautenticado _onDesautenticado;
 
   StreamSubscription<Paginacao>? _codigosSubscription;
   StreamSubscription<Paginacao>? _estoqueSubscription;
   StreamSubscription<Paginacao>? _tabelasDePrecoSubscription;
   StreamSubscription<Paginacao>? _precosDaReferenciaSubscription;
+  StreamSubscription<SyncMudancaEvent>? _mudancasWsSubscription;
+  StreamSubscription<bool>? _conectadoWsSubscription;
+  StreamSubscription<Null>? _onDesautenticadoSubscription;
+
+  // Rajada de eventos `sync:mudanca` (varias mudancas em sequencia no
+  // servidor) vira 1 sync so -- reinicia o timer a cada evento novo.
+  Timer? _debounceMudancaWs;
+  static const _debounceMudancaWsDuracao = Duration(seconds: 3);
+
+  // Rede de seguranca: se o WS ficar desconectado por tempo demais (ex:
+  // instabilidade de rede que o retry automatico do socket.io ainda nao
+  // recuperou), poll de baixa frequencia garante que o app nao fica cego
+  // indefinidamente -- a sync incremental por atualizadoEm cobre o que
+  // ficou pra tras sozinha, isso so garante que ela roda de tempos em tempos.
+  Timer? _fallbackPollingWs;
+  static const _fallbackPollingWsIntervalo = Duration(minutes: 3);
+
+  bool _conectadoAoWs = false;
+  bool _jaConectouAoWsAlgumaVez = false;
 
   SyncDataOrigem? _origemPendenteAposSincronizacaoAtual;
 
@@ -53,12 +78,57 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     this._recuperarEmpresaDaSessao,
     this._recuperarPermissoesDoUsuario,
     this._limparSincronizacaoIncremental,
+    this._syncWebSocketService,
+    this._recuperarTokenJwt,
+    this._apiBaseUrlConfig,
+    this._onDesautenticado,
   ) : super(const SyncDataState()) {
     on<SyncDataSolicitouSincronizacao>(_onSolicitouSincronizacao);
     on<SyncDataAtualizacaoRecebida>(_onAtualizacaoRecebida);
     on<SyncDataModuloConcluido>(_onModuloConcluido);
     on<SyncDataModuloFalhou>(_onModuloFalhou);
     on<SyncDataSolicitouResetIncremental>(_onResetIncremental);
+
+    _mudancasWsSubscription = _syncWebSocketService.mudancas.listen((_) {
+      _debounceMudancaWs?.cancel();
+      _debounceMudancaWs = Timer(_debounceMudancaWsDuracao, () {
+        add(
+          const SyncDataSolicitouSincronizacao(
+            origem: SyncDataOrigem.tempoReal,
+          ),
+        );
+      });
+    });
+
+    _conectadoWsSubscription = _syncWebSocketService.conectado.listen((
+      conectado,
+    ) {
+      final reconectou =
+          !_conectadoAoWs && conectado && _jaConectouAoWsAlgumaVez;
+      _conectadoAoWs = conectado;
+      _jaConectouAoWsAlgumaVez = true;
+      if (reconectou) {
+        add(
+          const SyncDataSolicitouSincronizacao(
+            origem: SyncDataOrigem.tempoReal,
+          ),
+        );
+      }
+    });
+
+    _onDesautenticadoSubscription = _onDesautenticado.call().listen((_) {
+      _syncWebSocketService.disconnect();
+    });
+
+    _fallbackPollingWs = Timer.periodic(_fallbackPollingWsIntervalo, (_) {
+      if (!_conectadoAoWs) {
+        add(
+          const SyncDataSolicitouSincronizacao(
+            origem: SyncDataOrigem.tempoReal,
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _onResetIncremental(
@@ -76,6 +146,8 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     if (!await _usuarioAutenticadoComEmpresa()) {
       return;
     }
+
+    await _conectarWebSocketSeNecessario();
 
     if (_sincronizacaoEmAndamentoSemErros()) {
       _origemPendenteAposSincronizacaoAtual = event.origem;
@@ -428,6 +500,22 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
     );
   }
 
+  // Conecta o WS de sinalizacao (idempotente -- `connect` e' no-op se ja
+  // conectado com o mesmo token). Chamado a cada solicitacao de sync porque
+  // e' o unico ponto que sabemos que ha sessao valida; cobre tanto o login
+  // recente quanto a sessao restaurada num boot novo do app (que nao dispara
+  // nenhum evento de "acabou de logar").
+  Future<void> _conectarWebSocketSeNecessario() async {
+    final token = await _recuperarTokenJwt();
+    if (token == null) {
+      return;
+    }
+    _syncWebSocketService.connect(
+      token: token,
+      baseUrl: _apiBaseUrlConfig.urlBase,
+    );
+  }
+
   Future<bool> _usuarioAutenticadoComEmpresa() async {
     final estaAutenticado = await _estaAutenticado();
     final empresa = await _recuperarEmpresaDaSessao();
@@ -543,6 +631,11 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
   @override
   Future<void> close() async {
     await _cancelarSincronizacoesAtivas();
+    await _mudancasWsSubscription?.cancel();
+    await _conectadoWsSubscription?.cancel();
+    await _onDesautenticadoSubscription?.cancel();
+    _debounceMudancaWs?.cancel();
+    _fallbackPollingWs?.cancel();
     return super.close();
   }
 }

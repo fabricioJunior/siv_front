@@ -70,8 +70,11 @@ dependencies:
   flutter_quill: 11.5.1
   hive_ce: ^2.19.3
   hive_ce_flutter: ^2.3.4
+  idb_shim: ^2.9.9
+  sentry_flutter: ^8.14.2
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.4.0
   flutter_test:
     sdk: flutter
   integration_test:
@@ -104,3 +107,8 @@ msix_config:
   architecture: x64
 
  
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter
+  org: vale-do-ceara

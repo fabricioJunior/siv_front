@@ -27,8 +27,10 @@ class ListaDeProdutosCompartilhadaHiveDto extends ListaDeProdutosCompartilhada
     'hash': hash,
     'idLista': idLista,
     'origemIndex': origem.index,
-    'criadaEm': criadaEm,
-    'atualizadaEm': atualizadaEm,
+    // IndexedDB (web) exige valor "structured-clone safe" -- `DateTime` vira
+    // ISO-8601 (Hive aceitava o objeto binário direto).
+    'criadaEm': criadaEm.toIso8601String(),
+    'atualizadaEm': atualizadaEm.toIso8601String(),
     'pessoaId': pessoaId,
     'funcionarioId': funcionarioId,
     'tabelaPrecoId': tabelaPrecoId,
@@ -45,8 +47,8 @@ class ListaDeProdutosCompartilhadaHiveDto extends ListaDeProdutosCompartilhada
       hash: props['hash'] as String,
       idLista: props['idLista'] as int?,
       origemIndex: props['origemIndex'] as int,
-      criadaEm: props['criadaEm'] as DateTime,
-      atualizadaEm: props['atualizadaEm'] as DateTime,
+      criadaEm: DateTime.parse(props['criadaEm'] as String),
+      atualizadaEm: DateTime.parse(props['atualizadaEm'] as String),
       pessoaId: props['pessoaId'] as int?,
       funcionarioId: props['funcionarioId'] as int?,
       tabelaPrecoId: props['tabelaPrecoId'] as int?,

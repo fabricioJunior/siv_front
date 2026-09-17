@@ -4,10 +4,14 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/terminal_da_sessao_hive_dto.dart';
 
-class TerminalDaSessaoHiveDataSource
-    extends HiveLocalDataSourceBase<TerminalDaSessaoHiveDto, TerminalDoUsuario>
+class TerminalDaSessaoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<TerminalDaSessaoHiveDto, TerminalDoUsuario>
     implements ITerminalDaSessaoLocalDataSource<TerminalDaSessaoHiveDto> {
-  TerminalDaSessaoHiveDataSource({required super.getBox});
+  TerminalDaSessaoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'common_data_TerminalDaSessaoHiveDto',
+          fromStorage: TerminalDaSessaoHiveDto.fromStorage,
+        );
 
   @override
   TerminalDaSessaoHiveDto toDto(TerminalDoUsuario entity) {

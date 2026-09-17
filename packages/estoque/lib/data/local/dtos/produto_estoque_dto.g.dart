@@ -36,34 +36,39 @@ const ProdutoEstoqueDtoSchema = CollectionSchema(
       type: IsarType.long,
     ),
     r'nome': PropertySchema(id: 6, name: r'nome', type: IsarType.string),
-    r'produtoIdExterno': PropertySchema(
+    r'nomePalavras': PropertySchema(
       id: 7,
+      name: r'nomePalavras',
+      type: IsarType.stringList,
+    ),
+    r'produtoIdExterno': PropertySchema(
+      id: 8,
       name: r'produtoIdExterno',
       type: IsarType.string,
     ),
     r'referenciaId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'referenciaId',
       type: IsarType.long,
     ),
     r'referenciaIdExterno': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'referenciaIdExterno',
       type: IsarType.string,
     ),
-    r'saldo': PropertySchema(id: 10, name: r'saldo', type: IsarType.double),
+    r'saldo': PropertySchema(id: 11, name: r'saldo', type: IsarType.double),
     r'tamanhoId': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'tamanhoId',
       type: IsarType.long,
     ),
     r'tamanhoNome': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'tamanhoNome',
       type: IsarType.string,
     ),
     r'unidadeMedida': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'unidadeMedida',
       type: IsarType.string,
     ),
@@ -74,7 +79,21 @@ const ProdutoEstoqueDtoSchema = CollectionSchema(
   deserialize: _produtoEstoqueDtoDeserialize,
   deserializeProp: _produtoEstoqueDtoDeserializeProp,
   idName: r'dataBaseId',
-  indexes: {},
+  indexes: {
+    r'nomePalavras': IndexSchema(
+      id: -4362408627362810343,
+      name: r'nomePalavras',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'nomePalavras',
+          type: IndexType.value,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
   links: {},
   embeddedSchemas: {},
 
@@ -92,6 +111,13 @@ int _produtoEstoqueDtoEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.corNome.length * 3;
   bytesCount += 3 + object.nome.length * 3;
+  bytesCount += 3 + object.nomePalavras.length * 3;
+  {
+    for (var i = 0; i < object.nomePalavras.length; i++) {
+      final value = object.nomePalavras[i];
+      bytesCount += value.length * 3;
+    }
+  }
   {
     final value = object.produtoIdExterno;
     if (value != null) {
@@ -127,13 +153,14 @@ void _produtoEstoqueDtoSerialize(
   writer.writeLong(offsets[4], object.hashCode);
   writer.writeLong(offsets[5], object.idDoProduto);
   writer.writeString(offsets[6], object.nome);
-  writer.writeString(offsets[7], object.produtoIdExterno);
-  writer.writeLong(offsets[8], object.referenciaId);
-  writer.writeString(offsets[9], object.referenciaIdExterno);
-  writer.writeDouble(offsets[10], object.saldo);
-  writer.writeLong(offsets[11], object.tamanhoId);
-  writer.writeString(offsets[12], object.tamanhoNome);
-  writer.writeString(offsets[13], object.unidadeMedida);
+  writer.writeStringList(offsets[7], object.nomePalavras);
+  writer.writeString(offsets[8], object.produtoIdExterno);
+  writer.writeLong(offsets[9], object.referenciaId);
+  writer.writeString(offsets[10], object.referenciaIdExterno);
+  writer.writeDouble(offsets[11], object.saldo);
+  writer.writeLong(offsets[12], object.tamanhoId);
+  writer.writeString(offsets[13], object.tamanhoNome);
+  writer.writeString(offsets[14], object.unidadeMedida);
 }
 
 ProdutoEstoqueDto _produtoEstoqueDtoDeserialize(
@@ -149,13 +176,14 @@ ProdutoEstoqueDto _produtoEstoqueDtoDeserialize(
     empresaId: reader.readLong(offsets[3]),
     idDoProduto: reader.readLong(offsets[5]),
     nome: reader.readString(offsets[6]),
-    produtoIdExterno: reader.readStringOrNull(offsets[7]),
-    referenciaId: reader.readLong(offsets[8]),
-    referenciaIdExterno: reader.readStringOrNull(offsets[9]),
-    saldo: reader.readDouble(offsets[10]),
-    tamanhoId: reader.readLong(offsets[11]),
-    tamanhoNome: reader.readString(offsets[12]),
-    unidadeMedida: reader.readStringOrNull(offsets[13]),
+    nomePalavras: reader.readStringList(offsets[7]) ?? [],
+    produtoIdExterno: reader.readStringOrNull(offsets[8]),
+    referenciaId: reader.readLong(offsets[9]),
+    referenciaIdExterno: reader.readStringOrNull(offsets[10]),
+    saldo: reader.readDouble(offsets[11]),
+    tamanhoId: reader.readLong(offsets[12]),
+    tamanhoNome: reader.readString(offsets[13]),
+    unidadeMedida: reader.readStringOrNull(offsets[14]),
   );
   return object;
 }
@@ -182,18 +210,20 @@ P _produtoEstoqueDtoDeserializeProp<P>(
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
-    case 9:
       return (reader.readStringOrNull(offset)) as P;
-    case 10:
-      return (reader.readDouble(offset)) as P;
-    case 11:
+    case 9:
       return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readDouble(offset)) as P;
     case 12:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 13:
+      return (reader.readString(offset)) as P;
+    case 14:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -222,6 +252,15 @@ extension ProdutoEstoqueDtoQueryWhereSort
   anyDataBaseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhere>
+  anyNomePalavrasElement() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'nomePalavras'),
+      );
     });
   }
 }
@@ -294,6 +333,172 @@ extension ProdutoEstoqueDtoQueryWhere
           includeUpper: includeUpper,
         ),
       );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementEqualTo(String nomePalavrasElement) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'nomePalavras',
+          value: [nomePalavrasElement],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementNotEqualTo(String nomePalavrasElement) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'nomePalavras',
+                lower: [],
+                upper: [nomePalavrasElement],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'nomePalavras',
+                lower: [nomePalavrasElement],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'nomePalavras',
+                lower: [nomePalavrasElement],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'nomePalavras',
+                lower: [],
+                upper: [nomePalavrasElement],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementGreaterThan(
+    String nomePalavrasElement, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'nomePalavras',
+          lower: [nomePalavrasElement],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementLessThan(
+    String nomePalavrasElement, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'nomePalavras',
+          lower: [],
+          upper: [nomePalavrasElement],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementBetween(
+    String lowerNomePalavrasElement,
+    String upperNomePalavrasElement, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'nomePalavras',
+          lower: [lowerNomePalavrasElement],
+          includeLower: includeLower,
+          upper: [upperNomePalavrasElement],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementStartsWith(String NomePalavrasElementPrefix) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'nomePalavras',
+          lower: [NomePalavrasElementPrefix],
+          upper: ['$NomePalavrasElementPrefix\u{FFFFF}'],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'nomePalavras', value: ['']),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterWhereClause>
+  nomePalavrasElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.lessThan(
+                indexName: r'nomePalavras',
+                upper: [''],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.greaterThan(
+                indexName: r'nomePalavras',
+                lower: [''],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.greaterThan(
+                indexName: r'nomePalavras',
+                lower: [''],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.lessThan(
+                indexName: r'nomePalavras',
+                upper: [''],
+              ),
+            );
+      }
     });
   }
 }
@@ -926,6 +1131,200 @@ extension ProdutoEstoqueDtoQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'nome', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'nomePalavras',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'nomePalavras',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'nomePalavras',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'nomePalavras', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'nomePalavras', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'nomePalavras', length, true, length, true);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'nomePalavras', 0, true, 0, true);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'nomePalavras', 0, false, 999999, true);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasLengthLessThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'nomePalavras', 0, true, length, include);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasLengthGreaterThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'nomePalavras', length, include, 999999, true);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  nomePalavrasLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'nomePalavras',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
       );
     });
   }
@@ -2208,6 +2607,13 @@ extension ProdutoEstoqueDtoQueryWhereDistinct
   }
 
   QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QDistinct>
+  distinctByNomePalavras() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nomePalavras');
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QDistinct>
   distinctByProdutoIdExterno({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(
@@ -2314,6 +2720,13 @@ extension ProdutoEstoqueDtoQueryProperty
   QueryBuilder<ProdutoEstoqueDto, String, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, List<String>, QQueryOperations>
+  nomePalavrasProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nomePalavras');
     });
   }
 

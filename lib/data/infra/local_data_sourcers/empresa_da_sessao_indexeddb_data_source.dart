@@ -4,10 +4,14 @@ import 'package:core/data_sourcers.dart';
 
 import 'dtos/empresa_hive_dto.dart';
 
-class EmpresaDaSessaoHiveDataSource
-    extends HiveLocalDataSourceBase<EmpresaHiveDto, Empresa>
+class EmpresaDaSessaoIndexedDbDataSource
+    extends IndexedDbLocalDataSourceBase<EmpresaHiveDto, Empresa>
     implements IEmpresaDaSessaoLocalDataSource<EmpresaHiveDto> {
-  EmpresaDaSessaoHiveDataSource({required super.getBox});
+  EmpresaDaSessaoIndexedDbDataSource({required super.getDb})
+      : super(
+          storeName: 'common_data_EmpresaHiveDto',
+          fromStorage: EmpresaHiveDto.fromStorage,
+        );
 
   @override
   EmpresaHiveDto toDto(Empresa entity) {

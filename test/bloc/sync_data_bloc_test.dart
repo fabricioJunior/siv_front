@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:autenticacao/models.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/paginacao.dart';
+import 'package:core/sync.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
@@ -60,6 +62,13 @@ void main() {
   late MockRecuperarEmpresaDaSessao recuperarEmpresaDaSessao;
   late MockRecuperarPermissoesDoUsuario recuperarPermissoesDoUsuario;
   late MockLimparSincronizacaoIncremental limparSincronizacaoIncremental;
+  late MockSyncWebSocketService syncWebSocketService;
+  late MockRecuperarTokenJwt recuperarTokenJwt;
+  late ApiBaseUrlConfig apiBaseUrlConfig;
+  late MockOnDesautenticado onDesautenticado;
+  late StreamController<SyncMudancaEvent> mudancasController;
+  late StreamController<bool> conectadoController;
+  late StreamController<Null> onDesautenticadoController;
   late SyncDataBloc bloc;
   late Usuario usuario;
 
@@ -73,6 +82,14 @@ void main() {
     recuperarEmpresaDaSessao = MockRecuperarEmpresaDaSessao();
     recuperarPermissoesDoUsuario = MockRecuperarPermissoesDoUsuario();
     limparSincronizacaoIncremental = MockLimparSincronizacaoIncremental();
+    syncWebSocketService = MockSyncWebSocketService();
+    recuperarTokenJwt = MockRecuperarTokenJwt();
+    apiBaseUrlConfig = ApiBaseUrlConfig()..atualizar('https://api.teste/v1');
+    onDesautenticado = MockOnDesautenticado();
+
+    mudancasController = StreamController<SyncMudancaEvent>.broadcast();
+    conectadoController = StreamController<bool>.broadcast();
+    onDesautenticadoController = StreamController<Null>.broadcast();
 
     usuario = Usuario.create(
       id: 1,
@@ -88,6 +105,13 @@ void main() {
     when(recuperarPermissoesDoUsuario.call(usuario.id)).thenAnswer(
       (_) async => [FakePermissaoDoUsuario('PRDFL001')],
     );
+    when(recuperarTokenJwt.call()).thenAnswer((_) async => 'jwt-fake');
+    when(syncWebSocketService.mudancas)
+        .thenAnswer((_) => mudancasController.stream);
+    when(syncWebSocketService.conectado)
+        .thenAnswer((_) => conectadoController.stream);
+    when(onDesautenticado.call())
+        .thenAnswer((_) => onDesautenticadoController.stream);
 
     bloc = SyncDataBloc(
       sincronizarCodigos,
@@ -99,11 +123,18 @@ void main() {
       recuperarEmpresaDaSessao,
       recuperarPermissoesDoUsuario,
       limparSincronizacaoIncremental,
+      syncWebSocketService,
+      recuperarTokenJwt,
+      apiBaseUrlConfig,
+      onDesautenticado,
     );
   });
 
   tearDown(() async {
     await bloc.close();
+    await mudancasController.close();
+    await conectadoController.close();
+    await onDesautenticadoController.close();
   });
 
   test(
@@ -147,6 +178,56 @@ void main() {
 
       await controllerB.close();
       await Future<void>.delayed(Duration.zero);
+    },
+  );
+
+  test(
+    'debounce: rajada de eventos sync:mudanca dispara apenas 1 sincronizacao',
+    () async {
+      when(sincronizarEstoque.call()).thenAnswer((_) => const Stream.empty());
+
+      mudancasController.add(const SyncMudancaEvent(modulo: 'estoque'));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      mudancasController.add(const SyncMudancaEvent(modulo: 'estoque'));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      mudancasController.add(const SyncMudancaEvent(modulo: 'estoque'));
+
+      await Future<void>.delayed(const Duration(seconds: 4));
+
+      verify(sincronizarEstoque.call()).called(1);
+      expect(bloc.state.origemUltimaSincronizacao, SyncDataOrigem.tempoReal);
+    },
+  );
+
+  test('reconexao do WS dispara sincronizacao completa', () async {
+    when(sincronizarEstoque.call()).thenAnswer((_) => const Stream.empty());
+
+    // Primeira conexao -- nao ha o que "recuperar", nao dispara sync extra.
+    conectadoController.add(true);
+    await Future<void>.delayed(Duration.zero);
+    verifyNever(sincronizarEstoque.call());
+
+    conectadoController.add(false);
+    await Future<void>.delayed(Duration.zero);
+    conectadoController.add(true);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(sincronizarEstoque.call()).called(1);
+    expect(bloc.state.origemUltimaSincronizacao, SyncDataOrigem.tempoReal);
+  });
+
+  test(
+    'mudanca global (sem empresaId) sincroniza igual a uma mudanca escopada '
+    '-- nao ha filtro client-side por empresaId, o servidor ja escopa via room',
+    () async {
+      when(sincronizarEstoque.call()).thenAnswer((_) => const Stream.empty());
+
+      mudancasController.add(
+        const SyncMudancaEvent(modulo: 'estoque', empresaId: null),
+      );
+      await Future<void>.delayed(const Duration(seconds: 4));
+
+      verify(sincronizarEstoque.call()).called(1);
     },
   );
 }

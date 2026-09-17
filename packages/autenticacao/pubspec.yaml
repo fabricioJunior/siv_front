@@ -21,7 +21,7 @@ dependencies:
   http: ^1.2.2
   cryptography: ^2.7.0
   path_provider: ^2.1.5
-  hive_ce: ^2.19.3
+  idb_shim: ^2.9.9
   
 
 

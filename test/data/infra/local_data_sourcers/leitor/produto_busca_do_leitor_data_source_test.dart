@@ -60,6 +60,17 @@ class _CodigosLocalDataSourceFake implements ICodigosLocalDataSource {
   }
 
   @override
+  Future<Map<int, Iterable<Codigo>>> recuperarCodigosPorProdutoIds(
+    Iterable<int> produtoIds,
+  ) async {
+    chamadas++;
+    return {
+      for (final produtoId in produtoIds)
+        produtoId: [_CodigoFake(codigo: 'EAN$produtoId', produtoId: produtoId)],
+    };
+  }
+
+  @override
   Future<Codigo?> recuperarCodigo(String codigo) => throw UnimplementedError();
   @override
   Future<void> salvarCodigosDeBarras(List<Codigo> codigos) async {}
@@ -72,6 +83,13 @@ class _PrecosDeReferenciasLocalDataSourceFake implements IPrecosDeReferenciasLoc
     required int referenciaId,
   }) async =>
       null;
+
+  @override
+  Future<Map<int, PrecoDaReferencia?>> obterPrecosDasReferenciasPorIds({
+    required int tabelaDePrecoId,
+    required Iterable<int> referenciaIds,
+  }) async =>
+      {for (final referenciaId in referenciaIds) referenciaId: null};
 
   @override
   Future<List<PrecoDaReferencia>> obterPrecosDasReferencias({required int tabelaDePrecoId}) =>
@@ -118,7 +136,7 @@ void main() {
       final resultados = await dataSource.buscarPorTexto('PRODUTO');
 
       expect(resultados.length, 60);
-      expect(codigosDataSource.chamadas, 60);
+      expect(codigosDataSource.chamadas, 1);
     },
   );
 }

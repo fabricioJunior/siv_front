@@ -45,6 +45,26 @@ class PrecosDeReferenciasLocalDataSource
   }
 
   @override
+  Future<Map<int, PrecoDaReferencia?>> obterPrecosDasReferenciasPorIds({
+    required int tabelaDePrecoId,
+    required Iterable<int> referenciaIds,
+  }) async {
+    final resultados = await Future.wait(
+      referenciaIds.map(
+        (referenciaId) => obterPrecoDaReferencia(
+          tabelaDePrecoId: tabelaDePrecoId,
+          referenciaId: referenciaId,
+        ),
+      ),
+    );
+    final referenciaIdsList = referenciaIds.toList();
+    return {
+      for (var i = 0; i < referenciaIdsList.length; i++)
+        referenciaIdsList[i]: resultados[i],
+    };
+  }
+
+  @override
   Future<void> salvarPrecoDaReferencia(PrecoDaReferencia preco) {
     return put(preco);
   }

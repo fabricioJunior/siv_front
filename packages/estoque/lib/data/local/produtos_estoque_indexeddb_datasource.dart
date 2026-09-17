@@ -104,9 +104,9 @@ class ProdutosEstoqueIndexedDbDatasource
     final idsRestritos = candidatosPorIndice.reduce(
       (a, b) => a.intersection(b),
     );
-    final candidatos = await Future.wait(idsRestritos.map(fetchById));
+    final candidatos = await fetchManyByIds(idsRestritos);
 
-    return obterSaldoDe(candidatos.whereType<ProdutoEstoqueHiveDto>(), filtro);
+    return obterSaldoDe(candidatos, filtro);
   }
 
   Future<Set<int>> _idsPorIndice(String indexName, Iterable<int> valores) async {
@@ -141,10 +141,10 @@ class ProdutosEstoqueIndexedDbDatasource
       termos.map((termo) => _idsPorPrefixoDePalavra(termo)),
     );
     final idsRestritos = idsPorTermo.reduce((a, b) => a.intersection(b));
-    final candidatos = await Future.wait(idsRestritos.map(fetchById));
+    final candidatos = await fetchManyByIds(idsRestritos);
 
     return buscarProdutosPorTextoDe(
-      candidatos.whereType<ProdutoEstoqueHiveDto>(),
+      candidatos,
       texto,
       tamanho: tamanho,
       cor: cor,

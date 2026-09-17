@@ -37,37 +37,42 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
       cor: cor,
     )).take(_limiteResultados);
 
-    // Um `await` por produto (codigo + preco) em sequencia vira N round-trips
-    // um atras do outro -- no Hive era barato (tudo em RAM), no IndexedDB
-    // (web) cada `await` e uma transacao de verdade do browser. `Future.wait`
-    // dispara todas em paralelo, já que nenhuma depende do resultado da outra.
-    final resultados = await Future.wait(
-      produtos.map((produto) async {
-        final codigos =
-            await codigosLocalDataSource.recuperarCodigosPorProdutoId(
-          produto.produtoId.toInt(),
-        );
-        if (codigos.isEmpty) {
-          return null;
-        }
-        final preco = tabelaDePrecoId != null
-            ? await precosDeReferenciasLocalDataSource.obterPrecoDaReferencia(
-                tabelaDePrecoId: tabelaDePrecoId,
-                referenciaId: produto.referenciaId.toInt(),
-              )
-            : null;
-        // Pula produtos sem preço se tabelaDePrecoId for fornecida.
-        if (tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
-          return null;
-        }
-        return ProdutoDoLeitorData(
-          codigo: codigos.first,
-          produto: produto,
-          precoDaReferencia: preco,
-        );
-      }),
-    );
-    return resultados.whereType<ProdutoDoLeitorData>().toList();
+    // Antes: um `await` por produto (codigo + preco), N * 2 transações
+    // IndexedDB separadas -- cada transação tem overhead real no browser.
+    // Agora: 2 buscas em lote (todos os códigos, todos os preços) pra
+    // materializar os candidatos, depois monta a lista em memória sem mais
+    // round-trip por item.
+    final produtoIds = produtos.map((p) => p.produtoId.toInt()).toList();
+    final codigosPorProdutoId =
+        await codigosLocalDataSource.recuperarCodigosPorProdutoIds(produtoIds);
+    final precosPorReferenciaId = tabelaDePrecoId != null
+        ? await precosDeReferenciasLocalDataSource
+            .obterPrecosDasReferenciasPorIds(
+              tabelaDePrecoId: tabelaDePrecoId,
+              referenciaIds: produtos.map((p) => p.referenciaId.toInt()),
+            )
+        : const <int, PrecoDaReferencia?>{};
+
+    final resultados = <ProdutoDoLeitorData>[];
+    for (final produto in produtos) {
+      final codigos = codigosPorProdutoId[produto.produtoId.toInt()];
+      if (codigos == null || codigos.isEmpty) {
+        continue;
+      }
+      final preco = tabelaDePrecoId != null
+          ? precosPorReferenciaId[produto.referenciaId.toInt()]
+          : null;
+      // Pula produtos sem preço se tabelaDePrecoId for fornecida.
+      if (tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
+        continue;
+      }
+      resultados.add(ProdutoDoLeitorData(
+        codigo: codigos.first,
+        produto: produto,
+        precoDaReferencia: preco,
+      ));
+    }
+    return resultados;
   }
 }
 

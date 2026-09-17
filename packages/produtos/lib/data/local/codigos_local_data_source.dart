@@ -32,4 +32,18 @@ class CodigosLocalDataSource extends IsarLocalDataSourceBase<CodigoDto, Codigo>
   Future<Iterable<Codigo>> recuperarCodigosPorProdutoId(int produtoId) {
     return fetchWhere((dto) => dto.produtoId == produtoId);
   }
+
+  @override
+  Future<Map<int, Iterable<Codigo>>> recuperarCodigosPorProdutoIds(
+    Iterable<int> produtoIds,
+  ) async {
+    final resultados = await Future.wait(
+      produtoIds.map((id) => recuperarCodigosPorProdutoId(id)),
+    );
+    final produtoIdsList = produtoIds.toList();
+    return {
+      for (var i = 0; i < produtoIdsList.length; i++)
+        produtoIdsList[i]: resultados[i],
+    };
+  }
 }

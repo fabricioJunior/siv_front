@@ -37,4 +37,16 @@ class CodigosIndexedDbDataSource
   Future<Iterable<Codigo>> recuperarCodigosPorProdutoId(int produtoId) {
     return fetchByIndex('produtoId', produtoId);
   }
+
+  @override
+  Future<Map<int, Iterable<Codigo>>> recuperarCodigosPorProdutoIds(
+    Iterable<int> produtoIds,
+  ) async {
+    final codigos = await fetchManyByIndexValues('produtoId', produtoIds.toSet());
+    final agrupados = <int, List<Codigo>>{};
+    for (final codigo in codigos) {
+      agrupados.putIfAbsent(codigo.produtoId, () => []).add(codigo);
+    }
+    return agrupados;
+  }
 }

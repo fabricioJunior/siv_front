@@ -81,6 +81,41 @@ abstract class IndexedDbLocalDataSourceBase<Dto extends HiveDto, E>
     return raws.map((raw) => fromStorage(Map<String, dynamic>.from(raw as Map)));
   }
 
+  /// Busca vários ids numa transação SÓ -- `Future.wait(ids.map(fetchById))`
+  /// abre uma transação POR id, e cada transação IndexedDB tem overhead real
+  /// no browser (isolamento JS↔engine nativa, bem mais caro que Isar).
+  /// Pra uma busca com dezenas de resultados isso vira dezenas de round-trips
+  /// separados -- usa isso sempre que tiver mais de um id pra buscar de uma
+  /// vez (ex: materializar candidatos já restritos por índice).
+  Future<Iterable<Dto>> fetchManyByIds(Iterable<int> ids) async {
+    final db = await getDb();
+    final txn = db.transaction(storeName, idbModeReadOnly);
+    final store = txn.objectStore(storeName);
+    final raws = await Future.wait(ids.map((id) => store.getObject(id)));
+    await txn.completed;
+    return raws
+        .whereType<Object>()
+        .map((raw) => fromStorage(Map<String, dynamic>.from(raw as Map)));
+  }
+
+  /// Mesma ideia de [fetchManyByIds], mas contra um índice em vez da chave
+  /// primária -- 1 transação, N `getAll(value)` concorrentes dentro dela.
+  /// Retorna achatado (não agrupado por valor); quem chama agrupa se
+  /// precisar (ex: por produtoId).
+  Future<Iterable<Dto>> fetchManyByIndexValues(
+    String indexName,
+    Iterable<Object> values,
+  ) async {
+    final db = await getDb();
+    final txn = db.transaction(storeName, idbModeReadOnly);
+    final index = txn.objectStore(storeName).index(indexName);
+    final results = await Future.wait(values.map((v) => index.getAll(v)));
+    await txn.completed;
+    return results
+        .expand((raws) => raws)
+        .map((raw) => fromStorage(Map<String, dynamic>.from(raw as Map)));
+  }
+
   /// Mesma ideia de [fetchByIndex], mas com um [KeyRange] -- usado pra busca
   /// por prefixo (`KeyRange.bound(termo, '$termo￿')`) num índice
   /// multiEntry, sem carregar a store inteira.

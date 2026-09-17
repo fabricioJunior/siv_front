@@ -39,6 +39,28 @@ class PrecosDeReferenciasIndexedDbDataSource extends IndexedDbLocalDataSourceBas
   }
 
   @override
+  Future<Map<int, PrecoDaReferencia?>> obterPrecosDasReferenciasPorIds({
+    required int tabelaDePrecoId,
+    required Iterable<int> referenciaIds,
+  }) async {
+    final ids = {
+      for (final referenciaId in referenciaIds)
+        PrecoDaReferenciaHiveDto.databaseIdFor(
+          tabelaDePrecoId: tabelaDePrecoId,
+          referenciaId: referenciaId,
+        ): referenciaId,
+    };
+    final precos = await fetchManyByIds(ids.keys);
+    final porReferenciaId = <int, PrecoDaReferencia?>{
+      for (final referenciaId in referenciaIds) referenciaId: null,
+    };
+    for (final preco in precos) {
+      porReferenciaId[preco.referenciaId] = preco;
+    }
+    return porReferenciaId;
+  }
+
+  @override
   Future<void> salvarPrecoDaReferencia(PrecoDaReferencia preco) {
     return put(preco);
   }

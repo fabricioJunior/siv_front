@@ -6,4 +6,8 @@ abstract class ICodigosLocalDataSource {
   Future<Codigo?> recuperarCodigo(String codigo); 
   
   Future<Iterable<Codigo>> recuperarCodigosPorProdutoId(int produtoId);
+
+  Future<Map<int, Iterable<Codigo>>> recuperarCodigosPorProdutoIds(
+    Iterable<int> produtoIds,
+  );
 }

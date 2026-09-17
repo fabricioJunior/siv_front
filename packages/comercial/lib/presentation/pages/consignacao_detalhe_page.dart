@@ -338,6 +338,22 @@ class _AcoesCard extends StatelessWidget {
               icon: const Icon(Icons.point_of_sale_outlined),
               label: const Text('Finalizar consignação'),
             ),
+            // "Finalizar consignação" abre a tela de acerto só quando há
+            // pendente > 0 -- uma vez tudo acertado, esse era o ÚNICO jeito
+            // de fechar a consignação (o botão "Fechar" só existe dentro da
+            // tela de acerto, após um acerto bem-sucedido). Se o operador
+            // saiu de lá sem fechar (ou o fechamento falhou), a consignação
+            // ficava presa em "em_andamento" pra sempre, sem nenhum caminho
+            // na UI pra fechar. Esse botão cobre esse caso.
+            FilledButton.tonalIcon(
+              onPressed: (consignacao.pendente ?? 0) > 0 || processando
+                  ? null
+                  : () => context
+                      .read<ConsignacaoDetalheBloc>()
+                      .add(const ConsignacaoDetalheFecharSolicitado()),
+              icon: const Icon(Icons.lock_outline),
+              label: const Text('Fechar consignação'),
+            ),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed(
                 '/consignacao_extrato',

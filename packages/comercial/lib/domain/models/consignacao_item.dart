@@ -7,6 +7,9 @@ abstract class ConsignacaoItem implements Equatable {
   int? get romaneioId;
   int? get sequencia;
   int? get produtoId;
+  String? get referenciaNome;
+  String? get corNome;
+  String? get tamanhoNome;
   double? get solicitado;
   double? get valorSolicitado;
   double? get devolvido;
@@ -24,6 +27,9 @@ abstract class ConsignacaoItem implements Equatable {
     int? romaneioId,
     int? sequencia,
     int? produtoId,
+    String? referenciaNome,
+    String? corNome,
+    String? tamanhoNome,
     double? solicitado,
     double? valorSolicitado,
     double? devolvido,
@@ -43,6 +49,9 @@ abstract class ConsignacaoItem implements Equatable {
         romaneioId,
         sequencia,
         produtoId,
+        referenciaNome,
+        corNome,
+        tamanhoNome,
         solicitado,
         valorSolicitado,
         devolvido,
@@ -72,6 +81,12 @@ class _ConsignacaoItemImpl implements ConsignacaoItem {
   @override
   final int? produtoId;
   @override
+  final String? referenciaNome;
+  @override
+  final String? corNome;
+  @override
+  final String? tamanhoNome;
+  @override
   final double? solicitado;
   @override
   final double? valorSolicitado;
@@ -97,6 +112,9 @@ class _ConsignacaoItemImpl implements ConsignacaoItem {
     this.romaneioId,
     this.sequencia,
     this.produtoId,
+    this.referenciaNome,
+    this.corNome,
+    this.tamanhoNome,
     this.solicitado,
     this.valorSolicitado,
     this.devolvido,
@@ -116,6 +134,9 @@ class _ConsignacaoItemImpl implements ConsignacaoItem {
         romaneioId,
         sequencia,
         produtoId,
+        referenciaNome,
+        corNome,
+        tamanhoNome,
         solicitado,
         valorSolicitado,
         devolvido,

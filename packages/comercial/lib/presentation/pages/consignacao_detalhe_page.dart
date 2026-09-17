@@ -422,7 +422,8 @@ class _ItensCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Produto #${item.produtoId} • Romaneio #${item.romaneioId}',
+                          '${item.referenciaNome ?? 'Produto #${item.produtoId}'} '
+                          '• ${item.tamanhoNome ?? '-'} • ${item.corNome ?? '-'}',
                         ),
                       ),
                       Text('Pendente: ${item.pendente ?? 0}'),

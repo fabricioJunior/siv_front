@@ -41,7 +41,11 @@ void main() async {
         initPrintingConfigs();
         runApp(MyApp());
       } catch (e, s) {
-        log('Falha na inicialização do app: $e', stackTrace: s, name: 'Startup');
+        log(
+          'Falha na inicialização do app: $e',
+          stackTrace: s,
+          name: 'Startup',
+        );
         await Sentry.captureException(e, stackTrace: s);
         runApp(AppInitializationErrorApp(error: e, stackTrace: s));
       }

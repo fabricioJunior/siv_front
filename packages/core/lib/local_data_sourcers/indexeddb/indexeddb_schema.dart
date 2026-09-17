@@ -7,13 +7,28 @@
 /// mudar/remover algo em um store que já existia numa versão publicada,
 /// subir [indexedDbSchemaVersion].
 class IndexedDbStoreSpec {
-  const IndexedDbStoreSpec({required this.storeName, this.indexes = const []});
+  const IndexedDbStoreSpec({
+    required this.storeName,
+    this.indexes = const [],
+    this.multiEntryIndexes = const [],
+  });
 
   final String storeName;
   final List<String> indexes;
+
+  /// Índices sobre campo `List<...>` -- browser cria uma entrada por elemento
+  /// da lista (`IDBObjectStore.createIndex(..., multiEntry: true)`), em vez
+  /// de indexar a lista inteira como valor único. Usado pra busca por
+  /// palavra sem full-scan (ver `ProdutosEstoqueIndexedDbDatasource`).
+  final List<String> multiEntryIndexes;
 }
 
-const indexedDbSchemaVersion = 1;
+// v1: schema inicial.
+// v2: índice multiEntry `nomePalavras` em `estoque_ProdutoEstoqueHiveDto`
+// (busca de texto sem full-scan). Registros gravados antes da v2 não têm
+// esse campo -- ficam fora da busca indexada até o próximo sync regravar o
+// produto, best-effort (ver `ProdutoEstoqueHiveDto.fromStorage`).
+const indexedDbSchemaVersion = 2;
 
 const indexedDbStores = <IndexedDbStoreSpec>[
   // core
@@ -39,6 +54,7 @@ const indexedDbStores = <IndexedDbStoreSpec>[
     // object store é o campo bruto do DTO).
     storeName: 'estoque_ProdutoEstoqueHiveDto',
     indexes: ['empresaId', 'referenciaId', 'idDoProduto'],
+    multiEntryIndexes: ['nomePalavras'],
   ),
   // autenticacao
   IndexedDbStoreSpec(storeName: 'autenticacao_PermissaoDoUsuarioHiveDto'),

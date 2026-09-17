@@ -3,6 +3,7 @@ import 'package:estoque/data/local/dtos/produto_estoque_hive_dto.dart';
 import 'package:estoque/data/local/produto_estoque_query_mixin.dart';
 import 'package:estoque/domain/data/datasourcers/i_produtos_estoque_local_datasource.dart';
 import 'package:estoque/estoque.dart';
+import 'package:idb_shim/idb_shim.dart';
 
 class ProdutosEstoqueIndexedDbDatasource
     extends IndexedDbLocalDataSourceBase<ProdutoEstoqueHiveDto, ProdutoDoEstoque>
@@ -51,6 +52,7 @@ class ProdutosEstoqueIndexedDbDatasource
       idDoProduto: entity.produtoId.toInt(),
       produtoIdExterno: entity.produtoIdExterno,
       nome: entity.nome,
+      nomePalavras: tokenizarNomeDoProduto(entity.nome),
       corId: entity.corId,
       corNome: entity.corNome,
       empresaId: entity.empresaId,
@@ -114,5 +116,46 @@ class ProdutosEstoqueIndexedDbDatasource
       ids.addAll(itens.map((e) => e.dataBaseId));
     }
     return ids;
+  }
+
+  @override
+  Future<List<ProdutoDoEstoque>> buscarProdutosPorTexto(
+    String texto, {
+    String? tamanho,
+    String? cor,
+  }) async {
+    final termos = tokenizarNomeDoProduto(texto);
+    if (termos.isEmpty) {
+      return buscarProdutosPorTextoDe(
+        await fetchAll(),
+        texto,
+        tamanho: tamanho,
+        cor: cor,
+      );
+    }
+
+    // Restringe pelo índice multiEntry `nomePalavras` (prefixo por palavra)
+    // antes de cair no filtro em memória -- interseção quando o termo
+    // digitado tem mais de uma palavra.
+    final idsPorTermo = await Future.wait(
+      termos.map((termo) => _idsPorPrefixoDePalavra(termo)),
+    );
+    final idsRestritos = idsPorTermo.reduce((a, b) => a.intersection(b));
+    final candidatos = await Future.wait(idsRestritos.map(fetchById));
+
+    return buscarProdutosPorTextoDe(
+      candidatos.whereType<ProdutoEstoqueHiveDto>(),
+      texto,
+      tamanho: tamanho,
+      cor: cor,
+    );
+  }
+
+  Future<Set<int>> _idsPorPrefixoDePalavra(String prefixo) async {
+    final itens = await fetchByIndexRange(
+      'nomePalavras',
+      KeyRange.bound(prefixo, '$prefixo￿'),
+    );
+    return itens.map((e) => e.dataBaseId).toSet();
   }
 }

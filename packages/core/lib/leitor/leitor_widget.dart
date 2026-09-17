@@ -1642,6 +1642,14 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
   final _textoFocusNode = FocusNode();
   final _filtrosScrollController = ScrollController();
 
+  // Sem debounce, cada tecla digitada disparava uma busca completa (varre
+  // todo o estoque local em memória, sem índice -- ver
+  // ProdutoEstoqueQueryMixin.buscarProdutosPorTexto) mais o enriquecimento
+  // de cada resultado (código + preço) em paralelo -- digitar rápido
+  // empilhava buscas concorrentes e estourava a RAM (~4GB observado).
+  Timer? _debounceBusca;
+  static const _debounceBuscaDuracao = Duration(milliseconds: 350);
+
   @override
   void initState() {
     super.initState();
@@ -1654,8 +1662,16 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
     });
   }
 
+  void _buscarComDebounce(String texto) {
+    _debounceBusca?.cancel();
+    _debounceBusca = Timer(_debounceBuscaDuracao, () {
+      _buscaBloc.add(LeitorBuscaTextoBuscado(texto));
+    });
+  }
+
   @override
   void dispose() {
+    _debounceBusca?.cancel();
     _buscaBloc.close();
     _textoController.dispose();
     _textoFocusNode.dispose();
@@ -1743,10 +1759,11 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                             : const Icon(Icons.search_outlined),
                       ),
                       textInputAction: TextInputAction.search,
-                      onSubmitted: (v) =>
-                          _buscaBloc.add(LeitorBuscaTextoBuscado(v)),
-                      onChanged: (v) =>
-                          _buscaBloc.add(LeitorBuscaTextoBuscado(v)),
+                      onSubmitted: (v) {
+                        _debounceBusca?.cancel();
+                        _buscaBloc.add(LeitorBuscaTextoBuscado(v));
+                      },
+                      onChanged: _buscarComDebounce,
                     ),
                     if (state.tamanhosDisponiveis.isNotEmpty ||
                         state.coresDisponiveis.isNotEmpty) ...[

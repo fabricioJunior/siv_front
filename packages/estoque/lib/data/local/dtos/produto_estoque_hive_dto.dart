@@ -18,6 +18,12 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
   @override
   final String nome;
 
+  /// Tokens de `nome` (lowercase, sem pontuação) -- gravado junto pra suportar
+  /// o índice `nomePalavras` (multiEntry) do IndexedDB, ver
+  /// `ProdutosEstoqueIndexedDbDatasource.buscarProdutosPorTexto` e
+  /// `tokenizarNomeDoProduto`.
+  final List<String> nomePalavras;
+
   @override
   BigInt get produtoId => BigInt.from(idDoProduto);
 
@@ -75,6 +81,7 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     required this.referenciaIdExterno,
     required this.produtoIdExterno,
     required this.nome,
+    required this.nomePalavras,
     required this.corId,
     required this.corNome,
     required this.tamanhoId,
@@ -93,6 +100,7 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     'idDoProduto': idDoProduto,
     'produtoIdExterno': produtoIdExterno,
     'nome': nome,
+    'nomePalavras': nomePalavras,
     'corId': corId,
     'corNome': corNome,
     'empresaId': empresaId,
@@ -112,6 +120,11 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
       idDoProduto: props['idDoProduto'] as int,
       produtoIdExterno: props['produtoIdExterno'] as String?,
       nome: props['nome'] as String,
+      // Registros gravados antes do índice `nomePalavras` (schema v1) não têm
+      // essa chave -- ficam de fora da busca indexada até o próximo sync
+      // regravar o produto (ver comentário em `indexeddb_schema.dart`).
+      nomePalavras: (props['nomePalavras'] as List?)?.cast<String>() ??
+          const <String>[],
       corId: props['corId'] as int,
       corNome: props['corNome'] as String,
       empresaId: props['empresaId'] as int,

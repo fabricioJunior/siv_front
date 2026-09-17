@@ -119,8 +119,27 @@ mixin ProdutoEstoqueQueryMixin<Dto extends ProdutoDoEstoque>
     String? tamanho,
     String? cor,
   }) async {
-    return (await fetchWhere((dto) {
-      if (!dto.nome.toLowerCase().contains(texto.toLowerCase())) {
+    return buscarProdutosPorTextoDe(
+      await fetchAll(),
+      texto,
+      tamanho: tamanho,
+      cor: cor,
+    );
+  }
+
+  /// Mesma lógica de `buscarProdutosPorTexto`, mas recebendo os candidatos já
+  /// prontos -- permite que uma engine com índice de palavras (Isar/IndexedDB)
+  /// pré-filtre pelo(s) termo(s) digitados antes de cair aqui, sem duplicar
+  /// o filtro de tamanho/cor.
+  List<ProdutoDoEstoque> buscarProdutosPorTextoDe(
+    Iterable<Dto> produtos,
+    String texto, {
+    String? tamanho,
+    String? cor,
+  }) {
+    final termo = _normalizarTexto(texto);
+    return produtos.where((dto) {
+      if (!_normalizarTexto(dto.nome).contains(termo)) {
         return false;
       }
       if (tamanho != null && !dto.tamanhoNome.contains(tamanho)) {
@@ -130,8 +149,23 @@ mixin ProdutoEstoqueQueryMixin<Dto extends ProdutoDoEstoque>
         return false;
       }
       return true;
-    })).toList();
+    }).toList();
   }
+}
+
+final _separadorDePalavras = RegExp(r'[^\p{L}\p{N}]+', unicode: true);
+
+/// Tokeniza o nome do produto em palavras (sem acento, lowercase, sem
+/// pontuação) -- usado tanto pra gravar o índice de palavras (Isar
+/// `nomePalavras`/IndexedDB `nomePalavras` multiEntry) quanto pra tokenizar
+/// o termo digitado na busca, mesma lógica dos dois lados. Sem remover
+/// acento aqui, "calca" (usuário digita sem cedilha) nunca batia com
+/// "CALÇA" (nome real do produto).
+List<String> tokenizarNomeDoProduto(String nome) {
+  return _normalizarTexto(nome)
+      .split(_separadorDePalavras)
+      .where((palavra) => palavra.isNotEmpty)
+      .toList();
 }
 
 bool _estaNoIntervaloDeDatas(
@@ -143,10 +177,12 @@ bool _estaNoIntervaloDeDatas(
   final inicioNormalizado = inicio == null
       ? null
       : DateTime(inicio.year, inicio.month, inicio.day);
-  final fimNormalizado =
-      fim == null ? null : DateTime(fim.year, fim.month, fim.day);
+  final fimNormalizado = fim == null
+      ? null
+      : DateTime(fim.year, fim.month, fim.day);
 
-  if (inicioNormalizado != null && dataNormalizada.isBefore(inicioNormalizado)) {
+  if (inicioNormalizado != null &&
+      dataNormalizada.isBefore(inicioNormalizado)) {
     return false;
   }
   if (fimNormalizado != null && dataNormalizada.isAfter(fimNormalizado)) {
@@ -190,8 +226,10 @@ int Function(ProdutoDoEstoque, ProdutoDoEstoque) _comparadorParaItem(
           (a.referenciaIdExterno ?? '').compareTo(b.referenciaIdExterno ?? '');
       break;
     case CampoOrdenacaoEstoque.atualizadoEm:
-      base = (a, b) => (a.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0))
-          .compareTo(b.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0));
+      base = (a, b) =>
+          (a.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            b.atualizadoEm ?? DateTime.fromMillisecondsSinceEpoch(0),
+          );
       break;
     case CampoOrdenacaoEstoque.corNome:
       base = (a, b) => a.corNome.compareTo(b.corNome);
@@ -246,7 +284,8 @@ List<ProdutoDoEstoque> _deduplicarProdutos(List<ProdutoDoEstoque> produtos) {
 
     final atualizacaoExistente = existente.atualizadoEm;
     final atualizacaoNova = produto.atualizadoEm;
-    final deveSubstituir = atualizacaoNova != null &&
+    final deveSubstituir =
+        atualizacaoNova != null &&
         (atualizacaoExistente == null ||
             atualizacaoNova.isAfter(atualizacaoExistente));
 

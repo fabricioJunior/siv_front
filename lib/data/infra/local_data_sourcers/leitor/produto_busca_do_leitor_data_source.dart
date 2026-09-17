@@ -16,6 +16,14 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
     required this.codigosLocalDataSource,
     required this.precosDeReferenciasLocalDataSource,
   });
+  // Termo curto/comum (ex: 1 letra) pode bater em milhares de SKUs no
+  // catálogo inteiro (buscarProdutosPorTexto varre tudo sem índice) --
+  // sem limite, o enriquecimento abaixo (Future.wait) dispara uma query de
+  // código + uma de preço EM PARALELO por resultado, e RAM explode (~4GB
+  // observado). Usuário não consegue ler uma lista de milhares de itens
+  // mesmo, os primeiros já bastam pra ele refinar a busca.
+  static const _limiteResultados = 60;
+
   @override
   Future<List<LeitorData>> buscarPorTexto(
     String texto, {
@@ -23,11 +31,11 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
     String? cor,
     int? tabelaDePrecoId,
   }) async {
-    var produtos = await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
+    var produtos = (await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
       texto,
       tamanho: tamanho,
       cor: cor,
-    );
+    )).take(_limiteResultados);
 
     // Um `await` por produto (codigo + preco) em sequencia vira N round-trips
     // um atras do outro -- no Hive era barato (tudo em RAM), no IndexedDB

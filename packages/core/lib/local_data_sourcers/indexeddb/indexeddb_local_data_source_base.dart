@@ -81,6 +81,20 @@ abstract class IndexedDbLocalDataSourceBase<Dto extends HiveDto, E>
     return raws.map((raw) => fromStorage(Map<String, dynamic>.from(raw as Map)));
   }
 
+  /// Mesma ideia de [fetchByIndex], mas com um [KeyRange] -- usado pra busca
+  /// por prefixo (`KeyRange.bound(termo, '$termo￿')`) num índice
+  /// multiEntry, sem carregar a store inteira.
+  Future<Iterable<Dto>> fetchByIndexRange(
+    String indexName,
+    KeyRange range,
+  ) async {
+    final db = await getDb();
+    final txn = db.transaction(storeName, idbModeReadOnly);
+    final raws = await txn.objectStore(storeName).index(indexName).getAll(range);
+    await txn.completed;
+    return raws.map((raw) => fromStorage(Map<String, dynamic>.from(raw as Map)));
+  }
+
   Future<void> deleteById(int id) async {
     final db = await getDb();
     final txn = db.transaction(storeName, idbModeReadWrite);

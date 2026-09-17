@@ -41,6 +41,11 @@ class IndexedDbDatabaseInstance implements IIndexedDbDatabaseInstance {
               store.createIndex(indexName, indexName);
             }
           }
+          for (final indexName in spec.multiEntryIndexes) {
+            if (!store.indexNames.contains(indexName)) {
+              store.createIndex(indexName, indexName, multiEntry: true);
+            }
+          }
         }
       },
     );

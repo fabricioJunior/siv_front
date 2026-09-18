@@ -2,6 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../tema.dart';
 
+/// Filho de um item-acordeão do [SivMenuLateral] (ver [SivMenuLateralItem.filhos]).
+class SivMenuLateralFilho {
+  final String label;
+  final bool selecionado;
+  final VoidCallback? onTap;
+
+  const SivMenuLateralFilho({
+    required this.label,
+    this.selecionado = false,
+    this.onTap,
+  });
+}
+
 /// Item do [SivMenuLateral]. A lógica de quais itens mostrar (permissão)
 /// é responsabilidade de quem monta a lista -- este widget só renderiza.
 class SivMenuLateralItem {
@@ -15,13 +28,24 @@ class SivMenuLateralItem {
   /// real (essa flag não desabilita [onTap]).
   final bool desabilitado;
 
+  /// Filhos de um item-acordeão -- quando não vazio, o item vira expansível
+  /// (chevron, sem navegação própria via [onTap]).
+  final List<SivMenuLateralFilho> filhos;
+  final bool expandido;
+  final VoidCallback? onToggleExpandir;
+
   const SivMenuLateralItem({
     required this.label,
     required this.icone,
     this.selecionado = false,
     this.onTap,
     this.desabilitado = false,
+    this.filhos = const [],
+    this.expandido = false,
+    this.onToggleExpandir,
   });
+
+  bool get eAcordeao => filhos.isNotEmpty;
 }
 
 /// Grupo de itens do [SivMenuLateral], com título de seção opcional (ex:
@@ -41,12 +65,18 @@ class SivMenuLateral extends StatelessWidget {
   final Widget? rodape;
   final bool colapsado;
 
+  /// Botão de encolher/expandir o menu inteiro, mostrado no topo -- só
+  /// aparece quando informado (controle manual, independente dos
+  /// breakpoints automáticos de largura).
+  final VoidCallback? onToggleColapso;
+
   const SivMenuLateral({
     super.key,
     required this.secoes,
     this.cabecalho,
     this.rodape,
     this.colapsado = false,
+    this.onToggleColapso,
   });
 
   @override
@@ -62,6 +92,34 @@ class SivMenuLateral extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (onToggleColapso != null)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: colapsado ? 0 : 12,
+                vertical: 8,
+              ),
+              child: Align(
+                alignment: colapsado ? Alignment.center : Alignment.centerRight,
+                child: Tooltip(
+                  message: colapsado ? 'Expandir menu' : 'Encolher menu',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                    onTap: onToggleColapso,
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Icon(
+                        colapsado
+                            ? Icons.chevron_right
+                            : Icons.chevron_left,
+                        size: 20,
+                        color: cores.textoSobreEscuroApoio,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (cabecalho != null) cabecalho!,
           Expanded(
             child: ListView(
@@ -147,11 +205,19 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
                   ),
                 ),
               ),
+              if (item.eAcordeao)
+                Icon(
+                  item.expandido ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: cores.textoSobreEscuroApoio,
+                ),
             ],
           ],
         ),
       ),
     );
+
+    final onTap = item.eAcordeao ? item.onToggleExpandir : item.onTap;
 
     final itemWidget = Padding(
       padding: EdgeInsets.symmetric(
@@ -164,7 +230,7 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
             color: item.selecionado ? cores.acoAtivo : Colors.transparent,
             borderRadius: BorderRadius.circular(SivDimensoes.raio),
             child: InkWell(
-              onTap: item.onTap,
+              onTap: onTap,
               borderRadius: BorderRadius.circular(SivDimensoes.raio),
               child: conteudo,
             ),
@@ -186,8 +252,59 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
       ),
     );
 
-    return colapsado
-        ? Tooltip(message: item.label, child: itemWidget)
-        : itemWidget;
+    final itemComTooltip =
+        colapsado ? Tooltip(message: item.label, child: itemWidget) : itemWidget;
+
+    if (!item.eAcordeao || colapsado || !item.expandido) {
+      return itemComTooltip;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        itemComTooltip,
+        for (final filho in item.filhos)
+          _SivMenuLateralFilhoWidget(filho: filho),
+      ],
+    );
+  }
+}
+
+class _SivMenuLateralFilhoWidget extends StatelessWidget {
+  final SivMenuLateralFilho filho;
+
+  const _SivMenuLateralFilhoWidget({required this.filho});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 0, 12, SivDimensoes.gapItemMenu / 2),
+      child: Material(
+        color: filho.selecionado ? cores.acoAtivo : Colors.transparent,
+        borderRadius: BorderRadius.circular(4),
+        child: InkWell(
+          onTap: filho.onTap,
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              filho.label,
+              style: textos.apoio.copyWith(
+                color: filho.selecionado
+                    ? cores.textoSobreEscuroTitulo
+                    : cores.textoSobreEscuroApoio,
+                fontWeight:
+                    filho.selecionado ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

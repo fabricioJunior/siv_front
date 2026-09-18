@@ -9,7 +9,13 @@ class PromocoesPage extends StatelessWidget {
   final bloc = sl<PromocoesBloc>();
   final debouncer = Debouncer(milliseconds: 400);
 
-  PromocoesPage({super.key});
+  /// Tela "Promoções do e-commerce" (rota `/ecommerce_promocoes`) reaproveita
+  /// esta mesma página, filtrando client-side por `Promocao.canal` -- lista
+  /// inteira já vem do bloc sem paginação, filtro aqui não distorce nenhuma
+  /// contagem exibida.
+  final bool apenasCanalEcommerce;
+
+  PromocoesPage({super.key, this.apenasCanalEcommerce = false});
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +97,15 @@ class PromocoesPage extends StatelessWidget {
                       );
                     }
 
-                    final itens = state.promocoes;
+                    final itens = apenasCanalEcommerce
+                        ? state.promocoes
+                            .where(
+                              (p) =>
+                                  p.canal == PromocaoCanal.ecommerce ||
+                                  p.canal == PromocaoCanal.ambos,
+                            )
+                            .toList()
+                        : state.promocoes;
                     if (itens.isEmpty) {
                       return const Center(
                         child: Padding(

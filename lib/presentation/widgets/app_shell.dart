@@ -1,28 +1,18 @@
 import 'package:autenticacao/models.dart';
 import 'package:autenticacao/presentation/utils/fluxos_de_permissao.dart';
+import 'package:comercial/presentation.dart' show comercialAcordeaoItens;
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:estoque/presentation.dart' show estoqueAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
-
-/// Componentes que liberam o item "Relatórios" do menu -- mais amplo que
-/// [componentesPorFluxo]['Relatórios'] porque a página agregadora reúne
-/// relatórios de vendas, clientes, estoque e caixa.
-const _componentesRelatorios = [
-  'RELFC001',
-  'RELFC002',
-  'RELFC003',
-  'RELFC004',
-  'RELFC006',
-  'RELFC007',
-  'RELFC008',
-  'RELFC009',
-  'RELFC010',
-  'FCXFP008',
-];
+import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
+    show administracaoAcordeaoItens;
+import 'package:siv_front/presentation/pages/relatorios_menu_page.dart'
+    show relatoriosAcordeaoItens;
 
 /// Casca de navegação: menu lateral fixo + barra de título, vivendo acima
 /// do [Navigator] (montada uma única vez em `MaterialApp.builder`). Trocar
@@ -84,18 +74,59 @@ class AppShell extends StatelessWidget {
   }
 }
 
+/// Filha de um item de topo com acordeão (ver [_ItemDeNavegacao.filhos]).
+class _ItemFilhoNav {
+  final String label;
+  final String rota;
+  final List<String> componentesNecessarios;
+  final String? grupo;
+
+  const _ItemFilhoNav({
+    required this.label,
+    required this.rota,
+    this.componentesNecessarios = const [],
+    this.grupo,
+  });
+
+  bool get permitido =>
+      componentesNecessarios.isEmpty ||
+      componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
+}
+
+_ItemFilhoNav _deAcordeaoFilho(SivMenuAcordeaoFilho filho) => _ItemFilhoNav(
+      label: filho.label,
+      rota: filho.rota,
+      componentesNecessarios:
+          filho.componente == null ? const [] : [filho.componente!],
+      grupo: filho.grupo,
+    );
+
+List<String> _uniaoComponentes(List<_ItemFilhoNav> filhos) =>
+    {for (final f in filhos) ...f.componentesNecessarios}.toList();
+
 class _ItemDeNavegacao {
   final String label;
   final IconData icone;
-  final String rota;
+
+  /// Rota de destino -- `null` quando [filhos] não é vazio (item-acordeão,
+  /// não navega sozinho, só expande/recolhe).
+  final String? rota;
   final List<String> componentesNecessarios;
+  final List<_ItemFilhoNav> filhos;
 
   const _ItemDeNavegacao({
     required this.label,
     required this.icone,
-    required this.rota,
+    this.rota,
     this.componentesNecessarios = const [],
+    this.filhos = const [],
   });
+
+  /// Chave estável de seleção/expansão -- a própria rota quando existe,
+  /// senão um id sintético a partir do label (item-acordeão sem rota).
+  String get chave => rota ?? 'acordeao:$label';
+
+  bool get eAcordeao => filhos.isNotEmpty;
 
   bool get exigePermissao => componentesNecessarios.isNotEmpty;
 
@@ -104,27 +135,32 @@ class _ItemDeNavegacao {
       componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
 }
 
-/// Componentes exigidos pela página agregadora `ComercialMenuPage` -- união
-/// de todos os itens que ela lista (venda, devolução, pedidos, romaneios,
-/// histórico de vendas, consignações, promoções, cupons, e-commerce e
-/// minhas listas). Precisa cobrir todo o conteúdo, senão o item do menu
-/// fica invisível pra quem só tem permissão de um dos fluxos internos.
-const _componentesComercial = [
-  'PEDFC001',
-  'ROMFP001',
-  'CONFC001',
-  'PROMFC001',
-  'CUPFC001',
-  'ECOFM001',
-  'ECOFM004',
+final _itensComercialFilhos = comercialAcordeaoItens.map(_deAcordeaoFilho).toList();
+final _itensEstoqueFilhos = estoqueAcordeaoItens.map(_deAcordeaoFilho).toList();
+final _itensAdministracaoFilhos =
+    administracaoAcordeaoItens.map(_deAcordeaoFilho).toList();
+final _itensRelatoriosFilhos = relatoriosAcordeaoItens.map(_deAcordeaoFilho).toList();
+
+final _itensEcommerceFilhos = <_ItemFilhoNav>[
+  const _ItemFilhoNav(
+    label: 'Pedidos do e-commerce',
+    rota: '/ecommerce_pedidos',
+    componentesNecessarios: ['PEDFC001'],
+  ),
+  const _ItemFilhoNav(
+    label: 'Promoções do e-commerce',
+    rota: '/ecommerce_promocoes',
+    componentesNecessarios: ['PROMFC001'],
+  ),
+  const _ItemFilhoNav(
+    label: 'Configurações',
+    rota: '/configuracao_ecommerce',
+    componentesNecessarios: ['ECOFM001'],
+  ),
 ];
 
-/// Componentes exigidos pela página agregadora `GerenciaEstoqueMenuPage`
-/// (entrada/saída manual, histórico, balanço, consulta de saldo).
-const _componentesEstoque = ['ROMFP001', 'PRDFL001'];
-
 final _itensDiaADia = <_ItemDeNavegacao>[
-  _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
+  const _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
   _ItemDeNavegacao(
     label: 'Venda',
     icone: Icons.shopping_cart_checkout_outlined,
@@ -137,14 +173,20 @@ final _itensDiaADia = <_ItemDeNavegacao>[
     rota: '/fluxo_de_caixa',
     componentesNecessarios: componentesPorFluxo['Caixa']!,
   ),
+  const _ItemDeNavegacao(
+    label: 'Pessoas',
+    icone: Icons.people_outline,
+    rota: '/pessoas',
+    componentesNecessarios: ['PESFM001', 'PESFC001', 'PESFC002', 'PESFC003'],
+  ),
   _ItemDeNavegacao(
     label: 'Comercial',
     icone: Icons.local_mall_outlined,
-    // Menu agregador (venda, devolução, pedidos, romaneios, histórico de
-    // vendas, consignações, promoções, cupons, e-commerce, minhas listas)
-    // -- mesma permissão da rota protegida em routes.dart.
-    rota: '/comercial',
-    componentesNecessarios: _componentesComercial,
+    // Item-acordeão (venda, devolução, pedidos, romaneios, histórico de
+    // vendas, consignações, promoções, cupons, minhas listas) -- e-commerce
+    // saiu daqui, virou item de topo próprio.
+    componentesNecessarios: _uniaoComponentes(_itensComercialFilhos),
+    filhos: _itensComercialFilhos,
   ),
 ];
 
@@ -156,12 +198,18 @@ final _itensGestao = <_ItemDeNavegacao>[
     componentesNecessarios: componentesPorFluxo['Produtos']!,
   ),
   _ItemDeNavegacao(
+    label: 'E-commerce',
+    icone: Icons.storefront_outlined,
+    componentesNecessarios: _uniaoComponentes(_itensEcommerceFilhos),
+    filhos: _itensEcommerceFilhos,
+  ),
+  _ItemDeNavegacao(
     label: 'Estoque',
     icone: Icons.inventory_2_outlined,
-    // Menu agregador (entrada/saída manual, histórico, balanço, consulta
-    // de saldo) -- não a tela de saldo direto, que é só um dos fluxos dele.
-    rota: '/gerencia_estoque',
-    componentesNecessarios: _componentesEstoque,
+    // Item-acordeão (entrada/saída manual, histórico, balanço, consulta de
+    // saldo).
+    componentesNecessarios: _uniaoComponentes(_itensEstoqueFilhos),
+    filhos: _itensEstoqueFilhos,
   ),
   _ItemDeNavegacao(
     label: 'Notas fiscais',
@@ -172,8 +220,8 @@ final _itensGestao = <_ItemDeNavegacao>[
   _ItemDeNavegacao(
     label: 'Relatórios',
     icone: Icons.bar_chart_outlined,
-    rota: '/relatorios',
-    componentesNecessarios: _componentesRelatorios,
+    componentesNecessarios: _uniaoComponentes(_itensRelatoriosFilhos),
+    filhos: _itensRelatoriosFilhos,
   ),
 ];
 
@@ -181,39 +229,17 @@ final _itensSistema = <_ItemDeNavegacao>[
   _ItemDeNavegacao(
     label: 'Administração',
     icone: Icons.admin_panel_settings_outlined,
-    rota: '/administracao',
-    componentesNecessarios: ['ADMFM001', 'ADMFM004', 'SYSFM001'],
+    componentesNecessarios: _uniaoComponentes(_itensAdministracaoFilhos),
+    filhos: _itensAdministracaoFilhos,
   ),
-  _ItemDeNavegacao(
+  const _ItemDeNavegacao(
     label: 'Sincronização',
     icone: Icons.sync,
     rota: '/sincronizacao',
   ),
 ];
 
-/// Rotas filhas de páginas agregadoras (`ComercialMenuPage`,
-/// `GerenciaEstoqueMenuPage`) mapeadas pra rota do item pai no menu raiz --
-/// usado pra manter o destaque e o título ativos quando o usuário navega
-/// pra dentro do agregador (`/venda` fica de fora: já é item próprio).
-const _rotaFilhaParaRotaRaiz = <String, String>{
-  '/devolucao': '/comercial',
-  '/pedidos': '/comercial',
-  '/romaneios': '/comercial',
-  '/vendas': '/comercial',
-  '/consignacoes': '/comercial',
-  '/promocoes': '/comercial',
-  '/cupons': '/comercial',
-  '/ecommerces': '/comercial',
-  '/listas_personalizadas': '/comercial',
-  '/entrada_manual_de_produtos': '/gerencia_estoque',
-  '/saida_manual_de_produtos': '/gerencia_estoque',
-  '/estoque': '/gerencia_estoque',
-  '/historico_estoque': '/gerencia_estoque',
-  '/romaneios_entrada_manual': '/gerencia_estoque',
-  '/balancos': '/gerencia_estoque',
-};
-
-class _AppShellCasca extends StatelessWidget {
+class _AppShellCasca extends StatefulWidget {
   final String rotaAtual;
   final AppState appState;
   final Widget child;
@@ -227,69 +253,155 @@ class _AppShellCasca extends StatelessWidget {
   });
 
   @override
+  State<_AppShellCasca> createState() => _AppShellCascaState();
+}
+
+class _AppShellCascaState extends State<_AppShellCasca> {
+  // null = segue o breakpoint automático de largura (SivScaffold decide).
+  // Setado (true/false) assim que o usuário mexe no botão de colapso --
+  // vale pra sessão inteira a partir daí, sobrepõe o automático.
+  bool? _colapsoManual;
+
+  final Set<String> _expandidos = {};
+
+  static final _itensComAcordeao = [
+    ..._itensDiaADia,
+    ..._itensGestao,
+    ..._itensSistema,
+  ].where((item) => item.eAcordeao).toList();
+
+  static final _mapaFilhoParaChavePai = <String, String>{
+    for (final pai in _itensComAcordeao)
+      for (final filho in pai.filhos) filho.rota: pai.chave,
+  };
+
+  void _toggleColapso(double larguraAtual) {
+    final autoAtual = larguraAtual < SivDimensoes.breakpointMenuRail;
+    final atual = _colapsoManual ?? autoAtual;
+    setState(() => _colapsoManual = !atual);
+  }
+
+  void _alternarExpandido(String chave) {
+    setState(() {
+      if (_expandidos.contains(chave)) {
+        _expandidos.remove(chave);
+      } else {
+        _expandidos.add(chave);
+        // Rail não tem onde mostrar filhas -- reabre o menu inteiro pra
+        // caber o acordeão que acabou de abrir.
+        if (_colapsoManual == true) _colapsoManual = false;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final itensTodos = [..._itensDiaADia, ..._itensGestao, ..._itensSistema];
-    final rotaSelecao = _rotaFilhaParaRotaRaiz[rotaAtual] ?? rotaAtual;
-    final itemAtivo = itensTodos
-        .where((item) => item.rota == rotaSelecao)
-        .toList();
-    final tituloAtivo = itemAtivo.isNotEmpty ? itemAtivo.first.label : null;
+    final chavePaiAtiva = _mapaFilhoParaChavePai[widget.rotaAtual];
 
-    return ValueListenableBuilder<String?>(
-      valueListenable: SivPageTitulo.notifier,
-      builder: (context, tituloPagina, _) => SivScaffold(
-        titulo: tituloPagina ?? tituloAtivo ?? 'SIV',
-        floatingActionButton: ValueListenableBuilder<Widget?>(
-          valueListenable: SivPageFab.notifier,
-          builder: (context, fab, _) => fab ?? const SizedBox.shrink(),
-        ), // SivScaffold repassa direto ao Scaffold.floatingActionButton --
-        // SizedBox.shrink() (sem tamanho, sem hit-test) equivale a "nenhum
-        // FAB" visualmente, mas mantém o slot como Widget não-nulo (evita
-        // remontar o subtree do ValueListenableBuilder a cada troca null/
-        // widget, que já causava um pequeno flash ao navegar entre páginas).
-        secoesMenu: [
-          SivMenuLateralSecao(
-            titulo: 'DIA A DIA',
-            itens: _itensDiaADia
-                .where((item) => item.permitido)
-                .map((item) => _mapearItem(item, rotaSelecao))
-                .toList(),
-          ),
-          SivMenuLateralSecao(
-            titulo: 'GESTÃO',
-            itens: _itensGestao
-                .where((item) => item.permitido)
-                .map((item) => _mapearItem(item, rotaSelecao))
-                .toList(),
-          ),
-          SivMenuLateralSecao(
-            titulo: 'SISTEMA',
-            itens: _itensSistema
-                .where((item) => item.permitido)
-                .map((item) => _mapearItem(item, rotaSelecao))
-                .toList(),
-          ),
-        ],
-        rodapeMenu: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _BarraTituloInfo(appState: appState, navigatorKey: navigatorKey),
-            _RodapeMenu(appState: appState, navigatorKey: navigatorKey),
-          ],
+    // Módulo correspondente à rota ativa abre automaticamente -- mutação
+    // direta de estado durante build (sem setState), efetiva já neste frame.
+    if (chavePaiAtiva != null) _expandidos.add(chavePaiAtiva);
+
+    final itemAtivoTopo =
+        itensTodos.where((item) => item.rota == widget.rotaAtual).toList();
+    final paiAtivo =
+        chavePaiAtiva == null
+            ? null
+            : itensTodos.where((item) => item.chave == chavePaiAtiva).toList();
+
+    final tituloAtivo = itemAtivoTopo.isNotEmpty
+        ? itemAtivoTopo.first.label
+        : (paiAtivo != null && paiAtivo.isNotEmpty ? paiAtivo.first.label : null);
+
+    return SivScaffold(
+      colapsoMenuForcado: _colapsoManual,
+      onToggleColapsoMenu: () =>
+          _toggleColapso(MediaQuery.sizeOf(context).width),
+      floatingActionButton: ValueListenableBuilder<Widget?>(
+        valueListenable: SivPageFab.notifier,
+        builder: (context, fab, _) => fab ?? const SizedBox.shrink(),
+      ), // SivScaffold repassa direto ao Scaffold.floatingActionButton --
+      // SizedBox.shrink() (sem tamanho, sem hit-test) equivale a "nenhum
+      // FAB" visualmente, mas mantém o slot como Widget não-nulo (evita
+      // remontar o subtree do ValueListenableBuilder a cada troca null/
+      // widget, que já causava um pequeno flash ao navegar entre páginas).
+      secoesMenu: [
+        SivMenuLateralSecao(
+          titulo: 'DIA A DIA',
+          itens: _itensDiaADia
+              .where((item) => item.permitido)
+              .map((item) => _mapearItem(item, chavePaiAtiva))
+              .toList(),
         ),
-        corpo: child,
+        SivMenuLateralSecao(
+          titulo: 'GESTÃO',
+          itens: _itensGestao
+              .where((item) => item.permitido)
+              .map((item) => _mapearItem(item, chavePaiAtiva))
+              .toList(),
+        ),
+        SivMenuLateralSecao(
+          titulo: 'SISTEMA',
+          itens: _itensSistema
+              .where((item) => item.permitido)
+              .map((item) => _mapearItem(item, chavePaiAtiva))
+              .toList(),
+        ),
+      ],
+      rodapeMenu: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _BarraTituloInfo(appState: widget.appState, navigatorKey: widget.navigatorKey),
+          _RodapeMenu(appState: widget.appState, navigatorKey: widget.navigatorKey),
+        ],
       ),
+      // Rotas sem label no menu (ex: telas abertas fora da navegação
+      // principal) renderizam o próprio título -- ver [SivTituloPagina] --
+      // então não duplica nada aqui.
+      corpo: tituloAtivo == null
+          ? widget.child
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SivTituloPagina(titulo: tituloAtivo),
+                Expanded(child: widget.child),
+              ],
+            ),
     );
   }
 
-  SivMenuLateralItem _mapearItem(_ItemDeNavegacao item, String rotaSelecao) {
+  SivMenuLateralItem _mapearItem(_ItemDeNavegacao item, String? chavePaiAtiva) {
+    if (item.eAcordeao) {
+      final expandido = _expandidos.contains(item.chave);
+      return SivMenuLateralItem(
+        label: item.label,
+        icone: item.icone,
+        selecionado: item.chave == chavePaiAtiva && !expandido,
+        expandido: expandido,
+        onToggleExpandir: () => _alternarExpandido(item.chave),
+        filhos: item.filhos
+            .where((filho) => filho.permitido)
+            .map(
+              (filho) => SivMenuLateralFilho(
+                label: filho.label,
+                selecionado: filho.rota == widget.rotaAtual,
+                onTap: filho.rota == widget.rotaAtual
+                    ? null
+                    : () => widget.navigatorKey.currentState?.pushNamed(filho.rota),
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return SivMenuLateralItem(
       label: item.label,
       icone: item.icone,
-      selecionado: item.rota == rotaSelecao,
-      onTap: item.rota == rotaAtual
+      selecionado: item.rota == widget.rotaAtual,
+      onTap: item.rota == widget.rotaAtual
           ? null
-          : () => navigatorKey.currentState?.pushNamed(item.rota),
+          : () => widget.navigatorKey.currentState?.pushNamed(item.rota!),
     );
   }
 }

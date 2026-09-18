@@ -219,6 +219,8 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
               return AberturaDeCaixaPage(
                 empresaId: widget.empresaId,
                 terminalId: widget.terminalId,
+                empresaNome: sessao.empresaNomeDaSessao,
+                terminalNome: sessao.terminalNomeDaSessao,
                 carregando: carregandoAbertura,
                 erro: erroAbertura ?? erroRecuperacaoCaixa,
                 onAbrir: () {

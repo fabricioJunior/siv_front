@@ -8,6 +8,8 @@ import 'package:core/equals.dart';
 import 'package:core/injecoes.dart';
 import 'package:financeiro/use_cases.dart';
 
+import '../sync_data/sync_data_bloc.dart';
+
 part 'app_state.dart';
 part 'app_event.dart';
 
@@ -27,13 +29,17 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final SalvarTerminalDaSessao _salvarTerminalDaSessao;
   final LimparTerminalDaSessao _limparTerminalDaSessao;
   final SincronizarPermissoesDoUsuario _sincronizarPermissoesDoUsuario;
+  final RecuperarPermissoesDoUsuarioLocal _recuperarPermissoesDoUsuarioLocal;
   final RecuperarCaixaAberto _recuperarCaixaAberto;
+  final SyncDataBloc _syncDataBloc;
 
   final ApiBaseUrlConfig _apiBaseUrlConfig;
 
   late StreamSubscription<Token> _onAutenticacoSubscription;
   late StreamSubscription<Null> _onDesautenticadoSubscription;
+  late StreamSubscription<SyncDataState> _syncDataBlocSubscription;
   bool _ignorarProximoEventoAppAutenticou = false;
+  DateTime? _ultimaSincronizacaoDeDadosProcessada;
   AppBloc(
     this._estaAutenticado,
     this._onAutenticado,
@@ -49,7 +55,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._salvarTerminalDaSessao,
     this._limparTerminalDaSessao,
     this._sincronizarPermissoesDoUsuario,
+    this._recuperarPermissoesDoUsuarioLocal,
     this._recuperarCaixaAberto,
+    this._syncDataBloc,
     this._apiBaseUrlConfig,
   ) : super(const AppState()) {
     _onAutenticacoSubscription = _onAutenticado.call().listen(
@@ -58,6 +66,25 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     _onDesautenticadoSubscription = _onDesautenticado.call().listen(
       (_) => add(AppDesautenticou(apagarDadosLocais: false)),
     );
+    // Sincronizacao incremental (websocket/polling/manual) concluida com
+    // sucesso -- aproveita pra atualizar as permissoes do usuario tambem,
+    // evitando round-trip extra so pra isso a cada boot/login (ver
+    // RecuperarPermissoesDoUsuarioLocal).
+    _syncDataBlocSubscription = _syncDataBloc.stream.listen((syncState) {
+      final finalizadoEm = syncState.finalizadoEm;
+      if (finalizadoEm == null ||
+          finalizadoEm == _ultimaSincronizacaoDeDadosProcessada) {
+        return;
+      }
+      final houveFalha = syncState.modulos.values.any(
+        (modulo) => modulo.status == SyncModuloStatus.falha,
+      );
+      if (houveFalha) {
+        return;
+      }
+      _ultimaSincronizacaoDeDadosProcessada = finalizadoEm;
+      add(AppSincronizacaoDeDadosConcluida());
+    });
     on<AppIniciou>(_onAppIniciou);
     on<AppAutenticou>(_onAppAutenticou);
     on<AppDesautenticou>(_onDesautenticou);
@@ -65,6 +92,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppSelecionouTerminalDaSessao>(_onSelecionouTerminalDaSessao);
     on<AppLimpouTerminalDaSessao>(_onLimpouTerminalDaSessao);
     on<AppAtualizouCaixaDaSessao>(_onAtualizouCaixaDaSessao);
+    on<AppSincronizacaoDeDadosConcluida>(_onSincronizacaoDeDadosConcluida);
   }
 
   FutureOr<void> _onAppAutenticou(
@@ -231,10 +259,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       );
       Map<String, PermissaoDoUsuario>? permissoesMap;
       if (estaAutenticado) {
-        _atualizarEtapaCarregamento(emit, 'Sincronizando permissões');
-        var permissoes = await _sincronizarPermissoesDoUsuario(
-          idUsuario: usuarioDaSessao!.id,
-        );
+        _atualizarEtapaCarregamento(emit, 'Carregando permissões');
+        var permissoes = await _recuperarPermissoesDoUsuarioLocal();
         permissoesMap = _mapPermissoes(permissoes);
       }
       emit(
@@ -256,6 +282,25 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       );
     } catch (e, s) {
       _emitFalhaInicializacao(emit, e, s);
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onSincronizacaoDeDadosConcluida(
+    AppSincronizacaoDeDadosConcluida event,
+    Emitter<AppState> emit,
+  ) async {
+    final usuarioDaSessao = state.usuarioDaSessao;
+    if (usuarioDaSessao == null) {
+      return;
+    }
+
+    try {
+      final permissoes = await _sincronizarPermissoesDoUsuario(
+        idUsuario: usuarioDaSessao.id,
+      );
+      emit(state.copyWith(permissoesDoUsuario: _mapPermissoes(permissoes)));
+    } catch (e, s) {
       addError(e, s);
     }
   }
@@ -457,6 +502,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   Future<void> close() async {
     await _onAutenticacoSubscription.cancel();
     await _onDesautenticadoSubscription.cancel();
+    await _syncDataBlocSubscription.cancel();
     return super.close();
   }
 }

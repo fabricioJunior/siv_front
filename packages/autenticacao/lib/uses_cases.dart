@@ -31,3 +31,4 @@ export 'domain/usecases/grupos_de_acesso/excluir_grupo_de_acesso.dart';
 export 'domain/usecases/recuperar_empresas.dart';
 export 'domain/usecases/recuperar_empresa_da_sessao.dart';
 export 'domain/usecases/sincronizar_permissoes_do_usuario.dart';
+export 'domain/usecases/recuperar_permissoes_do_usuario_local.dart';

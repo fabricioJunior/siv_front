@@ -15,6 +15,7 @@ import 'package:estoque/presentation.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
+import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:financeiro/models.dart' show TipoOperacaoFormaPagamento;
 import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
@@ -1227,11 +1228,29 @@ Widget _rotaProtegida({required String route, required Widget child}) {
     return child;
   }
 
-  if (componentes.any(PermissaoPorNome.acessoPermitido)) {
-    return child;
-  }
+  // Deep-link direto no web (ex: F5 numa rota protegida): o boot ainda pode
+  // estar carregando usuario/permissoes do cache local quando essa rota e'
+  // construida -- checar a permissao nesse instante sempre nega acesso.
+  // BlocBuilder reconstroi assim que o AppBloc termina `_onAppIniciou`.
+  return BlocBuilder<AppBloc, AppState>(
+    bloc: sl<AppBloc>(),
+    buildWhen: (previous, current) =>
+        previous.statusAutenticacao != current.statusAutenticacao ||
+        previous.permissoesDoUsuario != current.permissoesDoUsuario,
+    builder: (context, state) {
+      if (state.statusAutenticacao == StatusAutenticacao.carregandoDados) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator.adaptive()),
+        );
+      }
 
-  return const _AcessoNegadoPage();
+      if (componentes.any(PermissaoPorNome.acessoPermitido)) {
+        return child;
+      }
+
+      return const _AcessoNegadoPage();
+    },
+  );
 }
 
 Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {

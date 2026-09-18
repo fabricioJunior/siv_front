@@ -33,6 +33,8 @@ class AppSelecionouEmpresaDaSessao extends AppEvent {
   AppSelecionouEmpresaDaSessao({required this.empresa});
 }
 
+class AppSincronizacaoDeDadosConcluida extends AppEvent {}
+
 class AppAtualizouCaixaDaSessao extends AppEvent {
   final int terminalId;
   final int? caixaId;

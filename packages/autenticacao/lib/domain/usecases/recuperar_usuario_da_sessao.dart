@@ -7,12 +7,13 @@ class RecuperarUsuarioDaSessao {
   RecuperarUsuarioDaSessao({required this.usuariosRepository});
 
   Future<Usuario?> call() async {
-    var usuarioDaSessao = await usuariosRepository.getUsuarioDaSessaoSalvo();
-    if (usuarioDaSessao == null) {
-      usuarioDaSessao = await usuariosRepository.getUsuarioDaSessao();
-      await usuariosRepository.salvarUsuarioDaSessao(usuarioDaSessao);
+    final usuarioDaSessao = await usuariosRepository.getUsuarioDaSessaoSalvo();
+    if (usuarioDaSessao != null) {
+      return usuarioDaSessao;
     }
 
-    return usuariosRepository.getUsuarioDaSessao();
+    final usuarioRemoto = await usuariosRepository.getUsuarioDaSessao();
+    await usuariosRepository.salvarUsuarioDaSessao(usuarioRemoto);
+    return usuarioRemoto;
   }
 }

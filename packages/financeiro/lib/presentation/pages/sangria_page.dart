@@ -1,5 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +61,9 @@ class _SangriaPageState extends State<SangriaPage> {
           _sincronizarControllers(state);
           final salvando = state.step == SangriaStep.salvando;
 
+          final cores = context.sivColors;
+          final textos = context.sivTextos;
+
           return Scaffold(
             appBar: AppBar(title: const Text('Nova sangria')),
             floatingActionButton: FloatingActionButton.extended(
@@ -76,77 +81,116 @@ class _SangriaPageState extends State<SangriaPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.check),
-              label: Text(salvando ? 'Salvando...' : 'Salvar'),
+              label: Text(salvando ? 'Salvando...' : 'Salvar sangria'),
             ),
             body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.point_of_sale_outlined),
-                          title: const Text('Caixa de origem'),
-                          subtitle: Text('ID do caixa: ${widget.caixaId}'),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Dados da sangria',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _valorController,
-                        decoration: const InputDecoration(
-                          labelText: 'Valor',
-                          hintText: 'Ex: 150,00',
-                          prefixIcon: Icon(Icons.attach_money),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'[0-9,\.]')),
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: cores.superficie,
+                                  borderRadius: BorderRadius.circular(
+                                    SivDimensoes.raio,
+                                  ),
+                                  border: Border.all(color: cores.hairline),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.point_of_sale_outlined,
+                                      color: cores.aco,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'CAIXA DE ORIGEM',
+                                          style: textos.rotulo.copyWith(
+                                            color: cores.textoApoio,
+                                            fontSize: 10.5,
+                                          ),
+                                        ),
+                                        Text(
+                                          '#${widget.caixaId}',
+                                          style: textos.secao.copyWith(
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ...sivCantosBlueprint(cores.hairline),
+                            ],
+                          ),
+                          const SizedBox(height: SivDimensoes.gapCards),
+                          TextFormField(
+                            controller: _valorController,
+                            decoration: const InputDecoration(
+                              labelText: 'Valor',
+                              hintText: 'Ex: 150,00',
+                              prefixIcon: Icon(Icons.attach_money),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9,\.]')),
+                            ],
+                            validator: (value) {
+                              final valor = _parseValor(value ?? '');
+                              if (valor == null || valor <= 0) {
+                                return 'Informe um valor válido';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => _onCampoAlterado(
+                              context,
+                              valor: value,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _descricaoController,
+                            decoration: const InputDecoration(
+                              labelText: 'Descrição',
+                              hintText: 'Motivo da sangria…',
+                              prefixIcon: Icon(Icons.description_outlined),
+                            ),
+                            minLines: 2,
+                            maxLines: 4,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'A descrição é obrigatória';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => _onCampoAlterado(
+                              context,
+                              descricao: value,
+                            ),
+                          ),
                         ],
-                        validator: (value) {
-                          final valor = _parseValor(value ?? '');
-                          if (valor == null || valor <= 0) {
-                            return 'Informe um valor válido';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => _onCampoAlterado(
-                          context,
-                          valor: value,
-                        ),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _descricaoController,
-                        decoration: const InputDecoration(
-                          labelText: 'Descrição',
-                          hintText: 'Informe o motivo da sangria',
-                          prefixIcon: Icon(Icons.description_outlined),
-                        ),
-                        minLines: 2,
-                        maxLines: 4,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'A descrição é obrigatória';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => _onCampoAlterado(
-                          context,
-                          descricao: value,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

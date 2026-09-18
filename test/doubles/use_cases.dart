@@ -6,6 +6,7 @@ import 'package:estoque/estoque.dart';
 import 'package:mockito/annotations.dart';
 import 'package:precos/use_cases.dart';
 import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
+import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 
 @GenerateMocks([
   OnAutenticado,
@@ -15,6 +16,7 @@ import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
   RecuperarUsuarioDaSessao,
   RecuperarEmpresaDaSessao,
   SincronizarPermissoesDoUsuario,
+  RecuperarPermissoesDoUsuarioLocal,
   RecuperarPermissoesDoUsuario,
   LimparSincronizacaoIncremental,
   SincronizarCodigos,
@@ -23,5 +25,6 @@ import 'package:produtos/domain/use_cases/sincronizar_codigos.dart';
   SincronizarPrecos,
   RecuperarTokenJwt,
   SyncWebSocketService,
+  SyncDataBloc,
 ])
 void main() {}

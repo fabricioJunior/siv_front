@@ -20,9 +20,11 @@ class TokenRepository implements ITokenRepository {
   });
 
   @override
-  Future<void> putToken(Token token) async {
+  Future<void> putToken(Token token, {bool notificarTokenPut = true}) async {
     await localDataSource.put(token);
-    _onTokenPut.add(token);
+    if (notificarTokenPut) {
+      _onTokenPut.add(token);
+    }
   }
 
   @override
@@ -50,8 +52,11 @@ class TokenRepository implements ITokenRepository {
     // dataBaseId da box e' hash do jwtToken (muda a cada renovacao) -- sem apagar antes, cada
     // refresh acumularia uma entrada nova na box em vez de substituir (mesmo cuidado do login,
     // ver CriarTokenDeAutenticacao).
+    // notificarTokenPut: false -- renovação é silenciosa (sessão já autenticada, só o JWT
+    // trocou por trás de um 401). Notificar aqui reemitiria AppAutenticou no meio de uma sessão
+    // já ativa, reexecutando o fluxo de login inteiro no AppBloc e forçando redirect pra /home.
     await deleteToken(notificarTokenExcluido: false);
-    await putToken(tokenNovo);
+    await putToken(tokenNovo, notificarTokenPut: false);
     return tokenNovo;
   }
 

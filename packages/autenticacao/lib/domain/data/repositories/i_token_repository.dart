@@ -14,7 +14,7 @@ abstract class ITokenRepository {
   // estiver invalido/expirado (sessao > 30 dias sem uso), quem chama decide o fallback.
   Future<Token?> renovarToken();
 
-  Future<void> putToken(Token token);
+  Future<void> putToken(Token token, {bool notificarTokenPut = true});
 
   Future<void> deleteToken({bool notificarTokenExcluido = true});
 

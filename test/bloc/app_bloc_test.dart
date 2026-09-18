@@ -39,7 +39,10 @@ final LimparTerminalDaSessao limparTerminalDaSessao =
 
 final SincronizarPermissoesDoUsuario sincronizarPermissoesDoUsuario =
     MockSincronizarPermissoesDoUsuario();
+final RecuperarPermissoesDoUsuarioLocal recuperarPermissoesDoUsuarioLocal =
+    MockRecuperarPermissoesDoUsuarioLocal();
 final RecuperarCaixaAberto recuperarCaixaAberto = FakeRecuperarCaixaAberto();
+final MockSyncDataBloc syncDataBloc = MockSyncDataBloc();
 
 var licenciado = const Licenciado(
   id: '1',
@@ -120,6 +123,8 @@ void main() {
     _setupOnDesautenticado();
     _setupRecuperarEmpresaDaSessao();
     _setupSincronizarPermissoes();
+    _setupRecuperarPermissoesDoUsuarioLocal();
+    _setupSyncDataBloc();
   });
   blocTest(
     'emite estado com informações salvas de autenticacao',
@@ -143,7 +148,9 @@ void main() {
         salvarTerminalDaSessao,
         limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarPermissoesDoUsuarioLocal,
         recuperarCaixaAberto,
+        syncDataBloc,
         apiBaseUrlConfig,
       );
     },
@@ -183,7 +190,9 @@ void main() {
         salvarTerminalDaSessao,
         limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarPermissoesDoUsuarioLocal,
         recuperarCaixaAberto,
+        syncDataBloc,
         apiBaseUrlConfig,
       );
     },
@@ -218,7 +227,9 @@ void main() {
         salvarTerminalDaSessao,
         limparTerminalDaSessao,
         sincronizarPermissoesDoUsuario,
+        recuperarPermissoesDoUsuarioLocal,
         recuperarCaixaAberto,
+        syncDataBloc,
         apiBaseUrlConfig,
       );
     },
@@ -256,4 +267,14 @@ void _setupSincronizarPermissoes() {
   when(
     sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id),
   ).thenAnswer((_) async => <PermissaoDoUsuario>[]);
+}
+
+void _setupRecuperarPermissoesDoUsuarioLocal() {
+  when(
+    recuperarPermissoesDoUsuarioLocal.call(),
+  ).thenAnswer((_) async => <PermissaoDoUsuario>[]);
+}
+
+void _setupSyncDataBloc() {
+  when(syncDataBloc.stream).thenAnswer((_) => const Stream.empty());
 }

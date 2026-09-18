@@ -328,7 +328,11 @@ void _usesCases() {
   sl.registerFactory<SincronizarPermissoesDoUsuario>(
       () => SincronizarPermissoesDoUsuario(
             repository: sl(),
-          )); 
+          ));
+  sl.registerFactory<RecuperarPermissoesDoUsuarioLocal>(
+      () => RecuperarPermissoesDoUsuarioLocal(
+            repository: sl(),
+          ));
   sl.registerFactory<RecuperarPermissoesDoUsuario>(() => RecuperarPermissoesDoUsuario(
         permissoesRepository: sl(),
       ));

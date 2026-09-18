@@ -108,7 +108,10 @@ class RomaneiosRemoteDataSource extends RemoteDataSourceBase
         'page': '$page',
         'limit': '$limit',
         'ordenacao': 'id_desc',
-        if (searchTerm != null) 'searchTerm': searchTerm,
+        // API espera 'procurarPor' (ver RomaneioFilter no apollo-api) -- nome
+        // errado aqui fazia o filtro ser ignorado silenciosamente (param
+        // desconhecido, backend não valida strict).
+        if (searchTerm != null) 'procurarPor': searchTerm,
         if (caixaId != null) 'caixaId': '$caixaId',
         if (dataHoraInicial != null)
           'dataHoraInicial': dataHoraInicial.toIso8601String(),

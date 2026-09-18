@@ -1254,12 +1254,30 @@ Widget _rotaProtegida({required String route, required Widget child}) {
 }
 
 Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
-  final caixaIdDaSessao = sl<IAcessoGlobalSessao>().caixaIdDaSessao;
-  if (caixaIdDaSessao != null) {
-    return child;
-  }
+  // Mesmo problema do deep-link em _rotaProtegida: no boot direto numa rota
+  // protegida (F5 no web), o AppBloc ainda pode estar carregando o caixa da
+  // sessão quando essa rota e' construida -- ler a sessão nesse instante
+  // sempre acusa "caixa fechado". BlocBuilder reconstroi quando o AppBloc
+  // termina `_onAppIniciou`.
+  return BlocBuilder<AppBloc, AppState>(
+    bloc: sl<AppBloc>(),
+    buildWhen: (previous, current) =>
+        previous.statusAutenticacao != current.statusAutenticacao ||
+        previous.caixaIdDaSessao != current.caixaIdDaSessao,
+    builder: (context, state) {
+      if (state.statusAutenticacao == StatusAutenticacao.carregandoDados) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator.adaptive()),
+        );
+      }
 
-  return const _CaixaFechadoPage();
+      if (state.caixaIdDaSessao != null) {
+        return child;
+      }
+
+      return const _CaixaFechadoPage();
+    },
+  );
 }
 
 const Map<String, List<String>> _componentesDaRota = {

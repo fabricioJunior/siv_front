@@ -33,10 +33,8 @@ import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
-import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
-import 'package:siv_front/presentation/pages/relatorios_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
@@ -279,16 +277,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  // Telas-hub (ex-agregadoras) não são mais destino de rota -- a lista de
+  // filhas virou acordeão no menu lateral (ver AppShell). Rotas antigas
+  // continuam existindo só pra não quebrar deep-link externo: redirecionam
+  // pra primeira filha, na mesma ordem do acordeão correspondente.
   '/administracao': (context) {
     return _rotaProtegida(
       route: '/administracao',
-      child: const AdministracaoMenuPage(),
+      child: const _RedirecionarRota(destino: '/usuarios'),
     );
   },
   '/relatorios': (context) {
     return _rotaProtegida(
       route: '/relatorios',
-      child: const RelatoriosMenuPage(),
+      child: const _RedirecionarRota(destino: '/relatorio_faturamento'),
     );
   },
 
@@ -296,7 +298,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/comercial': (context) {
     return _rotaProtegida(
       route: '/comercial',
-      child: const ComercialMenuPage(),
+      child: const _RedirecionarRota(destino: '/venda'),
     );
   },
   '/venda': (context) {
@@ -454,6 +456,18 @@ Map<String, Widget Function(BuildContext)> routes = {
         ecommerceId: routeArgs['ecommerceId'] as int,
         tituloCanal: routeArgs['titulo'] as String?,
       ),
+    );
+  },
+  '/ecommerce_pedidos': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_pedidos',
+      child: const PedidosPage(apenasOrigemEcommerce: true),
+    );
+  },
+  '/ecommerce_promocoes': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_promocoes',
+      child: PromocoesPage(apenasCanalEcommerce: true),
     );
   },
   '/chamar_entregador': (context) {
@@ -974,7 +988,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/gerencia_estoque': (context) {
     return _rotaProtegida(
       route: '/gerencia_estoque',
-      child: const GerenciaEstoqueMenuPage(),
+      child: const _RedirecionarRota(destino: '/entrada_manual_de_produtos'),
     );
   },
   '/estoque': (context) {
@@ -1253,6 +1267,35 @@ Widget _rotaProtegida({required String route, required Widget child}) {
   );
 }
 
+/// Substitui, sem histórico, a rota atual (uma tela-hub descontinuada) pela
+/// primeira filha do acordeão correspondente no menu lateral -- cobre
+/// deep-link externo que ainda aponte pra rota antiga.
+class _RedirecionarRota extends StatefulWidget {
+  final String destino;
+
+  const _RedirecionarRota({required this.destino});
+
+  @override
+  State<_RedirecionarRota> createState() => _RedirecionarRotaState();
+}
+
+class _RedirecionarRotaState extends State<_RedirecionarRota> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pushReplacementNamed(widget.destino);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator.adaptive()),
+    );
+  }
+}
+
 Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
   // Mesmo problema do deep-link em _rotaProtegida: no boot direto numa rota
   // protegida (F5 no web), o AppBloc ainda pode estar carregando o caixa da
@@ -1310,6 +1353,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_pedidos': ['PEDFC001'],
+  '/ecommerce_promocoes': ['PROMFC001'],
   '/listas_personalizadas': ['ECOFM004'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],

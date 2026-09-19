@@ -57,7 +57,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         _bloc.add(const EcommerceReferenciasCarregarMaisSolicitou());
       }
     });
-    _atualizarTitulo();
     // Não chama _atualizarAcoes aqui -- ela lê _telaDesktop (MediaQuery),
     // proibido durante initState (context ainda não montado). O primeiro
     // build do BlocBuilder já chama _atualizarAcoes(state) sozinho.
@@ -69,20 +68,14 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       final ecommerce = await sl<RecuperarEcommerce>().call(widget.ecommerceId);
       if (!mounted) return;
       setState(() => _tituloCanal = ecommerce.titulo);
-      _atualizarTitulo();
     } catch (_) {
       // Sem título, a migalha cai pra "E-commerces / Produtos no site".
     }
   }
 
-  void _atualizarTitulo() {
-    final canal = _tituloCanal;
-    SivPageTitulo.definir(
-      canal == null
-          ? 'E-commerces / Produtos no site'
-          : 'E-commerces / $canal / Produtos no site',
-    );
-  }
+  String get _titulo => _tituloCanal == null
+      ? 'E-commerces / Produtos no site'
+      : 'E-commerces / $_tituloCanal / Produtos no site';
 
   @override
   void dispose() {
@@ -90,7 +83,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _debouncer.cancel();
     _scrollController.dispose();
     _bloc.close();
-    SivPageTitulo.limpar();
     super.dispose();
   }
 
@@ -161,22 +153,45 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           ),
         ],
         child: BlocBuilder<EcommerceReferenciasBloc, EcommerceReferenciasState>(
-          builder: (context, state) {
-            if (state is EcommerceReferenciasCarregarEmProgresso ||
-                state is EcommerceReferenciasInitial) {
-              return const Center(child: CircularProgressIndicator.adaptive());
-            }
+          builder: (context, state) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SivDimensoes.paginaHorizontal,
+                  vertical: SivDimensoes.paginaVertical,
+                ).copyWith(bottom: 0),
+                child: SivTituloPagina(titulo: _titulo),
+              ),
+              Expanded(child: _buildConteudo(context, state, cores, textos)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            if (state is EcommerceReferenciasCarregarFalha) {
-              return Center(
-                child: Text(
-                  'Não foi possível carregar as referências.',
-                  style: textos.corpo,
-                ),
-              );
-            }
+  Widget _buildConteudo(
+    BuildContext context,
+    EcommerceReferenciasState state,
+    SivColors cores,
+    SivTextStyles textos,
+  ) {
+    if (state is EcommerceReferenciasCarregarEmProgresso ||
+        state is EcommerceReferenciasInitial) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
 
-            // Scaffold próprio (não só Padding+Column) -- o body do Scaffold
+    if (state is EcommerceReferenciasCarregarFalha) {
+      return Center(
+        child: Text(
+          'Não foi possível carregar as referências.',
+          style: textos.corpo,
+        ),
+      );
+    }
+
+    // Scaffold próprio (não só Padding+Column) -- o body do Scaffold
             // sempre recebe altura limitada calculada internamente, não
             // depende do ancestral garantir isso. Sem ele, o Expanded/
             // SingleChildScrollView abaixo podia herdar altura ilimitada
@@ -269,10 +284,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                       // complementar.
                       ? _buildRodapeFixo(context, state)
                       : null),
-            );
-          },
-        ),
-      ),
     );
   }
 

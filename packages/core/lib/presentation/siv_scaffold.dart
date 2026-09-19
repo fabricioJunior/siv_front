@@ -3,56 +3,83 @@ import 'package:flutter/material.dart';
 import '../tema.dart';
 import 'siv_menu_lateral.dart';
 
-/// Casca de toda tela autenticada: menu lateral fixo + barra de título +
-/// slot de conteúdo.
+/// Casca de toda tela autenticada: menu lateral fixo + slot de conteúdo.
+/// Título é responsabilidade de cada tela, renderizado no topo do próprio
+/// corpo (ver [SivTituloPagina]).
 ///
 /// Responsivo em 3 modos, decididos pela largura disponível:
 /// - >= [SivDimensoes.breakpointMenuRail]: menu completo (236px), inline.
 /// - >= [SivDimensoes.breakpointMenuDrawer]: menu colapsado em rail de
 ///   ícones (72px) com tooltip, inline.
-/// - abaixo disso: menu vira [Drawer], acionado por um botão de menu na
-///   barra de título.
+/// - abaixo disso: menu vira [Drawer], acionado por um pequeno botão de
+///   menu fixo no topo.
 class SivScaffold extends StatelessWidget {
-  final String titulo;
-  final String? subtitulo;
   final List<SivMenuLateralSecao> secoesMenu;
   final Widget? cabecalhoMenu;
   final Widget? rodapeMenu;
   final Widget corpo;
   final Widget? floatingActionButton;
 
+  /// Override manual do usuário sobre o rail automático (breakpoints de
+  /// largura) -- `null` mantém o comportamento automático existente,
+  /// `true`/`false` força o modo independente da largura disponível.
+  /// Ignorado quando a tela é estreita o bastante pra virar [Drawer].
+  final bool? colapsoMenuForcado;
+  final VoidCallback? onToggleColapsoMenu;
+
   const SivScaffold({
     super.key,
-    required this.titulo,
     required this.secoesMenu,
     required this.corpo,
-    this.subtitulo,
     this.cabecalhoMenu,
     this.rodapeMenu,
     this.floatingActionButton,
+    this.colapsoMenuForcado,
+    this.onToggleColapsoMenu,
   });
 
   @override
   Widget build(BuildContext context) {
     final cores = context.sivColors;
-    final textos = context.sivTextos;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final largura = constraints.maxWidth;
         final emDrawer = largura < SivDimensoes.breakpointMenuDrawer;
-        final emRail =
-            !emDrawer && largura < SivDimensoes.breakpointMenuRail;
+        final emRail = !emDrawer &&
+            (colapsoMenuForcado ??
+                largura < SivDimensoes.breakpointMenuRail);
 
         final menu = SivMenuLateral(
           secoes: secoesMenu,
           cabecalho: cabecalhoMenu,
           rodape: rodapeMenu,
           colapsado: emRail,
+          onToggleColapso: emDrawer ? null : onToggleColapsoMenu,
         );
 
         return Scaffold(
-          drawer: emDrawer ? Drawer(width: 280, child: SafeArea(child: menu)) : null,
+          // Telas pequenas usam Drawer -- selecionar um item deve fechá-lo
+          // (padrão mobile); telas grandes têm o menu inline, não fecha nada.
+          drawer: emDrawer
+              ? Drawer(
+                  width: 280,
+                  child: SafeArea(
+                    child: Builder(
+                      builder: (drawerContext) => SivMenuLateral(
+                        secoes: _secoesComFechamentoDrawer(
+                          secoesMenu,
+                          () => Scaffold.of(drawerContext).closeDrawer(),
+                        ),
+                        cabecalho: cabecalhoMenu,
+                        rodape: rodapeMenu,
+                        colapsado: false,
+                        onToggleColapso: null,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
           floatingActionButton: floatingActionButton,
           body: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,44 +89,32 @@ class SivScaffold extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      constraints: const BoxConstraints(
-                        minHeight: SivDimensoes.alturaBarraTitulo,
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: emDrawer
-                            ? 16
-                            : SivDimensoes.paddingBarraTituloHorizontal,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cores.superficie,
-                        border: Border(bottom: BorderSide(color: cores.hairline)),
-                      ),
-                      // Barra de título só mostra título/subtítulo -- botões
-                      // de ação são responsabilidade de cada tela, renderizados
-                      // no topo do próprio corpo.
-                      child: Row(
-                        children: [
-                          if (emDrawer)
-                            Builder(
-                              builder: (context) => IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () =>
-                                    Scaffold.of(context).openDrawer(),
-                              ),
-                            ),
-                          Expanded(
-                            child: _SivScaffoldTitulo(
-                              titulo: titulo,
-                              subtitulo: subtitulo,
-                              textos: textos,
-                              cores: cores,
-                            ),
+                    // Sem Drawer -- o menu já fica inline, não precisa de
+                    // botão pra abrir nada. Título/subtítulo saíram daqui:
+                    // cada tela renderiza o próprio, no topo do corpo.
+                    if (emDrawer)
+                      Container(
+                        // CrossAxisAlignment.stretch (Column acima) força
+                        // este Container a virar full-width -- sem
+                        // alignment, o IconButton herda essa largura toda
+                        // como constraint tight e centraliza sozinho no
+                        // meio da barra em vez de ficar colado à esquerda.
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cores.superficie,
+                          border: Border(bottom: BorderSide(color: cores.hairline)),
+                        ),
+                        child: Builder(
+                          builder: (context) => IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () => Scaffold.of(context).openDrawer(),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
                     Expanded(
                       child: Padding(
                         // Padding fixo (28/30, pensado pra desktop) comia
@@ -126,40 +141,44 @@ class SivScaffold extends StatelessWidget {
   }
 }
 
-class _SivScaffoldTitulo extends StatelessWidget {
-  final String titulo;
-  final String? subtitulo;
-  final SivTextStyles textos;
-  final SivColors cores;
+/// Reconstrói [secoes] trocando cada `onTap` de navegação (item de topo
+/// sem filhos, ou filho de acordeão) por uma versão que fecha o Drawer
+/// antes de navegar. `onToggleExpandir` fica intacto -- só expande o
+/// acordeão, não é navegação.
+List<SivMenuLateralSecao> _secoesComFechamentoDrawer(
+  List<SivMenuLateralSecao> secoes,
+  VoidCallback fechar,
+) {
+  VoidCallback? envolver(VoidCallback? onTap) =>
+      onTap == null ? null : () { fechar(); onTap(); };
 
-  const _SivScaffoldTitulo({
-    required this.titulo,
-    required this.subtitulo,
-    required this.textos,
-    required this.cores,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          titulo,
-          style: textos.secao,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+  return secoes
+      .map(
+        (secao) => SivMenuLateralSecao(
+          titulo: secao.titulo,
+          itens: secao.itens
+              .map(
+                (item) => SivMenuLateralItem(
+                  label: item.label,
+                  icone: item.icone,
+                  selecionado: item.selecionado,
+                  onTap: envolver(item.onTap),
+                  desabilitado: item.desabilitado,
+                  expandido: item.expandido,
+                  onToggleExpandir: item.onToggleExpandir,
+                  filhos: item.filhos
+                      .map(
+                        (filho) => SivMenuLateralFilho(
+                          label: filho.label,
+                          selecionado: filho.selecionado,
+                          onTap: envolver(filho.onTap),
+                        ),
+                      )
+                      .toList(),
+                ),
+              )
+              .toList(),
         ),
-        if (subtitulo != null)
-          Text(
-            subtitulo!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: textos.apoio.copyWith(color: cores.textoApoio),
-          ),
-      ],
-    );
-  }
+      )
+      .toList();
 }

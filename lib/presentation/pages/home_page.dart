@@ -48,7 +48,7 @@ const _operacoesDoDia = <_OperacaoDoDia>[
     componentesNecessarios: ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   ),
   _OperacaoDoDia(
-    nome: 'Troca e devolução',
+    nome: 'Devolução',
     descricao: 'Registrar troca ou devolução de um produto.',
     icone: Icons.assignment_return_outlined,
     rota: '/devolucao',
@@ -394,9 +394,34 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                operacao.nome,
-                style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      operacao.nome,
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Esses cards duplicam itens que já existem no menu lateral
+                  // (Venda, Caixa, Pedidos etc.) -- tag deixa claro que é um
+                  // atalho, não uma navegação primária separada.
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: cores.superficieRecuada,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'atalho',
+                      style: textos.apoio.copyWith(
+                        fontSize: 10,
+                        color: cores.textoApoio,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(

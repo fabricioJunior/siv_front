@@ -162,7 +162,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Produtos no site'), findsOneWidget);
+      // "Produtos no site" (atalho) vive na aba "Configurações" do
+      // formulário -- textContaining porque o rótulo é montado como
+      // "$label · $valor" num único Text.rich.
+      await tester.ensureVisible(find.text('Configurações'));
+      await tester.tap(find.text('Configurações'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Produtos no site'), findsOneWidget);
     },
   );
 }

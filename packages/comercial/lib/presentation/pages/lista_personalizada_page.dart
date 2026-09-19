@@ -31,14 +31,12 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
     if (widget.listaId != null) {
       _bloc.add(ListaPersonalizadaAbriu(id: widget.listaId!));
     }
-    SivPageTitulo.definir('Lista personalizada');
   }
 
   @override
   void dispose() {
     _bloc.close();
     _tituloController.dispose();
-    SivPageTitulo.limpar();
     super.dispose();
   }
 
@@ -60,13 +58,22 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
               horizontal: SivDimensoes.paginaHorizontal,
               vertical: SivDimensoes.paginaVertical,
             ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: state.lista == null
-                  ? (widget.listaId != null
-                      ? const Center(child: CircularProgressIndicator.adaptive())
-                      : _buildFormulario(context, state))
-                  : _buildGestao(context, state),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SivTituloPagina(titulo: 'Lista personalizada'),
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: state.lista == null
+                        ? (widget.listaId != null
+                            ? const Center(
+                                child: CircularProgressIndicator.adaptive())
+                            : _buildFormulario(context, state))
+                        : _buildGestao(context, state),
+                  ),
+                ),
+              ],
             ),
           );
         },

@@ -94,6 +94,12 @@ class SivScaffold extends StatelessWidget {
                     // cada tela renderiza o próprio, no topo do corpo.
                     if (emDrawer)
                       Container(
+                        // CrossAxisAlignment.stretch (Column acima) força
+                        // este Container a virar full-width -- sem
+                        // alignment, o IconButton herda essa largura toda
+                        // como constraint tight e centraliza sozinho no
+                        // meio da barra em vez de ficar colado à esquerda.
+                        alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
                           vertical: 4,

@@ -264,6 +264,12 @@ class _AppShellCascaState extends State<_AppShellCasca> {
 
   final Set<String> _expandidos = {};
 
+  // Auto-expandir o módulo da rota ativa deve acontecer só ao ENTRAR nele,
+  // não em todo build -- senão um build disparado por outro motivo (ex: o
+  // próprio usuário clicando pra recolher o acordeão) reabria o módulo de
+  // volta no mesmo frame, porque a rota ativa continuava sendo filha dele.
+  String? _ultimaRotaProcessada;
+
   static final _itensComAcordeao = [
     ..._itensDiaADia,
     ..._itensGestao,
@@ -299,9 +305,14 @@ class _AppShellCascaState extends State<_AppShellCasca> {
     final itensTodos = [..._itensDiaADia, ..._itensGestao, ..._itensSistema];
     final chavePaiAtiva = _mapaFilhoParaChavePai[widget.rotaAtual];
 
-    // Módulo correspondente à rota ativa abre automaticamente -- mutação
-    // direta de estado durante build (sem setState), efetiva já neste frame.
-    if (chavePaiAtiva != null) _expandidos.add(chavePaiAtiva);
+    // Módulo correspondente à rota ativa abre automaticamente, mas só ao
+    // entrar nela -- mutação direta de estado durante build (sem setState,
+    // efetiva já neste frame), guardada por rota pra não sobrescrever um
+    // recolhimento manual do usuário enquanto ele continua na mesma tela.
+    if (chavePaiAtiva != null && widget.rotaAtual != _ultimaRotaProcessada) {
+      _expandidos.add(chavePaiAtiva);
+    }
+    _ultimaRotaProcessada = widget.rotaAtual;
 
     final itemAtivoTopo =
         itensTodos.where((item) => item.rota == widget.rotaAtual).toList();

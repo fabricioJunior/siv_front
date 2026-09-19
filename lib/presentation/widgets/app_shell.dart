@@ -597,11 +597,14 @@ class _BarraTituloInfo extends StatelessWidget {
                 ),
                 _LinhaInfoMenu(
                   icone: Icons.dvr_outlined,
-                  texto: appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
+                  texto:
+                      appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
                   onTap: () => _trocarTerminal(context),
                 ),
                 _LinhaInfoMenu(
-                  pontoStatus: caixaAberto ? _corCaixaAberto : cores.textoSobreEscuroApoio,
+                  pontoStatus: caixaAberto
+                      ? _corCaixaAberto
+                      : cores.textoSobreEscuroApoio,
                   texto: caixaAberto ? 'Caixa aberto' : 'Caixa fechado',
                   trailing: caixaAberto
                       // TODO: saldo do caixa (R$ x) não está disponível no
@@ -614,8 +617,9 @@ class _BarraTituloInfo extends StatelessWidget {
                           ),
                         )
                       : _BotaoAbrirCaixa(
-                          onTap: () => navigatorKey.currentState
-                              ?.pushNamed('/fluxo_de_caixa'),
+                          onTap: () => navigatorKey.currentState?.pushNamed(
+                            '/fluxo_de_caixa',
+                          ),
                         ),
                 ),
               ],
@@ -813,7 +817,9 @@ class _StatusCaixaCompacto extends StatelessWidget {
             height: 8,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: caixaAberto ? _corCaixaAberto : cores.textoSobreEscuroApoio,
+              color: caixaAberto
+                  ? _corCaixaAberto
+                  : cores.textoSobreEscuroApoio,
             ),
           ),
         ),

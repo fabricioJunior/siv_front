@@ -94,12 +94,13 @@ class _ItemFilhoNav {
 }
 
 _ItemFilhoNav _deAcordeaoFilho(SivMenuAcordeaoFilho filho) => _ItemFilhoNav(
-      label: filho.label,
-      rota: filho.rota,
-      componentesNecessarios:
-          filho.componente == null ? const [] : [filho.componente!],
-      grupo: filho.grupo,
-    );
+  label: filho.label,
+  rota: filho.rota,
+  componentesNecessarios: filho.componente == null
+      ? const []
+      : [filho.componente!],
+  grupo: filho.grupo,
+);
 
 List<String> _uniaoComponentes(List<_ItemFilhoNav> filhos) =>
     {for (final f in filhos) ...f.componentesNecessarios}.toList();
@@ -135,11 +136,16 @@ class _ItemDeNavegacao {
       componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
 }
 
-final _itensComercialFilhos = comercialAcordeaoItens.map(_deAcordeaoFilho).toList();
+final _itensComercialFilhos = comercialAcordeaoItens
+    .map(_deAcordeaoFilho)
+    .toList();
 final _itensEstoqueFilhos = estoqueAcordeaoItens.map(_deAcordeaoFilho).toList();
-final _itensAdministracaoFilhos =
-    administracaoAcordeaoItens.map(_deAcordeaoFilho).toList();
-final _itensRelatoriosFilhos = relatoriosAcordeaoItens.map(_deAcordeaoFilho).toList();
+final _itensAdministracaoFilhos = administracaoAcordeaoItens
+    .map(_deAcordeaoFilho)
+    .toList();
+final _itensRelatoriosFilhos = relatoriosAcordeaoItens
+    .map(_deAcordeaoFilho)
+    .toList();
 
 final _itensEcommerceFilhos = <_ItemFilhoNav>[
   const _ItemFilhoNav(
@@ -160,7 +166,11 @@ final _itensEcommerceFilhos = <_ItemFilhoNav>[
 ];
 
 final _itensDiaADia = <_ItemDeNavegacao>[
-  const _ItemDeNavegacao(label: 'Início', icone: Icons.home_outlined, rota: '/home'),
+  const _ItemDeNavegacao(
+    label: 'Início',
+    icone: Icons.home_outlined,
+    rota: '/home',
+  ),
   _ItemDeNavegacao(
     label: 'Venda',
     icone: Icons.shopping_cart_checkout_outlined,
@@ -314,16 +324,18 @@ class _AppShellCascaState extends State<_AppShellCasca> {
     }
     _ultimaRotaProcessada = widget.rotaAtual;
 
-    final itemAtivoTopo =
-        itensTodos.where((item) => item.rota == widget.rotaAtual).toList();
-    final paiAtivo =
-        chavePaiAtiva == null
-            ? null
-            : itensTodos.where((item) => item.chave == chavePaiAtiva).toList();
+    final itemAtivoTopo = itensTodos
+        .where((item) => item.rota == widget.rotaAtual)
+        .toList();
+    final paiAtivo = chavePaiAtiva == null
+        ? null
+        : itensTodos.where((item) => item.chave == chavePaiAtiva).toList();
 
     final tituloAtivo = itemAtivoTopo.isNotEmpty
         ? itemAtivoTopo.first.label
-        : (paiAtivo != null && paiAtivo.isNotEmpty ? paiAtivo.first.label : null);
+        : (paiAtivo != null && paiAtivo.isNotEmpty
+              ? paiAtivo.first.label
+              : null);
 
     return SivScaffold(
       colapsoMenuForcado: _colapsoManual,
@@ -363,8 +375,14 @@ class _AppShellCascaState extends State<_AppShellCasca> {
       rodapeMenu: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _BarraTituloInfo(appState: widget.appState, navigatorKey: widget.navigatorKey),
-          _RodapeMenu(appState: widget.appState, navigatorKey: widget.navigatorKey),
+          _BarraTituloInfo(
+            appState: widget.appState,
+            navigatorKey: widget.navigatorKey,
+          ),
+          _RodapeMenu(
+            appState: widget.appState,
+            navigatorKey: widget.navigatorKey,
+          ),
         ],
       ),
       // Rotas sem label no menu (ex: telas abertas fora da navegação
@@ -399,7 +417,9 @@ class _AppShellCascaState extends State<_AppShellCasca> {
                 selecionado: filho.rota == widget.rotaAtual,
                 onTap: filho.rota == widget.rotaAtual
                     ? null
-                    : () => widget.navigatorKey.currentState?.pushNamed(filho.rota),
+                    : () => widget.navigatorKey.currentState?.pushNamed(
+                        filho.rota,
+                      ),
               ),
             )
             .toList(),
@@ -525,6 +545,12 @@ class _RodapeMenu extends StatelessWidget {
   }
 }
 
+// Verde de "caixa aberto" não existe no design system hoje (só há `aco`/
+// `ceu` de acento azul e `falhaBorda`/`atencao` de alerta) -- mesma decisão
+// já tomada no redesign das telas de caixa: mantém o literal do mock em vez
+// de inventar token novo.
+const _corCaixaAberto = Color(0xFF5FB37C);
+
 class _BarraTituloInfo extends StatelessWidget {
   final AppState appState;
   final GlobalKey<NavigatorState> navigatorKey;
@@ -537,7 +563,6 @@ class _BarraTituloInfo extends StatelessWidget {
     final caixaAberto = appState.caixaIdDaSessao != null;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -545,43 +570,58 @@ class _BarraTituloInfo extends StatelessWidget {
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ChipInfo(
-            texto: appState.empresaDaSessao?.nome ?? 'Selecionar empresa',
-            onTap: () => navigatorKey.currentState?.pushNamed(
-              '/login',
-              arguments: {'trocandoDeEmpresa': true},
+      // Rail (72px) não tem espaço pra 3 linhas de texto+ícone -- vira só um
+      // indicador de status (bolinha) com o detalhe completo num tooltip,
+      // mesmo padrão já usado pelos itens do menu quando colapsados.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 120) {
+            return _StatusCaixaCompacto(
+              appState: appState,
+              caixaAberto: caixaAberto,
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _LinhaInfoMenu(
+                  icone: Icons.apartment_outlined,
+                  texto: appState.empresaDaSessao?.nome ?? 'Selecionar empresa',
+                  onTap: () => navigatorKey.currentState?.pushNamed(
+                    '/login',
+                    arguments: {'trocandoDeEmpresa': true},
+                  ),
+                ),
+                _LinhaInfoMenu(
+                  icone: Icons.dvr_outlined,
+                  texto: appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
+                  onTap: () => _trocarTerminal(context),
+                ),
+                _LinhaInfoMenu(
+                  pontoStatus: caixaAberto ? _corCaixaAberto : cores.textoSobreEscuroApoio,
+                  texto: caixaAberto ? 'Caixa aberto' : 'Caixa fechado',
+                  trailing: caixaAberto
+                      // TODO: saldo do caixa (R$ x) não está disponível no
+                      // AppState hoje -- mostra o número do caixa até a
+                      // sessão carregar o valor.
+                      ? Text(
+                          '#${appState.caixaIdDaSessao}',
+                          style: context.sivTextos.rotulo.copyWith(
+                            color: cores.ceu,
+                          ),
+                        )
+                      : _BotaoAbrirCaixa(
+                          onTap: () => navigatorKey.currentState
+                              ?.pushNamed('/fluxo_de_caixa'),
+                        ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 6),
-          _ChipInfo(
-            texto: appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
-            onTap: () => _trocarTerminal(context),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: caixaAberto ? cores.emAndamentoFundo : cores.falhaFundo,
-              border: Border.all(
-                color: caixaAberto ? cores.aco : cores.falhaBorda,
-              ),
-              borderRadius: BorderRadius.circular(SivDimensoes.raio),
-            ),
-            // TODO: valor em caixa (R$ x) não está disponível no AppState hoje
-            // -- exibe só o status até a sessão carregar o saldo do caixa.
-            child: Text(
-              caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO',
-              style: context.sivTextos.rotulo.copyWith(
-                color: cores.textoPrincipal,
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -641,11 +681,78 @@ class _BarraTituloInfo extends StatelessWidget {
   }
 }
 
-class _ChipInfo extends StatelessWidget {
+/// Linha do bloco empresa/terminal/caixa (menu expandido) -- ou um ícone com
+/// texto+chevron (empresa/terminal, navega ao tocar), ou uma bolinha de
+/// status com texto+trailing (linha do caixa, não navega sozinha).
+class _LinhaInfoMenu extends StatelessWidget {
+  final IconData? icone;
+  final Color? pontoStatus;
   final String texto;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+
+  const _LinhaInfoMenu({
+    this.icone,
+    this.pontoStatus,
+    required this.texto,
+    this.onTap,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final conteudo = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+      child: Row(
+        children: [
+          if (icone != null)
+            Icon(icone, size: 15, color: cores.textoSobreEscuroApoio)
+          else if (pontoStatus != null)
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: pontoStatus,
+              ),
+            ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              texto,
+              overflow: TextOverflow.ellipsis,
+              style: context.sivTextos.apoio.copyWith(
+                color: cores.textoSobreEscuroTitulo,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 14,
+              color: cores.textoSobreEscuroApoio,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    if (onTap == null) return conteudo;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(onTap: onTap, child: conteudo),
+    );
+  }
+}
+
+class _BotaoAbrirCaixa extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _ChipInfo({required this.texto, required this.onTap});
+  const _BotaoAbrirCaixa({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -653,35 +760,63 @@ class _ChipInfo extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(SivDimensoes.raio),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(SivDimensoes.raio),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-              child: Text(
-                texto,
-                overflow: TextOverflow.ellipsis,
-                style: context.sivTextos.apoio.copyWith(
-                  color: cores.textoSobreEscuroApoio,
-                ),
-              ),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: cores.textoSobreEscuroTitulo.withValues(alpha: 0.18),
             ),
-            const SizedBox(width: 4),
-            Icon(Icons.swap_horiz,
-                size: 14, color: cores.textoSobreEscuroApoio),
-          ],
+          ),
+          child: Text(
+            'Abrir',
+            style: context.sivTextos.apoio.copyWith(
+              color: cores.textoSobreEscuroApoio,
+            ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Versão pro menu em rail (72px, sem espaço pra texto) -- só a bolinha de
+/// status do caixa, com o resumo completo num tooltip (mesmo padrão dos
+/// itens de navegação quando colapsados).
+class _StatusCaixaCompacto extends StatelessWidget {
+  final AppState appState;
+  final bool caixaAberto;
+
+  const _StatusCaixaCompacto({
+    required this.appState,
+    required this.caixaAberto,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final empresa = appState.empresaDaSessao?.nome ?? 'Sem empresa';
+    final terminal = appState.terminalDaSessao?.nome ?? 'Sem terminal';
+    final status = caixaAberto
+        ? 'Caixa #${appState.caixaIdDaSessao} aberto'
+        : 'Caixa fechado';
+
+    return Tooltip(
+      message: '$empresa · $terminal · $status',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: caixaAberto ? _corCaixaAberto : cores.textoSobreEscuroApoio,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -56,7 +56,14 @@ class VendasBloc extends Bloc<VendasEvent, VendasState> {
         dataHoraInicial: dataHoraInicial,
         dataHoraFinal: dataHoraFinal,
         funcionarioIds: funcionarioIds.isEmpty ? null : funcionarioIds,
-        operacoes: const [TipoOperacao.venda],
+        // Acerto de consignação também é receita de venda (mesma decisão já
+        // aplicada no faturamento/recibo de caixa) -- sem ele, romaneios de
+        // acerto sumiam do histórico. Devolução fica de fora: é um estorno,
+        // não uma venda pra listar aqui.
+        operacoes: const [
+          TipoOperacao.venda,
+          TipoOperacao.consignacao_acerto,
+        ],
       );
 
       emit(

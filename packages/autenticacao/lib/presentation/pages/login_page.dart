@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 builder: (context, state) {
                   final mostrandoIndicadorFinalizacao =
                       state is LoginAutenticarEmProgresso &&
-                      state.idEmpresa != null;
+                          state.idEmpresa != null;
 
                   if (!mostrandoIndicadorFinalizacao) {
                     return const SizedBox.shrink();
@@ -256,7 +256,8 @@ class _LoginPageState extends State<LoginPage> {
                   // validar.
                   Center(
                     child: TextButton(
-                      onPressed: () => throw StateError('This is test exception'),
+                      onPressed: () =>
+                          throw StateError('This is test exception'),
                       child: const Text('Verify Sentry Setup'),
                     ),
                   ),
@@ -326,7 +327,9 @@ class _LoginPageState extends State<LoginPage> {
           : null,
       suffixIcon: IconButton(
         icon: Icon(
-          _senhaVisivel ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          _senhaVisivel
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
         ),
         onPressed: () => setState(() => _senhaVisivel = !_senhaVisivel),
       ),
@@ -372,9 +375,10 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(width: 8),
             TextButton(
               key: const Key('login_page_trocar_licenciado_button'),
-              onPressed: () => _trocarLicenciado(context, state.licenciados ?? const []),
+              onPressed: () =>
+                  _trocarLicenciado(context, state.licenciados ?? const []),
               child: Text(
-                'Trocar',
+                'Selecionar',
                 style: textos.apoio.copyWith(color: cores.aco),
               ),
             ),
@@ -433,7 +437,8 @@ class _LoginPageState extends State<LoginPage> {
         nome: nomeTerminalRetornado,
       );
     } else {
-      final terminaisDaEmpresa = await bloc.buscarTerminaisParaEmpresa(idEmpresa);
+      final terminaisDaEmpresa =
+          await bloc.buscarTerminaisParaEmpresa(idEmpresa);
 
       if (!context.mounted) return;
 
@@ -528,7 +533,8 @@ class _PainelDeMarca extends StatelessWidget {
             style: textos.corpo.copyWith(color: cores.textoSobreEscuroApoio),
           ),
           const Spacer(),
-          Divider(color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2)),
+          Divider(
+              color: cores.textoSobreEscuroTerciario.withValues(alpha: 0.2)),
           const SizedBox(height: 12),
           // TODO: versão do app, terminal e última sincronização não estão
           // disponíveis antes do login (dependem de sessão/config de

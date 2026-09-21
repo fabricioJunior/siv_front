@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
@@ -208,31 +209,62 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
           _controllers.putIfAbsent(tipo, () => TextEditingController());
         }
 
+        final cores = context.sivColors;
+        final textos = context.sivTextos;
+
         return ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(16),
           children: [
-            if (state.tiposPendentes.isNotEmpty) ...[
-              Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: const Icon(Icons.playlist_add_check_circle_outlined),
-                  title: const Text('Contagem pendente'),
-                  subtitle: Text(
-                    'Preencha os itens pendentes de pagamento para concluir o fechamento.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  trailing: Chip(
-                    label: Text('${state.tiposPendentes.length} itens'),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Informe o valor contado para cada forma de pagamento.',
+                    style: textos.apoio.copyWith(color: cores.textoApoio),
                   ),
                 ),
-              ),
-            ] else
-              const Card(
-                margin: EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: Icon(Icons.check_circle_outline, color: Colors.green),
-                  title: Text('Nenhum item pendente'),
-                  subtitle: Text('Nao ha contagens pendentes para este caixa.'),
+                TextButton(
+                  onPressed: salvando || cancelando
+                      ? null
+                      : () => _confirmarCancelamento(context),
+                  style: TextButton.styleFrom(foregroundColor: cores.vinho),
+                  child: cancelando
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Cancelar contagem'),
+                ),
+              ],
+            ),
+            const SizedBox(height: SivDimensoes.gapCards),
+            if (state.tiposPendentes.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cores.atencaoFundo,
+                  border: Border.all(color: cores.atencaoBorda),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Text(
+                  '${state.tiposPendentes.length} forma(s) de pagamento pendente(s) de contagem.',
+                  style: textos.apoio.copyWith(color: cores.textoPrincipal),
+                ),
+              )
+            else
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cores.selecaoFundo,
+                  border: Border.all(color: cores.aco),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Text(
+                  'Nenhum item pendente de contagem para este caixa.',
+                  style: textos.apoio.copyWith(color: cores.textoPrincipal),
                 ),
               ),
             ...state.tiposPendentes.map(
@@ -242,17 +274,17 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
                 state: state,
               ),
             ),
-            const SizedBox(height: 8),
             if (state.step == ContagemDoCaixaStep.validacaoInvalida &&
                 state.tipoComErro == null &&
                 state.erro != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
                 child: Text(
                   state.erro!,
-                  style: const TextStyle(color: Colors.red),
+                  style: textos.apoio.copyWith(color: cores.vinho),
                 ),
               ),
+            const SizedBox(height: SivDimensoes.gapCards),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -267,36 +299,16 @@ class _ContagemDoCaixaFormState extends State<_ContagemDoCaixaForm> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.save_outlined),
                 label: Text(
                   state.tiposPendentes.isEmpty
-                      ? 'Confirmar contagem zerada'
-                      : 'Salvar todos os itens preenchidos',
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: salvando || cancelando
-                    ? null
-                    : () => _confirmarCancelamento(context),
-                icon: cancelando
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cancel_outlined),
-                label: Text(
-                  cancelando ? 'Cancelando contagem...' : 'Cancelar contagem',
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                  side: BorderSide(color: Theme.of(context).colorScheme.error),
+                      ? 'CONFIRMAR CONTAGEM ZERADA'
+                      : 'CONCLUIR CONTAGEM',
                 ),
               ),
             ),
@@ -327,89 +339,65 @@ class _ItemContagemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorIcone = _corTipo(tipo);
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: cores.superficie,
+        border: Border.all(color: cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: colorIcone.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(_iconeTipo(tipo), color: colorIcone, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        _labelTipo(tipo),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (_jaSalvo) ...[
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: Colors.green,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: controller,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [_decimalInputFormatter],
-                    decoration: InputDecoration(
-                      prefixText: 'R\$ ',
-                      isDense: true,
-                      hintText: '0,00',
-                      errorText: _erroNesteItem ? state.erro : null,
-                    ),
-                    onChanged: (valor) {
-                      context.read<ContagemDoCaixaBloc>().add(
-                            ContagemDoCaixaItemValorAlterado(
-                              tipo: tipo,
-                              valor: valor,
-                            ),
-                          );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            if (_salvandoEsteItem)
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
+      child: Row(
+        children: [
+          Icon(_iconeTipo(tipo), color: _corTipo(tipo), size: 18),
+          const SizedBox(width: 10),
+          Text(_labelTipo(tipo), style: textos.corpo),
+          if (_jaSalvo) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.check_circle, size: 15, color: cores.acoProfundo),
           ],
-        ),
+          const Spacer(),
+          SizedBox(
+            width: 140,
+            child: TextField(
+              controller: controller,
+              textAlign: TextAlign.right,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [_decimalInputFormatter],
+              style: textos.secao.copyWith(fontSize: 16),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                prefixText: 'R\$ ',
+                hintText: '0,00',
+                errorText: _erroNesteItem ? state.erro : null,
+                errorStyle: textos.apoio.copyWith(color: cores.vinho),
+              ),
+              onChanged: (valor) {
+                context.read<ContagemDoCaixaBloc>().add(
+                      ContagemDoCaixaItemValorAlterado(
+                        tipo: tipo,
+                        valor: valor,
+                      ),
+                    );
+              },
+            ),
+          ),
+          if (_salvandoEsteItem)
+            const Padding(
+              padding: EdgeInsets.only(left: 8),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+        ],
       ),
     );
   }

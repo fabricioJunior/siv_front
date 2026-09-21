@@ -2,12 +2,15 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
 
 import 'abertura_de_caixa_page.dart';
 import 'fechamento_de_caixa_page.dart';
+
+const _corEntrada = Color(0xFF2F6A3A);
 
 class FluxoDeCaixaPage extends StatefulWidget {
   final int? empresaId;
@@ -118,6 +121,55 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
     );
   }
 
+  Future<void> _irParaSuprimentos(BuildContext context, int caixaId) async {
+    await Navigator.of(context).pushNamed(
+      '/suprimentos',
+      arguments: {'caixaId': caixaId},
+    );
+    if (!context.mounted) return;
+    context.read<FluxoDeCaixaBloc>().add(FluxoDeCaixaIniciou(caixaId: caixaId));
+  }
+
+  Future<void> _irParaSangrias(BuildContext context, int caixaId) async {
+    await Navigator.of(context).pushNamed(
+      '/sangrias',
+      arguments: {'caixaId': caixaId},
+    );
+    if (!context.mounted) return;
+    context.read<FluxoDeCaixaBloc>().add(FluxoDeCaixaIniciou(caixaId: caixaId));
+  }
+
+  Future<void> _irParaContagem(BuildContext context, int caixaId) async {
+    await Navigator.of(context).pushNamed(
+      '/contagem_do_caixa',
+      arguments: {'caixaId': caixaId},
+    );
+    if (!context.mounted) return;
+    context.read<FluxoDeCaixaBloc>().add(FluxoDeCaixaIniciou(caixaId: caixaId));
+  }
+
+  Future<void> _fecharCaixa(BuildContext context, int caixaId) async {
+    final confirmouFechamento = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => FechamentoDeCaixaPage(caixaId: caixaId)),
+    );
+    if (!context.mounted || confirmouFechamento != true) return;
+
+    final bloc = context.read<FluxoDeCaixaBloc>();
+    bloc.add(FluxoDeCaixaFechouCaixa(caixaId: caixaId));
+
+    final resultado = await bloc.stream.firstWhere(
+      (s) => s is FluxoDeCaixaFecharSucesso || s is FluxoDeCaixaFecharFalha,
+    );
+    if (!context.mounted) return;
+
+    if (resultado is FluxoDeCaixaFecharSucesso) {
+      await Navigator.of(context).pushNamed(
+        '/recibo_fechamento_caixa',
+        arguments: {'caixaId': caixaId},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final empresaId = widget.empresaId;
@@ -138,398 +190,618 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
         }
         return bloc;
       },
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Fluxo de caixa')),
-        body: BlocConsumer<FluxoDeCaixaBloc, FluxoDeCaixaState>(
-          listenWhen: (previous, current) =>
-              previous.caixaId != current.caixaId ||
-              previous.caixa?.terminalId != current.caixa?.terminalId,
-          listener: (_, state) {
-            if (terminalId == null) {
-              return;
-            }
+      child: BlocConsumer<FluxoDeCaixaBloc, FluxoDeCaixaState>(
+        listenWhen: (previous, current) =>
+            previous.caixaId != current.caixaId ||
+            previous.caixa?.terminalId != current.caixa?.terminalId,
+        listener: (_, state) {
+          if (terminalId == null) {
+            return;
+          }
 
-            sessao.atualizarCaixaIdDaSessao(
-              terminalId: terminalId,
-              caixaId:
-                  state.caixa?.terminalId == terminalId ? state.caixaId : null,
+          sessao.atualizarCaixaIdDaSessao(
+            terminalId: terminalId,
+            caixaId:
+                state.caixa?.terminalId == terminalId ? state.caixaId : null,
+          );
+        },
+        builder: (context, state) {
+          final carregando = state is FluxoDeCaixaCarregarEmProgresso ||
+              state is FluxoDeCaixaAbrirEmProgresso ||
+              state is FluxoDeCaixaFecharEmProgresso;
+          final recuperandoCaixaAberto =
+              state is FluxoDeCaixaCarregarEmProgresso &&
+                  state.caixa == null &&
+                  state.caixaId == null;
+
+          final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto ||
+              (state.caixa?.situacao == SituacaoCaixa.contagem);
+
+          final carregandoAbertura = state is FluxoDeCaixaAbrirEmProgresso;
+          final erroRecuperacaoCaixa =
+              state is FluxoDeCaixaCarregarFalha && state.caixa == null
+                  ? 'Falha ao recuperar o caixa aberto. Tente novamente.'
+                  : null;
+          final erroAbertura = state is FluxoDeCaixaAbrirFalha
+              ? 'Falha ao abrir o caixa. Tente novamente.'
+              : null;
+
+          if (recuperandoCaixaAberto) {
+            return const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text('Verificando caixa aberto...'),
+                ],
+              ),
             );
-          },
-          builder: (context, state) {
-            final carregando = state is FluxoDeCaixaCarregarEmProgresso ||
-                state is FluxoDeCaixaAbrirEmProgresso ||
-                state is FluxoDeCaixaFecharEmProgresso;
-            final recuperandoCaixaAberto =
-                state is FluxoDeCaixaCarregarEmProgresso &&
-                    state.caixa == null &&
-                    state.caixaId == null;
+          }
 
-            final caixaAberto = state.caixa?.situacao == SituacaoCaixa.aberto ||
-                (state.caixa?.situacao == SituacaoCaixa.contagem);
-
-            final carregandoAbertura = state is FluxoDeCaixaAbrirEmProgresso;
-            final erroRecuperacaoCaixa =
-                state is FluxoDeCaixaCarregarFalha && state.caixa == null
-                    ? 'Falha ao recuperar o caixa aberto. Tente novamente.'
-                    : null;
-            final erroAbertura = state is FluxoDeCaixaAbrirFalha
-                ? 'Falha ao abrir o caixa. Tente novamente.'
-                : null;
-
-            if (recuperandoCaixaAberto) {
-              return const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 12),
-                    Text('Verificando caixa aberto...'),
-                  ],
-                ),
-              );
-            }
-
-            // if (caixaEmContagem) {
-            //   return _CaixaEmContagem(
-            //     caixaId: state.caixaId,
-            //     onIrParaContagem: state.caixaId == null
-            //         ? null
-            //         : () async {
-            //             final caixaId = state.caixaId!;
-            //             await Navigator.of(context).pushNamed(
-            //               '/contagem_do_caixa',
-            //               arguments: {'caixaId': caixaId},
-            //             );
-
-            //             if (!context.mounted) {
-            //               return;
-            //             }
-
-            //             context.read<FluxoDeCaixaBloc>().add(
-            //                   FluxoDeCaixaRecuperouCaixaAberto(
-            //                     empresaId: widget.empresaId!,
-            //                     terminalId: widget.terminalId!,
-            //                   ),
-            //                 );
-            //           },
-            //   );
-            // }
-
-            if (!caixaAberto) {
-              return AberturaDeCaixaPage(
-                empresaId: widget.empresaId,
-                terminalId: widget.terminalId,
-                carregando: carregandoAbertura,
-                erro: erroAbertura ?? erroRecuperacaoCaixa,
-                onAbrir: () {
-                  context.read<FluxoDeCaixaBloc>().add(
-                        FluxoDeCaixaAbriuCaixa(
-                          empresaId: widget.empresaId!,
-                          terminalId: widget.terminalId!,
-                        ),
-                      );
-                },
-              );
-            }
-
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _ResumoCaixa(caixa: state.caixa!),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _documentoController,
-                        decoration: const InputDecoration(
-                          labelText: 'Filtrar por documento',
-                          suffixIcon: Icon(Icons.search),
-                        ),
-                        onSubmitted: (value) {
-                          context.read<FluxoDeCaixaBloc>().add(
-                                FluxoDeCaixaFiltrouDocumento(documento: value),
-                              );
-                        },
+          if (!caixaAberto) {
+            return AberturaDeCaixaPage(
+              empresaId: widget.empresaId,
+              terminalId: widget.terminalId,
+              empresaNome: sessao.empresaNomeDaSessao,
+              terminalNome: sessao.terminalNomeDaSessao,
+              carregando: carregandoAbertura,
+              erro: erroAbertura ?? erroRecuperacaoCaixa,
+              onAbrir: () {
+                context.read<FluxoDeCaixaBloc>().add(
+                      FluxoDeCaixaAbriuCaixa(
+                        empresaId: widget.empresaId!,
+                        terminalId: widget.terminalId!,
                       ),
-                      const SizedBox(height: 8),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: TerminalDaSessaoWidget(),
+                    );
+              },
+            );
+          }
+
+          final caixaId = state.caixaId;
+          final extratosFiltrados = _aplicarFiltros(state.extratos);
+          final mobile = MediaQuery.sizeOf(context).width <
+              SivDimensoes.breakpointMenuDrawer;
+
+          final acoes = _AcoesFluxoCaixa(
+            habilitado: !carregando && caixaId != null,
+            onSuprimentos: caixaId == null
+                ? null
+                : () => _irParaSuprimentos(context, caixaId),
+            onSangrias:
+                caixaId == null ? null : () => _irParaSangrias(context, caixaId),
+            onContagem:
+                caixaId == null ? null : () => _irParaContagem(context, caixaId),
+            onFecharCaixa:
+                caixaId == null ? null : () => _fecharCaixa(context, caixaId),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _CabecalhoCaixa(
+                caixa: state.caixa!,
+                habilitado: !carregando,
+                onAtualizar: caixaId == null
+                    ? null
+                    : () => context
+                        .read<FluxoDeCaixaBloc>()
+                        .add(FluxoDeCaixaIniciou(caixaId: caixaId)),
+              ),
+              const SizedBox(height: SivDimensoes.gapCards),
+              _ResumoMovimentacoesExtrato(
+                totalEntradas: state.totalEntradas,
+                totalSaidas: state.totalSaidas,
+                saldo: state.saldo,
+              ),
+              const SizedBox(height: SivDimensoes.gapCards),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _documentoController,
+                      decoration: const InputDecoration(
+                        hintText: 'Filtrar por documento…',
+                        prefixIcon: Icon(Icons.search_outlined),
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.tonalIcon(
-                          onPressed: carregando || state.caixaId == null
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).pushNamed(
-                                    '/suprimentos',
-                                    arguments: {'caixaId': state.caixaId},
-                                  );
-
-                                  if (!context.mounted ||
-                                      state.caixaId == null) {
-                                    return;
-                                  }
-
-                                  context.read<FluxoDeCaixaBloc>().add(
-                                        FluxoDeCaixaIniciou(
-                                          caixaId: state.caixaId!,
-                                        ),
-                                      );
-                                },
-                          icon: const Icon(Icons.savings_outlined),
-                          label: const Text('Suprimentos'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.tonalIcon(
-                          onPressed: carregando || state.caixaId == null
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).pushNamed(
-                                    '/sangrias',
-                                    arguments: {'caixaId': state.caixaId},
-                                  );
-
-                                  if (!context.mounted ||
-                                      state.caixaId == null) {
-                                    return;
-                                  }
-
-                                  context.read<FluxoDeCaixaBloc>().add(
-                                        FluxoDeCaixaIniciou(
-                                          caixaId: state.caixaId!,
-                                        ),
-                                      );
-                                },
-                          icon: const Icon(Icons.money_off_csred_outlined),
-                          label: const Text('Sangrias'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.tonalIcon(
-                          onPressed: carregando || state.caixaId == null
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).pushNamed(
-                                    '/contagem_do_caixa',
-                                    arguments: {'caixaId': state.caixaId},
-                                  );
-
-                                  if (!context.mounted ||
-                                      state.caixaId == null) {
-                                    return;
-                                  }
-
-                                  context.read<FluxoDeCaixaBloc>().add(
-                                        FluxoDeCaixaIniciou(
-                                          caixaId: state.caixaId!,
-                                        ),
-                                      );
-                                },
-                          icon: const Icon(Icons.calculate_outlined),
-                          label: const Text('Contagem do caixa'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: carregando || state.caixaId == null
-                                  ? null
-                                  : () {
-                                      context.read<FluxoDeCaixaBloc>().add(
-                                            FluxoDeCaixaIniciou(
-                                              caixaId: state.caixaId!,
-                                            ),
-                                          );
-                                    },
-                              child: const Text('Atualizar extrato'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: carregando || state.caixaId == null
-                                  ? null
-                                  : () async {
-                                      final caixaId = state.caixaId;
-                                      if (caixaId == null) {
-                                        return;
-                                      }
-
-                                      final confirmouFechamento =
-                                          await Navigator.of(
-                                        context,
-                                      ).push<bool>(
-                                        MaterialPageRoute(
-                                          builder: (_) => FechamentoDeCaixaPage(
-                                            caixaId: caixaId,
-                                          ),
-                                        ),
-                                      );
-
-                                      if (!context.mounted ||
-                                          confirmouFechamento != true) {
-                                        return;
-                                      }
-
-                                      final bloc =
-                                          context.read<FluxoDeCaixaBloc>();
-                                      bloc.add(
-                                        FluxoDeCaixaFechouCaixa(
-                                          caixaId: caixaId,
-                                        ),
-                                      );
-
-                                      final resultado =
-                                          await bloc.stream.firstWhere(
-                                        (s) =>
-                                            s is FluxoDeCaixaFecharSucesso ||
-                                            s is FluxoDeCaixaFecharFalha,
-                                      );
-
-                                      if (!context.mounted) return;
-
-                                      if (resultado
-                                          is FluxoDeCaixaFecharSucesso) {
-                                        await Navigator.of(context).pushNamed(
-                                          '/recibo_fechamento_caixa',
-                                          arguments: {'caixaId': caixaId},
-                                        );
-                                      }
-                                    },
-                              icon: const Icon(Icons.lock_outline),
-                              label: const Text('Fechar caixa'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (carregando)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: LinearProgressIndicator(),
-                  ),
-                if (state is FluxoDeCaixaCarregarFalha ||
-                    state is FluxoDeCaixaAbrirFalha ||
-                    state is FluxoDeCaixaFecharFalha)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      'Falha ao processar fluxo de caixa.',
-                      style: TextStyle(color: Colors.red),
+                      onSubmitted: (value) {
+                        context.read<FluxoDeCaixaBloc>().add(
+                              FluxoDeCaixaFiltrouDocumento(documento: value),
+                            );
+                      },
                     ),
                   ),
-                if (state.extratos.isNotEmpty) ...[
-                  _ResumoMovimentacoesExtrato(
-                    totalEntradas: state.totalEntradas,
-                    totalSaidas: state.totalSaidas,
-                    saldo: state.saldo,
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        _abrirSelecaoMultipla<TipoDocumentoExtratoCaixa>(
+                      titulo: 'Tipo da forma de pagamento',
+                      opcoes: TipoDocumentoExtratoCaixa.values,
+                      selecionados: _filtrosTipoDocumento,
+                      rotulo: _rotuloTipoDocumento,
+                      onConfirmar: (selecionados) {
+                        setState(() {
+                          _filtrosTipoDocumento
+                            ..clear()
+                            ..addAll(selecionados);
+                        });
+                      },
+                    ),
+                    icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                    label: Text(
+                      _filtrosTipoDocumento.isEmpty
+                          ? 'Forma de pagamento'
+                          : 'Forma de pagamento (${_filtrosTipoDocumento.length})',
+                    ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _abrirSelecaoMultipla<
-                                TipoDocumentoExtratoCaixa>(
-                              titulo: 'Tipo da forma de pagamento',
-                              opcoes: TipoDocumentoExtratoCaixa.values,
-                              selecionados: _filtrosTipoDocumento,
-                              rotulo: _rotuloTipoDocumento,
-                              onConfirmar: (selecionados) {
-                                setState(() {
-                                  _filtrosTipoDocumento
-                                    ..clear()
-                                    ..addAll(selecionados);
-                                });
-                              },
-                            ),
-                            icon: const Icon(Icons.filter_alt_outlined),
-                            label: Text(
-                              _filtrosTipoDocumento.isEmpty
-                                  ? 'Tipo da forma de pagamento'
-                                  : 'Tipo da forma de pagamento (${_filtrosTipoDocumento.length})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _abrirSelecaoMultipla<
-                                TipoHistoricoExtratoCaixa>(
-                              titulo: 'Forma de pagamento',
-                              opcoes: TipoHistoricoExtratoCaixa.values,
-                              selecionados: _filtrosTipoHistorico,
-                              rotulo: _rotuloHistorico,
-                              onConfirmar: (selecionados) {
-                                setState(() {
-                                  _filtrosTipoHistorico
-                                    ..clear()
-                                    ..addAll(selecionados);
-                                });
-                              },
-                            ),
-                            icon: const Icon(Icons.filter_alt_outlined),
-                            label: Text(
-                              _filtrosTipoHistorico.isEmpty
-                                  ? 'Forma de pagamento'
-                                  : 'Forma de pagamento (${_filtrosTipoHistorico.length})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        _abrirSelecaoMultipla<TipoHistoricoExtratoCaixa>(
+                      titulo: 'Tipo de lançamento',
+                      opcoes: TipoHistoricoExtratoCaixa.values,
+                      selecionados: _filtrosTipoHistorico,
+                      rotulo: _rotuloHistorico,
+                      onConfirmar: (selecionados) {
+                        setState(() {
+                          _filtrosTipoHistorico
+                            ..clear()
+                            ..addAll(selecionados);
+                        });
+                      },
+                    ),
+                    icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                    label: Text(
+                      _filtrosTipoHistorico.isEmpty
+                          ? 'Tipo de lançamento'
+                          : 'Tipo de lançamento (${_filtrosTipoHistorico.length})',
                     ),
                   ),
                 ],
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final extratosFiltrados = _aplicarFiltros(state.extratos);
-                      if (extratosFiltrados.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              state.extratos.isEmpty
-                                  ? 'Nenhum lançamento no extrato.'
-                                  : 'Nenhum lançamento encontrado para os filtros selecionados.',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                        itemCount: extratosFiltrados.length,
-                        itemBuilder: (context, index) {
-                          final item = extratosFiltrados[index];
-                          return _ExtratoTile(item: item);
-                        },
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      );
-                    },
+              ),
+              const SizedBox(height: SivDimensoes.gapCards),
+              if (carregando)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: LinearProgressIndicator(),
+                ),
+              if (state is FluxoDeCaixaCarregarFalha ||
+                  state is FluxoDeCaixaAbrirFalha ||
+                  state is FluxoDeCaixaFecharFalha)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Falha ao processar fluxo de caixa.',
+                    style: context.sivTextos.corpo
+                        .copyWith(color: context.sivColors.vinho),
                   ),
                 ),
-              ],
-            );
-          },
+              Expanded(
+                child: mobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          acoes,
+                          const SizedBox(height: SivDimensoes.gapCards),
+                          Expanded(
+                            child: _ExtratoLista(
+                              extratos: extratosFiltrados,
+                              temExtratos: state.extratos.isNotEmpty,
+                              mobile: true,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: acoes.onFecharCaixa,
+                              icon: const Icon(Icons.lock_outline),
+                              label: const Text('FECHAR CAIXA'),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _ExtratoLista(
+                              extratos: extratosFiltrados,
+                              temExtratos: state.extratos.isNotEmpty,
+                              mobile: false,
+                            ),
+                          ),
+                          const SizedBox(width: SivDimensoes.gapCards),
+                          SizedBox(width: 260, child: acoes),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CabecalhoCaixa extends StatelessWidget {
+  final Caixa caixa;
+  final bool habilitado;
+  final VoidCallback? onAtualizar;
+
+  const _CabecalhoCaixa({
+    required this.caixa,
+    required this.habilitado,
+    required this.onAtualizar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final (rotulo, corTag) = switch (caixa.situacao) {
+      SituacaoCaixa.aberto => ('ABERTO', cores.acoProfundo),
+      SituacaoCaixa.contagem => ('EM CONTAGEM', cores.atencao),
+      SituacaoCaixa.fechado => ('FECHADO', cores.textoApoio),
+    };
+
+    return Row(
+      children: [
+        Text('Caixa #${caixa.id}', style: textos.secao.copyWith(fontSize: 21)),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: cores.selecaoFundo,
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          child: Text(
+            rotulo,
+            style: textos.rotulo.copyWith(color: corTag, fontSize: 10.5),
+          ),
         ),
+        const Spacer(),
+        OutlinedButton.icon(
+          onPressed: habilitado ? onAtualizar : null,
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('Atualizar extrato'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ResumoMovimentacoesExtrato extends StatelessWidget {
+  final double totalEntradas;
+  final double totalSaidas;
+  final double saldo;
+
+  const _ResumoMovimentacoesExtrato({
+    required this.totalEntradas,
+    required this.totalSaidas,
+    required this.saldo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _CartaoValor(
+            titulo: 'ENTRADAS',
+            valor: _formatarMoeda(totalEntradas),
+            cor: _corEntrada,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _CartaoValor(
+            titulo: 'SAÍDAS',
+            valor: _formatarMoeda(totalSaidas),
+            cor: context.sivColors.vinho,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _CartaoValor(
+            titulo: 'SALDO DO PERÍODO',
+            valor: _formatarMoeda(saldo),
+            cor: context.sivColors.acoAtivo,
+            destaque: true,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CartaoValor extends StatelessWidget {
+  final String titulo;
+  final String valor;
+  final Color cor;
+  final bool destaque;
+
+  const _CartaoValor({
+    required this.titulo,
+    required this.valor,
+    required this.cor,
+    this.destaque = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: destaque ? cores.selecaoFundo : cores.superficie,
+        border: Border.all(color: destaque ? cores.aco : cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(titulo, style: textos.rotulo.copyWith(color: cor, fontSize: 10.5)),
+          const SizedBox(height: 3),
+          Text(
+            valor,
+            style: textos.secao.copyWith(color: cor, fontSize: 22),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AcoesFluxoCaixa extends StatelessWidget {
+  final bool habilitado;
+  final VoidCallback? onSuprimentos;
+  final VoidCallback? onSangrias;
+  final VoidCallback? onContagem;
+  final VoidCallback? onFecharCaixa;
+
+  const _AcoesFluxoCaixa({
+    required this.habilitado,
+    required this.onSuprimentos,
+    required this.onSangrias,
+    required this.onContagem,
+    required this.onFecharCaixa,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width <
+        SivDimensoes.breakpointMenuDrawer;
+
+    final botoes = [
+      _BotaoAcao(
+        icon: Icons.savings_outlined,
+        label: 'Suprimentos',
+        onPressed: habilitado ? onSuprimentos : null,
+        vertical: mobile,
+      ),
+      _BotaoAcao(
+        icon: Icons.money_off_csred_outlined,
+        label: 'Sangrias',
+        onPressed: habilitado ? onSangrias : null,
+        vertical: mobile,
+      ),
+      _BotaoAcao(
+        icon: Icons.calculate_outlined,
+        label: 'Contagem do caixa',
+        onPressed: habilitado ? onContagem : null,
+        vertical: mobile,
+      ),
+    ];
+
+    if (mobile) {
+      return Row(
+        children: [
+          for (final botao in botoes) ...[
+            Expanded(child: botao),
+            if (botao != botoes.last) const SizedBox(width: 7),
+          ],
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final botao in botoes) ...[
+          botao,
+          const SizedBox(height: 10),
+        ],
+        const Spacer(),
+        FilledButton.icon(
+          onPressed: onFecharCaixa,
+          icon: const Icon(Icons.lock_outline),
+          label: const Text('FECHAR CAIXA'),
+        ),
+      ],
+    );
+  }
+}
+
+class _BotaoAcao extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool vertical;
+
+  const _BotaoAcao({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    required this.vertical,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (vertical) {
+      return OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+      ),
+    );
+  }
+}
+
+class _ExtratoLista extends StatelessWidget {
+  final List<ExtratoCaixa> extratos;
+  final bool temExtratos;
+  final bool mobile;
+
+  const _ExtratoLista({
+    required this.extratos,
+    required this.temExtratos,
+    required this.mobile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (extratos.isEmpty) {
+      return Center(
+        child: Text(
+          temExtratos
+              ? 'Nenhum lançamento encontrado para os filtros selecionados.'
+              : 'Nenhum lançamento no extrato.',
+          textAlign: TextAlign.center,
+          style: context.sivTextos.corpo,
+        ),
+      );
+    }
+
+    if (mobile) {
+      return ListView.separated(
+        itemCount: extratos.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (context, index) => _ExtratoCardMobile(item: extratos[index]),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: SivTabela(
+        colunas: const [
+          SivTabelaColuna(titulo: 'LANÇAMENTO', flex: 3),
+          SivTabelaColuna(titulo: 'FORMA', flex: 1),
+          SivTabelaColuna(titulo: 'DOCUMENTO', flex: 2),
+          SivTabelaColuna.numerica(titulo: 'VALOR', flex: 1),
+        ],
+        quantidadeLinhas: extratos.length,
+        linhaBuilder: (context, indice) => _linhaExtrato(context, extratos[indice]),
+      ),
+    );
+  }
+
+  List<Widget> _linhaExtrato(BuildContext context, ExtratoCaixa item) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    final isDebito = item.tipoMovimento == TipoMovimentoExtratoCaixa.debito;
+    final cor = isDebito ? cores.vinho : _corEntrada;
+
+    return [
+      Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '${_rotuloHistorico(item.tipoHistorico)}\n',
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+            ),
+            TextSpan(
+              text: _formatarDataHora(item.criadoEm),
+              style: textos.apoio.copyWith(color: cores.textoApoio),
+            ),
+          ],
+        ),
+      ),
+      Text(_rotuloTipoDocumento(item.tipoDocumento), style: textos.corpo.copyWith(fontSize: 13)),
+      Text(
+        'Doc. ${item.documento}',
+        style: textos.apoio.copyWith(color: cores.textoApoio),
+      ),
+      Text(
+        '${isDebito ? '-' : '+'} ${_formatarMoeda(item.valor)}',
+        textAlign: TextAlign.right,
+        style: textos.corpo.copyWith(color: cor, fontWeight: FontWeight.w700),
+      ),
+    ];
+  }
+}
+
+class _ExtratoCardMobile extends StatelessWidget {
+  final ExtratoCaixa item;
+
+  const _ExtratoCardMobile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final isDebito = item.tipoMovimento == TipoMovimentoExtratoCaixa.debito;
+    final cor = isDebito ? cores.vinho : _corEntrada;
+
+    return SivCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _rotuloHistorico(item.tipoHistorico),
+                  style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                '${isDebito ? '-' : '+'}${item.valor.toStringAsFixed(2).replaceAll('.', ',')}',
+                style: textos.corpo.copyWith(color: cor, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${_rotuloTipoDocumento(item.tipoDocumento)} · ${_formatarDataHora(item.criadoEm)}',
+            style: textos.apoio.copyWith(color: cores.textoApoio),
+          ),
+          if (item.cancelado) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Lançamento cancelado${item.motivoCancelamento?.trim().isNotEmpty == true ? ': ${item.motivoCancelamento!.trim()}' : ''}',
+              style: textos.apoio.copyWith(color: cores.vinho, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -557,229 +829,6 @@ String _rotuloTipoDocumento(TipoDocumentoExtratoCaixa tipo) {
       return 'Adiantamento';
     case TipoDocumentoExtratoCaixa.creditoDeDevolucao:
       return 'Credito de devolucao';
-  }
-}
-
-class _ResumoCaixa extends StatelessWidget {
-  final Caixa caixa;
-
-  const _ResumoCaixa({required this.caixa});
-
-  @override
-  Widget build(BuildContext context) {
-    final (rotulo, cor) = switch (caixa.situacao) {
-      SituacaoCaixa.aberto => ('Aberto', Colors.green),
-      SituacaoCaixa.contagem => ('Em contagem', Colors.orange),
-      SituacaoCaixa.fechado => ('Fechado', Colors.grey),
-    };
-
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: ListTile(
-        title: Text('Caixa #${caixa.id}'),
-        subtitle:
-            Text('Empresa ${caixa.empresaId} | Terminal ${caixa.terminalId}'),
-        trailing: Text(
-          rotulo,
-          style: TextStyle(fontWeight: FontWeight.bold, color: cor),
-        ),
-      ),
-    );
-  }
-}
-
-class _ExtratoTile extends StatelessWidget {
-  final ExtratoCaixa item;
-
-  const _ExtratoTile({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDebito = item.tipoMovimento == TipoMovimentoExtratoCaixa.debito;
-    final color = isDebito ? Colors.red : Colors.green;
-    final theme = Theme.of(context);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isDebito ? Icons.arrow_upward : Icons.arrow_downward,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _rotuloHistorico(item.tipoHistorico),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.tipoDocumento.name,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _rotuloTipoDocumento(item.tipoDocumento),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Documento: ${item.documento}  •  ${_formatarDataHora(item.criadoEm)}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  if (item.observacao?.trim().isNotEmpty == true) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      item.observacao!.trim(),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
-                  if (item.cancelado) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Lancamento cancelado${item.motivoCancelamento?.trim().isNotEmpty == true ? ': ${item.motivoCancelamento!.trim()}' : ''}',
-                      style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    isDebito ? 'Saida' : 'Entrada',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${isDebito ? '-' : '+'} ${_formatarMoeda(item.valor)}',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResumoMovimentacoesExtrato extends StatelessWidget {
-  final double totalEntradas;
-  final double totalSaidas;
-  final double saldo;
-
-  const _ResumoMovimentacoesExtrato({
-    required this.totalEntradas,
-    required this.totalSaidas,
-    required this.saldo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _ResumoValorChip(
-                titulo: 'Entradas',
-                valor: _formatarMoeda(totalEntradas),
-                color: Colors.green,
-              ),
-              _ResumoValorChip(
-                titulo: 'Saidas',
-                valor: _formatarMoeda(totalSaidas),
-                color: Colors.red,
-              ),
-              _ResumoValorChip(
-                titulo: 'Saldo do periodo',
-                valor: _formatarMoeda(saldo),
-                color: saldo < 0 ? Colors.red : Colors.green,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ResumoValorChip extends StatelessWidget {
-  final String titulo;
-  final String valor;
-  final Color color;
-
-  const _ResumoValorChip({
-    required this.titulo,
-    required this.valor,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            titulo,
-            style: TextStyle(color: color, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            valor,
-            style: TextStyle(color: color, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
-    );
   }
 }
 

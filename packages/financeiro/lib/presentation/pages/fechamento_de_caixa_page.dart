@@ -1,8 +1,12 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
+
+const _corEntrada = Color(0xFF2F6A3A);
 
 class FechamentoDeCaixaPage extends StatefulWidget {
   final int caixaId;
@@ -77,74 +81,119 @@ class _FechamentoDeCaixaPageState extends State<FechamentoDeCaixaPage> {
             );
             final diferencaTotal = (totalContado - totalEsperado).abs();
             final possuiDivergencia = diferencaTotal >= 0.01;
+            final cores = context.sivColors;
+            final textos = context.sivTextos;
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _EtapaCard(
-                titulo: 'Fluxo de fechamento',
-                descricao:
-                    '1. Contagem dos pendentes  •  2. Confirmacao dos valores  •  3. Fechamento concreto',
-                icone: Icons.rule_folder_outlined,
+              Text(
+                'ETAPA 2 DE 3 · CONFIRMAÇÃO DOS VALORES CONTADOS',
+                style: textos.rotulo.copyWith(color: cores.aco, fontSize: 12),
               ),
-              const SizedBox(height: 10),
-              _EtapaCard(
-                titulo: 'Etapa 2 de 3: Confirmacao dos valores contados',
-                descricao: 'Caixa #${widget.caixaId}',
-                icone: Icons.fact_check_outlined,
+              const SizedBox(height: 6),
+              Text(
+                'Caixa #${widget.caixaId}',
+                style: textos.apoio.copyWith(color: cores.textoApoio),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SivDimensoes.gapCards),
               if (itens.isEmpty)
-                const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.check_circle_outline, color: Colors.green),
-                    title: Text('Nao ha itens pendentes para conferencia.'),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: cores.selecaoFundo,
+                    border: Border.all(color: cores.aco),
+                    borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                  ),
+                  child: Text(
+                    'Não há itens pendentes para conferência.',
+                    style: textos.corpo,
                   ),
                 )
               else
-                ...itens.map((item) => _ItemConferenciaTile(item: item)),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
+                Stack(
+                  children: [
+                    SivTabela(
+                      colunas: const [
+                        SivTabelaColuna(titulo: 'FORMA', flex: 2),
+                        SivTabelaColuna.numerica(titulo: 'ESPERADO', flex: 1),
+                        SivTabelaColuna.numerica(titulo: 'CONTADO', flex: 1),
+                        SivTabelaColuna.numerica(titulo: 'DIF.', flex: 1),
+                      ],
+                      quantidadeLinhas: itens.length,
+                      linhaBuilder: (context, indice) =>
+                          _linhaConferencia(context, itens[indice]),
+                    ),
+                    ...sivCantosBlueprint(cores.hairline),
+                  ],
+                ),
+              const SizedBox(height: SivDimensoes.gapCards),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cores.superficie,
+                  border: Border.all(color: cores.hairline),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Resumo da conferência', style: textos.secao.copyWith(fontSize: 14)),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Total esperado: ${_formatarMoeda(totalEsperado)} · Total contado: ${_formatarMoeda(totalContado)}',
+                      style: textos.apoio.copyWith(color: cores.textoApoio),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Diferença: ${_formatarMoeda(diferencaTotal)}',
+                      style: textos.secao.copyWith(
+                        fontSize: 15,
+                        color: possuiDivergencia ? cores.atencao : _corEntrada,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (state.faturamento != null) ...[
+                const SizedBox(height: SivDimensoes.gapCards),
+                _CardFaturamento(faturamento: state.faturamento!),
+              ],
+              if (possuiDivergencia) ...[
+                const SizedBox(height: 12),
+                Container(
                   padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  decoration: BoxDecoration(
+                    color: cores.atencaoFundo,
+                    border: Border.all(color: cores.atencaoBorda),
+                    borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Resumo da conferencia',
-                          style: Theme.of(context).textTheme.titleSmall),
-                      const SizedBox(height: 6),
-                      Text('Total esperado: ${_formatarMoeda(totalEsperado)}'),
-                      Text('Total contado: ${_formatarMoeda(totalContado)}'),
-                      Text(
-                        'Diferenca: ${_formatarMoeda(diferencaTotal)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color:
-                              possuiDivergencia ? Colors.orange : Colors.green,
+                      Icon(Icons.warning_amber_rounded, color: cores.atencao, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Fechamento bloqueado por divergência',
+                              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              'A contagem deve bater com o valor esperado para fechar o caixa.',
+                              style: textos.apoio.copyWith(color: cores.textoApoio),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              if (state.faturamento != null) ...[
-                const SizedBox(height: 12),
-                _CardFaturamento(faturamento: state.faturamento!),
               ],
-              if (possuiDivergencia) ...[
-                const SizedBox(height: 8),
-                Card(
-                  color: Colors.orange.withValues(alpha: 0.08),
-                  child: const ListTile(
-                    leading: Icon(Icons.warning_amber_rounded),
-                    title: Text('Fechamento bloqueado por divergencia'),
-                    subtitle: Text(
-                      'A contagem deve bater com o valor esperado para fechar o caixa.',
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               CheckboxListTile(
                 value: _confirmouConferencia,
                 onChanged: possuiDivergencia
@@ -158,19 +207,22 @@ class _FechamentoDeCaixaPageState extends State<FechamentoDeCaixaPage> {
                 title: const Text('Confirmo os valores contados e esperados'),
                 subtitle: Text(
                   possuiDivergencia
-                      ? 'Corrija a divergencia para liberar o fechamento.'
-                      : 'Ao confirmar, o fechamento concreto do caixa sera executado.',
+                      ? 'Corrija a divergência para liberar o fechamento.'
+                      : 'Ao confirmar, o fechamento concreto do caixa será executado.',
                 ),
               ),
               const SizedBox(height: 8),
-              FilledButton.icon(
-                onPressed: !_confirmouConferencia || possuiDivergencia
-                    ? null
-                    : () {
-                        Navigator.of(context).pop(true);
-                      },
-                icon: const Icon(Icons.lock_outline),
-                label: const Text('Confirmar e fechar caixa'),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: !_confirmouConferencia || possuiDivergencia
+                      ? null
+                      : () {
+                          Navigator.of(context).pop(true);
+                        },
+                  icon: const Icon(Icons.lock_outline),
+                  label: const Text('CONFIRMAR FECHAMENTO'),
+                ),
               ),
             ],
           );
@@ -181,57 +233,25 @@ class _FechamentoDeCaixaPageState extends State<FechamentoDeCaixaPage> {
   }
 }
 
-class _EtapaCard extends StatelessWidget {
-  final String titulo;
-  final String descricao;
-  final IconData icone;
+List<Widget> _linhaConferencia(BuildContext context, ConferenciaFechamentoItem item) {
+  final cores = context.sivColors;
+  final textos = context.sivTextos;
+  final diferenca = item.valorContado - item.valorEsperado;
+  final corDiferenca = diferenca.abs() < 0.01 ? _corEntrada : cores.atencao;
 
-  const _EtapaCard({
-    required this.titulo,
-    required this.descricao,
-    required this.icone,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icone),
-        title: Text(titulo),
-        subtitle: Text(descricao),
-      ),
-    );
-  }
+  return [
+    Text(_labelTipo(item.tipo), style: textos.corpo),
+    Text(_formatarValor(item.valorEsperado), textAlign: TextAlign.right, style: textos.corpo),
+    Text(_formatarValor(item.valorContado), textAlign: TextAlign.right, style: textos.corpo),
+    Text(
+      _formatarValor(diferenca.abs()),
+      textAlign: TextAlign.right,
+      style: textos.corpo.copyWith(color: corDiferenca, fontWeight: FontWeight.w600),
+    ),
+  ];
 }
 
-class _ItemConferenciaTile extends StatelessWidget {
-  final ConferenciaFechamentoItem item;
-
-  const _ItemConferenciaTile({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final diferenca = item.valorContado - item.valorEsperado;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(_iconeTipo(item.tipo)),
-        title: Text(_labelTipo(item.tipo)),
-        subtitle: Text(
-          'Esperado: ${_formatarMoeda(item.valorEsperado)}\nContado: ${_formatarMoeda(item.valorContado)}',
-        ),
-        trailing: Text(
-          _formatarMoeda(diferenca.abs()),
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: diferenca.abs() < 0.01 ? Colors.green : Colors.orange,
-          ),
-        ),
-      ),
-    );
-  }
-}
+String _formatarValor(double valor) => valor.toStringAsFixed(2).replaceAll('.', ',');
 
 String _labelTipo(TipoContagemDoCaixaItem tipo) {
   switch (tipo) {
@@ -255,31 +275,6 @@ String _labelTipo(TipoContagemDoCaixaItem tipo) {
       return 'Adiantamento';
     case TipoContagemDoCaixaItem.creditoDeDevolucao:
       return 'Credito de devolucao';
-  }
-}
-
-IconData _iconeTipo(TipoContagemDoCaixaItem tipo) {
-  switch (tipo) {
-    case TipoContagemDoCaixaItem.dinheiro:
-      return Icons.payments_outlined;
-    case TipoContagemDoCaixaItem.pix:
-      return Icons.pix;
-    case TipoContagemDoCaixaItem.cartao:
-      return Icons.credit_card_outlined;
-    case TipoContagemDoCaixaItem.fatura:
-      return Icons.receipt_long_outlined;
-    case TipoContagemDoCaixaItem.cheque:
-      return Icons.request_quote_outlined;
-    case TipoContagemDoCaixaItem.troco:
-      return Icons.currency_exchange;
-    case TipoContagemDoCaixaItem.voucher:
-      return Icons.confirmation_number_outlined;
-    case TipoContagemDoCaixaItem.tedDoc:
-      return Icons.swap_horiz_outlined;
-    case TipoContagemDoCaixaItem.adiantamento:
-      return Icons.trending_up_outlined;
-    case TipoContagemDoCaixaItem.creditoDeDevolucao:
-      return Icons.assignment_return_outlined;
   }
 }
 

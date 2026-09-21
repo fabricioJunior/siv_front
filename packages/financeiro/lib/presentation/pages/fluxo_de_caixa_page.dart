@@ -289,93 +289,35 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         .add(FluxoDeCaixaIniciou(caixaId: caixaId)),
               ),
               const SizedBox(height: SivDimensoes.gapCards),
-              _ResumoMovimentacoesExtrato(
-                totalEntradas: state.totalEntradas,
-                totalSaidas: state.totalSaidas,
-                saldo: state.saldo,
-              ),
-              const SizedBox(height: SivDimensoes.gapCards),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _documentoController,
-                      decoration: const InputDecoration(
-                        hintText: 'Filtrar por documento…',
-                        prefixIcon: Icon(Icons.search_outlined),
-                      ),
-                      onSubmitted: (value) {
-                        context.read<FluxoDeCaixaBloc>().add(
-                              FluxoDeCaixaFiltrouDocumento(documento: value),
-                            );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () =>
-                        _abrirSelecaoMultipla<TipoDocumentoExtratoCaixa>(
-                      titulo: 'Tipo da forma de pagamento',
-                      opcoes: TipoDocumentoExtratoCaixa.values,
-                      selecionados: _filtrosTipoDocumento,
-                      rotulo: _rotuloTipoDocumento,
-                      onConfirmar: (selecionados) {
-                        setState(() {
-                          _filtrosTipoDocumento
-                            ..clear()
-                            ..addAll(selecionados);
-                        });
-                      },
-                    ),
-                    icon: const Icon(Icons.filter_alt_outlined, size: 18),
-                    label: Text(
-                      _filtrosTipoDocumento.isEmpty
-                          ? 'Forma de pagamento'
-                          : 'Forma de pagamento (${_filtrosTipoDocumento.length})',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () =>
-                        _abrirSelecaoMultipla<TipoHistoricoExtratoCaixa>(
-                      titulo: 'Tipo de lançamento',
-                      opcoes: TipoHistoricoExtratoCaixa.values,
-                      selecionados: _filtrosTipoHistorico,
-                      rotulo: _rotuloHistorico,
-                      onConfirmar: (selecionados) {
-                        setState(() {
-                          _filtrosTipoHistorico
-                            ..clear()
-                            ..addAll(selecionados);
-                        });
-                      },
-                    ),
-                    icon: const Icon(Icons.filter_alt_outlined, size: 18),
-                    label: Text(
-                      _filtrosTipoHistorico.isEmpty
-                          ? 'Tipo de lançamento'
-                          : 'Tipo de lançamento (${_filtrosTipoHistorico.length})',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: SivDimensoes.gapCards),
-              if (carregando)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: LinearProgressIndicator(),
+              if (mobile) ...[
+                _ResumoMovimentacoesExtrato(
+                  totalEntradas: state.totalEntradas,
+                  totalSaidas: state.totalSaidas,
+                  saldo: state.saldo,
                 ),
-              if (state is FluxoDeCaixaCarregarFalha ||
-                  state is FluxoDeCaixaAbrirFalha ||
-                  state is FluxoDeCaixaFecharFalha)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'Falha ao processar fluxo de caixa.',
-                    style: context.sivTextos.corpo
-                        .copyWith(color: context.sivColors.vinho),
-                  ),
+                const SizedBox(height: SivDimensoes.gapCards),
+                _FiltrosExtrato(
+                  documentoController: _documentoController,
+                  filtrosTipoDocumento: _filtrosTipoDocumento,
+                  filtrosTipoHistorico: _filtrosTipoHistorico,
+                  onFiltrarDocumento: (value) => context
+                      .read<FluxoDeCaixaBloc>()
+                      .add(FluxoDeCaixaFiltrouDocumento(documento: value)),
+                  onAbrirSelecaoMultipla: _abrirSelecaoMultipla,
+                  onFormaDePagamentoAlterada: (selecionados) => setState(() {
+                    _filtrosTipoDocumento
+                      ..clear()
+                      ..addAll(selecionados);
+                  }),
+                  onTipoLancamentoAlterado: (selecionados) => setState(() {
+                    _filtrosTipoHistorico
+                      ..clear()
+                      ..addAll(selecionados);
+                  }),
                 ),
+                const SizedBox(height: SivDimensoes.gapCards),
+                ..._avisos(context, state, carregando),
+              ],
               Expanded(
                 child: mobile
                     ? Column(
@@ -405,14 +347,52 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
-                            child: _ExtratoLista(
-                              extratos: extratosFiltrados,
-                              temExtratos: state.extratos.isNotEmpty,
-                              mobile: false,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _ResumoMovimentacoesExtrato(
+                                  totalEntradas: state.totalEntradas,
+                                  totalSaidas: state.totalSaidas,
+                                  saldo: state.saldo,
+                                ),
+                                const SizedBox(height: SivDimensoes.gapCards),
+                                _FiltrosExtrato(
+                                  documentoController: _documentoController,
+                                  filtrosTipoDocumento: _filtrosTipoDocumento,
+                                  filtrosTipoHistorico: _filtrosTipoHistorico,
+                                  onFiltrarDocumento: (value) => context
+                                      .read<FluxoDeCaixaBloc>()
+                                      .add(FluxoDeCaixaFiltrouDocumento(
+                                          documento: value)),
+                                  onAbrirSelecaoMultipla:
+                                      _abrirSelecaoMultipla,
+                                  onFormaDePagamentoAlterada:
+                                      (selecionados) => setState(() {
+                                    _filtrosTipoDocumento
+                                      ..clear()
+                                      ..addAll(selecionados);
+                                  }),
+                                  onTipoLancamentoAlterado: (selecionados) =>
+                                      setState(() {
+                                    _filtrosTipoHistorico
+                                      ..clear()
+                                      ..addAll(selecionados);
+                                  }),
+                                ),
+                                const SizedBox(height: SivDimensoes.gapCards),
+                                ..._avisos(context, state, carregando),
+                                Expanded(
+                                  child: _ExtratoLista(
+                                    extratos: extratosFiltrados,
+                                    temExtratos: state.extratos.isNotEmpty,
+                                    mobile: false,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: SivDimensoes.gapCards),
-                          SizedBox(width: 260, child: acoes),
+                          _SidebarAcoes(acoes: acoes),
                         ],
                       ),
               ),
@@ -420,6 +400,129 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
           );
         },
       ),
+    );
+  }
+}
+
+List<Widget> _avisos(
+  BuildContext context,
+  FluxoDeCaixaState state,
+  bool carregando,
+) {
+  return [
+    if (carregando)
+      const Padding(
+        padding: EdgeInsets.only(bottom: 12),
+        child: LinearProgressIndicator(),
+      ),
+    if (state is FluxoDeCaixaCarregarFalha ||
+        state is FluxoDeCaixaAbrirFalha ||
+        state is FluxoDeCaixaFecharFalha)
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          'Falha ao processar fluxo de caixa.',
+          style: context.sivTextos.corpo
+              .copyWith(color: context.sivColors.vinho),
+        ),
+      ),
+  ];
+}
+
+class _SidebarAcoes extends StatelessWidget {
+  final Widget acoes;
+
+  const _SidebarAcoes({required this.acoes});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+
+    return Container(
+      width: 260,
+      padding: const EdgeInsets.all(SivDimensoes.gapCards),
+      decoration: BoxDecoration(
+        color: cores.superficieRecuada,
+        border: Border(left: BorderSide(color: cores.hairline)),
+      ),
+      child: acoes,
+    );
+  }
+}
+
+class _FiltrosExtrato extends StatelessWidget {
+  final TextEditingController documentoController;
+  final Set<TipoDocumentoExtratoCaixa> filtrosTipoDocumento;
+  final Set<TipoHistoricoExtratoCaixa> filtrosTipoHistorico;
+  final ValueChanged<String> onFiltrarDocumento;
+  final Future<void> Function<T>({
+    required String titulo,
+    required List<T> opcoes,
+    required Set<T> selecionados,
+    required String Function(T) rotulo,
+    required void Function(Set<T>) onConfirmar,
+  }) onAbrirSelecaoMultipla;
+  final void Function(Set<TipoDocumentoExtratoCaixa>)
+      onFormaDePagamentoAlterada;
+  final void Function(Set<TipoHistoricoExtratoCaixa>) onTipoLancamentoAlterado;
+
+  const _FiltrosExtrato({
+    required this.documentoController,
+    required this.filtrosTipoDocumento,
+    required this.filtrosTipoHistorico,
+    required this.onFiltrarDocumento,
+    required this.onAbrirSelecaoMultipla,
+    required this.onFormaDePagamentoAlterada,
+    required this.onTipoLancamentoAlterado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: documentoController,
+            decoration: const InputDecoration(
+              hintText: 'Filtrar por documento…',
+              prefixIcon: Icon(Icons.search_outlined),
+            ),
+            onSubmitted: onFiltrarDocumento,
+          ),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: () => onAbrirSelecaoMultipla<TipoDocumentoExtratoCaixa>(
+            titulo: 'Tipo da forma de pagamento',
+            opcoes: TipoDocumentoExtratoCaixa.values,
+            selecionados: filtrosTipoDocumento,
+            rotulo: _rotuloTipoDocumento,
+            onConfirmar: onFormaDePagamentoAlterada,
+          ),
+          icon: const Icon(Icons.filter_alt_outlined, size: 18),
+          label: Text(
+            filtrosTipoDocumento.isEmpty
+                ? 'Forma de pagamento'
+                : 'Forma de pagamento (${filtrosTipoDocumento.length})',
+          ),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: () => onAbrirSelecaoMultipla<TipoHistoricoExtratoCaixa>(
+            titulo: 'Tipo de lançamento',
+            opcoes: TipoHistoricoExtratoCaixa.values,
+            selecionados: filtrosTipoHistorico,
+            rotulo: _rotuloHistorico,
+            onConfirmar: onTipoLancamentoAlterado,
+          ),
+          icon: const Icon(Icons.filter_alt_outlined, size: 18),
+          label: Text(
+            filtrosTipoHistorico.isEmpty
+                ? 'Tipo de lançamento'
+                : 'Tipo de lançamento (${filtrosTipoHistorico.length})',
+          ),
+        ),
+      ],
     );
   }
 }

@@ -23,47 +23,101 @@ class ConsignacaoAcertoPage extends StatefulWidget {
 }
 
 class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
-  late final ConsignacaoAcertoBloc _bloc;
+  ConsignacaoAcertoBloc? _bloc;
   bool _dialogoAberto = false;
   bool _fechando = false;
+
+  late final List<ConsignacaoItem> _itensPendentesOriginais;
+  late final List<bool> _marcados;
+  late final List<double> _quantidades;
 
   @override
   void initState() {
     super.initState();
 
-    final itensPendentes = widget.consignacao.itens
+    _itensPendentesOriginais = widget.consignacao.itens
         .where((item) => (item.pendente ?? 0) > 0)
         .toList();
-    final romaneiosOrigem = widget.consignacao.itens
+    _marcados = List.filled(_itensPendentesOriginais.length, false);
+    _quantidades =
+        _itensPendentesOriginais.map((item) => item.pendente ?? 0).toList();
+  }
+
+  @override
+  void dispose() {
+    _bloc?.close();
+    super.dispose();
+  }
+
+  void _iniciarAcerto() {
+    final selecionados = <ConsignacaoItem>[];
+    for (var i = 0; i < _itensPendentesOriginais.length; i++) {
+      if (!_marcados[i]) continue;
+      final original = _itensPendentesOriginais[i];
+      final pendenteOriginal = original.pendente ?? 0;
+      final valorPendenteOriginal = original.valorPendente ?? 0;
+      final valorUnitario =
+          pendenteOriginal > 0 ? valorPendenteOriginal / pendenteOriginal : 0.0;
+      final quantidade = _quantidades[i];
+      if (quantidade <= 0) continue;
+
+      selecionados.add(
+        ConsignacaoItem.create(
+          empresaId: original.empresaId,
+          consignacaoId: original.consignacaoId,
+          pessoaId: original.pessoaId,
+          romaneioId: original.romaneioId,
+          sequencia: original.sequencia,
+          produtoId: original.produtoId,
+          referenciaNome: original.referenciaNome,
+          corNome: original.corNome,
+          tamanhoNome: original.tamanhoNome,
+          pendente: quantidade,
+          valorPendente: quantidade * valorUnitario,
+          operadorId: original.operadorId,
+        ),
+      );
+    }
+
+    if (selecionados.isEmpty) return;
+
+    final romaneiosOrigem = selecionados
         .map((item) => item.romaneioId)
         .whereType<int>()
         .toSet()
         .toList();
 
-    _bloc = ConsignacaoAcertoBloc(
-      sl(),
-      sl(),
-      sl(),
-      sl(),
-      sl(),
-      consignacaoId: widget.consignacao.id!,
-      funcionarioId: widget.consignacao.funcionarioId,
-      tabelaPrecoId: widget.consignacao.tabelaPrecoId,
-      itensPendentes: itensPendentes,
-      romaneiosOrigem: romaneiosOrigem,
-    )..add(const ConsignacaoAcertoIniciado());
-  }
-
-  @override
-  void dispose() {
-    _bloc.close();
-    super.dispose();
+    setState(() {
+      _bloc = ConsignacaoAcertoBloc(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        consignacaoId: widget.consignacao.id!,
+        funcionarioId: widget.consignacao.funcionarioId,
+        tabelaPrecoId: widget.consignacao.tabelaPrecoId,
+        itensPendentes: selecionados,
+        romaneiosOrigem: romaneiosOrigem,
+      )..add(const ConsignacaoAcertoIniciado());
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final bloc = _bloc;
+    if (bloc == null) {
+      return _SelecaoItensView(
+        itens: _itensPendentesOriginais,
+        marcados: _marcados,
+        quantidades: _quantidades,
+        onAlterado: () => setState(() {}),
+        onContinuar: _marcados.contains(true) ? _iniciarAcerto : null,
+      );
+    }
+
     return BlocProvider<ConsignacaoAcertoBloc>.value(
-      value: _bloc,
+      value: bloc,
       child: BlocConsumer<ConsignacaoAcertoBloc, ConsignacaoAcertoState>(
         listenWhen: (previous, current) => previous.step != current.step,
         listener: (context, state) async {
@@ -101,7 +155,8 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                         .toInt(),
                     valorTotalProdutos: state.itens.fold<double>(
                       0,
-                      (a, i) => a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
+                      (a, i) =>
+                          a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
                     ),
                   ),
                   pessoaId: widget.consignacao.pessoaId,
@@ -118,9 +173,9 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
               return;
             }
 
-            final formasRaw = resultado['formasDePagamentoRealizadas']
-                    as List<dynamic>? ??
-                const [];
+            final formasRaw =
+                resultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
+                    const [];
             final formas = formasRaw
                 .whereType<Map<String, dynamic>>()
                 .map((item) => Map<String, dynamic>.from(item))
@@ -152,8 +207,7 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                 );
           }
 
-          if (state.step == ConsignacaoAcertoStep.falha &&
-              state.erro != null) {
+          if (state.step == ConsignacaoAcertoStep.falha && state.erro != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.erro!)),
             );
@@ -180,8 +234,7 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          state.erro ??
-                              'Falha ao finalizar a consignação.',
+                          state.erro ?? 'Falha ao finalizar a consignação.',
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
@@ -259,6 +312,111 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _SelecaoItensView extends StatelessWidget {
+  final List<ConsignacaoItem> itens;
+  final List<bool> marcados;
+  final List<double> quantidades;
+  final VoidCallback onAlterado;
+  final VoidCallback? onContinuar;
+
+  const _SelecaoItensView({
+    required this.itens,
+    required this.marcados,
+    required this.quantidades,
+    required this.onAlterado,
+    required this.onContinuar,
+  });
+
+  String _formatarMoeda(double valor) => 'R\$ ${valor.toStringAsFixed(2)}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Selecionar itens para acerto')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: itens.length,
+              itemBuilder: (context, i) {
+                final item = itens[i];
+                final pendente = item.pendente ?? 0;
+                final valorPendente = item.valorPendente ?? 0;
+                final nome = [
+                  item.referenciaNome ?? 'Produto',
+                  item.corNome,
+                  item.tamanhoNome,
+                ].where((s) => s != null && s.isNotEmpty).join(' - ');
+
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: marcados[i],
+                          onChanged: (v) {
+                            marcados[i] = v ?? false;
+                            onAlterado();
+                          },
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(nome),
+                              Text(
+                                'Pendente: ${pendente.toStringAsFixed(2)} • '
+                                '${_formatarMoeda(valorPendente)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          width: 90,
+                          child: TextFormField(
+                            enabled: marcados[i],
+                            initialValue: quantidades[i].toStringAsFixed(2),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Qtd',
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              final parsed =
+                                  double.tryParse(value.replaceAll(',', '.'));
+                              if (parsed == null) return;
+                              quantidades[i] = parsed.clamp(0, pendente);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: FilledButton(
+              onPressed: onContinuar,
+              child: const Text('Continuar'),
+            ),
+          ),
+        ],
       ),
     );
   }

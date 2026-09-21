@@ -14,6 +14,8 @@ class ReferenciaCadastroState extends Equatable {
   final String descricao;
   final String composicao;
   final String cuidados;
+  final String ncm;
+  final bool ncmSugerido;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
   final bool gerandoId;
@@ -31,6 +33,8 @@ class ReferenciaCadastroState extends Equatable {
     this.descricao = '',
     this.composicao = '',
     this.cuidados = '',
+    this.ncm = '',
+    this.ncmSugerido = false,
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
     this.gerandoId = false,
@@ -49,6 +53,8 @@ class ReferenciaCadastroState extends Equatable {
     String Function()? descricao,
     String? composicao,
     String? cuidados,
+    String? ncm,
+    bool? ncmSugerido,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
     bool? gerandoId,
@@ -66,6 +72,8 @@ class ReferenciaCadastroState extends Equatable {
       descricao: descricao == null ? this.descricao : descricao(),
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
+      ncm: ncm ?? this.ncm,
+      ncmSugerido: ncmSugerido ?? this.ncmSugerido,
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
           carregandoSubCategorias ?? this.carregandoSubCategorias,
@@ -87,6 +95,8 @@ class ReferenciaCadastroState extends Equatable {
     descricao,
     composicao,
     cuidados,
+    ncm,
+    ncmSugerido,
     carregandoCategorias,
     carregandoSubCategorias,
     gerandoId,

@@ -34,6 +34,7 @@ class ReferenciaCadastroBloc
     on<ReferenciaCadastroDescricaoAlterada>(_onDescricaoAlterada);
     on<ReferenciaCadastroComposicaoAlterada>(_onComposicaoAlterada);
     on<ReferenciaCadastroCuidadosAlterados>(_onCuidadosAlterados);
+    on<ReferenciaCadastroNcmAlterado>(_onNcmAlterado);
     on<ReferenciaCadastroProximo>(_onProximo);
     on<ReferenciaCadastroVoltar>(_onVoltar);
     on<ReferenciaCadastroReiniciar>(_onReiniciar);
@@ -74,6 +75,8 @@ class ReferenciaCadastroBloc
         nome: null,
         step: ReferenciaCadastroStep.categoria,
         mensagem: null,
+        ncm: event.categoria.ncm ?? '',
+        ncmSugerido: event.categoria.ncm != null,
       ),
     );
 
@@ -115,7 +118,15 @@ class ReferenciaCadastroBloc
     ReferenciaCadastroSubCategoriaSelecionada event,
     Emitter<ReferenciaCadastroState> emit,
   ) async {
-    emit(state.copyWith(subCategoria: event.subCategoria, mensagem: null));
+    final ncmSugerido = event.subCategoria?.ncm ?? state.categoria?.ncm;
+    emit(
+      state.copyWith(
+        subCategoria: event.subCategoria,
+        mensagem: null,
+        ncm: ncmSugerido ?? '',
+        ncmSugerido: ncmSugerido != null,
+      ),
+    );
   }
 
   FutureOr<void> _onIdAlterado(
@@ -202,6 +213,15 @@ class ReferenciaCadastroBloc
     emit(state.copyWith(cuidados: event.cuidados, mensagem: null));
   }
 
+  FutureOr<void> _onNcmAlterado(
+    ReferenciaCadastroNcmAlterado event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) async {
+    emit(
+      state.copyWith(ncm: event.ncm, ncmSugerido: false, mensagem: null),
+    );
+  }
+
   FutureOr<void> _onProximo(
     ReferenciaCadastroProximo event,
     Emitter<ReferenciaCadastroState> emit,
@@ -248,6 +268,7 @@ class ReferenciaCadastroBloc
             descricao: _sanitizeOptional(state.descricao),
             composicao: _sanitizeOptional(state.composicao),
             cuidados: _sanitizeOptional(state.cuidados),
+            ncm: _sanitizeOptional(state.ncm),
           );
           emit(state.copyWith(step: ReferenciaCadastroStep.resumo));
         } catch (e, s) {
@@ -305,6 +326,8 @@ class ReferenciaCadastroBloc
         referenciaId: () => null,
         nome: () => null,
         descricao: () => '',
+        ncm: '',
+        ncmSugerido: false,
         mensagem: null,
       ),
     );

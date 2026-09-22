@@ -13,11 +13,13 @@ class OrigemPagamentoDespesaCampoAlterado extends OrigemPagamentoDespesaEvent {
   final String? nome;
   final TipoOrigemPagamentoDespesa? tipo;
   final int? diaVencimento;
+  final int? prazoFechamentoDias;
 
   OrigemPagamentoDespesaCampoAlterado({
     this.nome,
     this.tipo,
     this.diaVencimento,
+    this.prazoFechamentoDias,
   });
 }
 

@@ -99,7 +99,8 @@ class OrigensPagamentoDespesaPage extends StatelessWidget {
                             title: Text(origem.nome),
                             subtitle: Text(
                               origem.tipo.diaVencimentoObrigatorio
-                                  ? '${origem.tipo.label} • vence dia ${origem.diaVencimento}'
+                                  ? '${origem.tipo.label} • vence dia ${origem.diaVencimento} '
+                                      '• fecha ${origem.prazoFechamentoDias} dias antes'
                                   : origem.tipo.label,
                             ),
                             onTap: () async {

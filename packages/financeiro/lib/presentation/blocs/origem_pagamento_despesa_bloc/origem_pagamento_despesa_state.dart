@@ -6,6 +6,7 @@ class OrigemPagamentoDespesaState extends Equatable {
   final String? nome;
   final TipoOrigemPagamentoDespesa? tipo;
   final int? diaVencimento;
+  final int? prazoFechamentoDias;
   final OrigemPagamentoDespesa? origem;
   final String? erro;
   final OrigemPagamentoDespesaStep step;
@@ -16,6 +17,7 @@ class OrigemPagamentoDespesaState extends Equatable {
     this.nome,
     this.tipo,
     this.diaVencimento,
+    this.prazoFechamentoDias,
     this.origem,
     this.erro,
     required this.step,
@@ -29,6 +31,7 @@ class OrigemPagamentoDespesaState extends Equatable {
         nome = origem.nome,
         tipo = origem.tipo,
         diaVencimento = origem.diaVencimento,
+        prazoFechamentoDias = origem.prazoFechamentoDias,
         origem = origem,
         erro = null,
         step = step ?? OrigemPagamentoDespesaStep.editando;
@@ -39,6 +42,7 @@ class OrigemPagamentoDespesaState extends Equatable {
     String? nome,
     TipoOrigemPagamentoDespesa? tipo,
     int? diaVencimento,
+    int? prazoFechamentoDias,
     OrigemPagamentoDespesa? origem,
     String? erro,
     OrigemPagamentoDespesaStep? step,
@@ -49,6 +53,7 @@ class OrigemPagamentoDespesaState extends Equatable {
       nome: nome ?? this.nome,
       tipo: tipo ?? this.tipo,
       diaVencimento: diaVencimento ?? this.diaVencimento,
+      prazoFechamentoDias: prazoFechamentoDias ?? this.prazoFechamentoDias,
       origem: origem ?? this.origem,
       erro: erro,
       step: step ?? this.step,
@@ -56,8 +61,17 @@ class OrigemPagamentoDespesaState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [id, empresaId, nome, tipo, diaVencimento, origem, erro, step];
+  List<Object?> get props => [
+        id,
+        empresaId,
+        nome,
+        tipo,
+        diaVencimento,
+        prazoFechamentoDias,
+        origem,
+        erro,
+        step,
+      ];
 }
 
 enum OrigemPagamentoDespesaStep {

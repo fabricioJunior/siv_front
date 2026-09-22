@@ -7,6 +7,7 @@ class OrigemPagamentoDespesaDto extends OrigemPagamentoDespesa {
     required super.nome,
     required super.tipo,
     super.diaVencimento,
+    super.prazoFechamentoDias,
   });
 
   factory OrigemPagamentoDespesaDto.fromJson(Map<String, dynamic> json) {
@@ -16,6 +17,7 @@ class OrigemPagamentoDespesaDto extends OrigemPagamentoDespesa {
       nome: (json['nome'] as String?) ?? '',
       tipo: TipoOrigemPagamentoDespesa.fromString(json['tipo'] as String?),
       diaVencimento: (json['diaVencimento'] as num?)?.toInt(),
+      prazoFechamentoDias: (json['prazoFechamentoDias'] as num?)?.toInt(),
     );
   }
 
@@ -26,6 +28,7 @@ class OrigemPagamentoDespesaDto extends OrigemPagamentoDespesa {
       nome: origem.nome,
       tipo: origem.tipo,
       diaVencimento: origem.diaVencimento,
+      prazoFechamentoDias: origem.prazoFechamentoDias,
     );
   }
 
@@ -34,8 +37,10 @@ class OrigemPagamentoDespesaDto extends OrigemPagamentoDespesa {
       if (empresaId != null) 'empresaId': empresaId,
       'nome': nome,
       'tipo': tipo.value,
-      if (tipo == TipoOrigemPagamentoDespesa.cartaoCredito)
+      if (tipo == TipoOrigemPagamentoDespesa.cartaoCredito) ...{
         'diaVencimento': diaVencimento,
+        'prazoFechamentoDias': prazoFechamentoDias,
+      },
     };
   }
 }

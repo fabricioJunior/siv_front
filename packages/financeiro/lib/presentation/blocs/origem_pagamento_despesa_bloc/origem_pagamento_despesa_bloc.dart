@@ -68,6 +68,7 @@ class OrigemPagamentoDespesaBloc
         nome: event.nome,
         tipo: event.tipo,
         diaVencimento: event.diaVencimento,
+        prazoFechamentoDias: event.prazoFechamentoDias,
         step: OrigemPagamentoDespesaStep.editando,
         erro: null,
       ),
@@ -103,6 +104,17 @@ class OrigemPagamentoDespesaBloc
         return;
       }
 
+      if (tipo == TipoOrigemPagamentoDespesa.cartaoCredito &&
+          (state.prazoFechamentoDias == null || state.prazoFechamentoDias! <= 0)) {
+        emit(
+          state.copyWith(
+            step: OrigemPagamentoDespesaStep.validacaoInvalida,
+            erro: 'Informe o prazo de fechamento para cartão de crédito.',
+          ),
+        );
+        return;
+      }
+
       emit(state.copyWith(step: OrigemPagamentoDespesaStep.salvando, erro: null));
 
       final origem = OrigemPagamentoDespesa(
@@ -113,6 +125,10 @@ class OrigemPagamentoDespesaBloc
         diaVencimento:
             tipo == TipoOrigemPagamentoDespesa.cartaoCredito
                 ? state.diaVencimento
+                : null,
+        prazoFechamentoDias:
+            tipo == TipoOrigemPagamentoDespesa.cartaoCredito
+                ? state.prazoFechamentoDias
                 : null,
       );
 

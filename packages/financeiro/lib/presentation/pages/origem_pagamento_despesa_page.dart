@@ -21,11 +21,13 @@ class _OrigemPagamentoDespesaPageState
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _diaVencimentoController = TextEditingController();
+  final _prazoFechamentoDiasController = TextEditingController();
 
   @override
   void dispose() {
     _nomeController.dispose();
     _diaVencimentoController.dispose();
+    _prazoFechamentoDiasController.dispose();
     super.dispose();
   }
 
@@ -105,6 +107,15 @@ class _OrigemPagamentoDespesaPageState
                 );
               }
 
+              final prazoFechamentoDias = (state.prazoFechamentoDias ?? '').toString();
+              if (_prazoFechamentoDiasController.text != prazoFechamentoDias) {
+                _prazoFechamentoDiasController.value = TextEditingValue(
+                  text: prazoFechamentoDias == 'null' ? '' : prazoFechamentoDias,
+                  selection:
+                      TextSelection.collapsed(offset: prazoFechamentoDias.length),
+                );
+              }
+
               final tipo = state.tipo ?? TipoOrigemPagamentoDespesa.dinheiro;
 
               return SafeArea(
@@ -175,6 +186,32 @@ class _OrigemPagamentoDespesaPageState
                                 .add(
                                   OrigemPagamentoDespesaCampoAlterado(
                                     diaVencimento: int.tryParse(value),
+                                  ),
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _prazoFechamentoDiasController,
+                            decoration: const InputDecoration(
+                              labelText: 'Fecha quantos dias antes do vencimento',
+                              hintText: 'Ex: 7',
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: (value) {
+                              final dias = int.tryParse(value ?? '');
+                              if (dias == null || dias <= 0 || dias > 30) {
+                                return 'Informe uma quantidade válida (1-30)';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => context
+                                .read<OrigemPagamentoDespesaBloc>()
+                                .add(
+                                  OrigemPagamentoDespesaCampoAlterado(
+                                    prazoFechamentoDias: int.tryParse(value),
                                   ),
                                 ),
                           ),

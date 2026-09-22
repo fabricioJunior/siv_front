@@ -6,6 +6,7 @@ import 'package:financeiro/domain/models/categoria_despesa.dart';
 import 'package:financeiro/domain/models/despesa.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/domain/models/origem_pagamento_despesa.dart';
+import 'package:financeiro/domain/utils/proxima_data_vencimento_cartao.dart';
 import 'package:financeiro/use_cases.dart';
 
 part 'lancar_despesa_event.dart';
@@ -63,6 +64,23 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
     LancarDespesaCampoAlterado event,
     Emitter<LancarDespesaState> emit,
   ) {
+    var dataPagamento = event.dataPagamento;
+
+    final origemId = event.origemPagamentoId;
+    final modoAtual = event.modo ?? state.modo;
+    if (origemId != null && modoAtual == ModoLancamentoDespesa.avulsa) {
+      final origem = _origemPorId(state.origens, origemId);
+      final diaVencimentoCartao = origem?.diaVencimento;
+      if (origem != null &&
+          origem.tipo.diaVencimentoObrigatorio &&
+          diaVencimentoCartao != null) {
+        dataPagamento = proximaDataVencimentoCartao(
+          diaVencimentoCartao,
+          prazoFechamentoDias: origem.prazoFechamentoDias,
+        );
+      }
+    }
+
     emit(
       state.copyWith(
         modo: event.modo,
@@ -72,13 +90,23 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         origemPagamentoId: event.origemPagamentoId,
         formaPagamentoId: event.formaPagamentoId,
         limparFormaPagamento: event.limparFormaPagamento,
-        dataPagamento: event.dataPagamento,
+        dataPagamento: dataPagamento,
         diaVencimento: event.diaVencimento,
         parcelas: event.parcelas,
         step: LancarDespesaStep.editando,
         erro: null,
       ),
     );
+  }
+
+  OrigemPagamentoDespesa? _origemPorId(
+    List<OrigemPagamentoDespesa> origens,
+    int id,
+  ) {
+    for (final origem in origens) {
+      if (origem.id == id) return origem;
+    }
+    return null;
   }
 
   FutureOr<void> _onSalvou(

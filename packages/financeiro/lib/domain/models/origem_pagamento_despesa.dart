@@ -63,6 +63,7 @@ class OrigemPagamentoDespesa extends Equatable {
   final String nome;
   final TipoOrigemPagamentoDespesa tipo;
   final int? diaVencimento;
+  final int? prazoFechamentoDias;
 
   const OrigemPagamentoDespesa({
     this.id,
@@ -70,10 +71,12 @@ class OrigemPagamentoDespesa extends Equatable {
     required this.nome,
     required this.tipo,
     this.diaVencimento,
+    this.prazoFechamentoDias,
   });
 
   @override
-  List<Object?> get props => [id, empresaId, nome, tipo, diaVencimento];
+  List<Object?> get props =>
+      [id, empresaId, nome, tipo, diaVencimento, prazoFechamentoDias];
 
   @override
   bool? get stringify => true;

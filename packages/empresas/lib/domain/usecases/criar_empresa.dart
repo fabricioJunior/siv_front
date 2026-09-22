@@ -30,6 +30,7 @@ class CriarEmpresa {
     String? cep,
     double? latitude,
     double? longitude,
+    bool exigeClienteNaVenda = false,
   }) async {
     var novaEmpresa = Empresa.create(
       cnpj: cnpj,
@@ -53,6 +54,7 @@ class CriarEmpresa {
       cep: cep,
       latitude: latitude,
       longitude: longitude,
+      exigeClienteNaVenda: exigeClienteNaVenda,
     );
     return _empresasRepository.criarNovaEmpresa(
       novaEmpresa,

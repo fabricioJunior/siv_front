@@ -6,6 +6,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:estoque/presentation.dart' show estoqueAcordeaoItens;
+import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
@@ -146,6 +147,9 @@ final _itensAdministracaoFilhos = administracaoAcordeaoItens
 final _itensRelatoriosFilhos = relatoriosAcordeaoItens
     .map(_deAcordeaoFilho)
     .toList();
+final _itensDespesasFilhos = despesasAcordeaoItens
+    .map(_deAcordeaoFilho)
+    .toList();
 
 final _itensEcommerceFilhos = <_ItemFilhoNav>[
   const _ItemFilhoNav(
@@ -232,6 +236,12 @@ final _itensGestao = <_ItemDeNavegacao>[
     icone: Icons.bar_chart_outlined,
     componentesNecessarios: _uniaoComponentes(_itensRelatoriosFilhos),
     filhos: _itensRelatoriosFilhos,
+  ),
+  _ItemDeNavegacao(
+    label: 'Despesas',
+    icone: Icons.request_quote_outlined,
+    componentesNecessarios: _uniaoComponentes(_itensDespesasFilhos),
+    filhos: _itensDespesasFilhos,
   ),
 ];
 

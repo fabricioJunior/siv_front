@@ -8,6 +8,7 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
+import 'package:empresas/domain/usecases/recuperar_empresa.dart';
 import 'package:estoque/domain/usecases/balanco_usecases.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/use_cases.dart';
@@ -28,6 +29,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   final ObterBalancoEmAndamentoUseCase _obterBalancoEmAndamento;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarClienteNaoCadastrado _recuperarClienteNaoCadastrado;
+  final RecuperarEmpresa _recuperarEmpresa;
 
   VendaBloc(
     this._salvarListaDeProdutosCompartilhada,
@@ -40,6 +42,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     this._obterBalancoEmAndamento,
     this._acessoGlobalSessao,
     this._recuperarClienteNaoCadastrado,
+    this._recuperarEmpresa,
   ) : super(const VendaState()) {
     on<VendaClienteSelecionado>(_onClienteSelecionado);
     on<VendaClienteNaoCadastradoSolicitado>(
@@ -73,11 +76,27 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   // satisfazerem _validarSelecoes() sem exigir ação extra do operador. Só
   // preenche se o operador ainda não tiver escolhido/trocado o cliente, pra
   // não sobrescrever uma seleção manual já feita nem o cliente carregado de
-  // um orçamento.
+  // um orçamento. Empresa com exigeClienteNaVenda ativo desabilita esse
+  // atalho -- o seletor fica vazio e _validarSelecoes() bloqueia finalizar
+  // até o operador escolher um cliente real.
   FutureOr<void> _onClienteNaoCadastradoSolicitado(
     VendaClienteNaoCadastradoSolicitado event,
     Emitter<VendaState> emit,
   ) async {
+    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+    var exigeClienteNaVenda = false;
+    if (empresaId != null) {
+      try {
+        final empresa = await _recuperarEmpresa.call(empresaId);
+        exigeClienteNaVenda = empresa?.exigeClienteNaVenda ?? false;
+      } catch (e, s) {
+        addError(e, s);
+      }
+    }
+
+    emit(state.copyWith(exigeClienteNaVenda: exigeClienteNaVenda));
+
+    if (exigeClienteNaVenda) return;
     if (state.clienteSelecionado != null) return;
 
     try {
@@ -534,6 +553,11 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   String? _validarSelecoes() {
     if (state.clienteSelecionado == null) {
       return 'Selecione um cliente para continuar.';
+    }
+
+    if (state.exigeClienteNaVenda &&
+        state.clienteSelecionado?.data['generica'] == true) {
+      return 'Selecione um cliente cadastrado para continuar.';
     }
 
     if (state.vendedorSelecionado == null) {

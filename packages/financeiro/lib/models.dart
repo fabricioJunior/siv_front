@@ -13,3 +13,8 @@ export 'domain/models/recibo_fechamento_caixa.dart';
 export 'domain/models/caixa_do_historico.dart';
 export 'domain/models/filtro_historico_de_caixas.dart';
 export 'domain/models/pagina_historico_de_caixas.dart';
+export 'domain/models/categoria_despesa.dart';
+export 'domain/models/origem_pagamento_despesa.dart';
+export 'domain/models/despesa.dart';
+export 'domain/models/despesa_ocorrencia_calendario.dart';
+export 'domain/models/despesa_dashboard.dart';

@@ -29,6 +29,7 @@ class VendaState extends Equatable {
   final String? orcamentoId;
   final List<ProdutoCompartilhado> orcamentoItensPreCarregados;
   final int orcamentoSalvoContador;
+  final bool exigeClienteNaVenda;
 
   const VendaState({
     this.step = VendaStep.configuracao,
@@ -55,6 +56,7 @@ class VendaState extends Equatable {
     this.orcamentoId,
     this.orcamentoItensPreCarregados = const [],
     this.orcamentoSalvoContador = 0,
+    this.exigeClienteNaVenda = false,
   });
 
   bool get leituraIniciada => step == VendaStep.leitura;
@@ -95,6 +97,7 @@ class VendaState extends Equatable {
     Object? orcamentoId = _sentinela,
     List<ProdutoCompartilhado>? orcamentoItensPreCarregados,
     int? orcamentoSalvoContador,
+    bool? exigeClienteNaVenda,
   }) {
     return VendaState(
       step: step ?? this.step,
@@ -142,6 +145,7 @@ class VendaState extends Equatable {
           orcamentoItensPreCarregados ?? this.orcamentoItensPreCarregados,
       orcamentoSalvoContador:
           orcamentoSalvoContador ?? this.orcamentoSalvoContador,
+      exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
     );
   }
 
@@ -171,6 +175,7 @@ class VendaState extends Equatable {
         orcamentoId,
         orcamentoItensPreCarregados,
         orcamentoSalvoContador,
+        exigeClienteNaVenda,
       ];
 }
 

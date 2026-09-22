@@ -28,6 +28,8 @@ abstract class FormaDePagamento implements Equatable {
   bool get inativa;
   TipoOperacaoFormaPagamento get tipoOperacao;
   String? get provider;
+  double? get custoPercentual;
+  double? get custoFixo;
 
   factory FormaDePagamento.create({
     DateTime? criadoEm,
@@ -40,6 +42,8 @@ abstract class FormaDePagamento implements Equatable {
     required bool inativa,
     TipoOperacaoFormaPagamento tipoOperacao,
     String? provider,
+    double? custoPercentual,
+    double? custoFixo,
   }) = _FormaDePagamentoImpl;
 
   @override
@@ -54,6 +58,8 @@ abstract class FormaDePagamento implements Equatable {
         inativa,
         tipoOperacao,
         provider,
+        custoPercentual,
+        custoFixo,
       ];
 
   @override
@@ -91,6 +97,12 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
   @override
   final String? provider;
 
+  @override
+  final double? custoPercentual;
+
+  @override
+  final double? custoFixo;
+
   const _FormaDePagamentoImpl({
     this.criadoEm,
     this.atualizadoEm,
@@ -102,6 +114,8 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
     this.inativa = false,
     this.tipoOperacao = TipoOperacaoFormaPagamento.manual,
     this.provider,
+    this.custoPercentual,
+    this.custoFixo,
   });
 
   @override
@@ -116,6 +130,8 @@ class _FormaDePagamentoImpl implements FormaDePagamento {
         inativa,
         tipoOperacao,
         provider,
+        custoPercentual,
+        custoFixo,
       ];
 
   @override

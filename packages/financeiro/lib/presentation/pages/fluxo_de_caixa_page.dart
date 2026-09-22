@@ -139,6 +139,15 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
     context.read<FluxoDeCaixaBloc>().add(FluxoDeCaixaIniciou(caixaId: caixaId));
   }
 
+  Future<void> _irParaLancarDespesa(BuildContext context, int caixaId) async {
+    await Navigator.of(context).pushNamed(
+      '/lancar_despesa',
+      arguments: {'caixaId': caixaId},
+    );
+    if (!context.mounted) return;
+    context.read<FluxoDeCaixaBloc>().add(FluxoDeCaixaIniciou(caixaId: caixaId));
+  }
+
   Future<void> _irParaContagem(BuildContext context, int caixaId) async {
     await Navigator.of(context).pushNamed(
       '/contagem_do_caixa',
@@ -270,6 +279,9 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
                 : () => _irParaSuprimentos(context, caixaId),
             onSangrias:
                 caixaId == null ? null : () => _irParaSangrias(context, caixaId),
+            onLancarDespesa: caixaId == null
+                ? null
+                : () => _irParaLancarDespesa(context, caixaId),
             onContagem:
                 caixaId == null ? null : () => _irParaContagem(context, caixaId),
             onFecharCaixa:
@@ -663,6 +675,7 @@ class _AcoesFluxoCaixa extends StatelessWidget {
   final bool habilitado;
   final VoidCallback? onSuprimentos;
   final VoidCallback? onSangrias;
+  final VoidCallback? onLancarDespesa;
   final VoidCallback? onContagem;
   final VoidCallback? onFecharCaixa;
 
@@ -670,6 +683,7 @@ class _AcoesFluxoCaixa extends StatelessWidget {
     required this.habilitado,
     required this.onSuprimentos,
     required this.onSangrias,
+    required this.onLancarDespesa,
     required this.onContagem,
     required this.onFecharCaixa,
   });
@@ -690,6 +704,12 @@ class _AcoesFluxoCaixa extends StatelessWidget {
         icon: Icons.money_off_csred_outlined,
         label: 'Sangrias',
         onPressed: habilitado ? onSangrias : null,
+        vertical: mobile,
+      ),
+      _BotaoAcao(
+        icon: Icons.request_quote_outlined,
+        label: 'Lançar despesa',
+        onPressed: habilitado ? onLancarDespesa : null,
         vertical: mobile,
       ),
       _BotaoAcao(

@@ -76,6 +76,10 @@ class EmpresaDto implements Empresa {
   @override
   final double? longitude;
 
+  @override
+  @JsonKey(defaultValue: false)
+  final bool exigeClienteNaVenda;
+
   EmpresaDto({
     required this.cnpj,
     required this.codigoDeAtividade,
@@ -98,6 +102,7 @@ class EmpresaDto implements Empresa {
     required this.cep,
     this.latitude,
     this.longitude,
+    this.exigeClienteNaVenda = false,
   });
 
   Map<String, dynamic> toJson() => _$EmpresaDtoToJson(this);
@@ -127,6 +132,7 @@ class EmpresaDto implements Empresa {
     String? cep,
     double? latitude,
     double? longitude,
+    bool? exigeClienteNaVenda,
   }) {
     return EmpresaDto(
       cnpj: cnpj ?? this.cnpj,
@@ -152,6 +158,7 @@ class EmpresaDto implements Empresa {
       cep: cep ?? this.cep,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
     );
   }
 
@@ -178,6 +185,7 @@ class EmpresaDto implements Empresa {
         cep,
         latitude,
         longitude,
+        exigeClienteNaVenda,
       ];
 
   @override

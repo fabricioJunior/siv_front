@@ -22,6 +22,7 @@ abstract class Empresa implements Equatable {
   String? get cep;
   double? get latitude;
   double? get longitude;
+  bool get exigeClienteNaVenda;
 
   factory Empresa.create({
     int? id,
@@ -45,6 +46,7 @@ abstract class Empresa implements Equatable {
     String? cep,
     double? latitude,
     double? longitude,
+    bool exigeClienteNaVenda,
   }) = _EmpresaImpl;
 
   @override
@@ -73,6 +75,7 @@ abstract class Empresa implements Equatable {
         cep,
         latitude,
         longitude,
+        exigeClienteNaVenda,
       ];
 }
 
@@ -119,6 +122,8 @@ class _EmpresaImpl implements Empresa {
   final double? latitude;
   @override
   final double? longitude;
+  @override
+  final bool exigeClienteNaVenda;
 
   _EmpresaImpl({
     this.id,
@@ -142,6 +147,7 @@ class _EmpresaImpl implements Empresa {
     this.cep,
     this.latitude,
     this.longitude,
+    this.exigeClienteNaVenda = false,
   });
 
   _EmpresaImpl copyWith({
@@ -166,6 +172,7 @@ class _EmpresaImpl implements Empresa {
     String? cep,
     double? latitude,
     double? longitude,
+    bool? exigeClienteNaVenda,
   }) {
     return _EmpresaImpl(
       id: id ?? this.id,
@@ -191,6 +198,7 @@ class _EmpresaImpl implements Empresa {
       cep: cep ?? this.cep,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
     );
   }
 
@@ -220,6 +228,7 @@ class _EmpresaImpl implements Empresa {
         cep,
         latitude,
         longitude,
+        exigeClienteNaVenda,
       ];
 }
 
@@ -246,6 +255,7 @@ extension EmpresaCopyWith on Empresa {
     String? cep,
     double? latitude,
     double? longitude,
+    bool? exigeClienteNaVenda,
   }) {
     if (this is _EmpresaImpl) {
       return (this as _EmpresaImpl).copyWith(
@@ -270,6 +280,7 @@ extension EmpresaCopyWith on Empresa {
         cep: cep,
         latitude: latitude,
         longitude: longitude,
+        exigeClienteNaVenda: exigeClienteNaVenda,
       );
     }
     // If it's not _EmpresaImpl, create new instance from current values
@@ -296,6 +307,7 @@ extension EmpresaCopyWith on Empresa {
       municipio: municipio ?? this.municipio,
       cep: cep ?? this.cep,
       latitude: latitude ?? this.latitude,
+      exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
       longitude: longitude ?? this.longitude,
     );
   }

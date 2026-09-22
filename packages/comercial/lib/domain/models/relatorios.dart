@@ -54,6 +54,8 @@ abstract class RelatorioVendasPorFuncionarioItem {
   int get funcionarioId;
   String get funcionarioNome;
   double get total;
+  double get valorBrutoVendas;
+  double get valorDevolucoes;
   int get quantidadeProdutosVendidos;
   int get quantidadeVendas;
   double get ticketMedio;

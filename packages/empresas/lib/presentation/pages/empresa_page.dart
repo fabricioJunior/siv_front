@@ -639,6 +639,19 @@ class _EmpresaPageState extends State<EmpresaPage> {
             onChanged: (v) =>
                 _bloc.add(EmpresaEditou(substituicaoTributaria: v)),
           ),
+          const SizedBox(height: 14),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Exigir cliente cadastrado na venda'),
+            subtitle: const Text(
+              'Quando ativo, o operador precisa selecionar um cliente real '
+              'para finalizar a venda -- o cliente genérico deixa de ser '
+              'aceito.',
+            ),
+            value: empresa?.exigeClienteNaVenda ?? false,
+            onChanged: (v) =>
+                _bloc.add(EmpresaEditou(exigeClienteNaVenda: v)),
+          ),
         ],
       ),
     );

@@ -222,6 +222,10 @@ class RelatorioVendasPorFuncionarioItemDto
   @override
   final double total;
   @override
+  final double valorBrutoVendas;
+  @override
+  final double valorDevolucoes;
+  @override
   final int quantidadeProdutosVendidos;
   @override
   final int quantidadeVendas;
@@ -232,6 +236,8 @@ class RelatorioVendasPorFuncionarioItemDto
     required this.funcionarioId,
     required this.funcionarioNome,
     required this.total,
+    required this.valorBrutoVendas,
+    required this.valorDevolucoes,
     required this.quantidadeProdutosVendidos,
     required this.quantidadeVendas,
     required this.ticketMedio,
@@ -243,6 +249,8 @@ class RelatorioVendasPorFuncionarioItemDto
         funcionarioId: (j['funcionarioId'] as num).toInt(),
         funcionarioNome: j['funcionarioNome'] as String? ?? '',
         total: (j['total'] as num).toDouble(),
+        valorBrutoVendas: (j['valorBrutoVendas'] as num?)?.toDouble() ?? 0,
+        valorDevolucoes: (j['valorDevolucoes'] as num?)?.toDouble() ?? 0,
         quantidadeProdutosVendidos:
             (j['quantidadeProdutosVendidos'] as num).toInt(),
         quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),

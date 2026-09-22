@@ -64,6 +64,36 @@ void _remoteDataSources() {
       informacoesParaRequest: sl(),
     ),
   );
+
+  sl.registerFactory<ICategoriasDespesaRemoteDataSource>(
+    () => CategoriasDespesaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IOrigensPagamentoDespesaRemoteDataSource>(
+    () => OrigensPagamentoDespesaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IDespesasRemoteDataSource>(
+    () => DespesasRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IDespesasCalendarioRemoteDataSource>(
+    () => DespesasCalendarioRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
+  sl.registerFactory<IDespesasDashboardRemoteDataSource>(
+    () => DespesasDashboardRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
 }
 
 void _repositories() {
@@ -114,6 +144,26 @@ void _repositories() {
     () => HistoricoDeCaixasRepository(
       historicoDeCaixasRemoteDataSource: sl(),
     ),
+  );
+
+  sl.registerFactory<ICategoriasDespesaRepository>(
+    () => CategoriasDespesaRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IOrigensPagamentoDespesaRepository>(
+    () => OrigensPagamentoDespesaRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IDespesasRepository>(
+    () => DespesasRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IDespesasCalendarioRepository>(
+    () => DespesasCalendarioRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IDespesasDashboardRepository>(
+    () => DespesasDashboardRepository(remoteDataSource: sl()),
   );
 }
 
@@ -217,6 +267,58 @@ void _useCases() {
   sl.registerFactory<RecuperarHistoricoDeCaixas>(
     () => RecuperarHistoricoDeCaixas(repository: sl()),
   );
+
+  sl.registerFactory<RecuperarCategoriasDespesa>(
+    () => RecuperarCategoriasDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarCategoriaDespesa>(
+    () => RecuperarCategoriaDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<CriarCategoriaDespesa>(
+    () => CriarCategoriaDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<AtualizarCategoriaDespesa>(
+    () => AtualizarCategoriaDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarOrigensPagamentoDespesa>(
+    () => RecuperarOrigensPagamentoDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarOrigemPagamentoDespesa>(
+    () => RecuperarOrigemPagamentoDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<CriarOrigemPagamentoDespesa>(
+    () => CriarOrigemPagamentoDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<AtualizarOrigemPagamentoDespesa>(
+    () => AtualizarOrigemPagamentoDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<CriarDespesa>(
+    () => CriarDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarDespesas>(
+    () => RecuperarDespesas(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarCalendarioDeDespesas>(
+    () => RecuperarCalendarioDeDespesas(repository: sl()),
+  );
+
+  sl.registerFactory<RegistrarOcorrenciaDeDespesa>(
+    () => RegistrarOcorrenciaDeDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarDashboardDeDespesas>(
+    () => RecuperarDashboardDeDespesas(repository: sl()),
+  );
 }
 
 void _presentation() {
@@ -304,5 +406,33 @@ void _presentation() {
     () => HistoricoDeCaixasBloc(
       sl(),
     ),
+  );
+
+  sl.registerFactory<CategoriasDespesaBloc>(
+    () => CategoriasDespesaBloc(sl()),
+  );
+
+  sl.registerFactory<CategoriaDespesaBloc>(
+    () => CategoriaDespesaBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<OrigensPagamentoDespesaBloc>(
+    () => OrigensPagamentoDespesaBloc(sl()),
+  );
+
+  sl.registerFactory<OrigemPagamentoDespesaBloc>(
+    () => OrigemPagamentoDespesaBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<LancarDespesaBloc>(
+    () => LancarDespesaBloc(sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<CalendarioDeDespesasBloc>(
+    () => CalendarioDeDespesasBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<DashboardDeDespesasBloc>(
+    () => DashboardDeDespesasBloc(sl()),
   );
 }

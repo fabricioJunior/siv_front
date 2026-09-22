@@ -30,6 +30,7 @@ class EmpresaEditou extends EmpresaEvent {
   final String? cep;
   final double? latitude;
   final double? longitude;
+  final bool? exigeClienteNaVenda;
 
   EmpresaEditou({
     this.id,
@@ -53,6 +54,7 @@ class EmpresaEditou extends EmpresaEvent {
     this.cep,
     this.latitude,
     this.longitude,
+    this.exigeClienteNaVenda,
   });
 }
 

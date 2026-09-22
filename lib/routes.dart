@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
@@ -253,6 +254,43 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: ReciboFechamentoCaixaPage(caixaId: caixaId),
     );
   },
+  ///DESPESAS:
+  '/categorias_despesa': (context) {
+    return _rotaProtegida(
+      route: '/categorias_despesa',
+      child: CategoriasDespesaPage(),
+    );
+  },
+  '/categoria_despesa': (context) {
+    return CategoriaDespesaPage(id: args(context)['id']);
+  },
+  '/origens_pagamento_despesa': (context) {
+    return _rotaProtegida(
+      route: '/origens_pagamento_despesa',
+      child: OrigensPagamentoDespesaPage(),
+    );
+  },
+  '/origem_pagamento_despesa': (context) {
+    return OrigemPagamentoDespesaPage(id: args(context)['id']);
+  },
+  '/lancar_despesa': (context) {
+    return _rotaProtegida(
+      route: '/lancar_despesa',
+      child: LancarDespesaPage(caixaId: args(context)['caixaId']),
+    );
+  },
+  '/calendario_despesas': (context) {
+    return _rotaProtegida(
+      route: '/calendario_despesas',
+      child: const CalendarioDeDespesasPage(),
+    );
+  },
+  '/dashboard_despesas': (context) {
+    return _rotaProtegida(
+      route: '/dashboard_despesas',
+      child: const DashboardDeDespesasPage(),
+    );
+  },
   '/historico_de_caixas': (context) {
     return _rotaProtegida(
       route: '/historico_de_caixas',
@@ -315,6 +353,8 @@ Map<String, Widget Function(BuildContext)> routes = {
                 onlyView: data.onlyView,
                 clienteOuFuncionario: true,
                 compacto: data.compacto,
+                construirInfoExtra: (pessoa) =>
+                    UltimaCompraClienteInfo(pessoa: pessoa),
               ),
           vendedoresSeletor:
               (data) =>
@@ -1396,6 +1436,11 @@ const Map<String, List<String>> _componentesDaRota = {
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
   '/formas_de_pagamento': ['GERFM001'],
+  '/categorias_despesa': ['DESFM001'],
+  '/origens_pagamento_despesa': ['DESFM002'],
+  '/lancar_despesa': ['DESFM003'],
+  '/calendario_despesas': ['DESFM003'],
+  '/dashboard_despesas': ['DESFM003'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],

@@ -9,6 +9,8 @@ class FormaDePagamentoState extends Equatable {
   final bool? inativa;
   final TipoOperacaoFormaPagamento tipoOperacao;
   final String? provider;
+  final double? custoPercentual;
+  final double? custoFixo;
   final FormaDePagamento? formaDePagamento;
   final String? erro;
   final FormaDePagamentoStep step;
@@ -22,6 +24,8 @@ class FormaDePagamentoState extends Equatable {
     this.inativa,
     this.tipoOperacao = TipoOperacaoFormaPagamento.manual,
     this.provider,
+    this.custoPercentual,
+    this.custoFixo,
     this.formaDePagamento,
     this.erro,
     required this.step,
@@ -38,6 +42,8 @@ class FormaDePagamentoState extends Equatable {
         inativa = forma.inativa,
         tipoOperacao = forma.tipoOperacao,
         provider = forma.provider,
+        custoPercentual = forma.custoPercentual,
+        custoFixo = forma.custoFixo,
         formaDePagamento = forma,
         erro = null,
         step = step ?? FormaDePagamentoStep.editando;
@@ -52,6 +58,8 @@ class FormaDePagamentoState extends Equatable {
     TipoOperacaoFormaPagamento? tipoOperacao,
     String? provider,
     bool limparProvider = false,
+    double? custoPercentual,
+    double? custoFixo,
     FormaDePagamento? formaDePagamento,
     String? erro,
     FormaDePagamentoStep? step,
@@ -65,6 +73,8 @@ class FormaDePagamentoState extends Equatable {
       inativa: inativa ?? this.inativa,
       tipoOperacao: tipoOperacao ?? this.tipoOperacao,
       provider: limparProvider ? null : (provider ?? this.provider),
+      custoPercentual: custoPercentual ?? this.custoPercentual,
+      custoFixo: custoFixo ?? this.custoFixo,
       formaDePagamento: formaDePagamento ?? this.formaDePagamento,
       erro: erro,
       step: step ?? this.step,
@@ -81,6 +91,8 @@ class FormaDePagamentoState extends Equatable {
         inativa,
         tipoOperacao,
         provider,
+        custoPercentual,
+        custoFixo,
         formaDePagamento,
         erro,
         step,

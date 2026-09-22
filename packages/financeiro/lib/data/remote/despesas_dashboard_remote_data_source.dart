@@ -7,7 +7,7 @@ class DespesasDashboardRemoteDataSource extends RemoteDataSourceBase
   DespesasDashboardRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/despesas/dashboard';
+  String get path => '/v1/despesas/dashboard';
 
   @override
   Future<DespesaDashboard> recuperarDashboard({

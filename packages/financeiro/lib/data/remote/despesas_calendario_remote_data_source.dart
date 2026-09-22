@@ -11,7 +11,7 @@ class DespesasCalendarioRemoteDataSource extends RemoteDataSourceBase
   DespesasCalendarioRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/despesas/calendario';
+  String get path => '/v1/despesas/calendario';
 
   @override
   Future<List<DespesaOcorrenciaCalendario>> recuperarCalendario({

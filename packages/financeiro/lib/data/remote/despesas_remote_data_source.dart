@@ -8,7 +8,7 @@ class DespesasRemoteDataSource extends RemoteDataSourceBase
   DespesasRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/despesas';
+  String get path => '/v1/despesas';
 
   @override
   Future<Despesa> criarDespesa(Despesa despesa) async {

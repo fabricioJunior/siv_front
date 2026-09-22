@@ -8,7 +8,7 @@ class OrigensPagamentoDespesaRemoteDataSource extends RemoteDataSourceBase
   OrigensPagamentoDespesaRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/despesas/origens-pagamento/{id}';
+  String get path => '/v1/despesas/origens-pagamento/{id}';
 
   @override
   Future<List<OrigemPagamentoDespesa>> recuperarOrigens({

@@ -8,7 +8,7 @@ class CategoriasDespesaRemoteDataSource extends RemoteDataSourceBase
   CategoriasDespesaRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/despesas/categorias/{id}';
+  String get path => '/v1/despesas/categorias/{id}';
 
   @override
   Future<List<CategoriaDespesa>> recuperarCategorias({

@@ -317,7 +317,7 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
   }
 }
 
-class _SelecaoItensView extends StatelessWidget {
+class _SelecaoItensView extends StatefulWidget {
   final List<ConsignacaoItem> itens;
   final List<bool> marcados;
   final List<double> quantidades;
@@ -332,87 +332,160 @@ class _SelecaoItensView extends StatelessWidget {
     required this.onContinuar,
   });
 
+  @override
+  State<_SelecaoItensView> createState() => _SelecaoItensViewState();
+}
+
+class _SelecaoItensViewState extends State<_SelecaoItensView> {
+  final _buscaController = TextEditingController();
+  String _busca = '';
+
+  @override
+  void dispose() {
+    _buscaController.dispose();
+    super.dispose();
+  }
+
+  String _nomeItem(ConsignacaoItem item) => [
+        item.referenciaNome ?? 'Produto',
+        item.corNome,
+        item.tamanhoNome,
+      ].where((s) => s != null && s.isNotEmpty).join(' - ');
+
   String _formatarMoeda(double valor) => 'R\$ ${valor.toStringAsFixed(2)}';
 
   @override
   Widget build(BuildContext context) {
+    final buscaNormalizada = _busca.trim().toLowerCase();
+    final indicesVisiveis = [
+      for (var i = 0; i < widget.itens.length; i++)
+        if (buscaNormalizada.isEmpty ||
+            _nomeItem(widget.itens[i]).toLowerCase().contains(buscaNormalizada))
+          i,
+    ];
+
     return Scaffold(
       appBar: AppBar(title: const Text('Selecionar itens para acerto')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: TextField(
+              controller: _buscaController,
+              decoration: const InputDecoration(
+                hintText: 'Buscar por produto, cor ou tamanho',
+                prefixIcon: Icon(Icons.search),
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _busca = value),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                TextButton(
+                  onPressed: indicesVisiveis.isEmpty
+                      ? null
+                      : () {
+                          for (final i in indicesVisiveis) {
+                            widget.marcados[i] = true;
+                          }
+                          widget.onAlterado();
+                        },
+                  child: const Text('Marcar todos'),
+                ),
+                TextButton(
+                  onPressed: indicesVisiveis.isEmpty
+                      ? null
+                      : () {
+                          for (final i in indicesVisiveis) {
+                            widget.marcados[i] = false;
+                          }
+                          widget.onAlterado();
+                        },
+                  child: const Text('Desmarcar todos'),
+                ),
+              ],
+            ),
+          ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: itens.length,
-              itemBuilder: (context, i) {
-                final item = itens[i];
-                final pendente = item.pendente ?? 0;
-                final valorPendente = item.valorPendente ?? 0;
-                final nome = [
-                  item.referenciaNome ?? 'Produto',
-                  item.corNome,
-                  item.tamanhoNome,
-                ].where((s) => s != null && s.isNotEmpty).join(' - ');
+            child: indicesVisiveis.isEmpty
+                ? const Center(child: Text('Nenhum item encontrado.'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: indicesVisiveis.length,
+                    itemBuilder: (context, posicao) {
+                      final i = indicesVisiveis[posicao];
+                      final item = widget.itens[i];
+                      final pendente = item.pendente ?? 0;
+                      final valorPendente = item.valorPendente ?? 0;
 
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: marcados[i],
-                          onChanged: (v) {
-                            marcados[i] = v ?? false;
-                            onAlterado();
-                          },
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Row(
                             children: [
-                              Text(nome),
-                              Text(
-                                'Pendente: ${pendente.toStringAsFixed(2)} • '
-                                '${_formatarMoeda(valorPendente)}',
-                                style: Theme.of(context).textTheme.bodySmall,
+                              Checkbox(
+                                value: widget.marcados[i],
+                                onChanged: (v) {
+                                  widget.marcados[i] = v ?? false;
+                                  widget.onAlterado();
+                                },
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_nomeItem(item)),
+                                    Text(
+                                      'Pendente: ${pendente.toStringAsFixed(2)} • '
+                                      '${_formatarMoeda(valorPendente)}',
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                width: 90,
+                                child: TextFormField(
+                                  enabled: widget.marcados[i],
+                                  initialValue:
+                                      widget.quantidades[i].toStringAsFixed(2),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Qtd',
+                                    isDense: true,
+                                  ),
+                                  onChanged: (value) {
+                                    final parsed = double.tryParse(
+                                      value.replaceAll(',', '.'),
+                                    );
+                                    if (parsed == null) return;
+                                    widget.quantidades[i] =
+                                        parsed.clamp(0, pendente);
+                                  },
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(
-                          width: 90,
-                          child: TextFormField(
-                            enabled: marcados[i],
-                            initialValue: quantidades[i].toStringAsFixed(2),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              labelText: 'Qtd',
-                              isDense: true,
-                            ),
-                            onChanged: (value) {
-                              final parsed =
-                                  double.tryParse(value.replaceAll(',', '.'));
-                              if (parsed == null) return;
-                              quantidades[i] = parsed.clamp(0, pendente);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: FilledButton(
-              onPressed: onContinuar,
+              onPressed: widget.onContinuar,
               child: const Text('Continuar'),
             ),
           ),

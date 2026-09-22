@@ -632,7 +632,7 @@ void _presentation() {
   );
 
   sl.registerFactory<ConsignacaoDetalheBloc>(
-    () => ConsignacaoDetalheBloc(sl(), sl(), sl(), sl()),
+    () => ConsignacaoDetalheBloc(sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommercesBloc>(

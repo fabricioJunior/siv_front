@@ -10,11 +10,13 @@ class AtualizarConsignacao {
     required int id,
     int? funcionarioId,
     String? observacao,
+    double? valorAdiantado,
   }) {
     return repository.atualizar(
       id: id,
       funcionarioId: funcionarioId,
       observacao: observacao,
+      valorAdiantado: valorAdiantado,
     );
   }
 }

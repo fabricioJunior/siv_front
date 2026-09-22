@@ -28,11 +28,13 @@ class ConsignacoesRepository implements IConsignacoesRepository {
     required int id,
     int? funcionarioId,
     String? observacao,
+    double? valorAdiantado,
   }) {
     return remoteDataSource.atualizar(
       id: id,
       funcionarioId: funcionarioId,
       observacao: observacao,
+      valorAdiantado: valorAdiantado,
     );
   }
 

@@ -30,3 +30,15 @@ class ConsignacaoDetalheCancelarSolicitado extends ConsignacaoDetalheEvent {
   @override
   List<Object?> get props => [motivoCancelamento];
 }
+
+class ConsignacaoDetalheValorAdiantadoSolicitado
+    extends ConsignacaoDetalheEvent {
+  final double valorAdiantado;
+
+  const ConsignacaoDetalheValorAdiantadoSolicitado({
+    required this.valorAdiantado,
+  });
+
+  @override
+  List<Object?> get props => [valorAdiantado];
+}

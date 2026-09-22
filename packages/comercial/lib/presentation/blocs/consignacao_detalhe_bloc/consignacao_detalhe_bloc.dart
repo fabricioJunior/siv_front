@@ -15,6 +15,7 @@ class ConsignacaoDetalheBloc
   final RecalcularConsignacao _recalcularConsignacao;
   final FecharConsignacao _fecharConsignacao;
   final CancelarConsignacao _cancelarConsignacao;
+  final AtualizarConsignacao _atualizarConsignacao;
 
   int? _idAtual;
 
@@ -23,10 +24,14 @@ class ConsignacaoDetalheBloc
     this._recalcularConsignacao,
     this._fecharConsignacao,
     this._cancelarConsignacao,
+    this._atualizarConsignacao,
   ) : super(const ConsignacaoDetalheState()) {
     on<ConsignacaoDetalheCarregarSolicitado>(_onCarregarSolicitado);
     on<ConsignacaoDetalheFecharSolicitado>(_onFecharSolicitado);
     on<ConsignacaoDetalheCancelarSolicitado>(_onCancelarSolicitado);
+    on<ConsignacaoDetalheValorAdiantadoSolicitado>(
+      _onValorAdiantadoSolicitado,
+    );
   }
 
   FutureOr<void> _onCarregarSolicitado(
@@ -117,6 +122,40 @@ class ConsignacaoDetalheBloc
         state.copyWith(
           processando: false,
           erro: mensagemDeErroApi(e, 'Falha ao cancelar a consignação.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onValorAdiantadoSolicitado(
+    ConsignacaoDetalheValorAdiantadoSolicitado event,
+    Emitter<ConsignacaoDetalheState> emit,
+  ) async {
+    final id = _idAtual;
+    if (id == null) return;
+
+    emit(state.copyWith(processando: true, erro: null));
+
+    try {
+      await _atualizarConsignacao.call(
+        id: id,
+        valorAdiantado: event.valorAdiantado,
+      );
+      final consignacao =
+          await _recuperarConsignacao.call(id, incluirItens: true);
+      emit(
+        state.copyWith(
+          processando: false,
+          consignacao: consignacao,
+          erro: null,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          processando: false,
+          erro: mensagemDeErroApi(e, 'Falha ao registrar valor adiantado.'),
         ),
       );
       addError(e, s);

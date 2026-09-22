@@ -50,6 +50,9 @@ abstract class Consignacao implements Equatable {
   double? get valorAcertado;
   double? get pendente;
   double? get valorPendente;
+  double? get valorAdiantado;
+  double? get valorAdiantadoUtilizado;
+  double? get valorAdiantadoDisponivel;
   int? get operadorId;
   List<ConsignacaoItem> get itens;
 
@@ -77,6 +80,9 @@ abstract class Consignacao implements Equatable {
     double? valorAcertado,
     double? pendente,
     double? valorPendente,
+    double? valorAdiantado,
+    double? valorAdiantadoUtilizado,
+    double? valorAdiantadoDisponivel,
     int? operadorId,
     List<ConsignacaoItem>? itens,
   }) = _ConsignacaoImpl;
@@ -106,6 +112,9 @@ abstract class Consignacao implements Equatable {
         valorAcertado,
         pendente,
         valorPendente,
+        valorAdiantado,
+        valorAdiantadoUtilizado,
+        valorAdiantadoDisponivel,
         operadorId,
         itens,
       ];
@@ -162,6 +171,12 @@ class _ConsignacaoImpl implements Consignacao {
   @override
   final double? valorPendente;
   @override
+  final double? valorAdiantado;
+  @override
+  final double? valorAdiantadoUtilizado;
+  @override
+  final double? valorAdiantadoDisponivel;
+  @override
   final int? operadorId;
   @override
   final List<ConsignacaoItem> itens;
@@ -190,6 +205,9 @@ class _ConsignacaoImpl implements Consignacao {
     this.valorAcertado,
     this.pendente,
     this.valorPendente,
+    this.valorAdiantado,
+    this.valorAdiantadoUtilizado,
+    this.valorAdiantadoDisponivel,
     this.operadorId,
     List<ConsignacaoItem>? itens,
   }) : itens = itens ?? const [];
@@ -219,6 +237,9 @@ class _ConsignacaoImpl implements Consignacao {
         valorAcertado,
         pendente,
         valorPendente,
+        valorAdiantado,
+        valorAdiantadoUtilizado,
+        valorAdiantadoDisponivel,
         operadorId,
         itens,
       ];

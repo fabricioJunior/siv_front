@@ -4,6 +4,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ConsignacaoDetalhePage extends StatelessWidget {
   final int id;
@@ -46,6 +47,11 @@ class ConsignacaoDetalhePage extends StatelessWidget {
                             _CabecalhoCard(consignacao: consignacao),
                             const SizedBox(height: 12),
                             _ResumoCard(consignacao: consignacao),
+                            if (consignacao.situacao ==
+                                SituacaoConsignacao.em_andamento) ...[
+                              const SizedBox(height: 12),
+                              _ValorAdiantadoCard(consignacao: consignacao),
+                            ],
                             const SizedBox(height: 12),
                             _AcoesCard(
                               consignacao: consignacao,
@@ -96,6 +102,18 @@ class _CabecalhoCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text('Observação: ${consignacao.observacao}'),
               ),
+            if ((consignacao.valorAdiantado ?? 0) > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Adiantado: ${_formatarMoeda(consignacao.valorAdiantado!)} '
+                  '— já abatido: ${_formatarMoeda(consignacao.valorAdiantadoUtilizado ?? 0)} '
+                  '— disponível: ${_formatarMoeda(consignacao.valorAdiantadoDisponivel ?? consignacao.valorAdiantado!)}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
             if (consignacao.motivoCancelamento != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -129,6 +147,10 @@ class _CabecalhoCard extends StatelessWidget {
     if (data == null) return '-';
     return '${data.day.toString().padLeft(2, '0')}/'
         '${data.month.toString().padLeft(2, '0')}/${data.year}';
+  }
+
+  String _formatarMoeda(double valor) {
+    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }
 
@@ -228,6 +250,106 @@ class _ResumoItem extends StatelessWidget {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }
+
+class _ValorAdiantadoCard extends StatefulWidget {
+  final Consignacao consignacao;
+
+  const _ValorAdiantadoCard({required this.consignacao});
+
+  @override
+  State<_ValorAdiantadoCard> createState() => _ValorAdiantadoCardState();
+}
+
+class _ValorAdiantadoCardState extends State<_ValorAdiantadoCard> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final valorAtual = widget.consignacao.valorAdiantado;
+    _controller = TextEditingController(
+      text: valorAtual == null || valorAtual == 0
+          ? ''
+          : valorAtual.toStringAsFixed(2).replaceAll('.', ','),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cobrança antecipada',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Valor já cobrado do cliente no ato, abatido automaticamente '
+              'do próximo acerto.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [_decimalInputFormatter],
+                    decoration: const InputDecoration(
+                      labelText: 'Valor adiantado (R\$)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: () {
+                    final normalizado = _controller.text.replaceAll(',', '.');
+                    final valor = double.tryParse(normalizado) ?? 0;
+                    context.read<ConsignacaoDetalheBloc>().add(
+                          ConsignacaoDetalheValorAdiantadoSolicitado(
+                            valorAdiantado: valor,
+                          ),
+                        );
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final _decimalInputFormatter = TextInputFormatter.withFunction(
+  (oldValue, newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final normalizado = newValue.text.replaceAll('.', ',');
+    final regex = RegExp(r'^\d+(,\d{0,2})?$');
+    if (!regex.hasMatch(normalizado)) {
+      return oldValue;
+    }
+
+    return newValue.copyWith(text: normalizado);
+  },
+);
 
 class _AcoesCard extends StatelessWidget {
   final Consignacao consignacao;

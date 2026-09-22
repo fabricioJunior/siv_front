@@ -2,6 +2,8 @@ abstract class RelatorioFaturamentoVendedor {
   int get funcionarioId;
   String get funcionarioNome;
   double get total;
+  double get valorBrutoVendas;
+  double get valorDevolucoes;
   int get quantidadeProdutosVendidos;
   int get quantidadeVendas;
   double get ticketMedio;
@@ -25,6 +27,8 @@ abstract class RelatorioFaturamentoEmpresa {
   int get empresaId;
   String get empresaNome;
   double get total;
+  double get valorBrutoVendas;
+  double get valorDevolucoes;
   int get quantidadeProdutosVendidos;
   int get quantidadeVendas;
   double get ticketMedio;
@@ -34,6 +38,8 @@ abstract class RelatorioFaturamentoEmpresa {
 
 abstract class RelatorioFaturamento {
   double get total;
+  double get valorBrutoVendas;
+  double get valorDevolucoes;
   int get quantidadeProdutosVendidos;
   int get quantidadeVendas;
   double get ticketMedio;

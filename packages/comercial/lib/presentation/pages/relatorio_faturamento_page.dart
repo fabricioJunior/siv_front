@@ -334,6 +334,17 @@ class _HeaderKpi extends StatelessWidget {
           Row(
             children: [
               _Kpi(
+                  label: 'Valor bruto de vendas',
+                  valor: _fmtMoeda(relatorio.valorBrutoVendas as double)),
+              _Kpi(
+                  label: 'Valor das devoluções',
+                  valor: _fmtMoeda(relatorio.valorDevolucoes as double)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _Kpi(
                   label: 'Vendas',
                   valor: '${relatorio.quantidadeVendas}'),
               _Kpi(

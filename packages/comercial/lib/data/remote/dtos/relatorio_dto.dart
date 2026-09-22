@@ -8,6 +8,10 @@ class RelatorioFaturamentoVendedorDto implements RelatorioFaturamentoVendedor {
   @override
   final double total;
   @override
+  final double valorBrutoVendas;
+  @override
+  final double valorDevolucoes;
+  @override
   final int quantidadeProdutosVendidos;
   @override
   final int quantidadeVendas;
@@ -18,6 +22,8 @@ class RelatorioFaturamentoVendedorDto implements RelatorioFaturamentoVendedor {
     required this.funcionarioId,
     required this.funcionarioNome,
     required this.total,
+    required this.valorBrutoVendas,
+    required this.valorDevolucoes,
     required this.quantidadeProdutosVendidos,
     required this.quantidadeVendas,
     required this.ticketMedio,
@@ -28,6 +34,8 @@ class RelatorioFaturamentoVendedorDto implements RelatorioFaturamentoVendedor {
         funcionarioId: (j['funcionarioId'] as num).toInt(),
         funcionarioNome: j['funcionarioNome'] as String? ?? '',
         total: (j['total'] as num).toDouble(),
+        valorBrutoVendas: (j['valorBrutoVendas'] as num?)?.toDouble() ?? 0,
+        valorDevolucoes: (j['valorDevolucoes'] as num?)?.toDouble() ?? 0,
         quantidadeProdutosVendidos:
             (j['quantidadeProdutosVendidos'] as num).toInt(),
         quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),
@@ -98,6 +106,10 @@ class RelatorioFaturamentoEmpresaDto implements RelatorioFaturamentoEmpresa {
   @override
   final double total;
   @override
+  final double valorBrutoVendas;
+  @override
+  final double valorDevolucoes;
+  @override
   final int quantidadeProdutosVendidos;
   @override
   final int quantidadeVendas;
@@ -112,6 +124,8 @@ class RelatorioFaturamentoEmpresaDto implements RelatorioFaturamentoEmpresa {
     required this.empresaId,
     required this.empresaNome,
     required this.total,
+    required this.valorBrutoVendas,
+    required this.valorDevolucoes,
     required this.quantidadeProdutosVendidos,
     required this.quantidadeVendas,
     required this.ticketMedio,
@@ -124,6 +138,8 @@ class RelatorioFaturamentoEmpresaDto implements RelatorioFaturamentoEmpresa {
         empresaId: (j['empresaId'] as num).toInt(),
         empresaNome: j['empresaNome'] as String? ?? '',
         total: (j['total'] as num).toDouble(),
+        valorBrutoVendas: (j['valorBrutoVendas'] as num?)?.toDouble() ?? 0,
+        valorDevolucoes: (j['valorDevolucoes'] as num?)?.toDouble() ?? 0,
         quantidadeProdutosVendidos:
             (j['quantidadeProdutosVendidos'] as num).toInt(),
         quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),
@@ -143,6 +159,10 @@ class RelatorioFaturamentoDto implements RelatorioFaturamento {
   @override
   final double total;
   @override
+  final double valorBrutoVendas;
+  @override
+  final double valorDevolucoes;
+  @override
   final int quantidadeProdutosVendidos;
   @override
   final int quantidadeVendas;
@@ -153,6 +173,8 @@ class RelatorioFaturamentoDto implements RelatorioFaturamento {
 
   const RelatorioFaturamentoDto({
     required this.total,
+    required this.valorBrutoVendas,
+    required this.valorDevolucoes,
     required this.quantidadeProdutosVendidos,
     required this.quantidadeVendas,
     required this.ticketMedio,
@@ -162,6 +184,8 @@ class RelatorioFaturamentoDto implements RelatorioFaturamento {
   factory RelatorioFaturamentoDto.fromJson(Map<String, dynamic> j) =>
       RelatorioFaturamentoDto(
         total: (j['total'] as num).toDouble(),
+        valorBrutoVendas: (j['valorBrutoVendas'] as num?)?.toDouble() ?? 0,
+        valorDevolucoes: (j['valorDevolucoes'] as num?)?.toDouble() ?? 0,
         quantidadeProdutosVendidos:
             (j['quantidadeProdutosVendidos'] as num).toInt(),
         quantidadeVendas: (j['quantidadeVendas'] as num).toInt(),

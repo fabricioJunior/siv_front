@@ -206,7 +206,7 @@ class _EstoqueSaldoPageState extends State<EstoqueSaldoPage> {
   Widget build(BuildContext context) {
     var commonData = sl<IAcessoGlobalSessao>();
     return StreamBuilder<bool>(
-      initialData: commonData.dadosSincronizados,
+      initialData: !commonData.dadosSincronizados,
       stream: commonData.sincronizandoDados,
       builder: (context, asyncSnapshot) {
         if (asyncSnapshot.data == true) {

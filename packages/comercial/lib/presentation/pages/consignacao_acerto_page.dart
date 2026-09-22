@@ -129,6 +129,33 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
               );
             }
 
+            // Valor adiantado (pago no ato da consignação) abate automaticamente
+            // no backend (ReceberService) do total exigido nesse acerto, sem
+            // gerar lançamento próprio. O front precisa pedir só a diferença
+            // aqui -- senão o operador cobra o valor cheio, o backend calcula
+            // "sobra" igual ao adiantado e tenta devolver como troco, quebrando
+            // quando não há dinheiro suficiente pago pra cobrir o troco.
+            final valorTotalProdutosCheio = state.itens.fold<double>(
+              0,
+              (a, i) => a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
+            );
+            final valorAdiantadoAbatido =
+                (widget.consignacao.valorAdiantadoDisponivel ?? 0)
+                    .clamp(0, valorTotalProdutosCheio);
+            final valorTotalProdutosCobranca =
+                valorTotalProdutosCheio - valorAdiantadoAbatido;
+
+            if (valorAdiantadoAbatido > 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'R\$ ${valorAdiantadoAbatido.toStringAsFixed(2)} do valor '
+                    'adiantado abatidos automaticamente deste acerto.',
+                  ),
+                ),
+              );
+            }
+
             _dialogoAberto = true;
             final resultado = await showDialog<Map<String, dynamic>>(
               context: context,
@@ -153,11 +180,7 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
                     quantidadeTotalProdutos: state.itens
                         .fold<double>(0, (a, i) => a + (i.quantidade ?? 0))
                         .toInt(),
-                    valorTotalProdutos: state.itens.fold<double>(
-                      0,
-                      (a, i) =>
-                          a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
-                    ),
+                    valorTotalProdutos: valorTotalProdutosCobranca,
                   ),
                   pessoaId: widget.consignacao.pessoaId,
                   formasDePagamentoSeletor: widget.formasDePagamentoSeletor,

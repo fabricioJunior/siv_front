@@ -1,13 +1,16 @@
+import 'package:comercial/models.dart';
+import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes/injecoes.dart';
-import 'package:core/presentation.dart';
 import 'package:flutter/material.dart';
-import 'package:pessoas/models.dart';
-import 'package:pessoas/uses_cases.dart';
 
+/// Lista as movimentações (romaneios) desta consignação -- entradas
+/// (consignacao_saida), devoluções e acertos -- uma por romaneio distinto
+/// entre os itens já carregados. Toque no card abre o romaneio (tela já
+/// existente, só leitura) com os produtos daquela movimentação.
 class ConsignacaoExtratoPage extends StatefulWidget {
-  final int pessoaId;
+  final Consignacao consignacao;
 
-  const ConsignacaoExtratoPage({super.key, required this.pessoaId});
+  const ConsignacaoExtratoPage({super.key, required this.consignacao});
 
   @override
   State<ConsignacaoExtratoPage> createState() =>
@@ -17,8 +20,7 @@ class ConsignacaoExtratoPage extends StatefulWidget {
 class _ConsignacaoExtratoPageState extends State<ConsignacaoExtratoPage> {
   bool _carregando = true;
   String? _erro;
-  List<PessoaExtratoMovimentacao> _movimentacoes = const [];
-  double _saldo = 0;
+  List<Romaneio> _movimentacoes = const [];
 
   @override
   void initState() {
@@ -33,43 +35,52 @@ class _ConsignacaoExtratoPageState extends State<ConsignacaoExtratoPage> {
     });
 
     try {
-      final buscarExtrato = sl<BuscarPessoaExtrato>();
-      final movimentacoes = await buscarExtrato.call(pessoaId: widget.pessoaId);
+      final romaneioIds = widget.consignacao.itens
+          .map((item) => item.romaneioId)
+          .whereType<int>()
+          .toSet();
 
-      movimentacoes.sort((a, b) => b.data.compareTo(a.data));
-
-      final saldo = movimentacoes.fold<double>(
-        0,
-        (acumulado, item) => acumulado + item.valorAssinado,
+      final recuperarRomaneio = sl<RecuperarRomaneio>();
+      final movimentacoes = await Future.wait(
+        romaneioIds.map((id) => recuperarRomaneio.call(id)),
       );
+      movimentacoes.sort((a, b) {
+        final dataA = a.criadoEm ?? a.data;
+        final dataB = b.criadoEm ?? b.data;
+        if (dataA == null || dataB == null) return 0;
+        return dataB.compareTo(dataA);
+      });
 
       if (!mounted) return;
-
       setState(() {
         _movimentacoes = movimentacoes;
-        _saldo = double.parse(saldo.toStringAsFixed(2));
         _carregando = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _erro = 'Falha ao carregar o extrato do cliente.';
+        _erro = 'Falha ao carregar as movimentações da consignação.';
         _carregando = false;
       });
     }
   }
 
+  void _abrirRomaneio(int id) {
+    Navigator.of(context).pushNamed(
+      '/romaneio',
+      arguments: {'idRomaneio': id, 'permitirEdicao': false},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Extrato do cliente')),
+      appBar: AppBar(title: const Text('Movimentações da consignação')),
       body: RefreshIndicator(
         onRefresh: _carregar,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildResumo(context),
-            const SizedBox(height: 12),
             if (_carregando)
               const Card(
                 child: Padding(
@@ -108,45 +119,18 @@ class _ConsignacaoExtratoPageState extends State<ConsignacaoExtratoPage> {
                 child: Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
-                    'Nenhuma movimentação encontrada para este cliente.',
+                    'Nenhuma movimentação encontrada para esta consignação.',
                     textAlign: TextAlign.center,
                   ),
                 ),
               )
             else
-              ..._movimentacoes.map((item) => _MovimentacaoTile(item: item)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResumo(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Pessoa #${widget.pessoaId}',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _ResumoChip(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Saldo: ${_formatarMoeda(_saldo)}',
+              ..._movimentacoes.map(
+                (romaneio) => _MovimentacaoTile(
+                  romaneio: romaneio,
+                  onTap: () => _abrirRomaneio(romaneio.id!),
                 ),
-                _ResumoChip(
-                  icon: Icons.list_alt_outlined,
-                  label: '${_movimentacoes.length} movimentação(ões)',
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -155,62 +139,56 @@ class _ConsignacaoExtratoPageState extends State<ConsignacaoExtratoPage> {
 }
 
 class _MovimentacaoTile extends StatelessWidget {
-  final PessoaExtratoMovimentacao item;
+  final Romaneio romaneio;
+  final VoidCallback onTap;
 
-  const _MovimentacaoTile({required this.item});
+  const _MovimentacaoTile({required this.romaneio, required this.onTap});
+
+  String get _rotuloOperacao {
+    switch (romaneio.operacao) {
+      case TipoOperacao.consignacao_saida:
+        return 'Saída de produtos';
+      case TipoOperacao.consignacao_devolucao:
+        return 'Devolução';
+      case TipoOperacao.consignacao_acerto:
+        return 'Acerto';
+      default:
+        return romaneio.operacao?.descricao ?? 'Movimentação';
+    }
+  }
+
+  IconData get _icone {
+    switch (romaneio.operacao) {
+      case TipoOperacao.consignacao_devolucao:
+        return Icons.assignment_return_outlined;
+      case TipoOperacao.consignacao_acerto:
+        return Icons.point_of_sale_outlined;
+      default:
+        return Icons.north_east;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final entrada = item.valorAssinado >= 0;
+    final data = romaneio.criadoEm ?? romaneio.data;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: entrada
-              ? Colors.green.withValues(alpha: 0.12)
-              : Colors.red.withValues(alpha: 0.12),
-          child: Icon(
-            entrada ? Icons.south_west : Icons.north_east,
-            color: entrada ? Colors.green : Colors.red,
-          ),
-        ),
-        title: Text('${item.tipoDocumento} • ${item.tipoMovimento}'),
-        subtitle: Text(
-          '${_formatarData(item.data)}\nRomaneio: ${item.romaneioId ?? '-'} • Fatura: ${item.faturaId ?? '-'}',
-        ),
-        isThreeLine: true,
-        trailing: Text(
-          _formatarMoeda(item.valorAssinado),
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: entrada ? Colors.green : Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-        ),
+        onTap: onTap,
+        leading: CircleAvatar(child: Icon(_icone)),
+        title: Text('ID ${romaneio.id} • $_rotuloOperacao'),
+        subtitle: Text(data != null ? _formatarData(data) : '-'),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
 }
 
-class _ResumoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _ResumoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-}
-
-String _formatarData(DateTime data) => formatarDataHora(data);
-
-String _formatarMoeda(double valor) {
-  return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+String _formatarData(DateTime data) {
+  final local = data.toLocal();
+  final dia = local.day.toString().padLeft(2, '0');
+  final mes = local.month.toString().padLeft(2, '0');
+  final ano = local.year.toString();
+  return '$dia/$mes/$ano';
 }

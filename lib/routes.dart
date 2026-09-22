@@ -879,14 +879,11 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   '/consignacao_extrato': (context) {
     final argumentos = args(context);
-    final pessoaIdArg = argumentos['pessoaId'];
-    final pessoaId = pessoaIdArg is int
-        ? pessoaIdArg
-        : int.tryParse(pessoaIdArg?.toString() ?? '') ?? 0;
+    final consignacao = argumentos['consignacao'] as Consignacao;
 
     return _rotaProtegida(
       route: '/consignacao_extrato',
-      child: ConsignacaoExtratoPage(pessoaId: pessoaId),
+      child: ConsignacaoExtratoPage(consignacao: consignacao),
     );
   },
 

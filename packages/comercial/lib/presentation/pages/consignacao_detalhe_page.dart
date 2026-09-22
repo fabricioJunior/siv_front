@@ -369,7 +369,7 @@ class _AcoesCard extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => Navigator.of(context).pushNamed(
               '/consignacao_extrato',
-              arguments: {'pessoaId': consignacao.pessoaId},
+              arguments: {'consignacao': consignacao},
             ),
             icon: const Icon(Icons.receipt_long_outlined),
             label: const Text('Ver extrato do cliente'),
@@ -479,7 +479,7 @@ class _AcoesCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed(
                 '/consignacao_extrato',
-                arguments: {'pessoaId': consignacao.pessoaId},
+                arguments: {'consignacao': consignacao},
               ),
               icon: const Icon(Icons.receipt_long_outlined),
               label: const Text('Ver extrato do cliente'),

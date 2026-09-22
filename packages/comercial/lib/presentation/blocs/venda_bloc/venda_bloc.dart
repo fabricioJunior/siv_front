@@ -83,17 +83,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     VendaClienteNaoCadastradoSolicitado event,
     Emitter<VendaState> emit,
   ) async {
-    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
-    var exigeClienteNaVenda = false;
-    if (empresaId != null) {
-      try {
-        final empresa = await _recuperarEmpresa.call(empresaId);
-        exigeClienteNaVenda = empresa?.exigeClienteNaVenda ?? false;
-      } catch (e, s) {
-        addError(e, s);
-      }
-    }
-
+    final exigeClienteNaVenda = await _carregarExigeClienteNaVenda();
     emit(state.copyWith(exigeClienteNaVenda: exigeClienteNaVenda));
 
     if (exigeClienteNaVenda) return;
@@ -153,6 +143,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     VendaLeituraSolicitada event,
     Emitter<VendaState> emit,
   ) async {
+    await _sincronizarExigeClienteNaVenda(emit);
     final erro = _validarSelecoes();
     if (erro != null) {
       emit(state.copyWith(erro: erro));
@@ -244,6 +235,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     VendaFinalizarSolicitada event,
     Emitter<VendaState> emit,
   ) async {
+    await _sincronizarExigeClienteNaVenda(emit);
     final erroSelecao = _validarSelecoes();
     if (erroSelecao != null) {
       emit(state.copyWith(erro: erroSelecao));
@@ -321,6 +313,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     VendaCriarPedidoSolicitado event,
     Emitter<VendaState> emit,
   ) async {
+    await _sincronizarExigeClienteNaVenda(emit);
     final erroSelecao = _validarSelecoes();
     if (erroSelecao != null) {
       emit(state.copyWith(erro: erroSelecao));
@@ -432,6 +425,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     VendaOrcamentoSalvarSolicitado event,
     Emitter<VendaState> emit,
   ) async {
+    await _sincronizarExigeClienteNaVenda(emit);
     final erroSelecao = _validarSelecoes();
     if (erroSelecao != null) {
       emit(state.copyWith(erro: erroSelecao));
@@ -547,6 +541,38 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
       await _excluirOrcamento(event.hash);
     } catch (e, s) {
       addError(e, s);
+    }
+  }
+
+  // Memoizado: VendaClienteNaoCadastradoSolicitado dispara esse fetch no
+  // início da tela, mas é um evento concorrente como qualquer outro (bloc
+  // não serializa por padrão) -- sem isso, um operador rápido conseguia
+  // chamar leitura/finalizar/pedido/orçamento ANTES do fetch da empresa
+  // terminar, com state.exigeClienteNaVenda ainda no valor default (false),
+  // furando o bloqueio. Compartilhar a mesma Future garante que toda
+  // chamada (inclusive a primeira) espera o resultado real antes de validar.
+  Future<bool>? _exigeClienteNaVendaFuture;
+
+  Future<bool> _carregarExigeClienteNaVenda() {
+    return _exigeClienteNaVendaFuture ??= () async {
+      final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+      if (empresaId == null) return false;
+      try {
+        final empresa = await _recuperarEmpresa.call(empresaId);
+        return empresa?.exigeClienteNaVenda ?? false;
+      } catch (e, s) {
+        addError(e, s);
+        return false;
+      }
+    }();
+  }
+
+  Future<void> _sincronizarExigeClienteNaVenda(
+    Emitter<VendaState> emit,
+  ) async {
+    final exigeClienteNaVenda = await _carregarExigeClienteNaVenda();
+    if (exigeClienteNaVenda != state.exigeClienteNaVenda) {
+      emit(state.copyWith(exigeClienteNaVenda: exigeClienteNaVenda));
     }
   }
 

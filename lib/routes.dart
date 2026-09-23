@@ -909,9 +909,6 @@ Map<String, Widget Function(BuildContext)> routes = {
       referenciaId: args(context)['referenciaId'],
     );
   },
-  '/produtos': (context) {
-    return ProdutosPage();
-  },
   '/selecionar_produtos': (context) {
     final raw = args(context)['idsSelecionados'];
     final idsSelecionados = raw is List
@@ -951,6 +948,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/produto': (context) {
     return ProdutoPage(
       referenciaId: args(context)['referenciaId'],
+      referenciaNome: args(context)['referenciaNome'],
       corId: args(context)['corId'],
       tamanhoId: args(context)['tamanhoId'],
     );

@@ -31,6 +31,12 @@ class FormaDePagamentoDto implements FormaDePagamento {
   @override
   final String? provider;
 
+  @override
+  final double? custoPercentual;
+
+  @override
+  final double? custoFixo;
+
   const FormaDePagamentoDto({
     this.criadoEm,
     this.atualizadoEm,
@@ -42,6 +48,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
     this.inativa = false,
     this.tipoOperacao = TipoOperacaoFormaPagamento.manual,
     this.provider,
+    this.custoPercentual,
+    this.custoFixo,
   });
 
   factory FormaDePagamentoDto.fromJson(Map<String, dynamic> json) {
@@ -57,6 +65,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       tipoOperacao:
           TipoOperacaoFormaPagamento.fromString(json['tipoOperacao'] as String?),
       provider: json['provider'] as String?,
+      custoPercentual: (json['custoPercentual'] as num?)?.toDouble(),
+      custoFixo: (json['custoFixo'] as num?)?.toDouble(),
     );
   }
 
@@ -72,6 +82,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       inativa: forma.inativa,
       tipoOperacao: forma.tipoOperacao,
       provider: forma.provider,
+      custoPercentual: forma.custoPercentual,
+      custoFixo: forma.custoFixo,
     );
   }
 
@@ -87,6 +99,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'inativa': inativa,
       'tipoOperacao': tipoOperacao.value,
       'provider': provider,
+      'custoPercentual': custoPercentual,
+      'custoFixo': custoFixo,
     };
   }
 
@@ -98,6 +112,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'tipo': tipo,
       'tipoOperacao': tipoOperacao.value,
       if (provider != null) 'provider': provider,
+      if (custoPercentual != null) 'custoPercentual': custoPercentual,
+      if (custoFixo != null) 'custoFixo': custoFixo,
     };
   }
 
@@ -110,6 +126,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
       'inativa': inativa,
       'tipoOperacao': tipoOperacao.value,
       if (provider != null) 'provider': provider,
+      'custoPercentual': custoPercentual,
+      'custoFixo': custoFixo,
     };
   }
 
@@ -125,6 +143,8 @@ class FormaDePagamentoDto implements FormaDePagamento {
         inativa,
         tipoOperacao,
         provider,
+        custoPercentual,
+        custoFixo,
       ];
 
   @override

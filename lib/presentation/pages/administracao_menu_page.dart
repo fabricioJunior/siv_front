@@ -1,5 +1,42 @@
 import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
 import 'package:flutter/material.dart';
+
+/// Fonte única dos filhos do acordeão "Administração" no menu lateral (ver
+/// `AppShell`). "Sincronização" saiu daqui -- já existe como item de topo
+/// próprio, não pode ficar duplicada.
+const administracaoAcordeaoItens = <SivMenuAcordeaoFilho>[
+  SivMenuAcordeaoFilho(
+    label: 'Usuários',
+    rota: '/usuarios',
+    componente: 'ADMFM001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Grupos de acesso',
+    rota: '/grupos_de_acesso',
+    componente: 'ADMFM002',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Empresas',
+    rota: '/empresas',
+    componente: 'ADMFM004',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Formas de pagamento',
+    rota: '/formas_de_pagamento',
+    componente: 'GERFM001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Configurações',
+    rota: '/configuracoes',
+    componente: 'SYSFM001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Comunicados',
+    rota: '/comunicados',
+    componente: 'COMFC001',
+  ),
+];
 
 class AdministracaoMenuPage extends StatelessWidget {
   const AdministracaoMenuPage({super.key});

@@ -10,3 +10,6 @@ export 'domain/use_cases/obter_preco_da_referencia.dart';
 export 'domain/use_cases/remover_preco_da_referencia.dart';
 export 'domain/use_cases/sincronizar_precos.dart';
 export 'domain/use_cases/sincronziar_tabelas_de_preco.dart';
+export 'domain/use_cases/importacao/baixar_template_importacao_tabela_de_preco.dart';
+export 'domain/use_cases/importacao/importar_tabela_de_preco_csv.dart';
+export 'domain/use_cases/importacao/consultar_importacao_tabela_de_preco.dart';

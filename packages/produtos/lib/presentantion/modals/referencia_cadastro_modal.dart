@@ -29,6 +29,7 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
   final _descricaoController = TextEditingController();
   final _composicaoController = TextEditingController();
   final _cuidadosController = TextEditingController();
+  final _ncmController = TextEditingController();
   final _categoriaSearchController = TextEditingController();
   final _subCategoriaSearchController = TextEditingController();
 
@@ -43,6 +44,7 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     _descricaoController.dispose();
     _composicaoController.dispose();
     _cuidadosController.dispose();
+    _ncmController.dispose();
     _categoriaSearchController.dispose();
     _subCategoriaSearchController.dispose();
     super.dispose();
@@ -172,6 +174,9 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
     }
     if (_cuidadosController.text != state.cuidados) {
       _cuidadosController.text = state.cuidados;
+    }
+    if (_ncmController.text != state.ncm) {
+      _ncmController.text = state.ncm;
     }
   }
 
@@ -487,6 +492,25 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: _ncmController,
+          decoration: InputDecoration(
+            labelText: 'NCM',
+            border: const OutlineInputBorder(),
+            helperText: state.ncmSugerido
+                ? 'Sugestão baseada na categoria/sub-categoria — pode editar'
+                : null,
+            suffixIcon: state.ncmSugerido
+                ? const Icon(Icons.auto_awesome, size: 18)
+                : null,
+          ),
+          onChanged: (value) {
+            context.read<ReferenciaCadastroBloc>().add(
+              ReferenciaCadastroNcmAlterado(ncm: value),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        TextField(
           controller: _composicaoController,
           minLines: 2,
           maxLines: 4,
@@ -569,6 +593,10 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
           value: state.cuidados.trim().isEmpty
               ? 'Nao informados'
               : state.cuidados,
+        ),
+        _ResumoItem(
+          label: 'NCM',
+          value: state.ncm.trim().isEmpty ? 'Nao informado' : state.ncm,
         ),
       ],
     );

@@ -63,30 +63,34 @@ class SivTabela extends StatelessWidget {
             ),
             child: Row(
               children: [
-                for (final coluna in colunas)
+                for (final entrada in colunas.asMap().entries) ...[
+                  if (entrada.key > 0)
+                    const SizedBox(width: SivDimensoes.gapColunaTabela),
                   Expanded(
-                    flex: coluna.flex,
+                    flex: entrada.value.flex,
                     child: Text(
-                      coluna.titulo,
-                      textAlign: coluna.alinhamento,
+                      entrada.value.titulo,
+                      textAlign: entrada.value.alinhamento,
                       style: textos.rotulo,
                     ),
                   ),
+                ],
               ],
             ),
           ),
           for (var indice = 0; indice < quantidadeLinhas; indice++)
             _SivTabelaLinha(
-              corFundo: indice.isEven
-                  ? cores.superficie
-                  : cores.superficieRecuada,
+              corFundo:
+                  indice.isEven ? cores.superficie : cores.selecaoFundo,
               corSelecionada: cores.selecaoFundo,
               corBarra: cores.aco,
               selecionada: linhaSelecionada?.call(indice) ?? false,
               onTap: onLinhaTap == null ? null : () => onLinhaTap!(indice),
               child: Row(
                 children: [
-                  for (final entrada in colunas.asMap().entries)
+                  for (final entrada in colunas.asMap().entries) ...[
+                    if (entrada.key > 0)
+                      const SizedBox(width: SivDimensoes.gapColunaTabela),
                     Expanded(
                       flex: entrada.value.flex,
                       child: Align(
@@ -96,6 +100,7 @@ class SivTabela extends StatelessWidget {
                         child: linhaBuilder(context, indice)[entrada.key],
                       ),
                     ),
+                  ],
                 ],
               ),
             ),

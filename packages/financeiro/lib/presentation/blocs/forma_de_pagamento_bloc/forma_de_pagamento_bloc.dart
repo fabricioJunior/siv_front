@@ -75,6 +75,8 @@ class FormaDePagamentoBloc
         tipoOperacao: event.tipoOperacao,
         provider: event.provider,
         limparProvider: event.limparProvider,
+        custoPercentual: event.custoPercentual,
+        custoFixo: event.custoFixo,
         step: FormaDePagamentoStep.editando,
         erro: null,
       ),
@@ -138,6 +140,8 @@ class FormaDePagamentoBloc
         provider: state.tipoOperacao == TipoOperacaoFormaPagamento.online
             ? provider
             : null,
+        custoPercentual: state.custoPercentual,
+        custoFixo: state.custoFixo,
       );
 
       final salvo = state.id == null

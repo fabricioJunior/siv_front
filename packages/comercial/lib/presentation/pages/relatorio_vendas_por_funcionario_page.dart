@@ -262,7 +262,15 @@ class _FuncionarioCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _Metrica(
-                  label: 'Valor total vendido',
+                  label: 'Valor bruto de vendas',
+                  valor: _fmtMoeda(item.valorBrutoVendas as double),
+                ),
+                _Metrica(
+                  label: 'Valor das devoluções',
+                  valor: _fmtMoeda(item.valorDevolucoes as double),
+                ),
+                _Metrica(
+                  label: 'Faturamento',
                   valor: _fmtMoeda(item.total as double),
                 ),
                 _Metrica(

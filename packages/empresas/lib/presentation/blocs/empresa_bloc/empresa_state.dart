@@ -42,6 +42,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
   final String? cep;
   final double? latitude;
   final double? longitude;
+  final bool? exigeClienteNaVenda;
 
   @override
   final Empresa? empresa;
@@ -68,6 +69,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     this.cep,
     this.latitude,
     this.longitude,
+    this.exigeClienteNaVenda,
     this.empresa,
   });
 
@@ -92,6 +94,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         cep = empresa?.cep,
         latitude = empresa?.latitude,
         longitude = empresa?.longitude,
+        exigeClienteNaVenda = empresa?.exigeClienteNaVenda,
         id = empresa?.id;
 
   @override
@@ -116,6 +119,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
         cep,
         latitude,
         longitude,
+        exigeClienteNaVenda,
       ];
 
   EmpresaEditarEmProgresso copyWith({
@@ -140,6 +144,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
     String? cep,
     double? latitude,
     double? longitude,
+    bool? exigeClienteNaVenda,
     Empresa? empresa,
   }) {
     return EmpresaEditarEmProgresso(
@@ -166,6 +171,7 @@ class EmpresaEditarEmProgresso extends EmpresaState {
       cep: cep ?? this.cep,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
       empresa: empresa ?? this.empresa,
     );
   }

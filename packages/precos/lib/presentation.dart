@@ -8,3 +8,5 @@ export 'presentation/pages/tabela_de_preco_detalhe_page.dart';
 export 'presentation/pages/preco_da_referencia_page.dart';
 export 'presentation/modals/tabela_de_preco_modal.dart';
 export 'presentation/widgets/tabelas_de_preco_seletor.dart';
+export 'presentation/blocs/importar_tabela_de_preco_csv_bloc/importar_tabela_de_preco_csv_bloc.dart';
+export 'presentation/pages/importar_tabela_de_preco_csv_page.dart';

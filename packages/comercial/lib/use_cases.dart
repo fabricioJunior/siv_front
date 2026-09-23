@@ -100,3 +100,6 @@ export 'domain/use_cases/remover_itens_lista_personalizada.dart';
 export 'domain/use_cases/recuperar_lista_personalizada.dart';
 export 'domain/use_cases/buscar_link_lista_personalizada.dart';
 export 'domain/use_cases/listar_listas_personalizadas.dart';
+export 'domain/use_cases/importacao/baixar_template_importacao_pedidos.dart';
+export 'domain/use_cases/importacao/importar_pedidos_csv.dart';
+export 'domain/use_cases/importacao/consultar_importacao_pedido.dart';

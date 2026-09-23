@@ -25,6 +25,11 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
   final bool? clienteOuFuncionario;
   final bool compacto;
 
+  // Conteúdo extra (ex: última compra) exibido junto ao aniversário, sem
+  // acoplar este package (pessoas) a quem fornece o dado (ex: comercial).
+  // Null em todo lugar que não passar -- comportamento igual a hoje.
+  final Widget Function(Pessoa pessoa)? construirInfoExtra;
+
   @override
   final List<SelectData>? itemsSelecionadosInicial;
 
@@ -49,6 +54,7 @@ class SeletorPessoa extends StatefulWidget implements ISeletor {
     this.eFornecedor,
     this.clienteOuFuncionario,
     this.compacto = false,
+    this.construirInfoExtra,
   });
 
   @override
@@ -218,6 +224,8 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                 confirmarEmSeparadores: const [',', ';'],
               );
 
+          final pessoaAtual = _pessoaSelecionadaAtual ?? estadoExibido.pessoaSelecionada;
+
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,6 +279,11 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+              if (widget.construirInfoExtra != null && pessoaAtual != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: widget.construirInfoExtra!(pessoaAtual),
                 ),
             ],
           );

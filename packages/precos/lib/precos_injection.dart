@@ -4,6 +4,9 @@ import 'package:precos/data/remote/precos_de_referencias_remote_data_source.dart
 import 'package:precos/data/remote/tabela_de_preco_remote_data_source.dart';
 import 'package:precos/data/repositorios/precos_de_referencias_repository.dart';
 import 'package:precos/data/repositorios/tabelas_de_preco_repository.dart';
+import 'package:precos/data/remote/importacao_tabela_de_preco_remote_data_source.dart';
+import 'package:precos/data/repositorios/importacao_tabela_de_preco_repository.dart';
+import 'package:precos/domain/data/remote/i_importacao_tabela_de_preco_remote_data_source.dart';
 import 'package:precos/domain/data/remote/i_precos_de_referencias_remote_data_source.dart';
 import 'package:precos/domain/data/remote/i_tabelas_de_preco_remote_data_source.dart';
 import 'package:precos/presentation.dart';
@@ -26,6 +29,10 @@ void _dataSources() {
   );
 
   registerPrecosLocalDataSources();
+
+  sl.registerFactory<IImportacaoTabelaDePrecoRemoteDataSource>(
+    () => ImportacaoTabelaDePrecoRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -43,6 +50,10 @@ void _repositores() {
       tabelasDePrecoLocalDataSource: sl(),
       precosDeReferenciasLocalDataSource: sl(),
     ),
+  );
+
+  sl.registerFactory<IImportacaoTabelaDePrecoRepository>(
+    () => ImportacaoTabelaDePrecoRepository(remoteDataSource: sl()),
   );
 }
 
@@ -80,6 +91,16 @@ void _usesCases() {
   sl.registerFactory<SincronizarPrecos>(
     () => SincronizarPrecos(precosDeReferenciasRepository: sl()),
   );
+
+  sl.registerFactory<BaixarTemplateImportacaoTabelaDePreco>(
+    () => BaixarTemplateImportacaoTabelaDePreco(repository: sl()),
+  );
+  sl.registerFactory<ImportarTabelaDePrecoCsv>(
+    () => ImportarTabelaDePrecoCsv(repository: sl()),
+  );
+  sl.registerFactory<ConsultarImportacaoTabelaDePreco>(
+    () => ConsultarImportacaoTabelaDePreco(repository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -91,5 +112,8 @@ void _presentantion() {
     () => EditarPrecoDaReferenciaBloc(sl(), sl()),
   );
   sl.registerFactory<PrecosDaTabelaBloc>(() => PrecosDaTabelaBloc(sl(), sl()));
+  sl.registerFactory<ImportarTabelaDePrecoCsvBloc>(
+    () => ImportarTabelaDePrecoCsvBloc(sl(), sl(), sl(), sl()),
+  );
 }
 

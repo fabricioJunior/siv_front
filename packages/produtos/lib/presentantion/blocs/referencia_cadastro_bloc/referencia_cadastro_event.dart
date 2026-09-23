@@ -84,6 +84,15 @@ class ReferenciaCadastroCuidadosAlterados extends ReferenciaCadastroEvent {
   List<Object?> get props => [cuidados];
 }
 
+class ReferenciaCadastroNcmAlterado extends ReferenciaCadastroEvent {
+  final String ncm;
+
+  ReferenciaCadastroNcmAlterado({required this.ncm});
+
+  @override
+  List<Object?> get props => [ncm];
+}
+
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroVoltar extends ReferenciaCadastroEvent {}

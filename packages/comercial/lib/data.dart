@@ -56,3 +56,8 @@ export 'domain/data/remote/i_lista_personalizada_remote_data_source.dart';
 export 'domain/data/repositories/i_lista_personalizada_repository.dart';
 export 'data/remote/lista_personalizada_remote_data_source.dart';
 export 'data/repositories/lista_personalizada_repository.dart';
+
+export 'domain/data/remote/i_importacao_pedido_transferencia_remote_data_source.dart';
+export 'domain/data/repositories/i_importacao_pedido_transferencia_repository.dart';
+export 'data/remote/importacao_pedido_transferencia_remote_data_source.dart';
+export 'data/repositories/importacao_pedido_transferencia_repository.dart';

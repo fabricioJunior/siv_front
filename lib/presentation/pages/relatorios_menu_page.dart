@@ -28,6 +28,72 @@ const _infoPorGrupo = {
   GrupoRelatorio.caixaFiscal: _GrupoInfo('CAIXA E FISCAL', 'O caixa e o fisco fecham?'),
 };
 
+/// Fonte única dos filhos do acordeão "Relatórios" no menu lateral (ver
+/// `AppShell`) -- mesma ordem/agrupamento de [_todosOsRelatorios], sem o
+/// recurso de fixar (não cabe na largura do menu lateral).
+const relatoriosAcordeaoItens = <SivMenuAcordeaoFilho>[
+  SivMenuAcordeaoFilho(
+    label: 'Faturamento e Ticket',
+    rota: '/relatorio_faturamento',
+    componente: 'RELFC001',
+    grupo: 'VENDAS E FATURAMENTO',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Vendas por Funcionário',
+    rota: '/relatorio_vendas_por_funcionario',
+    componente: 'RELFC004',
+    grupo: 'VENDAS E FATURAMENTO',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Curva ABC',
+    rota: '/relatorio_curva_abc',
+    componente: 'RELFC002',
+    grupo: 'VENDAS E FATURAMENTO',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Clientes Ativos',
+    rota: '/relatorio_clientes_ativos',
+    componente: 'RELFC003',
+    grupo: 'CLIENTES',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Compras de Clientes',
+    rota: '/relatorio_compras_clientes',
+    componente: 'RELFC007',
+    grupo: 'CLIENTES',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Pontos de Fidelidade',
+    rota: '/relatorio_pontos_fidelidade',
+    componente: 'RELFC006',
+    grupo: 'CLIENTES',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Aniversariantes',
+    rota: '/relatorio_clientes_aniversariantes',
+    componente: 'RELFC009',
+    grupo: 'CLIENTES',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Produtos Defasados',
+    rota: '/relatorio_produtos_defasados',
+    componente: 'RELFC008',
+    grupo: 'ESTOQUE E PRODUTOS',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Histórico de Caixas',
+    rota: '/historico_de_caixas',
+    componente: 'FCXFP008',
+    grupo: 'CAIXA E FISCAL',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Fiscal',
+    rota: '/relatorio_fiscal',
+    componente: 'FISFM001',
+    grupo: 'CAIXA E FISCAL',
+  ),
+];
+
 // Acentos não deveriam importar na busca ("caixa" == "caixa" mesmo digitando
 // "cáixa"). Mesma tabela usada em generic_seletor.dart -- duplicada aqui por
 // ser privada lá; candidata a virar util de `core` se aparecer um 3º uso.

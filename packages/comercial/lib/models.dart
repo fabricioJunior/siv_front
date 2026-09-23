@@ -22,3 +22,4 @@ export 'domain/models/ecommerce_referencia_produto.dart';
 export 'domain/models/ecommerce_referencias_pagina.dart';
 export 'domain/models/lista_personalizada.dart';
 export 'domain/models/lista_personalizada_resumo.dart';
+export 'domain/models/importacao_pedido_transferencia.dart';

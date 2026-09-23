@@ -49,6 +49,12 @@ class ConsignacaoDto implements Consignacao {
   @override
   final double? valorPendente;
   @override
+  final double? valorAdiantado;
+  @override
+  final double? valorAdiantadoUtilizado;
+  @override
+  final double? valorAdiantadoDisponivel;
+  @override
   final int? operadorId;
   @override
   final List<ConsignacaoItem> itens;
@@ -77,6 +83,9 @@ class ConsignacaoDto implements Consignacao {
     this.valorAcertado,
     this.pendente,
     this.valorPendente,
+    this.valorAdiantado,
+    this.valorAdiantadoUtilizado,
+    this.valorAdiantadoDisponivel,
     this.operadorId,
     this.itens = const [],
   });
@@ -106,6 +115,9 @@ class ConsignacaoDto implements Consignacao {
       valorAcertado: _toDouble(json['valorAcertado']),
       pendente: _toDouble(json['pendente']),
       valorPendente: _toDouble(json['valorPendente']),
+      valorAdiantado: _toDouble(json['valorAdiantado']),
+      valorAdiantadoUtilizado: _toDouble(json['valorAdiantadoUtilizado']),
+      valorAdiantadoDisponivel: _toDouble(json['valorAdiantadoDisponivel']),
       operadorId: _toInt(json['operadorId']),
       itens: _toItens(json['itens']),
     );
@@ -136,6 +148,9 @@ class ConsignacaoDto implements Consignacao {
         valorAcertado,
         pendente,
         valorPendente,
+        valorAdiantado,
+        valorAdiantadoUtilizado,
+        valorAdiantadoDisponivel,
         operadorId,
         itens,
       ];

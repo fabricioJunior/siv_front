@@ -1,5 +1,7 @@
 library presentation;
 
+import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
+
 export 'presentation/blocs/fluxo_de_caixa_bloc/fluxo_de_caixa_bloc.dart';
 export 'presentation/blocs/forma_de_pagamento_bloc/forma_de_pagamento_bloc.dart';
 export 'presentation/blocs/formas_de_pagamento_bloc/formas_de_pagamento_bloc.dart';
@@ -26,3 +28,28 @@ export 'presentation/blocs/historico_de_caixas_bloc/historico_de_caixas_bloc.dar
 export 'presentation/pages/historico_de_caixas_page.dart';
 export 'presentation/pages/selecionar_caixa_page.dart';
 export 'presentation/widgets/seletor_caixa.dart';
+export 'presentation/blocs/categorias_despesa_bloc/categorias_despesa_bloc.dart';
+export 'presentation/blocs/categoria_despesa_bloc/categoria_despesa_bloc.dart';
+export 'presentation/pages/categoria_despesa_page.dart';
+export 'presentation/blocs/origens_pagamento_despesa_bloc/origens_pagamento_despesa_bloc.dart';
+export 'presentation/blocs/origem_pagamento_despesa_bloc/origem_pagamento_despesa_bloc.dart';
+export 'presentation/pages/origem_pagamento_despesa_page.dart';
+export 'presentation/blocs/lancar_despesa_bloc/lancar_despesa_bloc.dart';
+export 'presentation/pages/lancar_despesa_page.dart';
+export 'presentation/blocs/calendario_de_despesas_bloc/calendario_de_despesas_bloc.dart';
+export 'presentation/blocs/dashboard_de_despesas_bloc/dashboard_de_despesas_bloc.dart';
+export 'presentation/pages/controle_de_despesas_page.dart';
+
+/// Filhos do acordeão "Despesas" no menu lateral (ver `AppShell` do app).
+const despesasAcordeaoItens = <SivMenuAcordeaoFilho>[
+  SivMenuAcordeaoFilho(
+    label: 'Controle de despesas',
+    rota: '/controle_despesas',
+    componente: 'DESFM003',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Lançar despesa',
+    rota: '/lancar_despesa',
+    componente: 'DESFM003',
+  ),
+];

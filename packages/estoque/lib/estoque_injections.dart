@@ -7,13 +7,17 @@ import 'package:estoque/data/repositorios/estoque_repository.dart';
 import 'package:estoque/data/repositorios/historico_estoque_repository.dart';
 import 'package:estoque/data/repositories/balanco_repository.dart';
 import 'package:estoque/data/repositories/relatorio_estoque_repository.dart';
+import 'package:estoque/data/remote/importacao_estoque_remote_data_source.dart';
+import 'package:estoque/data/repositorios/importacao_estoque_repository.dart';
 import 'package:estoque/domain/data/remote/i_estoque_saldo_remote_data_source.dart';
 import 'package:estoque/domain/data/remote/i_balanco_remote_data_source.dart';
 import 'package:estoque/domain/data/remote/i_historico_estoque_remote_data_source.dart';
 import 'package:estoque/domain/data/remote/i_relatorio_estoque_remote_data_source.dart';
+import 'package:estoque/domain/data/remote/i_importacao_estoque_remote_data_source.dart';
 import 'package:estoque/domain/data/repositorios/i_estoque_repository.dart';
 import 'package:estoque/domain/data/repositorios/i_historico_estoque_repository.dart';
 import 'package:estoque/domain/data/repositorios/i_relatorio_estoque_repository.dart';
+import 'package:estoque/domain/data/repositorios/i_importacao_estoque_repository.dart';
 import 'package:estoque/domain/repositories/i_balanco_repository.dart';
 import 'package:estoque/presentation.dart';
 import 'package:estoque/use_cases.dart';
@@ -41,6 +45,9 @@ void _dataSources() {
   sl.registerFactory<IRelatorioEstoqueRemoteDataSource>(
     () => RelatorioEstoqueRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IImportacaoEstoqueRemoteDataSource>(
+    () => ImportacaoEstoqueRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositorios() {
@@ -59,6 +66,9 @@ void _repositorios() {
   );
   sl.registerFactory<IRelatorioEstoqueRepository>(
     () => RelatorioEstoqueRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IImportacaoEstoqueRepository>(
+    () => ImportacaoEstoqueRepository(remoteDataSource: sl()),
   );
 }
 
@@ -81,6 +91,10 @@ void _useCases() {
 
   sl.registerFactory<GetRelatorioProdutosDefasados>(
     () => GetRelatorioProdutosDefasados(repository: sl()),
+  );
+
+  sl.registerFactory<ImportarEstoqueCsv>(
+    () => ImportarEstoqueCsv(repository: sl()),
   );
 
   // Balanço Use Cases
@@ -154,6 +168,9 @@ void _presentation() {
   sl.registerFactory<HistoricoEstoqueBloc>(() => HistoricoEstoqueBloc(sl()));
   sl.registerFactory<RelatorioProdutosDefasadosBloc>(
     () => RelatorioProdutosDefasadosBloc(sl()),
+  );
+  sl.registerFactory<ImportarEstoqueCsvBloc>(
+    () => ImportarEstoqueCsvBloc(sl()),
   );
   sl.registerFactory<EntradaManualDeProdutosBloc>(
     () => EntradaManualDeProdutosBloc(sl(), sl(), sl(), sl()),

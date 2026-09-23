@@ -115,6 +115,7 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
     String? cep,
     double? latitude,
     double? longitude,
+    bool? exigeClienteNaVenda = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {
@@ -138,6 +139,7 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
               #cep: cep,
               #latitude: latitude,
               #longitude: longitude,
+              #exigeClienteNaVenda: exigeClienteNaVenda,
             }),
             returnValue: _i5.Future<_i3.Empresa>.value(
               _FakeEmpresa_1(
@@ -163,6 +165,7 @@ class MockCriarEmpresa extends _i1.Mock implements _i7.CriarEmpresa {
                   #cep: cep,
                   #latitude: latitude,
                   #longitude: longitude,
+                  #exigeClienteNaVenda: exigeClienteNaVenda,
                 }),
               ),
             ),

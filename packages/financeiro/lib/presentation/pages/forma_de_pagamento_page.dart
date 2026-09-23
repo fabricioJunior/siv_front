@@ -37,6 +37,8 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
   final _descricaoController = TextEditingController();
   final _inicioController = TextEditingController();
   final _parcelasController = TextEditingController();
+  final _custoPercentualController = TextEditingController();
+  final _custoFixoController = TextEditingController();
   List<String> _providers = [];
 
   @override
@@ -52,6 +54,8 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
     _descricaoController.dispose();
     _inicioController.dispose();
     _parcelasController.dispose();
+    _custoPercentualController.dispose();
+    _custoFixoController.dispose();
     super.dispose();
   }
 
@@ -275,6 +279,53 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
                           ),
                         ],
                         const SizedBox(height: 16),
+                        Text(
+                          'Custo da forma de pagamento',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _custoPercentualController,
+                          decoration: const InputDecoration(
+                            labelText: 'Custo percentual (%)',
+                            hintText: 'Ex: 2.5',
+                          ),
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*[.,]?\d*$'),
+                            ),
+                          ],
+                          onChanged: (value) => _onCampoAlterado(
+                            context,
+                            custoPercentual: double.tryParse(
+                              value.replaceAll(',', '.'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _custoFixoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Custo fixo (R\$)',
+                            hintText: 'Ex: 0.50',
+                          ),
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*[.,]?\d*$'),
+                            ),
+                          ],
+                          onChanged: (value) => _onCampoAlterado(
+                            context,
+                            custoFixo: double.tryParse(
+                              value.replaceAll(',', '.'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         SwitchListTile.adaptive(
                           contentPadding: EdgeInsets.zero,
                           title: const Text('Inativa'),
@@ -324,6 +375,22 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
         selection: TextSelection.collapsed(offset: parcelas.length),
       );
     }
+
+    final custoPercentual = state.custoPercentual?.toString() ?? '';
+    if (_custoPercentualController.text != custoPercentual) {
+      _custoPercentualController.value = TextEditingValue(
+        text: custoPercentual,
+        selection: TextSelection.collapsed(offset: custoPercentual.length),
+      );
+    }
+
+    final custoFixo = state.custoFixo?.toString() ?? '';
+    if (_custoFixoController.text != custoFixo) {
+      _custoFixoController.value = TextEditingValue(
+        text: custoFixo,
+        selection: TextSelection.collapsed(offset: custoFixo.length),
+      );
+    }
   }
 
   void _onCampoAlterado(
@@ -336,6 +403,8 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
     TipoOperacaoFormaPagamento? tipoOperacao,
     String? provider,
     bool limparProvider = false,
+    double? custoPercentual,
+    double? custoFixo,
   }) {
     context.read<FormaDePagamentoBloc>().add(
           FormaDePagamentoCampoAlterado(
@@ -347,6 +416,8 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
             tipoOperacao: tipoOperacao,
             provider: provider,
             limparProvider: limparProvider,
+            custoPercentual: custoPercentual,
+            custoFixo: custoFixo,
           ),
         );
   }

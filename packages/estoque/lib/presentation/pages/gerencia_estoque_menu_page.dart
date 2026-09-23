@@ -1,5 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
+
+/// Fonte única dos filhos do acordeão "Estoque" no menu lateral (ver
+/// `AppShell`).
+const estoqueAcordeaoItens = <SivMenuAcordeaoFilho>[
+  SivMenuAcordeaoFilho(
+    label: 'Entrada manual',
+    rota: '/entrada_manual_de_produtos',
+    componente: 'ROMFP001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Saída manual',
+    rota: '/saida_manual_de_produtos',
+    componente: 'ROMFP001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Consulta de saldo',
+    rota: '/estoque',
+    componente: 'PRDFL001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Histórico',
+    rota: '/historico_estoque',
+    componente: 'PRDFL001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Histórico de movimentações manuais',
+    rota: '/romaneios_entrada_manual',
+    componente: 'ROMFP001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Balanço',
+    rota: '/balancos',
+    componente: 'PRDFL001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Importar estoque',
+    rota: '/importar_estoque',
+    componente: 'PRDFL001',
+  ),
+];
 
 class GerenciaEstoqueMenuPage extends StatelessWidget {
   const GerenciaEstoqueMenuPage({super.key});
@@ -54,6 +95,14 @@ class GerenciaEstoqueMenuPage extends StatelessWidget {
         cor: Colors.blue,
         componente: 'PRDFL001',
         route: '/balancos',
+      ),
+      const _ItemData(
+        icon: Icons.upload_file,
+        titulo: 'Importar estoque',
+        subtitulo: 'Atualização em massa de saldo via planilha CSV.',
+        cor: Colors.teal,
+        componente: 'PRDFL001',
+        route: '/importar_estoque',
       ),
     ];
 

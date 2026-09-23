@@ -73,25 +73,21 @@ class _EcommerceReferenciaDetalhePageState
           rascunho: widget.referencia.rascunho,
         ),
       );
-    _atualizarTitulo();
   }
 
   @override
   void dispose() {
     _bloc.close();
-    SivPageTitulo.limpar();
     super.dispose();
   }
 
-  void _atualizarTitulo() {
+  String get _titulo {
     final canal = widget.tituloCanal;
     final nomeReferencia = widget.referencia.referenciaNome ??
         'Referência #${widget.referencia.referenciaId}';
-    SivPageTitulo.definir(
-      canal == null
-          ? 'E-commerces / $nomeReferencia'
-          : 'E-commerces / $canal / $nomeReferencia',
-    );
+    return canal == null
+        ? 'E-commerces / $nomeReferencia'
+        : 'E-commerces / $canal / $nomeReferencia';
   }
 
   Widget _botaoEditar(BuildContext context) {
@@ -112,6 +108,7 @@ class _EcommerceReferenciaDetalhePageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(_titulo, overflow: TextOverflow.ellipsis),
         actions: [_botaoEditar(context), const SizedBox(width: 12)],
       ),
       body: BlocProvider<EcommerceReferenciaDetalheBloc>.value(

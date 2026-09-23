@@ -57,6 +57,9 @@ class ConsignacaoAcertoBloc
         produtoId: item.produtoId,
         quantidade: pendente,
         valorUnitario: valorUnitario,
+        referenciaNome: item.referenciaNome,
+        corNome: item.corNome,
+        tamanhoNome: item.tamanhoNome,
       );
     }).toList(growable: false);
 

@@ -69,3 +69,6 @@ export 'domain/use_cases/recuperar_referencias_sem_peso.dart';
 export 'domain/use_cases/atualizar_dados_logisticos_em_massa.dart';
 export 'domain/use_cases/recuperar_codigos_de_barras_da_referencia.dart';
 export 'domain/use_cases/recuperar_grade_da_referencia.dart';
+export 'domain/use_cases/importacao/baixar_template_importacao_produtos.dart';
+export 'domain/use_cases/importacao/importar_produtos_csv.dart';
+export 'domain/use_cases/importacao/consultar_importacao_produto.dart';

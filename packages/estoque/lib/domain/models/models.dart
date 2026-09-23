@@ -7,3 +7,4 @@ export 'balanco.dart';
 export 'historico_estoque.dart';
 export 'filtro_historico_estoque.dart';
 export 'pagina_historico_estoque.dart';
+export 'item_importacao_estoque.dart';

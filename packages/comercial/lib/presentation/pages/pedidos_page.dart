@@ -53,7 +53,12 @@ String _moeda(double? valor) {
 }
 
 class PedidosPage extends StatefulWidget {
-  const PedidosPage({super.key});
+  /// Tela "Pedidos do e-commerce" (rota `/ecommerce_pedidos`) reaproveita
+  /// esta mesma página, só forçando o filtro de origem que já existia no
+  /// bloc -- sem chip pra desligar, o canal já é o assunto da tela inteira.
+  final bool apenasOrigemEcommerce;
+
+  const PedidosPage({super.key, this.apenasOrigemEcommerce = false});
 
   @override
   State<PedidosPage> createState() => _PedidosPageState();
@@ -70,6 +75,9 @@ class _PedidosPageState extends State<PedidosPage> {
   void initState() {
     super.initState();
     _bloc = sl<PedidosBloc>()..add(PedidosIniciou());
+    if (widget.apenasOrigemEcommerce) {
+      _bloc.add(PedidosFiltroOrigemEcommerceAlterado(true));
+    }
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -311,18 +319,19 @@ class _PedidosPageState extends State<PedidosPage> {
                         },
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: _ChipSituacao(
-                      label: 'E-commerce',
-                      selecionado: state.somenteEcommerceFiltro,
-                      onTap: () => _bloc.add(
-                        PedidosFiltroOrigemEcommerceAlterado(
-                          !state.somenteEcommerceFiltro,
+                  if (!widget.apenasOrigemEcommerce)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _ChipSituacao(
+                        label: 'E-commerce',
+                        selecionado: state.somenteEcommerceFiltro,
+                        onTap: () => _bloc.add(
+                          PedidosFiltroOrigemEcommerceAlterado(
+                            !state.somenteEcommerceFiltro,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

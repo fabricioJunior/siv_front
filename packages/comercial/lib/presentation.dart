@@ -10,6 +10,8 @@ export 'presentation/blocs/romaneios_bloc/romaneios_bloc.dart';
 export 'presentation/blocs/vendas_bloc/vendas_bloc.dart';
 export 'presentation/blocs/romaneios_entrada_manual_bloc/romaneios_entrada_manual_bloc.dart';
 export 'presentation/blocs/venda_bloc/venda_bloc.dart';
+export 'presentation/blocs/importar_pedidos_csv_bloc/importar_pedidos_csv_bloc.dart';
+export 'presentation/pages/importar_pedidos_csv_page.dart';
 export 'presentation/pages/comercial_menu_page.dart';
 export 'presentation/pages/credito_devolucao_movimentacoes_page.dart';
 export 'presentation/pages/criar_romaneio_por_parametros_page.dart';

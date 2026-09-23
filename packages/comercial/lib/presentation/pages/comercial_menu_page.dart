@@ -1,5 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
+
+/// Fonte única dos filhos do acordeão "Comercial" no menu lateral (ver
+/// `AppShell`). E-commerce saiu daqui -- virou item de topo próprio.
+const comercialAcordeaoItens = <SivMenuAcordeaoFilho>[
+  SivMenuAcordeaoFilho(label: 'Venda', rota: '/venda', componente: 'PEDFC001'),
+  SivMenuAcordeaoFilho(
+    label: 'Devolução',
+    rota: '/devolucao',
+    componente: 'PEDFC001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Pedidos',
+    rota: '/pedidos',
+    componente: 'PEDFC001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Importar pedidos',
+    rota: '/importar_pedidos_transferencia_entrada',
+    componente: 'IMPFP007',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Romaneios',
+    rota: '/romaneios',
+    componente: 'ROMFP001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Histórico de vendas',
+    rota: '/vendas',
+    componente: 'ROMFP001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Consignações',
+    rota: '/consignacoes',
+    componente: 'CONFC001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Promoções',
+    rota: '/promocoes',
+    componente: 'PROMFC001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Cupons',
+    rota: '/cupons',
+    componente: 'CUPFC001',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Minhas listas',
+    rota: '/listas_personalizadas',
+    componente: 'ECOFM004',
+  ),
+];
 
 class ComercialMenuPage extends StatelessWidget {
   const ComercialMenuPage({super.key});
@@ -31,6 +83,14 @@ class ComercialMenuPage extends StatelessWidget {
         cor: Colors.orange,
         componente: 'PEDFC001',
         route: '/pedidos',
+      ),
+      const _ItemData(
+        icon: Icons.upload_file,
+        titulo: 'Importar pedidos',
+        subtitulo: 'Entrada de mercadoria em massa via planilha CSV.',
+        cor: Colors.orange,
+        componente: 'IMPFP007',
+        route: '/importar_pedidos_transferencia_entrada',
       ),
       const _ItemData(
         icon: Icons.local_shipping,

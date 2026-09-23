@@ -27,13 +27,11 @@ class _EcommercesPageState extends State<EcommercesPage> {
     super.initState();
     _selecionadoId = widget.ecommerceIdInicial;
     _bloc = sl<EcommercesBloc>()..add(const EcommercesCarregarSolicitado());
-    SivPageTitulo.definir('E-commerces');
   }
 
   @override
   void dispose() {
     _bloc.close();
-    SivPageTitulo.limpar();
     super.dispose();
   }
 
@@ -57,6 +55,7 @@ class _EcommercesPageState extends State<EcommercesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SivTituloPagina(titulo: 'E-commerces'),
                 Padding(
                   padding:
                       const EdgeInsets.only(bottom: SivDimensoes.gapCards),

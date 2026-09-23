@@ -30,6 +30,7 @@ EmpresaDto _$EmpresaDtoFromJson(Map<String, dynamic> json) => EmpresaDto(
   cep: json['cep'] as String?,
   latitude: (json['latitude'] as num?)?.toDouble(),
   longitude: (json['longitude'] as num?)?.toDouble(),
+  exigeClienteNaVenda: json['exigeClienteNaVenda'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
@@ -57,4 +58,5 @@ Map<String, dynamic> _$EmpresaDtoToJson(EmpresaDto instance) =>
       'cep': ?instance.cep,
       'latitude': ?instance.latitude,
       'longitude': ?instance.longitude,
+      'exigeClienteNaVenda': instance.exigeClienteNaVenda,
     };

@@ -2,6 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
+import 'package:core/tema.dart';
 import 'package:estoque/domain/models/filtro_historico_estoque.dart';
 import 'package:estoque/domain/models/historico_estoque.dart';
 import 'package:estoque/presentation.dart';
@@ -171,216 +172,281 @@ class _HistoricoEstoquePageState extends State<HistoricoEstoquePage> {
     _recarregar();
   }
 
+  String _responsavel(HistoricoEstoque item) =>
+      item.funcionarioNome ??
+      item.operadorNome ??
+      item.caixaTerminalNome ??
+      '—';
+
+  void _irAoRomaneio(HistoricoEstoque item) {
+    Navigator.pushNamed(
+      context,
+      '/romaneio',
+      arguments: {'idRomaneio': item.romaneioId, 'permitirEdicao': false},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<HistoricoEstoqueBloc>.value(
       value: _bloc,
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Histórico de Estoque')),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                SearchBar(
-                  controller: _buscaController,
-                  hintText: 'Buscar por referência, funcionário ou cliente',
-                  onChanged: (_) => _debouncer.run(_recarregar),
-                  onSubmitted: (_) => _recarregar(),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FiltroChip(
-                        icon: Icons.date_range_outlined,
-                        label:
-                            '${formatarDataHora(_dataInicio)} - ${formatarDataHora(_dataFim)}',
-                        onTap: _abrirFiltroPeriodo,
-                      ),
-                      FiltroChip(
-                        icon: Icons.person_outline,
-                        label: _usuarioSelecionado?.nome ?? 'Usuário',
-                        onTap: _abrirFiltroUsuario,
-                        onLimpar: _usuarioSelecionado == null
-                            ? null
-                            : () {
-                                setState(() => _usuarioSelecionado = null);
-                                _recarregar();
-                              },
-                      ),
-                      FiltroChip(
-                        icon: Icons.point_of_sale_outlined,
-                        label: _caixaSelecionado?.nome ?? 'Caixa',
-                        onTap: _abrirFiltroCaixa,
-                        onLimpar: _caixaSelecionado == null
-                            ? null
-                            : () {
-                                setState(() => _caixaSelecionado = null);
-                                _recarregar();
-                              },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: BlocBuilder<HistoricoEstoqueBloc, HistoricoEstoqueState>(
-                    builder: (context, state) {
-                      if (state.step == HistoricoEstoqueStep.carregando &&
-                          state.itens.isEmpty) {
-                        return const Center(
-                          child: CircularProgressIndicator.adaptive(),
-                        );
-                      }
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _buscaController,
+            decoration: const InputDecoration(
+              hintText: 'Buscar por referência, funcionário ou cliente',
+              prefixIcon: Icon(Icons.search_outlined),
+            ),
+            onChanged: (_) => _debouncer.run(_recarregar),
+            onSubmitted: (_) => _recarregar(),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FiltroChip(
+                icon: Icons.date_range_outlined,
+                label:
+                    '${formatarDataHora(_dataInicio)} - ${formatarDataHora(_dataFim)}',
+                onTap: _abrirFiltroPeriodo,
+              ),
+              FiltroChip(
+                icon: Icons.person_outline,
+                label: _usuarioSelecionado?.nome ?? 'Usuário',
+                onTap: _abrirFiltroUsuario,
+                onLimpar: _usuarioSelecionado == null
+                    ? null
+                    : () {
+                        setState(() => _usuarioSelecionado = null);
+                        _recarregar();
+                      },
+              ),
+              FiltroChip(
+                icon: Icons.point_of_sale_outlined,
+                label: _caixaSelecionado?.nome ?? 'Caixa',
+                onTap: _abrirFiltroCaixa,
+                onLimpar: _caixaSelecionado == null
+                    ? null
+                    : () {
+                        setState(() => _caixaSelecionado = null);
+                        _recarregar();
+                      },
+              ),
+            ],
+          ),
+          const SizedBox(height: SivDimensoes.gapCards),
+          Expanded(
+            child: BlocBuilder<HistoricoEstoqueBloc, HistoricoEstoqueState>(
+              builder: (context, state) {
+                if (state.step == HistoricoEstoqueStep.carregando &&
+                    state.itens.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  );
+                }
 
-                      if (state.step == HistoricoEstoqueStep.falha &&
-                          state.itens.isEmpty) {
-                        return Center(
-                          child: Text(
-                            state.erro ?? 'Erro ao carregar histórico.',
+                if (state.step == HistoricoEstoqueStep.falha &&
+                    state.itens.isEmpty) {
+                  return Center(
+                    child: Text(
+                      state.erro ?? 'Erro ao carregar histórico.',
+                      style: context.sivTextos.corpo,
+                    ),
+                  );
+                }
+
+                if (state.itens.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Nenhuma movimentação encontrada para os filtros informados.',
+                      style: context.sivTextos.corpo,
+                    ),
+                  );
+                }
+
+                final exibirLoaderFinal =
+                    state.step == HistoricoEstoqueStep.carregandoMais;
+                final mobile = MediaQuery.sizeOf(context).width <
+                    SivDimensoes.breakpointMenuDrawer;
+
+                if (mobile) {
+                  return ListView.separated(
+                    controller: _scrollController,
+                    itemCount: state.itens.length + (exibirLoaderFinal ? 1 : 0),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      if (index >= state.itens.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: CircularProgressIndicator.adaptive(),
                           ),
                         );
                       }
-
-                      if (state.itens.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'Nenhuma movimentação encontrada para os filtros informados.',
-                          ),
-                        );
-                      }
-
-                      final exibirLoaderFinal =
-                          state.step == HistoricoEstoqueStep.carregandoMais;
-
-                      return ListView.separated(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(top: 8),
-                        itemCount:
-                            state.itens.length + (exibirLoaderFinal ? 1 : 0),
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          if (index >= state.itens.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: Center(
-                                child: CircularProgressIndicator.adaptive(),
-                              ),
-                            );
-                          }
-                          return _HistoricoEstoqueCard(
-                            item: state.itens[index],
-                          );
-                        },
+                      return _HistoricoEstoqueCardMobile(
+                        item: state.itens[index],
+                        onIrAoRomaneio: () =>
+                            _irAoRomaneio(state.itens[index]),
                       );
                     },
+                  );
+                }
+
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SivTabela(
+                        colunas: const [
+                          SivTabelaColuna(titulo: 'PRODUTO', flex: 4),
+                          SivTabelaColuna.numerica(titulo: 'QTD', flex: 1),
+                          SivTabelaColuna(titulo: 'ROMANEIO', flex: 2),
+                          SivTabelaColuna(titulo: 'RESPONSÁVEL', flex: 2),
+                          SivTabelaColuna(titulo: '', flex: 2),
+                        ],
+                        quantidadeLinhas: state.itens.length,
+                        linhaBuilder: (context, indice) {
+                          final item = state.itens[indice];
+                          return _linhaTabela(context, item);
+                        },
+                      ),
+                      if (exibirLoaderFinal)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: CircularProgressIndicator.adaptive(),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
-        ),
+        ],
       ),
     );
   }
-}
 
-class _HistoricoEstoqueCard extends StatelessWidget {
-  final HistoricoEstoque item;
+  List<Widget> _linhaTabela(BuildContext context, HistoricoEstoque item) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final corQuantidade = item.ehEntrada ? const Color(0xFF2F6A3A) : cores.vinho;
 
-  const _HistoricoEstoqueCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final corQuantidade = item.ehEntrada ? Colors.green : Colors.red;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return [
+      Text.rich(
+        TextSpan(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${item.referenciaNome}${item.corNome != null ? ' • ${item.corNome}' : ''}${item.tamanhoNome != null ? ' • ${item.tamanhoNome}' : ''}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Text(
-                  item.quantidade > 0
-                      ? '+${item.quantidade.toStringAsFixed(0)}'
-                      : item.quantidade.toStringAsFixed(0),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: corQuantidade,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            TextSpan(
+              text:
+                  '${item.referenciaNome}${item.corNome != null ? ' · ${item.corNome}' : ''}${item.tamanhoNome != null ? ' · ${item.tamanhoNome}' : ''}\n',
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Romaneio #${item.romaneioId}  •  ${formatarDataHora(item.dataHora)}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Saldo após: ${item.saldoApos.toStringAsFixed(0)}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (item.pessoaNome != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Cliente: ${item.pessoaNome!.toUpperCase()}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-            if (item.funcionarioNome != null || item.operadorNome != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                [
-                  if (item.funcionarioNome != null)
-                    'Funcionário: ${item.funcionarioNome!.toUpperCase()}',
-                  if (item.operadorNome != null)
-                    'Usuário: ${item.operadorNome!.toUpperCase()}',
-                ].join('  •  '),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/romaneio',
-                    arguments: {
-                      'idRomaneio': item.romaneioId,
-                      'permitirEdicao': false,
-                    },
-                  );
-                },
-                icon: const Icon(Icons.receipt_long_outlined, size: 16),
-                label: const Text('Ir ao romaneio'),
-              ),
+            TextSpan(
+              text: 'Saldo após: ${item.saldoApos.toStringAsFixed(0)}',
+              style: textos.apoio.copyWith(color: cores.textoApoio),
             ),
           ],
         ),
+      ),
+      Text(
+        item.quantidade > 0
+            ? '+${item.quantidade.toStringAsFixed(0)}'
+            : item.quantidade.toStringAsFixed(0),
+        textAlign: TextAlign.right,
+        style: textos.secao.copyWith(fontSize: 16, color: corQuantidade),
+      ),
+      Text(
+        '#RM-${item.romaneioId} · ${formatarDataHora(item.dataHora)}',
+        style: textos.apoio.copyWith(color: cores.textoApoio),
+      ),
+      Text(
+        _responsavel(item).toUpperCase(),
+        style: textos.apoio.copyWith(color: cores.textoApoio),
+      ),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          onPressed: () => _irAoRomaneio(item),
+          child: const Text('Ir ao romaneio'),
+        ),
+      ),
+    ];
+  }
+}
+
+class _HistoricoEstoqueCardMobile extends StatelessWidget {
+  final HistoricoEstoque item;
+  final VoidCallback onIrAoRomaneio;
+
+  const _HistoricoEstoqueCardMobile({
+    required this.item,
+    required this.onIrAoRomaneio,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final corQuantidade = item.ehEntrada ? const Color(0xFF2F6A3A) : cores.vinho;
+    final responsavel = item.funcionarioNome ??
+        item.operadorNome ??
+        item.caixaTerminalNome ??
+        '—';
+
+    return SivCard(
+      padding: const EdgeInsets.all(12),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${item.referenciaNome}${item.corNome != null ? ' · ${item.corNome}' : ''}${item.tamanhoNome != null ? ' · ${item.tamanhoNome}' : ''}',
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Text(
+                    item.quantidade > 0
+                        ? '+${item.quantidade.toStringAsFixed(0)}'
+                        : item.quantidade.toStringAsFixed(0),
+                    style: textos.secao.copyWith(
+                      fontSize: 16,
+                      color: corQuantidade,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '#RM-${item.romaneioId} · ${formatarDataHora(item.dataHora)} · ${responsavel.toUpperCase()}',
+                style: textos.apoio.copyWith(color: cores.textoApoio),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Saldo após: ${item.saldoApos.toStringAsFixed(0)}',
+                style: textos.apoio.copyWith(color: cores.textoApoio),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: onIrAoRomaneio,
+                  child: const Text('Ir ao romaneio'),
+                ),
+              ),
+            ],
+          ),
+          ...sivCantosBlueprint(cores.hairline),
+        ],
       ),
     );
   }

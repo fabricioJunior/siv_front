@@ -73,12 +73,14 @@ class ConsignacoesRemoteDataSource extends RemoteDataSourceBase
     required int id,
     int? funcionarioId,
     String? observacao,
+    double? valorAdiantado,
   }) async {
     final response = await put(
       pathParameters: {'id': '$id/atualizar'},
       body: {
         if (funcionarioId != null) 'funcionarioId': funcionarioId,
         if (observacao != null) 'observacao': observacao,
+        if (valorAdiantado != null) 'valorAdiantado': valorAdiantado,
       },
     );
     return ConsignacaoDto.fromJson(response.body as Map<String, dynamic>);

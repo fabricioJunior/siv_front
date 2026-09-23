@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
@@ -33,10 +34,8 @@ import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
 import 'package:sistema/pages.dart';
-import 'package:siv_front/presentation/pages/administracao_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
-import 'package:siv_front/presentation/pages/relatorios_menu_page.dart';
 import 'package:siv_front/presentation/pages/selecionar_empresa_page.dart';
 import 'package:siv_front/presentation/pages/splash_page.dart';
 import 'package:siv_front/presentation/pages/sync_page.dart';
@@ -255,6 +254,34 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: ReciboFechamentoCaixaPage(caixaId: caixaId),
     );
   },
+  ///DESPESAS:
+  '/categoria_despesa': (context) {
+    return _rotaProtegida(
+      route: '/categoria_despesa',
+      child: CategoriaDespesaPage(id: args(context)['id']),
+    );
+  },
+  '/origem_pagamento_despesa': (context) {
+    return _rotaProtegida(
+      route: '/origem_pagamento_despesa',
+      child: OrigemPagamentoDespesaPage(id: args(context)['id']),
+    );
+  },
+  '/lancar_despesa': (context) {
+    return _rotaProtegida(
+      route: '/lancar_despesa',
+      child: LancarDespesaPage(
+        caixaId: args(context)['caixaId'],
+        dataInicial: args(context)['dataPagamento'],
+      ),
+    );
+  },
+  '/controle_despesas': (context) {
+    return _rotaProtegida(
+      route: '/controle_despesas',
+      child: const ControleDeDespesasPage(),
+    );
+  },
   '/historico_de_caixas': (context) {
     return _rotaProtegida(
       route: '/historico_de_caixas',
@@ -279,16 +306,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  // Telas-hub (ex-agregadoras) não são mais destino de rota -- a lista de
+  // filhas virou acordeão no menu lateral (ver AppShell). Rotas antigas
+  // continuam existindo só pra não quebrar deep-link externo: redirecionam
+  // pra primeira filha, na mesma ordem do acordeão correspondente.
   '/administracao': (context) {
     return _rotaProtegida(
       route: '/administracao',
-      child: const AdministracaoMenuPage(),
+      child: const _RedirecionarRota(destino: '/usuarios'),
     );
   },
   '/relatorios': (context) {
     return _rotaProtegida(
       route: '/relatorios',
-      child: const RelatoriosMenuPage(),
+      child: const _RedirecionarRota(destino: '/relatorio_faturamento'),
     );
   },
 
@@ -296,7 +327,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/comercial': (context) {
     return _rotaProtegida(
       route: '/comercial',
-      child: const ComercialMenuPage(),
+      child: const _RedirecionarRota(destino: '/venda'),
     );
   },
   '/venda': (context) {
@@ -313,6 +344,8 @@ Map<String, Widget Function(BuildContext)> routes = {
                 onlyView: data.onlyView,
                 clienteOuFuncionario: true,
                 compacto: data.compacto,
+                construirInfoExtra: (pessoa) =>
+                    UltimaCompraClienteInfo(pessoa: pessoa),
               ),
           vendedoresSeletor:
               (data) =>
@@ -456,6 +489,18 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/ecommerce_pedidos': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_pedidos',
+      child: const PedidosPage(apenasOrigemEcommerce: true),
+    );
+  },
+  '/ecommerce_promocoes': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_promocoes',
+      child: PromocoesPage(apenasCanalEcommerce: true),
+    );
+  },
   '/chamar_entregador': (context) {
     return _rotaProtegida(
       route: '/chamar_entregador',
@@ -532,6 +577,19 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
+  },
+  '/importar_pedidos_transferencia_entrada': (context) {
+    return _rotaProtegida(
+      route: '/importar_pedidos_transferencia_entrada',
+      child: ImportarPedidosCsvPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
   },
   '/pedido': (context) {
     return PedidoPage(
@@ -825,14 +883,11 @@ Map<String, Widget Function(BuildContext)> routes = {
 
   '/consignacao_extrato': (context) {
     final argumentos = args(context);
-    final pessoaIdArg = argumentos['pessoaId'];
-    final pessoaId = pessoaIdArg is int
-        ? pessoaIdArg
-        : int.tryParse(pessoaIdArg?.toString() ?? '') ?? 0;
+    final consignacao = argumentos['consignacao'] as Consignacao;
 
     return _rotaProtegida(
       route: '/consignacao_extrato',
-      child: ConsignacaoExtratoPage(pessoaId: pessoaId),
+      child: ConsignacaoExtratoPage(consignacao: consignacao),
     );
   },
 
@@ -841,6 +896,12 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/menu_produtos',
       child: const MenuProdutosPage(),
+    );
+  },
+  '/importar_produtos': (context) {
+    return _rotaProtegida(
+      route: '/importar_produtos',
+      child: const ImportarProdutosCsvPage(),
     );
   },
   '/tamanhos': (context) {
@@ -954,6 +1015,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/selecionar_tabela_de_preco': (context) {
     return SelecionarTabelaDePrecoPage();
   },
+  '/importar_tabela_de_precos': (context) {
+    return _rotaProtegida(
+      route: '/importar_tabela_de_precos',
+      child: const ImportarTabelaDePrecoCsvPage(),
+    );
+  },
   '/tabela_de_preco_detalhe': (context) {
     return TabelaDePrecoDetalhePage(
       idTabelaDePreco: args(context)['idTabelaDePreco'],
@@ -974,7 +1041,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/gerencia_estoque': (context) {
     return _rotaProtegida(
       route: '/gerencia_estoque',
-      child: const GerenciaEstoqueMenuPage(),
+      child: const _RedirecionarRota(destino: '/entrada_manual_de_produtos'),
     );
   },
   '/estoque': (context) {
@@ -1020,6 +1087,12 @@ Map<String, Widget Function(BuildContext)> routes = {
               .toList();
         },
       ),
+    );
+  },
+  '/importar_estoque': (context) {
+    return _rotaProtegida(
+      route: '/importar_estoque',
+      child: const ImportarEstoqueCsvPage(),
     );
   },
   '/historico_estoque': (context) {
@@ -1253,6 +1326,35 @@ Widget _rotaProtegida({required String route, required Widget child}) {
   );
 }
 
+/// Substitui, sem histórico, a rota atual (uma tela-hub descontinuada) pela
+/// primeira filha do acordeão correspondente no menu lateral -- cobre
+/// deep-link externo que ainda aponte pra rota antiga.
+class _RedirecionarRota extends StatefulWidget {
+  final String destino;
+
+  const _RedirecionarRota({required this.destino});
+
+  @override
+  State<_RedirecionarRota> createState() => _RedirecionarRotaState();
+}
+
+class _RedirecionarRotaState extends State<_RedirecionarRota> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pushReplacementNamed(widget.destino);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator.adaptive()),
+    );
+  }
+}
+
 Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
   // Mesmo problema do deep-link em _rotaProtegida: no boot direto numa rota
   // protegida (F5 no web), o AppBloc ainda pode estar carregando o caixa da
@@ -1310,6 +1412,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_pedidos': ['PEDFC001'],
+  '/ecommerce_promocoes': ['PROMFC001'],
   '/listas_personalizadas': ['ECOFM004'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
@@ -1322,12 +1426,14 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_aniversariantes': ['RELFC009'],
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
+  '/importar_pedidos_transferencia_entrada': ['IMPFP007'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
+  '/importar_estoque': ['PRDFL001'],
   '/consultar_produto': ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
@@ -1350,9 +1456,15 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
+  '/importar_produtos': ['IMPFP001'],
   '/formas_de_pagamento': ['GERFM001'],
+  '/lancar_despesa': ['DESFM003'],
+  '/controle_despesas': ['DESFM003'],
+  '/categoria_despesa': ['DESFM001'],
+  '/origem_pagamento_despesa': ['DESFM002'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],
+  '/importar_tabela_de_precos': ['IMPFP002'],
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],

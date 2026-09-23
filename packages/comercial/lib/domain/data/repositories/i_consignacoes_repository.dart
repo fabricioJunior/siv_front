@@ -23,6 +23,7 @@ abstract class IConsignacoesRepository {
     required int id,
     int? funcionarioId,
     String? observacao,
+    double? valorAdiantado,
   });
 
   Future<void> recalcular(int id);

@@ -76,6 +76,7 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
         cep: event.cep,
         latitude: event.latitude,
         longitude: event.longitude,
+        exigeClienteNaVenda: event.exigeClienteNaVenda,
       );
 
       emit(
@@ -101,6 +102,7 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
           cep: event.cep,
           latitude: event.latitude,
           longitude: event.longitude,
+          exigeClienteNaVenda: event.exigeClienteNaVenda,
           empresa: empresaAtualizada,
         ),
       );
@@ -143,6 +145,7 @@ class EmpresaBloc extends Bloc<EmpresaEvent, EmpresaState> {
             cep: editState.cep,
             latitude: editState.latitude,
             longitude: editState.longitude,
+            exigeClienteNaVenda: editState.exigeClienteNaVenda ?? false,
           );
           emit(EmpresaSalvarSucesso(empresa: empresa));
         }

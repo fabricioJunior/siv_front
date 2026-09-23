@@ -282,6 +282,7 @@ abstract final class SivDimensoes {
   static const double linhaTabelaHorizontal = 22;
   static const double cabecalhoTabelaVertical = 14;
   static const double cabecalhoTabelaHorizontal = 22;
+  static const double gapColunaTabela = 16;
   static const double alturaBarraTitulo = 72;
   static const double paddingBarraTituloHorizontal = 34;
   static const double itemMenuVertical = 11;

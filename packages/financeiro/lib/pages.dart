@@ -12,3 +12,7 @@ export 'presentation/pages/contagem_do_caixa_page.dart';
 export 'presentation/widgets/formas_de_pagamento_seletor.dart';
 export 'presentation/pages/recibo_fechamento_caixa_page.dart';
 export 'presentation/pages/historico_de_caixas_page.dart';
+export 'presentation/pages/categoria_despesa_page.dart';
+export 'presentation/pages/origem_pagamento_despesa_page.dart';
+export 'presentation/pages/lancar_despesa_page.dart';
+export 'presentation/pages/controle_de_despesas_page.dart';

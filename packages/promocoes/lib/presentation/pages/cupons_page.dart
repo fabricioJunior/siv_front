@@ -1,6 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/presentation/debouncer.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/presentation.dart';
@@ -11,162 +12,142 @@ class CuponsPage extends StatelessWidget {
 
   CuponsPage({super.key});
 
+  Future<void> _abrirNovo(BuildContext context) async {
+    final result = await Navigator.of(context).pushNamed('/cupom/form');
+    if (result == true && context.mounted) {
+      context.read<CuponsBloc>().add(CuponsIniciou());
+    }
+  }
+
+  Future<void> _abrirEdicao(BuildContext context, Cupom item) async {
+    final result = await Navigator.of(context).pushNamed(
+      '/cupom/form',
+      arguments: {'idCupom': item.id},
+    );
+    if (result == true && context.mounted) {
+      context.read<CuponsBloc>().add(CuponsIniciou());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CuponsBloc>(
       create: (context) => bloc..add(CuponsIniciou()),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Cupons')),
-        floatingActionButton: BlocBuilder<CuponsBloc, CuponsState>(
-          builder: (context, state) {
-            final carregando = state is CuponsCarregarEmProgresso;
-
-            return FloatingActionButton(
-              onPressed: carregando
-                  ? null
-                  : () async {
-                      final result = await Navigator.of(
-                        context,
-                      ).pushNamed('/cupom/form');
-
-                      if (result == true) {
-                        // ignore: use_build_context_synchronously
-                        context.read<CuponsBloc>().add(CuponsIniciou());
-                      }
-                    },
-              child: carregando
-                  ? const CircularProgressIndicator.adaptive()
-                  : const Icon(Icons.add),
-            );
-          },
-        ),
-        body: SafeArea(
-          child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: SearchBar(
-                  hintText: 'Buscar por código',
-                  onChanged: (value) {
-                    debouncer.run(() {
-                      bloc.add(CuponsIniciou(busca: value));
-                    });
-                  },
-                  onSubmitted: (value) {
-                    bloc.add(CuponsIniciou(busca: value));
-                  },
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar por código',
+                      prefixIcon: Icon(Icons.search_outlined),
+                    ),
+                    onChanged: (value) => debouncer.run(
+                      () => bloc.add(CuponsIniciou(busca: value)),
+                    ),
+                    onSubmitted: (value) =>
+                        bloc.add(CuponsIniciou(busca: value)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: BlocBuilder<CuponsBloc, CuponsState>(
-                  builder: (context, state) {
-                    if (state is CuponsCarregarEmProgresso) {
-                      return const Center(
-                        child: CircularProgressIndicator.adaptive(),
-                      );
-                    }
-
-                    if (state is CuponsCarregarFalha) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text(
-                            'Falha ao carregar cupons.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final itens = state.cupons;
-                    if (itens.isEmpty) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text(
-                            'Nenhum cupom cadastrado.',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: itens.length,
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      itemBuilder: (context, index) {
-                        final item = itens[index];
-                        return _CupomCard(item: item);
-                      },
-                    );
-                  },
-                ),
+              const SizedBox(width: 12),
+              BlocBuilder<CuponsBloc, CuponsState>(
+                builder: (context, state) {
+                  final carregando = state is CuponsCarregarEmProgresso;
+                  return FilledButton.icon(
+                    onPressed: carregando ? null : () => _abrirNovo(context),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Novo cupom'),
+                  );
+                },
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
+          const SizedBox(height: SivDimensoes.gapCards),
+          Expanded(
+            child: BlocBuilder<CuponsBloc, CuponsState>(
+              builder: (context, state) {
+                if (state is CuponsCarregarEmProgresso) {
+                  return const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  );
+                }
 
-class _CupomCard extends StatelessWidget {
-  final Cupom item;
+                if (state is CuponsCarregarFalha) {
+                  return Center(
+                    child: Text(
+                      'Falha ao carregar cupons.',
+                      style: context.sivTextos.corpo
+                          .copyWith(color: context.sivColors.vinho),
+                    ),
+                  );
+                }
 
-  const _CupomCard({required this.item});
+                final itens = state.cupons;
+                if (itens.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Nenhum cupom cadastrado.',
+                      style: context.sivTextos.corpo,
+                    ),
+                  );
+                }
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor:
-              item.ativa ? Colors.green.shade100 : Colors.grey.shade300,
-          child: Icon(
-            Icons.confirmation_number_outlined,
-            color: item.ativa ? Colors.green.shade700 : Colors.grey.shade700,
+                final mobile = MediaQuery.sizeOf(context).width <
+                    SivDimensoes.breakpointMenuDrawer;
+
+                if (mobile) {
+                  return ListView.separated(
+                    itemCount: itens.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 9),
+                    itemBuilder: (context, index) => _CupomCardMobile(
+                      item: itens[index],
+                      onTap: () => _abrirEdicao(context, itens[index]),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  child: SivTabela(
+                    colunas: const [
+                      SivTabelaColuna(titulo: 'CÓDIGO', flex: 3),
+                      SivTabelaColuna(titulo: 'DESCONTO', flex: 2),
+                      SivTabelaColuna(titulo: 'VIGÊNCIA', flex: 2),
+                      SivTabelaColuna(titulo: 'SITUAÇÃO', flex: 1),
+                    ],
+                    quantidadeLinhas: itens.length,
+                    onLinhaTap: (indice) => _abrirEdicao(context, itens[indice]),
+                    linhaBuilder: (context, indice) =>
+                        _linhaTabela(context, itens[indice]),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        title: Text(
-          item.codigo,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_descricaoDesconto(item)),
-            Text(
-                '${_formatarData(item.dataInicio)} a ${_formatarData(item.dataFim)}'),
-            Text(
-              'Usos: ${item.usosRealizados}${item.limiteUsos != null ? '/${item.limiteUsos}' : ''}',
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.ativa ? 'Ativo' : 'Inativo',
-              style: TextStyle(color: item.ativa ? Colors.green : Colors.grey),
-            ),
-          ],
-        ),
-        onTap: () async {
-          final result = await Navigator.of(context).pushNamed(
-            '/cupom/form',
-            arguments: {'idCupom': item.id},
-          );
-
-          if (result == true && context.mounted) {
-            context.read<CuponsBloc>().add(CuponsIniciou());
-          }
-        },
+        ],
       ),
     );
   }
 
-  String _descricaoDesconto(Cupom item) {
+  List<Widget> _linhaTabela(BuildContext context, Cupom item) {
+    final textos = context.sivTextos;
+    return [
+      Text(
+        item.codigo,
+        style: textos.codigo.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      Text(_descricaoDesconto(item), style: textos.corpo.copyWith(fontSize: 13.5)),
+      Text(_vigencia(item), style: textos.corpo.copyWith(fontSize: 13)),
+      Align(alignment: Alignment.centerRight, child: _tagSituacao(context, item)),
+    ];
+  }
+
+  static String _descricaoDesconto(Cupom item) {
     switch (item.tipoDesconto) {
       case TipoDesconto.percentual:
         return '${item.valorPercentual ?? 0}% de desconto';
@@ -177,7 +158,89 @@ class _CupomCard extends StatelessWidget {
     }
   }
 
-  String _formatarData(DateTime data) {
-    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+  // ponytail: sem campo de "vigência contínua" no domínio -- exibe sempre o
+  // intervalo real de dataInicio/dataFim (mock mostrava "contínua"/"encerrado"
+  // como texto, mas isso não existe como dado hoje).
+  static String _vigencia(Cupom item) =>
+      '${_formatarData(item.dataInicio)} – ${_formatarData(item.dataFim)}';
+
+  static String _formatarData(DateTime data) =>
+      '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}';
+
+  static Widget _tagSituacao(BuildContext context, Cupom item) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final cor = item.ativa ? cores.acoProfundo : cores.textoApoio;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: item.ativa ? cores.selecaoFundo : cores.superficieRecuada,
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Text(
+        item.ativa ? 'Ativo' : 'Inativo',
+        style: textos.apoio.copyWith(color: cor, fontSize: 11),
+      ),
+    );
+  }
+}
+
+class _CupomCardMobile extends StatelessWidget {
+  final Cupom item;
+  final VoidCallback onTap;
+
+  const _CupomCardMobile({required this.item, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+
+    return Opacity(
+      opacity: item.ativa ? 1 : 0.55,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  border: Border.all(color: cores.hairline),
+                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.codigo,
+                            style: textos.codigo.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.5,
+                            ),
+                          ),
+                        ),
+                        CuponsPage._tagSituacao(context, item),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${CuponsPage._descricaoDesconto(item)} · ${CuponsPage._vigencia(item)}',
+                      style: textos.apoio.copyWith(color: cores.textoApoio),
+                    ),
+                  ],
+                ),
+              ),
+              ...sivCantosBlueprint(cores.hairline),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

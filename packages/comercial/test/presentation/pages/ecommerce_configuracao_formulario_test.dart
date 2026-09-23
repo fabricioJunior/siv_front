@@ -157,6 +157,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
+      // "Tabela de preço" vive na aba "Configurações" -- formulário virou
+      // 3 abas (Design/Integração/Configurações), ver
+      // ecommerce_configuracao_formulario.dart.
+      await tester.ensureVisible(find.text('Configurações'));
+      await tester.tap(find.text('Configurações'));
+      await tester.pumpAndSettle();
       expect(find.text('Tabela de preço'), findsOneWidget);
     },
   );
@@ -197,7 +203,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Produtos no site'), findsOneWidget);
+      // "Produtos no site" (atalho) vive na aba "Configurações" -- o rótulo
+      // é montado como "$label · $valor" num único Text.rich, então
+      // find.text() (igualdade exata) nunca bateria; textContaining é o
+      // certo aqui (bug pré-existente da asserção, só ficou visível agora
+      // que a aba deixou de ser exibida junto de tudo o resto).
+      await tester.ensureVisible(find.text('Configurações'));
+      await tester.tap(find.text('Configurações'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Produtos no site'), findsOneWidget);
     },
   );
 }

@@ -53,10 +53,10 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
 
 class _EcommerceConfiguracaoFormularioState
     extends State<EcommerceConfiguracaoFormulario> {
-  // Largura mínima da área do painel pra caber as 2 colunas lado a lado --
-  // menor que o breakpoint de página (SivDimensoes.breakpointMenuDrawer)
-  // porque aqui já é só a coluna direita do mestre-detalhe.
-  static const double _breakpointGrid = 640;
+  static const _corAbaAtiva = Color(0xFF5980A6);
+  static const _abas = ['Design', 'Integração', 'Configurações'];
+
+  int _abaSelecionada = 0;
 
   final _formKey = GlobalKey<FormState>();
   final _tituloController = TextEditingController();
@@ -143,7 +143,7 @@ class _EcommerceConfiguracaoFormularioState
               _iconeController.text = state.icone!;
             }
 
-            final colunaA = _BlueprintBox(
+            final abaDesign = _BlueprintBox(
               titulo: 'Identidade do canal',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,7 +196,7 @@ class _EcommerceConfiguracaoFormularioState
               ),
             );
 
-            final colunaB = Column(
+            final abaConfiguracoes = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _BlueprintBox(
@@ -289,51 +289,69 @@ class _EcommerceConfiguracaoFormularioState
               ],
             );
 
+            final abaIntegracao = state.id != null
+                ? _CardIntegracao(ecommerceId: state.id!)
+                : _BlueprintBox(
+                    titulo: 'Dados para integração',
+                    child: Text(
+                      'Salve o cadastro pra ver o ID do e-commerce e o endpoint do catálogo.',
+                      style: context.sivTextos.corpo,
+                    ),
+                  );
+
             return Form(
               key: _formKey,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SivDimensoes.paginaHorizontal,
-                  vertical: SivDimensoes.paginaVertical,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (state.id != null) ...[
-                      _CardIntegracao(ecommerceId: state.id!),
-                      const SizedBox(height: SivDimensoes.gapCards),
-                    ],
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth < _breakpointGrid) {
-                          return Column(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < _abas.length; i++)
+                          _AbaEcommerceConfig(
+                            titulo: _abas[i],
+                            ativa: _abaSelecionada == i,
+                            corAtiva: _corAbaAtiva,
+                            onTap: () => setState(() => _abaSelecionada = i),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: SivDimensoes.gapCards),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SivDimensoes.paginaHorizontal,
+                        vertical: SivDimensoes.paginaVertical,
+                      ),
+                      // IndexedStack (não TabBarView) -- mantém as 3 abas
+                      // sempre montadas, senão o Form.validate() ignora em
+                      // silêncio os campos da aba fora de tela ao salvar.
+                      child: IndexedStack(
+                        index: _abaSelecionada,
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              colunaA,
-                              const SizedBox(height: SivDimensoes.gapCards),
-                              colunaB,
+                              abaDesign,
+                              if (state.id != null) ...[
+                                const SizedBox(height: SivDimensoes.gapCards),
+                                PermissaoPorNome(
+                                  idComponente: 'ECOFM003',
+                                  child: _EcommerceBannersBloco(
+                                      ecommerceId: state.id!),
+                                ),
+                              ],
                             ],
-                          );
-                        }
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: colunaA),
-                            const SizedBox(width: SivDimensoes.gapCards),
-                            Expanded(child: colunaB),
-                          ],
-                        );
-                      },
-                    ),
-                    if (state.id != null) ...[
-                      const SizedBox(height: SivDimensoes.gapCards),
-                      PermissaoPorNome(
-                        idComponente: 'ECOFM003',
-                        child: _EcommerceBannersBloco(ecommerceId: state.id!),
+                          ),
+                          abaIntegracao,
+                          abaConfiguracoes,
+                        ],
                       ),
-                    ],
-                  ],
-                ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -420,6 +438,54 @@ class _EcommerceConfiguracaoFormularioState
             formasDePagamentoIds: formasDePagamentoIds ?? state.formasDePagamentoIds,
           ),
         );
+  }
+}
+
+// Aba simples (não usa TabBar/TabController -- conteúdo fica em IndexedStack,
+// ver comentário no build acima) com o mesmo tratamento visual do resto do
+// app: borda inferior de 2px na cor ativa, texto a 45% de opacidade inativo.
+class _AbaEcommerceConfig extends StatelessWidget {
+  final String titulo;
+  final bool ativa;
+  final Color corAtiva;
+  final VoidCallback onTap;
+
+  const _AbaEcommerceConfig({
+    required this.titulo,
+    required this.ativa,
+    required this.corAtiva,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        margin: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: ativa ? corAtiva : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          titulo,
+          style: textos.corpo.copyWith(
+            fontWeight: ativa ? FontWeight.w600 : FontWeight.w400,
+            color: ativa
+                ? cores.textoPrincipal
+                : cores.textoPrincipal.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
+    );
   }
 }
 

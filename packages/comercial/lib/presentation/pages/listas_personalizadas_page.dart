@@ -27,14 +27,12 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         _bloc.add(ListasPersonalizadasCarregarMaisSolicitado());
       }
     });
-    SivPageTitulo.definir('Minhas listas');
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _bloc.close();
-    SivPageTitulo.limpar();
     super.dispose();
   }
 
@@ -63,8 +61,17 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
             horizontal: SivDimensoes.paginaHorizontal,
             vertical: SivDimensoes.paginaVertical,
           ),
-          child: BlocBuilder<ListasPersonalizadasBloc, ListasPersonalizadasState>(
-            builder: (context, state) => _buildConteudo(context, state),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SivTituloPagina(titulo: 'Minhas listas'),
+              Expanded(
+                child: BlocBuilder<ListasPersonalizadasBloc,
+                    ListasPersonalizadasState>(
+                  builder: (context, state) => _buildConteudo(context, state),
+                ),
+              ),
+            ],
           ),
         ),
       ),

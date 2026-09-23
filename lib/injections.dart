@@ -30,6 +30,7 @@ import 'package:sistema/sistema_injections.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/leitor/produto_busca_do_leitor_data_source.dart';
 import 'package:siv_front/presentation/acesso_global_sessao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/indicadores_home/indicadores_home_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/data/infra/local_data_sourcers/sessao_local_data_sources.dart';
 import 'package:siv_front/data/infra/remote_data_sourcers/empresas_remote_data_source.dart';
@@ -139,6 +140,10 @@ void _presentation() {
     () => LimparSincronizacaoIncremental(paginacaoDataSource: sl()),
   );
 
+  sl.registerFactory<IndicadoresHomeBloc>(
+    () => IndicadoresHomeBloc(sl(), sl()),
+  );
+
   sl.registerLazySingleton<SyncDataBloc>(
     () => SyncDataBloc(
       sl(),
@@ -173,4 +178,3 @@ class InformacoesParaRequest implements IInformacoesParaRequests {
   @override
   Uri get uriBase => Uri.parse(apiBaseUrlConfig.urlBase);
 }
-

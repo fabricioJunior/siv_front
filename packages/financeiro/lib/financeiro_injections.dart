@@ -433,6 +433,6 @@ void _presentation() {
   );
 
   sl.registerFactory<DashboardDeDespesasBloc>(
-    () => DashboardDeDespesasBloc(sl()),
+    () => DashboardDeDespesasBloc(sl(), sl(), sl(), sl(), sl()),
   );
 }

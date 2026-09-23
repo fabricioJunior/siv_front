@@ -35,6 +35,11 @@ const estoqueAcordeaoItens = <SivMenuAcordeaoFilho>[
     rota: '/balancos',
     componente: 'PRDFL001',
   ),
+  SivMenuAcordeaoFilho(
+    label: 'Importar estoque',
+    rota: '/importar_estoque',
+    componente: 'PRDFL001',
+  ),
 ];
 
 class GerenciaEstoqueMenuPage extends StatelessWidget {
@@ -90,6 +95,14 @@ class GerenciaEstoqueMenuPage extends StatelessWidget {
         cor: Colors.blue,
         componente: 'PRDFL001',
         route: '/balancos',
+      ),
+      const _ItemData(
+        icon: Icons.upload_file,
+        titulo: 'Importar estoque',
+        subtitulo: 'Atualização em massa de saldo via planilha CSV.',
+        cor: Colors.teal,
+        componente: 'PRDFL001',
+        route: '/importar_estoque',
       ),
     ];
 

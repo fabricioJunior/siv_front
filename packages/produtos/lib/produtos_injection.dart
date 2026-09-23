@@ -25,6 +25,9 @@ import 'package:produtos/domain/data/remote/i_codigos_de_barras_da_referencia_re
 import 'package:produtos/data/remote/grade_da_referencia_remote_datasource.dart';
 import 'package:produtos/data/repositorios/grade_da_referencia_repository.dart';
 import 'package:produtos/domain/data/remote/i_grade_da_referencia_remote_data_source.dart';
+import 'package:produtos/data/remote/importacao_produto_remote_data_source.dart';
+import 'package:produtos/data/repositorios/importacao_produto_repository.dart';
+import 'package:produtos/domain/data/remote/i_importacao_produto_remote_data_source.dart';
 import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/estampas_repository.dart';
@@ -129,6 +132,10 @@ void _data() {
   sl.registerFactory<IGradeDaReferenciaRemoteDataSource>(
     () => GradeDaReferenciaRemoteDatasource(informacoesParaRequest: sl()),
   );
+
+  sl.registerFactory<IImportacaoProdutoRemoteDataSource>(
+    () => ImportacaoProdutoRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositores() {
@@ -199,6 +206,10 @@ void _repositores() {
 
   sl.registerFactory<IGradeDaReferenciaRepository>(
     () => GradeDaReferenciaRepository(gradeDaReferenciaRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IImportacaoProdutoRepository>(
+    () => ImportacaoProdutoRepository(remoteDataSource: sl()),
   );
 }
 
@@ -448,6 +459,18 @@ void _usesCases() {
   sl.registerFactory<RecuperarGradeDaReferencia>(
     () => RecuperarGradeDaReferencia(gradeDaReferenciaRepository: sl()),
   );
+
+  sl.registerFactory<BaixarTemplateImportacaoProdutos>(
+    () => BaixarTemplateImportacaoProdutos(repository: sl()),
+  );
+
+  sl.registerFactory<ImportarProdutosCsv>(
+    () => ImportarProdutosCsv(repository: sl()),
+  );
+
+  sl.registerFactory<ConsultarImportacaoProduto>(
+    () => ConsultarImportacaoProduto(repository: sl()),
+  );
 }
 
 void _presentantion() {
@@ -532,6 +555,10 @@ void _presentantion() {
       leitorDataDatasource: sl<ILeitorDataDatasource>(),
       recuperarGradeDaReferencia: sl(),
     ),
+  );
+
+  sl.registerFactory<ImportarProdutosCsvBloc>(
+    () => ImportarProdutosCsvBloc(sl(), sl(), sl()),
   );
 }
 

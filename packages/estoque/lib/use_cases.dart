@@ -4,3 +4,4 @@ export 'domain/usecases/sincronizar_estoque.dart';
 export 'domain/usecases/balanco_usecases.dart';
 export 'domain/usecases/recuperar_historico_de_estoque.dart';
 export 'domain/usecases/get_relatorio_produtos_defasados.dart';
+export 'domain/usecases/importar_estoque_csv.dart';

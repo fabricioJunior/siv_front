@@ -110,6 +110,23 @@ class MenuProdutosPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ItemMenu(
+            icon: Icons.upload_file,
+            titulo: 'Importar produtos',
+            subtitulo: 'Cadastro em massa via planilha CSV.',
+            componente: 'IMPFP001',
+            onTap: () => Navigator.of(context).pushNamed('/importar_produtos'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
+            icon: Icons.upload_file,
+            titulo: 'Importar preços',
+            subtitulo: 'Atualização em massa de preços de tabela via CSV.',
+            componente: 'IMPFP002',
+            onTap: () =>
+                Navigator.of(context).pushNamed('/importar_tabela_de_precos'),
+          ),
+          const SizedBox(height: 12),
+          _ItemMenu(
             icon: Icons.confirmation_number_outlined,
             titulo: 'Cupons',
             subtitulo: 'Crie e gerencie cupons de desconto.',

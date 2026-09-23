@@ -255,20 +255,8 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   ///DESPESAS:
-  '/categorias_despesa': (context) {
-    return _rotaProtegida(
-      route: '/categorias_despesa',
-      child: CategoriasDespesaPage(),
-    );
-  },
   '/categoria_despesa': (context) {
     return CategoriaDespesaPage(id: args(context)['id']);
-  },
-  '/origens_pagamento_despesa': (context) {
-    return _rotaProtegida(
-      route: '/origens_pagamento_despesa',
-      child: OrigensPagamentoDespesaPage(),
-    );
   },
   '/origem_pagamento_despesa': (context) {
     return OrigemPagamentoDespesaPage(id: args(context)['id']);
@@ -279,16 +267,10 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: LancarDespesaPage(caixaId: args(context)['caixaId']),
     );
   },
-  '/calendario_despesas': (context) {
+  '/controle_despesas': (context) {
     return _rotaProtegida(
-      route: '/calendario_despesas',
-      child: const CalendarioDeDespesasPage(),
-    );
-  },
-  '/dashboard_despesas': (context) {
-    return _rotaProtegida(
-      route: '/dashboard_despesas',
-      child: const DashboardDeDespesasPage(),
+      route: '/controle_despesas',
+      child: const ControleDeDespesasPage(),
     );
   },
   '/historico_de_caixas': (context) {
@@ -586,6 +568,19 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
+  },
+  '/importar_pedidos_transferencia_entrada': (context) {
+    return _rotaProtegida(
+      route: '/importar_pedidos_transferencia_entrada',
+      child: ImportarPedidosCsvPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
   },
   '/pedido': (context) {
     return PedidoPage(
@@ -894,6 +889,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const MenuProdutosPage(),
     );
   },
+  '/importar_produtos': (context) {
+    return _rotaProtegida(
+      route: '/importar_produtos',
+      child: const ImportarProdutosCsvPage(),
+    );
+  },
   '/tamanhos': (context) {
     return TamanhosPage();
   },
@@ -1005,6 +1006,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/selecionar_tabela_de_preco': (context) {
     return SelecionarTabelaDePrecoPage();
   },
+  '/importar_tabela_de_precos': (context) {
+    return _rotaProtegida(
+      route: '/importar_tabela_de_precos',
+      child: const ImportarTabelaDePrecoCsvPage(),
+    );
+  },
   '/tabela_de_preco_detalhe': (context) {
     return TabelaDePrecoDetalhePage(
       idTabelaDePreco: args(context)['idTabelaDePreco'],
@@ -1071,6 +1078,12 @@ Map<String, Widget Function(BuildContext)> routes = {
               .toList();
         },
       ),
+    );
+  },
+  '/importar_estoque': (context) {
+    return _rotaProtegida(
+      route: '/importar_estoque',
+      child: const ImportarEstoqueCsvPage(),
     );
   },
   '/historico_estoque': (context) {
@@ -1404,12 +1417,14 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_aniversariantes': ['RELFC009'],
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
+  '/importar_pedidos_transferencia_entrada': ['IMPFP007'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
+  '/importar_estoque': ['PRDFL001'],
   '/consultar_produto': ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
@@ -1432,14 +1447,13 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
+  '/importar_produtos': ['IMPFP001'],
   '/formas_de_pagamento': ['GERFM001'],
-  '/categorias_despesa': ['DESFM001'],
-  '/origens_pagamento_despesa': ['DESFM002'],
   '/lancar_despesa': ['DESFM003'],
-  '/calendario_despesas': ['DESFM003'],
-  '/dashboard_despesas': ['DESFM003'],
+  '/controle_despesas': ['DESFM003'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],
+  '/importar_tabela_de_precos': ['IMPFP002'],
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],

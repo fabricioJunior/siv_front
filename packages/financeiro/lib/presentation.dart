@@ -30,44 +30,26 @@ export 'presentation/pages/selecionar_caixa_page.dart';
 export 'presentation/widgets/seletor_caixa.dart';
 export 'presentation/blocs/categorias_despesa_bloc/categorias_despesa_bloc.dart';
 export 'presentation/blocs/categoria_despesa_bloc/categoria_despesa_bloc.dart';
-export 'presentation/pages/categorias_despesa_page.dart';
 export 'presentation/pages/categoria_despesa_page.dart';
 export 'presentation/blocs/origens_pagamento_despesa_bloc/origens_pagamento_despesa_bloc.dart';
 export 'presentation/blocs/origem_pagamento_despesa_bloc/origem_pagamento_despesa_bloc.dart';
-export 'presentation/pages/origens_pagamento_despesa_page.dart';
 export 'presentation/pages/origem_pagamento_despesa_page.dart';
 export 'presentation/blocs/lancar_despesa_bloc/lancar_despesa_bloc.dart';
 export 'presentation/pages/lancar_despesa_page.dart';
 export 'presentation/blocs/calendario_de_despesas_bloc/calendario_de_despesas_bloc.dart';
-export 'presentation/pages/calendario_de_despesas_page.dart';
 export 'presentation/blocs/dashboard_de_despesas_bloc/dashboard_de_despesas_bloc.dart';
-export 'presentation/pages/dashboard_de_despesas_page.dart';
+export 'presentation/pages/controle_de_despesas_page.dart';
 
 /// Filhos do acordeão "Despesas" no menu lateral (ver `AppShell` do app).
 const despesasAcordeaoItens = <SivMenuAcordeaoFilho>[
   SivMenuAcordeaoFilho(
-    label: 'Dashboard',
-    rota: '/dashboard_despesas',
-    componente: 'DESFM003',
-  ),
-  SivMenuAcordeaoFilho(
-    label: 'Calendário de pagamentos',
-    rota: '/calendario_despesas',
+    label: 'Controle de despesas',
+    rota: '/controle_despesas',
     componente: 'DESFM003',
   ),
   SivMenuAcordeaoFilho(
     label: 'Lançar despesa',
     rota: '/lancar_despesa',
     componente: 'DESFM003',
-  ),
-  SivMenuAcordeaoFilho(
-    label: 'Categorias de despesa',
-    rota: '/categorias_despesa',
-    componente: 'DESFM001',
-  ),
-  SivMenuAcordeaoFilho(
-    label: 'Origens de pagamento',
-    rota: '/origens_pagamento_despesa',
-    componente: 'DESFM002',
   ),
 ];

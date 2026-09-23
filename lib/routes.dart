@@ -8,7 +8,7 @@ import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
-import 'package:core/seletores.dart' show SelectData, SeletorData;
+import 'package:core/seletores.dart' show SelectData;
 import 'package:empresas/presentation.dart';
 import 'package:empresas/use_cases.dart' show RecuperarTerminais;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
@@ -154,8 +154,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/forma_de_pagamento': (context) {
     return FormaDePagamentoPage(
       idFormaDePagamento: args(context)['idFormaDePagamento'],
-      obterProviders: () =>
-          sl<RecuperarProvidersPagamentosAvulsos>().call(),
+      obterProviders: () => sl<RecuperarProvidersPagamentosAvulsos>().call(),
     );
   },
   '/fluxo_de_caixa': (context) {
@@ -254,6 +253,7 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: ReciboFechamentoCaixaPage(caixaId: caixaId),
     );
   },
+
   ///DESPESAS:
   '/categoria_despesa': (context) {
     return _rotaProtegida(
@@ -335,51 +335,43 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/venda',
         child: VendaPage(
-          pessoaSeletor: (data) =>
-              SeletorPessoa(
-                titulo: 'Cliente',
-                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                retornarSomenteId: false,
-                onChanged: data.onChanged,
-                onlyView: data.onlyView,
-                clienteOuFuncionario: true,
-                compacto: data.compacto,
-                construirInfoExtra: (pessoa) =>
-                    UltimaCompraClienteInfo(pessoa: pessoa),
-              ),
-          vendedoresSeletor:
-              (data) =>
-                  FuncionarioSeletor(
-                    modo: FuncionarioSeletorModo.unica,
-                    tipoFuncionario: TipoFuncionario.vendedor,
-                    itemsSelecionadosInicial:
-                        data.itemsSelecionadosInicial ?? const [],
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                    titulo: 'Vendedor',
-                    compacto: data.compacto,
-                  ),
-          tabelasDePrecoSeletor:
-              (data) =>
-                  TabelasDePrecoSeletor(
-                    titulo: 'Tabela de preço',
-                    modo: TabelasDePrecoSeletorModo.unica,
-                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                    compacto: data.compacto,
-                  ),
-          formasDePagamentoSeletor:
-              (data) =>
-                  FormasDePagamentoSeletor(
-                    modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                    titulo: 'Forma de pagamento',
-                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-                    idsPermitidos: data.idsPermitidos,
-                  ),
+          pessoaSeletor: (data) => SeletorPessoa(
+            titulo: 'Cliente',
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            retornarSomenteId: false,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            clienteOuFuncionario: true,
+            compacto: data.compacto,
+            construirInfoExtra: (pessoa) =>
+                UltimaCompraClienteInfo(pessoa: pessoa),
+          ),
+          vendedoresSeletor: (data) => FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            tipoFuncionario: TipoFuncionario.vendedor,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Vendedor',
+            compacto: data.compacto,
+          ),
+          tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            titulo: 'Tabela de preço',
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            compacto: data.compacto,
+          ),
+          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
+            modo: FormasDePagamentoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Forma de pagamento',
+            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+            idsPermitidos: data.idsPermitidos,
+          ),
         ),
       ),
     );
@@ -440,10 +432,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/ecommerces': (context) {
-    return _rotaProtegida(
-      route: '/ecommerces',
-      child: const EcommercesPage(),
-    );
+    return _rotaProtegida(route: '/ecommerces', child: const EcommercesPage());
   },
   '/configuracao_ecommerce': (context) {
     final routeArgs = args(context);
@@ -564,14 +553,11 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/relatorio_vendas_por_funcionario',
       child: RelatorioVendasPorFuncionarioPage(
-        funcionariosSeletor:
-            (data) =>
-                FuncionarioSeletor(
-                  modo: FuncionarioSeletorModo.multipla,
-                  onChanged: data.onChanged,
-                  itemsSelecionadosInicial:
-                      data.itemsSelecionadosInicial ?? const [],
-                ),
+        funcionariosSeletor: (data) => FuncionarioSeletor(
+          modo: FuncionarioSeletorModo.multipla,
+          onChanged: data.onChanged,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+        ),
       ),
     );
   },
@@ -594,29 +580,26 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pedido': (context) {
     return PedidoPage(
       idPedido: args(context)['idPedido'],
-      pessoaSeletor: (data) =>
-          SeletorPessoa(
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            retornarSomenteId: false,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-          ),
-      funcionarioSeletor: (data) =>
-          FuncionarioSeletor(
-            modo: FuncionarioSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Funcionário',
-          ),
-      tabelaDePrecoSeletor: (data) =>
-          TabelasDePrecoSeletor(
-            modo: TabelasDePrecoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Tabela de preço',
-          ),
+      pessoaSeletor: (data) => SeletorPessoa(
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        retornarSomenteId: false,
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+      ),
+      funcionarioSeletor: (data) => FuncionarioSeletor(
+        modo: FuncionarioSeletorModo.unica,
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+        titulo: 'Funcionário',
+      ),
+      tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+        modo: TabelasDePrecoSeletorModo.unica,
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+        titulo: 'Tabela de preço',
+      ),
     );
   },
   '/romaneios': (context) {
@@ -626,14 +609,11 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/vendas',
       child: VendasPage(
-        funcionariosSeletor:
-            (data) =>
-                FuncionarioSeletor(
-                  modo: FuncionarioSeletorModo.multipla,
-                  onChanged: data.onChanged,
-                  itemsSelecionadosInicial:
-                      data.itemsSelecionadosInicial ?? const [],
-                ),
+        funcionariosSeletor: (data) => FuncionarioSeletor(
+          modo: FuncionarioSeletorModo.multipla,
+          onChanged: data.onChanged,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+        ),
       ),
     );
   },
@@ -647,26 +627,23 @@ Map<String, Widget Function(BuildContext)> routes = {
     return RomaneioPage(
       idRomaneio: args(context)['idRomaneio'],
       permitirEdicao: args(context)['permitirEdicao'] ?? true,
-      funcionarioSeletor: (data) =>
-          FuncionarioSeletor(
-            modo: FuncionarioSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-          ),
-      tableDePrecoSeletor: (data) =>
-          TabelasDePrecoSeletor(
-            modo: TabelasDePrecoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onlyView: data.onlyView,
-          ),
-      pessoaSeletor: (data) =>
-          SeletorPessoa(
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            retornarSomenteId: false,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-          ),
+      funcionarioSeletor: (data) => FuncionarioSeletor(
+        modo: FuncionarioSeletorModo.unica,
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+      ),
+      tableDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+        modo: TabelasDePrecoSeletorModo.unica,
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        onlyView: data.onlyView,
+      ),
+      pessoaSeletor: (data) => SeletorPessoa(
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        retornarSomenteId: false,
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+      ),
     );
   },
   '/cancelar_romaneio': (context) {
@@ -763,34 +740,28 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/consignacao_abrir',
         child: AbrirConsignacaoPage(
-          pessoaSeletor: (data) =>
-              SeletorPessoa(
-                titulo: 'Cliente',
-                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                retornarSomenteId: false,
-                onChanged: data.onChanged,
-                onlyView: data.onlyView,
-                eCliente: true,
-              ),
-          funcionarioSeletor:
-              (data) =>
-                  FuncionarioSeletor(
-                    modo: FuncionarioSeletorModo.unica,
-                    itemsSelecionadosInicial:
-                        data.itemsSelecionadosInicial ?? const [],
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                    titulo: 'Vendedor',
-                  ),
-          tabelaDePrecoSeletor:
-              (data) =>
-                  TabelasDePrecoSeletor(
-                    titulo: 'Tabela de preço',
-                    modo: TabelasDePrecoSeletorModo.unica,
-                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                  ),
+          pessoaSeletor: (data) => SeletorPessoa(
+            titulo: 'Cliente',
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            retornarSomenteId: false,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            eCliente: true,
+          ),
+          funcionarioSeletor: (data) => FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Vendedor',
+          ),
+          tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            titulo: 'Tabela de preço',
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+          ),
         ),
       ),
     );
@@ -846,21 +817,20 @@ Map<String, Widget Function(BuildContext)> routes = {
         route: '/consignacao_acerto',
         child: ConsignacaoAcertoPage(
           consignacao: consignacao,
-          formasDePagamentoSeletor:
-              (data) =>
-                  FormasDePagamentoSeletor(
-                    modo: FormasDePagamentoSeletorModo.unica,
-                    itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                    onChanged: data.onChanged,
-                    onlyView: data.onlyView,
-                    titulo: 'Forma de pagamento',
-                    tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-                    idsPermitidos: data.idsPermitidos,
-                  ),
+          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
+            modo: FormasDePagamentoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Forma de pagamento',
+            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
+            idsPermitidos: data.idsPermitidos,
+          ),
         ),
       ),
     );
   },
+
   ///PROMOCOES E CUPONS:
   '/promocoes': (context) {
     return _rotaProtegida(route: '/promocoes', child: PromocoesPage());
@@ -992,15 +962,13 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/impressao_etiquetas',
       child: ImpressaoDeEtiquetasPage(
-        tabelasDePrecoSeletor:
-            (data) =>
-                TabelasDePrecoSeletor(
-                  modo: TabelasDePrecoSeletorModo.unica,
-                  itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-                  onChanged: data.onChanged,
-                  onlyView: data.onlyView,
-                  titulo: 'Tabela de preco',
-                ),
+        tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preco',
+        ),
       ),
     );
   },
@@ -1048,31 +1016,26 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/estoque',
       child: EstoqueSaldoPage(
-        seletorCores: (data) =>
-            CorSeletor(
-              modo: CorSeletorModo.multipla,
-              coresSelecionadasIniciais: (data.itemsSelecionadosInicial ?? [])
-                  .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
-                  .toList(),
-              onChanged: data.onChanged,
-            ),
-        seletorTamanhos: (data) =>
-            TamanhoSeletor(
-              modo: TamanhoSeletorModo.multipla,
-              tamanhosSelecionadosIniciais: (data.itemsSelecionadosInicial ?? [])
-                  .map(
-                    (s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false),
-                  )
-                  .toList(),
-              onChanged: data.onChanged,
-            ),
-        seletorTabelaPreco: (data) =>
-            TabelasDePrecoSeletor(
-              modo: TabelasDePrecoSeletorModo.unica,
-              itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-              onChanged: data.onChanged,
-              titulo: 'Tabela de preço',
-            ),
+        seletorCores: (data) => CorSeletor(
+          modo: CorSeletorModo.multipla,
+          coresSelecionadasIniciais: (data.itemsSelecionadosInicial ?? [])
+              .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
+              .toList(),
+          onChanged: data.onChanged,
+        ),
+        seletorTamanhos: (data) => TamanhoSeletor(
+          modo: TamanhoSeletorModo.multipla,
+          tamanhosSelecionadosIniciais: (data.itemsSelecionadosInicial ?? [])
+              .map((s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false))
+              .toList(),
+          onChanged: data.onChanged,
+        ),
+        seletorTabelaPreco: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
         obterPrecosDaTabela: (tabelaDePrecoId) async {
           final precos = await sl<RecuperarPrecosDasReferencias>().call(
             tabelaDePrecoId: tabelaDePrecoId,
@@ -1124,20 +1087,15 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/entrada_manual_de_produtos',
         child: EntradaManualDeProdutosPage(
-          funcionariosSeletor:
-              (data) =>
-                  FuncionarioSeletor(
-                    modo: FuncionarioSeletorModo.unica,
-                    onChanged: data.onChanged,
-                    itemsSelecionadosInicial:
-                        data.itemsSelecionadosInicial ?? const [],
-                  ),
-          tabelasDePrecoSeletor:
-              (data) =>
-                  TabelasDePrecoSeletor(
-                    modo: TabelasDePrecoSeletorModo.unica,
-                    onChanged: data.onChanged,
-                  ),
+          funcionariosSeletor: (data) => FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            onChanged: data.onChanged,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+          ),
+          tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            onChanged: data.onChanged,
+          ),
         ),
       ),
     );
@@ -1148,20 +1106,15 @@ Map<String, Widget Function(BuildContext)> routes = {
         route: '/saida_manual_de_produtos',
         child: EntradaManualDeProdutosPage(
           modo: ModoMovimentacaoManual.saida,
-          funcionariosSeletor:
-              (data) =>
-                  FuncionarioSeletor(
-                    modo: FuncionarioSeletorModo.unica,
-                    onChanged: data.onChanged,
-                    itemsSelecionadosInicial:
-                        data.itemsSelecionadosInicial ?? const [],
-                  ),
-          tabelasDePrecoSeletor:
-              (data) =>
-                  TabelasDePrecoSeletor(
-                    modo: TabelasDePrecoSeletorModo.unica,
-                    onChanged: data.onChanged,
-                  ),
+          funcionariosSeletor: (data) => FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            onChanged: data.onChanged,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+          ),
+          tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            onChanged: data.onChanged,
+          ),
         ),
       ),
     );

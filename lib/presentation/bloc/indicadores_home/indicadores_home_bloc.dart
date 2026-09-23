@@ -3,6 +3,7 @@ import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/domain/use_cases/contar_pedidos_por_situacao.dart';
 import 'package:comercial/domain/use_cases/get_relatorio_faturamento.dart';
 import 'package:core/bloc.dart';
+import 'package:core/equals.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 
 part 'indicadores_home_event.dart';

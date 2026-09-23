@@ -18,7 +18,7 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build windows --release
+      - run: flutter build windows --release --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
         env:
           CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 

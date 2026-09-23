@@ -15,6 +15,8 @@ class LancarDespesaState extends Equatable {
   final int? origemPagamentoId;
   final int? formaPagamentoId;
   final DateTime? dataPagamento;
+  final DateTime? dataInicial;
+  final bool pulouPorFechamento;
   final int? diaVencimento;
   final int? parcelas;
   final Despesa? despesaCriada;
@@ -34,6 +36,8 @@ class LancarDespesaState extends Equatable {
     this.origemPagamentoId,
     this.formaPagamentoId,
     this.dataPagamento,
+    this.dataInicial,
+    this.pulouPorFechamento = false,
     this.diaVencimento,
     this.parcelas,
     this.despesaCriada,
@@ -41,15 +45,29 @@ class LancarDespesaState extends Equatable {
     required this.step,
   });
 
-  /// Preview exibido no modo parcelado (ex: "7x de R$300,00 a partir de 09/2026").
-  String? get previewParcelamento {
-    if (modo != ModoLancamentoDespesa.parcelada) return null;
+  /// Categoria só ativas -- o cadastro pode ter inativas, aqui não entram.
+  List<CategoriaDespesa> get categoriasAtivas =>
+      categorias.where((c) => !c.inativa).toList();
+
+  OrigemPagamentoDespesa? get origemSelecionada {
+    for (final origem in origens) {
+      if (origem.id == origemPagamentoId) return origem;
+    }
+    return null;
+  }
+
+  bool get origemEhCredito =>
+      origemSelecionada?.tipo.diaVencimentoObrigatorio ?? false;
+
+  /// Preview das parcelas no modo parcelado: número, data e valor de cada
+  /// uma -- a 1ª data é `dataPagamento` (hoje ou vencimento do cartão), as
+  /// seguintes mês a mês com clamp de fim de mês.
+  List<(int, DateTime)> get previewParcelas {
+    if (modo != ModoLancamentoDespesa.parcelada) return const [];
     final total = parcelas;
-    final valorParcela = valor;
-    if (total == null || total <= 1 || valorParcela == null) return null;
-    final agora = DateTime.now();
-    return '${total}x de R\$${valorParcela.toStringAsFixed(2)} a partir de '
-        '${agora.month.toString().padLeft(2, '0')}/${agora.year}';
+    final primeira = dataPagamento;
+    if (total == null || total <= 1 || primeira == null) return const [];
+    return [for (var i = 0; i < total; i++) (i + 1, vencimentoNoMes(primeira, i))];
   }
 
   LancarDespesaState copyWith({
@@ -66,6 +84,8 @@ class LancarDespesaState extends Equatable {
     int? formaPagamentoId,
     bool limparFormaPagamento = false,
     DateTime? dataPagamento,
+    DateTime? dataInicial,
+    bool? pulouPorFechamento,
     int? diaVencimento,
     int? parcelas,
     Despesa? despesaCriada,
@@ -86,6 +106,8 @@ class LancarDespesaState extends Equatable {
       formaPagamentoId:
           limparFormaPagamento ? null : (formaPagamentoId ?? this.formaPagamentoId),
       dataPagamento: dataPagamento ?? this.dataPagamento,
+      dataInicial: dataInicial ?? this.dataInicial,
+      pulouPorFechamento: pulouPorFechamento ?? this.pulouPorFechamento,
       diaVencimento: diaVencimento ?? this.diaVencimento,
       parcelas: parcelas ?? this.parcelas,
       despesaCriada: despesaCriada ?? this.despesaCriada,
@@ -108,6 +130,8 @@ class LancarDespesaState extends Equatable {
         origemPagamentoId,
         formaPagamentoId,
         dataPagamento,
+        dataInicial,
+        pulouPorFechamento,
         diaVencimento,
         parcelas,
         despesaCriada,

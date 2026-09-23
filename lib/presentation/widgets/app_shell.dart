@@ -240,7 +240,14 @@ final _itensGestao = <_ItemDeNavegacao>[
   _ItemDeNavegacao(
     label: 'Despesas',
     icone: Icons.request_quote_outlined,
-    componentesNecessarios: _uniaoComponentes(_itensDespesasFilhos),
+    // União com os componentes da API de despesas que não têm item de menu
+    // próprio (categorias/origens, acessados via aba Cadastros) -- sem isso
+    // o botão some pra quem só tem DESFM001/002 e nenhum filho visível.
+    componentesNecessarios: {
+      ..._uniaoComponentes(_itensDespesasFilhos),
+      'DESFM001',
+      'DESFM002',
+    }.toList(),
     filhos: _itensDespesasFilhos,
   ),
 ];
@@ -322,7 +329,6 @@ class _AppShellCascaState extends State<_AppShellCasca> {
 
   @override
   Widget build(BuildContext context) {
-    final itensTodos = [..._itensDiaADia, ..._itensGestao, ..._itensSistema];
     final chavePaiAtiva = _mapaFilhoParaChavePai[widget.rotaAtual];
 
     // Módulo correspondente à rota ativa abre automaticamente, mas só ao
@@ -333,19 +339,6 @@ class _AppShellCascaState extends State<_AppShellCasca> {
       _expandidos.add(chavePaiAtiva);
     }
     _ultimaRotaProcessada = widget.rotaAtual;
-
-    final itemAtivoTopo = itensTodos
-        .where((item) => item.rota == widget.rotaAtual)
-        .toList();
-    final paiAtivo = chavePaiAtiva == null
-        ? null
-        : itensTodos.where((item) => item.chave == chavePaiAtiva).toList();
-
-    final tituloAtivo = itemAtivoTopo.isNotEmpty
-        ? itemAtivoTopo.first.label
-        : (paiAtivo != null && paiAtivo.isNotEmpty
-              ? paiAtivo.first.label
-              : null);
 
     return SivScaffold(
       colapsoMenuForcado: _colapsoManual,
@@ -395,18 +388,7 @@ class _AppShellCascaState extends State<_AppShellCasca> {
           ),
         ],
       ),
-      // Rotas sem label no menu (ex: telas abertas fora da navegação
-      // principal) renderizam o próprio título -- ver [SivTituloPagina] --
-      // então não duplica nada aqui.
-      corpo: tituloAtivo == null
-          ? widget.child
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SivTituloPagina(titulo: tituloAtivo),
-                Expanded(child: widget.child),
-              ],
-            ),
+      corpo: widget.child,
     );
   }
 

@@ -5,8 +5,9 @@ abstract class LancarDespesaEvent {}
 class LancarDespesaIniciou extends LancarDespesaEvent {
   final int empresaId;
   final int? caixaId;
+  final DateTime? dataInicial;
 
-  LancarDespesaIniciou({required this.empresaId, this.caixaId});
+  LancarDespesaIniciou({required this.empresaId, this.caixaId, this.dataInicial});
 }
 
 class LancarDespesaCampoAlterado extends LancarDespesaEvent {

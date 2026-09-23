@@ -42,6 +42,8 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         _recuperarFormasDePagamento.call(),
       ]);
 
+      final dataInicial = event.dataInicial ?? DateTime.now();
+
       emit(
         state.copyWith(
           empresaId: event.empresaId,
@@ -49,7 +51,8 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
           categorias: resultados[0] as List<CategoriaDespesa>,
           origens: resultados[1] as List<OrigemPagamentoDespesa>,
           formasDePagamento: resultados[2] as List<FormaDePagamento>,
-          dataPagamento: DateTime.now(),
+          dataInicial: dataInicial,
+          dataPagamento: dataInicial,
           parcelas: 1,
           step: LancarDespesaStep.editando,
         ),
@@ -64,20 +67,34 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
     LancarDespesaCampoAlterado event,
     Emitter<LancarDespesaState> emit,
   ) {
-    var dataPagamento = event.dataPagamento;
-
-    final origemId = event.origemPagamentoId;
     final modoAtual = event.modo ?? state.modo;
-    if (origemId != null && modoAtual == ModoLancamentoDespesa.avulsa) {
-      final origem = _origemPorId(state.origens, origemId);
+    final origemIdAtual = event.origemPagamentoId ?? state.origemPagamentoId;
+
+    var dataPagamento = event.dataPagamento ?? state.dataPagamento;
+    var pulouPorFechamento = state.pulouPorFechamento;
+
+    // Recalcula sempre que modo ou origem mudam (não só origem), e volta pra
+    // data inicial quando a origem sai de crédito pra outra -- ver 3.4/3.3.
+    final precisaRecalcular = event.dataPagamento == null &&
+        (event.modo != null || event.origemPagamentoId != null) &&
+        (modoAtual == ModoLancamentoDespesa.avulsa ||
+            modoAtual == ModoLancamentoDespesa.parcelada);
+
+    if (precisaRecalcular) {
+      final origem = origemIdAtual == null ? null : _origemPorId(state.origens, origemIdAtual);
       final diaVencimentoCartao = origem?.diaVencimento;
       if (origem != null &&
           origem.tipo.diaVencimentoObrigatorio &&
           diaVencimentoCartao != null) {
-        dataPagamento = proximaDataVencimentoCartao(
+        final (data, pulou) = proximaDataVencimentoCartao(
           diaVencimentoCartao,
           prazoFechamentoDias: origem.prazoFechamentoDias,
         );
+        dataPagamento = data;
+        pulouPorFechamento = pulou;
+      } else {
+        dataPagamento = state.dataInicial ?? DateTime.now();
+        pulouPorFechamento = false;
       }
     }
 
@@ -91,6 +108,7 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         formaPagamentoId: event.formaPagamentoId,
         limparFormaPagamento: event.limparFormaPagamento,
         dataPagamento: dataPagamento,
+        pulouPorFechamento: pulouPorFechamento,
         diaVencimento: event.diaVencimento,
         parcelas: event.parcelas,
         step: LancarDespesaStep.editando,
@@ -172,8 +190,13 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         origemPagamentoId: origemPagamentoId,
         formaPagamentoId: state.formaPagamentoId,
         caixaId: state.caixaId,
-        dataPagamento:
-            modo == ModoLancamentoDespesa.avulsa ? state.dataPagamento : null,
+        // Avulsa e parcelada mandam a data da 1ª parcela (hoje, ou o
+        // vencimento do cartão) -- o backend usa como base e incrementa mês
+        // a mês sozinho. `dataPagamento` é obrigatório sempre que a despesa
+        // não é `recorrente` (ver create-despesa.dto no apollo-api).
+        dataPagamento: modo == ModoLancamentoDespesa.recorrente
+            ? null
+            : state.dataPagamento,
         recorrente: modo == ModoLancamentoDespesa.recorrente,
         diaVencimento:
             modo == ModoLancamentoDespesa.recorrente ? state.diaVencimento : null,

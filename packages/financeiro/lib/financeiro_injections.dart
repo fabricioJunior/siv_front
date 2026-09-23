@@ -409,7 +409,7 @@ void _presentation() {
   );
 
   sl.registerFactory<CategoriasDespesaBloc>(
-    () => CategoriasDespesaBloc(sl()),
+    () => CategoriasDespesaBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<CategoriaDespesaBloc>(
@@ -417,7 +417,7 @@ void _presentation() {
   );
 
   sl.registerFactory<OrigensPagamentoDespesaBloc>(
-    () => OrigensPagamentoDespesaBloc(sl()),
+    () => OrigensPagamentoDespesaBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<OrigemPagamentoDespesaBloc>(
@@ -429,7 +429,7 @@ void _presentation() {
   );
 
   sl.registerFactory<CalendarioDeDespesasBloc>(
-    () => CalendarioDeDespesasBloc(sl(), sl()),
+    () => CalendarioDeDespesasBloc(sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<DashboardDeDespesasBloc>(

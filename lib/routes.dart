@@ -256,15 +256,24 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   ///DESPESAS:
   '/categoria_despesa': (context) {
-    return CategoriaDespesaPage(id: args(context)['id']);
+    return _rotaProtegida(
+      route: '/categoria_despesa',
+      child: CategoriaDespesaPage(id: args(context)['id']),
+    );
   },
   '/origem_pagamento_despesa': (context) {
-    return OrigemPagamentoDespesaPage(id: args(context)['id']);
+    return _rotaProtegida(
+      route: '/origem_pagamento_despesa',
+      child: OrigemPagamentoDespesaPage(id: args(context)['id']),
+    );
   },
   '/lancar_despesa': (context) {
     return _rotaProtegida(
       route: '/lancar_despesa',
-      child: LancarDespesaPage(caixaId: args(context)['caixaId']),
+      child: LancarDespesaPage(
+        caixaId: args(context)['caixaId'],
+        dataInicial: args(context)['dataPagamento'],
+      ),
     );
   },
   '/controle_despesas': (context) {
@@ -1451,6 +1460,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
   '/controle_despesas': ['DESFM003'],
+  '/categoria_despesa': ['DESFM001'],
+  '/origem_pagamento_despesa': ['DESFM002'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],
   '/importar_tabela_de_precos': ['IMPFP002'],

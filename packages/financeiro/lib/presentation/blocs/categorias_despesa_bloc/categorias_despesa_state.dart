@@ -2,11 +2,13 @@ part of 'categorias_despesa_bloc.dart';
 
 abstract class CategoriasDespesaState extends Equatable {
   final List<CategoriaDespesa> categorias;
+  final bool salvando;
+  final String? erro;
 
-  const CategoriasDespesaState({this.categorias = const []});
+  const CategoriasDespesaState({this.categorias = const [], this.salvando = false, this.erro});
 
   @override
-  List<Object?> get props => [categorias];
+  List<Object?> get props => [categorias, salvando, erro];
 }
 
 class CategoriasDespesaInitial extends CategoriasDespesaState {
@@ -18,7 +20,7 @@ class CategoriasDespesaCarregarEmProgresso extends CategoriasDespesaState {
 }
 
 class CategoriasDespesaCarregarSucesso extends CategoriasDespesaState {
-  const CategoriasDespesaCarregarSucesso({required super.categorias});
+  const CategoriasDespesaCarregarSucesso({required super.categorias, super.salvando, super.erro});
 }
 
 class CategoriasDespesaCarregarFalha extends CategoriasDespesaState {

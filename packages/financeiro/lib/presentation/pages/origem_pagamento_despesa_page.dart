@@ -1,8 +1,11 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
+import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
+import 'package:financeiro/presentation/utils/validacao_origem_pagamento_despesa.dart';
+import 'package:financeiro/presentation/widgets/card_blueprint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -29,6 +32,14 @@ class _OrigemPagamentoDespesaPageState
     _diaVencimentoController.dispose();
     _prazoFechamentoDiasController.dispose();
     super.dispose();
+  }
+
+  void _salvar(BuildContext context) {
+    if (_formKey.currentState?.validate() ?? false) {
+      context.read<OrigemPagamentoDespesaBloc>().add(
+            OrigemPagamentoDespesaSalvou(),
+          );
+    }
   }
 
   @override
@@ -59,31 +70,13 @@ class _OrigemPagamentoDespesaPageState
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(
-              widget.id == null ? 'Nova origem de pagamento' : 'Editar origem',
+            leading: IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () => Navigator.of(context).pop(),
             ),
-          ),
-          floatingActionButton:
-              BlocBuilder<OrigemPagamentoDespesaBloc, OrigemPagamentoDespesaState>(
-            builder: (context, state) {
-              final salvando =
-                  state.step == OrigemPagamentoDespesaStep.salvando ||
-                      state.step == OrigemPagamentoDespesaStep.carregando;
-              return FloatingActionButton(
-                onPressed: salvando
-                    ? null
-                    : () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          context
-                              .read<OrigemPagamentoDespesaBloc>()
-                              .add(OrigemPagamentoDespesaSalvou());
-                        }
-                      },
-                child: salvando
-                    ? const CircularProgressIndicator.adaptive()
-                    : const Icon(Icons.check),
-              );
-            },
+            title: Text(
+              widget.id == null ? 'Nova origem' : 'Editar origem',
+            ),
           ),
           body: BlocBuilder<OrigemPagamentoDespesaBloc, OrigemPagamentoDespesaState>(
             builder: (context, state) {
@@ -117,112 +110,306 @@ class _OrigemPagamentoDespesaPageState
               }
 
               final tipo = state.tipo ?? TipoOrigemPagamentoDespesa.dinheiro;
+              final salvando =
+                  state.step == OrigemPagamentoDespesaStep.salvando;
 
               return SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _nomeController,
-                          decoration: const InputDecoration(labelText: 'Nome'),
-                          validator: (value) =>
-                              (value == null || value.trim().isEmpty)
-                                  ? 'Informe o nome'
-                                  : null,
-                          onChanged: (value) => context
-                              .read<OrigemPagamentoDespesaBloc>()
-                              .add(
-                                OrigemPagamentoDespesaCampoAlterado(
-                                  nome: value,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _RotuloCampo('NOME'),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _nomeController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Ex: Banco do Brasil',
                                 ),
+                                validator: (value) =>
+                                    (value == null || value.trim().isEmpty)
+                                        ? 'Informe o nome'
+                                        : null,
+                                onChanged: (value) => context
+                                    .read<OrigemPagamentoDespesaBloc>()
+                                    .add(
+                                      OrigemPagamentoDespesaCampoAlterado(
+                                        nome: value,
+                                      ),
+                                    ),
                               ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<TipoOrigemPagamentoDespesa>(
-                          initialValue: tipo,
-                          decoration: const InputDecoration(labelText: 'Tipo'),
-                          items: TipoOrigemPagamentoDespesa.values
-                              .map(
-                                (t) => DropdownMenuItem(
-                                  value: t,
-                                  child: Text(t.label),
+                              const SizedBox(height: 18),
+                              _RotuloCampo('TIPO'),
+                              const SizedBox(height: 6),
+                              _SeletorTipo(
+                                selecionado: tipo,
+                                onSelecionar: (t) => context
+                                    .read<OrigemPagamentoDespesaBloc>()
+                                    .add(
+                                      OrigemPagamentoDespesaCampoAlterado(
+                                          tipo: t),
+                                    ),
+                              ),
+                              if (tipo.diaVencimentoObrigatorio) ...[
+                                const SizedBox(height: 18),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _CampoNumeroGrande(
+                                        rotulo: 'DIA DE VENCIMENTO',
+                                        controller: _diaVencimentoController,
+                                        validator: (value) =>
+                                            validarDiaVencimento(
+                                                int.tryParse(value ?? '')),
+                                        onChanged: (value) => context
+                                            .read<OrigemPagamentoDespesaBloc>()
+                                            .add(
+                                              OrigemPagamentoDespesaCampoAlterado(
+                                                diaVencimento:
+                                                    int.tryParse(value),
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _CampoNumeroGrande(
+                                        rotulo: 'FECHA DIAS ANTES',
+                                        controller:
+                                            _prazoFechamentoDiasController,
+                                        validator: (value) =>
+                                            validarPrazoFechamentoDias(
+                                                int.tryParse(value ?? '')),
+                                        onChanged: (value) => context
+                                            .read<OrigemPagamentoDespesaBloc>()
+                                            .add(
+                                              OrigemPagamentoDespesaCampoAlterado(
+                                                prazoFechamentoDias:
+                                                    int.tryParse(value),
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            context.read<OrigemPagamentoDespesaBloc>().add(
-                                  OrigemPagamentoDespesaCampoAlterado(
-                                    tipo: value,
-                                  ),
-                                );
-                          },
-                        ),
-                        if (tipo.diaVencimentoObrigatorio) ...[
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _diaVencimentoController,
-                            decoration: const InputDecoration(
-                              labelText: 'Dia de vencimento',
-                              hintText: 'Ex: 10',
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
+                                const SizedBox(height: 14),
+                                _NotaVencimento(
+                                  diaVencimento: state.diaVencimento,
+                                  prazoFechamentoDias:
+                                      state.prazoFechamentoDias,
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 14),
+                                _NotaSimples(
+                                  texto:
+                                      'Sem vencimento próprio — a despesa usa a data informada no lançamento.',
+                                ),
+                              ],
                             ],
-                            validator: (value) {
-                              final dia = int.tryParse(value ?? '');
-                              if (dia == null || dia <= 0 || dia > 31) {
-                                return 'Informe um dia válido (1-31)';
-                              }
-                              return null;
-                            },
-                            onChanged: (value) => context
-                                .read<OrigemPagamentoDespesaBloc>()
-                                .add(
-                                  OrigemPagamentoDespesaCampoAlterado(
-                                    diaVencimento: int.tryParse(value),
-                                  ),
-                                ),
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _prazoFechamentoDiasController,
-                            decoration: const InputDecoration(
-                              labelText: 'Fecha quantos dias antes do vencimento',
-                              hintText: 'Ex: 7',
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            validator: (value) {
-                              final dias = int.tryParse(value ?? '');
-                              if (dias == null || dias <= 0 || dias > 30) {
-                                return 'Informe uma quantidade válida (1-30)';
-                              }
-                              return null;
-                            },
-                            onChanged: (value) => context
-                                .read<OrigemPagamentoDespesaBloc>()
-                                .add(
-                                  OrigemPagamentoDespesaCampoAlterado(
-                                    prazoFechamentoDias: int.tryParse(value),
-                                  ),
-                                ),
-                          ),
-                        ],
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
+                    _RodapeAcoes(salvando: salvando, onSalvar: () => _salvar(context)),
+                  ],
                 ),
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RotuloCampo extends StatelessWidget {
+  final String texto;
+
+  const _RotuloCampo(this.texto);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(texto, style: context.sivTextos.rotulo.copyWith(fontSize: 11));
+  }
+}
+
+class _SeletorTipo extends StatelessWidget {
+  final TipoOrigemPagamentoDespesa selecionado;
+  final ValueChanged<TipoOrigemPagamentoDespesa> onSelecionar;
+
+  const _SeletorTipo({required this.selecionado, required this.onSelecionar});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return CardBlueprint(
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final tipo in TipoOrigemPagamentoDespesa.values)
+            InkWell(
+              onTap: () => onSelecionar(tipo),
+              child: Container(
+                constraints:
+                    const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: tipo != TipoOrigemPagamentoDespesa.values.last
+                    ? BoxDecoration(
+                        border:
+                            Border(bottom: BorderSide(color: cores.hairline)))
+                    : null,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cores.aco, width: 1.5),
+                        color: tipo == selecionado
+                            ? cores.acoAtivo
+                            : Colors.transparent,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(tipo.label, style: textos.corpo.copyWith(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CampoNumeroGrande extends StatelessWidget {
+  final String rotulo;
+  final TextEditingController controller;
+  final String? Function(String?) validator;
+  final ValueChanged<String> onChanged;
+
+  const _CampoNumeroGrande({
+    required this.rotulo,
+    required this.controller,
+    required this.validator,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _RotuloCampo(rotulo),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          style: context.sivTextos.valor.copyWith(fontSize: 19),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          validator: validator,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class _NotaVencimento extends StatelessWidget {
+  final int? diaVencimento;
+  final int? prazoFechamentoDias;
+
+  const _NotaVencimento({this.diaVencimento, this.prazoFechamentoDias});
+
+  @override
+  Widget build(BuildContext context) {
+    final dia = diaVencimento;
+    final prazo = prazoFechamentoDias;
+    if (dia == null || prazo == null) {
+      return const _NotaSimples(
+        texto:
+            'Compras depois do fechamento da fatura vencem no mês seguinte.',
+      );
+    }
+    final vencimento = DateTime(DateTime.now().year, DateTime.now().month, dia);
+    final fechamento = vencimento.subtract(Duration(days: prazo)).day;
+    return _NotaSimples(
+      texto: 'Fatura fecha dia $fechamento. Compras depois do fechamento '
+          'vencem no mês seguinte.',
+    );
+  }
+}
+
+class _NotaSimples extends StatelessWidget {
+  final String texto;
+
+  const _NotaSimples({required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cores.selecaoFundo,
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(texto,
+            style: context.sivTextos.apoio.copyWith(color: cores.acoProfundo)),
+      ),
+    );
+  }
+}
+
+class _RodapeAcoes extends StatelessWidget {
+  final bool salvando;
+  final VoidCallback onSalvar;
+
+  const _RodapeAcoes({required this.salvando, required this.onSalvar});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cores.superficie,
+        border: Border(top: BorderSide(color: cores.hairline)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: salvando ? null : () => Navigator.of(context).pop(false),
+                child: const Text('Descartar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton(
+                onPressed: salvando ? null : onSalvar,
+                child: salvando
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                      )
+                    : const Text('Salvar origem'),
+              ),
+            ),
+          ],
         ),
       ),
     );

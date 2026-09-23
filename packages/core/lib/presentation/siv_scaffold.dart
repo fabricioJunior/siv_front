@@ -115,21 +115,7 @@ class SivScaffold extends StatelessWidget {
                           ),
                         ),
                       ),
-                    Expanded(
-                      child: Padding(
-                        // Padding fixo (28/30, pensado pra desktop) comia
-                        // proporcionalmente demais numa tela de ~390px --
-                        // conteúdo ficava espremido mesmo sobrando espaço
-                        // real. Mobile (emDrawer) encosta nos 4 lados (0);
-                        // cada tela decide seu próprio respiro interno se
-                        // precisar.
-                        padding: EdgeInsets.symmetric(
-                          horizontal: emDrawer ? 0 : SivDimensoes.paginaHorizontal,
-                          vertical: emDrawer ? 0 : SivDimensoes.paginaVertical,
-                        ),
-                        child: corpo,
-                      ),
-                    ),
+                    Expanded(child: corpo),
                   ],
                 ),
               ),

@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-
 /// Descreve uma filha de um item-acordeão do menu lateral (ver
 /// `SivMenuLateralItem.filhos`). Cada `*_menu_page.dart` (hub) expõe uma
 /// lista pública desses itens -- única fonte de dado usada tanto pela

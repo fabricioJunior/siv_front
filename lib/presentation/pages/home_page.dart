@@ -1,10 +1,24 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/presentation/bloc/indicadores_home/indicadores_home_bloc.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
+
+// Mesmo formato usado em relatorio_faturamento_page.dart (comercial) --
+// sem formatador de moeda compartilhado no core ainda.
+String _fmtMoeda(double v) {
+  final s = v.toStringAsFixed(2);
+  final p = s.split('.');
+  final inteiro = p[0].replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+$)'),
+    (m) => '${m[1]}.',
+  );
+  return 'R\$ $inteiro,${p[1]}';
+}
 
 class _OperacaoDoDia {
   final String nome;
@@ -102,6 +116,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _indicadoresBloc = sl<IndicadoresHomeBloc>();
+
+  int get _empresaId => sl<IAcessoGlobalSessao>().empresaIdDaSessao ?? 0;
+
   @override
   void initState() {
     super.initState();
@@ -110,6 +128,13 @@ class _HomePageState extends State<HomePage> {
         const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.home),
       );
     });
+    _indicadoresBloc.add(IndicadoresHomeCarregou(empresaId: _empresaId));
+  }
+
+  @override
+  void dispose() {
+    _indicadoresBloc.close();
+    super.dispose();
   }
 
   @override
@@ -246,22 +271,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _indicadores(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final colunas = constraints.maxWidth >= 700 ? 4 : 2;
-        return GridView.count(
-          crossAxisCount: colunas,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: SivDimensoes.gapCards,
-          crossAxisSpacing: SivDimensoes.gapCards,
-          childAspectRatio: 1.9,
-          children: [
-            _indicadorCard(context, titulo: 'Vendido hoje', valor: '—'),
-            _indicadorCard(context, titulo: 'Ticket médio', valor: '—'),
-            _indicadorCard(context, titulo: 'Pedidos abertos', valor: '—'),
-            _indicadorSincronizacao(context),
-          ],
+    return BlocBuilder<IndicadoresHomeBloc, IndicadoresHomeState>(
+      bloc: _indicadoresBloc,
+      builder: (context, indicadoresState) {
+        final faturamento = indicadoresState.faturamento;
+        final carregando = indicadoresState.carregando;
+
+        final vendidoHoje = faturamento != null
+            ? _fmtMoeda(faturamento.total)
+            : (carregando ? '…' : '—');
+        final ticketMedio = faturamento != null
+            ? _fmtMoeda(faturamento.ticketMedio)
+            : (carregando ? '…' : '—');
+        final pedidosAbertos = indicadoresState.pedidosAbertos?.toString() ??
+            (carregando ? '…' : '—');
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final colunas = constraints.maxWidth >= 700 ? 4 : 2;
+            return GridView.count(
+              crossAxisCount: colunas,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: SivDimensoes.gapCards,
+              crossAxisSpacing: SivDimensoes.gapCards,
+              childAspectRatio: 1.9,
+              children: [
+                _indicadorCard(context, titulo: 'Vendido hoje', valor: vendidoHoje),
+                _indicadorCard(context, titulo: 'Ticket médio', valor: ticketMedio),
+                _indicadorCard(context, titulo: 'Pedidos abertos', valor: pedidosAbertos),
+                _indicadorSincronizacao(context),
+              ],
+            );
+          },
         );
       },
     );
@@ -275,9 +317,6 @@ class _HomePageState extends State<HomePage> {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
-    // TODO: "vendido hoje" (com comparativo), "ticket médio" e "pedidos
-    // abertos" não têm fonte de dado no AppState/blocs atuais -- ligar
-    // quando existir um use case/bloc de indicadores do dia.
     return SivCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

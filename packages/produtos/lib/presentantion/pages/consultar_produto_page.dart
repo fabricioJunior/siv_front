@@ -1,8 +1,8 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/leitor.dart';
+import 'package:core/precos_portas.dart';
 import 'package:flutter/material.dart';
-import 'package:precos/presentation.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
 
@@ -140,8 +140,7 @@ class _ConsultarProdutoBodyState extends State<_ConsultarProdutoBody> {
             ),
           ),
           const SizedBox(height: 16),
-          TabelasDePrecoSeletor(
-            modo: TabelasDePrecoSeletorModo.unica,
+          sl<PortaSeletorDeTabelaDePreco>().seletorUnico(
             onChanged: (itens) {
               final tabelaDePrecoId = itens.isNotEmpty ? itens.first.id : null;
               setState(() => _tabelaDePrecoId = tabelaDePrecoId);

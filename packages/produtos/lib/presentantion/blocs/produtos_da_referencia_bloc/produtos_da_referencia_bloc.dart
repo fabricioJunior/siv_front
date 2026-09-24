@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
-import 'package:estoque/models.dart';
-import 'package:estoque/use_cases.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/use_cases.dart';
 
@@ -13,7 +11,7 @@ part 'produtos_da_referencia_state.dart';
 class ProdutosDaReferenciaBloc
     extends Bloc<ProdutosDaReferenciaEvent, ProdutosDaReferenciaState> {
   final RecuperarProdutos _recuperarProdutos;
-  final RecuperarSaldoDoEstoque _recuperarSaldoDoEstoque;
+  final RecuperarSaldoDoEstoqueDaReferencia _recuperarSaldoDoEstoque;
 
   ProdutosDaReferenciaBloc(this._recuperarProdutos, this._recuperarSaldoDoEstoque)
     : super(const ProdutosDaReferenciaInitial()) {
@@ -67,13 +65,10 @@ class ProdutosDaReferenciaBloc
       Map<String, double> mapaCorTamanhoParaSaldo = {};
       bool saldoIndisponivel = false;
       try {
-        final saldo = await _recuperarSaldoDoEstoque.sincronizarPagina(
-          filtro: FiltroProdutoDoEstoque(
-            referenciaIds: [event.referenciaId],
-            limit: 10000,
-          ),
+        final saldo = await _recuperarSaldoDoEstoque(
+          referenciaId: event.referenciaId,
         );
-        for (final produtoDoEstoque in saldo.items) {
+        for (final produtoDoEstoque in saldo) {
           final key = '${produtoDoEstoque.corId}_${produtoDoEstoque.tamanhoId}';
           mapaCorTamanhoParaSaldo[key] = produtoDoEstoque.saldo;
         }

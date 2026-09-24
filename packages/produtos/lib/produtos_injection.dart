@@ -471,6 +471,14 @@ void _usesCases() {
   sl.registerFactory<ConsultarImportacaoProduto>(
     () => ConsultarImportacaoProduto(repository: sl()),
   );
+
+  sl.registerFactory<ObterPrecoDaReferencia>(
+    () => ObterPrecoDaReferencia(sl()),
+  );
+
+  sl.registerFactory<RecuperarSaldoDoEstoqueDaReferencia>(
+    () => RecuperarSaldoDoEstoqueDaReferencia(sl()),
+  );
 }
 
 void _presentantion() {

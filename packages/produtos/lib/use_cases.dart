@@ -72,3 +72,5 @@ export 'domain/use_cases/recuperar_grade_da_referencia.dart';
 export 'domain/use_cases/importacao/baixar_template_importacao_produtos.dart';
 export 'domain/use_cases/importacao/importar_produtos_csv.dart';
 export 'domain/use_cases/importacao/consultar_importacao_produto.dart';
+export 'domain/use_cases/obter_preco_da_referencia.dart';
+export 'domain/use_cases/recuperar_saldo_do_estoque_da_referencia.dart';

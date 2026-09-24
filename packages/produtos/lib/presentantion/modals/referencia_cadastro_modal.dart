@@ -148,7 +148,7 @@ class _ReferenciaCadastroModalState extends State<ReferenciaCadastroModal> {
 
     await navigator.pushNamed(
       '/produto',
-      arguments: {'referenciaId': referenciaId},
+      arguments: {'referenciaId': referenciaId, 'referenciaNome': referenciaNome},
     );
   }
 

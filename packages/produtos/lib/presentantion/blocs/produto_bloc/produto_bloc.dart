@@ -54,7 +54,12 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
 
       final cores = await _recuperarCores.call(inativo: false);
       final tamanhos = await _recuperarTamanhos.call(inativo: false);
-      final estampas = await _recuperarEstampas.call(inativo: false);
+      // Estampa é opcional (usuário pode não ter permissão PRDFM013) -- uma
+      // falha aqui não pode travar cor/tamanho/referência, que são
+      // obrigatórios pro resto do fluxo.
+      final estampas = await _recuperarEstampas
+          .call(inativo: false)
+          .catchError((_) => const <Estampa>[]);
 
       final produto = event.produto;
       final corInicial = event.corId == null

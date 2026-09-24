@@ -7,6 +7,7 @@ import 'package:produtos/presentation.dart';
 class ProdutoPage extends StatelessWidget {
   final Produto? produto;
   final int? referenciaId;
+  final String? referenciaNome;
   final int? corId;
   final int? tamanhoId;
 
@@ -14,6 +15,7 @@ class ProdutoPage extends StatelessWidget {
     super.key,
     this.produto,
     this.referenciaId,
+    this.referenciaNome,
     this.corId,
     this.tamanhoId,
   });
@@ -172,25 +174,18 @@ class ProdutoPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Selecione a referência, cores e tamanhos para gerar as combinações.',
+          'Selecione cores e tamanhos para gerar as combinações.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
-        ReferenciaSeletor(
-          modo: ReferenciaSeletorModo.unica,
-          idReferenciasSelecionadasIniciais: referenciaId != null
-              ? [referenciaId!]
-              : [],
-          referenciasSelecionadasIniciais: state.referenciaSelecionada == null
-              ? const []
-              : [state.referenciaSelecionada!],
-          onReferenciaChanged: (selecionadas) {
-            context.read<ProdutoBloc>().add(
-              ProdutoReferenciaSelecionou(
-                referencia: selecionadas.isEmpty ? null : selecionadas.first,
-              ),
-            );
-          },
+        // Referência já vem definida por quem abriu essa tela (sempre a
+        // partir de uma referência específica) -- sem seletor aqui pra
+        // evitar cadastrar produto na referência errada por engano.
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.style_outlined),
+          title: const Text('Referência'),
+          subtitle: Text(referenciaNome ?? 'ID $referenciaId'),
         ),
         const SizedBox(height: 12),
         CorSeletor(
@@ -358,7 +353,7 @@ class ProdutoPage extends StatelessWidget {
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Referência'),
-          subtitle: Text(state.referenciaSelecionada?.nome ?? '-'),
+          subtitle: Text(referenciaNome ?? 'ID $referenciaId'),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,

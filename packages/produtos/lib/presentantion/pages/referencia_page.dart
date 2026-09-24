@@ -489,6 +489,8 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
                                               arguments: {
                                                 'referenciaId':
                                                     state.referencia?.id,
+                                                'referenciaNome':
+                                                    state.referencia?.nome,
                                               },
                                             );
 

@@ -40,7 +40,6 @@ export 'package:produtos/presentantion/blocs/impressao_etiquetas_bloc/impressao_
 export 'package:produtos/presentantion/pages/referencias_page.dart';
 export 'package:produtos/presentantion/pages/referencia_page.dart';
 export 'package:produtos/presentantion/blocs/produtos_bloc/produtos_bloc.dart';
-export 'package:produtos/presentantion/pages/produtos_page.dart';
 export 'package:produtos/presentantion/pages/selecionar_produtos_page.dart';
 export 'package:produtos/presentantion/pages/selecionar_referencias_page.dart';
 export 'package:produtos/presentantion/pages/produto_page.dart';

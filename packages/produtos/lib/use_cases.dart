@@ -74,3 +74,5 @@ export 'domain/use_cases/importacao/importar_produtos_csv.dart';
 export 'domain/use_cases/importacao/consultar_importacao_produto.dart';
 export 'domain/use_cases/obter_preco_da_referencia.dart';
 export 'domain/use_cases/recuperar_saldo_do_estoque_da_referencia.dart';
+export 'domain/use_cases/listar_precos_da_referencia_por_tabela.dart';
+export 'domain/use_cases/salvar_preco_da_referencia.dart';

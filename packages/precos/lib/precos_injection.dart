@@ -2,6 +2,8 @@ import 'package:core/injecoes.dart';
 import 'package:core/precos_portas.dart';
 import 'package:precos/data/local/precos_local_data_sources.dart';
 import 'package:precos/domain/adapters/porta_obter_preco_da_referencia_impl.dart';
+import 'package:precos/domain/adapters/porta_listar_precos_da_referencia_por_tabela_impl.dart';
+import 'package:precos/domain/adapters/porta_salvar_preco_da_referencia_impl.dart';
 import 'package:precos/data/remote/precos_de_referencias_remote_data_source.dart';
 import 'package:precos/data/remote/tabela_de_preco_remote_data_source.dart';
 import 'package:precos/data/repositorios/precos_de_referencias_repository.dart';
@@ -81,6 +83,9 @@ void _usesCases() {
   sl.registerFactory<AtualizarPrecoDaReferencia>(
     () => AtualizarPrecoDaReferencia(precosDeReferenciasRepository: sl()),
   );
+  sl.registerFactory<CriarPrecoDaReferencia>(
+    () => CriarPrecoDaReferencia(precosDeReferenciasRepository: sl()),
+  );
   sl.registerFactory<ObterPrecoDaReferencia>(
     () => ObterPrecoDaReferencia(precosDeReferenciasRepository: sl()),
   );
@@ -106,6 +111,14 @@ void _usesCases() {
 
   sl.registerFactory<PortaObterPrecoDaReferencia>(
     () => PortaObterPrecoDaReferenciaImpl(sl()),
+  );
+
+  sl.registerFactory<PortaListarPrecosDaReferenciaPorTabela>(
+    () => PortaListarPrecosDaReferenciaPorTabelaImpl(sl(), sl()),
+  );
+
+  sl.registerFactory<PortaSalvarPrecoDaReferencia>(
+    () => PortaSalvarPrecoDaReferenciaImpl(sl(), sl()),
   );
 }
 

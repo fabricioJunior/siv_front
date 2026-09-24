@@ -9,12 +9,16 @@ class EcommerceConfiguracaoPage extends StatelessWidget {
   final int? empresaId;
   final int? ecommerceId;
   final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget empresaSeletor;
+  final SeletorPorEmpresaWidget terminalSeletor;
 
   const EcommerceConfiguracaoPage({
     super.key,
     this.empresaId,
     this.ecommerceId,
     required this.tabelaDePrecoSeletor,
+    required this.empresaSeletor,
+    required this.terminalSeletor,
   });
 
   @override
@@ -22,6 +26,8 @@ class EcommerceConfiguracaoPage extends StatelessWidget {
     return EcommercesPage(
       ecommerceIdInicial: ecommerceId,
       tabelaDePrecoSeletor: tabelaDePrecoSeletor,
+      empresaSeletor: empresaSeletor,
+      terminalSeletor: terminalSeletor,
     );
   }
 }

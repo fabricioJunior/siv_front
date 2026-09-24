@@ -163,6 +163,24 @@ void main() {
                 onlyView: data.onlyView,
                 titulo: 'Tabela de preço',
               ),
+              empresaSeletor: (data) => EmpresaSeletor(
+                titulo: 'Empresa de estoque',
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
+              ),
+              terminalSeletor: ({
+                required empresaId,
+                tipoFiltro,
+                required data,
+              }) =>
+                  TerminalSeletor(
+                empresaId: empresaId,
+                tipoFiltro: tipoFiltro,
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
+              ),
             ),
           ),
         ),

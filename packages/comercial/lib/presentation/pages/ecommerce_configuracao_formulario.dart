@@ -7,8 +7,6 @@ import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
-import 'package:empresas/presentation/widgets/empresa_seletor.dart';
-import 'package:empresas/presentation/widgets/terminal_seletor.dart';
 import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/presentation/widgets/formas_de_pagamento_seletor.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +33,8 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
   final VoidCallback? onExcluido;
   final EcommerceConfiguracaoFormularioController? controller;
   final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget empresaSeletor;
+  final SeletorPorEmpresaWidget terminalSeletor;
 
   const EcommerceConfiguracaoFormulario({
     super.key,
@@ -45,6 +45,8 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
     this.onExcluido,
     this.controller,
     required this.tabelaDePrecoSeletor,
+    required this.empresaSeletor,
+    required this.terminalSeletor,
   });
 
   @override
@@ -205,14 +207,17 @@ class _EcommerceConfiguracaoFormularioState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      EmpresaSeletor(
-                        titulo: 'Empresa de estoque',
-                        itemsSelecionadosInicial: _idInicial(state.empresaEstoqueId),
-                        onEmpresaChanged: (selecionadas) => _emitirEdicao(
-                          context,
-                          state,
-                          empresaEstoqueId:
-                              selecionadas.isEmpty ? null : selecionadas.first.id,
+                      widget.empresaSeletor(
+                        SeletorData(
+                          itemsSelecionadosInicial:
+                              _idInicial(state.empresaEstoqueId),
+                          onChanged: (selecionadas) => _emitirEdicao(
+                            context,
+                            state,
+                            empresaEstoqueId: selecionadas.isEmpty
+                                ? null
+                                : selecionadas.first.id,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -230,14 +235,17 @@ class _EcommerceConfiguracaoFormularioState
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TerminalSeletor(
+                      widget.terminalSeletor(
                         empresaId: _empresaId,
                         tipoFiltro: 'ecommerce',
-                        itemsSelecionadosInicial: _idInicial(state.terminalId),
-                        onTerminalChanged: (selecionadas) => _emitirEdicao(
-                          context,
-                          state,
-                          terminalId: selecionadas.isEmpty ? null : selecionadas.first.id,
+                        data: SeletorData(
+                          itemsSelecionadosInicial: _idInicial(state.terminalId),
+                          onChanged: (selecionadas) => _emitirEdicao(
+                            context,
+                            state,
+                            terminalId:
+                                selecionadas.isEmpty ? null : selecionadas.first.id,
+                          ),
                         ),
                       ),
                       Padding(

@@ -11,11 +11,15 @@ import 'package:flutter/material.dart';
 class EcommercesPage extends StatefulWidget {
   final int? ecommerceIdInicial;
   final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget empresaSeletor;
+  final SeletorPorEmpresaWidget terminalSeletor;
 
   const EcommercesPage({
     super.key,
     this.ecommerceIdInicial,
     required this.tabelaDePrecoSeletor,
+    required this.empresaSeletor,
+    required this.terminalSeletor,
   });
 
   @override
@@ -207,6 +211,8 @@ class _EcommercesPageState extends State<EcommercesPage> {
         key: const ValueKey('novo'),
         controller: _controladorPara('novo'),
         tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor,
+        empresaSeletor: widget.empresaSeletor,
+        terminalSeletor: widget.terminalSeletor,
         onSalvou: () {
           setState(() => _criandoNovo = false);
           _bloc.add(const EcommercesCarregarSolicitado());
@@ -229,6 +235,8 @@ class _EcommercesPageState extends State<EcommercesPage> {
       key: ValueKey(ecommerce.id),
       controller: _controladorPara(ecommerce.id ?? 'novo'),
       tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor,
+      empresaSeletor: widget.empresaSeletor,
+      terminalSeletor: widget.terminalSeletor,
       ecommerceId: ecommerce.id,
       empresaId: ecommerce.empresaId,
       referenciasPublicadas: ecommerce.referenciasPublicadas,

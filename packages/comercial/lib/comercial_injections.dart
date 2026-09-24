@@ -456,6 +456,13 @@ void _useCases() {
   sl.registerFactory<ConsultarImportacaoPedido>(
     () => ConsultarImportacaoPedido(repository: sl()),
   );
+
+  sl.registerFactory<VerificarExigeClienteNaVenda>(
+    () => VerificarExigeClienteNaVenda(sl()),
+  );
+  sl.registerFactory<VerificarPermiteNotaFiscalEmail>(
+    () => VerificarPermiteNotaFiscalEmail(sl()),
+  );
 }
 
 void _presentation() {

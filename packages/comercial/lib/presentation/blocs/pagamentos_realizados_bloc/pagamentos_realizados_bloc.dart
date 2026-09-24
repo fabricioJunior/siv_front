@@ -10,7 +10,6 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
-import 'package:empresas/use_cases.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/use_cases.dart';
 
@@ -24,8 +23,7 @@ class PagamentosRealizadosBloc
   final CarregarResumoPagamentosRealizados _carregarResumo;
   final BuscarSaldoCreditoDevolucao _buscarSaldoCreditoDevolucao;
   final VerificarElegibilidadeFidelidade _verificarElegibilidadeFidelidade;
-  final RecuperarConfiguracaoNotaFiscalEmail
-      _recuperarConfiguracaoNotaFiscalEmail;
+  final VerificarPermiteNotaFiscalEmail _verificarPermiteNotaFiscalEmail;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final ApurarElegibilidade _apurarElegibilidade;
   final ILeitorDataDatasource _leitorDataDatasource;
@@ -34,7 +32,7 @@ class PagamentosRealizadosBloc
     this._carregarResumo,
     this._buscarSaldoCreditoDevolucao,
     this._verificarElegibilidadeFidelidade,
-    this._recuperarConfiguracaoNotaFiscalEmail,
+    this._verificarPermiteNotaFiscalEmail,
     this._acessoGlobalSessao,
     this._apurarElegibilidade,
     this._leitorDataDatasource,
@@ -207,9 +205,9 @@ class PagamentosRealizadosBloc
     if (empresaId == null) return;
 
     try {
-      final configuracao =
-          await _recuperarConfiguracaoNotaFiscalEmail.call(empresaId);
-      emit(state.copyWith(permiteNotaFiscalEmail: configuracao.ativo));
+      final permite =
+          await _verificarPermiteNotaFiscalEmail(empresaId: empresaId);
+      emit(state.copyWith(permiteNotaFiscalEmail: permite));
     } catch (e, s) {
       addError(e, s);
     }

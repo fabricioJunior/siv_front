@@ -24,6 +24,15 @@ class SeletorData {
 
 typedef SeletorWidget = Widget Function(SeletorData data);
 
+/// Igual [SeletorWidget], mas pro seletor que precisa da empresa em contexto
+/// (ex: terminais de uma empresa) — empresaId só é conhecido em tempo de
+/// build no package consumidor, não no composition root.
+typedef SeletorPorEmpresaWidget = Widget Function({
+  required int empresaId,
+  String? tipoFiltro,
+  required SeletorData data,
+});
+
 abstract class ISeletor extends Widget {
   final List<SelectData>? itemsSelecionadosInicial;
   final Function(List<SelectData>)? onChanged;

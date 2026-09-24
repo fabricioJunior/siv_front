@@ -5,8 +5,6 @@ import 'package:core/bloc_test.dart';
 import 'package:core/leitor.dart';
 import 'package:core/produtos_compartilhados.dart';
 import 'package:core/sessao.dart';
-import 'package:empresas/models.dart';
-import 'package:empresas/use_cases.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/use_cases.dart';
@@ -36,10 +34,10 @@ class _StubVerificarElegibilidadeFidelidade
       throw UnimplementedError();
 }
 
-class _StubRecuperarConfiguracaoNotaFiscalEmail
-    implements RecuperarConfiguracaoNotaFiscalEmail {
+class _StubVerificarPermiteNotaFiscalEmail
+    implements VerificarPermiteNotaFiscalEmail {
   @override
-  Future<EmpresaNotaFiscalEmail> call(int empresaId) async =>
+  Future<bool> call({required int empresaId}) async =>
       throw UnimplementedError();
 }
 
@@ -179,7 +177,7 @@ void main() {
       _StubCarregarResumo(),
       _StubBuscarSaldoCreditoDevolucao(),
       _StubVerificarElegibilidadeFidelidade(),
-      _StubRecuperarConfiguracaoNotaFiscalEmail(),
+      _StubVerificarPermiteNotaFiscalEmail(),
       _FakeAcessoGlobalSessao(),
       _FakeApurarElegibilidade(
         ResultadoElegibilidade(

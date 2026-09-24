@@ -25,13 +25,13 @@ dependencies:
     path: ../empresas
   promocoes:
     path: ../promocoes
-  precos:
-    path: ../precos
   fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  precos:
+    path: ../precos
 
 flutter:

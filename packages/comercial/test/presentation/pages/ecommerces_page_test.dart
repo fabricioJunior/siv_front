@@ -5,6 +5,7 @@ import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
+import 'package:core/seletores.dart';
 import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
 import 'package:empresas/domain/data/repositories/i_terminais_repository.dart';
 import 'package:empresas/domain/entities/empresa.dart';
@@ -152,8 +153,18 @@ void main() {
     'ao selecionar um canal na lista, o botão "Produtos no site" fica visível',
     (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: EcommercesPage()),
+        MaterialApp(
+          home: Scaffold(
+            body: EcommercesPage(
+              tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+                modo: TabelasDePrecoSeletorModo.unica,
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
+                titulo: 'Tabela de preço',
+              ),
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();

@@ -6,6 +6,7 @@ import 'package:comercial/presentation/pages/ecommerce_configuracao_formulario.d
 import 'package:comercial/use_cases.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/i_permissoes_controller.dart';
+import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
 import 'package:empresas/domain/data/repositories/i_terminais_repository.dart';
@@ -149,8 +150,17 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: SivTheme.tema,
-          home: const Scaffold(
-            body: EcommerceConfiguracaoFormulario(empresaId: 1),
+          home: Scaffold(
+            body: EcommerceConfiguracaoFormulario(
+              empresaId: 1,
+              tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+                modo: TabelasDePrecoSeletorModo.unica,
+                itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                onChanged: data.onChanged,
+                onlyView: data.onlyView,
+                titulo: 'Tabela de preço',
+              ),
+            ),
           ),
         ),
       );
@@ -195,7 +205,17 @@ void main() {
           home: Scaffold(
             body: SizedBox(
               width: 386,
-              child: const EcommerceConfiguracaoFormulario(empresaId: 1, ecommerceId: 7),
+              child: EcommerceConfiguracaoFormulario(
+                empresaId: 1,
+                ecommerceId: 7,
+                tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+                  modo: TabelasDePrecoSeletorModo.unica,
+                  itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+                  onChanged: data.onChanged,
+                  onlyView: data.onlyView,
+                  titulo: 'Tabela de preço',
+                ),
+              ),
             ),
           ),
         ),

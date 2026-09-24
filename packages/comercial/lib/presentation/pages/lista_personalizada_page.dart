@@ -3,16 +3,21 @@ import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:precos/presentation.dart';
 import 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 
 class ListaPersonalizadaPage extends StatefulWidget {
   final int? listaId;
+  final SeletorWidget tabelaDePrecoSeletor;
 
-  const ListaPersonalizadaPage({super.key, this.listaId});
+  const ListaPersonalizadaPage({
+    super.key,
+    this.listaId,
+    required this.tabelaDePrecoSeletor,
+  });
 
   @override
   State<ListaPersonalizadaPage> createState() => _ListaPersonalizadaPageState();
@@ -102,10 +107,13 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
               decoration: const InputDecoration(labelText: 'Título da lista (opcional)'),
             ),
             const SizedBox(height: 16),
-            TabelasDePrecoSeletor(
-              onTabelaDePrecoChanged: (selecionadas) => setState(() {
-                _tabelaPrecoId = selecionadas.isEmpty ? null : selecionadas.first.id;
-              }),
+            widget.tabelaDePrecoSeletor(
+              SeletorData(
+                onChanged: (selecionadas) => setState(() {
+                  _tabelaPrecoId =
+                      selecionadas.isEmpty ? null : selecionadas.first.id;
+                }),
+              ),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(

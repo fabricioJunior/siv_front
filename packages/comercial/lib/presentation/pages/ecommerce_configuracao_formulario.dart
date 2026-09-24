@@ -13,7 +13,6 @@ import 'package:financeiro/domain/models/forma_de_pagamento.dart';
 import 'package:financeiro/presentation/widgets/formas_de_pagamento_seletor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:precos/presentation/widgets/tabelas_de_preco_seletor.dart';
 
 /// Aciona o salvar do formulário de fora dele -- o botão primário mora na
 /// barra de título da página (5a), não dentro do painel.
@@ -35,6 +34,7 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
   final VoidCallback? onSalvou;
   final VoidCallback? onExcluido;
   final EcommerceConfiguracaoFormularioController? controller;
+  final SeletorWidget tabelaDePrecoSeletor;
 
   const EcommerceConfiguracaoFormulario({
     super.key,
@@ -44,6 +44,7 @@ class EcommerceConfiguracaoFormulario extends StatefulWidget {
     this.onSalvou,
     this.onExcluido,
     this.controller,
+    required this.tabelaDePrecoSeletor,
   });
 
   @override
@@ -215,13 +216,17 @@ class _EcommerceConfiguracaoFormularioState
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TabelasDePrecoSeletor(
-                        itemsSelecionadosInicial: _idInicial(state.tabelaDePrecoId),
-                        onTabelaDePrecoChanged: (selecionadas) => _emitirEdicao(
-                          context,
-                          state,
-                          tabelaDePrecoId:
-                              selecionadas.isEmpty ? null : selecionadas.first.id,
+                      widget.tabelaDePrecoSeletor(
+                        SeletorData(
+                          itemsSelecionadosInicial:
+                              _idInicial(state.tabelaDePrecoId),
+                          onChanged: (selecionadas) => _emitirEdicao(
+                            context,
+                            state,
+                            tabelaDePrecoId: selecionadas.isEmpty
+                                ? null
+                                : selecionadas.first.id,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),

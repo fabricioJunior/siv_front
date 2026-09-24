@@ -942,7 +942,15 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consultar_produto': (context) {
     return _rotaProtegida(
       route: '/consultar_produto',
-      child: const ConsultarProdutoPage(),
+      child: ConsultarProdutoPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preço',
+        ),
+      ),
     );
   },
   '/produto': (context) {

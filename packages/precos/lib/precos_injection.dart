@@ -2,7 +2,6 @@ import 'package:core/injecoes.dart';
 import 'package:core/precos_portas.dart';
 import 'package:precos/data/local/precos_local_data_sources.dart';
 import 'package:precos/domain/adapters/porta_obter_preco_da_referencia_impl.dart';
-import 'package:precos/presentation/adapters/porta_seletor_de_tabela_de_preco_impl.dart';
 import 'package:precos/data/remote/precos_de_referencias_remote_data_source.dart';
 import 'package:precos/data/remote/tabela_de_preco_remote_data_source.dart';
 import 'package:precos/data/repositorios/precos_de_referencias_repository.dart';
@@ -121,10 +120,6 @@ void _presentantion() {
   sl.registerFactory<PrecosDaTabelaBloc>(() => PrecosDaTabelaBloc(sl(), sl()));
   sl.registerFactory<ImportarTabelaDePrecoCsvBloc>(
     () => ImportarTabelaDePrecoCsvBloc(sl(), sl(), sl(), sl()),
-  );
-
-  sl.registerFactory<PortaSeletorDeTabelaDePreco>(
-    () => PortaSeletorDeTabelaDePrecoImpl(),
   );
 }
 

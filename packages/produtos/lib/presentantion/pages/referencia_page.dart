@@ -5,7 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart';
+import 'package:produtos/presentantion/widgets/referencia_produtos_tab.dart';
+import 'package:produtos/presentantion/widgets/referencia_precos_tab.dart';
 
+/// Tela de detalhe da Referência -- Parte 1 (desktop, largura >= 1024).
+/// A Parte 2 (mobile) reaproveita os mesmos blocs (`ReferenciaBloc`,
+/// `ProdutosDaReferenciaBloc`, `AdicionarVariacoesBloc`,
+/// `PrecosDaReferenciaBloc`), só muda a apresentação.
 class ReferenciaPage extends StatefulWidget {
   final int idReferencia;
 
@@ -16,22 +22,21 @@ class ReferenciaPage extends StatefulWidget {
 }
 
 class _ReferenciaPageState extends State<ReferenciaPage> {
-  late final ReferenciaBloc _bloc;
+  late final ReferenciaBloc _referenciaBloc;
+  late final ProdutosDaReferenciaBloc _produtosBloc;
+  late final PrecosDaReferenciaBloc _precosBloc;
+
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _idController;
-  late final TextEditingController _nomeController;
-  late final TextEditingController _idExternoController;
-  late final TextEditingController _unidadeMedidaController;
-  late final TextEditingController _descricaoController;
-  late final TextEditingController _composicaoController;
-  late final TextEditingController _cuidadosController;
-  late final TextEditingController _ncmController;
-  late final TextEditingController _pesoController;
+  final _nomeController = TextEditingController();
+  final _idExternoController = TextEditingController();
+  final _unidadeMedidaController = TextEditingController();
+  final _descricaoController = TextEditingController();
+  final _composicaoController = TextEditingController();
+  final _cuidadosController = TextEditingController();
+  final _ncmController = TextEditingController();
+  final _pesoController = TextEditingController();
 
   bool _salvando = false;
-  bool _abrindoPreco = false;
-  bool _detalhesExpandidos = false;
-  int _refreshProdutosTrigger = 0;
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
   SubCategoria? _subCategoriaSelecionada;
@@ -39,23 +44,19 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
   @override
   void initState() {
     super.initState();
-    _bloc = sl<ReferenciaBloc>()
+    _referenciaBloc = sl<ReferenciaBloc>()
       ..add(ReferenciaIniciou(idReferencia: widget.idReferencia));
-    _idController = TextEditingController();
-    _nomeController = TextEditingController();
-    _idExternoController = TextEditingController();
-    _unidadeMedidaController = TextEditingController();
-    _descricaoController = TextEditingController();
-    _composicaoController = TextEditingController();
-    _cuidadosController = TextEditingController();
-    _ncmController = TextEditingController();
-    _pesoController = TextEditingController();
+    _produtosBloc = sl<ProdutosDaReferenciaBloc>()
+      ..add(ProdutosDaReferenciaIniciou(referenciaId: widget.idReferencia));
+    _precosBloc = sl<PrecosDaReferenciaBloc>()
+      ..add(PrecosDaReferenciaIniciou(referenciaId: widget.idReferencia));
   }
 
   @override
   void dispose() {
-    _bloc.close();
-    _idController.dispose();
+    _referenciaBloc.close();
+    _produtosBloc.close();
+    _precosBloc.close();
     _nomeController.dispose();
     _idExternoController.dispose();
     _unidadeMedidaController.dispose();
@@ -69,7 +70,6 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
 
   void _aplicarReferencia(Referencia referencia) {
     _referencia = referencia;
-    _idController.text = referencia.id?.toString() ?? '';
     _nomeController.text = referencia.nome;
     _idExternoController.text = referencia.idExterno ?? '';
     _unidadeMedidaController.text = referencia.unidadeMedida ?? '';
@@ -84,41 +84,25 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
 
   Future<void> _salvar() async {
     final referenciaAtual = _referencia;
-    if (referenciaAtual == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Carregando referência. Tente novamente.'),
-        ),
-      );
-      return;
-    }
+    if (referenciaAtual == null) return;
 
     final referenciaId = referenciaAtual.id;
-    final categoriaId =
-        _categoriaSelecionada?.id ?? referenciaAtual.categoriaId;
+    final categoriaId = _categoriaSelecionada?.id ?? referenciaAtual.categoriaId;
 
     if (referenciaId == null || categoriaId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Não foi possível salvar: referência sem ID ou categoria.',
-          ),
+          content: Text('Não foi possível salvar: referência sem ID ou categoria.'),
         ),
       );
       return;
     }
 
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() {
-      _salvando = true;
-    });
-
+    setState(() => _salvando = true);
     try {
-      final atualizarReferencia = sl<AtualizarReferencia>();
-      final referenciaAtualizada = await atualizarReferencia.call(
+      final atualizada = await sl<AtualizarReferencia>().call(
         id: referenciaId,
         nome: _nomeController.text.trim(),
         categoriaId: categoriaId,
@@ -134,41 +118,25 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
       );
 
       if (!mounted) return;
-      Navigator.of(context).pop(referenciaAtualizada);
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Falha ao salvar referência.')),
-      );
       setState(() {
+        _aplicarReferencia(atualizada);
         _salvando = false;
       });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Referência salva.')));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Falha ao salvar referência.')));
     }
   }
 
   String? _sanitizeOptional(String value) {
     final trimmed = value.trim();
-    if (trimmed.isEmpty) return null;
-    return trimmed;
-  }
-
-  Future<void> _editarCampoLongo({
-    required TextEditingController controller,
-    required String titulo,
-    required String hintText,
-  }) async {
-    final textoAtualizado = await TextoLongoEdicaoModal.show(
-      context: context,
-      titulo: titulo,
-      hintText: hintText,
-      textoInicial: controller.text,
-    );
-
-    if (textoAtualizado == null) return;
-
-    setState(() {
-      controller.text = textoAtualizado;
-    });
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   Future<void> _editarCategoriaSubCategoria() async {
@@ -178,16 +146,7 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
       subCategoriaAtualId:
           _subCategoriaSelecionada?.id ?? _referencia?.subCategoriaId,
     );
-
     if (resultado == null) return;
-
-    final candidatoNcm = resultado.subCategoria?.ncm ?? resultado.categoria.ncm;
-    final ncmSugerido =
-        (candidatoNcm != null && candidatoNcm.trim().length == 8)
-        ? candidatoNcm
-        : null;
-    final pesoSugerido =
-        resultado.subCategoria?.pesoGramas ?? resultado.categoria.pesoGramas;
 
     setState(() {
       _categoriaSelecionada = resultado.categoria;
@@ -198,67 +157,17 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
         subCategoriaId: resultado.subCategoria?.id,
         subCategoria: resultado.subCategoria,
       );
-      if (ncmSugerido != null && _ncmController.text.trim().isEmpty) {
-        _ncmController.text = ncmSugerido;
-      }
-      if (pesoSugerido != null && _pesoController.text.trim().isEmpty) {
-        _pesoController.text = pesoSugerido.toString();
-      }
     });
-  }
-
-  Future<void> _abrirPrecoDaReferencia() async {
-    final referenciaId = _referencia?.id ?? widget.idReferencia;
-    if (referenciaId <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Referência sem ID válido.')),
-      );
-      return;
-    }
-
-    setState(() {
-      _abrindoPreco = true;
-    });
-
-    try {
-      var tabelaDePrecoId = await Navigator.of(
-        context,
-      ).pushNamed('/selecionar_tabela_de_preco');
-
-      if (!mounted || tabelaDePrecoId == null) {
-        return;
-      }
-
-      if (!mounted) {
-        return;
-      }
-
-      await Navigator.of(context).pushNamed(
-        '/preco_da_referencia_page',
-        arguments: {
-          'tabelaDePrecoId': tabelaDePrecoId,
-          'referenciaId': referenciaId,
-          'referenciaNome': _referencia?.nome ?? _nomeController.text.trim(),
-        },
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Falha ao abrir edição de preço da referência.'),
-        ),
-      );
-    } finally {
-      setState(() {
-        _abrindoPreco = false;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [BlocProvider<ReferenciaBloc>.value(value: _bloc)],
+      providers: [
+        BlocProvider<ReferenciaBloc>.value(value: _referenciaBloc),
+        BlocProvider<ProdutosDaReferenciaBloc>.value(value: _produtosBloc),
+        BlocProvider<PrecosDaReferenciaBloc>.value(value: _precosBloc),
+      ],
       child: BlocConsumer<ReferenciaBloc, ReferenciaState>(
         listener: (context, state) {
           if (state is ReferenciaCarregarSucesso) {
@@ -270,358 +179,84 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
           final falha = state is ReferenciaCarregarFalha;
 
           return Scaffold(
-            appBar: AppBar(title: const Text('Detalhes da Referência')),
-            floatingActionButton: FloatingActionButton.extended(
-              onPressed: _salvando || carregando || falha || _referencia == null
-                  ? null
-                  : _salvar,
-              icon: _salvando
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check),
-              label: Text(_salvando ? 'Salvando...' : 'Salvar'),
+            appBar: AppBar(
+              title: const Text('Detalhes da Referência'),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FilledButton.icon(
+                    onPressed: _salvando || carregando || falha || _referencia == null
+                        ? null
+                        : _salvar,
+                    icon: _salvando
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(_salvando ? 'Salvando...' : 'Salvar'),
+                  ),
+                ),
+              ],
             ),
             body: SafeArea(
               child: carregando
                   ? const Center(child: CircularProgressIndicator.adaptive())
                   : falha
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Falha ao carregar referência.'),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: () {
-                                _bloc.add(
-                                  ReferenciaIniciou(
-                                    idReferencia: widget.idReferencia,
-                                  ),
-                                );
-                              },
-                              child: const Text('Tentar novamente'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Falha ao carregar referência.'),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => _referenciaBloc.add(
+                              ReferenciaIniciou(idReferencia: widget.idReferencia),
                             ),
-                          ],
-                        ),
+                            child: const Text('Tentar novamente'),
+                          ),
+                        ],
                       ),
                     )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Informações da Referência',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed:
-                                      carregando ||
-                                          falha ||
-                                          _abrindoPreco ||
-                                          _referencia == null
-                                      ? null
-                                      : _abrirPrecoDaReferencia,
-                                  icon: _abrindoPreco
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(Icons.price_change_outlined),
-                                  label: Text(
-                                    _abrindoPreco ? 'Abrindo...' : 'Preço',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Widget de mídias da referência
-                            if ((_referencia?.id ?? widget.idReferencia) > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: ReferenciaMidiasWidget(
-                                  referenciaId:
-                                      _referencia?.id ?? widget.idReferencia,
-                                  permiteEditar: true,
-                                ),
-                              ),
-                            TextFormField(
-                              controller: _idController,
-                              readOnly: true,
-                              enabled: false,
-                              decoration: const InputDecoration(
-                                labelText: 'ID',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _nomeController,
-                              decoration: const InputDecoration(
-                                labelText: 'Nome',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Informe o nome da referência';
-                                }
-                                return null;
-                              },
-                            ),
-
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: _editarCategoriaSubCategoria,
-                                icon: const Icon(Icons.swap_horiz),
-                                label: const Text(
-                                  'Alterar categoria/sub-categoria',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Categoria',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Text(_categoriaSelecionada?.nome ?? '-'),
-                            ),
-                            const SizedBox(height: 12),
-                            InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Sub-Categoria',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Text(
-                                _subCategoriaSelecionada?.nome ?? '-',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _ncmController,
-                              maxLength: 8,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              decoration: const InputDecoration(
-                                labelText: 'NCM',
-                                hintText: 'Ex: 6101.20.00',
-                                border: OutlineInputBorder(),
-                                counterText: '',
-                              ),
-                              validator: (value) {
-                                final texto = value?.trim() ?? '';
-                                if (texto.isEmpty) return null;
-                                if (texto.length != 8) {
-                                  return 'NCM deve conter exatamente 8 números.';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _pesoController,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              decoration: const InputDecoration(
-                                labelText: 'Peso (gramas)',
-                                hintText: 'Ex: 250',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              alignment: WrapAlignment.spaceBetween,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 8,
-                              runSpacing: 4,
-                              children: [
-                                Text(
-                                  'Produtos da referência',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Wrap(
-                                  spacing: 4,
-                                  runSpacing: 4,
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        Navigator.of(context).pushNamed(
-                                          '/codigos_de_barras_da_referencia',
-                                          arguments: {
-                                            'referenciaId':
-                                                state.referencia?.id,
-                                          },
-                                        );
-                                      },
-                                      icon: const Icon(Icons.barcode_reader),
-                                      label: const Text(
-                                        'Ver códigos de barras',
-                                      ),
-                                    ),
-                                    TextButton.icon(
-                                      onPressed: () async {
-                                        final criou =
-                                            await Navigator.of(
-                                              context,
-                                            ).pushNamed(
-                                              '/produto',
-                                              arguments: {
-                                                'referenciaId':
-                                                    state.referencia?.id,
-                                                'referenciaNome':
-                                                    state.referencia?.nome,
-                                              },
-                                            );
-
-                                        if (!mounted) return;
-
-                                        if (criou == true) {
-                                          setState(() {
-                                            _refreshProdutosTrigger++;
-                                          });
-                                        }
-                                      },
-                                      icon: const Icon(Icons.add),
-                                      label: const Text(
-                                        'Cadastrar novo produto',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            const SizedBox(height: 12),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Theme.of(context).dividerColor,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child:
-                                  (_referencia?.id ?? widget.idReferencia) > 0
-                                  ? ProdutosDaReferenciaTabelaWidget(
-                                      permitirCriacaoDeNovoProduto: true,
-                                      referenciaId:
-                                          _referencia?.id ??
-                                          widget.idReferencia,
-                                      refreshTrigger: _refreshProdutosTrigger,
-                                    )
-                                  : const Text(
-                                      'ID da referência indisponível para carregar produtos.',
-                                    ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            ExpansionTile(
-                              onExpansionChanged: (expandiu) {
-                                setState(() {
-                                  _detalhesExpandidos = expandiu;
-                                });
-                              },
-                              collapsedBackgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.06),
-
-                              collapsedShape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.30),
-                                ),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                              iconColor: Theme.of(context).colorScheme.primary,
-                              collapsedIconColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              textColor: Theme.of(context).colorScheme.primary,
-                              collapsedTextColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              tilePadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              childrenPadding: const EdgeInsets.only(top: 12),
-                              leading: Icon(
-                                _detalhesExpandidos
-                                    ? Icons.expand_less
-                                    : Icons.touch_app,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              title: Text(
-                                'Detalhes',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              subtitle: Text(
-                                _detalhesExpandidos
-                                    ? 'Toque para recolher'
-                                    : 'Toque para expandir e editar os detalhes',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: _buildDescricaoInput(),
-                                ),
-                                const SizedBox(height: 12),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: _buildComposicaoInput(),
-                                ),
-                                const SizedBox(height: 12),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: _buildCuidadosInput(),
-                                ),
-                                const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: _buildUnidadeDeMedidaInput(),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: _buildIDExternoInput(),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 96),
-                          ],
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 340,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: _buildIdentidade(context),
+                          ),
                         ),
-                      ),
+                        const VerticalDivider(width: 1),
+                        Expanded(
+                          child: DefaultTabController(
+                            length: 3,
+                            child: Column(
+                              children: [
+                                _buildTabBar(),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: TabBarView(
+                                      children: [
+                                        ReferenciaProdutosTab(
+                                          referenciaId: widget.idReferencia,
+                                        ),
+                                        ReferenciaPrecosTab(
+                                          referenciaId: widget.idReferencia,
+                                        ),
+                                        _buildDetalhesTab(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
             ),
           );
@@ -630,34 +265,96 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     );
   }
 
-  InputDecorator _buildDescricaoInput() {
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Descrição',
-        border: OutlineInputBorder(),
-      ),
+  Widget _buildTabBar() {
+    return BlocBuilder<ProdutosDaReferenciaBloc, ProdutosDaReferenciaState>(
+      builder: (context, produtosState) {
+        return BlocBuilder<PrecosDaReferenciaBloc, PrecosDaReferenciaState>(
+          builder: (context, precosState) {
+            return TabBar(
+              tabs: [
+                Tab(
+                  text:
+                      'Produtos (${produtosState.totalCombinacoesComProduto}/${produtosState.totalCombinacoesDaGrade})',
+                ),
+                Tab(
+                  text:
+                      'Tabela de preços (${precosState.totalComPreco}/${precosState.totalTabelas})',
+                ),
+                const Tab(text: 'Detalhes'),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildIdentidade(BuildContext context) {
+    return Form(
+      key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _descricaoController.text.trim().isEmpty
-                ? 'Sem descrição cadastrada'
-                : _descricaoController.text,
-            overflow: TextOverflow.ellipsis,
+          if ((_referencia?.id ?? widget.idReferencia) > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ReferenciaMidiasWidget(
+                referenciaId: _referencia?.id ?? widget.idReferencia,
+                permiteEditar: true,
+              ),
+            ),
+          TextFormField(
+            controller: _nomeController,
+            decoration: const InputDecoration(
+              labelText: 'Nome',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) =>
+                (value == null || value.trim().isEmpty)
+                ? 'Informe o nome da referência'
+                : null,
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                _editarCampoLongo(
-                  controller: _descricaoController,
-                  titulo: 'Editar descrição',
-                  hintText: 'Informe a descrição completa da referência',
-                );
-              },
-              icon: const Icon(Icons.edit_note_outlined),
-              label: const Text('Editar descrição'),
+          const SizedBox(height: 12),
+          InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'Categoria › Sub-categoria',
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: _editarCategoriaSubCategoria,
+              ),
+            ),
+            child: Text(
+              _subCategoriaSelecionada != null
+                  ? '${_categoriaSelecionada?.nome ?? '-'} › ${_subCategoriaSelecionada!.nome}'
+                  : (_categoriaSelecionada?.nome ?? '-'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _ncmController,
+            maxLength: 8,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'NCM',
+              border: OutlineInputBorder(),
+              counterText: '',
+            ),
+            validator: (value) {
+              final texto = value?.trim() ?? '';
+              if (texto.isEmpty) return null;
+              if (texto.length != 8) return 'NCM deve conter exatamente 8 números.';
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _pesoController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'Peso (gramas)',
+              border: OutlineInputBorder(),
             ),
           ),
         ],
@@ -665,92 +362,70 @@ class _ReferenciaPageState extends State<ReferenciaPage> {
     );
   }
 
-  TextFormField _buildIDExternoInput() {
-    return TextFormField(
-      controller: _idExternoController,
-      decoration: const InputDecoration(
-        labelText: 'ID Externo',
-        border: OutlineInputBorder(),
-      ),
-    );
-  }
-
-  TextFormField _buildUnidadeDeMedidaInput() {
-    return TextFormField(
-      controller: _unidadeMedidaController,
-      decoration: const InputDecoration(
-        labelText: 'Unidade de Medida',
-        border: OutlineInputBorder(),
-      ),
-    );
-  }
-
-  InputDecorator _buildCuidadosInput() {
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Cuidados',
-        border: OutlineInputBorder(),
-      ),
+  Widget _buildDetalhesTab() {
+    return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _cuidadosController.text.trim().isEmpty
-                ? 'Sem cuidados cadastrados'
-                : _cuidadosController.text,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _idExternoController,
+                  decoration: const InputDecoration(
+                    labelText: 'ID Externo',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _unidadeMedidaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Unidade de medida (UN, PC, KIT, PAR)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                _editarCampoLongo(
-                  controller: _cuidadosController,
-                  titulo: 'Editar cuidados',
-                  hintText: 'Informe os cuidados completos da referência',
-                );
-              },
-              icon: const Icon(Icons.edit_note_outlined),
-              label: const Text('Editar cuidados'),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _descricaoController,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Descrição',
+              border: OutlineInputBorder(),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  InputDecorator _buildComposicaoInput() {
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Composição',
-        border: OutlineInputBorder(),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _composicaoController.text.trim().isEmpty
-                ? 'Sem composição cadastrada'
-                : _composicaoController.text,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                _editarCampoLongo(
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
                   controller: _composicaoController,
-                  titulo: 'Editar composição',
-                  hintText: 'Informe a composição completa da referência',
-                );
-              },
-              icon: const Icon(Icons.edit_note_outlined),
-              label: const Text('Editar composição'),
-            ),
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Composição',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _cuidadosController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Cuidados',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

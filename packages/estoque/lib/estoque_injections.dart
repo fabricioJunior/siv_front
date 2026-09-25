@@ -22,6 +22,8 @@ import 'package:estoque/domain/repositories/i_balanco_repository.dart';
 import 'package:estoque/presentation.dart';
 import 'package:estoque/use_cases.dart';
 
+import 'package:core/estoque_portas.dart';
+import 'domain/adapters/porta_recuperar_saldo_do_estoque_impl.dart';
 import 'data/local/produtos_estoque_local_data_sources.dart';
 
 void resolverEstoqueInjection() {
@@ -75,6 +77,10 @@ void _repositorios() {
 void _useCases() {
   sl.registerFactory<RecuperarSaldoDoEstoque>(
     () => RecuperarSaldoDoEstoque(estoqueRepository: sl()),
+  );
+
+  sl.registerFactory<PortaRecuperarSaldoDoEstoque>(
+    () => PortaRecuperarSaldoDoEstoqueImpl(sl()),
   );
 
   sl.registerFactory<AgruparSaldoPorReferencia>(

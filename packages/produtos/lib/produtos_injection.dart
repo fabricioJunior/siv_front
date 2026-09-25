@@ -471,6 +471,22 @@ void _usesCases() {
   sl.registerFactory<ConsultarImportacaoProduto>(
     () => ConsultarImportacaoProduto(repository: sl()),
   );
+
+  sl.registerFactory<ObterPrecoDaReferencia>(
+    () => ObterPrecoDaReferencia(sl()),
+  );
+
+  sl.registerFactory<RecuperarSaldoDoEstoqueDaReferencia>(
+    () => RecuperarSaldoDoEstoqueDaReferencia(sl()),
+  );
+
+  sl.registerFactory<ListarPrecosDaReferenciaPorTabela>(
+    () => ListarPrecosDaReferenciaPorTabela(sl()),
+  );
+
+  sl.registerFactory<SalvarPrecoDaReferencia>(
+    () => SalvarPrecoDaReferencia(sl()),
+  );
 }
 
 void _presentantion() {
@@ -513,7 +529,15 @@ void _presentantion() {
   );
 
   sl.registerFactory<ProdutosDaReferenciaBloc>(
-    () => ProdutosDaReferenciaBloc(sl(), sl()),
+    () => ProdutosDaReferenciaBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<AdicionarVariacoesBloc>(
+    () => AdicionarVariacoesBloc(sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<PrecosDaReferenciaBloc>(
+    () => PrecosDaReferenciaBloc(sl(), sl()),
   );
 
   sl.registerFactory<ImpressaoEtiquetasBloc>(

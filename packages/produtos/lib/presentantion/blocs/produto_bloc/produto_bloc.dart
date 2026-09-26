@@ -124,6 +124,11 @@ class ProdutoBloc extends Bloc<ProdutoEvent, ProdutoState> {
         state.copyWith(
           produtoStep: ProdutoStep.falha,
           erroMensagem: 'Falha ao carregar cores e tamanhos.',
+          referenciaId: event.referenciaId,
+          idExterno: '',
+          corId: event.corId,
+          tamanhoId: event.tamanhoId,
+          estampaId: event.estampaId,
         ),
       );
       addError(e, s);

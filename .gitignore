@@ -52,3 +52,5 @@ app.*.map.json
 packages/*/build/
 
 sentry.properties
+.vercel
+.env*

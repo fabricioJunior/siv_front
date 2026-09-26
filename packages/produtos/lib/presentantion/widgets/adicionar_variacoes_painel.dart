@@ -15,6 +15,7 @@ class AdicionarVariacoesPainel extends StatefulWidget {
   final Set<int> tamanhoIdsNaGrade;
   final Set<int> estampaIdsNaGrade;
   final Set<String> chavesNaGrade;
+  final bool mobile;
 
   const AdicionarVariacoesPainel({
     super.key,
@@ -23,6 +24,7 @@ class AdicionarVariacoesPainel extends StatefulWidget {
     required this.tamanhoIdsNaGrade,
     required this.estampaIdsNaGrade,
     required this.chavesNaGrade,
+    this.mobile = false,
   });
 
   static Future<bool?> show({
@@ -46,6 +48,35 @@ class AdicionarVariacoesPainel extends StatefulWidget {
             estampaIdsNaGrade: estampaIdsNaGrade,
             chavesNaGrade: chavesNaGrade,
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Parte 2 (mobile): mesmo bloc/conteúdo, apresentado em bottom sheet
+  /// full-height com abas internas (Cores/Tamanhos/Estampas) em vez das
+  /// 3 colunas lado a lado do desktop.
+  static Future<bool?> showMobile({
+    required BuildContext context,
+    required int referenciaId,
+    required Set<int> corIdsNaGrade,
+    required Set<int> tamanhoIdsNaGrade,
+    required Set<int> estampaIdsNaGrade,
+    required Set<String> chavesNaGrade,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.92,
+        child: AdicionarVariacoesPainel(
+          mobile: true,
+          referenciaId: referenciaId,
+          corIdsNaGrade: corIdsNaGrade,
+          tamanhoIdsNaGrade: tamanhoIdsNaGrade,
+          estampaIdsNaGrade: estampaIdsNaGrade,
+          chavesNaGrade: chavesNaGrade,
         ),
       ),
     );
@@ -119,6 +150,8 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
               Expanded(
                 child: carregando
                     ? const Center(child: CircularProgressIndicator.adaptive())
+                    : widget.mobile
+                    ? _buildCorpoMobile(context, state)
                     : Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -147,6 +180,38 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCorpoMobile(BuildContext context, AdicionarVariacoesState state) {
+    final abas = ['Cores', 'Tamanhos', if (state.estampasAtivo) 'Estampas'];
+
+    return DefaultTabController(
+      length: abas.length,
+      child: Column(
+        children: [
+          TabBar(tabs: abas.map((a) => Tab(text: a)).toList()),
+          Expanded(
+            child: TabBarView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildColunaCores(context, state),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildColunaTamanhos(context, state),
+                ),
+                if (state.estampasAtivo)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildColunaEstampas(context, state),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

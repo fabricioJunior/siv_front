@@ -15,17 +15,26 @@ class CalendarioDeDespesasMesAlterado extends CalendarioDeDespesasEvent {
   CalendarioDeDespesasMesAlterado({required this.ano, required this.mes});
 }
 
-/// Dispara `POST /despesas/{id}/ocorrencias` -- pagar/editar/cancelar uma
-/// ocorrência do mês (materializando-a se ainda for virtual).
+/// Pagar/editar/cancelar uma ocorrência do mês. Ocorrência virtual (recorrente
+/// ainda não materializada nesse mês) usa `POST /despesas/{id}/ocorrencias`;
+/// ocorrência concreta (já é uma linha real de despesa) usa `PUT /despesas/{id}`
+/// -- o endpoint de ocorrências só aceita templates recorrentes e rejeita
+/// qualquer outra despesa com 400.
 class CalendarioDeDespesasOcorrenciaRegistrada extends CalendarioDeDespesasEvent {
   final int id;
+  final bool virtual;
   final double? valor;
+  final int? categoriaId;
+  final int? origemPagamentoId;
   final DateTime? dataPagamento;
   final StatusDespesa? status;
 
   CalendarioDeDespesasOcorrenciaRegistrada({
     required this.id,
+    required this.virtual,
     this.valor,
+    this.categoriaId,
+    this.origemPagamentoId,
     this.dataPagamento,
     this.status,
   });

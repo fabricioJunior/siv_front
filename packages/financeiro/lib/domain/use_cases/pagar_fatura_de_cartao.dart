@@ -7,10 +7,11 @@ class PagarFaturaDeCartao {
   PagarFaturaDeCartao({required this.repository});
 
   Future<PagamentoDeFatura> call({
+    required int empresaId,
     required int origemPagamentoId,
     required int ano,
     required int mes,
   }) {
-    return repository.pagarFatura(origemPagamentoId: origemPagamentoId, ano: ano, mes: mes);
+    return repository.pagarFatura(empresaId: empresaId, origemPagamentoId: origemPagamentoId, ano: ano, mes: mes);
   }
 }

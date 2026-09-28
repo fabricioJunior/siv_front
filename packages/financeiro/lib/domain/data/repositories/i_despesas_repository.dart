@@ -5,6 +5,7 @@ abstract class IDespesasRepository {
   Future<Despesa> criarDespesa(Despesa despesa);
 
   Future<PagamentoDeFatura> pagarFatura({
+    required int empresaId,
     required int origemPagamentoId,
     required int ano,
     required int mes,

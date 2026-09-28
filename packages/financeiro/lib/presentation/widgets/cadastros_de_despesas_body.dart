@@ -635,6 +635,7 @@ class _OrigensPagamentoDespesaSectionState
 
     try {
       final resultado = await sl<PagarFaturaDeCartao>().call(
+        empresaId: _empresaId,
         origemPagamentoId: origem.id!,
         ano: periodo.ano,
         mes: periodo.mes,

@@ -21,6 +21,7 @@ class DespesasRemoteDataSource extends RemoteDataSourceBase
 
   @override
   Future<PagamentoDeFatura> pagarFatura({
+    required int empresaId,
     required int origemPagamentoId,
     required int ano,
     required int mes,
@@ -31,6 +32,7 @@ class DespesasRemoteDataSource extends RemoteDataSourceBase
     final response = await httpClient.patch(
       uri: uriBase.replace(path: '/v1/despesas/pagar-fatura'),
       body: jsonEncode({
+        'empresaId': empresaId,
         'origemPagamentoId': origemPagamentoId,
         'ano': ano,
         'mes': mes,

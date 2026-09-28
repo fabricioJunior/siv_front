@@ -15,11 +15,12 @@ class DespesasRepository implements IDespesasRepository {
 
   @override
   Future<PagamentoDeFatura> pagarFatura({
+    required int empresaId,
     required int origemPagamentoId,
     required int ano,
     required int mes,
   }) {
-    return remoteDataSource.pagarFatura(origemPagamentoId: origemPagamentoId, ano: ano, mes: mes);
+    return remoteDataSource.pagarFatura(empresaId: empresaId, origemPagamentoId: origemPagamentoId, ano: ano, mes: mes);
   }
 
   @override

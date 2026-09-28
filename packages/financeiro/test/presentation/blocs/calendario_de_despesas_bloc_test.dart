@@ -48,7 +48,12 @@ class _FakeDespesasRepository implements IDespesasRepository {
   Future<Despesa> criarDespesa(Despesa despesa) async => despesa;
 
   @override
-  Future<PagamentoDeFatura> pagarFatura({required int origemPagamentoId, required int ano, required int mes}) async =>
+  Future<PagamentoDeFatura> pagarFatura({
+    required int empresaId,
+    required int origemPagamentoId,
+    required int ano,
+    required int mes,
+  }) async =>
       const PagamentoDeFatura(atualizadas: 0, valorTotal: 0);
 
   @override

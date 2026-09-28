@@ -651,7 +651,7 @@ void _marcarComoPago(BuildContext context, DespesaOcorrenciaCalendario o) {
   if (id == null) return;
   context.read<CalendarioDeDespesasBloc>().add(
         CalendarioDeDespesasOcorrenciaRegistrada(
-            id: id, status: StatusDespesa.pago, dataPagamento: o.dataPagamento),
+            id: id, virtual: o.virtual, status: StatusDespesa.pago, dataPagamento: o.dataPagamento),
       );
 }
 
@@ -660,7 +660,7 @@ void _cancelar(BuildContext context, DespesaOcorrenciaCalendario o) {
   if (id == null) return;
   context.read<CalendarioDeDespesasBloc>().add(
         CalendarioDeDespesasOcorrenciaRegistrada(
-            id: id, status: StatusDespesa.cancelado),
+            id: id, virtual: o.virtual, status: StatusDespesa.cancelado),
       );
 }
 
@@ -673,10 +673,18 @@ void _editar(BuildContext context, DespesaOcorrenciaCalendario o) {
     builder: (dialogContext) => _EditarOcorrenciaDialog(
       mes: bloc.state.mes,
       ocorrencia: o,
-      onSalvar: (valor, data) {
+      categoriaPorId: bloc.state.categoriaPorId,
+      origemPorId: bloc.state.origemPorId,
+      onSalvar: (valor, data, categoriaId, origemPagamentoId) {
         bloc.add(
           CalendarioDeDespesasOcorrenciaRegistrada(
-              id: id, valor: valor, dataPagamento: data),
+            id: id,
+            virtual: o.virtual,
+            valor: valor,
+            dataPagamento: data,
+            categoriaId: categoriaId,
+            origemPagamentoId: origemPagamentoId,
+          ),
         );
       },
     ),
@@ -686,10 +694,17 @@ void _editar(BuildContext context, DespesaOcorrenciaCalendario o) {
 class _EditarOcorrenciaDialog extends StatefulWidget {
   final int mes;
   final DespesaOcorrenciaCalendario ocorrencia;
-  final void Function(double valor, DateTime data) onSalvar;
+  final Map<int, String> categoriaPorId;
+  final Map<int, String> origemPorId;
+  final void Function(double valor, DateTime data, int categoriaId, int origemPagamentoId) onSalvar;
 
-  const _EditarOcorrenciaDialog(
-      {required this.mes, required this.ocorrencia, required this.onSalvar});
+  const _EditarOcorrenciaDialog({
+    required this.mes,
+    required this.ocorrencia,
+    required this.categoriaPorId,
+    required this.origemPorId,
+    required this.onSalvar,
+  });
 
   @override
   State<_EditarOcorrenciaDialog> createState() =>
@@ -699,6 +714,8 @@ class _EditarOcorrenciaDialog extends StatefulWidget {
 class _EditarOcorrenciaDialogState extends State<_EditarOcorrenciaDialog> {
   late final TextEditingController _valorController;
   late DateTime _data;
+  late int _categoriaId;
+  late int _origemPagamentoId;
 
   @override
   void initState() {
@@ -706,6 +723,8 @@ class _EditarOcorrenciaDialogState extends State<_EditarOcorrenciaDialog> {
     _valorController =
         TextEditingController(text: widget.ocorrencia.valor.toStringAsFixed(2));
     _data = widget.ocorrencia.dataPagamento;
+    _categoriaId = widget.ocorrencia.categoriaId;
+    _origemPagamentoId = widget.ocorrencia.origemPagamentoId;
   }
 
   @override
@@ -743,6 +762,20 @@ class _EditarOcorrenciaDialogState extends State<_EditarOcorrenciaDialog> {
               child: Text(_dataCurtaCompleta(_data)),
             ),
           ),
+          const SizedBox(height: 12),
+          _dropdown(
+            label: 'Categoria',
+            value: _categoriaId,
+            opcoes: widget.categoriaPorId,
+            onChanged: (v) => setState(() => _categoriaId = v),
+          ),
+          const SizedBox(height: 12),
+          _dropdown(
+            label: 'Conta / origem de pagamento',
+            value: _origemPagamentoId,
+            opcoes: widget.origemPorId,
+            onChanged: (v) => setState(() => _origemPagamentoId = v),
+          ),
         ],
       ),
       actions: [
@@ -754,12 +787,38 @@ class _EditarOcorrenciaDialogState extends State<_EditarOcorrenciaDialog> {
             final valor =
                 double.tryParse(_valorController.text.replaceAll(',', '.'));
             if (valor == null || valor <= 0) return;
-            widget.onSalvar(valor, _data);
+            widget.onSalvar(valor, _data, _categoriaId, _origemPagamentoId);
             Navigator.of(context).pop();
           },
           child: const Text('Salvar'),
         ),
       ],
+    );
+  }
+
+  // Categoria/origem inativa continuam no mapa (o bloc carrega todas, sem
+  // filtro), mas se a despesa apontar pra um id já excluído de verdade o
+  // DropdownButtonFormField quebra (exige exatamente 1 item com o value
+  // atual) -- entra um item extra só pra esse caso não crashar o diálogo.
+  Widget _dropdown({
+    required String label,
+    required int value,
+    required Map<int, String> opcoes,
+    required ValueChanged<int> onChanged,
+  }) {
+    final itens = {...opcoes};
+    itens.putIfAbsent(value, () => '(removido)');
+
+    return DropdownButtonFormField<int>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: label),
+      items: [
+        for (final entrada in itens.entries)
+          DropdownMenuItem(value: entrada.key, child: Text(entrada.value)),
+      ],
+      onChanged: (v) {
+        if (v != null) onChanged(v);
+      },
     );
   }
 }

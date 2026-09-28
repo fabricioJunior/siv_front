@@ -304,6 +304,14 @@ void _useCases() {
     () => CriarDespesa(repository: sl()),
   );
 
+  sl.registerFactory<AtualizarDespesa>(
+    () => AtualizarDespesa(repository: sl()),
+  );
+
+  sl.registerFactory<PagarFaturaDeCartao>(
+    () => PagarFaturaDeCartao(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarDespesas>(
     () => RecuperarDespesas(repository: sl()),
   );
@@ -429,7 +437,7 @@ void _presentation() {
   );
 
   sl.registerFactory<CalendarioDeDespesasBloc>(
-    () => CalendarioDeDespesasBloc(sl(), sl(), sl(), sl()),
+    () => CalendarioDeDespesasBloc(sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<DashboardDeDespesasBloc>(

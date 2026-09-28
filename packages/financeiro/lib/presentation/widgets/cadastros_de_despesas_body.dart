@@ -6,11 +6,9 @@ import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
-import 'package:financeiro/presentation/utils/nomes_dos_meses.dart';
 import 'package:financeiro/presentation/utils/validacao_origem_pagamento_despesa.dart';
 import 'package:financeiro/presentation/widgets/card_blueprint.dart';
 import 'package:financeiro/presentation/widgets/despesa_status_mark.dart';
-import 'package:financeiro/use_cases.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -605,52 +603,10 @@ class _OrigensPagamentoDespesaSectionState
                 style: textos.corpo.copyWith(fontSize: 13),
               ),
             ),
-            if (origem.tipo.diaVencimentoObrigatorio)
-              IconButton(
-                tooltip:
-                    'Pagar fatura do mês (marca todas as despesas pendentes desse cartão como pagas)',
-                icon: const Icon(Icons.price_check, size: 18),
-                onPressed: () => _pagarFatura(context, origem),
-              )
-            else
-              const SizedBox(width: 48),
           ],
         ),
       ),
     );
-  }
-
-  // Pagar a fatura quita de uma vez todas as despesas pendentes desse cartão
-  // no mês/ano escolhido -- o dinheiro sai de uma vez só pro banco, não faz
-  // sentido marcar despesa por despesa.
-  Future<void> _pagarFatura(
-      BuildContext context, OrigemPagamentoDespesa origem) async {
-    final agora = DateTime.now();
-    final periodo = await showDialog<({int ano, int mes})>(
-      context: context,
-      builder: (dialogContext) => _EscolherMesAnoDialog(
-          origem: origem, anoInicial: agora.year, mesInicial: agora.month),
-    );
-    if (periodo == null || !context.mounted) return;
-
-    try {
-      final resultado = await sl<PagarFaturaDeCartao>().call(
-        empresaId: _empresaId,
-        origemPagamentoId: origem.id!,
-        ano: periodo.ano,
-        mes: periodo.mes,
-      );
-      if (!context.mounted) return;
-      final mensagem = resultado.atualizadas == 0
-          ? 'Nenhuma despesa pendente desse cartão em ${periodo.mes}/${periodo.ano}.'
-          : '${resultado.atualizadas} despesa(s) marcada(s) como paga(s) -- R\$ ${resultado.valorTotal.toStringAsFixed(2)}.';
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(mensagem)));
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Falha ao pagar a fatura.')));
-    }
   }
 
   Widget _cardEditarOrigem(
@@ -933,70 +889,4 @@ int _diaFechamento(int diaVencimento, int prazoFechamentoDias) {
   final vencimento =
       DateTime(DateTime.now().year, DateTime.now().month, diaVencimento);
   return vencimento.subtract(Duration(days: prazoFechamentoDias)).day;
-}
-
-class _EscolherMesAnoDialog extends StatefulWidget {
-  final OrigemPagamentoDespesa origem;
-  final int anoInicial;
-  final int mesInicial;
-
-  const _EscolherMesAnoDialog(
-      {required this.origem,
-      required this.anoInicial,
-      required this.mesInicial});
-
-  @override
-  State<_EscolherMesAnoDialog> createState() => _EscolherMesAnoDialogState();
-}
-
-class _EscolherMesAnoDialogState extends State<_EscolherMesAnoDialog> {
-  late int _ano = widget.anoInicial;
-  late int _mes = widget.mesInicial;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Pagar fatura -- ${widget.origem.nome}'),
-      content: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: DropdownButtonFormField<int>(
-              initialValue: _mes,
-              decoration: const InputDecoration(labelText: 'Mês'),
-              items: [
-                for (var m = 1; m <= 12; m++)
-                  DropdownMenuItem(value: m, child: Text(nomesDosMeses[m - 1])),
-              ],
-              onChanged: (v) => setState(() => _mes = v!),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 100,
-            child: DropdownButtonFormField<int>(
-              initialValue: _ano,
-              decoration: const InputDecoration(labelText: 'Ano'),
-              items: [
-                for (var a = widget.anoInicial - 1;
-                    a <= widget.anoInicial + 1;
-                    a++)
-                  DropdownMenuItem(value: a, child: Text('$a')),
-              ],
-              onChanged: (v) => setState(() => _ano = v!),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar')),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop((ano: _ano, mes: _mes)),
-          child: const Text('Pagar fatura'),
-        ),
-      ],
-    );
-  }
 }

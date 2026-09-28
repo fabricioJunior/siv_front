@@ -5,6 +5,7 @@ import 'package:financeiro/presentation.dart';
 import 'package:financeiro/presentation/utils/formatadores.dart';
 import 'package:financeiro/presentation/utils/nomes_dos_meses.dart';
 import 'package:financeiro/presentation/widgets/card_blueprint.dart';
+import 'package:financeiro/presentation/widgets/confirmar_pagamento_fatura_dialog.dart';
 import 'package:financeiro/presentation/widgets/despesa_status_mark.dart';
 import 'package:flutter/material.dart';
 
@@ -480,13 +481,171 @@ class _PainelProximosVencimentos extends StatelessWidget {
                   style: textos.apoio.copyWith(color: cores.textoApoio)),
             )
           else
-            for (final ocorrencia in itens)
-              _LinhaVencimento(
-                ocorrencia: ocorrencia,
-                categoriaNome: sucesso.categoriaPorId[ocorrencia.categoriaId],
-                origemNome: sucesso.origemPorId[ocorrencia.origemPagamentoId],
-                compacto: compacto,
+            for (final linha in _linhasAgrupadas(itens))
+              linha is _GrupoVencimentoCartao
+                  ? _LinhaVencimentoCartao(
+                      empresaId: sucesso.empresaId,
+                      grupo: linha,
+                      compacto: compacto,
+                    )
+                  : _LinhaVencimento(
+                      ocorrencia: linha as DespesaOcorrenciaCalendario,
+                      categoriaNome: sucesso.categoriaPorId[linha.categoriaId],
+                      origemNome: sucesso.origemPorId[linha.origemPagamentoId],
+                      compacto: compacto,
+                    ),
+        ],
+      ),
+    );
+  }
+
+  /// Agrupa ocorrências de mesmo cartão + mesma data numa única linha
+  /// (`_GrupoVencimentoCartao`); despesas de outras origens seguem uma linha
+  /// por ocorrência (`DespesaOcorrenciaCalendario`).
+  List<Object> _linhasAgrupadas(List<DespesaOcorrenciaCalendario> itens) {
+    final porChave = <String, List<DespesaOcorrenciaCalendario>>{};
+    for (final o in itens) {
+      final origem = sucesso.origemPagamentoPorId[o.origemPagamentoId];
+      if (origem?.tipo != TipoOrigemPagamentoDespesa.cartaoCredito) continue;
+      final data = o.dataPagamento;
+      final chave = '${o.origemPagamentoId}-${data.year}-${data.month}-${data.day}';
+      porChave.putIfAbsent(chave, () => []).add(o);
+    }
+
+    final jaRenderizados = <String>{};
+    final linhas = <Object>[];
+    for (final o in itens) {
+      final origem = sucesso.origemPagamentoPorId[o.origemPagamentoId];
+      if (origem?.tipo != TipoOrigemPagamentoDespesa.cartaoCredito) {
+        linhas.add(o);
+        continue;
+      }
+      final data = o.dataPagamento;
+      final chave = '${o.origemPagamentoId}-${data.year}-${data.month}-${data.day}';
+      if (!jaRenderizados.add(chave)) continue;
+      linhas.add(_GrupoVencimentoCartao(
+        origemPagamentoId: o.origemPagamentoId,
+        nome: origem!.nome,
+        data: data,
+        ocorrencias: porChave[chave]!,
+      ));
+    }
+    return linhas;
+  }
+}
+
+class _GrupoVencimentoCartao {
+  final int origemPagamentoId;
+  final String nome;
+  final DateTime data;
+  final List<DespesaOcorrenciaCalendario> ocorrencias;
+
+  const _GrupoVencimentoCartao({
+    required this.origemPagamentoId,
+    required this.nome,
+    required this.data,
+    required this.ocorrencias,
+  });
+
+  double get total => ocorrencias.fold(0.0, (soma, o) => soma + o.valor);
+}
+
+class _LinhaVencimentoCartao extends StatelessWidget {
+  final int empresaId;
+  final _GrupoVencimentoCartao grupo;
+  final bool compacto;
+
+  const _LinhaVencimentoCartao({
+    required this.empresaId,
+    required this.grupo,
+    this.compacto = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final data = grupo.data;
+    final hoje = DateTime.now();
+    final ehHoje = data.year == hoje.year &&
+        data.month == hoje.month &&
+        data.day == hoje.day;
+    final quando = ehHoje
+        ? 'HOJE'
+        : data.month == hoje.month
+            ? nomesDosDiasDaSemana[data.weekday % 7].substring(0, 3)
+            : nomesDosMeses[data.month - 1].substring(0, 3).toUpperCase();
+    final n = grupo.ocorrencias.length;
+
+    void marcarComoPago() => confirmarEPagarFaturaDeCartao(
+          context,
+          empresaId: empresaId,
+          origemPagamentoId: grupo.origemPagamentoId,
+          origemNome: grupo.nome,
+          ano: data.year,
+          mes: data.month,
+          ocorrenciasPendentes: grupo.ocorrencias,
+        );
+
+    return Container(
+      constraints: BoxConstraints(minHeight: compacto ? 36 : 0),
+      padding: EdgeInsets.symmetric(
+          horizontal: compacto ? 14 : 20, vertical: compacto ? 10 : 12),
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: cores.hairline))),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: compacto ? 40 : 48,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${data.day}',
+                    style: textos.secao.copyWith(
+                        fontSize: compacto ? 19 : 22, color: cores.acoEscuro)),
+                Text(quando,
+                    style: textos.rotulo.copyWith(
+                        fontSize: compacto ? 9.5 : 10, color: cores.textoApoio)),
+              ],
+            ),
+          ),
+          SizedBox(width: compacto ? 10 : 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Cartão ${grupo.nome}',
+                    style: textos.corpo
+                        .copyWith(fontSize: compacto ? 13.5 : 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                Text('$n despesa${n == 1 ? '' : 's'}',
+                    style: textos.apoio.copyWith(
+                        fontSize: compacto ? 11.5 : 12, color: cores.textoApoio)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(formatarReais(grupo.total),
+                  style: textos.secao.copyWith(fontSize: compacto ? 15 : 17)),
+              const SizedBox(height: 4),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                onPressed: marcarComoPago,
+                child: const Text('Marcar como pago', style: TextStyle(fontSize: 11.5)),
               ),
+            ],
+          ),
         ],
       ),
     );

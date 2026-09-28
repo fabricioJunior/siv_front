@@ -51,6 +51,10 @@ class CalendarioDeDespesasBloc
             for (final o in resultados[1] as List<OrigemPagamentoDespesa>)
               if (o.id != null) o.id!: o.nome,
           },
+          origemPagamentoPorId: {
+            for (final o in resultados[1] as List<OrigemPagamentoDespesa>)
+              if (o.id != null) o.id!: o,
+          },
         ),
       );
     } catch (e, s) {

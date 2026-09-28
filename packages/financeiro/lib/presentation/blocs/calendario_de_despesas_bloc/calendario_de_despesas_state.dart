@@ -7,6 +7,7 @@ class CalendarioDeDespesasState extends Equatable {
   final List<DespesaOcorrenciaCalendario> ocorrencias;
   final Map<int, String> categoriaPorId;
   final Map<int, String> origemPorId;
+  final Map<int, OrigemPagamentoDespesa> origemPagamentoPorId;
   final CalendarioDeDespesasStep step;
   final String? erro;
 
@@ -17,6 +18,7 @@ class CalendarioDeDespesasState extends Equatable {
     this.ocorrencias = const [],
     this.categoriaPorId = const {},
     this.origemPorId = const {},
+    this.origemPagamentoPorId = const {},
     required this.step,
     this.erro,
   });
@@ -64,6 +66,7 @@ class CalendarioDeDespesasState extends Equatable {
     List<DespesaOcorrenciaCalendario>? ocorrencias,
     Map<int, String>? categoriaPorId,
     Map<int, String>? origemPorId,
+    Map<int, OrigemPagamentoDespesa>? origemPagamentoPorId,
     CalendarioDeDespesasStep? step,
     String? erro,
   }) {
@@ -74,14 +77,24 @@ class CalendarioDeDespesasState extends Equatable {
       ocorrencias: ocorrencias ?? this.ocorrencias,
       categoriaPorId: categoriaPorId ?? this.categoriaPorId,
       origemPorId: origemPorId ?? this.origemPorId,
+      origemPagamentoPorId: origemPagamentoPorId ?? this.origemPagamentoPorId,
       step: step ?? this.step,
       erro: erro,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [empresaId, ano, mes, ocorrencias, categoriaPorId, origemPorId, step, erro];
+  List<Object?> get props => [
+        empresaId,
+        ano,
+        mes,
+        ocorrencias,
+        categoriaPorId,
+        origemPorId,
+        origemPagamentoPorId,
+        step,
+        erro,
+      ];
 }
 
 class CalendarioDeDespesasInitial extends CalendarioDeDespesasState {

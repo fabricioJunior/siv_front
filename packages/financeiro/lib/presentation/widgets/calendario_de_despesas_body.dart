@@ -2,9 +2,11 @@ import 'package:core/bloc.dart';
 import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
+import 'package:financeiro/presentation/utils/agrupar_ocorrencias_por_cartao.dart';
 import 'package:financeiro/presentation/utils/formatadores.dart';
 import 'package:financeiro/presentation/utils/nomes_dos_meses.dart';
 import 'package:financeiro/presentation/widgets/card_blueprint.dart';
+import 'package:financeiro/presentation/widgets/confirmar_pagamento_fatura_dialog.dart';
 import 'package:financeiro/presentation/widgets/despesa_status_mark.dart';
 import 'package:flutter/material.dart';
 
@@ -497,12 +499,21 @@ class _PainelDoDia extends StatelessWidget {
                     child: Text('Nenhum pagamento neste dia.',
                         style: textos.apoio.copyWith(color: cores.textoApoio)),
                   )
-                : ListView(
-                    children: [
-                      for (final o in ocorrencias)
-                        _LinhaOcorrenciaPainel(ocorrencia: o)
-                    ],
-                  ),
+                : Builder(builder: (context) {
+                    final grupos = agruparOcorrenciasPorCartao(
+                        ocorrencias, state.origemPagamentoPorId);
+                    final agrupadas =
+                        grupos.expand((g) => g.ocorrencias).toSet();
+                    final avulsas =
+                        ocorrencias.where((o) => !agrupadas.contains(o));
+                    return ListView(
+                      children: [
+                        for (final grupo in grupos)
+                          _GrupoCartaoPainel(grupo: grupo, state: state),
+                        for (final o in avulsas) _LinhaOcorrenciaPainel(ocorrencia: o),
+                      ],
+                    );
+                  }),
           ),
           Divider(height: 1, color: cores.hairline),
           Padding(
@@ -643,6 +654,70 @@ class _LinhaOcorrenciaPainel extends StatelessWidget {
       case StatusDespesa.cancelado:
         return const DespesaTag('Cancelado', neutra: true);
     }
+  }
+}
+
+class _GrupoCartaoPainel extends StatelessWidget {
+  final GrupoCartao grupo;
+  final CalendarioDeDespesasState state;
+
+  const _GrupoCartaoPainel({required this.grupo, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cores.superficieRecuada,
+        border: Border(bottom: BorderSide(color: cores.hairline)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 12, 22, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(grupo.nome,
+                          style: textos.corpo
+                              .copyWith(fontWeight: FontWeight.w600, fontSize: 14)),
+                      Text(
+                        '${grupo.totalPagas} de ${grupo.ocorrencias.length} pagas'
+                        '${grupo.pendentes.isNotEmpty ? ' · ${formatarReais(grupo.totalPendente)} pendente' : ''}',
+                        style:
+                            textos.apoio.copyWith(fontSize: 12, color: cores.textoApoio),
+                      ),
+                    ],
+                  ),
+                ),
+                if (grupo.totalmentePago)
+                  const DespesaTag('Cartão pago')
+                else
+                  OutlinedButton(
+                    onPressed: () => confirmarEPagarFaturaDeCartao(
+                      context,
+                      empresaId: state.empresaId,
+                      origemPagamentoId: grupo.origemPagamentoId,
+                      origemNome: grupo.nome,
+                      ano: state.ano,
+                      mes: state.mes,
+                      ocorrenciasPendentes: grupo.pendentes,
+                    ),
+                    child: const Text('Marcar cartão como pago'),
+                  ),
+              ],
+            ),
+          ),
+          for (final o in grupo.ocorrencias) _LinhaOcorrenciaPainel(ocorrencia: o),
+        ],
+      ),
+    );
   }
 }
 
@@ -880,13 +955,100 @@ class _CalendarioMobile extends StatelessWidget {
         const SizedBox(height: 10),
         if (ocorrencias.isEmpty)
           _DiaVazioMobile(state: state, data: data)
-        else
-          for (final o in ocorrencias)
+        else ...[
+          Builder(builder: (context) {
+            final grupos =
+                agruparOcorrenciasPorCartao(ocorrencias, state.origemPagamentoPorId);
+            final agrupadas = grupos.expand((g) => g.ocorrencias).toSet();
+            final avulsas = ocorrencias.where((o) => !agrupadas.contains(o));
+            return Column(
+              children: [
+                for (final grupo in grupos)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _GrupoCartaoCardMobile(grupo: grupo, state: state),
+                  ),
+                for (final o in avulsas)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _CardAgendaOcorrencia(ocorrencia: o),
+                  ),
+              ],
+            );
+          }),
+        ],
+      ],
+    );
+  }
+}
+
+class _GrupoCartaoCardMobile extends StatelessWidget {
+  final GrupoCartao grupo;
+  final CalendarioDeDespesasState state;
+
+  const _GrupoCartaoCardMobile({required this.grupo, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return CardBlueprint(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(grupo.nome,
+                          style: textos.corpo
+                              .copyWith(fontWeight: FontWeight.w600, fontSize: 14.5)),
+                    ),
+                    if (grupo.totalmentePago) const DespesaTag('Cartão pago'),
+                  ],
+                ),
+                Text(
+                  '${grupo.totalPagas} de ${grupo.ocorrencias.length} pagas'
+                  '${grupo.pendentes.isNotEmpty ? ' · ${formatarReais(grupo.totalPendente)} pendente' : ''}',
+                  style: textos.apoio.copyWith(fontSize: 12, color: cores.textoApoio),
+                ),
+                if (!grupo.totalmentePago) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => confirmarEPagarFaturaDeCartao(
+                        context,
+                        empresaId: state.empresaId,
+                        origemPagamentoId: grupo.origemPagamentoId,
+                        origemNome: grupo.nome,
+                        ano: state.ano,
+                        mes: state.mes,
+                        ocorrenciasPendentes: grupo.pendentes,
+                      ),
+                      child: const Text('Marcar cartão como pago'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Divider(height: 1, color: cores.hairline),
+          for (final o in grupo.ocorrencias)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: _CardAgendaOcorrencia(ocorrencia: o),
             ),
-      ],
+          const SizedBox(height: 4),
+        ],
+      ),
     );
   }
 }

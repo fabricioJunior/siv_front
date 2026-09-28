@@ -55,16 +55,19 @@ class DashboardDeDespesasCarregarEmProgresso extends DashboardDeDespesasState {
 }
 
 class DashboardDeDespesasCarregarSucesso extends DashboardDeDespesasState {
+  final int empresaId;
   final List<DespesaOcorrenciaCalendario> proximosVencimentos;
   final List<ParcelamentoAgrupado> parcelamentosAbertos;
   final Map<int, String> categoriaPorId;
   final Map<int, String> origemPorId;
+  final Map<int, OrigemPagamentoDespesa> origemPagamentoPorId;
   final int pagamentosNoMesCount;
   final int pendentesNoMesCount;
   final int previstasRecorrentesCount;
   final DateTime? pagamentosFuturosAPartirDe;
 
   const DashboardDeDespesasCarregarSucesso({
+    required this.empresaId,
     required super.ano,
     required super.mes,
     required DespesaDashboard super.dashboard,
@@ -72,6 +75,7 @@ class DashboardDeDespesasCarregarSucesso extends DashboardDeDespesasState {
     this.parcelamentosAbertos = const [],
     this.categoriaPorId = const {},
     this.origemPorId = const {},
+    this.origemPagamentoPorId = const {},
     this.pagamentosNoMesCount = 0,
     this.pendentesNoMesCount = 0,
     this.previstasRecorrentesCount = 0,
@@ -81,10 +85,12 @@ class DashboardDeDespesasCarregarSucesso extends DashboardDeDespesasState {
   @override
   List<Object?> get props => [
         ...super.props,
+        empresaId,
         proximosVencimentos,
         parcelamentosAbertos,
         categoriaPorId,
         origemPorId,
+        origemPagamentoPorId,
         pagamentosNoMesCount,
         pendentesNoMesCount,
         previstasRecorrentesCount,

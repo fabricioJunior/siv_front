@@ -7,6 +7,7 @@ import 'package:financeiro/presentation/utils/nomes_dos_meses.dart';
 import 'package:financeiro/presentation/widgets/cadastros_de_despesas_body.dart';
 import 'package:financeiro/presentation/widgets/calendario_de_despesas_body.dart';
 import 'package:financeiro/presentation/widgets/painel_de_despesas.dart';
+import 'package:financeiro/presentation/widgets/relatorio_de_despesas_body.dart';
 import 'package:flutter/material.dart';
 
 const _corBorda = Color(0x2E26282A);
@@ -35,7 +36,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     final agora = DateTime.now();
     _ano = agora.year;
     _mes = agora.month;
@@ -206,6 +207,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                     tabs: const [
                       Tab(text: 'PAINEL'),
                       Tab(text: 'CALENDÁRIO'),
+                      Tab(text: 'RELATÓRIO'),
                       Tab(text: 'CADASTROS'),
                     ],
                   ),
@@ -230,6 +232,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                                     ano: _ano,
                                     mes: _mes),
                               )),
+                      const RelatorioDeDespesasBody(),
                       const CadastrosDeDespesasBody(),
                     ],
                   ),

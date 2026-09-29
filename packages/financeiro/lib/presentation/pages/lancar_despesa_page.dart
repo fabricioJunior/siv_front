@@ -261,9 +261,17 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
   final _valorController = TextEditingController();
   final _diaVencimentoController = TextEditingController();
   final _parcelasController = TextEditingController();
+  final _descricaoFocus = FocusNode();
+  final _valorFocus = FocusNode();
+  final _parcelasFocus = FocusNode();
+  final _diaVencimentoFocus = FocusNode();
 
   @override
   void dispose() {
+    _descricaoFocus.dispose();
+    _valorFocus.dispose();
+    _parcelasFocus.dispose();
+    _diaVencimentoFocus.dispose();
     _descricaoController.dispose();
     _valorController.dispose();
     _diaVencimentoController.dispose();
@@ -290,6 +298,9 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
             _Rotulo('DESCRIÇÃO'),
             TextField(
               controller: _descricaoController,
+              focusNode: _descricaoFocus,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => _valorFocus.requestFocus(),
               onChanged: (v) => bloc.add(LancarDespesaCampoAlterado(descricao: v)),
             ),
             const SizedBox(height: 12),
@@ -333,6 +344,13 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
         _Rotulo(state.modo == ModoLancamentoDespesa.parcelada ? 'VALOR DE CADA PARCELA' : 'VALOR'),
         TextField(
           controller: _valorController,
+          focusNode: _valorFocus,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => switch (state.modo) {
+            ModoLancamentoDespesa.parcelada => _parcelasFocus.requestFocus(),
+            ModoLancamentoDespesa.recorrente => _diaVencimentoFocus.requestFocus(),
+            ModoLancamentoDespesa.avulsa => FocusScope.of(context).nextFocus(),
+          },
           style: textos.corpo.copyWith(fontFamily: textos.secao.fontFamily, fontSize: 17),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$'))],
@@ -377,6 +395,13 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
           const SizedBox(height: 10),
           _notaCartao(context, state),
         ],
+        const SizedBox(height: 8),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Despesa já paga'),
+          value: state.pago,
+          onChanged: (v) => bloc.add(LancarDespesaCampoAlterado(pago: v)),
+        ),
       ],
     );
   }
@@ -422,6 +447,8 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
                   _Rotulo('Nº DE PARCELAS'),
                   TextField(
                     controller: _parcelasController,
+                    focusNode: _parcelasFocus,
+                    textInputAction: TextInputAction.done,
                     style: textos.corpo.copyWith(fontFamily: textos.secao.fontFamily, fontSize: 17),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -489,6 +516,8 @@ class _LancarDespesaFormState extends State<LancarDespesaForm> {
                   _Rotulo('DIA DE VENCIMENTO'),
                   TextField(
                     controller: _diaVencimentoController,
+                    focusNode: _diaVencimentoFocus,
+                    textInputAction: TextInputAction.done,
                     style: textos.corpo.copyWith(fontFamily: textos.secao.fontFamily, fontSize: 17),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],

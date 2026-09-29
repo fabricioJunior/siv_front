@@ -36,7 +36,16 @@ class _FechamentoDeCaixaPageState extends State<FechamentoDeCaixaPage> {
       create: (_) => sl<FechamentoDeCaixaBloc>()
         ..add(FechamentoDeCaixaIniciou(caixaId: widget.caixaId)),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Fechamento de caixa')),
+        appBar: AppBar(
+          title: const Text('Fechamento de caixa'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Recarregar valores (ex: após lançar sangria/suprimento)',
+              onPressed: _recarregarConferencia,
+            ),
+          ],
+        ),
         body: BlocBuilder<FechamentoDeCaixaBloc, FechamentoDeCaixaState>(
           builder: (context, state) {
             if (state.step == FechamentoDeCaixaStep.carregando ||

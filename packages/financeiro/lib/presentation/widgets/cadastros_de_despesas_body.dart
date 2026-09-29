@@ -28,10 +28,14 @@ class CadastrosDeDespesasBody extends StatelessWidget {
       builder: (context, constraints) {
         final largo = constraints.maxWidth >= _breakpointLargo;
         final colCategorias = categorias
-            ? SizedBox(width: largo ? 380 : double.infinity, child: _CategoriasDespesaSection(largo: largo))
+            ? SizedBox(
+                width: largo ? 380 : double.infinity,
+                child: _CategoriasDespesaSection(largo: largo))
             : null;
         final colOrigens = origens
-            ? SizedBox(width: largo && categorias ? null : double.infinity, child: _OrigensPagamentoDespesaSection(largo: largo))
+            ? SizedBox(
+                width: largo && categorias ? null : double.infinity,
+                child: _OrigensPagamentoDespesaSection(largo: largo))
             : null;
 
         if (largo && categorias && origens) {
@@ -39,7 +43,10 @@ class CadastrosDeDespesasBody extends StatelessWidget {
             // Esquerda 16 pra alinhar com o rótulo "PAINEL" da TabBar.
             padding: const EdgeInsets.fromLTRB(16, 20, 20, 20),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              // stretch dá altura limitada (a do Row, que já vem finita da TabBarView) pras
+              // colunas -- sem isso os Column internos crescem livres e estouram sem poder
+              // rolar quando a lista de categorias/origens fica grande.
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 colCategorias!,
                 const SizedBox(width: 20),
@@ -91,7 +98,8 @@ class _AbasCadastrosMobileState extends State<_AbasCadastrosMobile> {
             onTap: onTap,
             child: Container(
               alignment: Alignment.center,
-              constraints: const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
+              constraints:
+                  const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
               decoration: BoxDecoration(
                 color: ativa ? cores.acoAtivo : Colors.white,
                 borderRadius: BorderRadius.circular(SivDimensoes.raio),
@@ -119,8 +127,10 @@ class _AbasCadastrosMobileState extends State<_AbasCadastrosMobile> {
             padding: const EdgeInsets.all(3),
             child: Row(
               children: [
-                aba('CATEGORIAS', _categoriasAtiva, () => setState(() => _categoriasAtiva = true)),
-                aba('ORIGENS', !_categoriasAtiva, () => setState(() => _categoriasAtiva = false)),
+                aba('CATEGORIAS', _categoriasAtiva,
+                    () => setState(() => _categoriasAtiva = true)),
+                aba('ORIGENS', !_categoriasAtiva,
+                    () => setState(() => _categoriasAtiva = false)),
               ],
             ),
           ),
@@ -142,7 +152,8 @@ class _CategoriasDespesaSection extends StatefulWidget {
   const _CategoriasDespesaSection({required this.largo});
 
   @override
-  State<_CategoriasDespesaSection> createState() => _CategoriasDespesaSectionState();
+  State<_CategoriasDespesaSection> createState() =>
+      _CategoriasDespesaSectionState();
 }
 
 class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
@@ -169,8 +180,10 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
 
   void _abrirEdicao({int? id, String nome = '', bool inativa = false}) async {
     if (!widget.largo) {
-      final result = await Navigator.of(context).pushNamed('/categoria_despesa', arguments: {'id': id});
-      if (result == true && mounted) bloc.add(CategoriasDespesaIniciou(empresaId: _empresaId));
+      final result = await Navigator.of(context)
+          .pushNamed('/categoria_despesa', arguments: {'id': id});
+      if (result == true && mounted)
+        bloc.add(CategoriasDespesaIniciou(empresaId: _empresaId));
       return;
     }
     setState(() {
@@ -189,7 +202,8 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
   void _salvar() {
     final nome = _nomeController.text.trim();
     if (nome.isEmpty) return;
-    bloc.add(CategoriasDespesaSalvou(id: _editandoId, empresaId: _empresaId, nome: nome, inativa: _inativa));
+    bloc.add(CategoriasDespesaSalvou(
+        id: _editandoId, empresaId: _empresaId, nome: nome, inativa: _inativa));
     _fecharEdicao();
   }
 
@@ -201,7 +215,8 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
     final contagemPorCategoria = <int, int>{};
     for (final o in calendario.ocorrencias) {
       if (o.status == StatusDespesa.cancelado) continue;
-      contagemPorCategoria.update(o.categoriaId, (v) => v + 1, ifAbsent: () => 1);
+      contagemPorCategoria.update(o.categoriaId, (v) => v + 1,
+          ifAbsent: () => 1);
     }
 
     return BlocProvider<CategoriasDespesaBloc>(
@@ -209,21 +224,37 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
       child: BlocConsumer<CategoriasDespesaBloc, CategoriasDespesaState>(
         listenWhen: (previous, current) => current.erro != null,
         listener: (context, state) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.erro!)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.erro!)));
         },
         builder: (context, state) {
+          final linhas = [
+            for (final categoria in state.categorias)
+              _editandoId == categoria.id
+                  ? _linhaEdicao(context)
+                  : _linhaCategoria(context, categoria,
+                      contagemPorCategoria[categoria.id] ?? 0),
+          ];
+
           return CardBlueprint(
             padding: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              // No layout largo o Column recebe altura limitada (Row com stretch, acima) --
+              // MainAxisSize.max deixa o Expanded da lista abaixo funcionar e rolar. No mobile
+              // esse widget mora dentro de um ListView (altura infinita), onde Expanded quebraria
+              // -- min mantém o comportamento antigo de "cresce do tamanho do conteúdo".
+              mainAxisSize: widget.largo ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('CATEGORIAS', style: textos.secao.copyWith(fontSize: 16, color: cores.acoAtivo)),
+                      Text('CATEGORIAS',
+                          style: textos.secao
+                              .copyWith(fontSize: 16, color: cores.acoAtivo)),
                       OutlinedButton.icon(
                         onPressed: () => _abrirEdicao(),
                         icon: const Icon(Icons.add, size: 14),
@@ -240,19 +271,25 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
                     child: SearchBar(
                       hintText: 'Buscar por nome',
                       onChanged: (value) => debouncer.run(
-                        () => bloc.add(CategoriasDespesaIniciou(empresaId: _empresaId, busca: value)),
+                        () => bloc.add(CategoriasDespesaIniciou(
+                            empresaId: _empresaId, busca: value)),
                       ),
                     ),
                   ),
                 if (state is CategoriasDespesaCarregarEmProgresso)
-                  const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator.adaptive()))
+                  const Padding(
+                      padding: EdgeInsets.all(16),
+                      child:
+                          Center(child: CircularProgressIndicator.adaptive()))
                 else if (state.categorias.isEmpty)
-                  Padding(padding: const EdgeInsets.all(16), child: Text('Nenhuma categoria cadastrada.', style: textos.apoio))
+                  Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Nenhuma categoria cadastrada.',
+                          style: textos.apoio))
+                else if (widget.largo)
+                  Expanded(child: ListView(children: linhas))
                 else
-                  for (final categoria in state.categorias)
-                    _editandoId == categoria.id
-                        ? _linhaEdicao(context)
-                        : _linhaCategoria(context, categoria, contagemPorCategoria[categoria.id] ?? 0),
+                  ...linhas,
               ],
             ),
           );
@@ -281,7 +318,9 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Ativa', style: context.sivTextos.apoio),
-              Switch.adaptive(value: !_inativa, onChanged: (v) => setState(() => _inativa = !v)),
+              Switch.adaptive(
+                  value: !_inativa,
+                  onChanged: (v) => setState(() => _inativa = !v)),
             ],
           ),
           const SizedBox(width: 4),
@@ -291,38 +330,50 @@ class _CategoriasDespesaSectionState extends State<_CategoriasDespesaSection> {
     );
   }
 
-  Widget _linhaCategoria(BuildContext context, CategoriaDespesa categoria, int contagem) {
+  Widget _linhaCategoria(
+      BuildContext context, CategoriaDespesa categoria, int contagem) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final subtitulo = contagem > 0 ? '$contagem despesas no mês' : 'Nenhuma despesa no mês';
+    final subtitulo =
+        contagem > 0 ? '$contagem despesas no mês' : 'Nenhuma despesa no mês';
 
     if (!widget.largo) {
       return _CardCadastroMobile(
-        onTap: () => _abrirEdicao(id: categoria.id, nome: categoria.nome, inativa: categoria.inativa),
+        onTap: () => _abrirEdicao(
+            id: categoria.id, nome: categoria.nome, inativa: categoria.inativa),
         nome: categoria.nome,
         opaco: categoria.inativa,
         subtitulo: subtitulo,
-        tag: categoria.inativa ? const DespesaTag('Inativa', neutra: true) : null,
+        tag: categoria.inativa
+            ? const DespesaTag('Inativa', neutra: true)
+            : null,
       );
     }
 
     return InkWell(
-      onTap: () => _abrirEdicao(id: categoria.id, nome: categoria.nome, inativa: categoria.inativa),
+      onTap: () => _abrirEdicao(
+          id: categoria.id, nome: categoria.nome, inativa: categoria.inativa),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: cores.hairline))),
+        decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: cores.hairline))),
         child: Row(
           children: [
             Expanded(
               child: Opacity(
                 opacity: categoria.inativa ? 0.6 : 1,
-                child: Text(categoria.nome, style: textos.corpo.copyWith(fontSize: 14)),
+                child: Text(categoria.nome,
+                    style: textos.corpo.copyWith(fontSize: 14)),
               ),
             ),
-            if (categoria.inativa) ...[const DespesaTag('Inativa', neutra: true), const SizedBox(width: 8)],
+            if (categoria.inativa) ...[
+              const DespesaTag('Inativa', neutra: true),
+              const SizedBox(width: 8)
+            ],
             Text(
               contagem > 0 ? '$contagem despesas no mês' : '—',
-              style: textos.apoio.copyWith(fontSize: 12, color: cores.textoApoio),
+              style:
+                  textos.apoio.copyWith(fontSize: 12, color: cores.textoApoio),
             ),
             const SizedBox(width: 8),
             Icon(Icons.edit_outlined, size: 15, color: cores.textoApoio),
@@ -343,10 +394,12 @@ class _OrigensPagamentoDespesaSection extends StatefulWidget {
   const _OrigensPagamentoDespesaSection({required this.largo});
 
   @override
-  State<_OrigensPagamentoDespesaSection> createState() => _OrigensPagamentoDespesaSectionState();
+  State<_OrigensPagamentoDespesaSection> createState() =>
+      _OrigensPagamentoDespesaSectionState();
 }
 
-class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespesaSection> {
+class _OrigensPagamentoDespesaSectionState
+    extends State<_OrigensPagamentoDespesaSection> {
   final bloc = sl<OrigensPagamentoDespesaBloc>();
   late final TextEditingController _nomeController;
   late final TextEditingController _diaVencimentoController;
@@ -365,8 +418,10 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
 
   Future<void> _abrirEdicao({int? id}) async {
     if (!widget.largo) {
-      final result = await Navigator.of(context).pushNamed('/origem_pagamento_despesa', arguments: {'id': id});
-      if (result == true && mounted) bloc.add(OrigensPagamentoDespesaIniciou(empresaId: _empresaId));
+      final result = await Navigator.of(context)
+          .pushNamed('/origem_pagamento_despesa', arguments: {'id': id});
+      if (result == true && mounted)
+        bloc.add(OrigensPagamentoDespesaIniciou(empresaId: _empresaId));
       return;
     }
     bloc.add(OrigensPagamentoDespesaSelecionou(id: id));
@@ -387,59 +442,99 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
 
     return BlocProvider<OrigensPagamentoDespesaBloc>(
       create: (_) => bloc,
-      child: BlocConsumer<OrigensPagamentoDespesaBloc, OrigensPagamentoDespesaState>(
+      child: BlocConsumer<OrigensPagamentoDespesaBloc,
+          OrigensPagamentoDespesaState>(
         listenWhen: (previous, current) => current.erro != null,
         listener: (context, state) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.erro!)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.erro!)));
         },
         builder: (context, state) {
           _sincronizarControllers(state);
+          final linhas = [
+            for (final origem in state.origens)
+              _linhaOrigem(context, origem,
+                  selecionada:
+                      state is OrigensPagamentoDespesaCarregarSucesso &&
+                          state.formId == origem.id),
+          ];
+
+          final card = CardBlueprint(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // Ver comentário equivalente em _CategoriasDespesaSectionState.build.
+              mainAxisSize: widget.largo ? MainAxisSize.max : MainAxisSize.min,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('ORIGENS DE PAGAMENTO',
+                          style: textos.secao
+                              .copyWith(fontSize: 16, color: cores.acoAtivo)),
+                      OutlinedButton.icon(
+                        onPressed: () => _abrirEdicao(),
+                        icon: const Icon(Icons.add, size: 14),
+                        label: const Text('Nova origem'),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: cores.hairline),
+                if (widget.largo)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            flex: 14,
+                            child: Text('NOME',
+                                style: textos.rotulo.copyWith(fontSize: 11))),
+                        Expanded(
+                            flex: 10,
+                            child: Text('TIPO',
+                                style: textos.rotulo.copyWith(fontSize: 11))),
+                        Expanded(
+                            flex: 8,
+                            child: Text('VENCIMENTO',
+                                style: textos.rotulo.copyWith(fontSize: 11))),
+                        Expanded(
+                            flex: 8,
+                            child: Text('FECHAMENTO',
+                                style: textos.rotulo.copyWith(fontSize: 11))),
+                      ],
+                    ),
+                  ),
+                if (state is OrigensPagamentoDespesaCarregarEmProgresso)
+                  const Padding(
+                      padding: EdgeInsets.all(16),
+                      child:
+                          Center(child: CircularProgressIndicator.adaptive()))
+                else if (state.origens.isEmpty)
+                  Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Nenhuma origem cadastrada.',
+                          style: textos.apoio))
+                else if (widget.largo)
+                  Expanded(child: ListView(children: linhas))
+                else
+                  ...linhas,
+              ],
+            ),
+          );
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: widget.largo ? MainAxisSize.max : MainAxisSize.min,
             children: [
-              CardBlueprint(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('ORIGENS DE PAGAMENTO', style: textos.secao.copyWith(fontSize: 16, color: cores.acoAtivo)),
-                          OutlinedButton.icon(
-                            onPressed: () => _abrirEdicao(),
-                            icon: const Icon(Icons.add, size: 14),
-                            label: const Text('Nova origem'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Divider(height: 1, color: cores.hairline),
-                    if (widget.largo)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        child: Row(
-                          children: [
-                            Expanded(flex: 14, child: Text('NOME', style: textos.rotulo.copyWith(fontSize: 11))),
-                            Expanded(flex: 10, child: Text('TIPO', style: textos.rotulo.copyWith(fontSize: 11))),
-                            Expanded(flex: 8, child: Text('VENCIMENTO', style: textos.rotulo.copyWith(fontSize: 11))),
-                            Expanded(flex: 8, child: Text('FECHAMENTO', style: textos.rotulo.copyWith(fontSize: 11))),
-                          ],
-                        ),
-                      ),
-                    if (state is OrigensPagamentoDespesaCarregarEmProgresso)
-                      const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator.adaptive()))
-                    else if (state.origens.isEmpty)
-                      Padding(padding: const EdgeInsets.all(16), child: Text('Nenhuma origem cadastrada.', style: textos.apoio))
-                    else
-                      for (final origem in state.origens)
-                        _linhaOrigem(context, origem, selecionada: state is OrigensPagamentoDespesaCarregarSucesso && state.formId == origem.id),
-                  ],
-                ),
-              ),
+              // Expanded só funciona com um ancestral de altura limitada (layout largo) -- no
+              // mobile esse widget mora dentro de um ListView (altura infinita), onde Expanded
+              // quebraria.
+              widget.largo ? Expanded(child: card) : card,
               if (widget.largo) ...[
                 const SizedBox(height: 18),
                 _cardEditarOrigem(context, state),
@@ -451,7 +546,8 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
     );
   }
 
-  Widget _linhaOrigem(BuildContext context, OrigemPagamentoDespesa origem, {required bool selecionada}) {
+  Widget _linhaOrigem(BuildContext context, OrigemPagamentoDespesa origem,
+      {required bool selecionada}) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
@@ -474,25 +570,36 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
         decoration: BoxDecoration(
           color: selecionada ? cores.selecaoFundo : null,
           border: Border(
-            left: BorderSide(color: selecionada ? cores.aco : Colors.transparent, width: 3),
+            left: BorderSide(
+                color: selecionada ? cores.aco : Colors.transparent, width: 3),
             bottom: BorderSide(color: cores.hairline),
           ),
         ),
         child: Row(
           children: [
-            Expanded(flex: 14, child: Text(origem.nome, style: textos.corpo.copyWith(fontSize: 14))),
-            Expanded(flex: 10, child: Text(origem.tipo.label, style: textos.apoio.copyWith(fontSize: 13))),
+            Expanded(
+                flex: 14,
+                child: Text(origem.nome,
+                    style: textos.corpo.copyWith(fontSize: 14))),
+            Expanded(
+                flex: 10,
+                child: Text(origem.tipo.label,
+                    style: textos.apoio.copyWith(fontSize: 13))),
             Expanded(
               flex: 8,
               child: Text(
-                origem.tipo.diaVencimentoObrigatorio ? 'Dia ${origem.diaVencimento}' : '—',
+                origem.tipo.diaVencimentoObrigatorio
+                    ? 'Dia ${origem.diaVencimento}'
+                    : '—',
                 style: textos.corpo.copyWith(fontSize: 13),
               ),
             ),
             Expanded(
               flex: 8,
               child: Text(
-                origem.tipo.diaVencimentoObrigatorio ? '${origem.prazoFechamentoDias} dias antes' : '—',
+                origem.tipo.diaVencimentoObrigatorio
+                    ? '${origem.prazoFechamentoDias} dias antes'
+                    : '—',
                 style: textos.corpo.copyWith(fontSize: 13),
               ),
             ),
@@ -502,7 +609,8 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
     );
   }
 
-  Widget _cardEditarOrigem(BuildContext context, OrigensPagamentoDespesaState state) {
+  Widget _cardEditarOrigem(
+      BuildContext context, OrigensPagamentoDespesaState state) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
     if (state is! OrigensPagamentoDespesaCarregarSucesso || !state.editando) {
@@ -515,8 +623,11 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
     }
 
     final credito = state.formTipo.diaVencimentoObrigatorio;
-    final vencimentoFechamento = credito && state.formDiaVencimento != null && state.formPrazoFechamentoDias != null
-        ? _diaFechamento(state.formDiaVencimento!, state.formPrazoFechamentoDias!)
+    final vencimentoFechamento = credito &&
+            state.formDiaVencimento != null &&
+            state.formPrazoFechamentoDias != null
+        ? _diaFechamento(
+            state.formDiaVencimento!, state.formPrazoFechamentoDias!)
         : null;
 
     return CardBlueprint(
@@ -524,7 +635,8 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(state.formId == null ? 'Nova origem' : 'Editar origem', style: textos.secao.copyWith(fontSize: 18)),
+          Text(state.formId == null ? 'Nova origem' : 'Editar origem',
+              style: textos.secao.copyWith(fontSize: 18)),
           const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +645,8 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
                 child: TextField(
                   controller: _nomeController,
                   decoration: const InputDecoration(labelText: 'Nome'),
-                  onChanged: (v) => bloc.add(OrigensPagamentoDespesaCampoAlterado(nome: v)),
+                  onChanged: (v) =>
+                      bloc.add(OrigensPagamentoDespesaCampoAlterado(nome: v)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -552,10 +665,13 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
                   width: 130,
                   child: TextField(
                     controller: _diaVencimentoController,
-                    decoration: const InputDecoration(labelText: 'Dia de vencimento'),
+                    decoration:
+                        const InputDecoration(labelText: 'Dia de vencimento'),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (v) => bloc.add(OrigensPagamentoDespesaCampoAlterado(diaVencimento: int.tryParse(v))),
+                    onChanged: (v) => bloc.add(
+                        OrigensPagamentoDespesaCampoAlterado(
+                            diaVencimento: int.tryParse(v))),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -563,10 +679,13 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
                   width: 170,
                   child: TextField(
                     controller: _prazoController,
-                    decoration: const InputDecoration(labelText: 'Fecha dias antes'),
+                    decoration:
+                        const InputDecoration(labelText: 'Fecha dias antes'),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (v) => bloc.add(OrigensPagamentoDespesaCampoAlterado(prazoFechamentoDias: int.tryParse(v))),
+                    onChanged: (v) => bloc.add(
+                        OrigensPagamentoDespesaCampoAlterado(
+                            prazoFechamentoDias: int.tryParse(v))),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -576,7 +695,8 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
                         'Fatura fecha dia $vencimentoFechamento · compras após o fechamento vencem no mês seguinte.',
-                        style: textos.apoio.copyWith(fontSize: 12.5, color: cores.acoAtivo),
+                        style: textos.apoio
+                            .copyWith(fontSize: 12.5, color: cores.acoAtivo),
                       ),
                     ),
                   ),
@@ -594,21 +714,33 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => bloc.add(OrigensPagamentoDespesaSelecionou(id: null)),
+                onPressed: () =>
+                    bloc.add(OrigensPagamentoDespesaSelecionou(id: null)),
                 child: const Text('Descartar'),
               ),
               const SizedBox(width: 10),
               FilledButton(
                 onPressed: () {
-                  final erroDia = credito ? validarDiaVencimento(state.formDiaVencimento) : null;
-                  final erroPrazo = credito ? validarPrazoFechamentoDias(state.formPrazoFechamentoDias) : null;
-                  if (state.formNome.trim().isEmpty || erroDia != null || erroPrazo != null) {
+                  final erroDia = credito
+                      ? validarDiaVencimento(state.formDiaVencimento)
+                      : null;
+                  final erroPrazo = credito
+                      ? validarPrazoFechamentoDias(
+                          state.formPrazoFechamentoDias)
+                      : null;
+                  if (state.formNome.trim().isEmpty ||
+                      erroDia != null ||
+                      erroPrazo != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(erroDia ?? erroPrazo ?? 'Informe o nome da origem.')),
+                      SnackBar(
+                          content: Text(erroDia ??
+                              erroPrazo ??
+                              'Informe o nome da origem.')),
                     );
                     return;
                   }
-                  bloc.add(OrigensPagamentoDespesaSalvou(empresaId: _empresaId));
+                  bloc.add(
+                      OrigensPagamentoDespesaSalvou(empresaId: _empresaId));
                 },
                 child: const Text('Salvar origem'),
               ),
@@ -619,27 +751,35 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
     );
   }
 
-  Widget _seletorTipo(BuildContext context, TipoOrigemPagamentoDespesa selecionado) {
+  Widget _seletorTipo(
+      BuildContext context, TipoOrigemPagamentoDespesa selecionado) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
     return DecoratedBox(
-      decoration: BoxDecoration(border: Border.all(color: cores.hairline), borderRadius: BorderRadius.circular(SivDimensoes.raio)),
+      decoration: BoxDecoration(
+          border: Border.all(color: cores.hairline),
+          borderRadius: BorderRadius.circular(SivDimensoes.raio)),
       child: Row(
         children: [
           for (final tipo in TipoOrigemPagamentoDespesa.values)
             Expanded(
               child: InkWell(
-                onTap: () => bloc.add(OrigensPagamentoDespesaCampoAlterado(tipo: tipo)),
+                onTap: () =>
+                    bloc.add(OrigensPagamentoDespesaCampoAlterado(tipo: tipo)),
                 child: Container(
                   alignment: Alignment.center,
-                  constraints: const BoxConstraints(minHeight: SivDimensoes.alvoToqueMinimo),
-                  color: tipo == selecionado ? cores.acoAtivo : Colors.transparent,
+                  constraints: const BoxConstraints(
+                      minHeight: SivDimensoes.alvoToqueMinimo),
+                  color:
+                      tipo == selecionado ? cores.acoAtivo : Colors.transparent,
                   child: Text(
                     _tipoAbreviado(tipo),
                     textAlign: TextAlign.center,
                     style: textos.apoio.copyWith(
                       fontSize: 11,
-                      color: tipo == selecionado ? Colors.white : cores.textoPrincipal,
+                      color: tipo == selecionado
+                          ? Colors.white
+                          : cores.textoPrincipal,
                     ),
                   ),
                 ),
@@ -659,7 +799,9 @@ class _OrigensPagamentoDespesaSectionState extends State<_OrigensPagamentoDespes
 
   void _sync(TextEditingController controller, String valor) {
     if (controller.text != valor) {
-      controller.value = TextEditingValue(text: valor, selection: TextSelection.collapsed(offset: valor.length));
+      controller.value = TextEditingValue(
+          text: valor,
+          selection: TextSelection.collapsed(offset: valor.length));
     }
   }
 }
@@ -744,6 +886,7 @@ class _CardCadastroMobile extends StatelessWidget {
 
 /// Dia em que a fatura fecha (vencimento - prazo, com volta de mês).
 int _diaFechamento(int diaVencimento, int prazoFechamentoDias) {
-  final vencimento = DateTime(DateTime.now().year, DateTime.now().month, diaVencimento);
+  final vencimento =
+      DateTime(DateTime.now().year, DateTime.now().month, diaVencimento);
   return vencimento.subtract(Duration(days: prazoFechamentoDias)).day;
 }

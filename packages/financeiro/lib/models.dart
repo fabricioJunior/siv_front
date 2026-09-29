@@ -18,3 +18,4 @@ export 'domain/models/origem_pagamento_despesa.dart';
 export 'domain/models/despesa.dart';
 export 'domain/models/despesa_ocorrencia_calendario.dart';
 export 'domain/models/despesa_dashboard.dart';
+export 'domain/models/pagamento_de_fatura.dart';

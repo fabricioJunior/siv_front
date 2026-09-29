@@ -15,12 +15,14 @@ class CalendarioDeDespesasBloc
     extends Bloc<CalendarioDeDespesasEvent, CalendarioDeDespesasState> {
   final RecuperarCalendarioDeDespesas _recuperarCalendario;
   final RegistrarOcorrenciaDeDespesa _registrarOcorrencia;
+  final AtualizarDespesa _atualizarDespesa;
   final RecuperarCategoriasDespesa _recuperarCategorias;
   final RecuperarOrigensPagamentoDespesa _recuperarOrigens;
 
   CalendarioDeDespesasBloc(
     this._recuperarCalendario,
     this._registrarOcorrencia,
+    this._atualizarDespesa,
     this._recuperarCategorias,
     this._recuperarOrigens,
   ) : super(const CalendarioDeDespesasInitial()) {
@@ -49,6 +51,10 @@ class CalendarioDeDespesasBloc
             for (final o in resultados[1] as List<OrigemPagamentoDespesa>)
               if (o.id != null) o.id!: o.nome,
           },
+          origemPagamentoPorId: {
+            for (final o in resultados[1] as List<OrigemPagamentoDespesa>)
+              if (o.id != null) o.id!: o,
+          },
         ),
       );
     } catch (e, s) {
@@ -74,14 +80,30 @@ class CalendarioDeDespesasBloc
     Emitter<CalendarioDeDespesasState> emit,
   ) async {
     try {
-      await _registrarOcorrencia.call(
-        event.id,
-        ano: state.ano,
-        mes: state.mes,
-        valor: event.valor,
-        dataPagamento: event.dataPagamento,
-        status: event.status,
-      );
+      if (event.virtual) {
+        // Ainda não existe uma linha de despesa pra esse mês (recorrente) --
+        // materializa via endpoint de ocorrências.
+        await _registrarOcorrencia.call(
+          event.id,
+          ano: state.ano,
+          mes: state.mes,
+          valor: event.valor,
+          dataPagamento: event.dataPagamento,
+          status: event.status,
+        );
+      } else {
+        // Já é uma despesa concreta (avulsa, parcela ou ocorrência já
+        // materializada) -- o endpoint de ocorrências rejeita isso com 400
+        // porque exige um template recorrente. Atualiza a linha direto.
+        await _atualizarDespesa.call(
+          event.id,
+          valor: event.valor,
+          categoriaId: event.categoriaId,
+          origemPagamentoId: event.origemPagamentoId,
+          dataPagamento: event.dataPagamento,
+          status: event.status,
+        );
+      }
       await _carregar(emit, empresaId: state.empresaId, ano: state.ano, mes: state.mes);
     } catch (e, s) {
       emit(state.copyWith(step: CalendarioDeDespesasStep.carregado, erro: 'Falha ao registrar a ocorrência.'));

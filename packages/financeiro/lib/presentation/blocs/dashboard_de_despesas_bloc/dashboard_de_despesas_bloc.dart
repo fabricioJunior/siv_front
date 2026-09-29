@@ -72,9 +72,14 @@ class DashboardDeDespesasBloc
         for (final c in resultados[2] as List<CategoriaDespesa>)
           if (c.id != null) c.id!: c.nome,
       };
+      final origens = resultados[3] as List<OrigemPagamentoDespesa>;
       final origemPorId = {
-        for (final o in resultados[3] as List<OrigemPagamentoDespesa>)
+        for (final o in origens)
           if (o.id != null) o.id!: o.nome,
+      };
+      final origemPagamentoPorId = {
+        for (final o in origens)
+          if (o.id != null) o.id!: o,
       };
       final ocorrenciasDoMes = resultados[4] as List<DespesaOcorrenciaCalendario>;
       final ocorrenciasDoMesSeguinte =
@@ -82,6 +87,7 @@ class DashboardDeDespesasBloc
 
       emit(
         DashboardDeDespesasCarregarSucesso(
+          empresaId: event.empresaId,
           ano: event.ano,
           mes: event.mes,
           dashboard: dashboard,
@@ -106,6 +112,7 @@ class DashboardDeDespesasBloc
           parcelamentosAbertos: _parcelamentosAbertos(despesas, origemPorId),
           categoriaPorId: categoriaPorId,
           origemPorId: origemPorId,
+          origemPagamentoPorId: origemPagamentoPorId,
         ),
       );
     } catch (e, s) {

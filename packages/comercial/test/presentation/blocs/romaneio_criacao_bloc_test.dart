@@ -405,6 +405,56 @@ void main() {
     ],
   );
 
+  group('venda zerada por cupom', () {
+    final recebidas = <RomaneioPagamentoRealizado>[];
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'repassa a linha de pagamento de valor 0 ao recebimento no caixa (não descarta)',
+      setUp: recebidas.clear,
+      build: () => RomaneioCriacaoBloc(
+        StubCriarRomaneio((_) async => romaneioCriado),
+        StubAdicionarItemRomaneio(
+            ({required romaneioId, required item}) async {}),
+        StubRecuperarRomaneio((_) async => romaneioCriado),
+        StubAtualizarObservacaoRomaneio((_, __) async => romaneioCriado),
+        StubRecuperarListaDeProdutosCompartilhada(
+          onCall: (_) async => listaCompartilhada,
+          onRecuperarProdutos: (_) async => [produto],
+        ),
+        StubRemoverListaDeProdutosCompartilhada((_) async {}),
+        StubRemoverProdutoCompartilhado((_) async {}),
+        StubAtualizarListaCompartilhada((_) async {}),
+        StubReceberRomaneioNoCaixa(
+          ({
+            required caixaId,
+            required romaneioId,
+            required formasDePagamentoRealizadas,
+          }) async {
+            recebidas.addAll(formasDePagamentoRealizadas);
+          },
+        ),
+        StubCriarVendaCompleta(() async => throw UnimplementedError()),
+        const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
+        RecuperarCaixaAberto(repository: StubCaixaRepository()),
+        ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
+      ),
+      act: (bloc) => bloc.add(
+        const RomaneioCriacaoSolicitada(
+          hashLista: hashLista,
+          formasDePagamentoRealizadas: [
+            {'controle': 1, 'formaDePagamentoId': 1, 'parcela': 1, 'valor': 0.0},
+          ],
+          cupom: {'codigo': 'PRICILLA200', 'produtoIds': [1]},
+        ),
+      ),
+      wait: const Duration(milliseconds: 100),
+      verify: (_) {
+        expect(recebidas, hasLength(1));
+        expect(recebidas.first.valor, 0);
+      },
+    );
+  });
+
   group('consignação', () {
     final listaConsignacaoSaida = ListaDeProdutosCompartilhada(
       hash: hashLista,

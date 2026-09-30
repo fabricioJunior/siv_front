@@ -47,8 +47,26 @@ class _CancelamentoRomaneioPageState extends State<CancelamentoRomaneioPage> {
             return;
           }
 
-          if ((state.step == CancelamentoRomaneioStep.falha ||
-                  state.step == CancelamentoRomaneioStep.validacaoInvalida) &&
+          if (state.step == CancelamentoRomaneioStep.falha &&
+              state.erro != null) {
+            // Mensagem da API pode ser longa (ex.: linha do tempo do acerto com
+            // devolução); SnackBar cortaria o texto.
+            showDialog<void>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Não foi possível cancelar'),
+                content: SingleChildScrollView(
+                  child: SelectableText(state.erro!),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Entendi'),
+                  ),
+                ],
+              ),
+            );
+          } else if (state.step == CancelamentoRomaneioStep.validacaoInvalida &&
               state.erro != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.erro!)),

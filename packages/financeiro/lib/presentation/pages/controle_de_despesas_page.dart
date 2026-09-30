@@ -7,6 +7,7 @@ import 'package:financeiro/presentation/utils/nomes_dos_meses.dart';
 import 'package:financeiro/presentation/widgets/cadastros_de_despesas_body.dart';
 import 'package:financeiro/presentation/widgets/calendario_de_despesas_body.dart';
 import 'package:financeiro/presentation/widgets/painel_de_despesas.dart';
+import 'package:financeiro/presentation/widgets/relatorio_de_despesas_body.dart';
 import 'package:flutter/material.dart';
 
 const _corBorda = Color(0x2E26282A);
@@ -29,13 +30,15 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
   late final CalendarioDeDespesasBloc _calendarioBloc;
   late int _ano;
   late int _mes;
+  // Dia selecionado na aba Calendário -- "lançar" já abre com essa data.
+  final _diaDoCalendario = ValueNotifier<DateTime?>(null);
 
   int get _empresaId => sl<IAcessoGlobalSessao>().empresaIdDaSessao ?? 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     final agora = DateTime.now();
     _ano = agora.year;
     _mes = agora.month;
@@ -48,6 +51,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
 
   @override
   void dispose() {
+    _diaDoCalendario.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -67,6 +71,17 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
       _mes = novoMes;
     });
     _recarregar();
+  }
+
+  Future<void> _lancar(BuildContext context) async {
+    final noCalendario = _tabController.index == 1;
+    final result = await abrirLancarDespesa(
+      context,
+      dataInicial: noCalendario ? _diaDoCalendario.value : null,
+    );
+    if (result == true) {
+      _recarregar();
+    }
   }
 
   void _recarregar() {
@@ -97,12 +112,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
           return Scaffold(
             floatingActionButton: estreito
                 ? FloatingActionButton.extended(
-                    onPressed: () async {
-                      final result = await abrirLancarDespesa(context);
-                      if (result == true) {
-                        _recarregar();
-                      }
-                    },
+                    onPressed: () => _lancar(context),
                     icon: const Icon(Icons.add),
                     label: const Text('LANÇAR'),
                   )
@@ -156,13 +166,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                  onPressed: () async {
-                                    final result =
-                                        await abrirLancarDespesa(context);
-                                    if (result == true) {
-                                      _recarregar();
-                                    }
-                                  },
+                                  onPressed: () => _lancar(context),
                                   icon: const Padding(
                                     padding: EdgeInsetsGeometry.only(
                                         top: 16, bottom: 16),
@@ -206,6 +210,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                     tabs: const [
                       Tab(text: 'PAINEL'),
                       Tab(text: 'CALENDÁRIO'),
+                      Tab(text: 'RELATÓRIO'),
                       Tab(text: 'CADASTROS'),
                     ],
                   ),
@@ -224,12 +229,14 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                       PainelDeDespesas(
                           onVerCalendario: () => _tabController.animateTo(1)),
                       CalendarioDeDespesasBody(
+                          dataSelecionada: _diaDoCalendario,
                           onAlterou: () => _dashboardBloc.add(
                                 DashboardDeDespesasIniciou(
                                     empresaId: _empresaId,
                                     ano: _ano,
                                     mes: _mes),
                               )),
+                      const RelatorioDeDespesasBody(),
                       const CadastrosDeDespesasBody(),
                     ],
                   ),

@@ -111,6 +111,7 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         pulouPorFechamento: pulouPorFechamento,
         diaVencimento: event.diaVencimento,
         parcelas: event.parcelas,
+        pagoManual: event.pago,
         step: LancarDespesaStep.editando,
         erro: null,
       ),
@@ -201,6 +202,7 @@ class LancarDespesaBloc extends Bloc<LancarDespesaEvent, LancarDespesaState> {
         diaVencimento:
             modo == ModoLancamentoDespesa.recorrente ? state.diaVencimento : null,
         parcelas: modo == ModoLancamentoDespesa.parcelada ? state.parcelas : null,
+        status: state.pago ? StatusDespesa.pago : null,
       );
 
       final criada = await _criarDespesa.call(despesa);

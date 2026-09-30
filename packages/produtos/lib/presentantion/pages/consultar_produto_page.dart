@@ -1,13 +1,15 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/leitor.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
-import 'package:precos/presentation.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
 
 class ConsultarProdutoPage extends StatelessWidget {
-  const ConsultarProdutoPage({super.key});
+  final SeletorWidget tabelaDePrecoSeletor;
+
+  const ConsultarProdutoPage({super.key, required this.tabelaDePrecoSeletor});
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +17,16 @@ class ConsultarProdutoPage extends StatelessWidget {
       create: (_) => sl<ConsultarProdutoBloc>(),
       child: Scaffold(
         appBar: AppBar(title: const Text('Consultar produto')),
-        body: const _ConsultarProdutoBody(),
+        body: _ConsultarProdutoBody(tabelaDePrecoSeletor: tabelaDePrecoSeletor),
       ),
     );
   }
 }
 
 class _ConsultarProdutoBody extends StatefulWidget {
-  const _ConsultarProdutoBody();
+  final SeletorWidget tabelaDePrecoSeletor;
+
+  const _ConsultarProdutoBody({required this.tabelaDePrecoSeletor});
 
   @override
   State<_ConsultarProdutoBody> createState() => _ConsultarProdutoBodyState();
@@ -140,15 +144,17 @@ class _ConsultarProdutoBodyState extends State<_ConsultarProdutoBody> {
             ),
           ),
           const SizedBox(height: 16),
-          TabelasDePrecoSeletor(
-            modo: TabelasDePrecoSeletorModo.unica,
-            onChanged: (itens) {
-              final tabelaDePrecoId = itens.isNotEmpty ? itens.first.id : null;
-              setState(() => _tabelaDePrecoId = tabelaDePrecoId);
-              context.read<ConsultarProdutoBloc>().add(
-                ConsultarProdutoTabelaDePrecoAlterada(tabelaDePrecoId),
-              );
-            },
+          widget.tabelaDePrecoSeletor(
+            SeletorData(
+              onChanged: (itens) {
+                final tabelaDePrecoId =
+                    itens.isNotEmpty ? itens.first.id : null;
+                setState(() => _tabelaDePrecoId = tabelaDePrecoId);
+                context.read<ConsultarProdutoBloc>().add(
+                  ConsultarProdutoTabelaDePrecoAlterada(tabelaDePrecoId),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 16),
           const Divider(),

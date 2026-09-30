@@ -1,4 +1,5 @@
 import 'package:comercial/presentation/pages/ecommerces_page.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 
 /// Rota mantida por compatibilidade (deep link/retorno) -- o formulário de
@@ -7,11 +8,26 @@ import 'package:flutter/material.dart';
 class EcommerceConfiguracaoPage extends StatelessWidget {
   final int? empresaId;
   final int? ecommerceId;
+  final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget empresaSeletor;
+  final SeletorPorEmpresaWidget terminalSeletor;
 
-  const EcommerceConfiguracaoPage({super.key, this.empresaId, this.ecommerceId});
+  const EcommerceConfiguracaoPage({
+    super.key,
+    this.empresaId,
+    this.ecommerceId,
+    required this.tabelaDePrecoSeletor,
+    required this.empresaSeletor,
+    required this.terminalSeletor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return EcommercesPage(ecommerceIdInicial: ecommerceId);
+    return EcommercesPage(
+      ecommerceIdInicial: ecommerceId,
+      tabelaDePrecoSeletor: tabelaDePrecoSeletor,
+      empresaSeletor: empresaSeletor,
+      terminalSeletor: terminalSeletor,
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
+import 'package:produtos/presentantion/widgets/grade_quantidade_etiquetas.dart';
 
 class ImpressaoDeEtiquetasPage extends StatelessWidget {
   final SeletorWidget tabelasDePrecoSeletor;
@@ -417,67 +418,19 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
     BuildContext context,
     ImpressaoEtiquetasState state,
   ) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: [
-          const DataColumn(label: Text('Cor \\ Tamanho')),
-          ...state.tamanhos.map(
-            (tamanho) => DataColumn(label: Text(tamanho.nome)),
+    return GradeQuantidadeEtiquetas(
+      produtos: state.produtos,
+      tamanhos: state.tamanhos,
+      mapaProduto: state.mapaCorTamanhoParaProduto,
+      quantidades: state.quantidadesPorProdutoId,
+      controllerDe: _getController,
+      aoAlterar: (produtoId, quantidade) =>
+          context.read<ImpressaoEtiquetasBloc>().add(
+            ImpressaoEtiquetasQuantidadeAlterada(
+              produtoId: produtoId,
+              quantidade: quantidade,
+            ),
           ),
-        ],
-        rows: state.cores
-            .map((cor) {
-              return DataRow(
-                cells: [
-                  DataCell(Text(cor.nome)),
-                  ...state.tamanhos.map((tamanho) {
-                    final chave = '${cor.id}_${tamanho.id}';
-                    final produto = state.mapaCorTamanhoParaProduto[chave];
-
-                    if (produto?.id == null) {
-                      return const DataCell(Center(child: Text('-')));
-                    }
-
-                    final produtoId = produto!.id!;
-                    final controller = _getController(
-                      produtoId,
-                      state.quantidadesPorProdutoId[produtoId] ?? 0,
-                    );
-
-                    return DataCell(
-                      SizedBox(
-                        width: 72,
-                        child: TextField(
-                          controller: controller,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: '0',
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 8,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            final parsed = int.tryParse(value.trim()) ?? 0;
-                            context.read<ImpressaoEtiquetasBloc>().add(
-                              ImpressaoEtiquetasQuantidadeAlterada(
-                                produtoId: produtoId,
-                                quantidade: parsed,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              );
-            })
-            .toList(growable: false),
-      ),
     );
   }
 

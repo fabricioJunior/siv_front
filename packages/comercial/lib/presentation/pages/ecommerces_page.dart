@@ -4,13 +4,23 @@ import 'package:comercial/presentation/pages/ecommerce_configuracao_formulario.d
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
 class EcommercesPage extends StatefulWidget {
   final int? ecommerceIdInicial;
+  final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget empresaSeletor;
+  final SeletorPorEmpresaWidget terminalSeletor;
 
-  const EcommercesPage({super.key, this.ecommerceIdInicial});
+  const EcommercesPage({
+    super.key,
+    this.ecommerceIdInicial,
+    required this.tabelaDePrecoSeletor,
+    required this.empresaSeletor,
+    required this.terminalSeletor,
+  });
 
   @override
   State<EcommercesPage> createState() => _EcommercesPageState();
@@ -200,6 +210,9 @@ class _EcommercesPageState extends State<EcommercesPage> {
       return EcommerceConfiguracaoFormulario(
         key: const ValueKey('novo'),
         controller: _controladorPara('novo'),
+        tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor,
+        empresaSeletor: widget.empresaSeletor,
+        terminalSeletor: widget.terminalSeletor,
         onSalvou: () {
           setState(() => _criandoNovo = false);
           _bloc.add(const EcommercesCarregarSolicitado());
@@ -221,6 +234,9 @@ class _EcommercesPageState extends State<EcommercesPage> {
     return EcommerceConfiguracaoFormulario(
       key: ValueKey(ecommerce.id),
       controller: _controladorPara(ecommerce.id ?? 'novo'),
+      tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor,
+      empresaSeletor: widget.empresaSeletor,
+      terminalSeletor: widget.terminalSeletor,
       ecommerceId: ecommerce.id,
       empresaId: ecommerce.empresaId,
       referenciasPublicadas: ecommerce.referenciasPublicadas,

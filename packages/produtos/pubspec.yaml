@@ -11,12 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  core: 
+  core:
     path: ../core
-  precos:
-    path: ../precos
-  estoque:
-    path: ../estoque
   mockito: ^5.0.0
   json_annotation: ^4.9.0
   chips_input_autocomplete: ^1.2.2

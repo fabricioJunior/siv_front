@@ -1,5 +1,8 @@
+import 'package:core/empresas_portas.dart';
 import 'package:core/injecoes.dart';
 import 'package:empresas/data/remote_data_sourcers/empresas_remote_data_source.dart';
+import 'package:empresas/domain/adapters/porta_verificar_exige_cliente_na_venda_impl.dart';
+import 'package:empresas/domain/adapters/porta_verificar_permite_nota_fiscal_email_impl.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_nota_fiscal_email_remote_data_source.dart';
 import 'package:empresas/data/remote_data_sourcers/terminais_remote_data_source.dart';
@@ -113,6 +116,13 @@ void _useCases() {
 
   sl.registerFactory<DesativarTerminal>(
     () => DesativarTerminal(repository: sl()),
+  );
+
+  sl.registerFactory<PortaVerificarExigeClienteNaVenda>(
+    () => PortaVerificarExigeClienteNaVendaImpl(sl()),
+  );
+  sl.registerFactory<PortaVerificarPermiteNotaFiscalEmail>(
+    () => PortaVerificarPermiteNotaFiscalEmailImpl(sl()),
   );
 }
 

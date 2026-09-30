@@ -12,6 +12,12 @@ part 'devolucao_event.dart';
 part 'devolucao_state.dart';
 
 class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
+  // Espelha `validarDevolucao(..., ['venda', 'consignacao_acerto'])` no apollo-api.
+  static const _operacoesDevolviveis = [
+    TipoOperacao.venda,
+    TipoOperacao.consignacao_acerto,
+  ];
+
   final RecuperarRomaneios _recuperarRomaneios;
   final RecuperarItensRomaneio _recuperarItensRomaneio;
   final CriarRomaneio _criarRomaneio;
@@ -45,11 +51,16 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
     emit(state.copyWith(carregandoRomaneios: true, erro: null));
 
     try {
-      final romaneios = await _recuperarRomaneios.call(page: 1, limit: 200);
+      final romaneios = await _recuperarRomaneios.call(
+        page: 1,
+        limit: 200,
+        operacoes: _operacoesDevolviveis,
+      );
       final romaneiosDeVenda = romaneios
           .where(
             (romaneio) =>
-                romaneio.id != null && romaneio.operacao == TipoOperacao.venda,
+                romaneio.id != null &&
+                _operacoesDevolviveis.contains(romaneio.operacao),
           )
           .toList(growable: false);
 
@@ -109,11 +120,13 @@ class DevolucaoBloc extends Bloc<DevolucaoEvent, DevolucaoState> {
         searchTerm: filtroBusca,
         dataHoraInicial: dataInicial,
         dataHoraFinal: dataFinal,
+        operacoes: _operacoesDevolviveis,
       );
       final romaneiosDeVenda = romaneios
           .where(
             (romaneio) =>
-                romaneio.id != null && romaneio.operacao == TipoOperacao.venda,
+                romaneio.id != null &&
+                _operacoesDevolviveis.contains(romaneio.operacao),
           )
           .toList(growable: false);
 

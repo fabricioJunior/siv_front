@@ -19,6 +19,8 @@ class LancarDespesaState extends Equatable {
   final bool pulouPorFechamento;
   final int? diaVencimento;
   final int? parcelas;
+  /// Escolha explícita do usuário; `null` = automático (ver [pago]).
+  final bool? pagoManual;
   final Despesa? despesaCriada;
   final String? erro;
   final LancarDespesaStep step;
@@ -40,10 +42,23 @@ class LancarDespesaState extends Equatable {
     this.pulouPorFechamento = false,
     this.diaVencimento,
     this.parcelas,
+    this.pagoManual,
     this.despesaCriada,
     this.erro,
     required this.step,
   });
+
+  /// Despesa avulsa com data anterior a hoje costuma já estar paga, então
+  /// nasce marcada como paga -- a menos que o usuário escolha o contrário.
+  bool get pago {
+    if (modo != ModoLancamentoDespesa.avulsa) return false;
+    if (pagoManual != null) return pagoManual!;
+    final data = dataPagamento;
+    if (data == null) return false;
+    final agora = DateTime.now();
+    return DateTime(data.year, data.month, data.day)
+        .isBefore(DateTime(agora.year, agora.month, agora.day));
+  }
 
   /// Categoria só ativas -- o cadastro pode ter inativas, aqui não entram.
   List<CategoriaDespesa> get categoriasAtivas =>
@@ -88,6 +103,7 @@ class LancarDespesaState extends Equatable {
     bool? pulouPorFechamento,
     int? diaVencimento,
     int? parcelas,
+    bool? pagoManual,
     Despesa? despesaCriada,
     String? erro,
     LancarDespesaStep? step,
@@ -110,6 +126,7 @@ class LancarDespesaState extends Equatable {
       pulouPorFechamento: pulouPorFechamento ?? this.pulouPorFechamento,
       diaVencimento: diaVencimento ?? this.diaVencimento,
       parcelas: parcelas ?? this.parcelas,
+      pagoManual: pagoManual ?? this.pagoManual,
       despesaCriada: despesaCriada ?? this.despesaCriada,
       erro: erro,
       step: step ?? this.step,
@@ -134,6 +151,7 @@ class LancarDespesaState extends Equatable {
         pulouPorFechamento,
         diaVencimento,
         parcelas,
+        pagoManual,
         despesaCriada,
         erro,
         step,

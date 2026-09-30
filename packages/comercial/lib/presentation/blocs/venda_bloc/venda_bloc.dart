@@ -8,7 +8,6 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
-import 'package:empresas/domain/usecases/recuperar_empresa.dart';
 import 'package:estoque/domain/usecases/balanco_usecases.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/use_cases.dart';
@@ -29,7 +28,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   final ObterBalancoEmAndamentoUseCase _obterBalancoEmAndamento;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarClienteNaoCadastrado _recuperarClienteNaoCadastrado;
-  final RecuperarEmpresa _recuperarEmpresa;
+  final VerificarExigeClienteNaVenda _verificarExigeClienteNaVenda;
 
   VendaBloc(
     this._salvarListaDeProdutosCompartilhada,
@@ -42,7 +41,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     this._obterBalancoEmAndamento,
     this._acessoGlobalSessao,
     this._recuperarClienteNaoCadastrado,
-    this._recuperarEmpresa,
+    this._verificarExigeClienteNaVenda,
   ) : super(const VendaState()) {
     on<VendaClienteSelecionado>(_onClienteSelecionado);
     on<VendaClienteNaoCadastradoSolicitado>(
@@ -558,8 +557,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
       final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
       if (empresaId == null) return false;
       try {
-        final empresa = await _recuperarEmpresa.call(empresaId);
-        return empresa?.exigeClienteNaVenda ?? false;
+        return await _verificarExigeClienteNaVenda(empresaId: empresaId);
       } catch (e, s) {
         addError(e, s);
         return false;

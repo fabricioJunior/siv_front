@@ -11,6 +11,10 @@ class CalendarioDeDespesasState extends Equatable {
   final CalendarioDeDespesasStep step;
   final String? erro;
 
+  /// Ocorrências (por `idParaOcorrencia`) com pagar/editar/apagar em andamento:
+  /// só o card delas mostra loading, a tela não recarrega inteira.
+  final Set<int> processando;
+
   const CalendarioDeDespesasState({
     required this.empresaId,
     required this.ano,
@@ -21,6 +25,7 @@ class CalendarioDeDespesasState extends Equatable {
     this.origemPagamentoPorId = const {},
     required this.step,
     this.erro,
+    this.processando = const {},
   });
 
   /// Ocorrências agrupadas por dia do mês, já ordenadas.
@@ -69,6 +74,7 @@ class CalendarioDeDespesasState extends Equatable {
     Map<int, OrigemPagamentoDespesa>? origemPagamentoPorId,
     CalendarioDeDespesasStep? step,
     String? erro,
+    Set<int>? processando,
   }) {
     return CalendarioDeDespesasState(
       empresaId: empresaId ?? this.empresaId,
@@ -80,6 +86,7 @@ class CalendarioDeDespesasState extends Equatable {
       origemPagamentoPorId: origemPagamentoPorId ?? this.origemPagamentoPorId,
       step: step ?? this.step,
       erro: erro,
+      processando: processando ?? this.processando,
     );
   }
 
@@ -94,6 +101,7 @@ class CalendarioDeDespesasState extends Equatable {
         origemPagamentoPorId,
         step,
         erro,
+        processando,
       ];
 }
 

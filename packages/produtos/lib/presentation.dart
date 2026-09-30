@@ -32,6 +32,8 @@ export 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.d
 export 'package:produtos/presentantion/blocs/referencia_bloc/referencia_bloc.dart';
 export 'package:produtos/presentantion/blocs/produto_bloc/produto_bloc.dart';
 export 'package:produtos/presentantion/blocs/produtos_da_referencia_bloc/produtos_da_referencia_bloc.dart';
+export 'package:produtos/presentantion/blocs/adicionar_variacoes_bloc/adicionar_variacoes_bloc.dart';
+export 'package:produtos/presentantion/blocs/precos_da_referencia_bloc/precos_da_referencia_bloc.dart';
 export 'package:produtos/presentantion/blocs/codigos_de_barras_da_referencia_bloc/codigos_de_barras_da_referencia_bloc.dart';
 export 'package:produtos/presentantion/pages/codigos_de_barras_da_referencia_page.dart';
 export 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
@@ -69,5 +71,4 @@ export 'package:produtos/presentantion/widgets/estampa_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 export 'package:produtos/presentantion/widgets/categoria_seletor.dart';
 export 'package:produtos/presentantion/widgets/etiqueta_seletor.dart';
-export 'package:produtos/presentantion/widgets/produtos_da_referencia_tabela_widget.dart';
 export 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';

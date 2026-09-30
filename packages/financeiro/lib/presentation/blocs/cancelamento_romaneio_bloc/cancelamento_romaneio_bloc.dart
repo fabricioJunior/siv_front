@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
 import 'package:financeiro/use_cases.dart';
 
@@ -115,11 +116,12 @@ class CancelamentoRomaneioBloc
           erro: null,
         ),
       );
-    } catch (_) {
+    } catch (e) {
       emit(
         state.copyWith(
           step: CancelamentoRomaneioStep.falha,
-          erro: 'Falha ao cancelar o romaneio. Tente novamente.',
+          erro: mensagemDeErroApi(
+              e, 'Falha ao cancelar o romaneio. Tente novamente.'),
         ),
       );
     }

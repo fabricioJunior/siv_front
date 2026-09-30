@@ -1053,6 +1053,32 @@ class PagamentosRealizadosBloc
       }
 
       final opcoesPorItem = _mapearOpcoesPorProduto(itens, resultado);
+      final escolhas = _autoAplicarPromocaoUnica(
+        opcoesPorItem,
+        state.promocaoEscolhidaPorItem,
+        state.descontosItensAplicado,
+      );
+
+      // Cupom válido mas que não chegou a nenhum item: não mostrar "Cupom aplicado"
+      // (falso positivo) -- diz o motivo e deixa o campo livre pra outro código.
+      if (!escolhas.values.any((opcao) => opcao.ehCupom)) {
+        final haviaOpcaoDeCupom = opcoesPorItem.values.any(
+          (opcoes) => opcoes.any((opcao) => opcao.ehCupom),
+        );
+        emit(
+          state.copyWith(
+            opcoesElegiveisPorItem: opcoesPorItem,
+            carregandoElegibilidade: false,
+            cupomCodigoAplicado: null,
+            cupomErro: haviaOpcaoDeCupom
+                ? 'Cupom válido, mas os itens elegíveis já têm promoção ou '
+                    'desconto aplicado. O cupom não é acumulável.'
+                : 'Cupom válido, mas nenhum item do carrinho é elegível '
+                    '(verifique produtos, valor mínimo e vigência).',
+          ),
+        );
+        return;
+      }
 
       emit(
         state.copyWith(
@@ -1060,11 +1086,7 @@ class PagamentosRealizadosBloc
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
           ),
-          promocaoEscolhidaPorItem: _autoAplicarPromocaoUnica(
-            opcoesPorItem,
-            state.promocaoEscolhidaPorItem,
-            state.descontosItensAplicado,
-          ),
+          promocaoEscolhidaPorItem: escolhas,
           carregandoElegibilidade: false,
           cupomCodigoAplicado: codigo,
           cupomErro: null,

@@ -8,10 +8,15 @@ class SivMenuLateralFilho {
   final bool selecionado;
   final VoidCallback? onTap;
 
+  /// Rótulo de agrupamento por tema, opcional -- filhos consecutivos com o
+  /// mesmo grupo ganham um cabeçalho de seção acima do primeiro.
+  final String? grupo;
+
   const SivMenuLateralFilho({
     required this.label,
     this.selecionado = false,
     this.onTap,
+    this.grupo,
   });
 }
 
@@ -263,9 +268,34 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         itemComTooltip,
-        for (final filho in item.filhos)
-          _SivMenuLateralFilhoWidget(filho: filho),
+        for (var i = 0; i < item.filhos.length; i++) ...[
+          if (item.filhos[i].grupo != null &&
+              (i == 0 || item.filhos[i].grupo != item.filhos[i - 1].grupo))
+            _CabecalhoGrupoFilho(texto: item.filhos[i].grupo!),
+          _SivMenuLateralFilhoWidget(filho: item.filhos[i]),
+        ],
       ],
+    );
+  }
+}
+
+class _CabecalhoGrupoFilho extends StatelessWidget {
+  final String texto;
+
+  const _CabecalhoGrupoFilho({required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 10, 12, 3),
+      child: Text(
+        texto,
+        style: context.sivTextos.rotulo.copyWith(
+          color: cores.textoSobreEscuroTerciario,
+          fontSize: 10,
+        ),
+      ),
     );
   }
 }

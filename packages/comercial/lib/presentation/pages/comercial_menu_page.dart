@@ -5,51 +5,65 @@ import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
 /// Fonte única dos filhos do acordeão "Comercial" no menu lateral (ver
 /// `AppShell`). E-commerce saiu daqui -- virou item de topo próprio.
 const comercialAcordeaoItens = <SivMenuAcordeaoFilho>[
-  SivMenuAcordeaoFilho(label: 'Venda', rota: '/venda', componente: 'PEDFC001'),
+  SivMenuAcordeaoFilho(
+    label: 'Venda',
+    rota: '/venda',
+    componente: 'PEDFC001',
+    grupo: 'VENDA',
+  ),
   SivMenuAcordeaoFilho(
     label: 'Devolução',
     rota: '/devolucao',
     componente: 'PEDFC001',
+    grupo: 'VENDA',
   ),
   SivMenuAcordeaoFilho(
     label: 'Pedidos',
     rota: '/pedidos',
     componente: 'PEDFC001',
+    grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
     label: 'Importar pedidos',
     rota: '/importar_pedidos_transferencia_entrada',
     componente: 'IMPFP007',
+    grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
     label: 'Romaneios',
     rota: '/romaneios',
     componente: 'ROMFP001',
+    grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
     label: 'Histórico de vendas',
     rota: '/vendas',
     componente: 'ROMFP001',
+    grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
     label: 'Consignações',
     rota: '/consignacoes',
     componente: 'CONFC001',
+    grupo: 'CONSIGNAÇÃO',
   ),
   SivMenuAcordeaoFilho(
     label: 'Promoções',
     rota: '/promocoes',
     componente: 'PROMFC001',
+    grupo: 'MARKETING',
   ),
   SivMenuAcordeaoFilho(
     label: 'Cupons',
     rota: '/cupons',
     componente: 'CUPFC001',
+    grupo: 'MARKETING',
   ),
   SivMenuAcordeaoFilho(
     label: 'Minhas listas',
     rota: '/listas_personalizadas',
     componente: 'ECOFM004',
+    grupo: 'MARKETING',
   ),
 ];
 

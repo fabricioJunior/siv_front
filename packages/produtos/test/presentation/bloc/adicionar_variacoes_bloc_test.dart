@@ -157,9 +157,9 @@ void main() {
     _FakeCriarProdutosEmLote(),
   );
 
-  group('AdicionarVariacoesBloc - travamento -', () {
+  group('AdicionarVariacoesBloc - seleção de cor/tamanho já usados -', () {
     blocTest<AdicionarVariacoesBloc, AdicionarVariacoesState>(
-      'cor já na grade vem marcada e não pode ser desmarcada',
+      'cor já usada em outra variação não vem pré-selecionada, mas pode ser selecionada',
       build: build,
       act: (bloc) async {
         bloc.add(
@@ -172,10 +172,21 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         bloc.add(AdicionarVariacoesCorAlternou(corId: 1));
       },
-      verify: (bloc) {
-        expect(bloc.state.coresSelecionadas, {1});
-        expect(bloc.state.podeDesmarcarCor(1), isFalse);
+      verify: (bloc) => expect(bloc.state.coresSelecionadas, {1}),
+    );
+
+    blocTest<AdicionarVariacoesBloc, AdicionarVariacoesState>(
+      'cor já usada em outra variação pode ser desmarcada livremente depois de selecionada',
+      build: build,
+      act: (bloc) async {
+        bloc.add(
+          AdicionarVariacoesIniciou(referenciaId: 1, corIdsNaGrade: {1}),
+        );
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AdicionarVariacoesCorAlternou(corId: 1));
+        bloc.add(AdicionarVariacoesCorAlternou(corId: 1));
       },
+      verify: (bloc) => expect(bloc.state.coresSelecionadas, isEmpty),
     );
 
     blocTest<AdicionarVariacoesBloc, AdicionarVariacoesState>(
@@ -187,10 +198,7 @@ void main() {
         bloc.add(AdicionarVariacoesCorAlternou(corId: 2));
         bloc.add(AdicionarVariacoesCorAlternou(corId: 2));
       },
-      verify: (bloc) {
-        expect(bloc.state.coresSelecionadas, isEmpty);
-        expect(bloc.state.podeDesmarcarCor(2), isTrue);
-      },
+      verify: (bloc) => expect(bloc.state.coresSelecionadas, isEmpty),
     );
   });
 
@@ -200,7 +208,8 @@ void main() {
       build: build,
       act: (bloc) async {
         // Preto/P já existe. Selecionando Preto+Azul x P+M o diff deve
-        // excluir só Preto/P.
+        // excluir só Preto/P -- Preto e P precisam ser selecionados de
+        // novo, não vêm mais pré-marcados só por já estarem na grade.
         bloc.add(
           AdicionarVariacoesIniciou(
             referenciaId: 1,
@@ -210,7 +219,9 @@ void main() {
           ),
         );
         await Future<void>.delayed(Duration.zero);
+        bloc.add(AdicionarVariacoesCorAlternou(corId: 1));
         bloc.add(AdicionarVariacoesCorAlternou(corId: 2));
+        bloc.add(AdicionarVariacoesTamanhoAlternou(tamanhoId: 1));
         bloc.add(AdicionarVariacoesTamanhoAlternou(tamanhoId: 2));
       },
       verify: (bloc) {
@@ -237,6 +248,8 @@ void main() {
           ),
         );
         await Future<void>.delayed(Duration.zero);
+        bloc.add(AdicionarVariacoesCorAlternou(corId: 1));
+        bloc.add(AdicionarVariacoesTamanhoAlternou(tamanhoId: 1));
         bloc.add(AdicionarVariacoesTamanhoAlternou(tamanhoId: 2));
         bloc.add(AdicionarVariacoesConfirmou());
       },

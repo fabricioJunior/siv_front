@@ -75,12 +75,6 @@ class AdicionarVariacoesState extends Equatable {
 
   int get totalCombinacoesNovas => combinacoesNovas.length;
 
-  bool podeDesmarcarCor(int corId) => !corIdsNaGrade.contains(corId);
-  bool podeDesmarcarTamanho(int tamanhoId) =>
-      !tamanhoIdsNaGrade.contains(tamanhoId);
-  bool podeDesmarcarEstampa(int estampaId) =>
-      !estampaIdsNaGrade.contains(estampaId);
-
   AdicionarVariacoesState copyWith({
     AdicionarVariacoesStep? step,
     int? referenciaId,

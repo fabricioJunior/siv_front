@@ -520,7 +520,7 @@ void _presentantion() {
 
   sl.registerFactory<ReferenciasBloc>(() => ReferenciasBloc(sl()));
 
-  sl.registerFactory<ReferenciaBloc>(() => ReferenciaBloc(sl()));
+  sl.registerFactory<ReferenciaBloc>(() => ReferenciaBloc(sl(), sl()));
 
   sl.registerFactory<ProdutosBloc>(() => ProdutosBloc(sl(), sl()));
 

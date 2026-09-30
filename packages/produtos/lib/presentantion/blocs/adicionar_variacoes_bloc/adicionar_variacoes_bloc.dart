@@ -48,9 +48,6 @@ class AdicionarVariacoesBloc
         tamanhoIdsNaGrade: event.tamanhoIdsNaGrade,
         estampaIdsNaGrade: event.estampaIdsNaGrade,
         chavesNaGrade: event.chavesNaGrade,
-        coresSelecionadas: event.corIdsNaGrade,
-        tamanhosSelecionados: event.tamanhoIdsNaGrade,
-        estampasSelecionadas: event.estampaIdsNaGrade,
         estampasAtivo: event.estampaIdsNaGrade.isNotEmpty,
       ),
     );
@@ -75,13 +72,14 @@ class AdicionarVariacoesBloc
     }
   }
 
+  // Cor/tamanho/estampa já cadastrados em outra combinação da referência
+  // também podem ser selecionados aqui -- útil pra adicionar um tamanho novo
+  // numa cor que já existe, por exemplo. A combinação exata que já existe
+  // (mesma cor+tamanho+estampa) é filtrada em [combinacoesNovas], não aqui.
   void _onCorAlternou(
     AdicionarVariacoesCorAlternou event,
     Emitter<AdicionarVariacoesState> emit,
   ) {
-    if (state.corIdsNaGrade.contains(event.corId)) {
-      return;
-    }
     emit(
       state.copyWith(
         coresSelecionadas: _alternar(state.coresSelecionadas, event.corId),
@@ -93,7 +91,6 @@ class AdicionarVariacoesBloc
     AdicionarVariacoesTamanhoAlternou event,
     Emitter<AdicionarVariacoesState> emit,
   ) {
-    if (state.tamanhoIdsNaGrade.contains(event.tamanhoId)) return;
     emit(
       state.copyWith(
         tamanhosSelecionados: _alternar(
@@ -108,7 +105,6 @@ class AdicionarVariacoesBloc
     AdicionarVariacoesEstampaAlternou event,
     Emitter<AdicionarVariacoesState> emit,
   ) {
-    if (state.estampaIdsNaGrade.contains(event.estampaId)) return;
     emit(
       state.copyWith(
         estampasSelecionadas: _alternar(
@@ -154,7 +150,24 @@ class AdicionarVariacoesBloc
     try {
       final itens = <NovoProdutoCombinacao>[];
       for (final combinacao in combinacoes) {
-        final codigoDeBarras = await _criarCodigoDeBarras.call();
+        // codigosManuais != null => origem "Do fornecedor": usa o que foi
+        // digitado/bipado, ou nenhum código se essa combinação ficou em
+        // branco (bipa depois). codigosManuais == null => origem "SIV",
+        // mantém o gerado automaticamente de sempre.
+        String? codigoDeBarras;
+        if (event.codigosManuais == null) {
+          codigoDeBarras = await _criarCodigoDeBarras.call();
+        } else {
+          final chave = chaveComboGrade(
+            combinacao.corId,
+            combinacao.tamanhoId,
+            combinacao.estampaId,
+          );
+          codigoDeBarras = event.codigosManuais![chave];
+          if (codigoDeBarras == null && event.gerarSivParaRestantes) {
+            codigoDeBarras = await _criarCodigoDeBarras.call();
+          }
+        }
         itens.add(
           NovoProdutoCombinacao(
             referenciaId: state.referenciaId!,

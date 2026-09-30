@@ -71,4 +71,25 @@ class AdicionarVariacoesBuscaAlterou extends AdicionarVariacoesEvent {
   List<Object?> get props => [campo, texto];
 }
 
-class AdicionarVariacoesConfirmou extends AdicionarVariacoesEvent {}
+class AdicionarVariacoesConfirmou extends AdicionarVariacoesEvent {
+  /// Código de barras digitado/bipado por combinação (chave via
+  /// [chaveComboGrade]), quando a origem escolhida foi "Do fornecedor".
+  /// `null` (não informado nesse evento) = gerar pelo SIV, mantendo o
+  /// comportamento de sempre. Combinação sem entrada no mapa (usuário não
+  /// bipou aquela) é criada sem código de barras, pra bipar depois.
+  final Map<String, String>? codigosManuais;
+
+  /// Só considerado quando [codigosManuais] != null: combinação sem entrada
+  /// no mapa é criada sem código (padrão, `false`) ou tem o código gerado
+  /// pelo SIV na hora (`true`) -- toggle "os que ficarem sem código" da
+  /// etapa de bipagem.
+  final bool gerarSivParaRestantes;
+
+  AdicionarVariacoesConfirmou({
+    this.codigosManuais,
+    this.gerarSivParaRestantes = false,
+  });
+
+  @override
+  List<Object?> get props => [codigosManuais, gerarSivParaRestantes];
+}

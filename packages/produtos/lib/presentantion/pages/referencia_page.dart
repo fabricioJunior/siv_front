@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
-import 'package:produtos/use_cases.dart';
 import 'package:produtos/presentantion/widgets/referencia_produtos_tab.dart';
 import 'package:produtos/presentantion/widgets/referencia_precos_tab.dart';
 import 'package:produtos/presentantion/widgets/referencia_mobile.dart';
@@ -45,7 +44,6 @@ class _ReferenciaPageState extends State<ReferenciaPage>
   final _ncmController = TextEditingController();
   final _pesoController = TextEditingController();
 
-  bool _salvando = false;
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
   SubCategoria? _subCategoriaSelecionada;
@@ -97,12 +95,15 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     if (referenciaAtual == null) return;
 
     final referenciaId = referenciaAtual.id;
-    final categoriaId = _categoriaSelecionada?.id ?? referenciaAtual.categoriaId;
+    final categoriaId =
+        _categoriaSelecionada?.id ?? referenciaAtual.categoriaId;
 
     if (referenciaId == null || categoriaId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Não foi possível salvar: referência sem ID ou categoria.'),
+          content: Text(
+            'Não foi possível salvar: referência sem ID ou categoria.',
+          ),
         ),
       );
       return;
@@ -110,9 +111,8 @@ class _ReferenciaPageState extends State<ReferenciaPage>
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _salvando = true);
-    try {
-      final atualizada = await sl<AtualizarReferencia>().call(
+    _referenciaBloc.add(
+      ReferenciaAtualizou(
         id: referenciaId,
         nome: _nomeController.text.trim(),
         categoriaId: categoriaId,
@@ -125,23 +125,8 @@ class _ReferenciaPageState extends State<ReferenciaPage>
         cuidados: _sanitizeOptional(_cuidadosController.text),
         ncm: _sanitizeOptional(_ncmController.text),
         pesoGramas: int.tryParse(_pesoController.text.trim()),
-      );
-
-      if (!mounted) return;
-      setState(() {
-        _aplicarReferencia(atualizada);
-        _salvando = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Referência salva.')));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _salvando = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Falha ao salvar referência.')));
-    }
+      ),
+    );
   }
 
   String? _sanitizeOptional(String value) {
@@ -181,14 +166,25 @@ class _ReferenciaPageState extends State<ReferenciaPage>
       child: BlocConsumer<ReferenciaBloc, ReferenciaState>(
         listener: (context, state) {
           if (state is ReferenciaCarregarSucesso) {
-            _aplicarReferencia(state.referencia);
+            setState(() => _aplicarReferencia(state.referencia));
+          } else if (state is ReferenciaSalvarSucesso) {
+            setState(() => _aplicarReferencia(state.referencia));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Referência salva.')));
+          } else if (state is ReferenciaSalvarFalha) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Falha ao salvar referência.')),
+            );
           }
         },
         builder: (context, state) {
           final carregando = state is ReferenciaCarregarEmProgresso;
           final falha = state is ReferenciaCarregarFalha;
+          final salvando = state is ReferenciaSalvarEmProgresso;
           final mobile =
-              MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+              MediaQuery.sizeOf(context).width <
+              SivDimensoes.breakpointMenuDrawer;
 
           if (carregando) {
             return const Scaffold(
@@ -216,24 +212,43 @@ class _ReferenciaPageState extends State<ReferenciaPage>
             );
           }
 
-          if (mobile) return _buildMobile(context);
+          if (mobile) return _buildMobile(context, salvando);
 
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Detalhes da Referência'),
+              title: Builder(
+                builder: (context) {
+                  final cores = context.sivColors;
+                  return Text.rich(
+                    TextSpan(
+                      style: TextStyle(color: cores.textoApoio),
+                      children: [
+                        const TextSpan(text: 'Produtos / Referências / '),
+                        TextSpan(
+                          text: _referencia?.nome ?? '',
+                          style: TextStyle(
+                            color: cores.textoPrincipal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
               actions: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: FilledButton.icon(
-                    onPressed: _salvando ? null : _salvar,
-                    icon: _salvando
+                    onPressed: salvando ? null : _salvar,
+                    icon: salvando
                         ? const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: Text(_salvando ? 'Salvando...' : 'Salvar'),
+                    label: Text(salvando ? 'Salvando...' : 'Salvar'),
                   ),
                 ),
               ],
@@ -288,19 +303,22 @@ class _ReferenciaPageState extends State<ReferenciaPage>
       builder: (context, produtosState) {
         return BlocBuilder<PrecosDaReferenciaBloc, PrecosDaReferenciaState>(
           builder: (context, precosState) {
-            return TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(
-                  text:
-                      'Produtos (${produtosState.totalCombinacoesComProduto}/${produtosState.totalCombinacoesDaGrade})',
-                ),
-                Tab(
-                  text:
-                      'Tabela de preços (${precosState.totalComPreco}/${precosState.totalTabelas})',
-                ),
-                const Tab(text: 'Detalhes'),
-              ],
+            return Container(
+              color: Colors.white,
+              child: TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(
+                    text:
+                        'Produtos (${produtosState.totalCombinacoesComProduto}/${produtosState.totalCombinacoesDaGrade})',
+                  ),
+                  Tab(
+                    text:
+                        'Tabela de preços (${precosState.totalComPreco}/${precosState.totalTabelas})',
+                  ),
+                  const Tab(text: 'Detalhes'),
+                ],
+              ),
             );
           },
         );
@@ -308,18 +326,21 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     );
   }
 
-  Widget _buildMobile(BuildContext context) {
+  Widget _buildMobile(BuildContext context, bool salvando) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_referencia?.nome ?? '', style: textos.secao.copyWith(fontSize: 22)),
+        title: Text(
+          _referencia?.nome ?? '',
+          style: textos.secao.copyWith(fontSize: 22),
+        ),
         actions: [
           TextButton(
-            onPressed: _salvando ? null : _salvar,
+            onPressed: salvando ? null : _salvar,
             child: Text(
-              _salvando ? 'Salvando...' : 'Salvar',
+              salvando ? 'Salvando...' : 'Salvar',
               style: TextStyle(color: cores.acoAtivo),
             ),
           ),
@@ -343,9 +364,15 @@ class _ReferenciaPageState extends State<ReferenciaPage>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    ReferenciaProdutosMobileTab(referenciaId: widget.idReferencia),
-                    ReferenciaPrecosMobileTab(referenciaId: widget.idReferencia),
-                    SingleChildScrollView(child: _buildDetalhesTab(compacto: true)),
+                    ReferenciaProdutosMobileTab(
+                      referenciaId: widget.idReferencia,
+                    ),
+                    ReferenciaPrecosMobileTab(
+                      referenciaId: widget.idReferencia,
+                    ),
+                    SingleChildScrollView(
+                      child: _buildDetalhesTab(compacto: true),
+                    ),
                   ],
                 ),
               ),
@@ -377,7 +404,9 @@ class _ReferenciaPageState extends State<ReferenciaPage>
                   );
                   if (criouAlgo == true) {
                     produtosBloc.add(
-                      ProdutosDaReferenciaIniciou(referenciaId: widget.idReferencia),
+                      ProdutosDaReferenciaIniciou(
+                        referenciaId: widget.idReferencia,
+                      ),
                     );
                   }
                 },
@@ -448,8 +477,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
           TextFormField(
             controller: _nomeController,
             decoration: const InputDecoration(),
-            validator: (value) =>
-                (value == null || value.trim().isEmpty)
+            validator: (value) => (value == null || value.trim().isEmpty)
                 ? 'Informe o nome da referência'
                 : null,
           ),
@@ -572,9 +600,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(valor, overflow: TextOverflow.ellipsis),
-                ),
+                Expanded(child: Text(valor, overflow: TextOverflow.ellipsis)),
                 if (onTap != null)
                   Icon(Icons.expand_more, size: 18, color: cores.textoApoio),
               ],

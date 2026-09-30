@@ -42,82 +42,107 @@ class ReferenciaPrecosTab extends StatelessWidget {
         final textos = context.sivTextos;
         final rotuloColuna = textos.rotulo.copyWith(color: cores.textoApoio);
 
-        return Stack(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cores.superficie,
-                  borderRadius: BorderRadius.circular(SivDimensoes.raio),
-                  border: Border.all(color: cores.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
+            Text('PREÇO DA REFERÊNCIA POR TABELA', style: textos.secao),
+            SizedBox(height: 8),
+            Text(
+              'Um preço por tabela, igual para as 22 variações. Clique no valor para editar',
+              style: textos.apoio,
+            ),
+
+            SizedBox(height: 16),
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: cores.superficie,
+                        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                        border: Border.all(color: cores.hairline),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(flex: 3, child: Text('TABELA', style: rotuloColuna)),
-                          SizedBox(
-                            width: 110,
-                            child: Text('TERMINADOR', style: rotuloColuna),
-                          ),
-                          SizedBox(
-                            width: 190,
-                            child: Text('ATUALIZADO', style: rotuloColuna),
-                          ),
-                          SizedBox(
-                            width: 150,
-                            child: Text(
-                              'VALOR',
-                              textAlign: TextAlign.right,
-                              style: rotuloColuna,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Text('TABELA', style: rotuloColuna),
+                                ),
+                                SizedBox(
+                                  width: 110,
+                                  child: Text(
+                                    'TERMINADOR',
+                                    style: rotuloColuna,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 190,
+                                  child: Text(
+                                    'ATUALIZADO',
+                                    style: rotuloColuna,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    'VALOR',
+                                    textAlign: TextAlign.right,
+                                    style: rotuloColuna,
+                                  ),
+                                ),
+                                const SizedBox(width: 80),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 80),
+                          Divider(height: 1, color: cores.hairline),
+                          Expanded(
+                            child: ListView.separated(
+                              itemCount: state.tabelas.length,
+                              separatorBuilder: (_, __) =>
+                                  Divider(height: 1, color: cores.hairline),
+                              itemBuilder: (context, index) {
+                                final tabela = state.tabelas[index];
+                                final emEdicao =
+                                    state.tabelaEmEdicaoId ==
+                                    tabela.tabelaDePrecoId;
+
+                                return emEdicao
+                                    ? _LinhaEmEdicao(state: state)
+                                    : _LinhaIdle(tabela: tabela);
+                              },
+                            ),
+                          ),
+                          Divider(height: 1, color: cores.hairline),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            child: Text(
+                              'Enter salva · Esc cancela · tabela inativa fica só para consulta',
+                              style: textos.apoio.copyWith(
+                                fontSize: 12,
+                                color: cores.textoApoio,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Divider(height: 1, color: cores.hairline),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: state.tabelas.length,
-                        separatorBuilder: (_, __) =>
-                            Divider(height: 1, color: cores.hairline),
-                        itemBuilder: (context, index) {
-                          final tabela = state.tabelas[index];
-                          final emEdicao =
-                              state.tabelaEmEdicaoId == tabela.tabelaDePrecoId;
-
-                          return emEdicao
-                              ? _LinhaEmEdicao(state: state)
-                              : _LinhaIdle(tabela: tabela);
-                        },
-                      ),
-                    ),
-                    Divider(height: 1, color: cores.hairline),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
-                      ),
-                      child: Text(
-                        'Enter salva · Esc cancela · tabela inativa fica só para consulta',
-                        style: textos.apoio.copyWith(
-                          fontSize: 12,
-                          color: cores.textoApoio,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  ...sivCantosBlueprint(cores.hairline),
+                ],
               ),
             ),
-            ...sivCantosBlueprint(cores.hairline),
           ],
         );
       },
@@ -139,7 +164,9 @@ class _LinhaIdle extends StatelessWidget {
       onTap: tabela.tabelaInativa
           ? null
           : () => context.read<PrecosDaReferenciaBloc>().add(
-              PrecosDaReferenciaEditouLinha(tabelaDePrecoId: tabela.tabelaDePrecoId),
+              PrecosDaReferenciaEditouLinha(
+                tabelaDePrecoId: tabela.tabelaDePrecoId,
+              ),
             ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -208,7 +235,11 @@ class _LinhaIdle extends StatelessWidget {
               width: 80,
               child: tabela.tabelaInativa
                   ? null
-                  : Icon(Icons.edit_outlined, size: 18, color: cores.textoApoio),
+                  : Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: cores.textoApoio,
+                    ),
             ),
           ],
         ),
@@ -273,7 +304,10 @@ class _LinhaEmEdicaoState extends State<_LinhaEmEdicao> {
           Expanded(
             child: Text(
               tabela.tabelaNome,
-              style: textos.secao.copyWith(fontSize: 17, color: cores.acoEscuro),
+              style: textos.secao.copyWith(
+                fontSize: 17,
+                color: cores.acoEscuro,
+              ),
             ),
           ),
           SizedBox(
@@ -282,7 +316,9 @@ class _LinhaEmEdicaoState extends State<_LinhaEmEdicao> {
               controller: _controller,
               autofocus: true,
               enabled: !salvando,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],

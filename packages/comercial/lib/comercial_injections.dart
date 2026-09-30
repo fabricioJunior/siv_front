@@ -54,6 +54,10 @@ void _remoteDataSources() {
     ),
   );
 
+  sl.registerFactory<IImportacaoVendaRemoteDataSource>(
+    () => ImportacaoVendaRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IIntegracaoFiscalRemoteDataSource>(
     () => IntegracaoFiscalRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -143,6 +147,10 @@ void _repositories() {
 
   sl.registerFactory<IImportacaoPedidoTransferenciaRepository>(
     () => ImportacaoPedidoTransferenciaRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IImportacaoVendaRepository>(
+    () => ImportacaoVendaRepository(remoteDataSource: sl()),
   );
 }
 
@@ -457,6 +465,16 @@ void _useCases() {
     () => ConsultarImportacaoPedido(repository: sl()),
   );
 
+  sl.registerFactory<BaixarTemplateImportacaoVendas>(
+    () => BaixarTemplateImportacaoVendas(repository: sl()),
+  );
+  sl.registerFactory<ImportarVendasCsv>(
+    () => ImportarVendasCsv(repository: sl()),
+  );
+  sl.registerFactory<ConsultarImportacaoVenda>(
+    () => ConsultarImportacaoVenda(repository: sl()),
+  );
+
   sl.registerFactory<VerificarExigeClienteNaVenda>(
     () => VerificarExigeClienteNaVenda(sl()),
   );
@@ -692,5 +710,9 @@ void _presentation() {
 
   sl.registerFactory<ImportarPedidosCsvBloc>(
     () => ImportarPedidosCsvBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ImportarVendasCsvBloc>(
+    () => ImportarVendasCsvBloc(sl(), sl(), sl()),
   );
 }

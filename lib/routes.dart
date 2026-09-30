@@ -638,6 +638,25 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/importar_vendas': (context) {
+    return _rotaProtegida(
+      route: '/importar_vendas',
+      child: ImportarVendasCsvPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+        funcionarioSeletor: (data) => FuncionarioSeletor(
+          modo: FuncionarioSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+          onChanged: data.onChanged,
+          titulo: 'Funcionário',
+        ),
+      ),
+    );
+  },
   '/pedido': (context) {
     return PedidoPage(
       idPedido: args(context)['idPedido'],
@@ -1447,6 +1466,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_pedidos_transferencia_entrada': ['IMPFP007'],
+  '/importar_vendas': ['IMPFP008'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],

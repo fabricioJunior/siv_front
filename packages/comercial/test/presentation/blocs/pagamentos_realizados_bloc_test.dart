@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc_test.dart';
 import 'package:core/leitor.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promocoes/models.dart';
@@ -169,7 +172,255 @@ const _produtoComConflito = ProdutoCompartilhado(
   tamanhoNome: 'M',
 );
 
+const _produto199 = ProdutoCompartilhado(
+  hash: 'p199',
+  produtoId: 9,
+  hashLista: 'hash',
+  quantidade: 1,
+  valorUnitario: 199,
+  nome: 'Produto 199',
+  corNome: 'Azul',
+  tamanhoNome: 'M',
+);
+
 void main() {
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom valor_fixo 200 em produto de 199: aplica o desconto e zera o total',
+    build: () => PagamentosRealizadosBloc(
+      _StubCarregarResumo(),
+      _StubBuscarSaldoCreditoDevolucao(),
+      _StubVerificarElegibilidadeFidelidade(),
+      _StubVerificarPermiteNotaFiscalEmail(),
+      _FakeAcessoGlobalSessao(),
+      _FakeApurarElegibilidade(
+        ResultadoElegibilidade(
+          itens: [
+            ItemElegibilidade(
+              referenciaId: 900,
+              opcoesElegiveis: [
+                const OpcaoElegivel(
+                  tipo: 'cupom',
+                  id: 3,
+                  nome: 'Cupom PRICILLA200',
+                  valorDesconto: 199,
+                  valorFinalUnitario: 0,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      _FakeLeitorDataDatasource({9: 900}),
+    ),
+    seed: () => const PagamentosRealizadosState(
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: [_produto199],
+        quantidadeTotalProdutos: 1,
+        valorTotalProdutos: 199,
+      ),
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cupomErro, isNull);
+      expect(bloc.state.cupomCodigoAplicado, 'PRICILLA200');
+      expect(bloc.state.promocaoEscolhidaPorItem[9]?.ehCupom, isTrue);
+      expect(bloc.state.valorDescontoPromocaoTotal, 199);
+      expect(bloc.state.valorTotalComDesconto, 0);
+    },
+  );
+
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom: resposta REAL da apuracao em producao (JSON) zera produto de 199',
+    build: () => PagamentosRealizadosBloc(
+      _StubCarregarResumo(),
+      _StubBuscarSaldoCreditoDevolucao(),
+      _StubVerificarElegibilidadeFidelidade(),
+      _StubVerificarPermiteNotaFiscalEmail(),
+      _FakeAcessoGlobalSessao(),
+      _FakeApurarElegibilidade(
+        ResultadoElegibilidade.fromJson(
+          jsonDecode(
+            '{"itens":[{"referenciaId":66700001,"opcoesElegiveis":[{"tipo":"cupom","id":3,'
+            '"nome":"Cupom PRICILLA200","valorDesconto":199,"valorFinalUnitario":0}]}]}',
+          ) as Map<String, dynamic>,
+        ),
+      ),
+      _FakeLeitorDataDatasource({9: 66700001}),
+    ),
+    seed: () => const PagamentosRealizadosState(
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: [_produto199],
+        quantidadeTotalProdutos: 1,
+        valorTotalProdutos: 199,
+      ),
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cupomErro, isNull);
+      expect(bloc.state.promocaoEscolhidaPorItem[9]?.ehCupom, isTrue);
+      expect(bloc.state.valorTotalComDesconto, 0);
+    },
+  );
+
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom valido mas sem nenhum item elegivel: nao mostra "aplicado" e explica o motivo',
+    build: () => PagamentosRealizadosBloc(
+      _StubCarregarResumo(),
+      _StubBuscarSaldoCreditoDevolucao(),
+      _StubVerificarElegibilidadeFidelidade(),
+      _StubVerificarPermiteNotaFiscalEmail(),
+      _FakeAcessoGlobalSessao(),
+      _FakeApurarElegibilidade(
+        ResultadoElegibilidade(
+          itens: [ItemElegibilidade(referenciaId: 900, opcoesElegiveis: const [])],
+        ),
+      ),
+      _FakeLeitorDataDatasource({9: 900}),
+    ),
+    seed: () => const PagamentosRealizadosState(
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: [_produto199],
+        quantidadeTotalProdutos: 1,
+        valorTotalProdutos: 199,
+      ),
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cupomCodigoAplicado, isNull);
+      expect(bloc.state.possuiCupomAplicado, isFalse);
+      expect(bloc.state.cupomErro, contains('nenhum item do carrinho é elegível'));
+      expect(bloc.state.valorTotalComDesconto, 199);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom perde para promocao ja escolhida no item: avisa que nao e acumulavel',
+    build: () => PagamentosRealizadosBloc(
+      _StubCarregarResumo(),
+      _StubBuscarSaldoCreditoDevolucao(),
+      _StubVerificarElegibilidadeFidelidade(),
+      _StubVerificarPermiteNotaFiscalEmail(),
+      _FakeAcessoGlobalSessao(),
+      _FakeApurarElegibilidade(
+        ResultadoElegibilidade(
+          itens: [
+            ItemElegibilidade(
+              referenciaId: 900,
+              opcoesElegiveis: [
+                _opcao(77),
+                const OpcaoElegivel(
+                  tipo: 'cupom',
+                  id: 3,
+                  nome: 'Cupom PRICILLA200',
+                  valorDesconto: 199,
+                  valorFinalUnitario: 0,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      _FakeLeitorDataDatasource({9: 900}),
+    ),
+    seed: () => const PagamentosRealizadosState(
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: [_produto199],
+        quantidadeTotalProdutos: 1,
+        valorTotalProdutos: 199,
+      ),
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.possuiCupomAplicado, isFalse);
+      expect(bloc.state.cupomErro, contains('não é acumulável'));
+    },
+  );
+
+
+  PagamentosRealizadosState estadoVendaDe199({required bool comCupom, String valorTexto = ''}) =>
+      PagamentosRealizadosState(
+        resumo: const PagamentosRealizadosResumo(
+          listaCompartilhada: null,
+          produtosCompartilhados: [_produto199],
+          quantidadeTotalProdutos: 1,
+          valorTotalProdutos: 199,
+        ),
+        promocaoEscolhidaPorItem: comCupom
+            ? {
+                9: const OpcaoElegivel(
+                  tipo: 'cupom',
+                  id: 3,
+                  nome: 'Cupom PRICILLA200',
+                  valorDesconto: 199,
+                  valorFinalUnitario: 0,
+                ),
+              }
+            : const {},
+        cupomCodigoAplicado: comCupom ? 'PRICILLA200' : null,
+        linhas: [
+          PagamentoRealizadoLinha(
+            id: 'l1',
+            formaDePagamento: SelectData(
+              id: 1,
+              nome: 'Dinheiro',
+              data: const {'tipo': 'dinheiro'},
+            ),
+            valorTexto: valorTexto,
+            parcelasTexto: '1',
+          ),
+        ],
+      );
+
+  PagamentosRealizadosBloc blocDeFechamento() => PagamentosRealizadosBloc(
+        _StubCarregarResumo(),
+        _StubBuscarSaldoCreditoDevolucao(),
+        _StubVerificarElegibilidadeFidelidade(),
+        _StubVerificarPermiteNotaFiscalEmail(),
+        _FakeAcessoGlobalSessao(),
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: [])),
+        _FakeLeitorDataDatasource({9: 900}),
+      );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'fecha venda zerada por cupom com pagamento de valor 0 (valor em branco)',
+    build: blocDeFechamento,
+    seed: () => estadoVendaDe199(comCupom: true),
+    act: (bloc) => bloc.add(const PagamentosRealizadosFinalizacaoSolicitada()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.erro, isNull);
+      expect(bloc.state.step, PagamentosRealizadosStep.concluido);
+      expect(bloc.state.resultado, hasLength(1));
+      expect(bloc.state.resultado.first['valor'], 0);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'sem cupom, total a pagar > 0 continua exigindo valor maior que zero',
+    build: blocDeFechamento,
+    seed: () => estadoVendaDe199(comCupom: false, valorTexto: '0'),
+    act: (bloc) => bloc.add(const PagamentosRealizadosFinalizacaoSolicitada()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.erro, 'Informe um valor válido em todas as linhas.');
+      expect(bloc.state.step, isNot(PagamentosRealizadosStep.concluido));
+    },
+  );
+
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
     'auto-aplica promocao por produto, mesmo com multiplas promocoes '
     'distintas no carrinho, e nao auto-aplica em produto com conflito',

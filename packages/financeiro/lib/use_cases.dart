@@ -27,6 +27,7 @@ export 'domain/use_cases/recuperar_categorias_despesa.dart';
 export 'domain/use_cases/recuperar_categoria_despesa.dart';
 export 'domain/use_cases/criar_categoria_despesa.dart';
 export 'domain/use_cases/atualizar_categoria_despesa.dart';
+export 'domain/use_cases/apagar_despesa.dart';
 export 'domain/use_cases/atualizar_despesa.dart';
 export 'domain/use_cases/pagar_fatura_de_cartao.dart';
 export 'domain/use_cases/recuperar_origens_pagamento_despesa.dart';

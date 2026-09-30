@@ -15,6 +15,20 @@ class CalendarioDeDespesasMesAlterado extends CalendarioDeDespesasEvent {
   CalendarioDeDespesasMesAlterado({required this.ano, required this.mes});
 }
 
+/// Apagar uma ocorrência. `escopo.esta` numa ocorrência virtual de recorrente
+/// cancela só o mês; `escopo.todas` apaga a série (parcelas ou recorrência).
+class CalendarioDeDespesasOcorrenciaApagada extends CalendarioDeDespesasEvent {
+  final int id;
+  final bool virtual;
+  final EscopoExclusaoDespesa escopo;
+
+  CalendarioDeDespesasOcorrenciaApagada({
+    required this.id,
+    required this.virtual,
+    required this.escopo,
+  });
+}
+
 /// Pagar/editar/cancelar uma ocorrência do mês. Ocorrência virtual (recorrente
 /// ainda não materializada nesse mês) usa `POST /despesas/{id}/ocorrencias`;
 /// ocorrência concreta (já é uma linha real de despesa) usa `PUT /despesas/{id}`

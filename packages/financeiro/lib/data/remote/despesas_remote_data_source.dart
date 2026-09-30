@@ -46,6 +46,17 @@ class DespesasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<void> apagarDespesa(
+    int id, {
+    EscopoExclusaoDespesa escopo = EscopoExclusaoDespesa.esta,
+  }) async {
+    await delete(
+      pathParameters: {'id': id.toString()},
+      queryParameters: {'escopo': escopo.value},
+    );
+  }
+
+  @override
   Future<Despesa> atualizarDespesa(
     int id, {
     double? valor,

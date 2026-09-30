@@ -11,6 +11,8 @@ abstract class IDespesasRemoteDataSource {
     required int mes,
   });
 
+  Future<void> apagarDespesa(int id, {EscopoExclusaoDespesa escopo});
+
   Future<Despesa> atualizarDespesa(
     int id, {
     double? valor,

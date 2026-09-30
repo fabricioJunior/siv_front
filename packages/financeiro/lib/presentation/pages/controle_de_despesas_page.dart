@@ -30,6 +30,8 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
   late final CalendarioDeDespesasBloc _calendarioBloc;
   late int _ano;
   late int _mes;
+  // Dia selecionado na aba Calendário -- "lançar" já abre com essa data.
+  final _diaDoCalendario = ValueNotifier<DateTime?>(null);
 
   int get _empresaId => sl<IAcessoGlobalSessao>().empresaIdDaSessao ?? 0;
 
@@ -49,6 +51,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
 
   @override
   void dispose() {
+    _diaDoCalendario.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -68,6 +71,17 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
       _mes = novoMes;
     });
     _recarregar();
+  }
+
+  Future<void> _lancar(BuildContext context) async {
+    final noCalendario = _tabController.index == 1;
+    final result = await abrirLancarDespesa(
+      context,
+      dataInicial: noCalendario ? _diaDoCalendario.value : null,
+    );
+    if (result == true) {
+      _recarregar();
+    }
   }
 
   void _recarregar() {
@@ -98,12 +112,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
           return Scaffold(
             floatingActionButton: estreito
                 ? FloatingActionButton.extended(
-                    onPressed: () async {
-                      final result = await abrirLancarDespesa(context);
-                      if (result == true) {
-                        _recarregar();
-                      }
-                    },
+                    onPressed: () => _lancar(context),
                     icon: const Icon(Icons.add),
                     label: const Text('LANÇAR'),
                   )
@@ -157,13 +166,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                  onPressed: () async {
-                                    final result =
-                                        await abrirLancarDespesa(context);
-                                    if (result == true) {
-                                      _recarregar();
-                                    }
-                                  },
+                                  onPressed: () => _lancar(context),
                                   icon: const Padding(
                                     padding: EdgeInsetsGeometry.only(
                                         top: 16, bottom: 16),
@@ -226,6 +229,7 @@ class _ControleDeDespesasPageState extends State<ControleDeDespesasPage>
                       PainelDeDespesas(
                           onVerCalendario: () => _tabController.animateTo(1)),
                       CalendarioDeDespesasBody(
+                          dataSelecionada: _diaDoCalendario,
                           onAlterou: () => _dashboardBloc.add(
                                 DashboardDeDespesasIniciou(
                                     empresaId: _empresaId,

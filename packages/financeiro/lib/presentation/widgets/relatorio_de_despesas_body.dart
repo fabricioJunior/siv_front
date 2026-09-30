@@ -35,6 +35,8 @@ class _RelatorioDeDespesasBodyState extends State<RelatorioDeDespesasBody> {
   final Set<int> _categoriaIds = {};
   List<CategoriaDespesa> _categorias = const [];
   List<Despesa> _despesas = const [];
+  bool _separarTodas = false;
+  bool _outrasAberto = false;
   bool _carregando = true;
   bool _falhou = false;
 
@@ -279,15 +281,19 @@ class _RelatorioDeDespesasBodyState extends State<RelatorioDeDespesasBody> {
   }
 
   Widget _cardPizza(List<(int, double)> porCategoria, double total) {
-    // Fatias demais viram ilegíveis: as menores viram "Outras".
+    // Fatias demais viram ilegíveis: por padrão as menores viram "Outras",
+    // com opção de separar todas.
+    final agrupar = !_separarTodas && porCategoria.length > _maxFatias;
+    final principais = agrupar ? porCategoria.take(_maxFatias) : porCategoria;
+    final outras = agrupar
+        ? [for (final e in porCategoria.skip(_maxFatias)) (_nomeCategoria(e.$1), e.$2)]
+        : const <(String, double)>[];
     final fatias = <(String, double)>[
-      for (final e in porCategoria.take(_maxFatias)) (_nomeCategoria(e.$1), e.$2),
-      if (porCategoria.length > _maxFatias)
-        (
-          'Outras',
-          porCategoria.skip(_maxFatias).fold<double>(0, (s, e) => s + e.$2),
-        ),
+      for (final e in principais) (_nomeCategoria(e.$1), e.$2),
+      if (outras.isNotEmpty)
+        ('Outras (${outras.length} categorias)', outras.fold<double>(0, (s, e) => s + e.$2)),
     ];
+    final apoio = Theme.of(context).textTheme.bodySmall;
     return CardBlueprint(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -320,23 +326,65 @@ class _RelatorioDeDespesasBodyState extends State<RelatorioDeDespesasBody> {
             ),
           ),
           const SizedBox(height: 12),
-          for (var i = 0; i < fatias.length; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                children: [
-                  Container(
-                      width: 10,
-                      height: 10,
-                      color: _cores[i % _cores.length]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(fatias[i].$1,
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ),
-                  Text(formatarReais(fatias[i].$2)),
-                ],
+          for (var i = 0; i < fatias.length; i++) ...[
+            InkWell(
+              onTap: outras.isNotEmpty && i == fatias.length - 1
+                  ? () => setState(() => _outrasAberto = !_outrasAberto)
+                  : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Container(
+                        width: 10,
+                        height: 10,
+                        color: _cores[i % _cores.length]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(fatias[i].$1,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                    Text(formatarReais(fatias[i].$2)),
+                    if (outras.isNotEmpty && i == fatias.length - 1)
+                      Icon(_outrasAberto ? Icons.expand_less : Icons.expand_more,
+                          size: 18),
+                  ],
+                ),
               ),
+            ),
+            if (outras.isNotEmpty && i == fatias.length - 1)
+              Padding(
+                padding: const EdgeInsets.only(left: 18, bottom: 4),
+                child: _outrasAberto
+                    ? Column(
+                        children: [
+                          for (final o in outras)
+                            Row(children: [
+                              Expanded(
+                                child: Text(o.$1,
+                                    style: apoio,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                              Text(formatarReais(o.$2), style: apoio),
+                            ]),
+                        ],
+                      )
+                    : Text(
+                        'Inclui: ${outras.map((o) => o.$1).join(', ')}',
+                        style: apoio,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+              ),
+          ],
+          if (porCategoria.length > _maxFatias)
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: const Text('Mostrar todas as categorias na pizza'),
+              value: _separarTodas,
+              onChanged: (v) => setState(() => _separarTodas = v),
             ),
         ],
       ),

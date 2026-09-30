@@ -18,7 +18,11 @@ class CalendarioDeDespesasBody extends StatefulWidget {
   /// recarregar o painel junto.
   final VoidCallback? onAlterou;
 
-  const CalendarioDeDespesasBody({super.key, this.onAlterou});
+  /// Recebe a data do dia selecionado no calendário -- a página usa pra abrir
+  /// "nova despesa" já com essa data.
+  final ValueNotifier<DateTime?>? dataSelecionada;
+
+  const CalendarioDeDespesasBody({super.key, this.onAlterou, this.dataSelecionada});
 
   @override
   State<CalendarioDeDespesasBody> createState() =>
@@ -33,8 +37,9 @@ class _CalendarioDeDespesasBodyState extends State<CalendarioDeDespesasBody> {
   Widget build(BuildContext context) {
     return BlocConsumer<CalendarioDeDespesasBloc, CalendarioDeDespesasState>(
       listenWhen: (previous, current) =>
-          previous.step == CalendarioDeDespesasStep.carregando &&
-          current.step == CalendarioDeDespesasStep.carregado,
+          (previous.step == CalendarioDeDespesasStep.carregando &&
+              current.step == CalendarioDeDespesasStep.carregado) ||
+          (previous.processando.isNotEmpty && current.processando.isEmpty),
       listener: (context, state) => widget.onAlterou?.call(),
       builder: (context, state) {
         if (state.step == CalendarioDeDespesasStep.inicial ||
@@ -59,6 +64,12 @@ class _CalendarioDeDespesasBodyState extends State<CalendarioDeDespesasBody> {
           final ehMesAtual = state.ano == hoje.year && state.mes == hoje.month;
           _diaSelecionado = ehMesAtual ? hoje.day : 1;
           _mesDoDiaSelecionado = state.mes;
+        }
+
+        final dataDoDia = DateTime(state.ano, state.mes, _diaSelecionado ?? 1);
+        if (widget.dataSelecionada?.value != dataDoDia) {
+          WidgetsBinding.instance.addPostFrameCallback(
+              (_) => widget.dataSelecionada?.value = dataDoDia);
         }
 
         return LayoutBuilder(
@@ -561,7 +572,9 @@ class _LinhaOcorrenciaPainel extends StatelessWidget {
         .origemPorId[ocorrencia.origemPagamentoId];
     final cancelada = ocorrencia.status == StatusDespesa.cancelado;
 
-    return Container(
+    return _SobreposicaoCarregando(
+      ativo: _estaProcessando(context, ocorrencia),
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
       decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: cores.hairline))),
@@ -639,9 +652,17 @@ class _LinhaOcorrenciaPainel extends StatelessWidget {
               ],
             ),
           ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _apagar(context, ocorrencia),
+              icon: const Icon(Icons.delete_outline, size: 15),
+              label: const Text('Apagar', style: TextStyle(fontSize: 12.5)),
+            ),
+          ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _tagStatus(BuildContext context, DespesaOcorrenciaCalendario o) {
@@ -719,6 +740,105 @@ class _GrupoCartaoPainel extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _estaProcessando(BuildContext context, DespesaOcorrenciaCalendario o) {
+  final id = o.idParaOcorrencia;
+  return id != null &&
+      context.select<CalendarioDeDespesasBloc, bool>(
+          (b) => b.state.processando.contains(id));
+}
+
+/// Loading só em cima do card da despesa em andamento, sem recarregar a tela.
+class _SobreposicaoCarregando extends StatelessWidget {
+  final bool ativo;
+  final Widget child;
+
+  const _SobreposicaoCarregando({required this.ativo, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        if (ativo)
+          const Positioned.fill(
+            child: AbsorbPointer(
+              child: ColoredBox(
+                color: Colors.white70,
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Pergunta até onde apagar. Avulsa: só confirma. Parcela e recorrente: escolhe
+/// entre só esta (parcela / mês) e a série toda. `null` = desistiu.
+Future<EscopoExclusaoDespesa?> _perguntarEscopoDeExclusao(
+  BuildContext context,
+  DespesaOcorrenciaCalendario o,
+) {
+  final parcela = o.totalParcelas != null;
+  final recorrente = o.despesaRecorrentePaiId != null;
+  final titulo = parcela
+      ? 'Apagar parcela?'
+      : recorrente
+          ? 'Apagar despesa recorrente?'
+          : 'Apagar despesa?';
+  final corpo = parcela
+      ? '"${o.descricao}" é a parcela ${o.numeroParcela ?? '?'}/${o.totalParcelas}. Apagar só esta parcela ou todas?'
+      : recorrente
+          ? '"${o.descricao}" se repete todo mês. Apagar só a de ${_dataCurta(o.dataPagamento)} ou a recorrência inteira?'
+          : 'Apagar "${o.descricao}" (${formatarReais(o.valor)})? Isso não pode ser desfeito.';
+  return showDialog<EscopoExclusaoDespesa>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(titulo),
+      content: Text(corpo),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Voltar'),
+        ),
+        if (parcela || recorrente) ...[
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, EscopoExclusaoDespesa.todas),
+            child: Text(parcela ? 'Todas as parcelas' : 'Toda a recorrência'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, EscopoExclusaoDespesa.esta),
+            child: Text(parcela ? 'Só esta parcela' : 'Só este mês'),
+          ),
+        ] else
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, EscopoExclusaoDespesa.esta),
+            child: const Text('Apagar'),
+          ),
+      ],
+    ),
+  );
+}
+
+Future<void> _apagar(BuildContext context, DespesaOcorrenciaCalendario o) async {
+  final id = o.idParaOcorrencia;
+  if (id == null) return;
+  final bloc = context.read<CalendarioDeDespesasBloc>();
+  final escopo = await _perguntarEscopoDeExclusao(context, o);
+  if (escopo == null) return;
+  bloc.add(CalendarioDeDespesasOcorrenciaApagada(
+      id: id, virtual: o.virtual, escopo: escopo));
 }
 
 void _marcarComoPago(BuildContext context, DespesaOcorrenciaCalendario o) {
@@ -1102,7 +1222,9 @@ class _CardAgendaOcorrencia extends StatelessWidget {
     final textos = context.sivTextos;
     final cancelada = ocorrencia.status == StatusDespesa.cancelado;
 
-    return InkWell(
+    return _SobreposicaoCarregando(
+      ativo: _estaProcessando(context, ocorrencia),
+      child: InkWell(
       onTap: () => _abrirBottomSheet(context, ocorrencia),
       child: CardBlueprint(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1145,7 +1267,7 @@ class _CardAgendaOcorrencia extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -1233,6 +1355,18 @@ void _abrirBottomSheet(BuildContext context, DespesaOcorrenciaCalendario o) {
                   ],
                 ),
               ],
+              const SizedBox(height: 6),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    _apagar(context, o);
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Apagar'),
+                ),
+              ),
             ],
           ),
         ),

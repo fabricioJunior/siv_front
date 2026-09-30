@@ -43,9 +43,15 @@ class _FakeCalendarioRepository implements IDespesasCalendarioRepository {
 
 class _FakeDespesasRepository implements IDespesasRepository {
   ({int id, double? valor, int? categoriaId, int? origemPagamentoId, StatusDespesa? status})? chamadaAtualizar;
+  ({int id, EscopoExclusaoDespesa escopo})? chamadaApagar;
 
   @override
   Future<Despesa> criarDespesa(Despesa despesa) async => despesa;
+
+  @override
+  Future<void> apagarDespesa(int id, {EscopoExclusaoDespesa escopo = EscopoExclusaoDespesa.esta}) async {
+    chamadaApagar = (id: id, escopo: escopo);
+  }
 
   @override
   Future<PagamentoDeFatura> pagarFatura({
@@ -115,6 +121,7 @@ void main() {
       RecuperarCalendarioDeDespesas(repository: calendarioRepo),
       RegistrarOcorrenciaDeDespesa(repository: calendarioRepo),
       AtualizarDespesa(repository: despesasRepo),
+      ApagarDespesa(repository: despesasRepo),
       RecuperarCategoriasDespesa(repository: _FakeCategoriasRepository()),
       RecuperarOrigensPagamentoDespesa(repository: _FakeOrigensRepository()),
     );
@@ -155,6 +162,25 @@ void main() {
       expect(despesasRepo.chamadaAtualizar?.categoriaId, 3);
       expect(despesasRepo.chamadaAtualizar?.origemPagamentoId, 4);
       expect(calendarioRepo.chamadaOcorrencia, isNull);
+    },
+  );
+
+  blocTest<CalendarioDeDespesasBloc, CalendarioDeDespesasState>(
+    'apagar só este mês de recorrente virtual cancela o mês; apagar tudo chama DELETE com escopo todas',
+    build: build,
+    act: (bloc) async {
+      bloc.add(CalendarioDeDespesasIniciou(empresaId: 1));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(CalendarioDeDespesasOcorrenciaApagada(id: 10, virtual: true, escopo: EscopoExclusaoDespesa.esta));
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      bloc.add(CalendarioDeDespesasOcorrenciaApagada(id: 30, virtual: false, escopo: EscopoExclusaoDespesa.todas));
+    },
+    wait: const Duration(milliseconds: 20),
+    verify: (bloc) {
+      expect(calendarioRepo.chamadaOcorrencia?.status, StatusDespesa.cancelado);
+      expect(despesasRepo.chamadaApagar, (id: 30, escopo: EscopoExclusaoDespesa.todas));
+      expect(bloc.state.processando, isEmpty);
+      expect(bloc.state.step, CalendarioDeDespesasStep.carregado);
     },
   );
 }

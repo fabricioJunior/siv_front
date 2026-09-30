@@ -1,5 +1,14 @@
 import 'package:core/equals.dart';
 
+/// Até onde apagar: só a linha (ou o mês, numa recorrente) ou a série toda
+/// (todas as parcelas / toda a recorrência).
+enum EscopoExclusaoDespesa {
+  esta,
+  todas;
+
+  String get value => name;
+}
+
 enum StatusDespesa {
   pendente,
   pago,

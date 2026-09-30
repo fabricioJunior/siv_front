@@ -4,6 +4,7 @@ import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
+import 'package:produtos/presentantion/widgets/grade_quantidade_etiquetas.dart';
 
 class ImpressaoDeEtiquetasPage extends StatelessWidget {
   final SeletorWidget tabelasDePrecoSeletor;
@@ -417,95 +418,19 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
     BuildContext context,
     ImpressaoEtiquetasState state,
   ) {
-    // Uma linha por cor × estampa (mesma cor com estampas diferentes são linhas distintas).
-    final linhas =
-        {
-          for (final p in state.produtos)
-            if (p.cor != null) '${p.cor!.id}|${p.estampaId ?? ''}': p,
-        }.values.toList()..sort((a, b) {
-          final porCor = a.cor!.nome.toLowerCase().compareTo(
-            b.cor!.nome.toLowerCase(),
-          );
-          return porCor != 0
-              ? porCor
-              : (a.estampa?.nome ?? '').toLowerCase().compareTo(
-                  (b.estampa?.nome ?? '').toLowerCase(),
-                );
-        });
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: [
-          const DataColumn(label: Text('Cor · Estampa \\ Tamanho')),
-          ...state.tamanhos.map(
-            (tamanho) => DataColumn(label: Text(tamanho.nome)),
+    return GradeQuantidadeEtiquetas(
+      produtos: state.produtos,
+      tamanhos: state.tamanhos,
+      mapaProduto: state.mapaCorTamanhoParaProduto,
+      quantidades: state.quantidadesPorProdutoId,
+      controllerDe: _getController,
+      aoAlterar: (produtoId, quantidade) =>
+          context.read<ImpressaoEtiquetasBloc>().add(
+            ImpressaoEtiquetasQuantidadeAlterada(
+              produtoId: produtoId,
+              quantidade: quantidade,
+            ),
           ),
-        ],
-        rows: linhas
-            .map((linha) {
-              final cor = linha.cor!;
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Text(
-                      linha.estampa == null
-                          ? cor.nome
-                          : '${cor.nome} · ${linha.estampa!.nome}',
-                    ),
-                  ),
-                  ...state.tamanhos.map((tamanho) {
-                    // Mesma origem de ids do bloc (cor.id / tamanho.id dos objetos), senão a chave não bate.
-                    final chave = cor.id == null || tamanho.id == null
-                        ? null
-                        : chaveComboGrade(cor.id!, tamanho.id!, linha.estampaId);
-                    final produto = chave == null
-                        ? null
-                        : state.mapaCorTamanhoParaProduto[chave];
-
-                    if (produto?.id == null) {
-                      return const DataCell(Center(child: Text('-')));
-                    }
-
-                    final produtoId = produto!.id!;
-                    final controller = _getController(
-                      produtoId,
-                      state.quantidadesPorProdutoId[produtoId] ?? 0,
-                    );
-
-                    return DataCell(
-                      SizedBox(
-                        width: 72,
-                        child: TextField(
-                          controller: controller,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: '0',
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 8,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            final parsed = int.tryParse(value.trim()) ?? 0;
-                            context.read<ImpressaoEtiquetasBloc>().add(
-                              ImpressaoEtiquetasQuantidadeAlterada(
-                                produtoId: produtoId,
-                                quantidade: parsed,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              );
-            })
-            .toList(growable: false),
-      ),
     );
   }
 

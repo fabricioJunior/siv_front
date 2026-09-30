@@ -170,38 +170,65 @@ class _RelatorioDeDespesasBodyState extends State<RelatorioDeDespesasBody> {
     );
   }
 
+  List<CategoriaDespesa> get _categoriasAtivas =>
+      _categorias.where((c) => !c.inativa && c.id != null).toList();
+
+  Future<void> _escolherCategorias() async {
+    final escolhidas = await showModalBottomSheet<Set<int>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      // Em tela larga vira um painel centralizado, não uma folha esticada.
+      constraints: const BoxConstraints(maxWidth: 520),
+      builder: (_) => _SeletorDeCategorias(
+        categorias: _categoriasAtivas,
+        selecionadas: _categoriaIds,
+      ),
+    );
+    if (escolhidas == null) return;
+    setState(() {
+      _categoriaIds
+        ..clear()
+        ..addAll(escolhidas);
+    });
+  }
+
   Widget _filtros() {
     String data(DateTime d) =>
         '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    final categorias = _categorias.where((c) => !c.inativa && c.id != null).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final nomes = [
+      for (final c in _categoriasAtivas)
+        if (_categoriaIds.contains(c.id)) c.nome,
+    ];
+    final rotuloCategorias = nomes.isEmpty
+        ? 'Todas as categorias'
+        : nomes.length == 1
+            ? nomes.first
+            : '${nomes.length} categorias';
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         OutlinedButton.icon(
           onPressed: _escolherPeriodo,
           icon: const Icon(Icons.date_range, size: 18),
           label: Text('${data(_inicio)} a ${data(_fim)}'),
         ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            ChoiceChip(
-              label: const Text('Todas as categorias'),
-              selected: _categoriaIds.isEmpty,
-              onSelected: (_) => setState(_categoriaIds.clear),
-            ),
-            for (final c in categorias)
-              FilterChip(
-                label: Text(c.nome),
-                selected: _categoriaIds.contains(c.id!),
-                onSelected: (v) => setState(() {
-                  v ? _categoriaIds.add(c.id!) : _categoriaIds.remove(c.id!);
-                }),
-              ),
-          ],
+        OutlinedButton.icon(
+          onPressed: _escolherCategorias,
+          icon: const Icon(Icons.category_outlined, size: 18),
+          label: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Text(rotuloCategorias,
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
         ),
+        if (_categoriaIds.isNotEmpty)
+          TextButton(
+            onPressed: () => setState(_categoriaIds.clear),
+            child: const Text('Limpar'),
+          ),
       ],
     );
   }
@@ -409,6 +436,112 @@ class _RelatorioDeDespesasBodyState extends State<RelatorioDeDespesasBody> {
               trailing: Text(formatarReais(d.valor)),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Folha com busca e caixas de seleção -- no celular sobe de baixo, em tela
+/// larga fica centralizada. Só aplica ao confirmar.
+class _SeletorDeCategorias extends StatefulWidget {
+  final List<CategoriaDespesa> categorias;
+  final Set<int> selecionadas;
+
+  const _SeletorDeCategorias({
+    required this.categorias,
+    required this.selecionadas,
+  });
+
+  @override
+  State<_SeletorDeCategorias> createState() => _SeletorDeCategoriasState();
+}
+
+class _SeletorDeCategoriasState extends State<_SeletorDeCategorias> {
+  late final Set<int> _marcadas = {...widget.selecionadas};
+  String _busca = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final visiveis = [
+      for (final c in widget.categorias)
+        if (c.nome.toLowerCase().contains(_busca.toLowerCase())) c,
+    ];
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.75,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text('Categorias',
+                        style: Theme.of(context).textTheme.titleMedium),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(_marcadas.clear),
+                    child: const Text('Limpar'),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _marcadas.addAll(
+                        [for (final c in visiveis) c.id!])),
+                    child: const Text('Todas'),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.categorias.length > 6)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Buscar categoria',
+                    isDense: true,
+                  ),
+                  onChanged: (v) => setState(() => _busca = v),
+                ),
+              ),
+            Expanded(
+              child: ListView(
+                children: [
+                  for (final c in visiveis)
+                    CheckboxListTile(
+                      dense: true,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Text(c.nome),
+                      value: _marcadas.contains(c.id),
+                      onChanged: (v) => setState(() =>
+                          v == true ? _marcadas.add(c.id!) : _marcadas.remove(c.id!)),
+                    ),
+                  if (visiveis.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: Text('Nenhuma categoria encontrada.')),
+                    ),
+                ],
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context, _marcadas),
+                    child: Text(_marcadas.isEmpty
+                        ? 'Aplicar (todas)'
+                        : 'Aplicar (${_marcadas.length})'),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

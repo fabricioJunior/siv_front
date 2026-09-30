@@ -10,6 +10,7 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
+import 'package:flutter/foundation.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/use_cases.dart';
 
@@ -17,6 +18,19 @@ part 'pagamentos_realizados_event.dart';
 part 'pagamentos_realizados_state.dart';
 
 final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+// Diagnóstico do fluxo de cupom/promoção no caixa. Só imprime em debug (kDebugMode).
+void _logCupom(String mensagem) {
+  if (kDebugMode) debugPrint('[CUPOM] $mensagem');
+}
+
+String _descreverOpcoes(Map<int, OpcaoElegivel> escolhas) => escolhas.isEmpty
+    ? '{}'
+    : escolhas.entries
+        .map((e) =>
+            'produto ${e.key} -> ${e.value.tipo}#${e.value.id} '
+            '"${e.value.nome}" desc/un=${e.value.valorDesconto}')
+        .join(' | ');
 
 class PagamentosRealizadosBloc
     extends Bloc<PagamentosRealizadosEvent, PagamentosRealizadosState> {
@@ -647,6 +661,21 @@ class PagamentosRealizadosBloc
       return;
     }
 
+    // Venda 100% zerada por cupom: o backend aceita linha de pagamento de valor 0
+    // (ReceberService.validarValoresDePagamento) -- só nesse caso; sem cupom o valor continua > 0.
+    final vendaZeradaPorCupom = state.valorTotalAPagar <= 0.01 &&
+        state.promocaoEscolhidaPorItem.values.any((opcao) => opcao.ehCupom);
+
+    if (vendaZeradaPorCupom && state.linhas.isEmpty) {
+      emit(
+        state.copyWith(
+          erro: 'Informe uma forma de pagamento (valor R\$ 0,00) para '
+              'concluir a venda zerada pelo cupom.',
+        ),
+      );
+      return;
+    }
+
     final linhasValidadas = <PagamentoRealizadoLinha>[];
     for (final linha in state.linhas) {
       if (linha.formaDePagamento == null) {
@@ -658,8 +687,10 @@ class PagamentosRealizadosBloc
         return;
       }
 
-      final valor = _toDouble(linha.valorTexto);
-      if (valor == null || valor <= 0) {
+      // Sem valor digitado, venda zerada por cupom vale 0 (nada a cobrar).
+      final valor =
+          _toDouble(linha.valorTexto) ?? (vendaZeradaPorCupom ? 0.0 : null);
+      if (valor == null || valor < 0 || (valor == 0 && !vendaZeradaPorCupom)) {
         emit(state.copyWith(
             erro: 'Informe um valor válido em todas as linhas.'));
         return;
@@ -749,6 +780,12 @@ class PagamentosRealizadosBloc
       final linha = entry.value;
       return linha.toJson(controle: entry.key + 1);
     }).toList(growable: false);
+    _logCupom(
+      'FECHAMENTO | cupomAplicado=${state.cupomCodigoAplicado} | '
+      'escolhas: ${_descreverOpcoes(state.promocaoEscolhidaPorItem)} | '
+      'total produtos=${state.valorTotalProdutos} desc promo/cupom=${state.valorDescontoPromocaoTotal} '
+      'total a pagar=$totalAPagar | linhas pgto=${linhasValidadas.length}',
+    );
 
     emit(
       state.copyWith(
@@ -869,7 +906,13 @@ class PagamentosRealizadosBloc
       try {
         final leitorData =
             await _leitorDataDatasource.getDataPorProdutoId(produto.produtoId);
-        if (leitorData == null) continue;
+        if (leitorData == null) {
+          _logCupom(
+            'PULADO produto ${produto.produtoId}: leitor local não achou '
+            '(sem produto/código de barras no Isar) -> não vai pra apuração',
+          );
+          continue;
+        }
 
         itens[produto.produtoId] = ItemApuracaoElegibilidade(
           referenciaId: leitorData.idReferencia,
@@ -882,6 +925,10 @@ class PagamentosRealizadosBloc
       }
     }
 
+    _logCupom(
+      'itens p/ apuração (${itens.length}/${produtos.length}): '
+      '${itens.values.map((i) => "produto ${i.produtoId} ref ${i.referenciaId} qtd ${i.quantidade} un=${i.valorUnitario}").join(" | ")}',
+    );
     return itens;
   }
 
@@ -1031,6 +1078,12 @@ class PagamentosRealizadosBloc
     }
 
     final produtos = state.resumo?.produtosCompartilhados ?? const [];
+    _logCupom(
+      'APLICAR "$codigo" | cliente=${state.pessoaId} | carrinho='
+      '${produtos.map((p) => "produto ${p.produtoId} qtd ${p.quantidade} un=${p.valorUnitario}").join(" | ")} '
+      '| escolhas atuais: ${_descreverOpcoes(state.promocaoEscolhidaPorItem)} '
+      '| desconto manual por item: ${state.descontosItensAplicado}',
+    );
     emit(state.copyWith(carregandoElegibilidade: true, cupomErro: null));
 
     try {
@@ -1039,6 +1092,10 @@ class PagamentosRealizadosBloc
         clienteId: state.pessoaId,
         itens: itens.values.toList(),
         codigoCupom: codigo,
+      );
+      _logCupom(
+        'RESPOSTA apuração: cupomInvalido=${resultado.cupomInvalido} | '
+        '${resultado.itens.map((i) => "ref ${i.referenciaId}: [${i.opcoesElegiveis.map((o) => "${o.tipo}#${o.id} desc/un=${o.valorDesconto} final/un=${o.valorFinalUnitario}").join(", ")}]").join(" | ")}',
       );
 
       if (resultado.cupomInvalido != null) {
@@ -1058,12 +1115,20 @@ class PagamentosRealizadosBloc
         state.promocaoEscolhidaPorItem,
         state.descontosItensAplicado,
       );
+      _logCupom(
+        'opções por produto: ${opcoesPorItem.entries.map((e) => "produto ${e.key}: ${e.value.length} opção(ões) [${e.value.map((o) => "${o.tipo}#${o.id}").join(",")}]").join(" | ")} '
+        '=> escolhas após auto-aplicar: ${_descreverOpcoes(escolhas)}',
+      );
 
       // Cupom válido mas que não chegou a nenhum item: não mostrar "Cupom aplicado"
       // (falso positivo) -- diz o motivo e deixa o campo livre pra outro código.
       if (!escolhas.values.any((opcao) => opcao.ehCupom)) {
         final haviaOpcaoDeCupom = opcoesPorItem.values.any(
           (opcoes) => opcoes.any((opcao) => opcao.ehCupom),
+        );
+        _logCupom(
+          'NÃO APLICADO "$codigo": haviaOpcaoDeCupom=$haviaOpcaoDeCupom '
+          '(false = apuração não devolveu cupom p/ nenhum item; true = item já tinha promoção/desconto)',
         );
         emit(
           state.copyWith(
@@ -1092,7 +1157,12 @@ class PagamentosRealizadosBloc
           cupomErro: null,
         ),
       );
+      _logCupom(
+        'APLICADO "$codigo" | desconto promo/cupom total=${state.valorDescontoPromocaoTotal} '
+        '| total c/ desconto=${state.valorTotalComDesconto} | total a pagar=${state.valorTotalAPagar}',
+      );
     } catch (e, s) {
+      _logCupom('ERRO ao aplicar "$codigo": $e');
       emit(
         state.copyWith(
           carregandoElegibilidade: false,

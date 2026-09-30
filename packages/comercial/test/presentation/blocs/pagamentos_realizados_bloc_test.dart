@@ -6,6 +6,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc_test.dart';
 import 'package:core/leitor.dart';
 import 'package:core/produtos_compartilhados.dart';
+import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promocoes/models.dart';
@@ -346,6 +347,77 @@ void main() {
     verify: (bloc) {
       expect(bloc.state.possuiCupomAplicado, isFalse);
       expect(bloc.state.cupomErro, contains('não é acumulável'));
+    },
+  );
+
+
+  PagamentosRealizadosState estadoVendaDe199({required bool comCupom, String valorTexto = ''}) =>
+      PagamentosRealizadosState(
+        resumo: const PagamentosRealizadosResumo(
+          listaCompartilhada: null,
+          produtosCompartilhados: [_produto199],
+          quantidadeTotalProdutos: 1,
+          valorTotalProdutos: 199,
+        ),
+        promocaoEscolhidaPorItem: comCupom
+            ? {
+                9: const OpcaoElegivel(
+                  tipo: 'cupom',
+                  id: 3,
+                  nome: 'Cupom PRICILLA200',
+                  valorDesconto: 199,
+                  valorFinalUnitario: 0,
+                ),
+              }
+            : const {},
+        cupomCodigoAplicado: comCupom ? 'PRICILLA200' : null,
+        linhas: [
+          PagamentoRealizadoLinha(
+            id: 'l1',
+            formaDePagamento: SelectData(
+              id: 1,
+              nome: 'Dinheiro',
+              data: const {'tipo': 'dinheiro'},
+            ),
+            valorTexto: valorTexto,
+            parcelasTexto: '1',
+          ),
+        ],
+      );
+
+  PagamentosRealizadosBloc blocDeFechamento() => PagamentosRealizadosBloc(
+        _StubCarregarResumo(),
+        _StubBuscarSaldoCreditoDevolucao(),
+        _StubVerificarElegibilidadeFidelidade(),
+        _StubVerificarPermiteNotaFiscalEmail(),
+        _FakeAcessoGlobalSessao(),
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: [])),
+        _FakeLeitorDataDatasource({9: 900}),
+      );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'fecha venda zerada por cupom com pagamento de valor 0 (valor em branco)',
+    build: blocDeFechamento,
+    seed: () => estadoVendaDe199(comCupom: true),
+    act: (bloc) => bloc.add(const PagamentosRealizadosFinalizacaoSolicitada()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.erro, isNull);
+      expect(bloc.state.step, PagamentosRealizadosStep.concluido);
+      expect(bloc.state.resultado, hasLength(1));
+      expect(bloc.state.resultado.first['valor'], 0);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'sem cupom, total a pagar > 0 continua exigindo valor maior que zero',
+    build: blocDeFechamento,
+    seed: () => estadoVendaDe199(comCupom: false, valorTexto: '0'),
+    act: (bloc) => bloc.add(const PagamentosRealizadosFinalizacaoSolicitada()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.erro, 'Informe um valor válido em todas as linhas.');
+      expect(bloc.state.step, isNot(PagamentosRealizadosStep.concluido));
     },
   );
 

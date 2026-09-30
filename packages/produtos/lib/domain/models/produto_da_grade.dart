@@ -7,6 +7,8 @@ class ProdutoDaGrade extends Equatable {
   final String corNome;
   final int tamanhoId;
   final String tamanhoNome;
+  final int? estampaId;
+  final String? estampaNome;
   final List<String> codigosBarras;
   final int saldo;
 
@@ -17,6 +19,8 @@ class ProdutoDaGrade extends Equatable {
     required this.corNome,
     required this.tamanhoId,
     required this.tamanhoNome,
+    this.estampaId,
+    this.estampaNome,
     required this.codigosBarras,
     required this.saldo,
   });
@@ -29,6 +33,8 @@ class ProdutoDaGrade extends Equatable {
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaId,
+    estampaNome,
     codigosBarras,
     saldo,
   ];

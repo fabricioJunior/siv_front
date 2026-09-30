@@ -27,3 +27,24 @@ class ReferenciaCarregarSucesso extends ReferenciaState {
 class ReferenciaCarregarFalha extends ReferenciaState {
   const ReferenciaCarregarFalha();
 }
+
+class ReferenciaSalvarEmProgresso extends ReferenciaState {
+  @override
+  final Referencia referencia;
+
+  const ReferenciaSalvarEmProgresso({required this.referencia});
+}
+
+class ReferenciaSalvarSucesso extends ReferenciaState {
+  @override
+  final Referencia referencia;
+
+  const ReferenciaSalvarSucesso({required this.referencia});
+}
+
+class ReferenciaSalvarFalha extends ReferenciaState {
+  @override
+  final Referencia referencia;
+
+  const ReferenciaSalvarFalha({required this.referencia});
+}

@@ -151,6 +151,81 @@ final _itensDespesasFilhos = despesasAcordeaoItens
     .map(_deAcordeaoFilho)
     .toList();
 
+final _itensProdutosFilhos = <_ItemFilhoNav>[
+  const _ItemFilhoNav(
+    label: 'Referências',
+    rota: '/referencias',
+    componentesNecessarios: ['PRDFM003'],
+    grupo: 'CATÁLOGO',
+  ),
+  const _ItemFilhoNav(
+    label: 'Tabelas de preço',
+    rota: '/tabelas_de_preco',
+    componentesNecessarios: ['PRDFM010'],
+    grupo: 'CATÁLOGO',
+  ),
+  const _ItemFilhoNav(
+    label: 'Importar produtos',
+    rota: '/importar_produtos',
+    componentesNecessarios: ['IMPFP001'],
+    grupo: 'CATÁLOGO',
+  ),
+  const _ItemFilhoNav(
+    label: 'Categorias',
+    rota: '/categorias',
+    componentesNecessarios: ['PRDFM004'],
+    grupo: 'ATRIBUTOS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Cores',
+    rota: '/cores',
+    componentesNecessarios: ['PRDFM001'],
+    grupo: 'ATRIBUTOS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Tamanhos',
+    rota: '/tamanhos',
+    componentesNecessarios: ['PRDFM001'],
+    grupo: 'ATRIBUTOS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Estampas',
+    rota: '/estampas',
+    componentesNecessarios: ['PRDFM013'],
+    grupo: 'ATRIBUTOS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Marcas',
+    rota: '/marcas',
+    componentesNecessarios: ['PRDFM006'],
+    grupo: 'ATRIBUTOS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Imprimir etiquetas',
+    rota: '/impressao_etiquetas',
+    componentesNecessarios: ['PRDFM003'],
+    grupo: 'ETIQUETAS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Modelos de etiqueta',
+    rota: '/etiquetas',
+    componentesNecessarios: ['PRDFM003'],
+    grupo: 'ETIQUETAS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Sem NCM',
+    rota: '/referencias_pendentes_ncm',
+    componentesNecessarios: ['PRDFM004'],
+    grupo: 'PENDÊNCIAS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Sem peso',
+    rota: '/referencias_pendentes_peso',
+    componentesNecessarios: ['PRDFM004'],
+    grupo: 'PENDÊNCIAS',
+  ),
+];
+
 final _itensEcommerceFilhos = <_ItemFilhoNav>[
   const _ItemFilhoNav(
     label: 'Pedidos do e-commerce',
@@ -208,8 +283,10 @@ final _itensGestao = <_ItemDeNavegacao>[
   _ItemDeNavegacao(
     label: 'Produtos',
     icone: Icons.checkroom_outlined,
-    rota: '/menu_produtos',
-    componentesNecessarios: componentesPorFluxo['Produtos']!,
+    // Item-acordeão (catálogo, atributos, etiquetas, pendências) -- era rota
+    // única pra '/menu_produtos', virou lista expansível igual Comercial.
+    componentesNecessarios: _uniaoComponentes(_itensProdutosFilhos),
+    filhos: _itensProdutosFilhos,
   ),
   _ItemDeNavegacao(
     label: 'E-commerce',
@@ -406,6 +483,7 @@ class _AppShellCascaState extends State<_AppShellCasca> {
             .map(
               (filho) => SivMenuLateralFilho(
                 label: filho.label,
+                grupo: filho.grupo,
                 selecionado: filho.rota == widget.rotaAtual,
                 onTap: filho.rota == widget.rotaAtual
                     ? null

@@ -24,6 +24,14 @@ class DespesasRepository implements IDespesasRepository {
   }
 
   @override
+  Future<void> apagarDespesa(
+    int id, {
+    EscopoExclusaoDespesa escopo = EscopoExclusaoDespesa.esta,
+  }) {
+    return remoteDataSource.apagarDespesa(id, escopo: escopo);
+  }
+
+  @override
   Future<Despesa> atualizarDespesa(
     int id, {
     double? valor,

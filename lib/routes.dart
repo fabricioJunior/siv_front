@@ -432,7 +432,36 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/ecommerces': (context) {
-    return _rotaProtegida(route: '/ecommerces', child: const EcommercesPage());
+    return _rotaProtegida(
+      route: '/ecommerces',
+      child: EcommercesPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preço',
+        ),
+        empresaSeletor: (data) => EmpresaSeletor(
+          titulo: 'Empresa de estoque',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+        ),
+        terminalSeletor: ({
+          required empresaId,
+          tipoFiltro,
+          required data,
+        }) =>
+            TerminalSeletor(
+          empresaId: empresaId,
+          tipoFiltro: tipoFiltro,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+        ),
+      ),
+    );
   },
   '/configuracao_ecommerce': (context) {
     final routeArgs = args(context);
@@ -449,6 +478,31 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: EcommerceConfiguracaoPage(
         empresaId: empresaId,
         ecommerceId: ecommerceId,
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preço',
+        ),
+        empresaSeletor: (data) => EmpresaSeletor(
+          titulo: 'Empresa de estoque',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+        ),
+        terminalSeletor: ({
+          required empresaId,
+          tipoFiltro,
+          required data,
+        }) =>
+            TerminalSeletor(
+          empresaId: empresaId,
+          tipoFiltro: tipoFiltro,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+        ),
       ),
     );
   },
@@ -465,6 +519,13 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/listas_personalizadas',
       child: ListaPersonalizadaPage(
         listaId: idArg is int ? idArg : int.tryParse(idArg?.toString() ?? ''),
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preço',
+        ),
       ),
     );
   },
@@ -942,7 +1003,15 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consultar_produto': (context) {
     return _rotaProtegida(
       route: '/consultar_produto',
-      child: const ConsultarProdutoPage(),
+      child: ConsultarProdutoPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preço',
+        ),
+      ),
     );
   },
   '/produto': (context) {

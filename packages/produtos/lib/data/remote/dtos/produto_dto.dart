@@ -37,13 +37,17 @@ class ProdutoDto implements Produto {
   });
 
   factory ProdutoDto.fromJson(Map<String, dynamic> json) {
+    // GET /produtos não serializa corId/tamanhoId/estampaId (@Exclude na entity); só os objetos
+    // aninhados. Sem esse fallback os ids chegam 0/null e a estampa some.
+    int? idAninhado(String chave) => ((json[chave] as Map?)?['id'] as num?)?.toInt();
+
     return ProdutoDto(
       id: (json['id'] as num?)?.toInt(),
       referenciaId: (json['referenciaId'] as num?)?.toInt() ?? 0,
       idExterno: (json['idExterno'] ?? '').toString(),
-      corId: (json['corId'] as num?)?.toInt() ?? 0,
-      tamanhoId: (json['tamanhoId'] as num?)?.toInt() ?? 0,
-      estampaId: (json['estampaId'] as num?)?.toInt(),
+      corId: (json['corId'] as num?)?.toInt() ?? idAninhado('cor') ?? 0,
+      tamanhoId: (json['tamanhoId'] as num?)?.toInt() ?? idAninhado('tamanho') ?? 0,
+      estampaId: (json['estampaId'] as num?)?.toInt() ?? idAninhado('estampa'),
       tamanho: json['tamanho'] != null
           ? TamanhoDto.fromJson(json['tamanho'] as Map<String, dynamic>)
           : null,

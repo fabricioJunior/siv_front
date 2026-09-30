@@ -16,6 +16,7 @@ class CalendarioDeDespesasBloc
   final RecuperarCalendarioDeDespesas _recuperarCalendario;
   final RegistrarOcorrenciaDeDespesa _registrarOcorrencia;
   final AtualizarDespesa _atualizarDespesa;
+  final ApagarDespesa _apagarDespesa;
   final RecuperarCategoriasDespesa _recuperarCategorias;
   final RecuperarOrigensPagamentoDespesa _recuperarOrigens;
 
@@ -23,12 +24,14 @@ class CalendarioDeDespesasBloc
     this._recuperarCalendario,
     this._registrarOcorrencia,
     this._atualizarDespesa,
+    this._apagarDespesa,
     this._recuperarCategorias,
     this._recuperarOrigens,
   ) : super(const CalendarioDeDespesasInitial()) {
     on<CalendarioDeDespesasIniciou>(_onIniciou);
     on<CalendarioDeDespesasMesAlterado>(_onMesAlterado);
     on<CalendarioDeDespesasOcorrenciaRegistrada>(_onOcorrenciaRegistrada);
+    on<CalendarioDeDespesasOcorrenciaApagada>(_onOcorrenciaApagada);
   }
 
   FutureOr<void> _onIniciou(
@@ -78,8 +81,8 @@ class CalendarioDeDespesasBloc
   FutureOr<void> _onOcorrenciaRegistrada(
     CalendarioDeDespesasOcorrenciaRegistrada event,
     Emitter<CalendarioDeDespesasState> emit,
-  ) async {
-    try {
+  ) {
+    return _processar(emit, event.id, () async {
       if (event.virtual) {
         // Ainda não existe uma linha de despesa pra esse mês (recorrente) --
         // materializa via endpoint de ocorrências.
@@ -104,9 +107,58 @@ class CalendarioDeDespesasBloc
           status: event.status,
         );
       }
-      await _carregar(emit, empresaId: state.empresaId, ano: state.ano, mes: state.mes);
+    }, 'Falha ao registrar a ocorrência.');
+  }
+
+  FutureOr<void> _onOcorrenciaApagada(
+    CalendarioDeDespesasOcorrenciaApagada event,
+    Emitter<CalendarioDeDespesasState> emit,
+  ) {
+    return _processar(emit, event.id, () async {
+      if (event.virtual && event.escopo == EscopoExclusaoDespesa.esta) {
+        // Só este mês de uma recorrente: não há linha pra apagar, então o mês
+        // é materializado como cancelado.
+        await _registrarOcorrencia.call(
+          event.id,
+          ano: state.ano,
+          mes: state.mes,
+          status: StatusDespesa.cancelado,
+        );
+      } else {
+        await _apagarDespesa.call(event.id, escopo: event.escopo);
+      }
+    }, 'Falha ao apagar a despesa.');
+  }
+
+  /// Roda [acao] e recarrega o mês sem trocar o `step` -- só a ocorrência
+  /// [chave] fica em `processando` (loading no card, não na tela toda).
+  Future<void> _processar(
+    Emitter<CalendarioDeDespesasState> emit,
+    int chave,
+    Future<void> Function() acao,
+    String mensagemDeErro,
+  ) async {
+    final ano = state.ano;
+    final mes = state.mes;
+    emit(state.copyWith(processando: {...state.processando, chave}, erro: null));
+    try {
+      await acao();
+      final ocorrencias = await _recuperarCalendario.call(
+        empresaId: state.empresaId,
+        ano: ano,
+        mes: mes,
+      );
+      // O usuário pode ter trocado de mês enquanto isso rodava.
+      final mesmoMes = state.ano == ano && state.mes == mes;
+      emit(state.copyWith(
+        ocorrencias: mesmoMes ? ocorrencias : null,
+        processando: {...state.processando}..remove(chave),
+      ));
     } catch (e, s) {
-      emit(state.copyWith(step: CalendarioDeDespesasStep.carregado, erro: 'Falha ao registrar a ocorrência.'));
+      emit(state.copyWith(
+        processando: {...state.processando}..remove(chave),
+        erro: mensagemDeErro,
+      ));
       addError(e, s);
     }
   }

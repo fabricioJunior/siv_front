@@ -103,3 +103,5 @@ export 'domain/use_cases/listar_listas_personalizadas.dart';
 export 'domain/use_cases/importacao/baixar_template_importacao_pedidos.dart';
 export 'domain/use_cases/importacao/importar_pedidos_csv.dart';
 export 'domain/use_cases/importacao/consultar_importacao_pedido.dart';
+export 'domain/use_cases/verificar_exige_cliente_na_venda.dart';
+export 'domain/use_cases/verificar_permite_nota_fiscal_email.dart';

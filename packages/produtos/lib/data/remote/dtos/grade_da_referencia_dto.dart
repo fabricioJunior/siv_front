@@ -47,6 +47,8 @@ class _ProdutoDaGradeDto {
       corNome: (json['corNome'] ?? '').toString(),
       tamanhoId: (json['tamanhoId'] as num?)?.toInt() ?? 0,
       tamanhoNome: (json['tamanhoNome'] ?? '').toString(),
+      estampaId: (json['estampaId'] as num?)?.toInt(),
+      estampaNome: json['estampaNome']?.toString(),
       codigosBarras: codigosJson.map((e) => e.toString()).toList(),
       saldo: (json['saldo'] as num?)?.toInt() ?? 0,
     );

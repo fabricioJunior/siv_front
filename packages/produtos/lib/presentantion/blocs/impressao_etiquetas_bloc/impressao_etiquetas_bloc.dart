@@ -5,8 +5,9 @@ import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
-import 'package:precos/use_cases.dart';
 import 'package:produtos/models.dart';
+import 'package:produtos/presentantion/blocs/produtos_da_referencia_bloc/produtos_da_referencia_bloc.dart'
+    show chaveComboGrade;
 import 'package:produtos/use_cases.dart';
 
 part 'impressao_etiquetas_event.dart';
@@ -127,7 +128,8 @@ class ImpressaoEtiquetasBloc
         }
 
         if (cor?.id != null && tamanho?.id != null) {
-          final chave = '${cor!.id}_${tamanho!.id}';
+          // Estampa entra na chave: mesma cor/tamanho com estampas diferentes são produtos distintos.
+          final chave = chaveComboGrade(cor!.id!, tamanho!.id!, produto.estampaId);
           mapaCorTamanhoParaProduto[chave] = produto;
         }
       }
@@ -204,7 +206,7 @@ class ImpressaoEtiquetasBloc
         referenciaId: referencia!.id!,
       );
 
-      if (precoDaReferencia.valor <= 0) {
+      if (precoDaReferencia <= 0) {
         emit(
           state.copyWith(
             processando: false,
@@ -251,12 +253,14 @@ class ImpressaoEtiquetasBloc
 
         final cor = produto.cor?.nome ?? 'SEM COR';
         final tamanho = produto.tamanho?.nome ?? 'SEM TAMANHO';
+        final estampa = produto.estampa?.nome;
+        final corExibicao = estampa == null ? cor : '$cor · $estampa';
         final codigoStorage = await _recuperarCodigoDeBarrasDoProduto(
           produtoId: produtoId,
         );
 
         if (codigoStorage == null || codigoStorage.trim().isEmpty) {
-          combinacoesSemCodigo.add('$cor/$tamanho');
+          combinacoesSemCodigo.add('$corExibicao/$tamanho');
           continue;
         }
 
@@ -264,6 +268,7 @@ class ImpressaoEtiquetasBloc
           requisicoes.add(
             _RequisicaoEtiqueta(
               cor: cor,
+              corExibicao: corExibicao,
               tamanho: tamanho,
               codigoBarras: codigoStorage.trim(),
             ),
@@ -328,7 +333,7 @@ class ImpressaoEtiquetasBloc
             cor: requisicao.cor,
             tamanho: requisicao.tamanho,
             codigoBarras: requisicao.codigoBarras,
-            preco: precoDaReferencia.valor,
+            preco: precoDaReferencia,
             descricao: referencia.nome,
             limitesCaracteres: limitesCaracteres,
           );
@@ -336,10 +341,10 @@ class ImpressaoEtiquetasBloc
           novosItens.add(
             EtiquetaImpressaoItem.create(
               descricao:
-                  '${referencia.nome} | Cor: ${requisicao.cor} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
+                  '${referencia.nome} | Cor: ${requisicao.corExibicao} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
               zpl: zplProcessado,
               referencia: referencia.nome,
-              cor: requisicao.cor,
+              cor: requisicao.corExibicao,
               tamanho: requisicao.tamanho,
               viaOrdem: via.ordem,
             ),
@@ -686,11 +691,14 @@ double _rankTamanho(String nome) {
 
 class _RequisicaoEtiqueta {
   final String cor;
+  // Cor + estampa, só pra exibição na tela/pilha; o ZPL continua recebendo [cor].
+  final String corExibicao;
   final String tamanho;
   final String codigoBarras;
 
   const _RequisicaoEtiqueta({
     required this.cor,
+    required this.corExibicao,
     required this.tamanho,
     required this.codigoBarras,
   });

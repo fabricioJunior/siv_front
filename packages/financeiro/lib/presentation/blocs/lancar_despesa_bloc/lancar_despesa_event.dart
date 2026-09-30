@@ -21,6 +21,7 @@ class LancarDespesaCampoAlterado extends LancarDespesaEvent {
   final DateTime? dataPagamento;
   final int? diaVencimento;
   final int? parcelas;
+  final bool? pago;
 
   LancarDespesaCampoAlterado({
     this.modo,
@@ -33,6 +34,7 @@ class LancarDespesaCampoAlterado extends LancarDespesaEvent {
     this.dataPagamento,
     this.diaVencimento,
     this.parcelas,
+    this.pago,
   });
 }
 

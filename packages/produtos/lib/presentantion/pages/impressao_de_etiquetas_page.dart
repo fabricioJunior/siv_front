@@ -417,23 +417,51 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
     BuildContext context,
     ImpressaoEtiquetasState state,
   ) {
+    // Uma linha por cor × estampa (mesma cor com estampas diferentes são linhas distintas).
+    final linhas =
+        {
+          for (final p in state.produtos)
+            if (p.cor != null) '${p.cor!.id}|${p.estampaId ?? ''}': p,
+        }.values.toList()..sort((a, b) {
+          final porCor = a.cor!.nome.toLowerCase().compareTo(
+            b.cor!.nome.toLowerCase(),
+          );
+          return porCor != 0
+              ? porCor
+              : (a.estampa?.nome ?? '').toLowerCase().compareTo(
+                  (b.estampa?.nome ?? '').toLowerCase(),
+                );
+        });
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: [
-          const DataColumn(label: Text('Cor \\ Tamanho')),
+          const DataColumn(label: Text('Cor · Estampa \\ Tamanho')),
           ...state.tamanhos.map(
             (tamanho) => DataColumn(label: Text(tamanho.nome)),
           ),
         ],
-        rows: state.cores
-            .map((cor) {
+        rows: linhas
+            .map((linha) {
+              final cor = linha.cor!;
               return DataRow(
                 cells: [
-                  DataCell(Text(cor.nome)),
+                  DataCell(
+                    Text(
+                      linha.estampa == null
+                          ? cor.nome
+                          : '${cor.nome} · ${linha.estampa!.nome}',
+                    ),
+                  ),
                   ...state.tamanhos.map((tamanho) {
-                    final chave = '${cor.id}_${tamanho.id}';
-                    final produto = state.mapaCorTamanhoParaProduto[chave];
+                    // Mesma origem de ids do bloc (cor.id / tamanho.id dos objetos), senão a chave não bate.
+                    final chave = cor.id == null || tamanho.id == null
+                        ? null
+                        : chaveComboGrade(cor.id!, tamanho.id!, linha.estampaId);
+                    final produto = chave == null
+                        ? null
+                        : state.mapaCorTamanhoParaProduto[chave];
 
                     if (produto?.id == null) {
                       return const DataCell(Center(child: Text('-')));

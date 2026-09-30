@@ -30,12 +30,20 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
     String? tamanho,
     String? cor,
     int? tabelaDePrecoId,
+    Set<int>? somenteProdutoIds,
   }) async {
-    var produtos = (await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
+    final encontrados = await produtoEstoqueLocalDataSource.buscarProdutosPorTexto(
       texto,
       tamanho: tamanho,
       cor: cor,
-    )).take(_limiteResultados);
+    );
+    // Restrição ANTES do limite: com o corte em 60 primeiro, um termo comum (ex.: "blusa")
+    // devolvia 60 SKUs do catálogo inteiro e a restrição (itens do romaneio) não achava nenhum.
+    final produtos = (somenteProdutoIds == null
+            ? encontrados
+            : encontrados.where((p) => somenteProdutoIds.contains(p.produtoId.toInt())))
+        .take(_limiteResultados)
+        .toList();
 
     // Antes: um `await` por produto (codigo + preco), N * 2 transações
     // IndexedDB separadas -- cada transação tem overhead real no browser.
@@ -62,8 +70,9 @@ class ProdutoBuscaDoLeitorDataSource implements ILeitorBuscaDataDatasource {
       final preco = tabelaDePrecoId != null
           ? precosPorReferenciaId[produto.referenciaId.toInt()]
           : null;
-      // Pula produtos sem preço se tabelaDePrecoId for fornecida.
-      if (tabelaDePrecoId != null && (preco == null || preco.valor == 0)) {
+      // Pula produtos sem preço se tabelaDePrecoId for fornecida -- exceto na busca restrita
+      // (devolução): o item é válido por estar no romaneio, com ou sem preço na tabela hoje.
+      if (tabelaDePrecoId != null && somenteProdutoIds == null && (preco == null || preco.valor == 0)) {
         continue;
       }
       resultados.add(ProdutoDoLeitorData(

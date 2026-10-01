@@ -29,12 +29,14 @@ class ImportacaoVendaResultado extends Equatable {
   final int totalRecebidos;
   final int importados;
   final int itensImportados;
+  final int semClienteCadastrado;
   final List<ImportacaoVendaRejeitada> rejeitados;
 
   const ImportacaoVendaResultado({
     required this.totalRecebidos,
     required this.importados,
     this.itensImportados = 0,
+    this.semClienteCadastrado = 0,
     this.rejeitados = const [],
   });
 
@@ -43,6 +45,8 @@ class ImportacaoVendaResultado extends Equatable {
       totalRecebidos: (json['totalRecebidos'] as num?)?.toInt() ?? 0,
       importados: (json['importados'] as num?)?.toInt() ?? 0,
       itensImportados: (json['itensImportados'] as num?)?.toInt() ?? 0,
+      semClienteCadastrado:
+          (json['semClienteCadastrado'] as num?)?.toInt() ?? 0,
       rejeitados: (json['rejeitados'] as List<dynamic>? ?? const [])
           .whereType<Map<String, dynamic>>()
           .map(ImportacaoVendaRejeitada.fromJson)
@@ -51,8 +55,13 @@ class ImportacaoVendaResultado extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [totalRecebidos, importados, itensImportados, rejeitados];
+  List<Object?> get props => [
+        totalRecebidos,
+        importados,
+        itensImportados,
+        semClienteCadastrado,
+        rejeitados
+      ];
 }
 
 // Espelha ImportacaoEntity do backend.
@@ -75,8 +84,9 @@ class ImportacaoVenda extends Equatable {
       id: (json['id'] as num).toInt(),
       situacao: ImportacaoSituacao.fromString(json['situacao'] as String?),
       erro: json['erro'] as String?,
-      resultado:
-          resultado == null ? null : ImportacaoVendaResultado.fromJson(resultado),
+      resultado: resultado == null
+          ? null
+          : ImportacaoVendaResultado.fromJson(resultado),
     );
   }
 

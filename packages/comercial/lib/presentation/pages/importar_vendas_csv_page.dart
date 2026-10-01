@@ -68,7 +68,8 @@ class ImportarVendasCsvPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text('2. Escolha o funcionário (vendedor)', style: titulo),
+                      Text('2. Escolha o funcionário (vendedor)',
+                          style: titulo),
                       const SizedBox(height: 12),
                       funcionarioSeletor(
                         SeletorData(
@@ -188,6 +189,15 @@ class _ResultadoView extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
+          if (resultado.semClienteCadastrado > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${resultado.semClienteCadastrado} venda(s) com documento sem '
+              'cadastro foram lançadas como "Cliente não cadastrado" '
+              '(documento na observação do romaneio).',
+              textAlign: TextAlign.center,
+            ),
+          ],
           if (resultado.rejeitados.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text(

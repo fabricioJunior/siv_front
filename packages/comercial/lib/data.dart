@@ -61,3 +61,7 @@ export 'domain/data/remote/i_importacao_pedido_transferencia_remote_data_source.
 export 'domain/data/repositories/i_importacao_pedido_transferencia_repository.dart';
 export 'data/remote/importacao_pedido_transferencia_remote_data_source.dart';
 export 'data/repositories/importacao_pedido_transferencia_repository.dart';
+export 'domain/data/remote/i_importacao_venda_remote_data_source.dart';
+export 'domain/data/repositories/i_importacao_venda_repository.dart';
+export 'data/remote/importacao_venda_remote_data_source.dart';
+export 'data/repositories/importacao_venda_repository.dart';

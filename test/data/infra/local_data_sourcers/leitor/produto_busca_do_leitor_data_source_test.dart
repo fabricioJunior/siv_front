@@ -139,4 +139,58 @@ void main() {
       expect(codigosDataSource.chamadas, 1);
     },
   );
+
+  ProdutoDoEstoque produto(int i) => ProdutoDoEstoque.create(
+        empresaId: 1,
+        referenciaId: i,
+        referenciaIdExterno: null,
+        produtoId: BigInt.from(i),
+        produtoIdExterno: null,
+        nome: 'BLUSA $i',
+        corId: 1,
+        corNome: 'AZUL',
+        tamanhoId: 1,
+        tamanhoNome: 'UN',
+        unidadeMedida: 'UN',
+        saldo: 0,
+      );
+
+  test(
+    'somenteProdutoIds é aplicado ANTES do limite de 60: item permitido na posição 4321 '
+    'de 5000 resultados continua aparecendo (devolução não achava o produto do romaneio)',
+    () async {
+      final dataSource = ProdutoBuscaDoLeitorDataSource(
+        produtoEstoqueLocalDataSource:
+            _ProdutoEstoqueLocalDataSourceFake(List.generate(5000, produto)),
+        codigosLocalDataSource: _CodigosLocalDataSourceFake(),
+        precosDeReferenciasLocalDataSource: _PrecosDeReferenciasLocalDataSourceFake(),
+      );
+
+      final resultados = await dataSource.buscarPorTexto('BLUSA', somenteProdutoIds: {4321});
+
+      expect(resultados.map((r) => r.id), [4321]);
+    },
+  );
+
+  test(
+    'busca restrita não esconde item do romaneio sem preço na tabela; busca normal continua '
+    'escondendo produto sem preço',
+    () async {
+      final dataSource = ProdutoBuscaDoLeitorDataSource(
+        produtoEstoqueLocalDataSource: _ProdutoEstoqueLocalDataSourceFake([produto(1), produto(2)]),
+        codigosLocalDataSource: _CodigosLocalDataSourceFake(),
+        precosDeReferenciasLocalDataSource: _PrecosDeReferenciasLocalDataSourceFake(), // sempre sem preço
+      );
+
+      final restrita = await dataSource.buscarPorTexto(
+        'BLUSA',
+        tabelaDePrecoId: 7,
+        somenteProdutoIds: {1},
+      );
+      final normal = await dataSource.buscarPorTexto('BLUSA', tabelaDePrecoId: 7);
+
+      expect(restrita.map((r) => r.id), [1]);
+      expect(normal, isEmpty);
+    },
+  );
 }

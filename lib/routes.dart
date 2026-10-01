@@ -13,6 +13,8 @@ import 'package:empresas/presentation.dart';
 import 'package:empresas/use_cases.dart' show RecuperarTerminais;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
+import 'package:importacao/presentation.dart';
+import 'package:siv_front/presentation/acesso_importacao.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
@@ -625,15 +627,23 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
-  '/importar_pedidos_transferencia_entrada': (context) {
+  '/importacao_guiada': (context) {
     return _rotaProtegida(
-      route: '/importar_pedidos_transferencia_entrada',
-      child: ImportarPedidosCsvPage(
-        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
-          modo: TabelasDePrecoSeletorModo.unica,
-          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-          onChanged: data.onChanged,
-          titulo: 'Tabela de preço',
+      route: '/importacao_guiada',
+      child: _SomenteQuemImporta(
+        child: ImportacaoGuiadaPage(
+          tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            titulo: 'Tabela de preço',
+          ),
+          funcionarioSeletor: (data) => FuncionarioSeletor(
+            modo: FuncionarioSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+            onChanged: data.onChanged,
+            titulo: 'Funcionário',
+          ),
         ),
       ),
     );
@@ -899,12 +909,6 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/promocao/form': (context) {
     return PromocaoFormPage(idPromocao: args(context)['idPromocao']);
   },
-  '/promocao/importar_csv': (context) {
-    return _rotaProtegida(
-      route: '/promocao/importar_csv',
-      child: const ImportarPromocoesCsvPage(),
-    );
-  },
   '/cupons': (context) {
     return _rotaProtegida(route: '/cupons', child: CuponsPage());
   },
@@ -927,12 +931,6 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/menu_produtos',
       child: const MenuProdutosPage(),
-    );
-  },
-  '/importar_produtos': (context) {
-    return _rotaProtegida(
-      route: '/importar_produtos',
-      child: const ImportarProdutosCsvPage(),
     );
   },
   '/tamanhos': (context) {
@@ -1050,12 +1048,6 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/selecionar_tabela_de_preco': (context) {
     return SelecionarTabelaDePrecoPage();
   },
-  '/importar_tabela_de_precos': (context) {
-    return _rotaProtegida(
-      route: '/importar_tabela_de_precos',
-      child: const ImportarTabelaDePrecoCsvPage(),
-    );
-  },
   '/tabela_de_preco_detalhe': (context) {
     return TabelaDePrecoDetalhePage(
       idTabelaDePreco: args(context)['idTabelaDePreco'],
@@ -1117,12 +1109,6 @@ Map<String, Widget Function(BuildContext)> routes = {
               .toList();
         },
       ),
-    );
-  },
-  '/importar_estoque': (context) {
-    return _rotaProtegida(
-      route: '/importar_estoque',
-      child: const ImportarEstoqueCsvPage(),
     );
   },
   '/historico_estoque': (context) {
@@ -1346,6 +1332,18 @@ Widget _rotaProtegida({required String route, required Widget child}) {
   );
 }
 
+/// Importação de dados é restrita ao usuário [loginDeImportacao]: os demais
+/// veem "acesso negado" (o backend recusa de qualquer jeito).
+class _SomenteQuemImporta extends StatelessWidget {
+  final Widget child;
+
+  const _SomenteQuemImporta({required this.child});
+
+  @override
+  Widget build(BuildContext context) =>
+      usuarioDaSessaoPodeImportar() ? child : const _AcessoNegadoPage();
+}
+
 /// Substitui, sem histórico, a rota atual (uma tela-hub descontinuada) pela
 /// primeira filha do acordeão correspondente no menu lateral -- cobre
 /// deep-link externo que ainda aponte pra rota antiga.
@@ -1446,14 +1444,14 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_aniversariantes': ['RELFC009'],
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
-  '/importar_pedidos_transferencia_entrada': ['IMPFP007'],
+  // Qualquer uma das 4 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
+  '/importacao_guiada': ['IMPFP006', 'IMPFP001', 'IMPFP009', 'IMPFP008'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],
   '/cancelar_romaneio': ['ROMFP001'],
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
-  '/importar_estoque': ['PRDFL001'],
   '/consultar_produto': ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
@@ -1476,7 +1474,6 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM003'],
-  '/importar_produtos': ['IMPFP001'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
   '/controle_despesas': ['DESFM003'],
@@ -1484,7 +1481,6 @@ const Map<String, List<String>> _componentesDaRota = {
   '/origem_pagamento_despesa': ['DESFM002'],
   '/fluxo_de_caixa': ['FCXFP001', 'FCXFP002', 'FCXFL001'],
   '/tabelas_de_preco': ['PRDFM010'],
-  '/importar_tabela_de_precos': ['IMPFP002'],
   '/pagamentos_avulsos': ['PAGFM001', 'PAGFP005'],
   '/pagamento_avulso': ['PAGFM001'],
   '/administracao': ['ADMFM001', 'ADMFM004', 'SYSFM001'],
@@ -1502,7 +1498,6 @@ const Map<String, List<String>> _componentesDaRota = {
     'FCXFP008',
   ],
   '/promocoes': ['PROMFC001'],
-  '/promocao/importar_csv': ['PROMFM001'],
   '/cupons': ['CUPFC001'],
   '/comunicados': ['COMFC001'],
   '/comunicados/compor': ['COMFM001'],

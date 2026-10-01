@@ -30,6 +30,21 @@ class _StubBuscarSaldoCreditoDevolucao
       throw UnimplementedError();
 }
 
+class _SaldoCreditoFake implements BuscarSaldoCreditoDevolucao {
+  final consultados = <int>[];
+
+  @override
+  Future<double> call({
+    required int pessoaId,
+    List<int>? empresaIds,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  }) async {
+    consultados.add(pessoaId);
+    return 79;
+  }
+}
+
 class _StubVerificarElegibilidadeFidelidade
     implements VerificarElegibilidadeFidelidade {
   @override
@@ -420,6 +435,51 @@ void main() {
       expect(bloc.state.step, isNot(PagamentosRealizadosStep.concluido));
     },
   );
+
+  group('crédito de devolução na tela de pagamento', () {
+    PagamentosRealizadosBloc blocCom(_SaldoCreditoFake saldo) => PagamentosRealizadosBloc(
+          _StubCarregarResumo(),
+          saldo,
+          _StubVerificarElegibilidadeFidelidade(),
+          _StubVerificarPermiteNotaFiscalEmail(),
+          _FakeAcessoGlobalSessao(),
+          _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: [])),
+          _FakeLeitorDataDatasource(const {}),
+        );
+
+    PagamentosRealizadosIniciado iniciadoCom({required bool generico}) => PagamentosRealizadosIniciado(
+          hashLista: 'hash',
+          pessoaId: 2208,
+          clienteGenerico: generico,
+          resumoInicial: const PagamentosRealizadosResumo(
+            listaCompartilhada: null,
+            produtosCompartilhados: [_produto199],
+            quantidadeTotalProdutos: 1,
+            valorTotalProdutos: 199,
+          ),
+        );
+
+    test('cliente genérico ("Cliente não cadastrado") não consulta nem mostra o saldo da pessoa compartilhada', () async {
+      final saldo = _SaldoCreditoFake();
+      final bloc = blocCom(saldo)..add(iniciadoCom(generico: true));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(saldo.consultados, isEmpty);
+      expect(bloc.state.saldoCreditoDevolucao, 0);
+      expect(bloc.state.carregandoSaldoCreditoDevolucao, isFalse);
+      await bloc.close();
+    });
+
+    test('cliente identificado continua consultando o próprio saldo', () async {
+      final saldo = _SaldoCreditoFake();
+      final bloc = blocCom(saldo)..add(iniciadoCom(generico: false));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(saldo.consultados, [2208]);
+      expect(bloc.state.saldoCreditoDevolucao, 79);
+      await bloc.close();
+    });
+  });
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
     'auto-aplica promocao por produto, mesmo com multiplas promocoes '

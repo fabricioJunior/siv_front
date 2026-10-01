@@ -998,6 +998,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
+  importacao:
+    dependency: "direct main"
+    description:
+      path: "packages/importacao"
+      relative: true
+    source: path
+    version: "0.0.1"
   injector:
     dependency: transitive
     description:

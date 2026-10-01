@@ -294,6 +294,92 @@ class RelatorioPdfExporter {
     );
   }
 
+  static Future<void> exportarAniversariantes(
+    List<RelatorioClienteAniversarianteItem> items, {
+    required String mesNome,
+    required int mes,
+    String? dataUltimaCompraInicial,
+    String? dataUltimaCompraFinal,
+  }) async {
+    final doc = pw.Document();
+    final filtroCompra = dataUltimaCompraInicial != null &&
+            dataUltimaCompraFinal != null
+        ? '  |  Última compra: ${_fmtData(dataUltimaCompraInicial)} a ${_fmtData(dataUltimaCompraFinal)}'
+        : '';
+    const cabecalhos = [
+      'Nome',
+      'Documento',
+      'E-mail',
+      'Telefone',
+      'Nascimento',
+      'Última compra',
+    ];
+    pw.Widget celula(String texto, {bool negrito = false}) => pw.Padding(
+          padding: const pw.EdgeInsets.all(4),
+          child: pw.Text(
+            texto,
+            style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: negrito ? pw.FontWeight.bold : pw.FontWeight.normal,
+            ),
+          ),
+        );
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4.landscape,
+        build: (ctx) => [
+          _cabecalho(
+            'Relatório — Clientes Aniversariantes',
+            'Mês de $mesNome',
+            _roxo,
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Total de clientes: ${items.length}$filtroCompra',
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(4),
+              1: const pw.FlexColumnWidth(2),
+              2: const pw.FlexColumnWidth(3),
+              3: const pw.FlexColumnWidth(2),
+              4: const pw.FlexColumnWidth(1.4),
+              5: const pw.FlexColumnWidth(1.4),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                repeat: true,
+                children: [for (final h in cabecalhos) celula(h, negrito: true)],
+              ),
+              for (final item in items)
+                pw.TableRow(
+                  children: [
+                    celula(item.nome.toUpperCase()),
+                    celula(item.documento),
+                    celula(item.email ?? ''),
+                    celula(item.contato ?? ''),
+                    celula(_fmtData(item.nascimento)),
+                    celula(item.dataUltimaCompra == null
+                        ? ''
+                        : _fmtData(item.dataUltimaCompra!)),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+    await PdfService.compartilhar(
+      await doc.save(),
+      'clientes_aniversariantes_${mes.toString().padLeft(2, '0')}.pdf',
+    );
+  }
+
   static Future<void> exportarClientesAtivos(
     RelatorioClientesAtivos dados,
     int dias,

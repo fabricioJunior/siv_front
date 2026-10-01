@@ -23,12 +23,17 @@ class LeitorBuscaRestritaDataSource implements ILeitorBuscaDataDatasource {
     String? tamanho,
     String? cor,
     int? tabelaDePrecoId,
+    Set<int>? somenteProdutoIds,
   }) async {
+    final permitidos = somenteProdutoIds == null
+        ? saldosDisponiveis.keys.toSet()
+        : saldosDisponiveis.keys.toSet().intersection(somenteProdutoIds);
     final resultado = await origem.buscarPorTexto(
       texto,
       tamanho: tamanho,
       cor: cor,
       tabelaDePrecoId: tabelaDePrecoId,
+      somenteProdutoIds: permitidos,
     );
 
     return resultado

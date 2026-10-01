@@ -1,6 +1,8 @@
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/presentation.dart' show SivMenuAcordeaoFilho;
 import 'package:flutter/material.dart';
+import 'package:importacao/models.dart' show ImportacaoEtapa;
+import 'package:siv_front/presentation/acesso_importacao.dart';
 
 /// Fonte única dos filhos do acordeão "Administração" no menu lateral (ver
 /// `AppShell`). "Sincronização" saiu daqui -- já existe como item de topo
@@ -92,6 +94,15 @@ class AdministracaoMenuPage extends StatelessWidget {
         componente: 'SYSFM001',
         route: '/configuracoes',
       ),
+      _ItemData(
+        icon: Icons.upload_file_outlined,
+        titulo: 'Importação guiada',
+        subtitulo: 'Clientes, produtos, estoque e vendas, na ordem certa.',
+        cor: Colors.cyan,
+        qualquerComponente: ImportacaoEtapa.todasPermissoes,
+        somenteQuemImporta: true,
+        route: '/importacao_guiada',
+      ),
       const _ItemData(
         icon: Icons.sync,
         titulo: 'Sincronização',
@@ -105,8 +116,13 @@ class AdministracaoMenuPage extends StatelessWidget {
     final permitidos = todos
         .where(
           (item) =>
-              item.componente == null ||
-              PermissaoPorNome.acessoPermitido(item.componente!),
+              (!item.somenteQuemImporta || usuarioDaSessaoPodeImportar()) &&
+              (item.qualquerComponente.isNotEmpty
+                  ? item.qualquerComponente.any(
+                      PermissaoPorNome.acessoPermitido,
+                    )
+                  : item.componente == null ||
+                        PermissaoPorNome.acessoPermitido(item.componente!)),
         )
         .toList();
 
@@ -166,6 +182,12 @@ class _ItemData {
   final String subtitulo;
   final Color cor;
   final String? componente;
+
+  /// Libera o item para quem tiver QUALQUER um desses componentes.
+  final List<String> qualquerComponente;
+
+  /// Só aparece para o usuário que pode importar dados.
+  final bool somenteQuemImporta;
   final String route;
 
   const _ItemData({
@@ -174,6 +196,8 @@ class _ItemData {
     required this.subtitulo,
     required this.cor,
     this.componente,
+    this.qualquerComponente = const [],
+    this.somenteQuemImporta = false,
     required this.route,
   });
 }
@@ -219,8 +243,9 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   descricao,
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: Colors.white.withValues(alpha: 0.90)),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.90),
+                  ),
                 ),
               ],
             ),

@@ -24,8 +24,10 @@ class ArquivoService {
   ///
   /// - Web: o `file_picker` não implementa `saveFile` (lança `UnimplementedError`), então o
   ///   download é feito pelo navegador.
-  /// - Android/iOS: o plugin grava o arquivo, mas exige os [bytes] no `saveFile`.
-  /// - Desktop: o plugin só abre o diálogo e devolve o caminho; quem grava é o app.
+  /// - Android/iOS: o plugin grava o arquivo e EXIGE os [bytes] no `saveFile`.
+  /// - Desktop: o plugin só abre o diálogo e devolve o caminho; quem grava é o app. Não pode
+  ///   receber `bytes`: no macOS lança `UnsupportedError('Bytes are not supported on macOS')`
+  ///   (Windows/Linux ignoram).
   Future<String?> salvarBytes({
     required Uint8List bytes,
     required String nomeSugerido,
@@ -35,14 +37,13 @@ class ArquivoService {
       return nomeSugerido;
     }
 
+    final mobile = Platform.isAndroid || Platform.isIOS;
     final path = await FilePicker.platform.saveFile(
       fileName: nomeSugerido,
-      bytes: bytes,
+      bytes: mobile ? bytes : null,
     );
     if (path == null) return null;
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      await File(path).writeAsBytes(bytes);
-    }
+    if (!mobile) await File(path).writeAsBytes(bytes);
     return path;
   }
 

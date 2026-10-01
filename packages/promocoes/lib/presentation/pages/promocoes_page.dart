@@ -24,15 +24,6 @@ class PromocoesPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Promoções'),
-          actions: [
-            IconButton(
-              tooltip: 'Importar promoções via CSV',
-              icon: const Icon(Icons.upload_file_outlined),
-              onPressed: () {
-                Navigator.of(context).pushNamed('/promocao/importar_csv');
-              },
-            ),
-          ],
         ),
         floatingActionButton: BlocBuilder<PromocoesBloc, PromocoesState>(
           builder: (context, state) {

@@ -10,6 +10,7 @@ import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:importacao/models.dart' show ImportacaoEtapa;
+import 'package:siv_front/presentation/acesso_importacao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
     show administracaoAcordeaoItens;
@@ -83,16 +84,21 @@ class _ItemFilhoNav {
   final List<String> componentesNecessarios;
   final String? grupo;
 
+  /// Só aparece para o usuário que pode importar dados.
+  final bool somenteQuemImporta;
+
   const _ItemFilhoNav({
     required this.label,
     required this.rota,
     this.componentesNecessarios = const [],
     this.grupo,
+    this.somenteQuemImporta = false,
   });
 
   bool get permitido =>
-      componentesNecessarios.isEmpty ||
-      componentesNecessarios.any(PermissaoPorNome.acessoPermitido);
+      (!somenteQuemImporta || usuarioDaSessaoPodeImportar()) &&
+      (componentesNecessarios.isEmpty ||
+          componentesNecessarios.any(PermissaoPorNome.acessoPermitido));
 }
 
 _ItemFilhoNav _deAcordeaoFilho(SivMenuAcordeaoFilho filho) => _ItemFilhoNav(
@@ -148,6 +154,7 @@ final _itensAdministracaoFilhos = <_ItemFilhoNav>[
     label: 'Importação guiada',
     rota: '/importacao_guiada',
     componentesNecessarios: ImportacaoEtapa.todasPermissoes,
+    somenteQuemImporta: true,
   ),
 ];
 final _itensRelatoriosFilhos = relatoriosAcordeaoItens
@@ -168,12 +175,6 @@ final _itensProdutosFilhos = <_ItemFilhoNav>[
     label: 'Tabelas de preço',
     rota: '/tabelas_de_preco',
     componentesNecessarios: ['PRDFM010'],
-    grupo: 'CATÁLOGO',
-  ),
-  const _ItemFilhoNav(
-    label: 'Importar produtos',
-    rota: '/importar_produtos',
-    componentesNecessarios: ['IMPFP001'],
     grupo: 'CATÁLOGO',
   ),
   const _ItemFilhoNav(

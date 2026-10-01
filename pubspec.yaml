@@ -53,6 +53,8 @@ dependencies:
     path: packages/precos
   estoque:
     path: packages/estoque
+  importacao:
+    path: packages/importacao
   entregas:
     path: packages/entregas
   comunicados:

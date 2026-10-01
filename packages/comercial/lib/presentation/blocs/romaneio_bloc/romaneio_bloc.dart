@@ -353,7 +353,9 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
             return null;
           }
 
-          if (valor == null || valor <= 0) {
+          // Valor 0 é válido: venda 100% zerada por cupom (o diálogo de pagamento só deixa
+          // chegar 0 nesse caso). Só descarta ausente/negativo.
+          if (valor == null || valor < 0) {
             return null;
           }
 

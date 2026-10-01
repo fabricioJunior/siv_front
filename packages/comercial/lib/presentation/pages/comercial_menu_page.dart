@@ -24,12 +24,6 @@ const comercialAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
-    label: 'Importar pedidos',
-    rota: '/importar_pedidos_transferencia_entrada',
-    componente: 'IMPFP007',
-    grupo: 'PEDIDOS',
-  ),
-  SivMenuAcordeaoFilho(
     label: 'Romaneios',
     rota: '/romaneios',
     componente: 'ROMFP001',
@@ -97,14 +91,6 @@ class ComercialMenuPage extends StatelessWidget {
         cor: Colors.orange,
         componente: 'PEDFC001',
         route: '/pedidos',
-      ),
-      const _ItemData(
-        icon: Icons.upload_file,
-        titulo: 'Importar pedidos',
-        subtitulo: 'Entrada de mercadoria em massa via planilha CSV.',
-        cor: Colors.orange,
-        componente: 'IMPFP007',
-        route: '/importar_pedidos_transferencia_entrada',
       ),
       const _ItemData(
         icon: Icons.local_shipping,

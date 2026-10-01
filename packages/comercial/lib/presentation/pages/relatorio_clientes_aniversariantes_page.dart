@@ -1,9 +1,14 @@
 import 'package:comercial/domain/models/relatorios.dart';
+import 'package:comercial/domain/use_cases/get_relatorio_clientes_aniversariantes.dart';
 import 'package:comercial/presentation/blocs/relatorio_clientes_aniversariantes_bloc/relatorio_clientes_aniversariantes_bloc.dart';
+import 'package:comercial/presentation/relatorios/aniversariantes_todas_as_paginas.dart';
 import 'package:comercial/presentation/relatorios/csv/relatorio_csv_exporter.dart';
+import 'package:comercial/presentation/relatorios/excel/relatorio_excel_exporter.dart';
+import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 
 const _meses = [
@@ -44,6 +49,7 @@ class _RelatorioClientesAniversariantesPageState
   late int _mes;
   String? _dataUltimaCompraInicial;
   String? _dataUltimaCompraFinal;
+  bool _exportando = false;
 
   @override
   void initState() {
@@ -68,14 +74,47 @@ class _RelatorioClientesAniversariantesPageState
     ));
   }
 
-  Future<void> _exportarCsv(
-    List<RelatorioClienteAniversarianteItem> items,
+  // Exporta o relatório INTEIRO com os filtros aplicados (a tela mostra uma página de 100 por vez).
+  Future<void> _exportar(
+    RelatorioClientesAniversariantesState state,
+    String rotulo,
+    Future<String?> Function(List<RelatorioClienteAniversarianteItem> items)
+        salvar,
   ) async {
-    final path = await RelatorioCsvExporter.exportarAniversariantes(items);
-    if (!mounted || path == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('CSV salvo em $path')),
-    );
+    if (_exportando) return;
+    setState(() => _exportando = true);
+    try {
+      final empresaId = sl<IAcessoGlobalSessao>().empresaIdDaSessao;
+      if (empresaId == null) throw StateError('Empresa não selecionada.');
+      final useCase = sl<GetRelatorioClientesAniversariantes>();
+      final items = await buscarTodosAniversariantes(
+        (pagina) => useCase.call(
+          empresaIds: [empresaId],
+          mes: state.mes,
+          dataUltimaCompraInicial: state.dataUltimaCompraInicial,
+          dataUltimaCompraFinal: state.dataUltimaCompraFinal,
+          page: pagina,
+        ),
+      );
+      final destino = await salvar(items);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            destino == null
+                ? '$rotulo gerado (${items.length} clientes).'
+                : '$rotulo salvo em $destino (${items.length} clientes).',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao exportar $rotulo: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _exportando = false);
+    }
   }
 
   Future<void> _abrirFiltroPeriodoUltimaCompra() async {
@@ -107,13 +146,62 @@ class _RelatorioClientesAniversariantesPageState
             appBar: AppBar(
               title: const Text('Clientes Aniversariantes'),
               actions: [
-                IconButton(
-                  tooltip: 'Exportar CSV',
-                  icon: const Icon(Icons.file_download_outlined),
-                  onPressed: (state.dados?.items.isEmpty ?? true)
-                      ? null
-                      : () => _exportarCsv(state.dados!.items),
-                ),
+                if (_exportando)
+                  const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else ...[
+                  IconButton(
+                    tooltip: 'Exportar PDF',
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    onPressed: (state.dados?.items.isEmpty ?? true)
+                        ? null
+                        : () => _exportar(
+                              state,
+                              'PDF',
+                              (items) async {
+                                await RelatorioPdfExporter
+                                    .exportarAniversariantes(
+                                  items,
+                                  mesNome: _meses[state.mes - 1],
+                                  mes: state.mes,
+                                  dataUltimaCompraInicial:
+                                      state.dataUltimaCompraInicial,
+                                  dataUltimaCompraFinal:
+                                      state.dataUltimaCompraFinal,
+                                );
+                                return null;
+                              },
+                            ),
+                  ),
+                  IconButton(
+                    tooltip: 'Exportar Excel',
+                    icon: const Icon(Icons.table_chart_outlined),
+                    onPressed: (state.dados?.items.isEmpty ?? true)
+                        ? null
+                        : () => _exportar(
+                              state,
+                              'Excel',
+                              RelatorioExcelExporter.exportarAniversariantes,
+                            ),
+                  ),
+                  IconButton(
+                    tooltip: 'Exportar CSV',
+                    icon: const Icon(Icons.file_download_outlined),
+                    onPressed: (state.dados?.items.isEmpty ?? true)
+                        ? null
+                        : () => _exportar(
+                              state,
+                              'CSV',
+                              RelatorioCsvExporter.exportarAniversariantes,
+                            ),
+                  ),
+                ],
               ],
             ),
             body: ListView(

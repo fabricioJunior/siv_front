@@ -14,6 +14,7 @@ import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
 import 'package:entregas/entregas_injections.dart';
 import 'package:estoque/estoque_injections.dart';
+import 'package:importacao/importacao_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
 import 'package:comunicados/comunicados_injections.dart';
@@ -65,6 +66,7 @@ Future<void> resolverDependenciasApp() async {
   resolverPromocoesInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();
+  resolverImportacaoInjection();
   resolverEntregasInjections();
   resolverComunicadosInjection();
   _presentation();

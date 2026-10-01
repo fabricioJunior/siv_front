@@ -139,7 +139,10 @@ class PagamentosRealizadosBloc
           linhas: [PagamentoRealizadoLinha.nova()],
           erro: null,
           resultado: const [],
-          carregandoSaldoCreditoDevolucao: pessoaId != null,
+          // "Cliente não cadastrado" é uma pessoa compartilhada por todas as vendas sem cliente: crédito de
+          // devolução dela não é de ninguém, então nem consulta (saldo fica 0 e não dá pra pagar com crédito).
+          carregandoSaldoCreditoDevolucao:
+              pessoaId != null && !event.clienteGenerico,
           carregandoElegibilidadeFidelidade: pessoaId != null,
           descontoTipo: descontosItensSeed.isNotEmpty
               ? DescontoTipo.valorBruto
@@ -165,14 +168,16 @@ class PagamentosRealizadosBloc
       );
 
       if (pessoaId != null) {
-        final saldo =
-            await _buscarSaldoCreditoDevolucao.call(pessoaId: pessoaId);
-        emit(
-          state.copyWith(
-            saldoCreditoDevolucao: saldo,
-            carregandoSaldoCreditoDevolucao: false,
-          ),
-        );
+        if (!event.clienteGenerico) {
+          final saldo =
+              await _buscarSaldoCreditoDevolucao.call(pessoaId: pessoaId);
+          emit(
+            state.copyWith(
+              saldoCreditoDevolucao: saldo,
+              carregandoSaldoCreditoDevolucao: false,
+            ),
+          );
+        }
 
         try {
           final elegivel = await _verificarElegibilidadeFidelidade.call(

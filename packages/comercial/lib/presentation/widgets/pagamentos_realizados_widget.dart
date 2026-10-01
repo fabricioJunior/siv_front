@@ -326,7 +326,8 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
     final onDescontoPressed = widget.onDescontoPressed;
     final onTaxaEntregaPressed = widget.onTaxaEntregaPressed;
     final theme = Theme.of(context);
-    final possuiPessoa = state.pessoaId != null;
+    // Cliente genérico ("não cadastrado") não tem crédito próprio: trata como sem cliente identificado.
+    final possuiPessoa = state.pessoaId != null && !state.clienteGenerico;
     final carregandoCredito = state.carregandoSaldoCreditoDevolucao;
 
     return Card(

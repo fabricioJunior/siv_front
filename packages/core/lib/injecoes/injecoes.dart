@@ -52,6 +52,7 @@ void coreInjections() {
   sl.registerLazySingleton<CepService>(() => CepService());
 
   sl.registerLazySingleton<ArquivoService>(() => ArquivoService());
+  sl.registerLazySingleton<PlanilhaService>(() => PlanilhaService());
 
   sl.registerLazySingleton<LinkService>(() => LinkService());
 

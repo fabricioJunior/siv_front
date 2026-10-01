@@ -9,6 +9,7 @@ import 'package:estoque/presentation.dart' show estoqueAcordeaoItens;
 import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:importacao/models.dart' show ImportacaoEtapa;
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
     show administracaoAcordeaoItens;
@@ -141,9 +142,14 @@ final _itensComercialFilhos = comercialAcordeaoItens
     .map(_deAcordeaoFilho)
     .toList();
 final _itensEstoqueFilhos = estoqueAcordeaoItens.map(_deAcordeaoFilho).toList();
-final _itensAdministracaoFilhos = administracaoAcordeaoItens
-    .map(_deAcordeaoFilho)
-    .toList();
+final _itensAdministracaoFilhos = <_ItemFilhoNav>[
+  ...administracaoAcordeaoItens.map(_deAcordeaoFilho),
+  _ItemFilhoNav(
+    label: 'Importação guiada',
+    rota: '/importacao_guiada',
+    componentesNecessarios: ImportacaoEtapa.todasPermissoes,
+  ),
+];
 final _itensRelatoriosFilhos = relatoriosAcordeaoItens
     .map(_deAcordeaoFilho)
     .toList();

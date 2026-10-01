@@ -13,6 +13,7 @@ import 'package:empresas/presentation.dart';
 import 'package:empresas/use_cases.dart' show RecuperarTerminais;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
 import 'package:estoque/presentation.dart';
+import 'package:importacao/presentation.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
@@ -642,6 +643,25 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/importar_vendas',
       child: ImportarVendasCsvPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+        funcionarioSeletor: (data) => FuncionarioSeletor(
+          modo: FuncionarioSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+          onChanged: data.onChanged,
+          titulo: 'Funcionário',
+        ),
+      ),
+    );
+  },
+  '/importacao_guiada': (context) {
+    return _rotaProtegida(
+      route: '/importacao_guiada',
+      child: ImportacaoGuiadaPage(
         tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
           modo: TabelasDePrecoSeletorModo.unica,
           itemsSelecionadosInicial: data.itemsSelecionadosInicial,
@@ -1467,6 +1487,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_pedidos_transferencia_entrada': ['IMPFP007'],
   '/importar_vendas': ['IMPFP008'],
+  // Qualquer uma das 4 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
+  '/importacao_guiada': ['IMPFP006', 'IMPFP001', 'IMPFP009', 'IMPFP008'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],

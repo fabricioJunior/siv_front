@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:siv_front/presentation/widgets/assinatura_siv.dart';
 
 // Rota '/' é o fallback do Navigator (ex.: browser back no web voltando até
 // a entrada de histórico anterior a qualquer navegação da SPA). Sem
@@ -52,6 +53,8 @@ class _SplashPageState extends State<SplashPage> {
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          AssinaturaSiv(),
+          SizedBox(height: 24),
           CircularProgressIndicator(),
         ],
       )),

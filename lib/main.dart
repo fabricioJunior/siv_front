@@ -18,6 +18,7 @@ import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/presentation/widgets/app_shell.dart';
+import 'package:siv_front/presentation/widgets/assinatura_siv.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -292,6 +293,8 @@ class AppLoadingView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const AssinaturaSiv(),
+                const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 20),
                 Text(

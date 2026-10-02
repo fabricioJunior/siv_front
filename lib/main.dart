@@ -143,7 +143,7 @@ class MyApp extends StatelessWidget {
       initialRoute: _initialRoute,
       routes: routes,
       navigatorKey: navigatorKey,
-      title: 'Flutter Demo',
+      title: 'SIV',
       builder: (context, child) {
         return Overlay(
           initialEntries: [

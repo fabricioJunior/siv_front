@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "Vale do Ceara" "\0"
-            VALUE "FileDescription", "SIV Front" "\0"
+            VALUE "FileDescription", "SIV" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "ValedoCear.SivFront" "\0"
             VALUE "LegalCopyright", "Copyright (C) Vale do Ceara. All rights reserved." "\0"
             VALUE "OriginalFilename", "siv_front.exe" "\0"
-            VALUE "ProductName", "SIV Front" "\0"
+            VALUE "ProductName", "SIV" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

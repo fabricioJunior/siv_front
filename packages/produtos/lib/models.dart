@@ -5,6 +5,7 @@ export 'domain/models/categoria.dart';
 export 'domain/models/sub_categoria.dart';
 export 'domain/models/marca.dart';
 export 'domain/models/referencia.dart';
+export 'domain/models/referencias_busca.dart';
 export 'domain/models/produto.dart';
 export 'domain/models/novo_produto_combinacao.dart';
 export 'domain/models/referencia_midia.dart';

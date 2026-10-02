@@ -29,6 +29,7 @@ export 'package:produtos/presentantion/modals/marca_modal.dart';
 export 'package:produtos/presentantion/pages/marcas_page.dart';
 
 export 'package:produtos/presentantion/blocs/referencias_bloc/referencias_bloc.dart';
+export 'package:produtos/presentantion/blocs/referencias_lista_bloc/referencias_lista_bloc.dart';
 export 'package:produtos/presentantion/blocs/referencia_bloc/referencia_bloc.dart';
 export 'package:produtos/presentantion/blocs/produto_bloc/produto_bloc.dart';
 export 'package:produtos/presentantion/blocs/produtos_da_referencia_bloc/produtos_da_referencia_bloc.dart';

@@ -1,12 +1,12 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart' show sivCantosBlueprint;
+import 'package:core/presentation/debouncer.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/domain/referencias_filtro.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
-import 'package:produtos/use_cases.dart';
 
 // Abaixo disso a tabela de 8 colunas não cabe: a linha vira um cartão compacto.
 const _larguraTabela = 900.0;
@@ -19,46 +19,36 @@ class ReferenciasPage extends StatefulWidget {
 }
 
 class _ReferenciasPageState extends State<ReferenciasPage> {
-  final bloc = sl<ReferenciasBloc>();
+  final bloc = sl<ReferenciasListaBloc>();
   final _buscaController = TextEditingController();
-  ReferenciasFiltro _filtro = const ReferenciasFiltro();
-  Map<int, String> _marcas = const {};
-
-  @override
-  void initState() {
-    super.initState();
-    _carregarMarcas();
-  }
+  final _debouncer = Debouncer(milliseconds: 400);
 
   @override
   void dispose() {
+    _debouncer.cancel();
     _buscaController.dispose();
     super.dispose();
   }
 
-  // A referência só traz o marcaId; o nome vem do cadastro de marcas. Sem ele a coluna
-  // mostra "—" em vez de derrubar a lista.
-  Future<void> _carregarMarcas() async {
-    try {
-      final marcas = await sl<RecuperarMarcas>().call();
-      if (!mounted) return;
-      setState(() {
-        _marcas = {
-          for (final m in marcas)
-            if (m.id != null) m.id!: m.nome,
-        };
-      });
-    } catch (_) {}
-  }
+  // Tudo (busca, categoria, pendências, ordenação) é consulta ao servidor: o bloc volta à página 1 e a resposta mais
+  // recente vence. Os chips usam sempre o filtro mais novo, para um toque não apagar a busca ainda no debounce.
+  void _filtrar(ReferenciasFiltro filtro) =>
+      bloc.add(ReferenciasListaFiltrou(filtro: filtro));
 
-  void _limpar() {
-    _buscaController.clear();
-    setState(() => _filtro = const ReferenciasFiltro());
+  void _buscar(String texto) {
+    _debouncer.run(() => _filtrar(bloc.state.filtro.copyWith(busca: texto)));
   }
 
   void _limparBusca() {
     _buscaController.clear();
-    setState(() => _filtro = _filtro.copyWith(busca: ''));
+    _debouncer.cancel();
+    _filtrar(bloc.state.filtro.copyWith(busca: ''));
+  }
+
+  void _limpar() {
+    _buscaController.clear();
+    _debouncer.cancel();
+    _filtrar(const ReferenciasFiltro());
   }
 
   Future<void> _abrir(Referencia referencia) async {
@@ -72,19 +62,18 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
     await Navigator.of(context).push<Referencia>(
       MaterialPageRoute(builder: (_) => ReferenciaPage(idReferencia: id)),
     );
-    bloc.add(ReferenciasIniciou(ordenacao: bloc.state.ordenacao));
+    bloc.add(const ReferenciasListaRecarregou());
   }
 
   Future<void> _novaReferencia() async {
     await ReferenciaCadastroModal.show(context: context);
-    bloc.add(ReferenciasIniciou(ordenacao: bloc.state.ordenacao));
+    bloc.add(const ReferenciasListaRecarregou());
   }
 
   Future<void> _abrirOrdenacao(ReferenciasOrdenacao atual) async {
     final escolha = await showModalBottomSheet<(bool, ReferenciasOrdenacao?)>(
       context: context,
       backgroundColor: context.sivColors.superficie,
-      showDragHandle: false,
       builder: (_) => _FolhaOpcoes<ReferenciasOrdenacao>(
         titulo: 'Ordenar por',
         selecionado: atual,
@@ -95,38 +84,35 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
       ),
     );
     final nova = escolha?.$2;
-    if (nova != null) bloc.add(ReferenciasIniciou(ordenacao: nova));
+    if (nova != null) bloc.add(ReferenciasListaFiltrou(ordenacao: nova));
   }
 
-  Future<void> _abrirCategorias(List<Referencia> todas) async {
-    final contagens = _filtro.contarPorCategoria(todas);
+  Future<void> _abrirCategorias(ReferenciasListaState estado) async {
     final escolha = await showModalBottomSheet<(bool, int?)>(
       context: context,
       backgroundColor: context.sivColors.superficie,
       isScrollControlled: true,
       builder: (_) => _FolhaOpcoes<int>(
         titulo: 'Categoria',
-        selecionado: _filtro.categoriaId,
-        podeLimpar: _filtro.categoriaId != null,
+        selecionado: estado.filtro.categoriaId,
+        podeLimpar: estado.filtro.categoriaId != null,
         opcoes: [
-          for (final c in ReferenciasFiltro.categoriasDe(todas))
-            _Opcao(valor: c.id, rotulo: c.nome, contagem: contagens[c.id] ?? 0),
+          for (final c in estado.resumo.categorias)
+            _Opcao(valor: c.id, rotulo: c.nome, contagem: c.total),
         ],
       ),
     );
     if (escolha == null) return;
-    setState(
-      () => _filtro = _filtro.copyWith(
-        categoriaId: escolha.$1 ? null : escolha.$2,
-      ),
+    _filtrar(
+      bloc.state.filtro.copyWith(categoriaId: escolha.$1 ? null : escolha.$2),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final estreito = MediaQuery.sizeOf(context).width < _larguraTabela;
-    return BlocProvider<ReferenciasBloc>(
-      create: (context) => bloc..add(ReferenciasIniciou()),
+    return BlocProvider<ReferenciasListaBloc>(
+      create: (context) => bloc..add(const ReferenciasListaIniciou()),
       child: Scaffold(
         floatingActionButton: estreito
             ? FloatingActionButton.extended(
@@ -140,30 +126,31 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
               ),
         appBar: AppBar(title: const Text('Referências')),
         body: SafeArea(
-          child: BlocBuilder<ReferenciasBloc, ReferenciasState>(
-            builder: (context, state) {
-              final todas = state is ReferenciasCarregarSucesso
-                  ? state.referencias
-                  : const <Referencia>[];
-              return LayoutBuilder(
-                builder: (context, constraints) =>
-                    constraints.maxWidth >= _larguraTabela
-                    ? _layoutDesktop(context, state, todas)
-                    : _layoutMobile(context, state, todas),
-              );
-            },
+          child: BlocBuilder<ReferenciasListaBloc, ReferenciasListaState>(
+            builder: (context, state) => LayoutBuilder(
+              builder: (context, constraints) =>
+                  constraints.maxWidth >= _larguraTabela
+                  ? _layoutDesktop(context, state)
+                  : _layoutMobile(context, state),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _layoutDesktop(
-    BuildContext context,
-    ReferenciasState state,
-    List<Referencia> todas,
-  ) {
-    final exibidas = _filtro.aplicar(todas);
+  Widget _quadro(ReferenciasListaState state, {required bool emTabela}) {
+    return _Quadro(
+      estado: state,
+      emTabela: emTabela,
+      onTentarNovamente: () => bloc.add(const ReferenciasListaIniciou()),
+      onCarregarMais: () => bloc.add(const ReferenciasListaCarregouMais()),
+      onAbrir: _abrir,
+      onLimpar: _limpar,
+    );
+  }
+
+  Widget _layoutDesktop(BuildContext context, ReferenciasListaState state) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(30, 22, 30, 18),
       child: Column(
@@ -176,147 +163,149 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
                   controller: _buscaController,
                   hint: 'Buscar por nome ou nº da referência',
                   altura: 40,
-                  onBusca: (v) =>
-                      setState(() => _filtro = _filtro.copyWith(busca: v)),
+                  onBusca: _buscar,
                   onLimpar: _limparBusca,
                 ),
               ),
               const SizedBox(width: 10),
               _BotaoOrdenacao(
                 ordenacao: state.ordenacao,
-                onOrdenar: (o) => bloc.add(ReferenciasIniciou(ordenacao: o)),
+                onOrdenar: (o) =>
+                    bloc.add(ReferenciasListaFiltrou(ordenacao: o)),
               ),
             ],
           ),
           const SizedBox(height: 12),
           _LinhaFiltros(
-            filtro: _filtro,
-            todas: todas,
-            onFiltro: (f) => setState(() => _filtro = f),
+            filtro: state.filtro,
+            resumo: state.resumo,
+            onFiltro: _filtrar,
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: _Quadro(
-              estado: state,
-              onTentarNovamente: () =>
-                  bloc.add(ReferenciasIniciou(ordenacao: state.ordenacao)),
-              emTabela: true,
-              exibidas: exibidas,
-              marcas: _marcas,
-              onAbrir: _abrir,
-              onLimpar: _limpar,
-            ),
-          ),
+          Expanded(child: _quadro(state, emTabela: true)),
           const SizedBox(height: 12),
           _Rodape(
-            total: todas.length,
-            exibidas: exibidas.length,
-            filtrando: _filtro.ativo,
+            total: state.totalItens,
+            carregadas: state.itens.length,
+            filtrando: state.filtro.ativo,
           ),
         ],
       ),
     );
   }
 
-  Widget _layoutMobile(
-    BuildContext context,
-    ReferenciasState state,
-    List<Referencia> todas,
-  ) {
-    final exibidas = _filtro.aplicar(todas);
+  Widget _layoutMobile(BuildContext context, ReferenciasListaState state) {
     return Column(
       children: [
         _TopoMobile(
           controller: _buscaController,
-          filtro: _filtro,
-          todas: todas,
+          filtro: state.filtro,
+          resumo: state.resumo,
           ordenacao: state.ordenacao,
           rotuloContagem: _rotuloContagem(
-            todas.length,
-            exibidas.length,
-            _filtro.ativo,
+            state.totalItens,
+            state.itens.length,
+            state.filtro.ativo,
           ),
-          onBusca: (v) => setState(() => _filtro = _filtro.copyWith(busca: v)),
+          onBusca: _buscar,
           onLimparBusca: _limparBusca,
-          onFiltro: (f) => setState(() => _filtro = f),
-          onCategorias: () => _abrirCategorias(todas),
+          onFiltro: _filtrar,
+          onCategorias: () => _abrirCategorias(state),
           onOrdenar: () => _abrirOrdenacao(state.ordenacao),
         ),
-        Expanded(
-          child: _Quadro(
-            estado: state,
-            onTentarNovamente: () =>
-                bloc.add(ReferenciasIniciou(ordenacao: state.ordenacao)),
-            emTabela: false,
-            exibidas: exibidas,
-            marcas: _marcas,
-            onAbrir: _abrir,
-            onLimpar: _limpar,
-          ),
-        ),
+        Expanded(child: _quadro(state, emTabela: false)),
       ],
     );
   }
 }
 
-/// Carregando / erro / vazio / lista, em tabela (desktop) ou em linhas (mobile).
+/// Carregando / erro / vazio / lista (em tabela no desktop, em linhas no mobile), com rolagem infinita.
 class _Quadro extends StatelessWidget {
-  final ReferenciasState estado;
-  final VoidCallback onTentarNovamente;
+  final ReferenciasListaState estado;
   final bool emTabela;
-  final List<Referencia> exibidas;
-  final Map<int, String> marcas;
+  final VoidCallback onTentarNovamente;
+  final VoidCallback onCarregarMais;
   final ValueChanged<Referencia> onAbrir;
   final VoidCallback onLimpar;
 
   const _Quadro({
     required this.estado,
-    required this.onTentarNovamente,
     required this.emTabela,
-    required this.exibidas,
-    required this.marcas,
+    required this.onTentarNovamente,
+    required this.onCarregarMais,
     required this.onAbrir,
     required this.onLimpar,
   });
 
   @override
   Widget build(BuildContext context) {
-    final estado = this.estado;
-    if (estado is ReferenciasCarregarEmProgresso) {
+    if (estado.etapa == ReferenciasListaEtapa.carregando) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    if (estado is ReferenciasCarregarFalha) {
+    if (estado.etapa == ReferenciasListaEtapa.falha) {
       return _Erro(onTentarNovamente: onTentarNovamente);
     }
-    if (estado is! ReferenciasCarregarSucesso) return const SizedBox();
 
     final cores = context.sivColors;
-    final lista = exibidas.isEmpty
+    final itens = estado.itens;
+    final lista = itens.isEmpty
         ? _Vazio(onLimpar: onLimpar)
         : Material(
             color: Colors.transparent,
-            child: ListView.builder(
-              // folga para o botão "Nova referência" não cobrir a última linha
-              padding: EdgeInsets.only(bottom: emTabela ? 0 : 84),
-              itemCount: exibidas.length,
-              itemBuilder: (context, i) {
-                final r = exibidas[i];
-                return emTabela
-                    ? _LinhaTabela(
-                        referencia: r,
-                        marca: marcas[r.marcaId],
-                        onTap: () => onAbrir(r),
-                      )
-                    : _LinhaCompacta(
-                        referencia: r,
-                        marca: marcas[r.marcaId],
-                        onTap: () => onAbrir(r),
-                      );
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.metrics.extentAfter < 400 && estado.temMais) {
+                  onCarregarMais();
+                }
+                return false;
               },
+              child: ListView.builder(
+                // folga para o botão "Nova referência" não cobrir a última linha
+                padding: EdgeInsets.only(bottom: emTabela ? 0 : 84),
+                itemCount: itens.length + (estado.carregandoMais ? 1 : 0),
+                itemBuilder: (context, i) {
+                  if (i >= itens.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  }
+                  final item = itens[i];
+                  return emTabela
+                      ? _LinhaTabela(
+                          referencia: item.referencia,
+                          marca: item.marcaNome,
+                          onTap: () => onAbrir(item.referencia),
+                        )
+                      : _LinhaCompacta(
+                          referencia: item.referencia,
+                          marca: item.marcaNome,
+                          onTap: () => onAbrir(item.referencia),
+                        );
+                },
+              ),
             ),
           );
 
-    if (!emTabela) return lista;
+    // Busca nova em andamento: a lista anterior fica na tela e uma barra fina indica que está atualizando.
+    final progresso = estado.atualizando
+        ? const LinearProgressIndicator(minHeight: 2)
+        : const SizedBox(height: 2);
+
+    if (!emTabela) {
+      return Column(
+        children: [
+          progresso,
+          Expanded(child: lista),
+        ],
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         color: cores.superficie,
@@ -327,6 +316,7 @@ class _Quadro extends StatelessWidget {
           Column(
             children: [
               const _CabecalhoTabela(),
+              progresso,
               Expanded(child: lista),
             ],
           ),
@@ -337,9 +327,11 @@ class _Quadro extends StatelessWidget {
   }
 }
 
-String _rotuloContagem(int total, int exibidas, bool filtrando) {
-  String plural(int n) => n == 1 ? '1 referência' : '$n referências';
-  return filtrando ? '$exibidas de ${plural(total)}' : plural(total);
+/// "N referências" (ou "N referências encontradas" com filtro) e, enquanto há mais páginas, "mostrando X".
+String _rotuloContagem(int total, int carregadas, bool filtrando) {
+  final base = total == 1 ? '1 referência' : '$total referências';
+  final rotulo = filtrando ? '$base encontrada${total == 1 ? '' : 's'}' : base;
+  return carregadas < total ? '$rotulo · mostrando $carregadas' : rotulo;
 }
 
 // ---------------------------------------------------------------------------
@@ -509,7 +501,7 @@ class _BotaoOrdenacao extends StatelessWidget {
 class _TopoMobile extends StatelessWidget {
   final TextEditingController controller;
   final ReferenciasFiltro filtro;
-  final List<Referencia> todas;
+  final ResumoReferencias resumo;
   final ReferenciasOrdenacao ordenacao;
   final String rotuloContagem;
   final ValueChanged<String> onBusca;
@@ -521,7 +513,7 @@ class _TopoMobile extends StatelessWidget {
   const _TopoMobile({
     required this.controller,
     required this.filtro,
-    required this.todas,
+    required this.resumo,
     required this.ordenacao,
     required this.rotuloContagem,
     required this.onBusca,
@@ -535,14 +527,15 @@ class _TopoMobile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final pendencias = filtro.contar(todas);
+    final pendencias = resumo;
     final apoio = textos.corpo.copyWith(
       fontSize: 12.5,
       color: cores.textoApoio,
     );
-    final nomeCategoria = ReferenciasFiltro.categoriasDe(
-      todas,
-    ).where((c) => c.id == filtro.categoriaId).map((c) => c.nome).firstOrNull;
+    final nomeCategoria = resumo.categorias
+        .where((c) => c.id == filtro.categoriaId)
+        .map((c) => c.nome)
+        .firstOrNull;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
@@ -783,12 +776,12 @@ class _Radio extends StatelessWidget {
 
 class _LinhaFiltros extends StatelessWidget {
   final ReferenciasFiltro filtro;
-  final List<Referencia> todas;
+  final ResumoReferencias resumo;
   final ValueChanged<ReferenciasFiltro> onFiltro;
 
   const _LinhaFiltros({
     required this.filtro,
-    required this.todas,
+    required this.resumo,
     required this.onFiltro,
   });
 
@@ -796,8 +789,8 @@ class _LinhaFiltros extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final categorias = ReferenciasFiltro.categoriasDe(todas);
-    final pendencias = filtro.contar(todas);
+    final categorias = resumo.categorias;
+    final pendencias = resumo;
     final rotulo = textos.rotulo.copyWith(color: cores.textoApoio);
 
     return Wrap(
@@ -1257,12 +1250,12 @@ class _LinhaCompacta extends StatelessWidget {
 
 class _Rodape extends StatelessWidget {
   final int total;
-  final int exibidas;
+  final int carregadas;
   final bool filtrando;
 
   const _Rodape({
     required this.total,
-    required this.exibidas,
+    required this.carregadas,
     required this.filtrando,
   });
 
@@ -1277,7 +1270,7 @@ class _Rodape extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            _rotuloContagem(total, exibidas, filtrando),
+            _rotuloContagem(total, carregadas, filtrando),
             style: estilo,
           ),
         ),

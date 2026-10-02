@@ -10,8 +10,11 @@ import 'package:produtos/data/remote/categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/sub_categorias_remote_datasource.dart';
 import 'package:produtos/data/remote/marcas_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_remote_datasource.dart';
+import 'package:produtos/data/remote/referencias_busca_remote_datasource.dart';
 import 'package:produtos/data/remote/referencias_pendentes_ncm_remote_datasource.dart';
+import 'package:produtos/data/repositorios/referencias_busca_repository.dart';
 import 'package:produtos/data/repositorios/referencias_pendentes_ncm_repository.dart';
+import 'package:produtos/domain/data/remote/i_referencias_busca_remote_data_source.dart';
 import 'package:produtos/domain/data/remote/i_referencias_pendentes_ncm_remote_data_source.dart';
 import 'package:produtos/data/remote/referencias_pendentes_peso_remote_datasource.dart';
 import 'package:produtos/data/repositorios/referencias_pendentes_peso_repository.dart';
@@ -113,6 +116,10 @@ void _data() {
     () => ReferenciaMidiasRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IReferenciasBuscaRemoteDataSource>(
+    () => ReferenciasBuscaRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IReferenciasPendentesNcmRemoteDataSource>(
     () => ReferenciasPendentesNcmRemoteDatasource(informacoesParaRequest: sl()),
   );
@@ -190,6 +197,10 @@ void _repositores() {
 
   sl.registerFactory<IReferenciaMidiasRepository>(
     () => ReferenciaMidiasRepository(referenciaMidiasRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IReferenciasBuscaRepository>(
+    () => ReferenciasBuscaRepository(dataSource: sl()),
   );
 
   sl.registerFactory<IReferenciasPendentesNcmRepository>(
@@ -347,6 +358,10 @@ void _usesCases() {
 
   sl.registerFactory<RecuperarProximoIdReferencia>(
     () => RecuperarProximoIdReferencia(referenciasRepository: sl()),
+  );
+
+  sl.registerFactory<BuscarReferencias>(
+    () => BuscarReferencias(repository: sl()),
   );
 
   sl.registerFactory<RecuperarReferencias>(
@@ -519,6 +534,8 @@ void _presentantion() {
   sl.registerFactory<MarcaBloc>(() => MarcaBloc(sl(), sl(), sl()));
 
   sl.registerFactory<ReferenciasBloc>(() => ReferenciasBloc(sl()));
+
+  sl.registerFactory<ReferenciasListaBloc>(() => ReferenciasListaBloc(sl()));
 
   sl.registerFactory<ReferenciaBloc>(() => ReferenciaBloc(sl(), sl()));
 

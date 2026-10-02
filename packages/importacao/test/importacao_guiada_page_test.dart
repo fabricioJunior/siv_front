@@ -110,30 +110,45 @@ void main() {
       expect(find.text('Baixar modelo'), findsOneWidget);
       expect(find.text('Selecionar CSV'), findsOneWidget);
       expect(find.text('Importar'), findsOneWidget);
-      expect(
-        find.text('A importar'),
-        findsOneWidget,
-      ); // só Clientes está liberada
-      expect(find.text('Bloqueada'), findsNWidgets(3));
+      // nenhuma etapa é bloqueada: todas aparecem como "A importar"
+      expect(find.text('A importar'), findsNWidgets(4));
+      expect(find.text('Bloqueada'), findsNothing);
     },
   );
 
-  testWidgets('etapa bloqueada explica o motivo e leva de volta à anterior', (
-    tester,
-  ) async {
+  testWidgets(
+    'importar só vendas (sem importar as etapas anteriores): avisa a ordem recomendada mas não bloqueia',
+    (tester) async {
+      await abrir(tester); // histórico vazio, como em produção sem importações
+
+      await tester.tap(find.text('4. Vendas').first);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Ordem recomendada: importe "Estoque"'),
+        findsOneWidget,
+      );
+      // tudo da etapa de vendas continua disponível
+      expect(find.text('Baixar modelo'), findsOneWidget);
+      expect(find.text('seletor tabela'), findsOneWidget);
+      expect(find.text('seletor funcionario'), findsOneWidget);
+      expect(find.text('Selecionar CSV'), findsOneWidget);
+      expect(find.text('Importar'), findsOneWidget);
+
+      await tester.tap(find.text('Ir para Estoque'));
+      await tester.pumpAndSettle();
+      expect(find.text('3. Estoque'), findsWidgets);
+      expect(
+        find.textContaining('Ordem recomendada: importe "Produtos"'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('primeira etapa não mostra o aviso de ordem', (tester) async {
     await abrir(tester);
 
-    await tester.tap(find.text('4. Vendas').first);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Conclua a etapa "Estoque"'), findsOneWidget);
-    expect(find.text('Baixar modelo'), findsNothing);
-    expect(find.text('seletor tabela'), findsNothing);
-
-    await tester.tap(find.text('Ir para Estoque'));
-    await tester.pumpAndSettle();
-    expect(find.text('3. Estoque'), findsWidgets);
-    expect(find.textContaining('Conclua a etapa "Produtos"'), findsOneWidget);
+    expect(find.textContaining('Ordem recomendada'), findsNothing);
   });
 
   testWidgets(

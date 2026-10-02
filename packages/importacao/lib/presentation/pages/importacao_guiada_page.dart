@@ -74,7 +74,6 @@ class ImportacaoGuiadaPage extends StatelessWidget {
 }
 
 enum _StatusEtapa {
-  bloqueada,
   aguardando,
   enviando,
   processando,
@@ -83,7 +82,6 @@ enum _StatusEtapa {
   falha;
 
   String get rotulo => switch (this) {
-    bloqueada => 'Bloqueada',
     aguardando => 'A importar',
     enviando => 'Enviando',
     processando => 'Processando',
@@ -93,7 +91,6 @@ enum _StatusEtapa {
   };
 
   Color get cor => switch (this) {
-    bloqueada => Colors.grey,
     aguardando => Colors.blueGrey,
     enviando || processando => Colors.blue,
     concluida => Colors.green,
@@ -102,7 +99,6 @@ enum _StatusEtapa {
   };
 
   IconData get icone => switch (this) {
-    bloqueada => Icons.lock_outline,
     aguardando => Icons.upload_file_outlined,
     enviando || processando => Icons.sync,
     concluida => Icons.check,
@@ -130,9 +126,7 @@ _StatusEtapa _statusDe(ImportacaoGuiadaState state, ImportacaoEtapa etapa) {
         break;
     }
   }
-  return state.liberada(etapa)
-      ? _StatusEtapa.aguardando
-      : _StatusEtapa.bloqueada;
+  return _StatusEtapa.aguardando;
 }
 
 class _Passos extends StatelessWidget {
@@ -249,11 +243,11 @@ class _PainelEtapa extends StatelessWidget {
     return BlocBuilder<ImportacaoGuiadaBloc, ImportacaoGuiadaState>(
       buildWhen: (anterior, atual) =>
           anterior[etapa] != atual[etapa] ||
-          anterior.liberada(etapa) != atual.liberada(etapa),
+          anterior.anteriorConcluida(etapa) != atual.anteriorConcluida(etapa),
       builder: (context, state) {
         final dados = state[etapa];
         final importacao = dados.importacao;
-        final liberada = state.liberada(etapa);
+        final anteriorConcluida = state.anteriorConcluida(etapa);
         final permitido = PermissaoPorNome.acessoPermitido(etapa.permissao);
         final trabalhando = dados.enviando || dados.emAndamento;
 
@@ -270,21 +264,7 @@ class _PainelEtapa extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(etapa.descricao, style: tema.textTheme.bodyMedium),
                 const SizedBox(height: 16),
-                if (!liberada)
-                  _Aviso(
-                    icone: Icons.lock_outline,
-                    cor: Colors.grey,
-                    texto:
-                        'Conclua a etapa "${etapa.anterior!.titulo}" antes '
-                        'de importar esta.',
-                    acao: TextButton(
-                      onPressed: () => bloc.add(
-                        ImportacaoGuiadaEtapaSelecionada(etapa.anterior!),
-                      ),
-                      child: Text('Ir para ${etapa.anterior!.titulo}'),
-                    ),
-                  )
-                else if (!permitido)
+                if (!permitido)
                   const _Aviso(
                     icone: Icons.block,
                     cor: Colors.red,
@@ -292,6 +272,23 @@ class _PainelEtapa extends StatelessWidget {
                         'Seu usuário não tem permissão para importar esta etapa.',
                   )
                 else ...[
+                  if (!anteriorConcluida) ...[
+                    _Aviso(
+                      icone: Icons.info_outline,
+                      cor: Colors.blueGrey,
+                      texto:
+                          'Ordem recomendada: importe "${etapa.anterior!.titulo}" '
+                          'antes. Se esses dados já estão no sistema, pode '
+                          'seguir direto por aqui.',
+                      acao: TextButton(
+                        onPressed: () => bloc.add(
+                          ImportacaoGuiadaEtapaSelecionada(etapa.anterior!),
+                        ),
+                        child: Text('Ir para ${etapa.anterior!.titulo}'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _BotaoModelo(etapa: etapa),
                   if (etapa == ImportacaoEtapa.vendas) ...[
                     const SizedBox(height: 16),

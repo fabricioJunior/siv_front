@@ -156,31 +156,34 @@ void main() {
       );
 
       expect(bloc.state.etapaAtual, ImportacaoEtapa.produtos);
-      expect(bloc.state.liberada(ImportacaoEtapa.clientes), isTrue);
-      expect(bloc.state.liberada(ImportacaoEtapa.produtos), isTrue);
-      expect(bloc.state.liberada(ImportacaoEtapa.estoque), isFalse);
-      expect(bloc.state.liberada(ImportacaoEtapa.vendas), isFalse);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.clientes), isTrue);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isTrue);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.estoque), isFalse);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.vendas), isFalse);
     });
 
-    test('sem histórico só a primeira etapa está liberada', () async {
-      bloc.add(const ImportacaoGuiadaIniciou());
-      await _ate(
-        bloc,
-        (s) => !s.carregando && s.etapaAtual == ImportacaoEtapa.clientes,
-      );
+    test(
+      'sem histórico só a primeira etapa tem a anterior "concluída" (informativo; nada é bloqueado)',
+      () async {
+        bloc.add(const ImportacaoGuiadaIniciou());
+        await _ate(
+          bloc,
+          (s) => !s.carregando && s.etapaAtual == ImportacaoEtapa.clientes,
+        );
 
-      expect(ImportacaoEtapa.values.where(bloc.state.liberada), [
-        ImportacaoEtapa.clientes,
-      ]);
-    });
+        expect(ImportacaoEtapa.values.where(bloc.state.anteriorConcluida), [
+          ImportacaoEtapa.clientes,
+        ]);
+      },
+    );
 
-    test('importação com falha não libera a próxima etapa', () async {
+    test('importação com falha não conta como anterior concluída', () async {
       remoto.ultimas = [_imp(1, 'cliente', ImportacaoSituacao.falha)];
 
       bloc.add(const ImportacaoGuiadaIniciou());
       await _ate(bloc, (s) => s[ImportacaoEtapa.clientes].importacao != null);
 
-      expect(bloc.state.liberada(ImportacaoEtapa.produtos), isFalse);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isFalse);
       expect(bloc.state.etapaAtual, ImportacaoEtapa.clientes);
     });
 
@@ -420,7 +423,7 @@ void main() {
         );
 
         expect(remoto.consultas, [8]);
-        expect(bloc.state.liberada(ImportacaoEtapa.produtos), isTrue);
+        expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isTrue);
       },
     );
 

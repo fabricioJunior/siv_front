@@ -99,8 +99,9 @@ enum ImportacaoEtapa {
 
   /// Quem tem QUALQUER uma dessas permissões enxerga o assistente (cada etapa
   /// continua exigindo a sua).
-  static List<String> get todasPermissoes =>
-      [for (final etapa in values) etapa.permissao];
+  static List<String> get todasPermissoes => [
+    for (final etapa in values) etapa.permissao,
+  ];
 
   static ImportacaoEtapa? deTipo(String tipo) {
     final normalizado = tipo.toLowerCase();

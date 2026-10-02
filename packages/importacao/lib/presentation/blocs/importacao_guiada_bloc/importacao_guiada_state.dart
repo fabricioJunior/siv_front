@@ -83,9 +83,10 @@ class ImportacaoGuiadaState extends Equatable {
 
   EtapaImportacaoState operator [](ImportacaoEtapa etapa) => etapas[etapa]!;
 
-  /// A primeira etapa está sempre liberada; as demais só depois da anterior
-  /// concluída (a ordem importa: vendas dependem de clientes e produtos).
-  bool liberada(ImportacaoEtapa etapa) {
+  /// Só informativo: todas as etapas ficam disponíveis (os dados podem já existir
+  /// no sistema, ex.: clientes e produtos cadastrados por outro meio), mas a ordem
+  /// recomendada importa: vendas dependem de clientes e produtos.
+  bool anteriorConcluida(ImportacaoEtapa etapa) {
     final anterior = etapa.anterior;
     return anterior == null || this[anterior].concluida;
   }

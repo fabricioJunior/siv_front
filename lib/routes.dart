@@ -1466,7 +1466,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_pedidos_csv': ['IMPFP007'],
   // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
-  '/importacao_guiada': ['IMPFP006', 'IMPFP004', 'IMPFP002', 'IMPFP001', 'IMPFP009', 'IMPFP008'],
+  '/importacao_guiada': ['IMPFP006', 'IMPFP004', 'IMPFP002', 'IMPFP005', 'IMPFP009', 'IMPFP008'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],

@@ -29,6 +29,20 @@ class ImportacaoRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<ImportacaoPrevia> previa(
+    ImportacaoEtapa etapa, {
+    int? tabelaDePrecoId,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/previa/${etapa.name}'},
+      queryParameters: tabelaDePrecoId == null
+          ? null
+          : {'tabelaDePrecoId': '$tabelaDePrecoId'},
+    );
+    return ImportacaoPrevia.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<Uint8List> baixarModelo(
     ImportacaoEtapa etapa, {
     Map<String, String> query = const {},

@@ -32,19 +32,25 @@ class ImportacaoGuiadaBloc
   }) : _intervaloConsulta = intervaloConsulta,
        super(ImportacaoGuiadaState()) {
     on<ImportacaoGuiadaIniciou>(_onIniciou);
-    on<ImportacaoGuiadaEtapaSelecionada>(
-      (event, emit) => emit(state.copyWith(etapaAtual: event.etapa)),
-    );
+    on<ImportacaoGuiadaEtapaSelecionada>((event, emit) {
+      emit(state.copyWith(etapaAtual: event.etapa));
+      add(ImportacaoGuiadaPreviaCarregou(event.etapa));
+    });
+    on<ImportacaoGuiadaPreviaCarregou>(_onPreviaCarregou);
     on<ImportacaoGuiadaModeloBaixado>(_onModeloBaixado);
     on<ImportacaoGuiadaArquivoSelecionado>(_onArquivoSelecionado);
-    on<ImportacaoGuiadaTabelaDePrecoAlterada>(
-      (event, emit) => emit(
+    on<ImportacaoGuiadaTabelaDePrecoAlterada>((event, emit) {
+      emit(
         state.comEtapa(
           event.etapa,
           state[event.etapa].copyWith(tabelaDePrecoId: event.tabelaDePrecoId),
         ),
-      ),
-    );
+      );
+      // Preços: a amostra depende da tabela escolhida.
+      if (event.etapa.modeloPrecisaTabela) {
+        add(ImportacaoGuiadaPreviaCarregou(event.etapa));
+      }
+    });
     on<ImportacaoGuiadaFuncionarioAlterado>(
       (event, emit) => emit(
         state.comEtapa(
@@ -90,6 +96,7 @@ class ImportacaoGuiadaBloc
           add(ImportacaoGuiadaDetalhou(etapa));
         }
       }
+      add(ImportacaoGuiadaPreviaCarregou(state.etapaAtual));
       _ajustarConsulta();
     } catch (e, s) {
       emit(
@@ -111,6 +118,52 @@ class ImportacaoGuiadaBloc
     return ImportacaoEtapa.values.last;
   }
 
+  Future<void> _onPreviaCarregou(
+    ImportacaoGuiadaPreviaCarregou event,
+    Emitter<ImportacaoGuiadaState> emit,
+  ) async {
+    final etapa = event.etapa;
+    final tabelaId = state[etapa].tabelaDePrecoId;
+    if (etapa.modeloPrecisaTabela && tabelaId == null) {
+      emit(
+        state.comEtapa(
+          etapa,
+          state[etapa].copyWith(previa: null, erroPrevia: null),
+        ),
+      );
+      return;
+    }
+    emit(
+      state.comEtapa(
+        etapa,
+        state[etapa].copyWith(carregandoPrevia: true, erroPrevia: null),
+      ),
+    );
+    try {
+      final previa = await _remoto.previa(etapa, tabelaDePrecoId: tabelaId);
+      emit(
+        state.comEtapa(
+          etapa,
+          state[etapa].copyWith(previa: previa, carregandoPrevia: false),
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.comEtapa(
+          etapa,
+          state[etapa].copyWith(
+            carregandoPrevia: false,
+            erroPrevia: mensagemDeErroApi(
+              e,
+              'Não foi possível carregar a pré-visualização.',
+            ),
+          ),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
   Future<void> _onModeloBaixado(
     ImportacaoGuiadaModeloBaixado event,
     Emitter<ImportacaoGuiadaState> emit,
@@ -124,8 +177,8 @@ class ImportacaoGuiadaBloc
       final bytes = await _remoto.baixarModelo(
         event.etapa,
         query: event.etapa.modeloPrecisaTabela
-            ? {'tabelaDePrecoId': '$tabelaId'}
-            : const {},
+            ? {...event.etapa.queryModelo, 'tabelaDePrecoId': '$tabelaId'}
+            : event.etapa.queryModelo,
       );
       final destino = await _arquivos.salvarBytes(
         bytes: bytes,
@@ -240,7 +293,10 @@ class ImportacaoGuiadaBloc
     final terminouAgora =
         nova.situacao.finalizada &&
         !(atual?.id == nova.id && atual!.situacao.finalizada);
-    if (terminouAgora) add(ImportacaoGuiadaDetalhou(etapa));
+    if (terminouAgora) {
+      add(ImportacaoGuiadaDetalhou(etapa));
+      add(ImportacaoGuiadaPreviaCarregou(etapa)); // o que entrou agora
+    }
     _ajustarConsulta();
   }
 

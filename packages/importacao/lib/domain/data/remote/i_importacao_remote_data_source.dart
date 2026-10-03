@@ -14,6 +14,13 @@ abstract class IImportacaoRemoteDataSource {
     Map<String, String> query = const {},
   });
 
+  /// Amostra do que já está no sistema para a etapa (`tabelaDePrecoId` só
+  /// na etapa de preços).
+  Future<ImportacaoPrevia> previa(
+    ImportacaoEtapa etapa, {
+    int? tabelaDePrecoId,
+  });
+
   /// Sobe o CSV; o servidor responde na hora com a importação pendente e
   /// processa em segundo plano.
   Future<ImportacaoGuiada> enviar(

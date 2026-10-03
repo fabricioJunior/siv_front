@@ -180,25 +180,30 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppDesautenticou event,
     Emitter<AppState> emit,
   ) async {
+    // Sempre sai da sessão, mesmo se a limpeza falhar ou travar (no web o
+    // deleteDatabase do IndexedDB fica pendente se houver outra conexão
+    // aberta): sem isso o "Sair" não fazia nada e a tela ficava parada.
     try {
-      await _deslogar.call(apagarDadosLocais: event.apagarDadosLocais);
-      emit(
-        state.copyWith(
-          statusAutenticacao: StatusAutenticacao.naoAutenticao,
-          usuarioDaSessao: () => null,
-          empresaDaSessao: () => null,
-          terminalDaSessao: () => null,
-          caixaIdDaSessao: () => null,
-          licenciadoDaSessao: () => null,
-          mensagemErroInicializacao: null,
-          detalhesErroInicializacao: null,
-          etapaAtualInicializacao: null,
-          etapasInicializacaoConcluidas: const [],
-        ),
-      );
+      await _deslogar
+          .call(apagarDadosLocais: event.apagarDadosLocais)
+          .timeout(const Duration(seconds: 5));
     } catch (e, s) {
       addError(e, s);
     }
+    emit(
+      state.copyWith(
+        statusAutenticacao: StatusAutenticacao.naoAutenticao,
+        usuarioDaSessao: () => null,
+        empresaDaSessao: () => null,
+        terminalDaSessao: () => null,
+        caixaIdDaSessao: () => null,
+        licenciadoDaSessao: () => null,
+        mensagemErroInicializacao: null,
+        detalhesErroInicializacao: null,
+        etapaAtualInicializacao: null,
+        etapasInicializacaoConcluidas: const [],
+      ),
+    );
   }
 
   FutureOr<void> _onAppIniciou(AppIniciou event, Emitter<AppState> emit) async {

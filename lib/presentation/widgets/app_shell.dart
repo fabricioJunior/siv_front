@@ -672,12 +672,17 @@ class _BarraTituloInfo extends StatelessWidget {
                     arguments: {'trocandoDeEmpresa': true},
                   ),
                 ),
-                _LinhaInfoMenu(
-                  icone: Icons.dvr_outlined,
-                  texto:
-                      appState.terminalDaSessao?.nome ?? 'Selecionar terminal',
-                  onTap: () => _trocarTerminal(context),
-                ),
+                // Sem terminal na sessão e sem terminal liberado pro usuário
+                // nessa empresa não há o que selecionar.
+                if (appState.terminalDaSessao != null ||
+                    appState.terminaisDaEmpresaDaSessao.isNotEmpty)
+                  _LinhaInfoMenu(
+                    icone: Icons.dvr_outlined,
+                    texto:
+                        appState.terminalDaSessao?.nome ??
+                        'Selecionar terminal',
+                    onTap: () => _trocarTerminal(context),
+                  ),
                 _LinhaInfoMenu(
                   pontoStatus: caixaAberto
                       ? _corCaixaAberto
@@ -879,13 +884,13 @@ class _StatusCaixaCompacto extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final empresa = appState.empresaDaSessao?.nome ?? 'Sem empresa';
-    final terminal = appState.terminalDaSessao?.nome ?? 'Sem terminal';
+    final terminal = appState.terminalDaSessao?.nome;
     final status = caixaAberto
         ? 'Caixa #${appState.caixaIdDaSessao} aberto'
         : 'Caixa fechado';
 
     return Tooltip(
-      message: '$empresa · $terminal · $status',
+      message: [empresa, ?terminal, status].join(' · '),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Center(

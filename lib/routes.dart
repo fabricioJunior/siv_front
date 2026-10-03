@@ -1280,6 +1280,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/nota_fiscal_email_empresa': (context) {
     return EmpresaNotaFiscalEmailPage(idEmpresa: args(context)['empresaId']);
   },
+  '/integracao_meta_empresa': (context) {
+    return _rotaProtegida(
+      route: '/integracao_meta_empresa',
+      child: IntegracaoMetaPage(idEmpresa: args(context)['empresaId']),
+    );
+  },
   // Impressoras:
   '/etiqueta_preview_page': (context) {
     final argumentos = args(context);
@@ -1427,6 +1433,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_fiscal': ['FISFM001'],
   '/configuracao_fiscal': ['FISFM001'],
   '/configuracao_entrega': ['ENTFM001'],
+  '/integracao_meta_empresa': ['MCTFM006'],
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],

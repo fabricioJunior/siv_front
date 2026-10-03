@@ -566,7 +566,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ReferenciaCadastroBloc>(
-    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl()),
+    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(

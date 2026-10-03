@@ -1,6 +1,13 @@
 part of 'referencia_cadastro_bloc.dart';
 
-enum ReferenciaCadastroStep { categoria, subCategoria, id, nome, resumo }
+enum ReferenciaCadastroStep {
+  categoria,
+  subCategoria,
+  nome,
+  preco,
+  variacoes,
+  concluido,
+}
 
 class ReferenciaCadastroState extends Equatable {
   final ReferenciaCadastroStep step;
@@ -8,17 +15,16 @@ class ReferenciaCadastroState extends Equatable {
   final List<SubCategoria> subCategorias;
   final Categoria? categoria;
   final SubCategoria? subCategoria;
-  final int? referenciaId;
-  final String? nome;
+  final String nome;
+  final String preco;
   final String unidadeMedida;
   final String descricao;
   final String composicao;
   final String cuidados;
-  final String ncm;
-  final bool ncmSugerido;
+  final int? referenciaId;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
-  final bool gerandoId;
+  final bool salvando;
   final String? mensagem;
 
   const ReferenciaCadastroState({
@@ -27,57 +33,67 @@ class ReferenciaCadastroState extends Equatable {
     this.subCategorias = const [],
     this.categoria,
     this.subCategoria,
-    this.referenciaId,
-    this.nome,
+    this.nome = '',
+    this.preco = '',
     this.unidadeMedida = '',
     this.descricao = '',
     this.composicao = '',
     this.cuidados = '',
-    this.ncm = '',
-    this.ncmSugerido = false,
+    this.referenciaId,
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
-    this.gerandoId = false,
+    this.salvando = false,
     this.mensagem,
   });
+
+  /// Etapas visíveis no stepper: subcategoria só existe quando a categoria tem.
+  List<ReferenciaCadastroStep> get etapas => [
+    ReferenciaCadastroStep.categoria,
+    if (subCategorias.isNotEmpty) ReferenciaCadastroStep.subCategoria,
+    ReferenciaCadastroStep.nome,
+    ReferenciaCadastroStep.preco,
+    ReferenciaCadastroStep.variacoes,
+  ];
+
+  /// Referência já foi criada na API -- não dá mais pra voltar e editar
+  /// categoria/nome/preço por aqui.
+  bool get criada => referenciaId != null;
 
   ReferenciaCadastroState copyWith({
     ReferenciaCadastroStep? step,
     List<Categoria>? categorias,
     List<SubCategoria>? subCategorias,
-    Categoria? categoria,
-    SubCategoria? subCategoria,
-    int? Function()? referenciaId,
-    String? Function()? nome,
+    Categoria? Function()? categoria,
+    SubCategoria? Function()? subCategoria,
+    String? nome,
+    String? preco,
     String? unidadeMedida,
-    String Function()? descricao,
+    String? descricao,
     String? composicao,
     String? cuidados,
-    String? ncm,
-    bool? ncmSugerido,
+    int? referenciaId,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
-    bool? gerandoId,
+    bool? salvando,
     String? mensagem,
   }) {
     return ReferenciaCadastroState(
       step: step ?? this.step,
       categorias: categorias ?? this.categorias,
       subCategorias: subCategorias ?? this.subCategorias,
-      categoria: categoria ?? this.categoria,
-      subCategoria: subCategoria ?? this.subCategoria,
-      referenciaId: referenciaId == null ? this.referenciaId : referenciaId(),
-      nome: nome == null ? this.nome : nome(),
+      categoria: categoria == null ? this.categoria : categoria(),
+      subCategoria: subCategoria == null ? this.subCategoria : subCategoria(),
+      nome: nome ?? this.nome,
+      preco: preco ?? this.preco,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
-      descricao: descricao == null ? this.descricao : descricao(),
+      descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
-      ncm: ncm ?? this.ncm,
-      ncmSugerido: ncmSugerido ?? this.ncmSugerido,
+      referenciaId: referenciaId ?? this.referenciaId,
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
           carregandoSubCategorias ?? this.carregandoSubCategorias,
-      gerandoId: gerandoId ?? this.gerandoId,
+      salvando: salvando ?? this.salvando,
       mensagem: mensagem,
     );
   }
@@ -89,17 +105,16 @@ class ReferenciaCadastroState extends Equatable {
     subCategorias,
     categoria,
     subCategoria,
-    referenciaId,
     nome,
+    preco,
     unidadeMedida,
     descricao,
     composicao,
     cuidados,
-    ncm,
-    ncmSugerido,
+    referenciaId,
     carregandoCategorias,
     carregandoSubCategorias,
-    gerandoId,
+    salvando,
     mensagem,
   ];
 }

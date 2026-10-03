@@ -1,6 +1,8 @@
 part of 'referencia_cadastro_bloc.dart';
 
 abstract class ReferenciaCadastroEvent extends Equatable {
+  const ReferenciaCadastroEvent();
+
   @override
   List<Object?> get props => [];
 }
@@ -9,8 +11,7 @@ class ReferenciaCadastroIniciou extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroCategoriaSelecionada extends ReferenciaCadastroEvent {
   final Categoria categoria;
-
-  ReferenciaCadastroCategoriaSelecionada({required this.categoria});
+  const ReferenciaCadastroCategoriaSelecionada({required this.categoria});
 
   @override
   List<Object?> get props => [categoria];
@@ -18,83 +19,69 @@ class ReferenciaCadastroCategoriaSelecionada extends ReferenciaCadastroEvent {
 
 class ReferenciaCadastroSubCategoriaSelecionada
     extends ReferenciaCadastroEvent {
-  final SubCategoria? subCategoria;
-
-  ReferenciaCadastroSubCategoriaSelecionada({required this.subCategoria});
+  final SubCategoria subCategoria;
+  const ReferenciaCadastroSubCategoriaSelecionada({required this.subCategoria});
 
   @override
   List<Object?> get props => [subCategoria];
 }
 
-class ReferenciaCadastroIdAlterado extends ReferenciaCadastroEvent {
-  final int? id;
-
-  ReferenciaCadastroIdAlterado({required this.id});
-
-  @override
-  List<Object?> get props => [id];
-}
-
-class ReferenciaCadastroGerarId extends ReferenciaCadastroEvent {}
-
-class ReferenciaCadastroGerarNome extends ReferenciaCadastroEvent {}
-
 class ReferenciaCadastroNomeAlterado extends ReferenciaCadastroEvent {
   final String nome;
-
-  ReferenciaCadastroNomeAlterado({required this.nome});
+  const ReferenciaCadastroNomeAlterado({required this.nome});
 
   @override
   List<Object?> get props => [nome];
 }
 
-class ReferenciaCadastroUnidadeMedidaAlterada extends ReferenciaCadastroEvent {
-  final String unidadeMedida;
+class ReferenciaCadastroGerarNome extends ReferenciaCadastroEvent {}
 
-  ReferenciaCadastroUnidadeMedidaAlterada({required this.unidadeMedida});
+/// Campos opcionais do passo do nome; só o que vier não-nulo é alterado.
+class ReferenciaCadastroOpcionaisAlterados extends ReferenciaCadastroEvent {
+  final String? unidadeMedida;
+  final String? descricao;
+  final String? composicao;
+  final String? cuidados;
+  const ReferenciaCadastroOpcionaisAlterados({
+    this.unidadeMedida,
+    this.descricao,
+    this.composicao,
+    this.cuidados,
+  });
 
   @override
-  List<Object?> get props => [unidadeMedida];
+  List<Object?> get props => [unidadeMedida, descricao, composicao, cuidados];
 }
 
-class ReferenciaCadastroDescricaoAlterada extends ReferenciaCadastroEvent {
-  final String descricao;
-
-  ReferenciaCadastroDescricaoAlterada({required this.descricao});
-
-  @override
-  List<Object?> get props => [descricao];
-}
-
-class ReferenciaCadastroComposicaoAlterada extends ReferenciaCadastroEvent {
-  final String composicao;
-
-  ReferenciaCadastroComposicaoAlterada({required this.composicao});
+class ReferenciaCadastroPrecoAlterado extends ReferenciaCadastroEvent {
+  final String preco;
+  const ReferenciaCadastroPrecoAlterado({required this.preco});
 
   @override
-  List<Object?> get props => [composicao];
-}
-
-class ReferenciaCadastroCuidadosAlterados extends ReferenciaCadastroEvent {
-  final String cuidados;
-
-  ReferenciaCadastroCuidadosAlterados({required this.cuidados});
-
-  @override
-  List<Object?> get props => [cuidados];
-}
-
-class ReferenciaCadastroNcmAlterado extends ReferenciaCadastroEvent {
-  final String ncm;
-
-  ReferenciaCadastroNcmAlterado({required this.ncm});
-
-  @override
-  List<Object?> get props => [ncm];
+  List<Object?> get props => [preco];
 }
 
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroVoltar extends ReferenciaCadastroEvent {}
 
-class ReferenciaCadastroReiniciar extends ReferenciaCadastroEvent {}
+/// Vai direto a uma etapa já concluída (stepper / resumo clicáveis).
+class ReferenciaCadastroIrPara extends ReferenciaCadastroEvent {
+  final ReferenciaCadastroStep step;
+  const ReferenciaCadastroIrPara(this.step);
+
+  @override
+  List<Object?> get props => [step];
+}
+
+class ReferenciaCadastroVariacoesConcluidas extends ReferenciaCadastroEvent {}
+
+/// Recomeça o wizard. [manterCategoria] reaproveita categoria/subcategoria
+/// ("cadastrar outra em X") e volta direto pro nome.
+class ReferenciaCadastroReiniciar extends ReferenciaCadastroEvent {
+  final bool manterCategoria;
+  const ReferenciaCadastroReiniciar({this.manterCategoria = false});
+
+  @override
+  List<Object?> get props => [manterCategoria];
+}

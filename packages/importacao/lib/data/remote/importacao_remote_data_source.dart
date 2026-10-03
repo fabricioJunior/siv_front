@@ -29,8 +29,14 @@ class ImportacaoRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Uint8List> baixarModelo(ImportacaoEtapa etapa) {
-    return getBytes(pathParameters: {'path': etapa.caminhoModelo});
+  Future<Uint8List> baixarModelo(
+    ImportacaoEtapa etapa, {
+    Map<String, String> query = const {},
+  }) {
+    return getBytes(
+      pathParameters: {'path': etapa.caminhoModelo},
+      queryParameters: query.isEmpty ? null : query,
+    );
   }
 
   @override

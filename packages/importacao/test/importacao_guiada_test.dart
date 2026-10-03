@@ -164,29 +164,45 @@ void main() {
   });
 
   group('ImportacaoEtapa', () {
-    test('ordem do assistente: clientes, produtos, estoque, vendas', () {
-      expect(ImportacaoEtapa.values.map((e) => e.name), [
-        'clientes',
-        'produtos',
-        'estoque',
-        'vendas',
-      ]);
-      expect(ImportacaoEtapa.clientes.anterior, isNull);
-      expect(ImportacaoEtapa.vendas.anterior, ImportacaoEtapa.estoque);
-    });
+    test(
+      'ordem do assistente: clientes, referencias, precos, produtos, estoque, vendas',
+      () {
+        expect(ImportacaoEtapa.values.map((e) => e.name), [
+          'clientes',
+          'referencias',
+          'precos',
+          'produtos',
+          'estoque',
+          'vendas',
+        ]);
+        expect(ImportacaoEtapa.clientes.anterior, isNull);
+        expect(ImportacaoEtapa.precos.anterior, ImportacaoEtapa.referencias);
+        expect(ImportacaoEtapa.produtos.anterior, ImportacaoEtapa.precos);
+        expect(ImportacaoEtapa.vendas.anterior, ImportacaoEtapa.estoque);
+      },
+    );
 
     test(
       'deTipo ignora maiúsculas e devolve null para tipos fora do assistente',
       () {
         expect(ImportacaoEtapa.deTipo('VendaRomaneio'), ImportacaoEtapa.vendas);
         expect(ImportacaoEtapa.deTipo('ESTOQUE'), ImportacaoEtapa.estoque);
-        expect(ImportacaoEtapa.deTipo('referencia'), isNull);
+        expect(
+          ImportacaoEtapa.deTipo('Referencia'),
+          ImportacaoEtapa.referencias,
+        );
+        expect(
+          ImportacaoEtapa.deTipo('ReferenciaPreco'),
+          ImportacaoEtapa.precos,
+        );
       },
     );
 
-    test('toda etapa tem permissão própria e o conjunto cobre as 4', () {
+    test('toda etapa tem permissão própria e o conjunto cobre as 6', () {
       expect(ImportacaoEtapa.todasPermissoes, [
         'IMPFP006',
+        'IMPFP004',
+        'IMPFP002',
         'IMPFP001',
         'IMPFP009',
         'IMPFP008',

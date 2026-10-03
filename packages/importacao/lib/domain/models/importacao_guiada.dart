@@ -38,6 +38,31 @@ enum ImportacaoEtapa {
     nomeModelo: 'modelo-clientes.csv',
     permissao: 'IMPFP006',
   ),
+  referencias(
+    titulo: 'Referências',
+    descricao:
+        'Cadastra as referências (modelos) com categoria, subcategoria, '
+        'NCM e peso. Vem antes dos produtos, que são variações (cor e '
+        'tamanho) de uma referência.',
+    tipoBackend: 'referencia',
+    caminhoModelo: '/referencias/template',
+    caminhoEnvio: '/referencias/csv',
+    nomeModelo: 'modelo-referencias.csv',
+    permissao: 'IMPFP004',
+  ),
+  precos(
+    titulo: 'Preços',
+    descricao:
+        'Grava o preço de cada referência em uma tabela de preço. Escolha a '
+        'tabela e baixe o modelo: ele já vem com todas as referências '
+        'cadastradas, é só preencher a coluna "valor" das que quiser.',
+    tipoBackend: 'referenciapreco',
+    caminhoModelo: '/referencias/preco/template',
+    caminhoEnvio: '/referencias/preco/csv',
+    nomeModelo: 'modelo-precos.csv',
+    permissao: 'IMPFP002',
+    modeloPrecisaTabela: true,
+  ),
   produtos(
     titulo: 'Produtos',
     descricao:
@@ -87,6 +112,9 @@ enum ImportacaoEtapa {
   /// Componente de permissão exigido pelas rotas dessa etapa.
   final String permissao;
 
+  /// O modelo é gerado para uma tabela de preço (query `tabelaDePrecoId`).
+  final bool modeloPrecisaTabela;
+
   const ImportacaoEtapa({
     required this.titulo,
     required this.descricao,
@@ -95,6 +123,7 @@ enum ImportacaoEtapa {
     required this.caminhoEnvio,
     required this.nomeModelo,
     required this.permissao,
+    this.modeloPrecisaTabela = false,
   });
 
   /// Quem tem QUALQUER uma dessas permissões enxerga o assistente (cada etapa

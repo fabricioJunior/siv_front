@@ -122,7 +122,16 @@ class _PedidosPageState extends State<PedidosPage> {
                 padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [_botaoNovoPedido(context)],
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/importar_pedidos_csv'),
+                      icon: const Icon(Icons.upload_file_outlined, size: 18),
+                      label: const Text('Importar pedidos'),
+                    ),
+                    const SizedBox(width: 8),
+                    _botaoNovoPedido(context),
+                  ],
                 ),
               ),
               _buildBuscaEPeriodo(context, state, desktop: desktop),

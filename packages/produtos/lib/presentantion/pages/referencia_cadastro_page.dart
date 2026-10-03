@@ -6,18 +6,15 @@ import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/widgets/adicionar_variacoes_painel.dart';
 import 'package:produtos/presentation.dart';
 
-/// Wizard de cadastro de referência: categoria -> (subcategoria) -> nome ->
-/// preço -> variações. Retorna `true` se a referência foi criada.
-class ReferenciaCadastroModal extends StatelessWidget {
-  const ReferenciaCadastroModal({super.key});
+/// Wizard de cadastro de referência, em página inteira: categoria ->
+/// (subcategoria) -> nome -> preço -> variações. Retorna `true` se a
+/// referência foi criada.
+class ReferenciaCadastroPage extends StatelessWidget {
+  const ReferenciaCadastroPage({super.key});
 
   static Future<bool?> show({required BuildContext context}) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const ReferenciaCadastroModal(),
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const ReferenciaCadastroPage()),
     );
   }
 
@@ -29,11 +26,14 @@ class ReferenciaCadastroModal extends StatelessWidget {
       child: BlocBuilder<ReferenciaCadastroBloc, ReferenciaCadastroState>(
         builder: (context, state) {
           final largo = MediaQuery.of(context).size.width >= 900;
-          return SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Material(
-              color: Colors.white,
-              child: SafeArea(
+          return PopScope<bool>(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) Navigator.of(context).pop(state.criada);
+            },
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              body: SafeArea(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -54,7 +54,7 @@ class ReferenciaCadastroModal extends StatelessWidget {
                     ),
                     if (state.mensagem != null)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                        padding: const EdgeInsets.fromLTRB(36, 8, 36, 0),
                         child: Text(
                           state.mensagem!,
                           style: const TextStyle(color: Colors.red),
@@ -87,14 +87,25 @@ class _Cabecalho extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              'Nova referência',
-              style: Theme.of(context).textTheme.titleLarge,
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                InkWell(
+                  onTap: () => Navigator.of(context).pop(state.criada),
+                  child: Text(
+                    'Produtos / Referências /',
+                    style: tema.bodyMedium?.copyWith(color: Colors.black54),
+                  ),
+                ),
+                Text('Nova referência', style: tema.titleLarge),
+              ],
             ),
           ),
           IconButton(
@@ -121,7 +132,7 @@ class _Stepper extends StatelessWidget {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
       child: Row(
         children: [
           for (var i = 0; i < etapas.length; i++) ...[
@@ -737,7 +748,7 @@ class _Rodape extends StatelessWidget {
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Colors.black12)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
       child: Row(
         children: [
           if (podeVoltar)

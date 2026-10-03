@@ -66,7 +66,7 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
   }
 
   Future<void> _novaReferencia() async {
-    await ReferenciaCadastroModal.show(context: context);
+    await ReferenciaCadastroPage.show(context: context);
     bloc.add(const ReferenciasListaRecarregou());
   }
 

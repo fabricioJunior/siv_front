@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:importacao/domain/models/importacao_guiada.dart';
 import 'package:importacao/presentation/blocs/importacao_guiada_bloc/importacao_guiada_bloc.dart';
 
-/// Assistente de importação: clientes -> produtos -> estoque -> vendas, cada
+/// Assistente de importação: clientes -> referências -> preços -> produtos -> estoque -> vendas, cada
 /// etapa com modelo, envio, andamento em tempo real e resultado.
 class ImportacaoGuiadaPage extends StatelessWidget {
   // Só a etapa de vendas escolhe tabela de preço e funcionário; os seletores
@@ -290,7 +290,8 @@ class _PainelEtapa extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
                   _BotaoModelo(etapa: etapa),
-                  if (etapa == ImportacaoEtapa.vendas) ...[
+                  if (etapa == ImportacaoEtapa.vendas ||
+                      etapa.modeloPrecisaTabela) ...[
                     const SizedBox(height: 16),
                     Text('Tabela de preço', style: tema.textTheme.titleSmall),
                     const SizedBox(height: 8),
@@ -300,10 +301,13 @@ class _PainelEtapa extends StatelessWidget {
                         onChanged: (itens) => bloc.add(
                           ImportacaoGuiadaTabelaDePrecoAlterada(
                             itens.isEmpty ? null : itens.first.id,
+                            etapa: etapa,
                           ),
                         ),
                       ),
                     ),
+                  ],
+                  if (etapa == ImportacaoEtapa.vendas) ...[
                     const SizedBox(height: 16),
                     Text(
                       'Funcionário (vendedor)',

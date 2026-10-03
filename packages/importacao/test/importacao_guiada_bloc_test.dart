@@ -34,7 +34,10 @@ class _RemotoFake implements IImportacaoRemoteDataSource {
   }
 
   @override
-  Future<Uint8List> baixarModelo(ImportacaoEtapa etapa) async {
+  Future<Uint8List> baixarModelo(
+    ImportacaoEtapa etapa, {
+    Map<String, String> query = const {},
+  }) async {
     if (erroAoBaixar != null) throw erroAoBaixar!;
     return Uint8List.fromList([1, 2, 3]);
   }
@@ -155,9 +158,10 @@ void main() {
         (s) => !s.carregando && s[ImportacaoEtapa.clientes].importacao != null,
       );
 
-      expect(bloc.state.etapaAtual, ImportacaoEtapa.produtos);
+      expect(bloc.state.etapaAtual, ImportacaoEtapa.referencias);
       expect(bloc.state.anteriorConcluida(ImportacaoEtapa.clientes), isTrue);
-      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isTrue);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.referencias), isTrue);
+      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isFalse);
       expect(bloc.state.anteriorConcluida(ImportacaoEtapa.estoque), isFalse);
       expect(bloc.state.anteriorConcluida(ImportacaoEtapa.vendas), isFalse);
     });
@@ -183,7 +187,10 @@ void main() {
       bloc.add(const ImportacaoGuiadaIniciou());
       await _ate(bloc, (s) => s[ImportacaoEtapa.clientes].importacao != null);
 
-      expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isFalse);
+      expect(
+        bloc.state.anteriorConcluida(ImportacaoEtapa.referencias),
+        isFalse,
+      );
       expect(bloc.state.etapaAtual, ImportacaoEtapa.clientes);
     });
 
@@ -423,7 +430,10 @@ void main() {
         );
 
         expect(remoto.consultas, [8]);
-        expect(bloc.state.anteriorConcluida(ImportacaoEtapa.produtos), isTrue);
+        expect(
+          bloc.state.anteriorConcluida(ImportacaoEtapa.referencias),
+          isTrue,
+        );
       },
     );
 

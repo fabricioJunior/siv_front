@@ -26,7 +26,13 @@ class ImportacaoGuiadaArquivoSelecionado extends ImportacaoGuiadaEvent {
 
 class ImportacaoGuiadaTabelaDePrecoAlterada extends ImportacaoGuiadaEvent {
   final int? tabelaDePrecoId;
-  const ImportacaoGuiadaTabelaDePrecoAlterada(this.tabelaDePrecoId);
+
+  /// Etapa que escolheu a tabela (vendas ou preços).
+  final ImportacaoEtapa etapa;
+  const ImportacaoGuiadaTabelaDePrecoAlterada(
+    this.tabelaDePrecoId, {
+    this.etapa = ImportacaoEtapa.vendas,
+  });
 }
 
 class ImportacaoGuiadaFuncionarioAlterado extends ImportacaoGuiadaEvent {

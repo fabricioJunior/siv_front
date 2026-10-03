@@ -9,7 +9,10 @@ abstract class IImportacaoRemoteDataSource {
   /// Importação com o resultado detalhado (rejeições).
   Future<ImportacaoGuiada> consultar(int id);
 
-  Future<Uint8List> baixarModelo(ImportacaoEtapa etapa);
+  Future<Uint8List> baixarModelo(
+    ImportacaoEtapa etapa, {
+    Map<String, String> query = const {},
+  });
 
   /// Sobe o CSV; o servidor responde na hora com a importação pendente e
   /// processa em segundo plano.

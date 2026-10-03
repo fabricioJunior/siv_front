@@ -40,10 +40,8 @@ class ImportacaoGuiadaBloc
     on<ImportacaoGuiadaTabelaDePrecoAlterada>(
       (event, emit) => emit(
         state.comEtapa(
-          ImportacaoEtapa.vendas,
-          state[ImportacaoEtapa.vendas].copyWith(
-            tabelaDePrecoId: event.tabelaDePrecoId,
-          ),
+          event.etapa,
+          state[event.etapa].copyWith(tabelaDePrecoId: event.tabelaDePrecoId),
         ),
       ),
     );
@@ -117,8 +115,18 @@ class ImportacaoGuiadaBloc
     ImportacaoGuiadaModeloBaixado event,
     Emitter<ImportacaoGuiadaState> emit,
   ) async {
+    final tabelaId = state[event.etapa].tabelaDePrecoId;
+    if (event.etapa.modeloPrecisaTabela && tabelaId == null) {
+      emit(state.copyWith(erro: 'Selecione a tabela de preço do modelo.'));
+      return;
+    }
     try {
-      final bytes = await _remoto.baixarModelo(event.etapa);
+      final bytes = await _remoto.baixarModelo(
+        event.etapa,
+        query: event.etapa.modeloPrecisaTabela
+            ? {'tabelaDePrecoId': '$tabelaId'}
+            : const {},
+      );
       final destino = await _arquivos.salvarBytes(
         bytes: bytes,
         nomeSugerido: event.etapa.nomeModelo,

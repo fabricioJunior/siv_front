@@ -627,6 +627,19 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/pedidos': (context) {
     return _rotaProtegida(route: '/pedidos', child: const PedidosPage());
   },
+  '/importar_pedidos_csv': (context) {
+    return _rotaProtegida(
+      route: '/importar_pedidos_csv',
+      child: ImportarPedidosCsvPage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
+  },
   '/importacao_guiada': (context) {
     return _rotaProtegida(
       route: '/importacao_guiada',
@@ -1451,8 +1464,9 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_aniversariantes': ['RELFC009'],
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
-  // Qualquer uma das 4 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
-  '/importacao_guiada': ['IMPFP006', 'IMPFP001', 'IMPFP009', 'IMPFP008'],
+  '/importar_pedidos_csv': ['IMPFP007'],
+  // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
+  '/importacao_guiada': ['IMPFP006', 'IMPFP004', 'IMPFP002', 'IMPFP001', 'IMPFP009', 'IMPFP008'],
   '/romaneios': ['ROMFP001'],
   '/vendas': ['ROMFP001'],
   '/romaneios_entrada_manual': ['ROMFP001'],

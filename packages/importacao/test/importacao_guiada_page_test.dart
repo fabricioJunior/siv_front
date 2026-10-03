@@ -35,7 +35,10 @@ class _Remoto implements IImportacaoRemoteDataSource {
   Future<ImportacaoGuiada> consultar(int id) async => porId[id]!;
 
   @override
-  Future<Uint8List> baixarModelo(ImportacaoEtapa etapa) async => Uint8List(0);
+  Future<Uint8List> baixarModelo(
+    ImportacaoEtapa etapa, {
+    Map<String, String> query = const {},
+  }) async => Uint8List(0);
 
   @override
   Future<ImportacaoGuiada> enviar(
@@ -95,15 +98,17 @@ void main() {
   });
 
   testWidgets(
-    'mostra as 4 etapas na ordem e abre em Clientes (modelo e envio disponíveis)',
+    'mostra as 6 etapas na ordem e abre em Clientes (modelo e envio disponíveis)',
     (tester) async {
       await abrir(tester);
 
       for (final titulo in [
         '1. Clientes',
-        '2. Produtos',
-        '3. Estoque',
-        '4. Vendas',
+        '2. Referências',
+        '3. Preços',
+        '4. Produtos',
+        '5. Estoque',
+        '6. Vendas',
       ]) {
         expect(find.text(titulo), findsWidgets, reason: titulo);
       }
@@ -111,7 +116,7 @@ void main() {
       expect(find.text('Selecionar CSV'), findsOneWidget);
       expect(find.text('Importar'), findsOneWidget);
       // nenhuma etapa é bloqueada: todas aparecem como "A importar"
-      expect(find.text('A importar'), findsNWidgets(4));
+      expect(find.text('A importar'), findsNWidgets(6));
       expect(find.text('Bloqueada'), findsNothing);
     },
   );
@@ -121,7 +126,7 @@ void main() {
     (tester) async {
       await abrir(tester); // histórico vazio, como em produção sem importações
 
-      await tester.tap(find.text('4. Vendas').first);
+      await tester.tap(find.text('6. Vendas').first);
       await tester.pumpAndSettle();
 
       expect(
@@ -137,7 +142,7 @@ void main() {
 
       await tester.tap(find.text('Ir para Estoque'));
       await tester.pumpAndSettle();
-      expect(find.text('3. Estoque'), findsWidgets);
+      expect(find.text('5. Estoque'), findsWidgets);
       expect(
         find.textContaining('Ordem recomendada: importe "Produtos"'),
         findsOneWidget,
@@ -155,7 +160,13 @@ void main() {
     'etapa de vendas mostra os seletores de tabela de preço e funcionário quando liberada',
     (tester) async {
       remoto.ultimas = [
-        for (final (i, tipo) in ['cliente', 'produto', 'estoque'].indexed)
+        for (final (i, tipo) in [
+          'cliente',
+          'referencia',
+          'referenciapreco',
+          'produto',
+          'estoque',
+        ].indexed)
           ImportacaoGuiada(
             id: i + 1,
             tipo: tipo,

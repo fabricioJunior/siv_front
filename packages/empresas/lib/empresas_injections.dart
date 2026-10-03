@@ -5,23 +5,28 @@ import 'package:empresas/domain/adapters/porta_verificar_exige_cliente_na_venda_
 import 'package:empresas/domain/adapters/porta_verificar_permite_nota_fiscal_email_impl.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_nota_fiscal_email_remote_data_source.dart';
+import 'package:empresas/data/remote_data_sourcers/integracao_meta_remote_data_source.dart';
 import 'package:empresas/data/remote_data_sourcers/terminais_remote_data_source.dart';
 import 'package:empresas/data/repositories/empresa_parametro_repository.dart';
 import 'package:empresas/data/repositories/empresa_nota_fiscal_email_repository.dart';
 import 'package:empresas/data/repositories/empresas_repository.dart';
+import 'package:empresas/data/repositories/integracao_meta_repository.dart';
 import 'package:empresas/data/repositories/terminais_repository.dart';
 import 'package:empresas/domain/data/remote_data_sourcers/i_empresa_parametro_remote_data_source.dart';
 import 'package:empresas/domain/data/remote_data_sourcers/i_empresa_nota_fiscal_email_remote_data_source.dart';
 import 'package:empresas/domain/data/remote_data_sourcers/i_empresas_remote_data_source.dart';
+import 'package:empresas/domain/data/remote_data_sourcers/i_integracao_meta_remote_data_source.dart';
 import 'package:empresas/domain/data/remote_data_sourcers/i_terminais_remote_data_source.dart';
 import 'package:empresas/domain/data/repositories/i_empresa_parametro_repository.dart';
 import 'package:empresas/domain/data/repositories/i_empresa_nota_fiscal_email_repository.dart';
 import 'package:empresas/domain/data/repositories/i_empresas_repository.dart';
+import 'package:empresas/domain/data/repositories/i_integracao_meta_repository.dart';
 import 'package:empresas/domain/data/repositories/i_terminais_repository.dart';
 import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_parametros_bloc.dart';
 import 'package:empresas/presentation/blocs/empresa_nota_fiscal_email_bloc/empresa_nota_fiscal_email_bloc.dart';
 import 'package:empresas/presentation/blocs/empresa_bloc/empresa_bloc.dart';
 import 'package:empresas/presentation/blocs/empresas_bloc/empresas_bloc.dart';
+import 'package:empresas/presentation/blocs/integracao_meta_bloc/integracao_meta_bloc.dart';
 import 'package:empresas/presentation/blocs/terminal_bloc/terminal_bloc.dart';
 import 'package:empresas/presentation/blocs/terminais_bloc/terminais_bloc.dart';
 import 'package:empresas/use_cases.dart';
@@ -46,6 +51,10 @@ void _remoteDataSourcers() {
     () => EmpresaNotaFiscalEmailRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IIntegracaoMetaRemoteDataSource>(
+    () => IntegracaoMetaRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<ITerminaisRemoteDataSource>(
     () => TerminaisRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -62,6 +71,10 @@ void _repositories() {
 
   sl.registerFactory<IEmpresaNotaFiscalEmailRepository>(
     () => EmpresaNotaFiscalEmailRepository(remoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IIntegracaoMetaRepository>(
+    () => IntegracaoMetaRepository(remoteDataSource: sl()),
   );
 
   sl.registerFactory<ITerminaisRepository>(
@@ -98,6 +111,18 @@ void _useCases() {
 
   sl.registerFactory<AtualizarConfiguracaoNotaFiscalEmail>(
     () => AtualizarConfiguracaoNotaFiscalEmail(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarIntegracaoMeta>(
+    () => RecuperarIntegracaoMeta(repository: sl()),
+  );
+
+  sl.registerFactory<SalvarIntegracaoMeta>(
+    () => SalvarIntegracaoMeta(repository: sl()),
+  );
+
+  sl.registerFactory<TestarIntegracaoMeta>(
+    () => TestarIntegracaoMeta(repository: sl()),
   );
 
   sl.registerFactory<CriarTerminal>(() => CriarTerminal(repository: sl()));
@@ -137,6 +162,10 @@ void _presentantion() {
 
   sl.registerFactory<EmpresaNotaFiscalEmailBloc>(
     () => EmpresaNotaFiscalEmailBloc(sl(), sl()),
+  );
+
+  sl.registerFactory<IntegracaoMetaBloc>(
+    () => IntegracaoMetaBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<TerminaisBloc>(() => TerminaisBloc(sl(), sl()));

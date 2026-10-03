@@ -9,3 +9,4 @@ export 'presentation/pages/empresas_page.dart';
 export 'presentation/pages/empresa_page.dart';
 export 'presentation/pages/empresa_parametros_page.dart';
 export 'presentation/pages/empresa_nota_fiscal_email_page.dart';
+export 'presentation/pages/integracao_meta_page.dart';

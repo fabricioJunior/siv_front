@@ -1,11 +1,11 @@
 {
-    "name": "siv_front",
-    "short_name": "siv_front",
+    "name": "SIV",
+    "short_name": "SIV",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1D2D3D",
+    "theme_color": "#1D2D3D",
+    "description": "SIV Front: sistema de gestão para lojas de varejo, com venda no balcão (PDV), caixa, estoque, produtos, relatórios e financeiro.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

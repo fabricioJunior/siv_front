@@ -20,7 +20,8 @@ enum _SecaoEmpresa {
   parametrosDeVenda('Parâmetros', Icons.tune_outlined),
   notaFiscalEmail('Nota fiscal / e-mail', Icons.mail_outline),
   configFiscal('Config. fiscal', Icons.receipt_long_outlined),
-  configEntrega('Config. entrega', Icons.local_shipping_outlined);
+  configEntrega('Config. entrega', Icons.local_shipping_outlined),
+  integracaoMeta('Integração Meta', Icons.campaign_outlined);
 
   final String label;
   final IconData icone;
@@ -418,6 +419,14 @@ class _EmpresaPageState extends State<EmpresaPage> {
           titulo: 'Configuração de entrega',
           descricao: 'Regras de frete e entregadores da empresa.',
           rota: '/configuracao_entrega',
+          empresa: empresa,
+        );
+      case _SecaoEmpresa.integracaoMeta:
+        return _cardAtalho(
+          context,
+          titulo: 'Integração Meta',
+          descricao: 'Catálogo, Pixel e API de Conversões da Meta.',
+          rota: '/integracao_meta_empresa',
           empresa: empresa,
         );
     }

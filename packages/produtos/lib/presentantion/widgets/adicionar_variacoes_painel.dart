@@ -29,6 +29,11 @@ class AdicionarVariacoesPainel extends StatefulWidget {
   final Set<String> chavesNaGrade;
   final bool mobile;
 
+  /// Quando informado, o painel está embutido (ex.: wizard de cadastro) em
+  /// vez de aberto como rota: em vez de `Navigator.pop`, avisa o resultado
+  /// (`true` = criou variações).
+  final ValueChanged<bool>? onConcluir;
+
   const AdicionarVariacoesPainel({
     super.key,
     required this.referenciaId,
@@ -37,6 +42,7 @@ class AdicionarVariacoesPainel extends StatefulWidget {
     required this.estampaIdsNaGrade,
     required this.chavesNaGrade,
     this.mobile = false,
+    this.onConcluir,
   });
 
   static Future<bool?> show({
@@ -256,6 +262,15 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
     return KeyEventResult.ignored;
   }
 
+  void _fechar(BuildContext context, bool criou) {
+    final onConcluir = widget.onConcluir;
+    if (onConcluir != null) {
+      onConcluir(criou);
+    } else {
+      Navigator.of(context).pop(criou);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AdicionarVariacoesBloc>.value(
@@ -263,7 +278,7 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
       child: BlocConsumer<AdicionarVariacoesBloc, AdicionarVariacoesState>(
         listener: (context, state) {
           if (state.step == AdicionarVariacoesStep.sucesso) {
-            Navigator.of(context).pop(true);
+            _fechar(context, true);
           }
         },
         builder: (context, state) {
@@ -281,7 +296,7 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
               const SingleActivator(LogicalKeyboardKey.enter, meta: true): () =>
                   _acaoPrincipal(context, state),
               const SingleActivator(LogicalKeyboardKey.escape): () =>
-                  Navigator.of(context).pop(false),
+                  _fechar(context, false),
             },
             child: FocusScope(
               autofocus: true,
@@ -300,7 +315,7 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(false),
+                          onPressed: () => _fechar(context, false),
                         ),
                       ],
                     ),
@@ -566,7 +581,8 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
         .map(
           (cor) => (
             id: cor.id,
-            onTap: () => _bloc.add(AdicionarVariacoesCorAlternou(corId: cor.id!)),
+            onTap: () =>
+                _bloc.add(AdicionarVariacoesCorAlternou(corId: cor.id!)),
           ),
         )
         .toList();

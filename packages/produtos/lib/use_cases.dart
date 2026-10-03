@@ -39,6 +39,7 @@ export 'domain/use_cases/atualizar_referencia.dart';
 export 'domain/use_cases/criar_referencia.dart';
 export 'domain/use_cases/recuperar_proximo_id_referencia.dart';
 export 'domain/use_cases/recuperar_referencia.dart';
+export 'domain/use_cases/buscar_referencias.dart';
 export 'domain/use_cases/recuperar_referencias.dart';
 
 export 'domain/use_cases/criar_produto.dart';

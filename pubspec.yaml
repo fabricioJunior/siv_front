@@ -1,5 +1,5 @@
 name: siv_front
-description: "A new Flutter project."
+description: "SIV Front: sistema de gestão para lojas de varejo, com venda no balcão (PDV), caixa, estoque, produtos, relatórios e financeiro."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -99,14 +99,19 @@ flutter:
 
   uses-material-design: true
 
+  assets:
+    - assets/brand/
+
 msix_config:
   display_name: SIV Front
   publisher_display_name: Vale do Ceara
   identity_name: ValedoCear.SivFront
   publisher: CN=B25EE2CC-9891-4248-BD5B-370EA12848D0
-  msix_version: 1.0.0.0
+  msix_version: 1.0.1.0
   store: true
   architecture: x64
+  logo_path: assets/brand/siv_icone.png
+  languages: pt-br, en-us
 
  
 sentry:

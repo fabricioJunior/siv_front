@@ -250,38 +250,12 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                   ),
-                  const SizedBox(height: 8),
-                  // TEMPORÁRIO: só pra confirmar que o evento chega no
-                  // dashboard do Sentry após o wizard. Remover depois de
-                  // validar.
-                  Center(
-                    child: TextButton(
-                      onPressed: () =>
-                          throw StateError('This is test exception'),
-                      child: const Text('Verify Sentry Setup'),
-                    ),
-                  ),
                   const SizedBox(height: 24),
                   Center(
                     child: Text(
                       'Esqueceu a senha? Fale com o administrador',
                       style: textos.apoio.copyWith(color: cores.textoApoio),
                       textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: TextButton(
-                      key: const Key(
-                        'login_page_configuracao_dispositivo_button',
-                      ),
-                      onPressed: () => Navigator.of(
-                        context,
-                      ).pushNamed('/configuracao_dispositivo'),
-                      child: Text(
-                        'Trocar terminal',
-                        style: textos.apoio.copyWith(color: cores.aco),
-                      ),
                     ),
                   ),
                 ],

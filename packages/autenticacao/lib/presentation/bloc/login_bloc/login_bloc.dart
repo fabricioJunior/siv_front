@@ -173,19 +173,28 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       emit(LoginCarregarLicenciadosSucesso(state, licenciados: licenciados));
 
-      // Terminal memoriza a última licença usada -- pré-seleciona pra pular
-      // a etapa de escolha nos acessos seguintes (só troca via "Trocar
-      // licenciado").
+      // Pré-seleciona pra pular a etapa de escolha: primeiro o licenciado da
+      // URL (web: `?licenciado=<id ou nome>`), senão o último usado neste
+      // dispositivo (só troca via "Trocar licenciado").
       final licenciadoDaSessao = await _recuperarLicenciadoDaSessao.call();
-      if (licenciadoDaSessao != null &&
-          licenciados.any((item) => item.id == licenciadoDaSessao.id)) {
-        _apiBaseUrlConfig.atualizar(licenciadoDaSessao.urlApi);
+      final doDispositivo = licenciadoDaSessao == null
+          ? null
+          : licenciados
+              .where((item) => item.id == licenciadoDaSessao.id)
+              .firstOrNull;
+      final preSelecionado =
+          licenciadoDaUrl(licenciados, Uri.base) ?? doDispositivo;
+      if (preSelecionado != null) {
+        _apiBaseUrlConfig.atualizar(preSelecionado.urlApi);
         emit(
           LoginSelecionarLicenciadoSucesso(
             state,
-            licenciadoSelecionado: licenciadoDaSessao,
+            licenciadoSelecionado: preSelecionado,
           ),
         );
+        if (preSelecionado != doDispositivo) {
+          await _lembrarLicenciado(preSelecionado);
+        }
       }
     } catch (e, s) {
       emit(
@@ -209,6 +218,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         licenciadoSelecionado: event.licenciado,
       ),
     );
+    await _lembrarLicenciado(event.licenciado);
+  }
+
+  // Guarda a escolha já na seleção (não só no login bem-sucedido), pra não
+  // pedir de novo se o app for fechado antes de entrar.
+  Future<void> _lembrarLicenciado(Licenciado licenciado) async {
+    try {
+      await _salvarLicenciadoDaSessao.call(licenciado);
+    } catch (e, s) {
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onUsuarioAdicionoUsuario(
@@ -443,4 +463,22 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       return const [];
     }
   }
+}
+
+/// Licenciado pedido na URL (web): `?licenciado=<id ou nome>`, também aceito
+/// depois do `#` (`/#/login?licenciado=3`). `null` se não veio ou não existe.
+Licenciado? licenciadoDaUrl(List<Licenciado> licenciados, Uri url) {
+  var valor = url.queryParameters['licenciado'];
+  final fragmento = url.fragment;
+  final interrogacao = fragmento.indexOf('?');
+  if ((valor == null || valor.trim().isEmpty) && interrogacao >= 0) {
+    valor = Uri.splitQueryString(
+      fragmento.substring(interrogacao + 1),
+    )['licenciado'];
+  }
+  valor = valor?.trim().toLowerCase();
+  if (valor == null || valor.isEmpty) return null;
+  return licenciados
+      .where((l) => l.id == valor || l.nome.toLowerCase() == valor)
+      .firstOrNull;
 }

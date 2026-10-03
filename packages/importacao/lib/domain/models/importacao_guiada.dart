@@ -66,14 +66,16 @@ enum ImportacaoEtapa {
   produtos(
     titulo: 'Produtos',
     descricao:
-        'Cadastra referências, preços e produtos (cor, tamanho e código de '
-        'barras). O modelo tem uma linha de cada tipo: REFERENCIA, '
-        'REFERENCIA_PRECO e PRODUTO.',
-    tipoBackend: 'produto',
+        'Cadastra os produtos (cor, tamanho e código de barras) das '
+        'referências já importadas. O modelo tem só linhas PRODUTO, cada uma '
+        'apontando para o ID de uma referência existente.',
+    tipoBackend: 'produtosomente',
+    tiposLegados: ['produto', 'produtocategoria'],
     caminhoModelo: '/produtos/template',
-    caminhoEnvio: '/produtos/csv',
+    queryModelo: {'tipo': 'somente'},
+    caminhoEnvio: '/produtos/csv/somente',
     nomeModelo: 'modelo-produtos.csv',
-    permissao: 'IMPFP001',
+    permissao: 'IMPFP005',
   ),
   estoque(
     titulo: 'Estoque',
@@ -115,6 +117,12 @@ enum ImportacaoEtapa {
   /// O modelo é gerado para uma tabela de preço (query `tabelaDePrecoId`).
   final bool modeloPrecisaTabela;
 
+  /// Query fixa do download do modelo (ex.: `tipo=somente`).
+  final Map<String, String> queryModelo;
+
+  /// `tipo` de importações antigas que contam como esta etapa.
+  final List<String> tiposLegados;
+
   const ImportacaoEtapa({
     required this.titulo,
     required this.descricao,
@@ -124,6 +132,8 @@ enum ImportacaoEtapa {
     required this.nomeModelo,
     required this.permissao,
     this.modeloPrecisaTabela = false,
+    this.queryModelo = const {},
+    this.tiposLegados = const [],
   });
 
   /// Quem tem QUALQUER uma dessas permissões enxerga o assistente (cada etapa
@@ -135,12 +145,42 @@ enum ImportacaoEtapa {
   static ImportacaoEtapa? deTipo(String tipo) {
     final normalizado = tipo.toLowerCase();
     for (final etapa in values) {
-      if (etapa.tipoBackend == normalizado) return etapa;
+      if (etapa.tipoBackend == normalizado ||
+          etapa.tiposLegados.contains(normalizado)) {
+        return etapa;
+      }
     }
     return null;
   }
 
   ImportacaoEtapa? get anterior => index == 0 ? null : values[index - 1];
+}
+
+/// Amostra do que já está no sistema para uma etapa (até 10 itens mais
+/// recentes) -- só pra conferência, nunca a lista inteira.
+class ImportacaoPrevia extends Equatable {
+  final int total;
+  final List<String> colunas;
+  final List<List<String>> linhas;
+
+  const ImportacaoPrevia({
+    required this.total,
+    required this.colunas,
+    required this.linhas,
+  });
+
+  factory ImportacaoPrevia.fromJson(Map<String, dynamic> json) {
+    return ImportacaoPrevia(
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      colunas: (json['colunas'] as List<dynamic>? ?? const []).cast<String>(),
+      linhas: (json['linhas'] as List<dynamic>? ?? const [])
+          .map((l) => (l as List<dynamic>).map((c) => '$c').toList())
+          .toList(),
+    );
+  }
+
+  @override
+  List<Object?> get props => [total, colunas, linhas];
 }
 
 /// Registro do CSV que não foi importado, com o motivo.

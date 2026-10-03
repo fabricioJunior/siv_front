@@ -55,6 +55,9 @@ class ImportacaoGuiadaPage extends StatelessWidget {
                           _Passos(state: state),
                           const SizedBox(height: 16),
                           _PainelEtapa(
+                            // Key por etapa: sem ela o BlocBuilder interno é reaproveitado
+                            // ao trocar de etapa e fica com o buildWhen/estado da anterior.
+                            key: ValueKey(state.etapaAtual),
                             etapa: state.etapaAtual,
                             tabelaDePrecoSeletor: tabelaDePrecoSeletor,
                             funcionarioSeletor: funcionarioSeletor,
@@ -230,6 +233,7 @@ class _PainelEtapa extends StatelessWidget {
   final SeletorWidget funcionarioSeletor;
 
   const _PainelEtapa({
+    super.key,
     required this.etapa,
     required this.tabelaDePrecoSeletor,
     required this.funcionarioSeletor,
@@ -263,6 +267,8 @@ class _PainelEtapa extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(etapa.descricao, style: tema.textTheme.bodyMedium),
+                const SizedBox(height: 16),
+                _Previa(etapa: etapa, dados: dados),
                 const SizedBox(height: 16),
                 if (!permitido)
                   const _Aviso(
@@ -691,6 +697,86 @@ class _Aviso extends StatelessWidget {
           ?acao,
         ],
       ),
+    );
+  }
+}
+
+/// "No sistema agora": amostra (até 10 itens mais recentes) do que já está
+/// cadastrado para a etapa, pra conferir o que entrou.
+class _Previa extends StatelessWidget {
+  final ImportacaoEtapa etapa;
+  final EtapaImportacaoState dados;
+
+  const _Previa({required this.etapa, required this.dados});
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final previa = dados.previa;
+
+    final Widget corpo;
+    if (etapa.modeloPrecisaTabela && dados.tabelaDePrecoId == null) {
+      corpo = Text(
+        'Selecione a tabela de preço para ver os preços cadastrados.',
+        style: tema.textTheme.bodySmall,
+      );
+    } else if (dados.erroPrevia != null) {
+      corpo = Text(
+        dados.erroPrevia!,
+        style: tema.textTheme.bodySmall?.copyWith(color: Colors.red),
+      );
+    } else if (previa == null) {
+      corpo = const LinearProgressIndicator();
+    } else if (previa.linhas.isEmpty) {
+      corpo = Text('Nada cadastrado ainda.', style: tema.textTheme.bodySmall);
+    } else {
+      corpo = SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: 24,
+          dataRowMinHeight: 32,
+          dataRowMaxHeight: 36,
+          headingRowHeight: 36,
+          columns: [
+            for (final coluna in previa.colunas)
+              DataColumn(label: Text(coluna)),
+          ],
+          rows: [
+            for (final linha in previa.linhas)
+              DataRow(cells: [for (final c in linha) DataCell(Text(c))]),
+          ],
+        ),
+      );
+    }
+
+    final titulo = previa == null
+        ? 'No sistema agora'
+        : 'No sistema agora · ${previa.total} '
+              '${previa.total == 1 ? 'registro' : 'registros'}'
+              '${previa.total > previa.linhas.length ? ' (mostrando os ${previa.linhas.length} mais recentes)' : ''}';
+
+    return Column(
+      key: Key('importacao_previa_${etapa.name}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(titulo, style: tema.textTheme.titleSmall)),
+            IconButton(
+              tooltip: 'Atualizar',
+              visualDensity: VisualDensity.compact,
+              onPressed: dados.carregandoPrevia
+                  ? null
+                  : () => context.read<ImportacaoGuiadaBloc>().add(
+                      ImportacaoGuiadaPreviaCarregou(etapa),
+                    ),
+              icon: const Icon(Icons.refresh, size: 18),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        corpo,
+      ],
     );
   }
 }

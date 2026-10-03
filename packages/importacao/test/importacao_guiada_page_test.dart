@@ -27,12 +27,23 @@ class _Permissoes implements IPermissoesController {
 class _Remoto implements IImportacaoRemoteDataSource {
   List<ImportacaoGuiada> ultimas = [];
   final Map<int, ImportacaoGuiada> porId = {};
+  ImportacaoPrevia previaDaEtapa = const ImportacaoPrevia(
+    total: 0,
+    colunas: [],
+    linhas: [],
+  );
 
   @override
   Future<List<ImportacaoGuiada>> listarUltimas() async => ultimas;
 
   @override
   Future<ImportacaoGuiada> consultar(int id) async => porId[id]!;
+
+  @override
+  Future<ImportacaoPrevia> previa(
+    ImportacaoEtapa etapa, {
+    int? tabelaDePrecoId,
+  }) async => previaDaEtapa;
 
   @override
   Future<Uint8List> baixarModelo(
@@ -147,6 +158,32 @@ void main() {
         find.textContaining('Ordem recomendada: importe "Produtos"'),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'mostra a pré-visualização: total e amostra do que já está no sistema',
+    (tester) async {
+      remoto.previaDaEtapa = const ImportacaoPrevia(
+        total: 123,
+        colunas: ['ID', 'Nome'],
+        linhas: [
+          ['1', 'Ana'],
+          ['2', 'Bia'],
+        ],
+      );
+      await abrir(tester);
+
+      expect(
+        find.textContaining('No sistema agora · 123 registros'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('mostrando os 2 mais recentes'),
+        findsOneWidget,
+      );
+      expect(find.text('Ana'), findsOneWidget);
+      expect(find.text('Bia'), findsOneWidget);
     },
   );
 

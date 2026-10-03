@@ -11,12 +11,20 @@ class EtapaImportacaoState extends Equatable {
   final int? tabelaDePrecoId;
   final int? funcionarioId;
 
+  /// Amostra do que já está no sistema (pré-visualização).
+  final ImportacaoPrevia? previa;
+  final bool carregandoPrevia;
+  final String? erroPrevia;
+
   const EtapaImportacaoState({
     this.importacao,
     this.arquivoNome,
     this.enviando = false,
     this.tabelaDePrecoId,
     this.funcionarioId,
+    this.previa,
+    this.carregandoPrevia = false,
+    this.erroPrevia,
   });
 
   /// `Object? = _manter` deixa distinguir "não mexer" de "limpar (null)".
@@ -26,6 +34,9 @@ class EtapaImportacaoState extends Equatable {
     bool? enviando,
     Object? tabelaDePrecoId = _manter,
     Object? funcionarioId = _manter,
+    Object? previa = _manter,
+    bool? carregandoPrevia,
+    Object? erroPrevia = _manter,
   }) {
     return EtapaImportacaoState(
       importacao: identical(importacao, _manter)
@@ -41,6 +52,13 @@ class EtapaImportacaoState extends Equatable {
       funcionarioId: identical(funcionarioId, _manter)
           ? this.funcionarioId
           : funcionarioId as int?,
+      previa: identical(previa, _manter)
+          ? this.previa
+          : previa as ImportacaoPrevia?,
+      carregandoPrevia: carregandoPrevia ?? this.carregandoPrevia,
+      erroPrevia: identical(erroPrevia, _manter)
+          ? this.erroPrevia
+          : erroPrevia as String?,
     );
   }
 
@@ -55,6 +73,9 @@ class EtapaImportacaoState extends Equatable {
     enviando,
     tabelaDePrecoId,
     funcionarioId,
+    previa,
+    carregandoPrevia,
+    erroPrevia,
   ];
 }
 

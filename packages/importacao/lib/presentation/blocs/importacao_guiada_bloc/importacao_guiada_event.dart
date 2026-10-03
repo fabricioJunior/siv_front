@@ -62,3 +62,8 @@ class ImportacaoGuiadaDetalhou extends ImportacaoGuiadaEvent {
 class ImportacaoGuiadaConsultou extends ImportacaoGuiadaEvent {
   const ImportacaoGuiadaConsultou();
 }
+
+class ImportacaoGuiadaPreviaCarregou extends ImportacaoGuiadaEvent {
+  final ImportacaoEtapa etapa;
+  const ImportacaoGuiadaPreviaCarregou(this.etapa);
+}

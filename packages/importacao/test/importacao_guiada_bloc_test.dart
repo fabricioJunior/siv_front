@@ -34,6 +34,12 @@ class _RemotoFake implements IImportacaoRemoteDataSource {
   }
 
   @override
+  Future<ImportacaoPrevia> previa(
+    ImportacaoEtapa etapa, {
+    int? tabelaDePrecoId,
+  }) async => const ImportacaoPrevia(total: 0, colunas: [], linhas: []);
+
+  @override
   Future<Uint8List> baixarModelo(
     ImportacaoEtapa etapa, {
     Map<String, String> query = const {},

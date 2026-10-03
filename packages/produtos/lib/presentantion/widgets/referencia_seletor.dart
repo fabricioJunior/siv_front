@@ -164,7 +164,7 @@ class _ReferenciaSeletorState extends State<ReferenciaSeletor> {
             cadastrarLabel: 'Cadastrar referência',
             onCadastrarPressed: widget.permitirCadastro
                 ? () async {
-                    final salvou = await ReferenciaCadastroModal.show(
+                    final salvou = await ReferenciaCadastroPage.show(
                       context: context,
                     );
                     if (salvou == true) {

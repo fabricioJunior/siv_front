@@ -26,8 +26,13 @@ class Deslogar {
   // com a aba em background) -- mantém produtos/estoque/preços/etc em cache, só limpa sessão/token.
   // O wipe total (apagarTodosOsDados) é só pro logout explícito do usuário, que pode trocar de
   // licenciado -- ver comentário abaixo.
+  //
+  // O licenciado escolhido NÃO é esquecido no logout: a tela de login
+  // pré-seleciona o último usado (ver LoginBloc). No wipe total ele é regravado
+  // depois de apagar os dados (o banco local inteiro vai embora, inclusive ele).
   Future<void> call({bool apagarDadosLocais = true}) async {
-    await licenciadosRepository.limparLicenciadoDaSessao();
+    final licenciado =
+        await licenciadosRepository.recuperarLicenciadoDaSessao();
     await usuariosRepository.limparTerminalDaSessao();
     await usuariosRepository.apagarUsuarioDaSessao();
     await limparCredenciaisDeAutenticacao.call();
@@ -42,5 +47,8 @@ class Deslogar {
     // total precisa apagar as duas origens.
     await localDatabaseInstance.apagarTodosOsDados();
     await hiveDatabaseInstance.apagarTodosOsDados();
+    if (licenciado != null) {
+      await licenciadosRepository.salvarLicenciadoDaSessao(licenciado);
+    }
   }
 }

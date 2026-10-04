@@ -3,6 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart' show sivCantosBlueprint;
 import 'package:core/presentation/debouncer.dart';
 import 'package:core/tema.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:produtos/domain/referencias_filtro.dart';
 import 'package:produtos/models.dart';
@@ -774,7 +775,10 @@ class _Radio extends StatelessWidget {
 // Chips de categoria e pendências
 // ---------------------------------------------------------------------------
 
-class _LinhaFiltros extends StatelessWidget {
+/// Linha única (como no mock): as categorias rolam na horizontal dentro do espaço que sobra e as
+/// pendências ficam fixas à direita -- com muitas categorias a lista não quebra em várias linhas
+/// nem empurra a tabela para fora da tela.
+class _LinhaFiltros extends StatefulWidget {
   final ReferenciasFiltro filtro;
   final ResumoReferencias resumo;
   final ValueChanged<ReferenciasFiltro> onFiltro;
@@ -786,60 +790,120 @@ class _LinhaFiltros extends StatelessWidget {
   });
 
   @override
+  State<_LinhaFiltros> createState() => _LinhaFiltrosState();
+}
+
+class _LinhaFiltrosState extends State<_LinhaFiltros> {
+  final _rolagem = ScrollController();
+
+  @override
+  void dispose() {
+    _rolagem.dispose();
+    super.dispose();
+  }
+
+  void _rolar(double delta) {
+    if (!_rolagem.hasClients) return;
+    final max = _rolagem.position.maxScrollExtent;
+    _rolagem.animateTo(
+      (_rolagem.offset + delta).clamp(0.0, max),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final categorias = resumo.categorias;
-    final pendencias = resumo;
+    final filtro = widget.filtro;
+    final onFiltro = widget.onFiltro;
+    final categorias = widget.resumo.categorias;
     final rotulo = textos.rotulo.copyWith(color: cores.textoApoio);
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: Text('CATEGORIA', style: rotulo),
-        ),
+    final chipsCategorias = <Widget>[
+      _Chip(
+        rotulo: 'Todas',
+        selecionado: filtro.categoriaId == null,
+        onTap: () => onFiltro(filtro.copyWith(categoriaId: null)),
+      ),
+      for (final c in categorias)
         _Chip(
-          rotulo: 'Todas',
-          selecionado: filtro.categoriaId == null,
-          onTap: () => onFiltro(filtro.copyWith(categoriaId: null)),
+          rotulo: c.nome,
+          selecionado: filtro.categoriaId == c.id,
+          onTap: () => onFiltro(
+            filtro.copyWith(
+              categoriaId: filtro.categoriaId == c.id ? null : c.id,
+            ),
+          ),
         ),
-        for (final c in categorias)
-          _Chip(
-            rotulo: c.nome,
-            selecionado: filtro.categoriaId == c.id,
-            onTap: () => onFiltro(
-              filtro.copyWith(
-                categoriaId: filtro.categoriaId == c.id ? null : c.id,
+    ];
+
+    return SizedBox(
+      key: const Key('referencias_filtros'),
+      height: 34,
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text('CATEGORIA', style: rotulo),
+          ),
+          IconButton(
+            tooltip: 'Rolar categorias para a esquerda',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.chevron_left, size: 18),
+            onPressed: () => _rolar(-240),
+          ),
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                scrollbars: false,
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                },
+              ),
+              child: ListView.separated(
+                controller: _rolagem,
+                scrollDirection: Axis.horizontal,
+                itemCount: chipsCategorias.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (_, i) => Center(child: chipsCategorias[i]),
               ),
             ),
           ),
-        Container(
-          width: 1,
-          height: 20,
-          margin: const EdgeInsets.symmetric(horizontal: 10),
-          color: cores.tinta.withValues(alpha: 0.16),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: Text('PENDÊNCIAS', style: rotulo),
-        ),
-        _Chip(
-          rotulo: 'Sem NCM',
-          contagem: pendencias.semNcm,
-          selecionado: filtro.semNcm,
-          onTap: () => onFiltro(filtro.copyWith(semNcm: !filtro.semNcm)),
-        ),
-        _Chip(
-          rotulo: 'Sem peso',
-          contagem: pendencias.semPeso,
-          selecionado: filtro.semPeso,
-          onTap: () => onFiltro(filtro.copyWith(semPeso: !filtro.semPeso)),
-        ),
-      ],
+          IconButton(
+            tooltip: 'Rolar categorias para a direita',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.chevron_right, size: 18),
+            onPressed: () => _rolar(240),
+          ),
+          Container(
+            width: 1,
+            height: 20,
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            color: cores.tinta.withValues(alpha: 0.16),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Text('PENDÊNCIAS', style: rotulo),
+          ),
+          _Chip(
+            rotulo: 'Sem NCM',
+            contagem: widget.resumo.semNcm,
+            selecionado: filtro.semNcm,
+            onTap: () => onFiltro(filtro.copyWith(semNcm: !filtro.semNcm)),
+          ),
+          const SizedBox(width: 6),
+          _Chip(
+            rotulo: 'Sem peso',
+            contagem: widget.resumo.semPeso,
+            selecionado: filtro.semPeso,
+            onTap: () => onFiltro(filtro.copyWith(semPeso: !filtro.semPeso)),
+          ),
+        ],
+      ),
     );
   }
 }

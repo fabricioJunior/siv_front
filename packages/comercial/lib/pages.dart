@@ -1,5 +1,6 @@
 export 'presentation/pages/comercial_menu_page.dart';
 export 'presentation/pages/importar_pedidos_csv_page.dart';
+export 'presentation/pages/entrada_por_contagem_page.dart';
 export 'presentation/pages/importar_nfe_page.dart';
 export 'presentation/pages/pedido_entrada_page.dart';
 export 'presentation/pages/importar_vendas_csv_page.dart';

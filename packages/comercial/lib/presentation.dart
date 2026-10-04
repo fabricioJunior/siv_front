@@ -13,6 +13,7 @@ export 'presentation/blocs/venda_bloc/venda_bloc.dart';
 export 'presentation/blocs/importar_pedidos_csv_bloc/importar_pedidos_csv_bloc.dart';
 export 'presentation/pages/importar_pedidos_csv_page.dart';
 export 'presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
+export 'presentation/pages/entrada_por_contagem_page.dart';
 export 'presentation/pages/importar_nfe_page.dart';
 export 'presentation/pages/pedido_entrada_page.dart';
 export 'presentation/blocs/importar_vendas_csv_bloc/importar_vendas_csv_bloc.dart';

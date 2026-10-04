@@ -124,6 +124,16 @@ class _PedidosPageState extends State<PedidosPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton.icon(
+                      key: const Key('pedidos_entrada_nfe_button'),
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, '/importar_nfe');
+                        if (mounted) _bloc.add(PedidosIniciou());
+                      },
+                      icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                      label: const Text('Entrada por NF-e'),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/importar_pedidos_csv'),
                       icon: const Icon(Icons.upload_file_outlined, size: 18),

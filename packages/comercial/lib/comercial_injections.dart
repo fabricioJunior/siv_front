@@ -40,6 +40,10 @@ void _remoteDataSources() {
     () => PedidosRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IPedidoEntradaRemoteDataSource>(
+    () => PedidoEntradaRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IPedidoItemRemoteDataSource>(
     () => PedidoItemRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -717,6 +721,23 @@ void _presentation() {
 
   sl.registerFactory<ListasPersonalizadasBloc>(
     () => ListasPersonalizadasBloc(sl()),
+  );
+
+  sl.registerFactory<ImportarNfeEntrada>(() => ImportarNfeEntrada(sl()));
+  sl.registerFactory<ObterPedidoEntrada>(() => ObterPedidoEntrada(sl()));
+  sl.registerFactory<VincularLinhaEntrada>(() => VincularLinhaEntrada(sl()));
+  sl.registerFactory<PreCadastrarLinhaEntrada>(
+    () => PreCadastrarLinhaEntrada(sl()),
+  );
+  sl.registerFactory<IgnorarLinhaEntrada>(() => IgnorarLinhaEntrada(sl()));
+  sl.registerFactory<ResolverDivergenciaEntrada>(
+    () => ResolverDivergenciaEntrada(sl()),
+  );
+  sl.registerFactory<RegistrarContagemEntrada>(
+    () => RegistrarContagemEntrada(sl()),
+  );
+  sl.registerFactory<PedidoEntradaBloc>(
+    () => PedidoEntradaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ImportarPedidosCsvBloc>(

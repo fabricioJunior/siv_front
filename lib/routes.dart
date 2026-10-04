@@ -674,6 +674,27 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/entrada_contagem': (context) {
+    return _rotaProtegida(
+      route: '/entrada_contagem',
+      child: EntradaPorContagemPage(
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
+  },
   '/pedido_entrada': (context) {
     return _rotaProtegida(
       route: '/pedido_entrada',
@@ -686,6 +707,10 @@ Map<String, Widget Function(BuildContext)> routes = {
         referenciaSeletor: (data) => ReferenciaSeletor(
           modo: ReferenciaSeletorModo.unica,
           permitirCadastro: false,
+          onChanged: data.onChanged,
+        ),
+        referenciaContagemSeletor: (data) => ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.unica,
           onChanged: data.onChanged,
         ),
         corSeletor: (data) =>
@@ -1501,6 +1526,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_nfe': ['PEDFM001'],
+  '/entrada_contagem': ['PEDFM001'],
   '/pedido_entrada': ['PEDFC002'],
   '/importar_pedidos_csv': ['IMPFP007'],
   // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.

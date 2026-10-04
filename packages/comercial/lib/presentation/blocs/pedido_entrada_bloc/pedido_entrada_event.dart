@@ -27,6 +27,18 @@ class PedidoEntradaImportouNfe extends PedidoEntradaEvent {
   List<Object?> get props => [filePath, tabelaPrecoId];
 }
 
+class PedidoEntradaCriouPorContagem extends PedidoEntradaEvent {
+  final int pessoaId;
+  final int tabelaPrecoId;
+  const PedidoEntradaCriouPorContagem({
+    required this.pessoaId,
+    required this.tabelaPrecoId,
+  });
+
+  @override
+  List<Object?> get props => [pessoaId, tabelaPrecoId];
+}
+
 class PedidoEntradaVinculouLinha extends PedidoEntradaEvent {
   final int linhaId;
   final int referenciaId;

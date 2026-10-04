@@ -12,6 +12,9 @@ class PedidoEntradaPage extends StatefulWidget {
   final int pedidoId;
   final SeletorWidget categoriaSeletor;
   final SeletorWidget referenciaSeletor;
+
+  /// Referência com cadastro (wizard) -- usado na contagem sem NF-e.
+  final SeletorWidget referenciaContagemSeletor;
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
 
@@ -20,6 +23,7 @@ class PedidoEntradaPage extends StatefulWidget {
     required this.pedidoId,
     required this.categoriaSeletor,
     required this.referenciaSeletor,
+    required this.referenciaContagemSeletor,
     required this.corSeletor,
     required this.tamanhoSeletor,
   });
@@ -128,11 +132,11 @@ class _Conteudo extends StatelessWidget {
                 _Pendencias(pendencias: resumo.pendencias),
                 const SizedBox(height: 12),
               ],
-              if (resumo.linhas.isEmpty)
-                Text(
-                  'Este pedido não tem itens de NF-e. Use a conferência do '
-                  'pedido para bipar e dar entrada.',
-                  style: tema.textTheme.bodyMedium,
+              if (resumo.nfe == null)
+                _ContagemPorReferencia(
+                  resumo: resumo,
+                  salvando: salvando,
+                  seletores: seletores,
                 ),
               for (final linha in resumo.linhas)
                 _CartaoLinha(
@@ -171,6 +175,113 @@ class _Conteudo extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Entrada sem NF-e (manual / por contagem): conta por referência, cor e tamanho.
+/// A contagem cria o SKU e vira o que será etiquetado e conferido por bip.
+class _ContagemPorReferencia extends StatelessWidget {
+  final EntradaResumo resumo;
+  final bool salvando;
+  final PedidoEntradaPage seletores;
+
+  const _ContagemPorReferencia({
+    required this.resumo,
+    required this.salvando,
+    required this.seletores,
+  });
+
+  Future<void> _contar(
+    BuildContext context, {
+    int? referenciaId,
+    String? nome,
+  }) async {
+    final bloc = context.read<PedidoEntradaBloc>();
+    final itens = await showDialog<List<ItemContagem>>(
+      context: context,
+      builder: (_) => _ContagemDialog(
+        titulo: nome == null ? 'Contar referência' : 'Contar: $nome',
+        referenciaId: referenciaId,
+        referenciaSeletor: seletores.referenciaContagemSeletor,
+        existentes: resumo.contagens
+            .where((c) => c.referenciaId == referenciaId)
+            .toList(),
+        corSeletor: seletores.corSeletor,
+        tamanhoSeletor: seletores.tamanhoSeletor,
+      ),
+    );
+    if (itens != null && itens.isNotEmpty) {
+      bloc.add(PedidoEntradaRegistrouContagem(itens));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    final grupos = <int, List<EntradaContagem>>{};
+    for (final c in resumo.contagens) {
+      grupos.putIfAbsent(c.referenciaId ?? 0, () => []).add(c);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text('Contagem por referência', style: tema.titleMedium),
+            ),
+            FilledButton.icon(
+              key: const Key('entrada_contar_referencia'),
+              onPressed: salvando ? null : () => _contar(context),
+              icon: const Icon(Icons.add),
+              label: const Text('Contar referência'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (grupos.isEmpty)
+          Text(
+            'Nenhuma contagem ainda. Escolha (ou cadastre) a referência e '
+            'digite o que foi encontrado em cada cor e tamanho.',
+            style: tema.bodyMedium,
+          ),
+        for (final entry in grupos.entries)
+          Card(
+            key: Key('entrada_grupo_${entry.key}'),
+            child: ListTile(
+              title: Text(entry.value.first.referenciaNome ?? 'Referência'),
+              subtitle: Text(
+                entry.value
+                    .map(
+                      (c) =>
+                          '${c.corNome ?? '-'} ${c.tamanhoNome ?? ''}: ${_qtd(c.quantidade)}',
+                    )
+                    .join(' · '),
+              ),
+              trailing: Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    '${_qtd(entry.value.fold<double>(0, (s, c) => s + c.quantidade))} un.',
+                    style: tema.titleSmall,
+                  ),
+                  TextButton(
+                    onPressed: salvando
+                        ? null
+                        : () => _contar(
+                              context,
+                              referenciaId: entry.key == 0 ? null : entry.key,
+                              nome: entry.value.first.referenciaNome,
+                            ),
+                    child: const Text('Editar'),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -534,13 +645,20 @@ class _CartaoLinha extends StatelessWidget {
 /// escolhe cores e tamanhos e digita o encontrado em cada cruzamento -- é a
 /// contagem que cria cor + tamanho + SKU (nada é criado pela quantidade da nota).
 class _ContagemDialog extends StatefulWidget {
-  final EntradaLinha linha;
+  /// Linha da NF-e; null na contagem por referência (entrada sem NF-e).
+  final EntradaLinha? linha;
+  final int? referenciaId;
+  final String? titulo;
+  final SeletorWidget? referenciaSeletor;
   final List<EntradaContagem> existentes;
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
 
   const _ContagemDialog({
-    required this.linha,
+    this.linha,
+    this.referenciaId,
+    this.titulo,
+    this.referenciaSeletor,
     required this.existentes,
     required this.corSeletor,
     required this.tamanhoSeletor,
@@ -556,7 +674,9 @@ class _ContagemDialogState extends State<_ContagemDialog> {
   final _tamanhos = <int, String>{};
   final _celulas = <String, TextEditingController>{};
 
-  bool get _skuUnico => widget.linha.status == StatusLinhaEntrada.mapeado;
+  late int? _referenciaId = widget.referenciaId ?? widget.linha?.referenciaId;
+
+  bool get _skuUnico => widget.linha?.status == StatusLinhaEntrada.mapeado;
 
   @override
   void initState() {
@@ -597,19 +717,20 @@ class _ContagemDialogState extends State<_ContagemDialog> {
           ? const []
           : [
               ItemContagem(
-                linhaId: widget.linha.id,
-                produtoId: widget.linha.produtoId,
+                linhaId: widget.linha!.id,
+                produtoId: widget.linha!.produtoId,
                 quantidade: q,
               ),
             ];
     }
+    if (_referenciaId == null) return const [];
     return [
       for (final cor in _cores.keys)
         for (final tam in _tamanhos.keys)
           if (_ler(_celula(cor, tam)) != null)
             ItemContagem(
-              linhaId: widget.linha.id,
-              referenciaId: widget.linha.referenciaId,
+              linhaId: widget.linha?.id,
+              referenciaId: _referenciaId,
               corId: cor,
               tamanhoId: tam,
               quantidade: _ler(_celula(cor, tam))!,
@@ -620,7 +741,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Contar: ${widget.linha.descricao}'),
+      title: Text(widget.titulo ?? 'Contar: ${widget.linha!.descricao}'),
       content: SizedBox(
         width: 560,
         child: SingleChildScrollView(
@@ -644,7 +765,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
   Widget _campoUnico() => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('NF-e: ${_qtd(widget.linha.quantidadeNfe)}'),
+          Text('NF-e: ${_qtd(widget.linha!.quantidadeNfe)}'),
           TextField(
             key: const Key('contagem_quantidade'),
             controller: _simples,
@@ -662,9 +783,24 @@ class _ContagemDialogState extends State<_ContagemDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (widget.referenciaSeletor != null &&
+            widget.referenciaId == null &&
+            widget.linha == null) ...[
+          widget.referenciaSeletor!(
+            SeletorData(
+              compacto: true,
+              onChanged: (itens) => setState(
+                () => _referenciaId = itens.isEmpty ? null : itens.first.id,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
-          'NF-e: ${_qtd(widget.linha.quantidadeNfe)} — digite o que foi '
-          'encontrado em cada cor e tamanho.',
+          widget.linha == null
+              ? 'Digite o que foi encontrado em cada cor e tamanho.'
+              : 'NF-e: ${_qtd(widget.linha!.quantidadeNfe)} — digite o que foi '
+                  'encontrado em cada cor e tamanho.',
         ),
         const SizedBox(height: 8),
         widget.corSeletor(

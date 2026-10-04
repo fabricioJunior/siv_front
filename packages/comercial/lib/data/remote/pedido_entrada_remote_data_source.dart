@@ -34,6 +34,24 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<EntradaResumo> criarPorContagem({
+    required int pessoaId,
+    required int tabelaPrecoId,
+    String? observacao,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            'pessoaId': pessoaId,
+            'tabelaPrecoId': tabelaPrecoId,
+            if (observacao != null) 'observacao': observacao,
+          },
+          pathParameters: {'path': '/entrada/contagem'},
+        ))
+            .body,
+      );
+
+  @override
   Future<EntradaResumo> obter(int pedidoId) async => _resumo(
         (await get(pathParameters: {'path': '/$pedidoId/entrada'})).body,
       );

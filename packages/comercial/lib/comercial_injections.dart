@@ -713,6 +713,9 @@ void _presentation() {
   );
 
   sl.registerFactory<ImportarNfeEntrada>(() => ImportarNfeEntrada(sl()));
+  sl.registerFactory<CriarEntradaPorContagem>(
+    () => CriarEntradaPorContagem(sl()),
+  );
   sl.registerFactory<ObterPedidoEntrada>(() => ObterPedidoEntrada(sl()));
   sl.registerFactory<VincularLinhaEntrada>(() => VincularLinhaEntrada(sl()));
   sl.registerFactory<PreCadastrarLinhaEntrada>(
@@ -726,7 +729,7 @@ void _presentation() {
     () => RegistrarContagemEntrada(sl()),
   );
   sl.registerFactory<PedidoEntradaBloc>(
-    () => PedidoEntradaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+    () => PedidoEntradaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ImportarPedidosCsvBloc>(

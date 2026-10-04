@@ -6,6 +6,12 @@ abstract class IPedidoEntradaRemoteDataSource {
     required int tabelaPrecoId,
   });
 
+  Future<EntradaResumo> criarPorContagem({
+    required int pessoaId,
+    required int tabelaPrecoId,
+    String? observacao,
+  });
+
   Future<EntradaResumo> obter(int pedidoId);
 
   Future<EntradaResumo> vincularReferencia(

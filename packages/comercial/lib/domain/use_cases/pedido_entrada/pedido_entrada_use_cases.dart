@@ -15,6 +15,22 @@ class ImportarNfeEntrada {
       _remote.importarNfe(filePath: filePath, tabelaPrecoId: tabelaPrecoId);
 }
 
+class CriarEntradaPorContagem {
+  final IPedidoEntradaRemoteDataSource _remote;
+  CriarEntradaPorContagem(this._remote);
+
+  Future<EntradaResumo> call({
+    required int pessoaId,
+    required int tabelaPrecoId,
+    String? observacao,
+  }) =>
+      _remote.criarPorContagem(
+        pessoaId: pessoaId,
+        tabelaPrecoId: tabelaPrecoId,
+        observacao: observacao,
+      );
+}
+
 class ObterPedidoEntrada {
   final IPedidoEntradaRemoteDataSource _remote;
   ObterPedidoEntrada(this._remote);

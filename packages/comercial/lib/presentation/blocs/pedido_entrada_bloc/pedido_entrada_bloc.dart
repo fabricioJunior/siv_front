@@ -13,6 +13,7 @@ part 'pedido_entrada_state.dart';
 /// pré-cadastrar, contar e resolver divergências. Não mexe em estoque.
 class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   final ImportarNfeEntrada _importarNfe;
+  final CriarEntradaPorContagem _criarPorContagem;
   final ObterPedidoEntrada _obter;
   final VincularLinhaEntrada _vincular;
   final PreCadastrarLinhaEntrada _preCadastrar;
@@ -24,6 +25,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
 
   PedidoEntradaBloc(
     this._importarNfe,
+    this._criarPorContagem,
     this._obter,
     this._vincular,
     this._preCadastrar,
@@ -33,6 +35,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   ) : super(const PedidoEntradaState()) {
     on<PedidoEntradaCarregou>(_onCarregou);
     on<PedidoEntradaImportouNfe>(_onImportou);
+    on<PedidoEntradaCriouPorContagem>(_onCriouPorContagem);
     on<PedidoEntradaVinculouLinha>(
       (e, emit) => _salvar(
         emit,
@@ -111,6 +114,29 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
         state.copyWith(
           salvando: false,
           erro: mensagemDeErroApi(e, 'Falha ao importar a NF-e.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  Future<void> _onCriouPorContagem(
+    PedidoEntradaCriouPorContagem event,
+    Emitter<PedidoEntradaState> emit,
+  ) async {
+    emit(state.copyWith(salvando: true));
+    try {
+      final resumo = await _criarPorContagem(
+        pessoaId: event.pessoaId,
+        tabelaPrecoId: event.tabelaPrecoId,
+      );
+      _pedidoId = resumo.pedidoId;
+      emit(state.copyWith(salvando: false, resumo: resumo));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          salvando: false,
+          erro: mensagemDeErroApi(e, 'Falha ao iniciar a contagem.'),
         ),
       );
       addError(e, s);

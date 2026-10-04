@@ -124,6 +124,16 @@ class _PedidosPageState extends State<PedidosPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton.icon(
+                      key: const Key('pedidos_entrada_contagem_button'),
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, '/entrada_contagem');
+                        if (mounted) _bloc.add(PedidosIniciou());
+                      },
+                      icon: const Icon(Icons.fact_check_outlined, size: 18),
+                      label: const Text('Entrada por contagem'),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
                       key: const Key('pedidos_entrada_nfe_button'),
                       onPressed: () async {
                         await Navigator.pushNamed(context, '/importar_nfe');

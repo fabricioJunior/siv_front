@@ -4,6 +4,7 @@ import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cas
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada_page.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,12 +52,44 @@ Map<String, dynamic> _json({bool contado = false}) => {
       ],
     };
 
+Map<String, dynamic> _jsonContagem({bool comContagem = false}) => {
+      'pedidoId': 9,
+      'origemEntrada': 'CONTAGEM',
+      'nfe': null,
+      'linhas': [],
+      'contagens': comContagem
+          ? [
+              {
+                'produtoId': 5,
+                'quantidade': '3',
+                'referenciaId': 77,
+                'referenciaNome': 'Vestido Luna',
+                'corId': 1,
+                'corNome': 'Preto',
+                'tamanhoId': 2,
+                'tamanhoNome': 'M',
+              },
+            ]
+          : [],
+      'totais': {'nfe': 0, 'contado': comContagem ? 3 : 0},
+      'pendencias': [],
+    };
+
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? contagemEnviada;
+  bool semNfe = false;
 
   @override
   Future<EntradaResumo> obter(int pedidoId) async =>
-      EntradaResumo.fromJson(_json());
+      EntradaResumo.fromJson(semNfe ? _jsonContagem() : _json());
+
+  @override
+  Future<EntradaResumo> criarPorContagem({
+    required int pessoaId,
+    required int tabelaPrecoId,
+    String? observacao,
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<EntradaResumo> registrarContagem(
@@ -64,7 +97,9 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
     List<ItemContagem> itens,
   ) async {
     contagemEnviada = itens;
-    return EntradaResumo.fromJson(_json(contado: true));
+    return EntradaResumo.fromJson(
+      semNfe ? _jsonContagem(comContagem: true) : _json(contado: true),
+    );
   }
 
   @override
@@ -107,6 +142,7 @@ void main() {
     sl.registerFactory<PedidoEntradaBloc>(
       () => PedidoEntradaBloc(
         ImportarNfeEntrada(remoto),
+        CriarEntradaPorContagem(remoto),
         ObterPedidoEntrada(remoto),
         VincularLinhaEntrada(remoto),
         PreCadastrarLinhaEntrada(remoto),
@@ -116,14 +152,23 @@ void main() {
       ),
     );
     Widget falso(String n) => Text('seletor $n');
+    // Seletor que "escolhe" um item ao toque (os reais abrem busca).
+    SeletorWidget escolhe(String nome, int id) => (data) => TextButton(
+          key: Key('escolher_$nome'),
+          onPressed: () => data.onChanged?.call([
+            SelectData(id: id, nome: nome, data: const {}),
+          ]),
+          child: Text('escolher $nome'),
+        );
     await tester.pumpWidget(
       MaterialApp(
         home: PedidoEntradaPage(
           pedidoId: 9,
           categoriaSeletor: (_) => falso('categoria'),
           referenciaSeletor: (_) => falso('referencia'),
-          corSeletor: (_) => falso('cor'),
-          tamanhoSeletor: (_) => falso('tamanho'),
+          referenciaContagemSeletor: escolhe('referencia', 77),
+          corSeletor: escolhe('cor', 1),
+          tamanhoSeletor: escolhe('tamanho', 2),
         ),
       ),
     );
@@ -168,5 +213,44 @@ void main() {
     expect(remoto.contagemEnviada!.single.quantidade, 9);
     expect(find.textContaining('Diferença: -1'), findsOneWidget);
     expect(find.text('Resolver divergência'), findsOneWidget);
+  });
+
+  testWidgets(
+      'entrada por contagem: conta referência + cor + tamanho sem linha de NF-e',
+      (
+    tester,
+  ) async {
+    remoto.semNfe = true;
+    await abrir(tester);
+
+    expect(find.text('Contagem por referência'), findsOneWidget);
+    expect(find.textContaining('Nenhuma contagem ainda'), findsOneWidget);
+    expect(find.text('Calça Wide Leg'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('entrada_contar_referencia')));
+    await tester.pumpAndSettle();
+    // sem referência escolhida não há o que enviar
+    await tester.tap(find.byKey(const Key('contagem_salvar')));
+    await tester.pumpAndSettle();
+    expect(remoto.contagemEnviada, isNull);
+
+    await tester.tap(find.byKey(const Key('entrada_contar_referencia')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('escolher_referencia')));
+    await tester.tap(find.byKey(const Key('escolher_cor')));
+    await tester.tap(find.byKey(const Key('escolher_tamanho')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('contagem_1_2')), '3');
+    await tester.tap(find.byKey(const Key('contagem_salvar')));
+    await tester.pumpAndSettle();
+
+    final item = remoto.contagemEnviada!.single;
+    expect(item.linhaId, isNull); // sem NF-e
+    expect(item.referenciaId, 77);
+    expect(item.corId, 1);
+    expect(item.tamanhoId, 2);
+    expect(item.quantidade, 3);
+    expect(find.text('Vestido Luna'), findsOneWidget);
+    expect(find.textContaining('Preto M: 3'), findsOneWidget);
   });
 }

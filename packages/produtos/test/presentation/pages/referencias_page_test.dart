@@ -83,8 +83,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder chip(String rotulo) =>
-      find.descendant(of: find.byType(Wrap), matching: find.text(rotulo));
+  // A linha de filtros também é um ListView (horizontal).
+  final listaVertical = find.byWidgetPredicate(
+    (w) => w is ListView && w.scrollDirection == Axis.vertical,
+  );
+
+  Finder chip(String rotulo) => find.descendant(
+    of: find.byWidgetPredicate(
+      (w) => w is Wrap || w.key == const Key('referencias_filtros'),
+    ),
+    matching: find.text(rotulo),
+  );
 
   tearDown(() async => sl.reset());
 
@@ -161,6 +170,34 @@ void main() {
         expect(find.text('Camisa Básica'), findsOneWidget);
         expect(find.text('Calça Jeans'), findsNothing);
         expect(find.text('2 referências encontradas'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'com muitas categorias a linha de filtros não estoura e a tabela continua visível',
+      (tester) async {
+        // mais categorias do que cabem na largura
+        await abrir(
+          tester,
+          tela: tela,
+          itens: [
+            for (var i = 0; i < 40; i++)
+              _item(
+                100 + i,
+                'Peça $i',
+                categoriaId: 100 + i,
+                categoria: 'Categoria $i',
+              ),
+          ],
+        );
+
+        expect(tester.takeException(), isNull);
+        // ocupa uma linha só (34px), sem empurrar a tabela
+        expect(
+          tester.getSize(find.byKey(const Key('referencias_filtros'))).height,
+          34,
+        );
+        expect(find.text('Nº'), findsOneWidget);
       },
     );
 
@@ -289,11 +326,11 @@ void main() {
         );
         expect(find.text('8 referências · mostrando 5'), findsOneWidget);
 
-        await tester.drag(find.byType(ListView), const Offset(0, -2000));
+        await tester.drag(listaVertical, const Offset(0, -2000));
         await tester.pumpAndSettle();
 
         expect(servidor.chamadas.last.page, 2);
-        await tester.drag(find.byType(ListView), const Offset(0, -2000));
+        await tester.drag(listaVertical, const Offset(0, -2000));
         await tester.pumpAndSettle();
         expect(find.text('Ref 08'), findsOneWidget);
         expect(find.text('8 referências'), findsOneWidget);

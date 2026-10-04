@@ -26,3 +26,14 @@ jobs:
         with:
           name: siv_front-windows
           path: build/windows/x64/runner/Release/
+
+      # Pacote MSIX pronto pra Microsoft Store (usa o `msix_config` do pubspec: ícones/tiles do SIV, versão, idiomas).
+      # O build do Windows já foi feito acima (com o SENTRY_DSN), então não refaz.
+      - name: Gera o pacote MSIX da Microsoft Store
+        run: dart run msix:create --store --build-windows false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: siv_front-msix
+          path: build/windows/x64/runner/Release/*.msix
+          if-no-files-found: error

@@ -16,7 +16,7 @@ O revisor cita "English (United States), Portuguese (Brazil)": **os dois idiomas
 1. No Partner Center, em *Store listing → Store logos*, envie (apague qualquer imagem padrão/automática):
    - **1:1 (300×300):** `imagens/logo-1x1-300.png` (obrigatório)
    - **9:16/2:3 poster (720×1080):** `imagens/poster-2x3-720x1080.png`
-   - **16:9 box art (1920×1080):** `imagens/boxart-16x9-1920x1080.png`
+   - **Box art 1:1 (1080×1080):** `imagens/boxart-1x1-1080x1080.png`
    Faça isso nos **dois idiomas** (en-US e pt-BR) se a Store mostrar os campos por idioma.
 2. Confirme que o **pacote** enviado é o novo (o ícone do tile vem de `msix_config.logo_path`, já apontando para
    `assets/brand/siv_icone.png`, e `msix_version` 1.0.1.0 ou maior). Se o `.msix` enviado foi gerado antes do commit

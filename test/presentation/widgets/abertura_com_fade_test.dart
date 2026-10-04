@@ -116,4 +116,68 @@ void main() {
     expect(find.byType(_Contador), findsNothing);
     expect(find.text('carregando'), findsOneWidget);
   });
+
+  testWidgets(
+    'carga segurada (conteúdo montado por baixo) fica opaca até ser liberada',
+    (tester) async {
+      await tester.pumpWidget(
+        _app(const AberturaComFade(carregando: carga, conteudo: conteudo)),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('conteudo 0'), findsOneWidget); // já montado
+      expect(find.text('carregando'), findsOneWidget); // ainda por cima
+      expect(find.byKey(const ValueKey('abertura_saindo')), findsNothing);
+
+      // liberada: esmaece e sai
+      await tester.pumpWidget(_app(const AberturaComFade(conteudo: conteudo)));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(_opacidadeDaCarga(tester), lessThan(1));
+      await tester.pumpAndSettle();
+      expect(find.text('carregando'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'carga segurada não fica presa: some sozinha depois do tempo máximo',
+    (tester) async {
+      await tester.pumpWidget(
+        _app(
+          const AberturaComFade(
+            carregando: carga,
+            conteudo: conteudo,
+            tempoMaximo: Duration(seconds: 1),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(
+        find.byKey(const ValueKey('abertura_saindo')),
+        findsNothing,
+      ); // ainda opaca
+
+      await tester.pump(const Duration(milliseconds: 200)); // passou de 1 s
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(_opacidadeDaCarga(tester), lessThan(1));
+      await tester.pumpAndSettle();
+      expect(find.text('conteudo 0'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a carga segurada cobre o conteúdo e não deixa tocar nele', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(const AberturaComFade(carregando: carga, conteudo: conteudo)),
+    );
+
+    final carregando = tester.getRect(find.text('carregando'));
+    expect(carregando.isEmpty, isFalse);
+    // o conteúdo existe, mas a carga é o último filho do Stack (por cima)
+    final stack = tester.widget<Stack>(find.byType(Stack).first);
+    expect(
+      (stack.children.last as KeyedSubtree).key,
+      const ValueKey('abertura_carga'),
+    );
+  });
 }

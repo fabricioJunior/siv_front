@@ -18,7 +18,7 @@ import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/presentation/widgets/app_shell.dart';
-import 'package:siv_front/presentation/widgets/assinatura_siv.dart';
+import 'package:siv_front/presentation/widgets/app_loading_view.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -266,112 +266,6 @@ class GlobalBlocObserver extends BlocObserver {
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     log('${bloc.runtimeType} $error $stackTrace', name: 'Test log');
-  }
-}
-
-class AppLoadingView extends StatelessWidget {
-  final String? etapaAtual;
-  final List<String> etapasConcluidas;
-
-  const AppLoadingView({
-    super.key,
-    this.etapaAtual,
-    this.etapasConcluidas = const [],
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const AssinaturaSiv(),
-                const SizedBox(height: 24),
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(
-                  'Carregando dados do aplicativo...',
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  etapaAtual ?? 'Preparando ambiente',
-                  style: theme.textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                if (etapasConcluidas.isNotEmpty || etapaAtual != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Etapas de carregamento',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          ...etapasConcluidas.map(
-                            (etapa) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(etapa)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (etapaAtual != null)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(etapaAtual!)),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  key: const Key('app_loading_configuracao_dispositivo_button'),
-                  onPressed: () {
-                    Navigator.of(
-                      context,
-                    ).pushNamed('/configuracao_dispositivo');
-                  },
-                  icon: const Icon(Icons.phone_android_outlined),
-                  label: const Text('Configurações do dispositivo'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

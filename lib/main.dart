@@ -18,6 +18,7 @@ import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/presentation/widgets/app_shell.dart';
+import 'package:siv_front/presentation/widgets/abertura_com_fade.dart';
 import 'package:siv_front/presentation/widgets/app_loading_view.dart';
 import 'package:siv_front/routes.dart';
 
@@ -193,28 +194,34 @@ class MyApp extends StatelessWidget {
         builder: (context, state) {
           if (state.statusAutenticacao == StatusAutenticacao.carregandoDados &&
               !_restaurandoRotaEspecifica) {
-            return AppLoadingView(
-              etapaAtual: state.etapaAtualInicializacao,
-              etapasConcluidas: state.etapasInicializacaoConcluidas,
+            return AberturaComFade(
+              carregando: AppLoadingView(
+                etapaAtual: state.etapaAtualInicializacao,
+                etapasConcluidas: state.etapasInicializacaoConcluidas,
+              ),
             );
           }
 
           if (state.statusAutenticacao ==
               StatusAutenticacao.falhaInicializacao) {
-            return InitializationErrorView(
-              mensagem:
-                  state.mensagemErroInicializacao ??
-                  'Não foi possível iniciar o aplicativo.',
-              detalhesTecnicos: state.detalhesErroInicializacao,
-              onRetry: () => sl<AppBloc>().add(AppIniciou()),
-              onSairELimparDados: () => sl<AppBloc>().add(AppDesautenticou()),
+            return AberturaComFade(
+              conteudo: InitializationErrorView(
+                mensagem:
+                    state.mensagemErroInicializacao ??
+                    'Não foi possível iniciar o aplicativo.',
+                detalhesTecnicos: state.detalhesErroInicializacao,
+                onRetry: () => sl<AppBloc>().add(AppIniciou()),
+                onSairELimparDados: () => sl<AppBloc>().add(AppDesautenticou()),
+              ),
             );
           }
 
-          return AppShell(
-            rotaAtual: navigationObserver.rotaAtual,
-            navigatorKey: navigatorKey,
-            child: child ?? const SizedBox.shrink(),
+          return AberturaComFade(
+            conteudo: AppShell(
+              rotaAtual: navigationObserver.rotaAtual,
+              navigatorKey: navigatorKey,
+              child: child ?? const SizedBox.shrink(),
+            ),
           );
         },
       ),

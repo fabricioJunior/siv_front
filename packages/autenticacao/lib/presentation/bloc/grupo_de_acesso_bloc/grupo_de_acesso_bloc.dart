@@ -25,6 +25,7 @@ class GrupoDeAcessoBloc extends Bloc<GrupoDeAcessoEvent, GrupoDeAcessoState> {
     on<GrupoDeAcessoAlterouNomeEvent>(_onGrupoDeAcessoAlterouNome);
     on<GrupoDeAcessoAdionouPermissao>(_onGrupoDeAcessoAdionouPermissao);
     on<GrupoDeAcessoRemoveuPermissao>(_onGrupoDeAcessoRemoveuPermissao);
+    on<GrupoDeAcessoPermissoesRecarregouEvent>(_onPermissoesRecarregou);
     on<GrupoDeAcessoSalvou>(_onGrupoDeAcessoSalvou);
     on<GrupoExcluiu>(_onGrupoExcluiu);
   }
@@ -122,6 +123,34 @@ class GrupoDeAcessoBloc extends Bloc<GrupoDeAcessoEvent, GrupoDeAcessoState> {
         permissoesDoGrupo: permissoesAtualizadas,
       ),
     );
+  }
+
+  Future<void> _onPermissoesRecarregou(
+    GrupoDeAcessoPermissoesRecarregouEvent event,
+    Emitter<GrupoDeAcessoState> emit,
+  ) async {
+    final atual = state;
+    if (atual is! GrupoDeAcessoEdicaoEmProgresso || atual.id == null) return;
+    try {
+      final grupo = await _recuperarGrupoDeAcesso.call(atual.id!);
+      final doGrupo = grupo?.permissoes ?? const <Permissao>[];
+      final todas = [
+        ...?atual.permissoesDoGrupo,
+        ...?atual.permissoesNaoUtilizadasNoGrupo,
+      ];
+      emit(
+        GrupoDeAcessoEdicaoEmProgresso(
+          nome: atual.nome,
+          id: atual.id,
+          grupoDeAcesso: grupo,
+          permissoesDoGrupo: doGrupo.toList(),
+          permissoesNaoUtilizadasNoGrupo:
+              todas.where((p) => !doGrupo.contains(p)).toList(),
+        ),
+      );
+    } catch (e, s) {
+      addError(e, s);
+    }
   }
 
   Future<void> _onGrupoDeAcessoSalvou(

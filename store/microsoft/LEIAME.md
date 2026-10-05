@@ -16,7 +16,7 @@ O revisor cita "English (United States), Portuguese (Brazil)": **os dois idiomas
 1. No Partner Center, em *Store listing → Store logos*, envie (apague qualquer imagem padrão/automática):
    - **1:1 (300×300):** `imagens/logo-1x1-300.png` (obrigatório)
    - **9:16/2:3 poster (720×1080):** `imagens/poster-2x3-720x1080.png`
-   - **16:9 box art (1920×1080):** `imagens/boxart-16x9-1920x1080.png`
+   - **Box art 1:1 (1080×1080):** `imagens/boxart-1x1-1080x1080.png`
    Faça isso nos **dois idiomas** (en-US e pt-BR) se a Store mostrar os campos por idioma.
 2. Confirme que o **pacote** enviado é o novo (o ícone do tile vem de `msix_config.logo_path`, já apontando para
    `assets/brand/siv_icone.png`, e `msix_version` 1.0.1.0 ou maior). Se o `.msix` enviado foi gerado antes do commit
@@ -66,3 +66,18 @@ Fluxo sugerido: Início > Venda (PDV) > adicionar produto > finalizar com Pix > 
 ```
 Crie um **licenciado/usuário só de demonstração** (ambiente separado, dados fictícios, permissões de leitura e venda
 simples). Não use a conta administrativa nem credenciais de produção.
+
+## 5. Erros de validação do pacote (Partner Center)
+
+| Mensagem | Causa | Solução |
+|---|---|---|
+| `PublisherDisplayName ... é Vale do Ceara, que não corresponde ao nome de exibição do fornecedor: Vale do Ceará` | `msix_config.publisher_display_name` sem acento | Corrigido no `pubspec.yaml` (`Vale do Ceará`, igual ao cadastro do Partner Center). Gere o pacote de novo (versão **1.0.3.0**). |
+| `You must upload at least one package` | o pacote com erro foi removido do envio | Suba o `.msix` novo (artefato `siv_front-msix` do CI) e **remova o pacote antigo de 19,2 MB** (gerado antes das correções de tile). |
+| `restricted capabilities ... runFullTrust` (aviso) | todo app desktop Flutter empacotado em MSIX declara `runFullTrust` | Não é erro: justifique em *Submission options → Restricted capabilities* (texto abaixo). |
+
+Justificativa sugerida para `runFullTrust`:
+```
+O SIV é um aplicativo desktop Flutter para Windows (Win32) empacotado em MSIX. A capacidade runFullTrust é necessária
+para executar o processo desktop do aplicativo (acesso a impressoras térmicas e de etiquetas, leitor de código de barras
+USB e arquivos locais para importação e exportação de relatórios). Não há alternativa em UWP puro para esses recursos.
+```

@@ -66,3 +66,18 @@ Fluxo sugerido: Início > Venda (PDV) > adicionar produto > finalizar com Pix > 
 ```
 Crie um **licenciado/usuário só de demonstração** (ambiente separado, dados fictícios, permissões de leitura e venda
 simples). Não use a conta administrativa nem credenciais de produção.
+
+## 5. Erros de validação do pacote (Partner Center)
+
+| Mensagem | Causa | Solução |
+|---|---|---|
+| `PublisherDisplayName ... é Vale do Ceara, que não corresponde ao nome de exibição do fornecedor: Vale do Ceará` | `msix_config.publisher_display_name` sem acento | Corrigido no `pubspec.yaml` (`Vale do Ceará`, igual ao cadastro do Partner Center). Gere o pacote de novo (versão **1.0.3.0**). |
+| `You must upload at least one package` | o pacote com erro foi removido do envio | Suba o `.msix` novo (artefato `siv_front-msix` do CI) e **remova o pacote antigo de 19,2 MB** (gerado antes das correções de tile). |
+| `restricted capabilities ... runFullTrust` (aviso) | todo app desktop Flutter empacotado em MSIX declara `runFullTrust` | Não é erro: justifique em *Submission options → Restricted capabilities* (texto abaixo). |
+
+Justificativa sugerida para `runFullTrust`:
+```
+O SIV é um aplicativo desktop Flutter para Windows (Win32) empacotado em MSIX. A capacidade runFullTrust é necessária
+para executar o processo desktop do aplicativo (acesso a impressoras térmicas e de etiquetas, leitor de código de barras
+USB e arquivos locais para importação e exportação de relatórios). Não há alternativa em UWP puro para esses recursos.
+```

@@ -1,6 +1,7 @@
 import 'package:autenticacao/domain/models/permissao.dart';
 import 'package:autenticacao/presentation/bloc/grupo_de_acesso_bloc/grupo_de_acesso_bloc.dart';
 import 'package:autenticacao/presentation/utils/fluxos_de_permissao.dart';
+import 'package:autenticacao/presentation/widgets/permissoes_por_fluxo_view.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -36,6 +37,10 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
   final _buscaController = TextEditingController();
   final Set<String> _fluxosAbertos = {};
   bool _somenteMarcadas = false;
+
+  /// true = aba "Por fluxo" (liga ações, aplica na hora); false = lista de
+  /// permissões individuais (edição local + Salvar).
+  bool _porFluxo = true;
 
   @override
   void initState() {
@@ -239,8 +244,26 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
 
     final porFluxo = agruparPermissoesPorFluxo(filtradas);
 
+    if (_porFluxo) {
+      return ListView(
+        children: [
+          _abas(context),
+          const SizedBox(height: SivDimensoes.gapCards),
+          PermissoesPorFluxoView(
+            key: ValueKey('por-fluxo-${widget.idGrupoDeAcesso}'),
+            idGrupoDeAcesso: state.id ?? widget.idGrupoDeAcesso,
+            nomesPorCodigo: {for (final p in todas) p.id: p.nomeExibicao},
+            aoAplicar: () =>
+                bloc.add(GrupoDeAcessoPermissoesRecarregouEvent()),
+          ),
+        ],
+      );
+    }
+
     return ListView(
       children: [
+        _abas(context),
+        const SizedBox(height: SivDimensoes.gapCards),
         if (grupoNovoVazio) _seletorDeCargo(context),
         Row(
           children: [
@@ -274,6 +297,25 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
           const SizedBox(height: 12),
         ],
       ],
+    );
+  }
+
+  Widget _abas(BuildContext context) {
+    return SegmentedButton<bool>(
+      segments: const [
+        ButtonSegment(
+          value: true,
+          icon: Icon(Icons.account_tree_outlined),
+          label: Text('Por fluxo'),
+        ),
+        ButtonSegment(
+          value: false,
+          icon: Icon(Icons.checklist_outlined),
+          label: Text('Individuais'),
+        ),
+      ],
+      selected: {_porFluxo},
+      onSelectionChanged: (valor) => setState(() => _porFluxo = valor.first),
     );
   }
 

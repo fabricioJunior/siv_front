@@ -38,6 +38,11 @@ class GrupoDeAcessoRemoveuPermissao extends GrupoDeAcessoEvent {
   const GrupoDeAcessoRemoveuPermissao({required this.permissao});
 }
 
+/// As permissões do grupo mudaram no servidor por fora da edição local (ação
+/// ligada/desligada na aba "Por fluxo"): recarrega só as permissões e mantém o
+/// nome que o admin estiver digitando.
+class GrupoDeAcessoPermissoesRecarregouEvent extends GrupoDeAcessoEvent {}
+
 class GrupoDeAcessoSalvou extends GrupoDeAcessoEvent {}
 
 class GrupoExcluiu extends GrupoDeAcessoEvent {}

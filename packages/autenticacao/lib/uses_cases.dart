@@ -28,6 +28,8 @@ export 'domain/usecases/grupos_de_acesso/vincular_usuario_ao_grupo_de_acesso.dar
 export 'domain/usecases/grupos_de_acesso/desvincular_usuario_do_grupo_de_acesso.dart';
 export 'domain/usecases/grupos_de_acesso/recuperar_vinculos_grupo_de_acesso_do_usuario.dart';
 export 'domain/usecases/grupos_de_acesso/excluir_grupo_de_acesso.dart';
+export 'domain/usecases/grupos_de_acesso/recuperar_acoes_do_grupo_de_acesso.dart';
+export 'domain/usecases/grupos_de_acesso/aplicar_acoes_do_grupo_de_acesso.dart';
 export 'domain/usecases/recuperar_empresas.dart';
 export 'domain/usecases/recuperar_empresa_da_sessao.dart';
 export 'domain/usecases/sincronizar_permissoes_do_usuario.dart';

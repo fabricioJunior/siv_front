@@ -606,6 +606,46 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioProdutosDefasadosPage(),
     );
   },
+  '/relatorio_giro_estoque': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_giro_estoque',
+      child: RelatorioGiroEstoquePage(
+        seletorCategorias: (data) => CategoriaSeletor(
+          modo: CategoriaSeletorModo.multipla,
+          idCategoriasSelecionadasIniciais:
+              (data.itemsSelecionadosInicial ?? []).map((s) => s.id).toList(),
+          onChanged: data.onChanged,
+        ),
+        seletorFornecedores: (data) => SeletorPessoa(
+          modo: PessoaSeletorModo.multipla,
+          titulo: 'Fornecedores',
+          eFornecedor: true,
+          retornarSomenteId: false,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+        ),
+        seletorMarcas: (data) => MarcaSeletor(
+          idMarcasSelecionadasIniciais:
+              (data.itemsSelecionadosInicial ?? []).map((s) => s.id).toList(),
+          onChanged: data.onChanged,
+        ),
+        seletorTamanhos: (data) => TamanhoSeletor(
+          modo: TamanhoSeletorModo.multipla,
+          tamanhosSelecionadosIniciais: (data.itemsSelecionadosInicial ?? [])
+              .map((s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false))
+              .toList(),
+          onChanged: data.onChanged,
+        ),
+        seletorCores: (data) => CorSeletor(
+          modo: CorSeletorModo.multipla,
+          coresSelecionadasIniciais: (data.itemsSelecionadosInicial ?? [])
+              .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
+              .toList(),
+          onChanged: data.onChanged,
+        ),
+      ),
+    );
+  },
   '/relatorio_pontos_fidelidade': (context) {
     return _rotaProtegida(
       route: '/relatorio_pontos_fidelidade',
@@ -1458,6 +1498,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_curva_abc': ['RELFC002'],
   '/relatorio_clientes_ativos': ['RELFC003'],
   '/relatorio_produtos_defasados': ['RELFC008'],
+  '/relatorio_giro_estoque': ['RELFC013'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],
@@ -1515,6 +1556,7 @@ const Map<String, List<String>> _componentesDaRota = {
     'RELFC008',
     'RELFC009',
     'RELFC010',
+    'RELFC013',
     'ROMFP001',
     'FCXFP008',
   ],

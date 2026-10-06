@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:core/arquivos.dart';
 import 'package:core/injecoes.dart';
 import 'package:estoque/domain/models/produto_do_estoque.dart';
+import 'package:estoque/domain/models/relatorio_giro_estoque.dart';
+import 'package:estoque/presentation/pages/giro_estoque/giro_formatacao.dart';
 import 'package:estoque/domain/models/produto_do_estoque_por_referencia.dart';
 
 String _fmtData(DateTime? data) {
@@ -84,5 +86,20 @@ class EstoqueRelatorioCsvExporter {
         ]),
     ];
     return _salvarCsv(linhas, 'estoque_saldo_por_referencia.csv');
+  }
+
+  /// Aba ativa do Giro de Estoque, com cabeçalho de período/filtros/geração.
+  static Future<String?> exportarGiro({
+    required List<GiroEstoqueLinha> linhas,
+    required AbaGiro aba,
+    required FiltroGiroEstoque filtro,
+  }) {
+    final colunas = colunasExportacaoGiro(aba);
+    return _salvarCsv([
+      for (final c in cabecalhoExportacaoGiro(aba, filtro)) _linha([c]),
+      '',
+      _linha([for (final c in colunas) c.$1]),
+      for (final l in linhas) _linha([for (final c in colunas) c.$2(l)]),
+    ], 'giro_estoque_${aba.name}.csv');
   }
 }

@@ -99,6 +99,16 @@ void _useCases() {
     () => GetRelatorioProdutosDefasados(repository: sl()),
   );
 
+  sl.registerFactory<GetRelatorioGiroEstoque>(
+    () => GetRelatorioGiroEstoque(repository: sl()),
+  );
+  sl.registerFactory<GetResumoGiroEstoque>(
+    () => GetResumoGiroEstoque(repository: sl()),
+  );
+  sl.registerFactory<GetVariacoesGiroEstoque>(
+    () => GetVariacoesGiroEstoque(repository: sl()),
+  );
+
   sl.registerFactory<ImportarEstoqueCsv>(
     () => ImportarEstoqueCsv(repository: sl()),
   );
@@ -174,6 +184,9 @@ void _presentation() {
   sl.registerFactory<HistoricoEstoqueBloc>(() => HistoricoEstoqueBloc(sl()));
   sl.registerFactory<RelatorioProdutosDefasadosBloc>(
     () => RelatorioProdutosDefasadosBloc(sl()),
+  );
+  sl.registerFactory<RelatorioGiroEstoqueBloc>(
+    () => RelatorioGiroEstoqueBloc(sl(), sl(), sl()),
   );
   sl.registerFactory<ImportarEstoqueCsvBloc>(
     () => ImportarEstoqueCsvBloc(sl()),

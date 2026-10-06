@@ -334,6 +334,7 @@ const List<ItemPreviewMenu> itensPreviewMenu = [
       'RELFC008',
       'RELFC009',
       'RELFC010',
+      'RELFC013',
       'FCXFP008',
     ],
   ),

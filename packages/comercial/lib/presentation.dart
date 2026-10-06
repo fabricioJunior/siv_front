@@ -16,6 +16,8 @@ export 'presentation/blocs/importar_vendas_csv_bloc/importar_vendas_csv_bloc.dar
 export 'presentation/pages/importar_vendas_csv_page.dart';
 export 'presentation/pages/comercial_menu_page.dart';
 export 'presentation/pages/credito_devolucao_movimentacoes_page.dart';
+export 'presentation/blocs/transferir_credito_bloc/transferir_credito_bloc.dart';
+export 'presentation/widgets/transferir_credito_dialogo.dart';
 export 'presentation/pages/criar_romaneio_por_parametros_page.dart';
 export 'presentation/pages/devolucao_page.dart';
 export 'presentation/pages/pedido_itens_leitor_page.dart';

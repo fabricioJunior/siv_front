@@ -29,4 +29,22 @@ class CreditoDevolucaoRepository implements ICreditoDevolucaoRepository {
       dataFim: dataFim,
     );
   }
+
+  @override
+  Future<List<CreditoTransferivel>> buscarTransferiveis({
+    required int pessoaId,
+  }) {
+    return remoteDataSource.buscarTransferiveis(pessoaId: pessoaId);
+  }
+
+  @override
+  Future<ResultadoTransferenciaCredito> transferir({
+    required int pessoaId,
+    required List<int> romaneioIds,
+  }) {
+    return remoteDataSource.transferir(
+      pessoaId: pessoaId,
+      romaneioIds: romaneioIds,
+    );
+  }
 }

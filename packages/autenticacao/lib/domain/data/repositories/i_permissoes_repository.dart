@@ -18,4 +18,12 @@ abstract class IPermissoesRepository {
   Future<Iterable<Permissao>> recuperarPermissoesDoGrupoDeAcesso(
     int idGrupoDeAcesso,
   );
+
+  Future<AcoesDoGrupo> recuperarAcoesDoGrupoDeAcesso(int idGrupoDeAcesso);
+
+  Future<AcoesDoGrupo> aplicarAcoesDoGrupoDeAcesso({
+    required int idGrupoDeAcesso,
+    List<String> ativar = const [],
+    List<String> desativar = const [],
+  });
 }

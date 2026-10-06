@@ -102,6 +102,7 @@ export 'domain/use_cases/buscar_link_lista_personalizada.dart';
 export 'domain/use_cases/listar_listas_personalizadas.dart';
 export 'domain/use_cases/importacao/baixar_template_importacao_pedidos.dart';
 export 'domain/use_cases/importacao/importar_pedidos_csv.dart';
+export 'domain/use_cases/pedido_entrada/pedido_entrada_use_cases.dart';
 export 'domain/use_cases/importacao/consultar_importacao_pedido.dart';
 export 'domain/use_cases/importacao/baixar_template_importacao_vendas.dart';
 export 'domain/use_cases/importacao/importar_vendas_csv.dart';

@@ -289,7 +289,7 @@ packages:
     source: hosted
     version: "0.4.1"
   empresas:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       path: "../empresas"
       relative: true
@@ -1036,7 +1036,7 @@ packages:
     source: hosted
     version: "6.5.0"
   precos:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       path: "../precos"
       relative: true

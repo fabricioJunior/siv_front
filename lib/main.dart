@@ -18,7 +18,9 @@ import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/injections.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
 import 'package:siv_front/presentation/widgets/app_shell.dart';
-import 'package:siv_front/presentation/widgets/assinatura_siv.dart';
+import 'package:siv_front/presentation/widgets/abertura_com_fade.dart';
+import 'package:siv_front/presentation/widgets/abertura_decisao.dart';
+import 'package:siv_front/presentation/widgets/app_loading_view.dart';
 import 'package:siv_front/routes.dart';
 
 //https://apollo-api-stg.coralcloud.app/docs
@@ -105,6 +107,18 @@ class MyApp extends StatelessWidget {
   // boot" sem disparar o lint `must_be_immutable`.
   final _aguardandoRestaurarRotaDoBoot = [true];
 
+  // Estado do AppBloc antes de qualquer evento (o AppIniciou só roda depois do
+  // 1º build): enquanto o estado for ESTE mesmo objeto o boot ainda não começou e
+  // mostramos a carga -- sem isso o 1º frame desenha a tela de login (branca) e
+  // só depois a carga marinho. `identical` (não `==`): o estado final de um
+  // boot sem licenciado é igual ao padrão, mas é outro objeto.
+  final _estadoInicial = <AppState?>[null];
+
+  // A carga acabou mas ainda é a que está por cima do conteúdo (ver
+  // `segurarCarga`), e a última carga desenhada (pra continuar por cima).
+  final _veioDaCarga = [false];
+  final _ultimaCarga = <Widget?>[null];
+
   // No web, se a URL do boot já apontava pra uma rota específica (F5 numa
   // tela que não é login/home), a splash cheia de "sincronizando dados" não
   // precisa bloquear a tela -- ela já está certa, o bootstrap só atualiza
@@ -124,6 +138,7 @@ class MyApp extends StatelessWidget {
       }
     }
 
+    _estadoInicial[0] = sl<AppBloc>().state;
     return sl<AppBloc>().state.statusAutenticacao ==
             StatusAutenticacao.autenticado
         ? '/home'
@@ -191,30 +206,53 @@ class MyApp extends StatelessWidget {
       child: BlocBuilder<AppBloc, AppState>(
         bloc: sl<AppBloc>(),
         builder: (context, state) {
-          if (state.statusAutenticacao == StatusAutenticacao.carregandoDados &&
+          final bootNaoComecou = identical(state, _estadoInicial[0]);
+          if ((state.statusAutenticacao == StatusAutenticacao.carregandoDados ||
+                  bootNaoComecou) &&
               !_restaurandoRotaEspecifica) {
-            return AppLoadingView(
+            final carga = AppLoadingView(
               etapaAtual: state.etapaAtualInicializacao,
               etapasConcluidas: state.etapasInicializacaoConcluidas,
             );
+            _veioDaCarga[0] = true;
+            _ultimaCarga[0] = carga;
+            return AberturaComFade(carregando: carga);
           }
 
-          if (state.statusAutenticacao ==
-              StatusAutenticacao.falhaInicializacao) {
-            return InitializationErrorView(
-              mensagem:
-                  state.mensagemErroInicializacao ??
-                  'Não foi possível iniciar o aplicativo.',
-              detalhesTecnicos: state.detalhesErroInicializacao,
-              onRetry: () => sl<AppBloc>().add(AppIniciou()),
-              onSairELimparDados: () => sl<AppBloc>().add(AppDesautenticou()),
-            );
-          }
+          final Widget conteudo =
+              state.statusAutenticacao == StatusAutenticacao.falhaInicializacao
+              ? InitializationErrorView(
+                  mensagem:
+                      state.mensagemErroInicializacao ??
+                      'Não foi possível iniciar o aplicativo.',
+                  detalhesTecnicos: state.detalhesErroInicializacao,
+                  onRetry: () => sl<AppBloc>().add(AppIniciou()),
+                  onSairELimparDados: () =>
+                      sl<AppBloc>().add(AppDesautenticou()),
+                )
+              : AppShell(
+                  rotaAtual: navigationObserver.rotaAtual,
+                  navigatorKey: navigatorKey,
+                  child: child ?? const SizedBox.shrink(),
+                );
 
-          return AppShell(
-            rotaAtual: navigationObserver.rotaAtual,
-            navigatorKey: navigatorKey,
-            child: child ?? const SizedBox.shrink(),
+          // Recém saído da carga: ela continua por cima (opaca) até a
+          // navegação inicial chegar ao destino, e só então esmaece.
+          return ValueListenableBuilder<String?>(
+            valueListenable: navigationObserver.rotaAtual,
+            builder: (context, rota, _) {
+              final segurar = segurarCarga(
+                veioDaCarga: _veioDaCarga[0],
+                status: state.statusAutenticacao,
+                rotaAtual: rota,
+                rotaDeTeste: routeToTest,
+              );
+              if (!segurar) _veioDaCarga[0] = false;
+              return AberturaComFade(
+                carregando: segurar ? _ultimaCarga[0] : null,
+                conteudo: conteudo,
+              );
+            },
           );
         },
       ),
@@ -266,112 +304,6 @@ class GlobalBlocObserver extends BlocObserver {
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     log('${bloc.runtimeType} $error $stackTrace', name: 'Test log');
-  }
-}
-
-class AppLoadingView extends StatelessWidget {
-  final String? etapaAtual;
-  final List<String> etapasConcluidas;
-
-  const AppLoadingView({
-    super.key,
-    this.etapaAtual,
-    this.etapasConcluidas = const [],
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const AssinaturaSiv(),
-                const SizedBox(height: 24),
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(
-                  'Carregando dados do aplicativo...',
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  etapaAtual ?? 'Preparando ambiente',
-                  style: theme.textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                if (etapasConcluidas.isNotEmpty || etapaAtual != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Etapas de carregamento',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          ...etapasConcluidas.map(
-                            (etapa) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(etapa)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (etapaAtual != null)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(etapaAtual!)),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  key: const Key('app_loading_configuracao_dispositivo_button'),
-                  onPressed: () {
-                    Navigator.of(
-                      context,
-                    ).pushNamed('/configuracao_dispositivo');
-                  },
-                  icon: const Icon(Icons.phone_android_outlined),
-                  label: const Text('Configurações do dispositivo'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

@@ -81,6 +81,12 @@ const relatoriosAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'ESTOQUE E PRODUTOS',
   ),
   SivMenuAcordeaoFilho(
+    label: 'Giro de Estoque',
+    rota: '/relatorio_giro_estoque',
+    componente: 'RELFC013',
+    grupo: 'ESTOQUE E PRODUTOS',
+  ),
+  SivMenuAcordeaoFilho(
     label: 'Histórico de Caixas',
     rota: '/historico_de_caixas',
     componente: 'FCXFP008',
@@ -197,6 +203,14 @@ const _todosOsRelatorios = <_ItemData>[
     grupo: GrupoRelatorio.estoque,
     componente: 'RELFC008',
     route: '/relatorio_produtos_defasados',
+  ),
+  _ItemData(
+    icon: Icons.speed_outlined,
+    titulo: 'Giro de Estoque',
+    subtitulo: 'Velocidade de venda por lote, reposição e estoque parado.',
+    grupo: GrupoRelatorio.estoque,
+    componente: 'RELFC013',
+    route: '/relatorio_giro_estoque',
   ),
   _ItemData(
     icon: Icons.history,

@@ -2,6 +2,8 @@ import 'package:core/pdf.dart'
     show PdfPageFormat, PdfColor, PdfColors, PdfService;
 import 'package:core/pdf_widgets.dart' as pw;
 import 'package:estoque/domain/models/preco_referencia_estoque.dart';
+import 'package:estoque/domain/models/relatorio_giro_estoque.dart';
+import 'package:estoque/presentation/pages/giro_estoque/giro_formatacao.dart';
 import 'package:estoque/domain/models/produto_do_estoque.dart';
 import 'package:estoque/domain/models/produto_do_estoque_por_referencia.dart';
 
@@ -328,5 +330,42 @@ class EstoqueRelatorioPdfExporter {
       await doc.save(),
       'valor_estoque_por_referencia_${tabelaDePrecoNome.replaceAll(RegExp(r'\s+'), '_').toLowerCase()}.pdf',
     );
+  }
+
+  /// Aba ativa do Giro de Estoque, com cabeçalho de período/filtros/geração.
+  static Future<void> exportarGiro({
+    required List<GiroEstoqueLinha> linhas,
+    required AbaGiro aba,
+    required FiltroGiroEstoque filtro,
+  }) async {
+    final colunas = colunasExportacaoGiro(aba);
+    final cab = cabecalhoExportacaoGiro(aba, filtro);
+    final doc = pw.Document();
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4.landscape,
+        maxPages: 1000,
+        build: (ctx) => [
+          _cabecalho(cab[0], '${cab[1]}  |  ${cab[3]}', _azul),
+          pw.SizedBox(height: 6),
+          pw.Text(cab[2], style: const pw.TextStyle(fontSize: 8)),
+          pw.SizedBox(height: 8),
+          pw.TableHelper.fromTextArray(
+            headers: [for (final c in colunas) c.$1],
+            data: [
+              for (final l in linhas) [for (final c in colunas) c.$2(l)],
+            ],
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+            headerStyle:
+                pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold),
+            cellStyle: const pw.TextStyle(fontSize: 7),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+            cellPadding: const pw.EdgeInsets.all(3),
+          ),
+        ],
+      ),
+    );
+
+    await PdfService.compartilhar(await doc.save(), 'giro_estoque_${aba.name}.pdf');
   }
 }

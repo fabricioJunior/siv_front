@@ -89,9 +89,11 @@ const Map<String, List<String>> componentesPorFluxo = {
     'PESFM001',
     'PESFM002',
     'PESFM003',
+    'PESFM004',
     'PESFC001',
     'PESFC002',
     'PESFC003',
+    'PESFC004',
     'PESFL001',
   ],
   'Produtos': [

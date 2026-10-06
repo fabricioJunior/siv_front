@@ -241,6 +241,14 @@ void _useCases() {
     () => BuscarCreditoDevolucaoMovimentacoes(repository: sl()),
   );
 
+  sl.registerFactory<GetCreditosTransferiveis>(
+    () => GetCreditosTransferiveis(repository: sl()),
+  );
+
+  sl.registerFactory<TransferirCreditosDevolucao>(
+    () => TransferirCreditosDevolucao(repository: sl()),
+  );
+
   sl.registerFactory<BuscarSaldoCreditoDevolucao>(
     () => BuscarSaldoCreditoDevolucao(repository: sl()),
   );
@@ -663,6 +671,9 @@ void _presentation() {
   );
   sl.registerFactory<RelatorioClientesAniversariantesBloc>(
     () => RelatorioClientesAniversariantesBloc(sl()),
+  );
+  sl.registerFactory<TransferirCreditoBloc>(
+    () => TransferirCreditoBloc(sl(), sl()),
   );
   sl.registerFactory<ComprasDoClienteBloc>(
     () => ComprasDoClienteBloc(sl()),

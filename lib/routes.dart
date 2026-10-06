@@ -719,6 +719,67 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/importar_nfe': (context) {
+    return _rotaProtegida(
+      route: '/importar_nfe',
+      child: ImportarNfePage(
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
+  },
+  '/entrada_contagem': (context) {
+    return _rotaProtegida(
+      route: '/entrada_contagem',
+      child: EntradaPorContagemPage(
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
+        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela de preço',
+        ),
+      ),
+    );
+  },
+  '/pedido_entrada': (context) {
+    return _rotaProtegida(
+      route: '/pedido_entrada',
+      child: PedidoEntradaPage(
+        pedidoId: args(context)['pedidoId'],
+        categoriaSeletor: (data) => CategoriaSeletor(
+          modo: CategoriaSeletorModo.unica,
+          onChanged: data.onChanged,
+        ),
+        referenciaSeletor: (data) => ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.unica,
+          permitirCadastro: false,
+          onChanged: data.onChanged,
+        ),
+        referenciaContagemSeletor: (data) => ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.unica,
+          onChanged: data.onChanged,
+        ),
+        corSeletor: (data) =>
+            CorSeletor(modo: CorSeletorModo.multipla, onChanged: data.onChanged),
+        tamanhoSeletor: (data) => TamanhoSeletor(
+          modo: TamanhoSeletorModo.multipla,
+          onChanged: data.onChanged,
+        ),
+      ),
+    );
+  },
   '/pedido': (context) {
     return PedidoPage(
       idPedido: args(context)['idPedido'],
@@ -1523,6 +1584,9 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_aniversariantes': ['RELFC009'],
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
+  '/importar_nfe': ['PEDFM001'],
+  '/entrada_contagem': ['PEDFM001'],
+  '/pedido_entrada': ['PEDFC002'],
   '/importar_pedidos_csv': ['IMPFP007'],
   // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
   '/importacao_guiada': ['IMPFP006', 'IMPFP004', 'IMPFP002', 'IMPFP005', 'IMPFP009', 'IMPFP008'],

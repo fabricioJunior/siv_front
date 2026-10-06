@@ -39,14 +39,17 @@ import 'package:core/injecoes.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:http/http.dart';
 
+import 'data/remote/acoes_do_grupo_remote_data_source.dart';
 import 'data/remote/permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'data/remote/permissoes_do_usuario_remote_data_source.dart';
 import 'data/repositories/permissoes_repository.dart';
+import 'domain/data/data_sourcers/remote/i_acoes_do_grupo_remote_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_grupo_acesso_remote_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_do_usuario_remote_data_source.dart';
 import 'domain/data/data_sourcers/remote/i_permissoes_remote_data_source.dart';
 import 'domain/data/repositories/i_permissoes_repository.dart';
 import 'domain/data/repositories/i_token_repository.dart';
+import 'presentation/bloc/acoes_do_grupo_bloc/acoes_do_grupo_bloc.dart';
 import 'presentation/bloc/grupo_de_acesso_bloc/grupo_de_acesso_bloc.dart';
 import 'presentation/bloc/grupos_de_acesso_bloc/grupos_de_acesso_bloc.dart';
 
@@ -88,6 +91,13 @@ void _presentation() {
   );
   sl.registerFactory<GruposDeAcessoBloc>(
     () => GruposDeAcessoBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<AcoesDoGrupoBloc>(
+    () => AcoesDoGrupoBloc(
+      sl(),
       sl(),
     ),
   );
@@ -286,6 +296,18 @@ void _usesCases() {
     ),
   );
 
+  sl.registerFactory<RecuperarAcoesDoGrupoDeAcesso>(
+    () => RecuperarAcoesDoGrupoDeAcesso(
+      repository: sl(),
+    ),
+  );
+
+  sl.registerFactory<AplicarAcoesDoGrupoDeAcesso>(
+    () => AplicarAcoesDoGrupoDeAcesso(
+      repository: sl(),
+    ),
+  );
+
   sl.registerFactory<RecuperarPermissoesDoGrupoDeAcesso>(
     () => RecuperarPermissoesDoGrupoDeAcesso(
       repository: sl(),
@@ -366,6 +388,7 @@ void _repositories() {
       sl(),
       sl(),
       sl(),
+      sl(),
       permissoesRemoteDataSource: sl(),
     ),
   );
@@ -418,6 +441,11 @@ void _remoteData() {
 
   sl.registerFactory<IGruposDeAcessoRemoteDataSource>(
     () => GruposDeAcessoRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+  sl.registerFactory<IAcoesDoGrupoRemoteDataSource>(
+    () => AcoesDoGrupoRemoteDataSource(
       informacoesParaRequest: sl(),
     ),
   );

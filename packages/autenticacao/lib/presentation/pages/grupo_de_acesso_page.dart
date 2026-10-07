@@ -38,9 +38,10 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
   final Set<String> _fluxosAbertos = {};
   bool _somenteMarcadas = false;
 
-  /// true = aba "Por fluxo" (liga ações, aplica na hora); false = lista de
+  /// true = aba "Por fluxo" (liga ações, salva pelo FAB); false = lista de
   /// permissões individuais (edição local + Salvar).
   bool _porFluxo = true;
+  final _fluxoKey = GlobalKey<PermissoesPorFluxoViewState>();
 
   @override
   void initState() {
@@ -245,18 +246,15 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
     final porFluxo = agruparPermissoesPorFluxo(filtradas);
 
     if (_porFluxo) {
-      return ListView(
-        children: [
-          _abas(context),
-          const SizedBox(height: SivDimensoes.gapCards),
-          PermissoesPorFluxoView(
-            key: ValueKey('por-fluxo-${widget.idGrupoDeAcesso}'),
-            idGrupoDeAcesso: state.id ?? widget.idGrupoDeAcesso,
-            nomesPorCodigo: {for (final p in todas) p.id: p.nomeExibicao},
-            aoAplicar: () =>
-                bloc.add(GrupoDeAcessoPermissoesRecarregouEvent()),
-          ),
-        ],
+      return PermissoesPorFluxoView(
+        key: _fluxoKey,
+        idGrupoDeAcesso: state.id ?? widget.idGrupoDeAcesso,
+        nomesPorCodigo: {for (final p in todas) p.id: p.nomeExibicao},
+        aoAplicar: () => bloc.add(GrupoDeAcessoPermissoesRecarregouEvent()),
+        cabecalho: Padding(
+          padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+          child: _abas(context),
+        ),
       );
     }
 
@@ -315,7 +313,12 @@ class _GrupoDeAcessoPageState extends State<GrupoDeAcessoPage> {
         ),
       ],
       selected: {_porFluxo},
-      onSelectionChanged: (valor) => setState(() => _porFluxo = valor.first),
+      onSelectionChanged: (valor) async {
+        if (_porFluxo && !await (_fluxoKey.currentState?.confirmarSaida(context) ?? Future.value(true))) {
+          return;
+        }
+        if (mounted) setState(() => _porFluxo = valor.first);
+      },
     );
   }
 

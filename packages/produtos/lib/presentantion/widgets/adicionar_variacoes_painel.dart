@@ -2,6 +2,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
@@ -195,9 +196,9 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
   }
 
   // Enter no campo de busca seleciona o chip destacado (setas ↑/↓ movem o
-  // destaque, começa no 1º resultado). Mantém o texto digitado -- deixa o
-  // usuário conferir/ajustar o filtro em vez de perder o que buscou a cada
-  // seleção.
+  // destaque, começa no 1º resultado) e limpa o texto, pronto pra próxima
+  // busca. Com o campo vazio não faz nada: senão Enter alternaria o 1º item
+  // da lista inteira sem o usuário ter buscado nada.
   void _selecionarDestacado({
     required List<({int? id, VoidCallback? onTap})> itens,
     required TextEditingController controller,
@@ -207,11 +208,17 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
     required ValueChanged<int> onDestaqueAlterado,
     required ValueChanged<int?> onRecemAdicionado,
   }) {
+    if (controller.text.trim().isEmpty) {
+      focusNode.requestFocus();
+      return;
+    }
     if (destaque < 0 || destaque >= itens.length) return;
     final item = itens[destaque];
     if (item.id == null || item.onTap == null) return;
 
     item.onTap!();
+    controller.clear();
+    _bloc.add(AdicionarVariacoesBuscaAlterou(campo: campo, texto: ''));
     onDestaqueAlterado(0);
     // TextField.onSubmitted por padrão devolve o foco pro sistema (esconde
     // teclado/perde destaque) -- sem isso, cada Enter obrigava a clicar de
@@ -271,83 +278,149 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
     }
   }
 
+  // Flutter só deixa arrastar-pra-rolar com toque; com mouse/trackpad (web e
+  // desktop) só rolava pela roda ou pela barra. Liberamos todos os
+  // dispositivos nas listas/faixas do painel.
+  Widget _arrastavel(BuildContext context, Widget child) => ScrollConfiguration(
+    behavior: ScrollConfiguration.of(
+      context,
+    ).copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+    child: child,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AdicionarVariacoesBloc>.value(
-      value: _bloc,
-      child: BlocConsumer<AdicionarVariacoesBloc, AdicionarVariacoesState>(
-        listener: (context, state) {
-          if (state.step == AdicionarVariacoesStep.sucesso) {
-            _fechar(context, true);
-          }
-        },
-        builder: (context, state) {
-          final carregando =
-              state.step == AdicionarVariacoesStep.carregando ||
-              state.step == AdicionarVariacoesStep.inicial;
+    return _arrastavel(
+      context,
+      BlocProvider<AdicionarVariacoesBloc>.value(
+        value: _bloc,
+        child: BlocConsumer<AdicionarVariacoesBloc, AdicionarVariacoesState>(
+          listener: (context, state) {
+            if (state.step == AdicionarVariacoesStep.sucesso) {
+              _fechar(context, true);
+            }
+          },
+          builder: (context, state) {
+            final carregando =
+                state.step == AdicionarVariacoesStep.carregando ||
+                state.step == AdicionarVariacoesStep.inicial;
 
-          return CallbackShortcuts(
-            bindings: {
-              const SingleActivator(
-                LogicalKeyboardKey.enter,
-                control: true,
-              ): () =>
-                  _acaoPrincipal(context, state),
-              const SingleActivator(LogicalKeyboardKey.enter, meta: true): () =>
-                  _acaoPrincipal(context, state),
-              const SingleActivator(LogicalKeyboardKey.escape): () =>
-                  _fechar(context, false),
-            },
-            child: FocusScope(
-              autofocus: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Adicionar variações',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
+            return CallbackShortcuts(
+              bindings: {
+                const SingleActivator(
+                  LogicalKeyboardKey.enter,
+                  control: true,
+                ): () =>
+                    _acaoPrincipal(context, state),
+                const SingleActivator(
+                  LogicalKeyboardKey.enter,
+                  meta: true,
+                ): () =>
+                    _acaoPrincipal(context, state),
+                const SingleActivator(LogicalKeyboardKey.escape): () =>
+                    _fechar(context, false),
+              },
+              child: FocusScope(
+                autofocus: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_embutidoMobile ||
+                        (_embutidoDesktop && _etapa == _EtapaWizard.variacoes))
+                      _buildCabecalhoVariacoes(context, state)
+                    else
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Adicionar variações',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => _fechar(context, false),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => _fechar(context, false),
-                        ),
-                      ],
+                      ),
+                    // Wizard de passos só no desktop -- mobile continua com o
+                    // fluxo antigo (Cores/Tamanhos/Estampas em abas + criar
+                    // direto pelo SIV), ver decisão documentada em [_buildRodape].
+                    if (!widget.mobile && !carregando)
+                      _buildStepperHeader(context, state),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: carregando
+                          ? const Center(
+                              child: CircularProgressIndicator.adaptive(),
+                            )
+                          : _buildConteudo(context, state),
                     ),
-                  ),
-                  // Wizard de passos só no desktop -- mobile continua com o
-                  // fluxo antigo (Cores/Tamanhos/Estampas em abas + criar
-                  // direto pelo SIV), ver decisão documentada em [_buildRodape].
-                  if (!widget.mobile && !carregando)
-                    _buildStepperHeader(context, state),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: carregando
-                        ? const Center(
-                            child: CircularProgressIndicator.adaptive(),
-                          )
-                        : _buildConteudo(context, state),
-                  ),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildFooter(context, state),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildFooter(context, state),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Embutido no assistente de cadastro (desktop): título/subtítulo da etapa e
+  // o botão de estampas no cabeçalho, como nas outras etapas do assistente.
+  bool get _embutidoDesktop => !widget.mobile && widget.onConcluir != null;
+  bool get _embutidoMobile => widget.mobile && widget.onConcluir != null;
+
+  Widget _buildCabecalhoVariacoes(
+    BuildContext context,
+    AdicionarVariacoesState state,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quais variações?',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                if (!widget.mobile) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Cada cor × tamanho vira um produto com código de barras automático.',
+                    style: TextStyle(color: Colors.black54),
                   ),
                 ],
-              ),
+              ],
             ),
-          );
-        },
+          ),
+          if (!widget.mobile && !state.estampasAtivo)
+            OutlinedButton.icon(
+              onPressed: () => _bloc.add(
+                AdicionarVariacoesEstampasAtivouAlternou(ativo: true),
+              ),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Estampas (opcional)'),
+            ),
+        ],
       ),
     );
   }
 
   Widget _buildConteudo(BuildContext context, AdicionarVariacoesState state) {
+    if (_embutidoMobile) return _buildResumoMobile(context, state);
     if (widget.mobile) return _buildCorpoMobile(context, state);
     switch (_etapa) {
       case _EtapaWizard.variacoes:
@@ -511,6 +584,217 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
     );
   }
 
+  // Mobile embutido no assistente: em vez de colunas com busca direta na
+  // tela, 3 linhas-resumo; cada uma abre um modal com a busca e a seleção
+  // (mais leve no celular, teclado não disputa espaço com a lista).
+  Widget _buildResumoMobile(
+    BuildContext context,
+    AdicionarVariacoesState state,
+  ) {
+    String resumo(Iterable<String> nomes, String vazio) =>
+        nomes.isEmpty ? vazio : nomes.join(', ');
+
+    final cores = [
+      for (final c in state.todasCores)
+        if (c.id != null && state.coresSelecionadas.contains(c.id)) c.nome,
+    ];
+    final tamanhos = [
+      for (final t in state.todosTamanhos)
+        if (t.id != null && state.tamanhosSelecionados.contains(t.id)) t.nome,
+    ];
+    final estampas = [
+      for (final e in state.todasEstampas)
+        if (e.id != null && state.estampasSelecionadas.contains(e.id)) e.nome,
+    ];
+    final n = state.totalCombinacoesNovas;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(
+              side: BorderSide(color: Color(0x241D1F20)),
+            ),
+            child: Column(
+              children: [
+                _linhaResumo(
+                  'CORES · ${cores.length} selecionadas',
+                  resumo(cores, 'Toque para escolher'),
+                  () => _abrirSeletorMobile(
+                    coluna: _buildColunaCores,
+                    total: (s) => s.coresSelecionadas.length,
+                  ),
+                ),
+                const Divider(height: 1),
+                _linhaResumo(
+                  'TAMANHOS · ${tamanhos.length} selecionados',
+                  resumo(tamanhos, 'Toque para escolher'),
+                  () => _abrirSeletorMobile(
+                    coluna: _buildColunaTamanhos,
+                    total: (s) => s.tamanhosSelecionados.length,
+                  ),
+                ),
+                const Divider(height: 1),
+                _linhaResumo(
+                  'ESTAMPAS · ${estampas.length} selecionadas',
+                  resumo(estampas, 'Opcional'),
+                  () {
+                    if (!state.estampasAtivo) {
+                      _bloc.add(
+                        AdicionarVariacoesEstampasAtivouAlternou(ativo: true),
+                      );
+                    }
+                    _abrirSeletorMobile(
+                      coluna: _buildColunaEstampas,
+                      total: (s) => s.estampasSelecionadas.length,
+                      // Estampa é opcional: fechar sem escolher nenhuma
+                      // desliga a coluna (senão a grade fica esperando).
+                      aoFechar: () {
+                        if (_bloc.state.estampasSelecionadas.isEmpty) {
+                          _bloc.add(
+                            AdicionarVariacoesEstampasAtivouAlternou(
+                              ativo: false,
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(
+              side: BorderSide(color: Color(0x241D1F20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text('$n', style: Theme.of(context).textTheme.headlineMedium),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      n == 1
+                          ? 'variação nova (cor × tamanho)'
+                          : 'variações novas (cor × tamanho)',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _linhaResumo(String rotulo, String resumo, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 66),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rotulo,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        letterSpacing: 1.6,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      resumo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14.5),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.black45),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Modal de seleção (tela quase cheia) com a mesma coluna do desktop --
+  // busca, Enter que seleciona e limpa, selecionados abaixo do campo.
+  Future<void> _abrirSeletorMobile({
+    required Widget Function(BuildContext, AdicionarVariacoesState) coluna,
+    required int Function(AdicionarVariacoesState) total,
+    VoidCallback? aoFechar,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      // Arrastar rápido na lista/faixa de selecionados fechava o modal;
+      // agora só fecha pelo PRONTO ou tocando fora.
+      enableDrag: false,
+      builder: (sheetContext) => _arrastavel(
+        sheetContext,
+        BlocProvider<AdicionarVariacoesBloc>.value(
+          value: _bloc,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: FractionallySizedBox(
+              heightFactor: 0.92,
+              child:
+                  BlocBuilder<AdicionarVariacoesBloc, AdicionarVariacoesState>(
+                    builder: (ctx, state) => Column(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            child: coluna(ctx, state),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: FilledButton(
+                              onPressed: () => Navigator.of(sheetContext).pop(),
+                              child: Text('PRONTO · ${total(state)}'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+    aoFechar?.call();
+  }
+
   Widget _buildCorpoMobile(
     BuildContext context,
     AdicionarVariacoesState state,
@@ -628,6 +912,11 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
             ),
           ),
         ),
+        _bandejaSelecionados([
+          for (final cor in state.todasCores)
+            if (cor.id != null && state.coresSelecionadas.contains(cor.id))
+              (id: cor.id!, label: cor.nome),
+        ], (id) => _bloc.add(AdicionarVariacoesCorAlternou(corId: id))),
         const SizedBox(height: 8),
         Expanded(
           child: SingleChildScrollView(
@@ -792,6 +1081,11 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
             ),
           ),
         ),
+        _bandejaSelecionados([
+          for (final t in state.todosTamanhos)
+            if (t.id != null && state.tamanhosSelecionados.contains(t.id))
+              (id: t.id!, label: t.nome),
+        ], (id) => _bloc.add(AdicionarVariacoesTamanhoAlternou(tamanhoId: id))),
         const SizedBox(height: 8),
         Expanded(
           child: SingleChildScrollView(
@@ -889,7 +1183,23 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Estampas', style: Theme.of(context).textTheme.titleMedium),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Estampas',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            if (_embutidoDesktop)
+              TextButton(
+                onPressed: () => _bloc.add(
+                  AdicionarVariacoesEstampasAtivouAlternou(ativo: false),
+                ),
+                child: const Text('Remover'),
+              ),
+          ],
+        ),
         const SizedBox(height: 8),
         Focus(
           onKeyEvent: (node, event) => _navegarComSetas(
@@ -927,6 +1237,11 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
             ),
           ),
         ),
+        _bandejaSelecionados([
+          for (final e in state.todasEstampas)
+            if (e.id != null && state.estampasSelecionadas.contains(e.id))
+              (id: e.id!, label: e.nome),
+        ], (id) => _bloc.add(AdicionarVariacoesEstampaAlternou(estampaId: id))),
         const SizedBox(height: 8),
         Expanded(
           child: SingleChildScrollView(
@@ -955,6 +1270,38 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
           ),
         ),
       ],
+    );
+  }
+
+  // Selecionados logo abaixo do campo de busca -- some da vista quando a lista
+  // filtrada não mostra o item, e o ✕ remove sem precisar achar o chip.
+  Widget _bandejaSelecionados(
+    List<({int id, String label})> itens,
+    ValueChanged<int> onRemover,
+  ) {
+    if (itens.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 62),
+        child: SingleChildScrollView(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final item in itens)
+                InputChip(
+                  key: ValueKey('sel-${item.id}'),
+                  label: Text(item.label),
+                  onDeleted: () => onRemover(item.id),
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: const Color(0xFFEEF6FF),
+                  side: const BorderSide(color: Color(0xFF5980A6)),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1007,13 +1354,16 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
 
     return Row(
       children: [
-        FilterChip(
-          label: const Text('Incluir estampas'),
-          selected: state.estampasAtivo,
-          onSelected: (ativo) =>
-              _bloc.add(AdicionarVariacoesEstampasAtivouAlternou(ativo: ativo)),
-        ),
-        const SizedBox(width: 12),
+        if (!_embutidoMobile) ...[
+          FilterChip(
+            label: const Text('Incluir estampas'),
+            selected: state.estampasAtivo,
+            onSelected: (ativo) => _bloc.add(
+              AdicionarVariacoesEstampasAtivouAlternou(ativo: ativo),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
         Expanded(
           child: Text(
             'Novos na grade: $n produto(s) com código de barras',
@@ -1040,13 +1390,16 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
 
     return Row(
       children: [
-        FilterChip(
-          label: const Text('Incluir estampas'),
-          selected: state.estampasAtivo,
-          onSelected: (ativo) =>
-              _bloc.add(AdicionarVariacoesEstampasAtivouAlternou(ativo: ativo)),
-        ),
-        const SizedBox(width: 12),
+        if (!_embutidoDesktop) ...[
+          FilterChip(
+            label: const Text('Incluir estampas'),
+            selected: state.estampasAtivo,
+            onSelected: (ativo) => _bloc.add(
+              AdicionarVariacoesEstampasAtivouAlternou(ativo: ativo),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
         Expanded(
           child: Text(
             'Novos na grade: $n produto(s) com código de barras',

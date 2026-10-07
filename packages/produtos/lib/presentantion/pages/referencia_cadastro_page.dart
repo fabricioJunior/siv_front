@@ -333,6 +333,7 @@ class _Corpo extends StatelessWidget {
         tamanhoIdsNaGrade: const {},
         estampaIdsNaGrade: const {},
         chavesNaGrade: const {},
+        mobile: MediaQuery.sizeOf(context).width < 720,
         onConcluir: (_) => context.read<ReferenciaCadastroBloc>().add(
           ReferenciaCadastroVariacoesConcluidas(),
         ),

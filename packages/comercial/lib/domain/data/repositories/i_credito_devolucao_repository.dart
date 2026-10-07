@@ -9,4 +9,13 @@ abstract class ICreditoDevolucaoRepository {
     DateTime? dataInicio,
     DateTime? dataFim,
   });
+
+  Future<List<CreditoTransferivel>> buscarTransferiveis({
+    required int pessoaId,
+  });
+
+  Future<ResultadoTransferenciaCredito> transferir({
+    required int pessoaId,
+    required List<int> romaneioIds,
+  });
 }

@@ -562,8 +562,11 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       'PRDFM005',
       'PRDFM006',
       'PRDFM007',
+      'PRDFM009',
       'PRDFM010',
       'PRDFM011',
+      // Consulta (vendedora): lê os códigos de barras sem poder cadastrar.
+      'PRDFL004',
     ], permissoes)) {
       permitidos.add(SyncModulo.codigos);
     }
@@ -578,11 +581,11 @@ class SyncDataBloc extends Bloc<SyncDataEvent, SyncDataState> {
       permitidos.add(SyncModulo.estoque);
     }
 
-    if (_temAcessoAAlgumComponente(const ['PRDFM010'], permissoes)) {
+    if (_temAcessoAAlgumComponente(const ['PRDFM010', 'PRDFL003'], permissoes)) {
       permitidos.add(SyncModulo.tabelasDePreco);
     }
 
-    if (_temAcessoAAlgumComponente(const ['PRDFM011'], permissoes)) {
+    if (_temAcessoAAlgumComponente(const ['PRDFM011', 'PRDFL005'], permissoes)) {
       permitidos.add(SyncModulo.precosDaReferencia);
     }
 

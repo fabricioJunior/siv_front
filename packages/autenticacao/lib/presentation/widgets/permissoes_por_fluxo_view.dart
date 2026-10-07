@@ -10,27 +10,30 @@ import 'package:flutter/material.dart';
 /// ações (ex: Venda > Fazer venda; Caixa > Ver movimentações) e o servidor
 /// aplica TODAS as permissões que a ação exige, pra nenhuma ficar de fora.
 ///
-/// Cada alteração é aplicada na hora (não espera o botão Salvar da tela).
-/// [aoAplicar] roda depois de cada alteração confirmada, pra o pai
-/// recarregar a lista de permissões individuais. [nomesPorCodigo] traduz o
+/// As alterações ficam pendentes e só vão ao servidor no FAB "Salvar
+/// alterações" (independe do botão Salvar do grupo). Devolve a área rolável
+/// inteira: [cabecalho] (abas) + lista + FAB. [aoAplicar] roda depois de
+/// salvar, pra o pai recarregar a lista de permissões individuais. [nomesPorCodigo] traduz o
 /// código da permissão (PEDFC001) no nome que o admin entende.
 class PermissoesPorFluxoView extends StatefulWidget {
   final int? idGrupoDeAcesso;
   final Map<String, String> nomesPorCodigo;
   final VoidCallback aoAplicar;
+  final Widget cabecalho;
 
   const PermissoesPorFluxoView({
     super.key,
+    required this.cabecalho,
     required this.idGrupoDeAcesso,
     required this.nomesPorCodigo,
     required this.aoAplicar,
   });
 
   @override
-  State<PermissoesPorFluxoView> createState() => _PermissoesPorFluxoViewState();
+  State<PermissoesPorFluxoView> createState() => PermissoesPorFluxoViewState();
 }
 
-class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
+class PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
   late final AcoesDoGrupoBloc _bloc;
   final Set<String> _fluxosAbertos = {};
 
@@ -48,17 +51,46 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
     super.dispose();
   }
 
+  /// true se pode sair/trocar de aba: sem pendências ou usuário confirmou
+  /// descartar.
+  Future<bool> confirmarSaida(BuildContext context) async {
+    if (!_bloc.state.temPendencias) return true;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('Há permissões alteradas que não foram salvas.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Continuar editando'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
   String _nome(String codigo) => widget.nomesPorCodigo[codigo] ?? codigo;
 
   @override
   Widget build(BuildContext context) {
     if (widget.idGrupoDeAcesso == null) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Text(
-          'Salve o grupo primeiro. Depois você libera os fluxos por aqui, '
-          'ou marque as permissões na aba "Individuais".',
-        ),
+      return ListView(
+        children: [
+          widget.cabecalho,
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'Salve o grupo primeiro. Depois você libera os fluxos por aqui, '
+              'ou marque as permissões na aba "Individuais".',
+            ),
+          ),
+        ],
       );
     }
 
@@ -73,35 +105,83 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
             SivAviso.mostrar(
               context,
               tipo: SivAvisoTipo.falha,
-              mensagem: state.mensagemDeErro ?? 'Não foi possível aplicar.',
+              mensagem: state.mensagemDeErro ?? 'Não foi possível salvar.',
             );
           } else {
+            SivAviso.mostrar(context, mensagem: 'Permissões salvas');
             widget.aoAplicar();
           }
         },
         builder: (context, state) {
           final acoes = state.acoes;
           if (acoes == null) {
-            if (state.status == AcoesDoGrupoStatus.falha) {
-              return _falhaAoCarregar(state.mensagemDeErro);
-            }
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator.adaptive()),
+            return ListView(
+              children: [
+                widget.cabecalho,
+                if (state.status == AcoesDoGrupoStatus.falha)
+                  _falhaAoCarregar(state.mensagemDeErro)
+                else
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(child: CircularProgressIndicator.adaptive()),
+                  ),
+              ],
             );
           }
           final aplicando = state.status == AcoesDoGrupoStatus.aplicando;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (aplicando) const LinearProgressIndicator(minHeight: 2),
-              for (final fluxo in acoes.fluxos) ...[
-                _fluxoCard(context, fluxo, acoes, aplicando),
-                const SizedBox(height: 12),
+          final pendencias = state.pendentes.length;
+          return PopScope(
+            canPop: pendencias == 0,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              final nav = Navigator.of(context);
+              if (await confirmarSaida(context)) nav.pop();
+            },
+            child: Stack(
+              children: [
+                ListView(
+                  padding: EdgeInsets.only(bottom: pendencias > 0 ? 88 : 0),
+                  children: [
+                    widget.cabecalho,
+                    if (aplicando) const LinearProgressIndicator(minHeight: 2),
+                    if (pendencias > 0)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: aplicando
+                              ? null
+                              : () => _bloc.add(AcoesDoGrupoDescartou()),
+                          icon: const Icon(Icons.undo, size: 18),
+                          label: const Text('Descartar alterações'),
+                        ),
+                      ),
+                    const SizedBox(height: SivDimensoes.gapCards),
+                    for (final fluxo in acoes.fluxos) ...[
+                      _fluxoCard(context, fluxo, state, aplicando),
+                      const SizedBox(height: 12),
+                    ],
+                    if (acoes.componentesAvulsos.isNotEmpty)
+                      _avulsos(context, acoes.componentesAvulsos),
+                  ],
+                ),
+                if (pendencias > 0)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: FloatingActionButton.extended(
+                      heroTag: null,
+                      onPressed: aplicando ? null : () => _bloc.add(AcoesDoGrupoSalvou()),
+                      icon: aplicando
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check),
+                      label: Text('Salvar alterações ($pendencias)'),
+                    ),
+                  ),
               ],
-              if (acoes.componentesAvulsos.isNotEmpty)
-                _avulsos(context, acoes.componentesAvulsos),
-            ],
+            ),
           );
         },
       ),
@@ -128,15 +208,18 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
   Widget _fluxoCard(
     BuildContext context,
     FluxoDoGrupo fluxo,
-    AcoesDoGrupo acoes,
+    AcoesDoGrupoState state,
     bool aplicando,
   ) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
     final aberto = _fluxosAbertos.contains(fluxo.id);
     final incompletas = fluxo.acoes
-        .where((a) => a.estado == EstadoAcaoDoGrupo.incompleta)
+        .where((a) =>
+            a.estado == EstadoAcaoDoGrupo.incompleta &&
+            !state.pendentes.containsKey(a.id))
         .length;
+    final ligadas = fluxo.acoes.where(state.ligada).length;
 
     return SivCard(
       padding: EdgeInsets.zero,
@@ -170,7 +253,7 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
                         style: textos.apoio),
                     const SizedBox(width: 12),
                   ],
-                  Text('${fluxo.acoesLigadas} de ${fluxo.acoes.length} ações',
+                  Text('$ligadas de ${fluxo.acoes.length} ações',
                       style: textos.apoio),
                   const SizedBox(width: 8),
                   Icon(aberto ? Icons.expand_less : Icons.expand_more, color: cores.textoApoio),
@@ -179,7 +262,7 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
             ),
           ),
           if (aberto)
-            for (final acao in fluxo.acoes) _acaoLinha(context, fluxo, acao, aplicando),
+            for (final acao in fluxo.acoes) _acaoLinha(context, fluxo, acao, state, aplicando),
         ],
       ),
     );
@@ -189,12 +272,14 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
     BuildContext context,
     FluxoDoGrupo fluxo,
     AcaoDoGrupo acao,
+    AcoesDoGrupoState state,
     bool aplicando,
   ) {
     final textos = context.sivTextos;
     final cores = context.sivColors;
-    final ligada = acao.estado != EstadoAcaoDoGrupo.desligada;
-    final incompleta = acao.estado == EstadoAcaoDoGrupo.incompleta;
+    final ligada = state.ligada(acao);
+    final incompleta = acao.estado == EstadoAcaoDoGrupo.incompleta &&
+        !state.pendentes.containsKey(acao.id);
     final nomesRequeridas = acao.requer
         .map((id) => fluxo.acoes.where((a) => a.id == id).map((a) => a.nome))
         .expand((n) => n)
@@ -215,11 +300,7 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
             value: ligada,
             onChanged: aplicando
                 ? null
-                : (v) => _bloc.add(
-                      v
-                          ? AcoesDoGrupoAlterou(ativar: [acao.id])
-                          : AcoesDoGrupoAlterou(desativar: [acao.id]),
-                    ),
+                : (v) => _bloc.add(AcoesDoGrupoAlternou(acao.id, ligar: v)),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -253,7 +334,7 @@ class _PermissoesPorFluxoViewState extends State<PermissoesPorFluxoView> {
             TextButton(
               onPressed: aplicando
                   ? null
-                  : () => _bloc.add(AcoesDoGrupoAlterou(ativar: [acao.id])),
+                  : () => _bloc.add(AcoesDoGrupoCompletou(acao.id)),
               child: const Text('Completar'),
             ),
         ],

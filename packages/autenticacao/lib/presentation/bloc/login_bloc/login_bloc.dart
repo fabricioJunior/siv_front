@@ -401,6 +401,16 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
                 : 'Os dados enviados são inválidos. Revise as informações e tente novamente.',
           );
         case 401:
+          // A API responde 401 também para usuário bloqueado ("usuário bloqueado"): sem este caso o usuário via
+          // "usuário ou senha incorretos" e não sabia que o problema é o bloqueio.
+          if (error.apiMessage?.toLowerCase().contains('bloqueado') ?? false) {
+            return LoginAutenticarFalha(
+              currentState,
+              tipo: LoginErroTipo.acessoNegado,
+              erro:
+                  'Este usuário está bloqueado. Fale com o administrador do sistema para liberar o acesso.',
+            );
+          }
           return LoginAutenticarFalha(
             currentState,
             tipo: LoginErroTipo.credenciaisInvalidas,

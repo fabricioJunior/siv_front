@@ -4,6 +4,7 @@ import 'package:autenticacao/presentation/bloc/login_bloc/login_bloc.dart';
 import 'package:autenticacao/uses_cases.dart';
 import 'package:core/bloc_test.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/remote_data_sourcers.dart' show HttpException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
@@ -197,6 +198,41 @@ void main() {
     );
 
     blocTest<LoginBloc, LoginState>(
+      'usuário bloqueado: 401 com "usuário bloqueado" mostra que está bloqueado, não "senha incorreta"',
+      build: () => loginBloc,
+      seed: () => estadoComLicenciadoSelecionado,
+      setUp: () {
+        _setupHttpFalhaCriarToken(401, 'usuário bloqueado');
+      },
+      act: (bloc) {
+        bloc.add(LoginAutenticou());
+      },
+      expect: () => [
+        estadoDeAutenticacaoEmProgresso,
+        isA<LoginAutenticarFalha>()
+            .having((s) => s.tipo, 'tipo', LoginErroTipo.acessoNegado)
+            .having((s) => s.erro, 'erro', contains('bloqueado')),
+      ],
+    );
+    blocTest<LoginBloc, LoginState>(
+      '401 sem bloqueio continua dizendo usuário ou senha incorretos',
+      build: () => loginBloc,
+      seed: () => estadoComLicenciadoSelecionado,
+      setUp: () {
+        _setupHttpFalhaCriarToken(401, 'usuario ou senha inválida');
+      },
+      act: (bloc) {
+        bloc.add(LoginAutenticou());
+      },
+      expect: () => [
+        estadoDeAutenticacaoEmProgresso,
+        isA<LoginAutenticarFalha>()
+            .having((s) => s.tipo, 'tipo', LoginErroTipo.credenciaisInvalidas)
+            .having((s) => s.erro, 'erro', contains('incorretos')),
+      ],
+    );
+
+    blocTest<LoginBloc, LoginState>(
       'emite estado de falha quando tenta autenticar sem licenciado selecionado',
       build: () => loginBloc,
       seed: () => estadoSucessoAdicionarSenha,
@@ -231,6 +267,11 @@ void _setupFalhaCriarTokenDeAutenticacao(
 ) {
   when(criarTokenDeAutenticacao.call(usuario: usuario, senha: senha))
       .thenThrow(Exception('erro desconhecido'));
+}
+
+void _setupHttpFalhaCriarToken(int status, String apiMessage) {
+  when(criarTokenDeAutenticacao.call(usuario: 'usuario', senha: 'senha'))
+      .thenThrow(HttpException('erro', statusCode: status, apiMessage: apiMessage));
 }
 
 void _setupRecuperarUsuarioDaSessao(Usuario usuario) {

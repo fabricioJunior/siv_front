@@ -199,6 +199,38 @@ void main() {
     },
   );
 
+  group('permissao para sincronizar', () {
+    Future<SyncDataState> sincronizarCom(List<String> componentes) async {
+      when(recuperarPermissoesDoUsuario.call(1)).thenAnswer(
+        (_) async => [for (final c in componentes) FakePermissaoDoUsuario(c)],
+      );
+      when(sincronizarCodigos.call()).thenAnswer((_) => const Stream.empty());
+      when(sincronizarEstoque.call()).thenAnswer((_) => const Stream.empty());
+      when(sincronizarTabelasDePreco.call()).thenAnswer((_) => const Stream.empty());
+      when(sincronizarPrecos.call()).thenAnswer((_) => const Stream.empty());
+      bloc.add(const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.vendas));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return bloc.state;
+    }
+
+    test('vendedora com as permissoes de CONSULTA (sem manutencao) sincroniza codigos, tabelas e precos', () async {
+      final estado = await sincronizarCom(['PRDFL001', 'PRDFL003', 'PRDFL004', 'PRDFL005']);
+
+      for (final modulo in SyncModulo.values) {
+        expect(estado.modulos[modulo]!.erro, isNull, reason: '$modulo deveria ser permitido');
+      }
+    });
+
+    test('so com estoque, codigos/tabelas/precos continuam bloqueados', () async {
+      final estado = await sincronizarCom(['PRDFL001']);
+
+      expect(estado.modulos[SyncModulo.estoque]!.erro, isNull);
+      for (final modulo in [SyncModulo.codigos, SyncModulo.tabelasDePreco, SyncModulo.precosDaReferencia]) {
+        expect(estado.modulos[modulo]!.erro, 'Sincronização não permitida para o seu perfil.');
+      }
+    });
+  });
+
   test('reconexao do WS dispara sincronizacao completa', () async {
     when(sincronizarEstoque.call()).thenAnswer((_) => const Stream.empty());
 

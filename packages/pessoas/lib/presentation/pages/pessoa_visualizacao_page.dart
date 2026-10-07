@@ -8,8 +8,14 @@ import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
 class PessoaVisualizacaoPage extends StatefulWidget {
   final int idPessoa;
 
+  /// Abre a transferência de crédito do cliente não cadastrado para esta
+  /// pessoa; montado em routes.dart (pessoas não depende de comercial).
+  final Future<bool> Function(BuildContext context, int idPessoa, String nome)?
+      aoTransferirCredito;
+
   const PessoaVisualizacaoPage({
     required this.idPessoa,
+    this.aoTransferirCredito,
     super.key,
   });
 
@@ -159,6 +165,20 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
               icon: const Icon(Icons.edit_outlined),
               label: const Text('Editar'),
             ),
+            if (widget.aoTransferirCredito != null &&
+                idPessoa != null &&
+                !(state.pessoa?.generica ?? false) &&
+                PermissaoPorNome.acessoPermitido('PESFM004') &&
+                PermissaoPorNome.acessoPermitido('PESFC004'))
+              OutlinedButton.icon(
+                onPressed: () => widget.aoTransferirCredito!(
+                  context,
+                  idPessoa,
+                  state.nome ?? 'Pessoa #$idPessoa',
+                ),
+                icon: const Icon(Icons.swap_horiz),
+                label: const Text('Transferir crédito do cliente não cadastrado'),
+              ),
           ],
         ),
       ),

@@ -5,6 +5,7 @@ export 'domain/models/pedido_pagamento.dart';
 export 'domain/models/pedido_evento.dart';
 export 'domain/models/pagamentos_realizados_resumo.dart';
 export 'domain/models/credito_devolucao_movimentacao.dart';
+export 'domain/models/credito_transferivel.dart';
 export 'domain/models/romaneio.dart';
 export 'domain/models/romaneio_item.dart';
 export 'domain/models/romaneio_item_devolvido.dart';

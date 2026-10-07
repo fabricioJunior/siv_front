@@ -8,7 +8,7 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
   CreditoDevolucaoRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/v1/pessoas/{pessoaId}/extrato/credito-de-devolucao';
+  String get path => '/v1/pessoas/{pessoaId}/extrato/credito-de-devolucao{sufixo}';
 
   @override
   Future<List<CreditoDevolucaoMovimentacao>> buscarMovimentacoes({
@@ -36,4 +36,45 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
         .map(CreditoDevolucaoMovimentacaoDto.fromJson)
         .toList(growable: false);
   }
+
+  @override
+  Future<List<CreditoTransferivel>> buscarTransferiveis({
+    required int pessoaId,
+  }) async {
+    final response = await get(
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': '/nao-cadastrado'},
+    );
+    final body = response.body as List<dynamic>? ?? const [];
+    return body.whereType<Map<String, dynamic>>().map((j) {
+      return CreditoTransferivel(
+        romaneioId: _int(j['romaneioId']),
+        faturaId: _int(j['faturaId']),
+        faturaParcela: _int(j['faturaParcela']),
+        data: DateTime.tryParse('${j['data']}') ?? DateTime.now(),
+        valor: _num(j['valor']),
+        observacao: (j['observacao'] ?? '').toString(),
+      );
+    }).toList(growable: false);
+  }
+
+  @override
+  Future<ResultadoTransferenciaCredito> transferir({
+    required int pessoaId,
+    required List<int> romaneioIds,
+  }) async {
+    final response = await post(
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': '/transferir'},
+      body: {'romaneioIds': romaneioIds},
+    );
+    final j = response.body as Map<String, dynamic>;
+    return ResultadoTransferenciaCredito(
+      valorTotal: _num(j['valorTotal']),
+      saldoCreditoDevolucaoDestino: _num(j['saldoCreditoDevolucaoDestino']),
+    );
+  }
+
+  int _int(dynamic v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+
+  double _num(dynamic v) =>
+      v is num ? v.toDouble() : double.tryParse('$v'.replaceAll(',', '.')) ?? 0;
 }

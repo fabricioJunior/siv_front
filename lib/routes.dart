@@ -5,6 +5,7 @@ import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
 import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
+import 'package:comercial/presentation/widgets/transferir_credito_dialogo.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
@@ -112,7 +113,24 @@ Map<String, Widget Function(BuildContext)> routes = {
     return PessoaPage(idPessoa: args(context)['idPessoa']);
   },
   '/pessoa_visualizacao': (context) {
-    return PessoaVisualizacaoPage(idPessoa: args(context)['idPessoa']);
+    return PessoaVisualizacaoPage(
+      idPessoa: args(context)['idPessoa'],
+      aoTransferirCredito: (ctx, idPessoa, nome) async {
+        final r = await TransferirCreditoDialogo.mostrar(
+          ctx,
+          pessoaId: idPessoa,
+          nomeDestino: nome,
+        );
+        if (r != null && ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text('${formatarMoedaBr(r.valorTotal)} transferidos'),
+            ),
+          );
+        }
+        return r != null;
+      },
+    );
   },
   '/pontos_page': (context) {
     return PontosPage(idPessoa: args(context)['idPessoa']);

@@ -29,8 +29,10 @@ jobs:
 
       # Pacote MSIX pronto pra Microsoft Store (usa o `msix_config` do pubspec: ícones/tiles do SIV, versão, idiomas).
       # O build do Windows já foi feito acima (com o SENTRY_DSN), então não refaz.
+      # A Store recusa versão repetida: a versão vem do nº da execução (1.1.<run>.0, sempre crescente; o último número é 0
+      # por regra da Store). Substitui o msix_version do pubspec, que fica só como valor local.
       - name: Gera o pacote MSIX da Microsoft Store
-        run: dart run msix:create --store --build-windows false
+        run: dart run msix:create --store --build-windows false --version 1.1.${{ github.run_number }}.0
 
       - uses: actions/upload-artifact@v4
         with:

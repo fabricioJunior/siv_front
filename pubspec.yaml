@@ -107,7 +107,7 @@ msix_config:
   publisher_display_name: Vale do Ceará
   identity_name: ValedoCear.SivFront
   publisher: CN=B25EE2CC-9891-4248-BD5B-370EA12848D0
-  msix_version: 1.0.3.0
+  msix_version: 1.0.4.0
   store: true
   architecture: x64
   logo_path: assets/brand/siv_icone.png

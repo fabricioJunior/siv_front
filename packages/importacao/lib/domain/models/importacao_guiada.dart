@@ -24,14 +24,14 @@ enum ImportacaoSituacao {
 }
 
 /// Etapas do assistente, na ordem em que precisam ser importadas: vendas
-/// apontam para clientes (CPF) e produtos (código de barras), e o estoque
+/// apontam para clientes (CPF ou CNPJ) e produtos (código de barras), e o estoque
 /// só grava saldo de produto que já existe.
 enum ImportacaoEtapa {
   clientes(
     titulo: 'Clientes',
     descricao:
-        'Cadastra os clientes pelo CPF. Vem primeiro porque as vendas '
-        'apontam para eles pelo CPF.',
+        'Cadastra os clientes pelo documento (CPF ou CNPJ). Vem primeiro '
+        'porque as vendas apontam para eles pelo documento.',
     tipoBackend: 'cliente',
     caminhoModelo: '/pessoas/template',
     caminhoEnvio: '/pessoas/csv',

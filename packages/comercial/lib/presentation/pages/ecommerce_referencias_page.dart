@@ -140,7 +140,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                 }
               } else if (state is EcommerceReferenciasAdicionarLoteConcluiu) {
                 if (state.falhas.isNotEmpty) {
-                  _mostrarFalhasDoLote(context, state, state.falhas);
+                  _mostrarFalhasDoLote(
+                    context,
+                    state,
+                    state.falhas,
+                    titulo: 'Algumas referências não foram adicionadas',
+                  );
                 } else {
                   SivAviso.mostrar(
                     context,
@@ -1150,11 +1155,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   void _mostrarFalhasDoLote(
     BuildContext context,
     EcommerceReferenciasState state,
-    List<EcommerceLoteFalha> falhas,
-  ) {
+    List<EcommerceLoteFalha> falhas, {
+    String titulo = 'Algumas referências não foram publicadas',
+  }) {
     SivDialogo.mostrar(
       context,
-      titulo: 'Algumas referências não foram publicadas',
+      titulo: titulo,
       onConfirmar: (_) {},
       textoAcao: 'Entendi',
       corpo: SizedBox(
@@ -1175,12 +1181,19 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
 
   String _textoFalha(
       EcommerceReferenciasState state, EcommerceLoteFalha falha) {
-    final candidatas =
-        state.referencias.where((r) => r.id == falha.id).toList();
+    final candidatas = state.referencias
+        .where(
+          (r) => falha.referenciaId != null
+              ? r.referenciaId == falha.referenciaId
+              : r.id == falha.id,
+        )
+        .toList();
     final nome = candidatas.isEmpty
-        ? 'Referência #${falha.id}'
+        ? 'Referência #${falha.referenciaId ?? falha.id}'
         : (candidatas.first.referenciaNome ??
             'Referência #${candidatas.first.referenciaId}');
+    final mensagem = falha.mensagem?.trim();
+    if (mensagem != null && mensagem.isNotEmpty) return '$nome: $mensagem';
     final motivos = falha.motivos
         .map((m) => textoMotivoBloqueioEcommerce[m] ?? m)
         .join(', ')

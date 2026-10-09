@@ -28,6 +28,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   final DecidirDivergenciaEntrada _decidirDivergencia;
   final RegistrarEtiquetasEntrada _registrarEtiquetas;
   final FaturarEntrada _faturar;
+  final RegistrarLeiturasEntrada _registrarLeituras;
   final IAcessoGlobalSessao _sessao;
 
   int? _pedidoId;
@@ -47,6 +48,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     this._decidirDivergencia,
     this._registrarEtiquetas,
     this._faturar,
+    this._registrarLeituras,
     this._sessao,
   ) : super(const PedidoEntradaState()) {
     on<PedidoEntradaCarregou>(_onCarregou);
@@ -115,6 +117,11 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
           )),
     );
     on<PedidoEntradaFaturou>(_onFaturou);
+    on<PedidoEntradaLeu>(_onLeu);
+    on<PedidoEntradaEnviouLeituras>(_onEnviouLeituras);
+    on<PedidoEntradaDescartouLeituras>(
+      (e, emit) => emit(state.copyWith(leiturasPendentes: const {})),
+    );
     on<PedidoEntradaRegistrouContagemLivre>(
       (e, emit) => _salvar(
         emit,
@@ -200,6 +207,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
       final resumo = await _criarPorContagem(
         pessoaId: event.pessoaId,
         tabelaPrecoId: event.tabelaPrecoId,
+        funcionarioId: event.funcionarioId,
       );
       _pedidoId = resumo.pedidoId;
       emit(state.copyWith(salvando: false, resumo: resumo));
@@ -363,6 +371,58 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
         ),
       );
       addError(e, s);
+    }
+  }
+
+  /// Bipe local: só atualiza o mapa. O lido nunca fica abaixo de zero.
+  void _onLeu(PedidoEntradaLeu e, Emitter<PedidoEntradaState> emit) {
+    final lido = state.resumo?.conferencia.itens
+        .where((i) => i.produtoId == e.produtoId)
+        .map((i) => i.lido.round())
+        .firstOrNull;
+    if (lido == null) return; // não pertence à entrada
+    final pend = state.leiturasPendentes[e.produtoId] ?? 0;
+    final novo = pend + e.delta;
+    if (lido + novo < 0) return;
+    final mapa = Map<int, int>.of(state.leiturasPendentes);
+    if (novo == 0) {
+      mapa.remove(e.produtoId);
+    } else {
+      mapa[e.produtoId] = novo;
+    }
+    emit(state.copyWith(leiturasPendentes: mapa));
+  }
+
+  Future<void> _onEnviouLeituras(
+    PedidoEntradaEnviouLeituras e,
+    Emitter<PedidoEntradaState> emit,
+  ) async {
+    final pendentes = state.leiturasPendentes;
+    if (pendentes.isEmpty) {
+      if (e.irParaRevisar) emit(state.copyWith(passo: 4));
+      return;
+    }
+    emit(state.copyWith(salvando: true, passo: state.passoVisivel));
+    try {
+      final resumo = await _registrarLeituras(_pedidoId!, pendentes);
+      emit(
+        state.copyWith(
+          salvando: false,
+          resumo: resumo,
+          leiturasPendentes: const {},
+          passo: e.irParaRevisar ? 4 : state.passoVisivel,
+          mensagem: 'Leituras enviadas',
+        ),
+      );
+    } catch (err, s) {
+      // mantém as leituras pendentes: nada se perde
+      emit(
+        state.copyWith(
+          salvando: false,
+          erro: mensagemDeErroApi(err, 'Falha ao enviar as leituras.'),
+        ),
+      );
+      addError(err, s);
     }
   }
 }

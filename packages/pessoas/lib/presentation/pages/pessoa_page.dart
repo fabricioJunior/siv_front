@@ -197,7 +197,10 @@ class _PessoaPageState extends State<PessoaPage> {
     return _currentStep;
   }
 
+  bool _ehJuridica(PessoaState state) => state.tipoPessoa == TipoPessoa.juridica;
+
   Widget _buildStepPessoa(BuildContext context, PessoaState state) {
+    final juridica = _ehJuridica(state);
     return SingleChildScrollView(
       child: Form(
         key: _formKeyPessoa,
@@ -207,9 +210,9 @@ class _PessoaPageState extends State<PessoaPage> {
             TextFormField(
               key: const Key('nome_pessoa_text_field'),
               controller: _nomeController,
-              decoration: const InputDecoration(
-                labelText: 'Nome *',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: juridica ? 'Razão social *' : 'Nome *',
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -219,16 +222,41 @@ class _PessoaPageState extends State<PessoaPage> {
               },
             ),
             const SizedBox(height: 12),
-            CPFInput(
+            SegmentedButton<TipoPessoa>(
+              key: const Key('tipo_pessoa_selector'),
+              segments: const [
+                ButtonSegment(
+                  value: TipoPessoa.fisica,
+                  label: Text('Pessoa física'),
+                  icon: Icon(Icons.person_outline),
+                ),
+                ButtonSegment(
+                  value: TipoPessoa.juridica,
+                  label: Text('Pessoa jurídica'),
+                  icon: Icon(Icons.business_outlined),
+                ),
+              ],
+              selected: {state.tipoPessoa ?? TipoPessoa.fisica},
+              onSelectionChanged: (selecao) {
+                // CPF e CNPJ têm máscara diferente: o documento digitado não vale para o outro tipo.
+                _cpfController.clear();
+                context.read<PessoaBloc>().add(
+                      PessoaEditou(tipoPessoa: selecao.first, documento: ''),
+                    );
+              },
+            ),
+            const SizedBox(height: 12),
+            DocumentoInput(
               controller: _cpfController,
+              juridica: juridica,
               valorInicial: state.documento,
-              onChanged: (value) => _aoAlterarCpf(context, value),
+              onChanged: (value) => _aoAlterarDocumento(context, value, juridica),
             ),
             if (state.verificandoDocumento)
               const Padding(
                 padding: EdgeInsets.only(top: 4),
                 child: Text(
-                  'Verificando CPF...',
+                  'Verificando documento...',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               )
@@ -240,15 +268,17 @@ class _PessoaPageState extends State<PessoaPage> {
                   style: TextStyle(fontSize: 12, color: Colors.red.shade700),
                 ),
               ),
-            const SizedBox(height: 12),
-            DateInput(
-              externalController: _dataNascimentoController,
-              dataInicial: state.dataDeNascimento,
-              labelText: 'Data de nascimento *',
-              onComplete: (value) {
-                _dataNascimentoSelecionada = value;
-              },
-            ),
+            if (!juridica) ...[
+              const SizedBox(height: 12),
+              DateInput(
+                externalController: _dataNascimentoController,
+                dataInicial: state.dataDeNascimento,
+                labelText: 'Data de nascimento *',
+                onComplete: (value) {
+                  _dataNascimentoSelecionada = value;
+                },
+              ),
+            ],
             const SizedBox(height: 12),
             CelularInput(
               controller: _contatoController,
@@ -545,18 +575,19 @@ class _PessoaPageState extends State<PessoaPage> {
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('CPF'),
+            title: Text(_ehJuridica(state) ? 'CNPJ' : 'CPF'),
             subtitle: Text(_cpfController.text.trim().isEmpty
                 ? '-'
                 : _cpfController.text.trim()),
           ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Data de nascimento'),
-            subtitle: Text(_dataNascimentoController.text.trim().isEmpty
-                ? '-'
-                : _dataNascimentoController.text.trim()),
-          ),
+          if (!_ehJuridica(state))
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Data de nascimento'),
+              subtitle: Text(_dataNascimentoController.text.trim().isEmpty
+                  ? '-'
+                  : _dataNascimentoController.text.trim()),
+            ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Celular'),
@@ -718,7 +749,7 @@ class _PessoaPageState extends State<PessoaPage> {
       if (!(_formKeyPessoa.currentState?.validate() ?? false)) {
         return false;
       }
-      if (_obterDataNascimentoAtual(state) == null) {
+      if (!_ehJuridica(state) && _obterDataNascimentoAtual(state) == null) {
         _erro(context, 'Informe a data de nascimento.');
         return false;
       }
@@ -751,9 +782,12 @@ class _PessoaPageState extends State<PessoaPage> {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
   }
 
-  void _aoAlterarCpf(BuildContext context, String value) {
+  void _aoAlterarDocumento(BuildContext context, String value, bool juridica) {
     final digitos = value.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digitos.length == 11 && cpfEhValido(digitos)) {
+    final completoEValido = juridica
+        ? digitos.length == 14 && cnpjEhValido(digitos)
+        : digitos.length == 11 && cpfEhValido(digitos);
+    if (completoEValido) {
       context.read<PessoaBloc>().add(
             PessoaVerificarDocumentoSolicitado(documento: digitos),
           );

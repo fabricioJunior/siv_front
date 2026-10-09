@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
@@ -6,29 +8,93 @@ import 'package:core/leitor.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
-/// Passo 4: LeitorWidget em modo conferência (contado × lido). Cada bipe é
-/// repassado a [onConferirCodigo] (servidor: lido = atendido).
-class PassoConferir extends StatelessWidget {
+/// Dados locais do leitor: resolve o código a partir dos itens da própria
+/// entrada (zero rede por bipe).
+class _FonteLocal implements ILeitorDataDatasource {
+  List<ProdutoEsperado> itens = const [];
+
+  LeitorData? _por(bool Function(ProdutoEsperado) f) {
+    for (final p in itens) {
+      if (f(p)) return _DadoLocal(p);
+    }
+    return null;
+  }
+
+  @override
+  Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) async =>
+      _por((p) => p.codigoDeBarras == codigo);
+
+  @override
+  Future<LeitorData?> getDataPorProdutoId(
+    int produtoId, {
+    int? tabelaDePrecoId,
+  }) async =>
+      _por((p) => p.id == produtoId);
+}
+
+class _DadoLocal with LeitorData {
+  final ProdutoEsperado p;
+  _DadoLocal(this.p);
+  @override
+  String get codigoDeBarras => p.codigoDeBarras;
+  @override
+  String get descricao => p.descricao;
+  @override
+  int get quantidade => 0;
+  @override
+  int get idReferencia => p.idReferencia;
+  @override
+  String get tamanho => p.tamanho;
+  @override
+  String get cor => p.cor;
+  @override
+  double? get valor => null;
+  @override
+  int get id => p.id;
+  @override
+  Map<String, dynamic> get dados => const {};
+}
+
+/// Passo 4: LeitorWidget em modo conferência (contado × lido). O bipe é LOCAL
+/// (sem rede): as leituras ficam pendentes no bloc e vão ao servidor em lote
+/// ([onEnviar]); a tela já soma o pendente ao lido do servidor.
+class PassoConferir extends StatefulWidget {
   final EntradaResumo resumo;
-  final ILeitorDataDatasource dataSource;
+
+  /// produtoId -> variação do lido ainda não enviada.
+  final Map<int, int> pendentes;
+  final bool salvando;
   final ILeitorBuscaDataDatasource? buscaDataSource;
 
-  /// Soma [quantidade] (negativa = remover leitura) ao atendido do produto.
-  final void Function(String codigoDeBarras, int quantidade) onConferirCodigo;
+  /// +1 bipe, -1 remover leitura (local).
+  final void Function(int produtoId, int delta) onLeu;
+
+  /// Envia o lote; true se enviou (ou não havia nada). Com [irParaRevisar],
+  /// só segue para Revisar se der certo.
+  final Future<bool> Function({bool irParaRevisar}) onEnviar;
   final ValueChanged<int> onIrParaPasso;
 
   const PassoConferir({
     super.key,
     required this.resumo,
-    required this.dataSource,
-    this.buscaDataSource,
-    required this.onConferirCodigo,
+    required this.pendentes,
+    required this.onLeu,
+    required this.onEnviar,
     required this.onIrParaPasso,
+    this.salvando = false,
+    this.buscaDataSource,
   });
 
+  @override
+  State<PassoConferir> createState() => _PassoConferirState();
+}
+
+class _PassoConferirState extends State<PassoConferir> {
+  final _fonte = _FonteLocal();
+
   List<ProdutoEsperado>? get _esperados {
-    final itens = resumo.conferencia.itens;
-    if (itens.isEmpty) return null; // backend antigo: leitor comum
+    final itens = widget.resumo.conferencia.itens;
+    if (itens.isEmpty) return null;
     return [
       for (final i in itens)
         ProdutoEsperado(
@@ -39,17 +105,19 @@ class PassoConferir extends StatelessWidget {
           cor: i.cor,
           tamanho: i.tamanho,
           esperado: i.contado.round(),
-          lido: i.lido.round(),
+          lido: math.max(
+            0,
+            i.lido.round() + (widget.pendentes[i.produtoId] ?? 0),
+          ),
         ),
     ];
   }
 
-  Future<void> _corrigir(
-    BuildContext context,
-    ProdutoEsperado p,
-    int lido,
-  ) async {
+  Future<void> _corrigir(ProdutoEsperado p, int lido) async {
     final bloc = context.read<PedidoEntradaBloc>();
+    // o servidor valida para >= lido do servidor: envia o pendente antes
+    if (widget.pendentes.isNotEmpty && !await widget.onEnviar()) return;
+    if (!mounted) return;
     final r = await showModalBottomSheet<({bool corrigir, String? obs})>(
       context: context,
       isScrollControlled: true,
@@ -71,35 +139,71 @@ class PassoConferir extends StatelessWidget {
   Widget build(BuildContext context) {
     final mobile = ehMobile(context);
     final textos = context.sivTextos;
-    final conf = resumo.conferencia;
+    final cores = context.sivColors;
+    final esperados = _esperados;
+    _fonte.itens = esperados ?? const [];
+    final totalLido = esperados?.fold<int>(0, (s, p) => s + p.lido) ??
+        widget.resumo.conferencia.totalLido.round();
+    final total = widget.resumo.conferencia.totalContado > 0
+        ? widget.resumo.conferencia.totalContado
+        : widget.resumo.totalContado;
+    final nPend = widget.pendentes.values.fold<int>(0, (s, d) => s + d.abs());
+    final temPend = nPend > 0;
+
     return Column(
       children: [
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(12),
             child: LeitorWidget(
-              dataSource: dataSource,
-              buscaDataSource: buscaDataSource,
+              dataSource: _fonte,
+              buscaDataSource: widget.buscaDataSource,
               autofocus: !mobile,
               alturaLista: mobile ? 420 : 480,
               campoCodigoHint: 'Código de barras…',
-              produtosEsperados: _esperados,
-              onUltimoProdutoLido: (item) =>
-                  onConferirCodigo(item.codigoDeBarras, 1),
-              onRemoverLeitura: (p) => onConferirCodigo(p.codigoDeBarras, -1),
-              onCorrigirContagem: (p, lido) => _corrigir(context, p, lido),
+              avisarCodigoDuplicado: false,
+              produtosEsperados: esperados,
+              onUltimoProdutoLido: (item) => widget.onLeu(item.id, 1),
+              onRemoverLeitura: (p) {
+                if (p.lido > 0) widget.onLeu(p.id, -1);
+              },
+              onCorrigirContagem: _corrigir,
             ),
           ),
         ),
         RodapeAcaoEntrada(
-          resumo: Text(
-            '${qtd(conf.totalLido)} de ${qtd(conf.totalContado > 0 ? conf.totalContado : resumo.totalContado)} peças',
-            style: textos.apoio,
+          aviso: temPend
+              ? Text(
+                  '$nPend leitura(s) ainda não enviada(s)',
+                  key: const Key('conferir_pendentes'),
+                  style: textos.apoio.copyWith(color: cores.parcialTexto),
+                )
+              : null,
+          resumo: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$totalLido de ${qtd(total)} peças', style: textos.apoio),
+              if (temPend)
+                TextButton(
+                  key: const Key('conferir_enviar_agora'),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: widget.salvando ? null : () => widget.onEnviar(),
+                  child: const Text('Enviar agora'),
+                ),
+            ],
           ),
           acao: BotaoPrincipalEntrada(
             key: const Key('conferir_continuar'),
-            rotulo: 'CONTINUAR · REVISAR',
-            onPressed: () => onIrParaPasso(4),
+            rotulo: temPend ? 'ENVIAR E REVISAR' : 'CONTINUAR · REVISAR',
+            onPressed: widget.salvando
+                ? null
+                : temPend
+                    ? () => widget.onEnviar(irParaRevisar: true)
+                    : () => widget.onIrParaPasso(4),
           ),
         ),
       ],
@@ -204,7 +308,8 @@ class _FolhaCorrigirContagemState extends State<FolhaCorrigirContagem> {
                 Expanded(
                   child: BotaoPrincipalEntrada(
                     key: const Key('corrigir_confirmar'),
-                    rotulo: _corrigir ? 'CORRIGIR CONTAGEM' : 'CONTINUAR BIPANDO',
+                    rotulo:
+                        _corrigir ? 'CORRIGIR CONTAGEM' : 'CONTINUAR BIPANDO',
                     onPressed: () => Navigator.pop(
                       context,
                       (

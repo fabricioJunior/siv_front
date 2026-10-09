@@ -169,13 +169,22 @@ class ContagemLivre extends Equatable {
   final int tamanhoId;
   final double quantidade;
 
+  /// Preenchidos quando é uma variação nova (cor/tamanho sem SKU) de uma
+  /// referência já cadastrada; null = produto sem referência.
+  final int? referenciaId;
+  final String? referenciaNome;
+
   const ContagemLivre({
     required this.id,
     required this.descricao,
     required this.corId,
     required this.tamanhoId,
     required this.quantidade,
+    this.referenciaId,
+    this.referenciaNome,
   });
+
+  bool get ehVariacaoNova => referenciaId != null;
 
   factory ContagemLivre.fromJson(Map<String, dynamic> j) => ContagemLivre(
         id: _int(j['id']) ?? 0,
@@ -183,10 +192,13 @@ class ContagemLivre extends Equatable {
         corId: _int(j['corId']) ?? 0,
         tamanhoId: _int(j['tamanhoId']) ?? 0,
         quantidade: _num(j['quantidade']),
+        referenciaId: _int(j['referenciaId']),
+        referenciaNome: j['referenciaNome'] as String?,
       );
 
   @override
-  List<Object?> get props => [id, descricao, corId, tamanhoId, quantidade];
+  List<Object?> get props =>
+      [id, descricao, corId, tamanhoId, quantidade, referenciaId];
 }
 
 /// Situação de um item na conferência (lido × contado).
@@ -532,6 +544,14 @@ class EntradaResumo extends Equatable {
           .toList(),
     );
   }
+
+  /// Contagem de produto sem referência (a associar).
+  List<ContagemLivre> get livresSemReferencia =>
+      contagensLivres.where((c) => !c.ehVariacaoNova).toList();
+
+  /// Cor/tamanho novos de referência já cadastrada (a cadastrar).
+  List<ContagemLivre> get variacoesNovas =>
+      contagensLivres.where((c) => c.ehVariacaoNova).toList();
 
   List<EntradaContagem> contagensDaLinha(int linhaId) =>
       contagens.where((c) => c.linhaId == linhaId).toList();

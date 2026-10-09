@@ -144,11 +144,43 @@ class _PassoContarState extends State<PassoContar> {
 
   Map<String, List<ContagemLivre>> get _gruposLivres {
     final g = <String, List<ContagemLivre>>{};
-    for (final c in _r.contagensLivres) {
+    for (final c in _r.livresSemReferencia) {
       g.putIfAbsent(c.descricao, () => []).add(c);
     }
     return g;
   }
+
+  Map<int, List<ContagemLivre>> get _gruposVariacoes {
+    final g = <int, List<ContagemLivre>>{};
+    for (final c in _r.variacoesNovas) {
+      g.putIfAbsent(c.referenciaId!, () => []).add(c);
+    }
+    return g;
+  }
+
+  /// Reabre a contagem COM referência dessa referência, com as variações
+  /// novas (e as já cadastradas) para recontar.
+  void _editarVariacao(int refId, List<ContagemLivre> itens) => _abrir(
+        _Edicao(
+          titulo: itens.first.referenciaNome ?? 'Referência',
+          referenciaId: refId,
+          referenciaNome: itens.first.referenciaNome,
+          existentes: [
+            ..._r.contagens.where((c) => c.referenciaId == refId),
+            for (final c in itens)
+              EntradaContagem(
+                produtoId: 0,
+                linhaId: null,
+                quantidade: c.quantidade,
+                referenciaId: refId,
+                corId: c.corId,
+                corNome: _corNome(c.corId),
+                tamanhoId: c.tamanhoId,
+                tamanhoNome: _tamNome(c.tamanhoId),
+              ),
+          ],
+        ),
+      );
 
   void _guardarNomes() {
     for (final c in _r.contagens) {
@@ -206,7 +238,9 @@ class _PassoContarState extends State<PassoContar> {
   Widget build(BuildContext context) {
     _guardarNomes();
     final mobile = ehMobile(context);
-    final livres = _gruposLivres.length;
+    final semRef = _gruposLivres.length;
+    final variacoes = _r.variacoesNovas.length;
+    final livres = semRef + variacoes;
     final temContagem = _r.contagens.isNotEmpty || _r.contagensLivres.isNotEmpty;
     final lista = _lista(context, mobile);
     final edicao = _edicao;
@@ -241,12 +275,20 @@ class _PassoContarState extends State<PassoContar> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${qtd(_r.totalContado)} peças · ${_gruposRef.length + livres} produtos',
+                      '${qtd(_r.totalContado)} peças · ${_gruposRef.length + _gruposLivres.length + _gruposVariacoes.length} produtos',
                       style: context.sivTextos.apoio,
                     ),
-                    if (livres > 0)
+                    if (semRef > 0)
                       Text(
-                        '$livres sem referência',
+                        '$semRef sem referência',
+                        style: context.sivTextos.apoio
+                            .copyWith(color: context.sivColors.parcialTexto),
+                      ),
+                    if (variacoes > 0)
+                      Text(
+                        variacoes == 1
+                            ? '1 variação a cadastrar'
+                            : '$variacoes variações a cadastrar',
                         style: context.sivTextos.apoio
                             .copyWith(color: context.sivColors.parcialTexto),
                       ),
@@ -277,7 +319,8 @@ class _PassoContarState extends State<PassoContar> {
     final refs = _gruposRef;
     final livres = _gruposLivres;
     final nfe = _r.nfe != null;
-    final vazio = !nfe && refs.isEmpty && livres.isEmpty;
+    final variacoesNovas = _gruposVariacoes;
+    final vazio = !nfe && refs.isEmpty && livres.isEmpty && variacoesNovas.isEmpty;
 
     final conteudo = ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -316,6 +359,40 @@ class _PassoContarState extends State<PassoContar> {
               total: e.value.fold<double>(0, (s, c) => s + c.quantidade),
               onTap: widget.salvando ? null : () => _editarRef(e.key, e.value),
             ),
+          if (variacoesNovas.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              color: cores.parcialFundo,
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'VARIAÇÃO NOVA · cadastrar no passo 2',
+                      key: const Key('secao_variacao_nova'),
+                      style: textos.rotulo.copyWith(color: cores.parcialTexto),
+                    ),
+                  ),
+                  for (final e in variacoesNovas.entries)
+                    _linhaGrupo(
+                      chave: Key('entrada_variacao_${e.key}'),
+                      titulo: e.value.first.referenciaNome ?? e.value.first.descricao,
+                      resumo: e.value
+                          .map((c) =>
+                              '${_corNome(c.corId)} ${_tamNome(c.tamanhoId)}·${qtd(c.quantidade)}')
+                          .join(' · '),
+                      total:
+                          e.value.fold<double>(0, (s, c) => s + c.quantidade),
+                      onTap: widget.salvando
+                          ? null
+                          : () => _editarVariacao(e.key, e.value),
+                    ),
+                ],
+              ),
+            ),
+          ],
           if (livres.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(

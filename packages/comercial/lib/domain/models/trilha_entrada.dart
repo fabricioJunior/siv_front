@@ -69,7 +69,9 @@ class TrilhaEntrada {
   const TrilhaEntrada._();
 
   static int _gruposLivres(EntradaResumo r) =>
-      r.contagensLivres.map((c) => c.descricao).toSet().length;
+      r.livresSemReferencia.map((c) => c.descricao).toSet().length;
+
+  static int _variacoes(EntradaResumo r) => r.variacoesNovas.length;
 
   static bool _temContagem(EntradaResumo r) =>
       r.contagens.isNotEmpty || r.contagensLivres.isNotEmpty;
@@ -150,6 +152,7 @@ class TrilhaEntrada {
     final etapa = etapaAtual(r, etiquetasLocal: etiquetasLocal);
     final faturado = r.etapa == 'faturado';
     final livres = _gruposLivres(r);
+    final variacoes = _variacoes(r);
     final semDecisao = divergenciasSemDecisao(r);
     final etiquetas = etiquetasConcluidas(r, local: etiquetasLocal);
     final diff = diffEtiquetas(r);
@@ -176,8 +179,12 @@ class TrilhaEntrada {
               : contagemCorrigida > 0
                   ? 'corrigida $contagemCorrigida×'
                   : '${_qtd(r.totalContado)} peças · $produtos produtos',
-      livres > 0
+      livres > 0 && variacoes > 0
+          ? '$livres sem referência · $variacoes variações'
+          : livres > 0
           ? '$livres sem referência'
+          : variacoes > 0
+          ? (variacoes == 1 ? '1 variação a cadastrar' : '$variacoes variações a cadastrar')
           : _temContagem(r)
               ? 'tudo com referência'
               : 'após contar',
@@ -202,7 +209,7 @@ class TrilhaEntrada {
           subtitulo: subtitulos[i],
           status: i == passo
               ? StatusPasso.ativo
-              : (i == 1 && livres > 0 && passo > 1) ||
+              : (i == 1 && (livres > 0 || variacoes > 0) && passo > 1) ||
                       (i == 3 && semDecisao > 0 && passo == 4)
                   ? StatusPasso.atencao
                   : concluido[i]

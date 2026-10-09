@@ -33,19 +33,35 @@ class _PassoAssociarState extends State<PassoAssociar> {
 
   Map<String, List<ContagemLivre>> get _grupos {
     final g = <String, List<ContagemLivre>>{};
-    for (final c in widget.resumo.contagensLivres) {
+    for (final c in widget.resumo.livresSemReferencia) {
       g.putIfAbsent(c.descricao, () => []).add(c);
     }
     return g;
   }
 
+  /// Variações novas (cor/tamanho sem SKU) agrupadas por referência.
+  Map<int, List<ContagemLivre>> get _variacoes {
+    final g = <int, List<ContagemLivre>>{};
+    for (final c in widget.resumo.variacoesNovas) {
+      g.putIfAbsent(c.referenciaId!, () => []).add(c);
+    }
+    return g;
+  }
+
+  void _cadastrar(List<ContagemLivre> itens) =>
+      context.read<PedidoEntradaBloc>().add(
+            PedidoEntradaAssociouContagemLivre([for (final c in itens) c.id]),
+          );
+
   @override
   Widget build(BuildContext context) {
     final grupos = _grupos;
-    if (grupos.length > _totalVisto) _totalVisto = grupos.length;
+    final variacoes = _variacoes;
+    final total = grupos.length + variacoes.length;
+    if (total > _totalVisto) _totalVisto = total;
     final textos = context.sivTextos;
     final cores = context.sivColors;
-    final faltam = grupos.length;
+    final faltam = total;
 
     return Column(
       children: [
@@ -72,6 +88,40 @@ class _PassoAssociarState extends State<PassoAssociar> {
                     style: textos.rotulo.copyWith(color: cores.textoApoio),
                   ),
                 ),
+              if (variacoes.isNotEmpty) ...[
+                Text('VARIAÇÕES NOVAS · cadastrar',
+                    key: const Key('secao_variacoes_novas'),
+                    style: textos.rotulo.copyWith(color: cores.parcialTexto)),
+                const SizedBox(height: 8),
+                for (final e in variacoes.entries)
+                  _GrupoVariacao(
+                    key: Key('grupo_variacao_${e.key}'),
+                    referenciaId: e.key,
+                    itens: e.value,
+                    salvando: widget.salvando,
+                    onCadastrar: () => _cadastrar(e.value),
+                  ),
+                if (variacoes.length >= 2)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SizedBox(
+                      height: alturaBotaoPrincipal,
+                      child: OutlinedButton(
+                        key: const Key('cadastrar_todas_variacoes'),
+                        onPressed: widget.salvando
+                            ? null
+                            : () => _cadastrar(
+                                  [for (final v in variacoes.values) ...v],
+                                ),
+                        child: const Text('CADASTRAR TODAS'),
+                      ),
+                    ),
+                  ),
+                if (grupos.isNotEmpty) const SizedBox(height: 8),
+              ],
+              if (grupos.isNotEmpty && variacoes.isNotEmpty)
+                Text('SEM REFERÊNCIA · associar',
+                    style: textos.rotulo.copyWith(color: cores.parcialTexto)),
               for (final e in grupos.entries)
                 _GrupoAssociar(
                   key: Key('grupo_associar_${e.key}'),
@@ -99,6 +149,61 @@ class _PassoAssociarState extends State<PassoAssociar> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _GrupoVariacao extends StatelessWidget {
+  final int referenciaId;
+  final List<ContagemLivre> itens;
+  final bool salvando;
+  final VoidCallback onCadastrar;
+
+  const _GrupoVariacao({
+    super.key,
+    required this.referenciaId,
+    required this.itens,
+    required this.salvando,
+    required this.onCadastrar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final nome = itens.first.referenciaNome ?? itens.first.descricao;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cores.parcialFundo,
+        border: Border.all(color: cores.parcialBorda),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$nome · REF $referenciaId',
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          for (final c in itens)
+            Text(
+              '${nomesCor[c.corId] ?? '#${c.corId}'} · ${nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'} · ${qtd(c.quantidade)}',
+              style: textos.corpo,
+            ),
+          const SizedBox(height: 4),
+          Text('Esta cor/tamanho ainda não existe para a referência.',
+              style: textos.apoio.copyWith(color: cores.parcialTexto)),
+          const SizedBox(height: 12),
+          BotaoPrincipalEntrada(
+            key: Key('cadastrar_variacao_$referenciaId'),
+            rotulo: itens.length > 1
+                ? 'CADASTRAR ${itens.length} VARIAÇÕES'
+                : 'CADASTRAR VARIAÇÃO',
+            onPressed: salvando ? null : onCadastrar,
+          ),
+        ],
+      ),
     );
   }
 }

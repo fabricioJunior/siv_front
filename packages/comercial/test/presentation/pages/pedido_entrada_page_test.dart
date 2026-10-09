@@ -117,6 +117,7 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? livreEnviada;
   List<int>? associados;
   int? associadoRef;
+  int? associadoCategoria;
   bool semNfe = false;
   bool comLivre = false;
   Map<String, dynamic> extra = const {};
@@ -160,6 +161,7 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   }) async {
     associados = ids;
     associadoRef = referenciaId;
+    associadoCategoria = categoriaId;
     return EntradaResumo.fromJson(_jsonContagem(comContagem: true));
   }
 
@@ -542,6 +544,82 @@ void main() {
     await tester.tap(find.text('SALVAR · IMPRIMIR 2'));
     await tester.pumpAndSettle();
     expect(remoto.contagemEnviada!.single.quantidade, 5);
+  });
+
+  Map<String, dynamic> variacoes() => {
+        'etapa': 'associando',
+        'contagensLivres': [
+          {'id': 10, 'descricao': 'Vestido Luna', 'corId': 5, 'tamanhoId': 6, 'quantidade': '2', 'referenciaId': 77, 'referenciaNome': 'Vestido Luna'},
+          {'id': 11, 'descricao': 'Vestido Luna', 'corId': 5, 'tamanhoId': 7, 'quantidade': '1', 'referenciaId': 77, 'referenciaNome': 'Vestido Luna'},
+          {'id': 12, 'descricao': 'Body Aurora', 'corId': 5, 'tamanhoId': 6, 'quantidade': '4', 'referenciaId': 88, 'referenciaNome': 'Body Aurora'},
+          {'id': 13, 'descricao': 'Peça sem ref', 'corId': 1, 'tamanhoId': 2, 'quantidade': '3'},
+        ],
+      };
+
+  testWidgets('Associar: variações novas por referência, botão manda só os ids',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    await abrir(tester);
+
+    expect(find.text('VARIAÇÕES NOVAS · cadastrar'), findsOneWidget);
+    expect(find.text('Esta cor/tamanho ainda não existe para a referência.'),
+        findsNWidgets(2));
+    expect(find.text('CADASTRAR 2 VARIAÇÕES'), findsOneWidget);
+    expect(find.text('CADASTRAR VARIAÇÃO'), findsOneWidget);
+    expect(find.byKey(const Key('cadastrar_todas_variacoes')), findsOneWidget);
+    // sem referência continua como antes
+    expect(find.byKey(const Key('grupo_associar_Peça sem ref')), findsOneWidget);
+    expect(tester.getSize(find.byKey(const Key('cadastrar_variacao_77'))).height,
+        inInclusiveRange(50, 52));
+
+    await tester.tap(find.byKey(const Key('cadastrar_variacao_77')));
+    await tester.pumpAndSettle();
+    expect(remoto.associados, [10, 11]);
+    expect(remoto.associadoRef, isNull);
+    expect(remoto.associadoCategoria, isNull);
+  });
+
+  testWidgets('Associar: CADASTRAR TODAS manda os ids de todas as variações',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    await abrir(tester);
+    await tester.ensureVisible(find.byKey(const Key('cadastrar_todas_variacoes')));
+    await tester.tap(find.byKey(const Key('cadastrar_todas_variacoes')));
+    await tester.pumpAndSettle();
+    expect(remoto.associados, [10, 11, 12]);
+  });
+
+  testWidgets('Contar separa variação nova de sem referência', (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = {...variacoes(), 'etapa': 'contando'};
+    await abrir(tester);
+
+    expect(find.text('VARIAÇÃO NOVA · cadastrar no passo 2'), findsOneWidget);
+    expect(find.byKey(const Key('entrada_variacao_77')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_variacao_88')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_sem_ref_Peça sem ref')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_sem_ref_Vestido Luna')), findsNothing);
+    expect(find.text('1 sem referência'), findsOneWidget);
+    expect(find.text('3 variações a cadastrar'), findsOneWidget);
+    expect(find.text('TERMINEI · ASSOCIAR 4'), findsOneWidget);
+
+    // tocar reabre o painel COM referência dessa referência
+    await tester.tap(find.byKey(const Key('entrada_variacao_77')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('painel_fechar')), findsOneWidget);
+    expect(find.byKey(const Key('contagem_5_6')), findsOneWidget);
+    expect(find.byKey(const Key('contagem_5_7')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('contagem_5_6')), '5');
+    await tester.pump();
+    await tester.tap(find.text('SALVAR'));
+    await tester.pumpAndSettle();
+    expect(remoto.contagemEnviada!.map((e) => (e.referenciaId, e.corId, e.tamanhoId, e.quantidade)),
+        containsAll([(77, 5, 6, 5.0), (77, 5, 7, 1.0)]));
   });
 
   testWidgets('desktop: trilha em linha e painel inline', (tester) async {

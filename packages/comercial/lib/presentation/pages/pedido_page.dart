@@ -2209,6 +2209,18 @@ class _PedidoPageState extends State<PedidoPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (state.tipo == 'compra' && state.id != null)
+                  OutlinedButton.icon(
+                    key: const Key('pedido_abrir_contagem_button'),
+                    onPressed: carregando
+                        ? null
+                        : () => Navigator.of(context).pushNamed(
+                              '/pedido_entrada',
+                              arguments: {'pedidoId': state.id},
+                            ),
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: const Text('Abrir contagem'),
+                  ),
                 if (semVendedor)
                   FilledButton.icon(
                     onPressed:

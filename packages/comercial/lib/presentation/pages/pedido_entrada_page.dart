@@ -1,5 +1,7 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/presentation/blocs/pedido_bloc/pedido_bloc.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
+import 'package:comercial/presentation/pages/pedido_conferencia_page.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
@@ -36,8 +38,47 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
   late final PedidoEntradaBloc _bloc = sl<PedidoEntradaBloc>()
     ..add(PedidoEntradaCarregou(widget.pedidoId));
 
+  PedidoBloc? _pedidoBloc;
+
+  // Conferência por código de barras: reaproveita a PedidoConferenciaPage com um PedidoBloc
+  // carregado para este pedido. O bloc fica vivo até a tela fechar para o PedidoConferiu terminar.
+  Future<void> _conferir(BuildContext context) async {
+    final nav = Navigator.of(context);
+    await _pedidoBloc?.close();
+    final pedidoBloc = _pedidoBloc = sl<PedidoBloc>()
+      ..add(PedidoIniciou(idPedido: widget.pedidoId));
+    await nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: pedidoBloc,
+          child: const PedidoConferenciaPage(),
+        ),
+      ),
+    );
+    if (mounted) _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
+  }
+
+  void _imprimirEtiquetas(BuildContext context, EntradaResumo resumo) {
+    Navigator.of(context).pushNamed(
+      '/impressao_etiquetas',
+      arguments: {
+        'itens': [
+          for (final c in resumo.contagens)
+            if (c.referenciaId != null && c.quantidade > 0)
+              {
+                'referenciaId': c.referenciaId,
+                'referenciaNome': c.referenciaNome ?? '',
+                'produtoId': c.produtoId,
+                'quantidade': c.quantidade,
+              },
+        ],
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _pedidoBloc?.close();
     _bloc.close();
     super.dispose();
   }
@@ -97,6 +138,8 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                     resumo: resumo,
                     salvando: state.salvando,
                     seletores: widget,
+                    onConferir: () => _conferir(context),
+                    onEtiquetas: () => _imprimirEtiquetas(context, resumo),
                   ),
           );
         },
@@ -109,16 +152,22 @@ class _Conteudo extends StatelessWidget {
   final EntradaResumo resumo;
   final bool salvando;
   final PedidoEntradaPage seletores;
+  final VoidCallback onConferir;
+  final VoidCallback onEtiquetas;
 
   const _Conteudo({
     required this.resumo,
     required this.salvando,
     required this.seletores,
+    required this.onConferir,
+    required this.onEtiquetas,
   });
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final bloqueado =
+        resumo.contagensLivres.isNotEmpty || resumo.pendencias.isNotEmpty;
     return Column(
       children: [
         if (salvando) const LinearProgressIndicator(minHeight: 2),
@@ -159,26 +208,43 @@ class _Conteudo extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    resumo.contagensLivres.isNotEmpty
-                        ? 'Associe uma referência para poder conferir.'
-                        : resumo.pendencias.isEmpty
-                        ? 'Sem pendências: pode seguir para a conferência.'
-                        : '${resumo.pendencias.length} pendência(s) antes da conferência.',
-                    style: tema.textTheme.bodySmall,
-                  ),
+                Text(
+                  resumo.contagensLivres.isNotEmpty
+                      ? 'Associe uma referência para poder imprimir etiquetas e conferir.'
+                      : resumo.pendencias.isEmpty
+                      ? 'Sem pendências: pode imprimir etiquetas e conferir.'
+                      : '${resumo.pendencias.length} pendência(s) antes de imprimir etiquetas e conferir.',
+                  style: tema.textTheme.bodySmall,
                 ),
-                FilledButton.icon(
-                  key: const Key('pedido_entrada_conferir_button'),
-                  onPressed: () => Navigator.of(context).pushNamed(
-                    '/pedido',
-                    arguments: {'idPedido': resumo.pedidoId},
-                  ),
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Etiquetas e conferência'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const Key('pedido_entrada_etiquetas_button'),
+                      onPressed: bloqueado ? null : onEtiquetas,
+                      icon: const Icon(Icons.label_outline),
+                      label: const Text('Imprimir etiquetas'),
+                    ),
+                    FilledButton.icon(
+                      key: const Key('pedido_entrada_conferir_codigo_button'),
+                      onPressed: bloqueado ? null : onConferir,
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: const Text('Conferir por código de barras'),
+                    ),
+                    TextButton(
+                      key: const Key('pedido_entrada_conferir_button'),
+                      onPressed: () => Navigator.of(context).pushNamed(
+                        '/pedido',
+                        arguments: {'idPedido': resumo.pedidoId},
+                      ),
+                      child: const Text('Abrir pedido'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -281,10 +347,10 @@ class _ContagemPorReferencia extends StatelessWidget {
                     onPressed: salvando
                         ? null
                         : () => _contar(
-                              context,
-                              referenciaId: entry.key == 0 ? null : entry.key,
-                              nome: entry.value.first.referenciaNome,
-                            ),
+                            context,
+                            referenciaId: entry.key == 0 ? null : entry.key,
+                            nome: entry.value.first.referenciaNome,
+                          ),
                     child: const Text('Editar'),
                   ),
                 ],
@@ -384,8 +450,9 @@ class _SemReferencia extends StatelessWidget {
                     SeletorData(
                       compacto: true,
                       onChanged: (itens) => setState(
-                        () => referenciaId =
-                            itens.isEmpty ? null : itens.first.id,
+                        () => referenciaId = itens.isEmpty
+                            ? null
+                            : itens.first.id,
                       ),
                     ),
                   )
@@ -661,13 +728,15 @@ class _CartaoLinha extends StatelessWidget {
                 children: [
                   if (linha.status == StatusLinhaEntrada.naoCadastrado) ...[
                     OutlinedButton(
-                      onPressed:
-                          salvando ? null : () => _preCadastrar(context, bloc),
+                      onPressed: salvando
+                          ? null
+                          : () => _preCadastrar(context, bloc),
                       child: const Text('Pré-cadastrar'),
                     ),
                     OutlinedButton(
-                      onPressed:
-                          salvando ? null : () => _vincular(context, bloc),
+                      onPressed: salvando
+                          ? null
+                          : () => _vincular(context, bloc),
                       child: const Text('Vincular a referência'),
                     ),
                   ],
@@ -689,8 +758,9 @@ class _CartaoLinha extends StatelessWidget {
                     ),
                   if (linha.divergente && !linha.divergenciaResolvida)
                     OutlinedButton(
-                      onPressed:
-                          salvando ? null : () => _resolver(context, bloc),
+                      onPressed: salvando
+                          ? null
+                          : () => _resolver(context, bloc),
                       child: const Text('Resolver divergência'),
                     ),
                   if (contada == null)
@@ -698,11 +768,11 @@ class _CartaoLinha extends StatelessWidget {
                       onPressed: salvando
                           ? null
                           : () => bloc.add(
-                                PedidoEntradaIgnorouLinha(
-                                  linha.id,
-                                  ignorar: !ignorada,
-                                ),
+                              PedidoEntradaIgnorouLinha(
+                                linha.id,
+                                ignorar: !ignorada,
                               ),
+                            ),
                       child: Text(ignorada ? 'Reativar' : 'Ignorar'),
                     ),
                 ],
@@ -715,7 +785,9 @@ class _CartaoLinha extends StatelessWidget {
   }
 
   Future<void> _preCadastrar(
-      BuildContext context, PedidoEntradaBloc bloc) async {
+    BuildContext context,
+    PedidoEntradaBloc bloc,
+  ) async {
     final nome = TextEditingController(text: linha.descricao);
     int? categoriaId;
     final ok = await showDialog<bool>(
@@ -756,8 +828,9 @@ class _CartaoLinha extends StatelessWidget {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              onPressed:
-                  categoriaId == null ? null : () => Navigator.pop(ctx, true),
+              onPressed: categoriaId == null
+                  ? null
+                  : () => Navigator.pop(ctx, true),
               child: const Text('Criar referência'),
             ),
           ],
@@ -800,8 +873,9 @@ class _CartaoLinha extends StatelessWidget {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              onPressed:
-                  referenciaId == null ? null : () => Navigator.pop(ctx, true),
+              onPressed: referenciaId == null
+                  ? null
+                  : () => Navigator.pop(ctx, true),
               child: const Text('Vincular'),
             ),
           ],
@@ -999,18 +1073,17 @@ class _ContagemDialogState extends State<_ContagemDialog> {
   }
 
   Widget _campoUnico() => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('NF-e: ${_qtd(widget.linha!.quantidadeNfe)}'),
-          TextField(
-            key: const Key('contagem_quantidade'),
-            controller: _simples,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration:
-                const InputDecoration(labelText: 'Quantidade encontrada'),
-          ),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text('NF-e: ${_qtd(widget.linha!.quantidadeNfe)}'),
+      TextField(
+        key: const Key('contagem_quantidade'),
+        controller: _simples,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(labelText: 'Quantidade encontrada'),
+      ),
+    ],
+  );
 
   Widget _grade() {
     final cores = _cores.entries.toList();
@@ -1047,7 +1120,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
           widget.linha == null
               ? 'Digite o que foi encontrado em cada cor e tamanho.'
               : 'NF-e: ${_qtd(widget.linha!.quantidadeNfe)} — digite o que foi '
-                  'encontrado em cada cor e tamanho.',
+                    'encontrado em cada cor e tamanho.',
         ),
         const SizedBox(height: 8),
         widget.corSeletor(

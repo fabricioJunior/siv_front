@@ -9,16 +9,22 @@ import 'package:produtos/presentantion/widgets/grade_quantidade_etiquetas.dart';
 class ImpressaoDeEtiquetasPage extends StatelessWidget {
   final SeletorWidget tabelasDePrecoSeletor;
 
+  /// Produtos/quantidades já conhecidos (ex.: pedido de entrada); vazio = fluxo manual.
+  final List<ItemEtiquetaInicial> itensIniciais;
+
   const ImpressaoDeEtiquetasPage({
     super.key,
     required this.tabelasDePrecoSeletor,
+    this.itensIniciais = const [],
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<ImpressaoEtiquetasBloc>(
       create: (_) =>
-          sl<ImpressaoEtiquetasBloc>()..add(ImpressaoEtiquetasIniciou()),
+          sl<ImpressaoEtiquetasBloc>()
+            ..add(ImpressaoEtiquetasIniciou())
+            ..add(ImpressaoEtiquetasItensIniciaisDefinidos(itensIniciais)),
       child: _ImpressaoDeEtiquetasView(
         tabelasDePrecoSeletor: tabelasDePrecoSeletor,
       ),
@@ -143,6 +149,33 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                   ),
                 ),
               ),
+              if (state.itensIniciais.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Card(
+                  key: const Key('etiquetas_itens_iniciais'),
+                  child: ListTile(
+                    title: Text(
+                      '${state.itensIniciais.fold<int>(0, (s, i) => s + i.quantidade)} '
+                      'etiqueta(s) do pedido de entrada',
+                    ),
+                    subtitle: const Text(
+                      'Escolha a etiqueta e a tabela de preco e adicione a pilha.',
+                    ),
+                    trailing: FilledButton(
+                      key: const Key('etiquetas_adicionar_itens_iniciais'),
+                      onPressed:
+                          state.processando ||
+                              state.etiquetaSelecionada == null ||
+                              state.tabelaSelecionada == null
+                          ? null
+                          : () => bloc.add(
+                              ImpressaoEtiquetasItensIniciaisAdicionarSolicitado(),
+                            ),
+                      child: const Text('Adicionar a pilha'),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               Card(
                 child: Padding(

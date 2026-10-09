@@ -41,6 +41,106 @@ class ImpressaoEtiquetasBloc
     on<ImpressaoEtiquetasPilhaQuantidadeAlterada>(_onPilhaQuantidadeAlterada);
     on<ImpressaoEtiquetasPilhaItemRemovido>(_onPilhaItemRemovido);
     on<ImpressaoEtiquetasPilhaOrdenacaoAlterada>(_onPilhaOrdenacaoAlterada);
+    on<ImpressaoEtiquetasItensIniciaisDefinidos>(
+      (e, emit) => emit(state.copyWith(itensIniciais: e.itens)),
+    );
+    on<ImpressaoEtiquetasItensIniciaisAdicionarSolicitado>(
+      _onItensIniciaisAdicionar,
+    );
+  }
+
+  Future<void> _onItensIniciaisAdicionar(
+    ImpressaoEtiquetasItensIniciaisAdicionarSolicitado event,
+    Emitter<ImpressaoEtiquetasState> emit,
+  ) async {
+    final etiqueta = state.etiquetaSelecionada;
+    final tabela = state.tabelaSelecionada;
+    if (etiqueta == null || tabela == null || state.itensIniciais.isEmpty) {
+      emit(
+        state.copyWith(
+          erro: () =>
+              'Selecione etiqueta e tabela de preco antes de adicionar.',
+        ),
+      );
+      return;
+    }
+
+    try {
+      emit(
+        state.copyWith(
+          processando: true,
+          erro: () => null,
+          sucesso: () => null,
+        ),
+      );
+      final porReferencia = <int, List<ItemEtiquetaInicial>>{};
+      for (final i in state.itensIniciais) {
+        porReferencia.putIfAbsent(i.referenciaId, () => []).add(i);
+      }
+      final novos = <EtiquetaImpressaoItem>[];
+      for (final entry in porReferencia.entries) {
+        final nome = entry.value.first.referenciaNome;
+        final preco = await _obterPrecoDaReferencia(
+          tabelaDePrecoId: tabela.id,
+          referenciaId: entry.key,
+        );
+        if (preco <= 0) {
+          emit(
+            state.copyWith(
+              processando: false,
+              erro: () =>
+                  '$nome nao possui preco cadastrado na tabela informada.',
+            ),
+          );
+          return;
+        }
+        final produtos = await _recuperarProdutos(referenciaId: entry.key);
+        final gerado = await _gerarItens(
+          etiqueta: etiqueta,
+          preco: preco,
+          referenciaNome: nome,
+          produtosQtd: [
+            for (final p in produtos)
+              MapEntry(
+                p,
+                [
+                  for (final i in entry.value)
+                    if (i.produtoId == p.id) i.quantidade,
+                ].fold(0, (a, b) => a + b),
+              ),
+          ],
+        );
+        if (gerado.erro != null) {
+          emit(
+            state.copyWith(
+              processando: false,
+              erro: () => '$nome: ${gerado.erro}',
+            ),
+          );
+          return;
+        }
+        novos.addAll(gerado.itens);
+      }
+      emit(
+        state.copyWith(
+          processando: false,
+          itensIniciais: const [],
+          pilhaImpressao: _ordenarPilha([
+            ...state.pilhaImpressao,
+            ...novos,
+          ], state.pilhaOrdenacao),
+          sucesso: () => '${novos.length} etiqueta(s) adicionada(s) a pilha.',
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          processando: false,
+          erro: () => 'Falha ao processar etiquetas dos itens do pedido.',
+        ),
+      );
+      addError(e, s);
+    }
   }
 
   FutureOr<void> _onIniciou(
@@ -129,7 +229,11 @@ class ImpressaoEtiquetasBloc
 
         if (cor?.id != null && tamanho?.id != null) {
           // Estampa entra na chave: mesma cor/tamanho com estampas diferentes são produtos distintos.
-          final chave = chaveComboGrade(cor!.id!, tamanho!.id!, produto.estampaId);
+          final chave = chaveComboGrade(
+            cor!.id!,
+            tamanho!.id!,
+            produto.estampaId,
+          );
           mapaCorTamanhoParaProduto[chave] = produto;
         }
       }
@@ -217,140 +321,20 @@ class ImpressaoEtiquetasBloc
         return;
       }
 
-      final viasOrdenadas = [...etiqueta.vias]
-        ..sort((a, b) => a.ordem.compareTo(b.ordem));
-
-      if (viasOrdenadas.isEmpty) {
-        emit(
-          state.copyWith(
-            processando: false,
-            erro: () => 'A etiqueta selecionada nao possui vias configuradas.',
-          ),
-        );
+      final gerado = await _gerarItens(
+        etiqueta: etiqueta,
+        preco: precoDaReferencia,
+        referenciaNome: referencia.nome,
+        produtosQtd: [
+          for (final p in state.produtos)
+            MapEntry(p, state.quantidadesPorProdutoId[p.id] ?? 0),
+        ],
+      );
+      if (gerado.erro != null) {
+        emit(state.copyWith(processando: false, erro: () => gerado.erro));
         return;
       }
-
-      final limitesCaracteres = <String, int>{
-        for (final elemento in etiqueta.elementos)
-          if (elemento.limiteCaracteres != null)
-            elemento.nome: elemento.limiteCaracteres!,
-      };
-
-      final novosItens = <EtiquetaImpressaoItem>[];
-      final combinacoesSemCodigo = <String>[];
-      final requisicoes = <_RequisicaoEtiqueta>[];
-
-      for (final produto in state.produtos) {
-        final produtoId = produto.id;
-        if (produtoId == null) {
-          continue;
-        }
-
-        final quantidade = state.quantidadesPorProdutoId[produtoId] ?? 0;
-        if (quantidade <= 0) {
-          continue;
-        }
-
-        final cor = produto.cor?.nome ?? 'SEM COR';
-        final tamanho = produto.tamanho?.nome ?? 'SEM TAMANHO';
-        final estampa = produto.estampa?.nome;
-        final corExibicao = estampa == null ? cor : '$cor · $estampa';
-        final codigoStorage = await _recuperarCodigoDeBarrasDoProduto(
-          produtoId: produtoId,
-        );
-
-        if (codigoStorage == null || codigoStorage.trim().isEmpty) {
-          combinacoesSemCodigo.add('$corExibicao/$tamanho');
-          continue;
-        }
-
-        for (var i = 0; i < quantidade; i++) {
-          requisicoes.add(
-            _RequisicaoEtiqueta(
-              cor: cor,
-              corExibicao: corExibicao,
-              tamanho: tamanho,
-              codigoBarras: codigoStorage.trim(),
-            ),
-          );
-        }
-      }
-
-      if (combinacoesSemCodigo.isNotEmpty) {
-        final combinacoesOrdenadas = combinacoesSemCodigo.toSet().toList()
-          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        final detalhes = combinacoesOrdenadas.join(', ');
-
-        emit(
-          state.copyWith(
-            processando: false,
-            erro: () =>
-                'Nao foi possivel adicionar. As seguintes combinacoes estao sem codigo de barras cadastrado: $detalhes.',
-          ),
-        );
-        return;
-      }
-
-      if (requisicoes.isEmpty) {
-        emit(
-          state.copyWith(
-            processando: false,
-            erro: () =>
-                'Informe ao menos uma quantidade maior que zero na grade.',
-          ),
-        );
-        return;
-      }
-
-      // "Vias" sao COLUNAS de uma mesma linha fisica impressa (MesclaEtiquetas junta N vias
-      // consecutivas num unico ^XA/^XZ = 1 linha/adesivo). Cada coluna deve mostrar um item
-      // DIFERENTE da fila -- por isso agrupa as requisicoes em blocos do tamanho de
-      // viasOrdenadas.length, e dentro de cada bloco casa requisicao[j] com via[j] (posicao =
-      // coluna). Ex: etiqueta de 2 vias, 5 itens (X1..X5) -> blocos [X1,X2] [X3,X4] [X5] = 2
-      // linhas completas + 1 linha final com o item que sobrou (coluna 2 fica em branco, ja que
-      // o bloco final tem só 1 item -- nao duplica o ultimo item pra preencher a coluna vazia).
-      //
-      // Bug anterior: pra cada requisicao gerava TODAS as vias com os MESMOS dados (mesma
-      // requisicao repetida em todas as colunas) -- "X e Y" saia "X e X" numa linha e "Y e Y" em
-      // outra, em vez de "X e Y" numa linha so.
-      for (
-        var inicio = 0;
-        inicio < requisicoes.length;
-        inicio += viasOrdenadas.length
-      ) {
-        final bloco = requisicoes
-            .skip(inicio)
-            .take(viasOrdenadas.length)
-            .toList(growable: false);
-
-        for (var coluna = 0; coluna < bloco.length; coluna++) {
-          final requisicao = bloco[coluna];
-          final via = viasOrdenadas[coluna];
-
-          final zplProcessado = _processarEtiquetaParaImpressao(
-            templateZpl: via.zpl,
-            titulo: state.tituloEmpresaSessao,
-            cor: requisicao.cor,
-            tamanho: requisicao.tamanho,
-            codigoBarras: requisicao.codigoBarras,
-            preco: precoDaReferencia,
-            descricao: referencia.nome,
-            limitesCaracteres: limitesCaracteres,
-          );
-
-          novosItens.add(
-            EtiquetaImpressaoItem.create(
-              descricao:
-                  '${referencia.nome} | Cor: ${requisicao.corExibicao} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
-              zpl: zplProcessado,
-              referencia: referencia.nome,
-              cor: requisicao.corExibicao,
-              tamanho: requisicao.tamanho,
-              viaOrdem: via.ordem,
-            ),
-          );
-        }
-      }
+      final novosItens = gerado.itens;
 
       emit(
         state.copyWith(
@@ -373,6 +357,143 @@ class ImpressaoEtiquetasBloc
       );
       addError(e, s);
     }
+  }
+
+  /// Monta os itens da pilha (uma linha por etiqueta) de uma referencia.
+  /// Erro de negocio volta em [erro]; nada e emitido aqui.
+  Future<({List<EtiquetaImpressaoItem> itens, String? erro})> _gerarItens({
+    required Etiqueta etiqueta,
+    required double preco,
+    required String referenciaNome,
+    required Iterable<MapEntry<Produto, int>> produtosQtd,
+  }) async {
+    final viasOrdenadas = [...etiqueta.vias]
+      ..sort((a, b) => a.ordem.compareTo(b.ordem));
+
+    if (viasOrdenadas.isEmpty) {
+      return (
+        itens: const <EtiquetaImpressaoItem>[],
+        erro: 'A etiqueta selecionada nao possui vias configuradas.',
+      );
+    }
+
+    final limitesCaracteres = <String, int>{
+      for (final elemento in etiqueta.elementos)
+        if (elemento.limiteCaracteres != null)
+          elemento.nome: elemento.limiteCaracteres!,
+    };
+
+    final novosItens = <EtiquetaImpressaoItem>[];
+    final combinacoesSemCodigo = <String>[];
+    final requisicoes = <_RequisicaoEtiqueta>[];
+
+    for (final entry in produtosQtd) {
+      final produto = entry.key;
+      final produtoId = produto.id;
+      if (produtoId == null) {
+        continue;
+      }
+
+      final quantidade = entry.value;
+      if (quantidade <= 0) {
+        continue;
+      }
+
+      final cor = produto.cor?.nome ?? 'SEM COR';
+      final tamanho = produto.tamanho?.nome ?? 'SEM TAMANHO';
+      final estampa = produto.estampa?.nome;
+      final corExibicao = estampa == null ? cor : '$cor · $estampa';
+      final codigoStorage = await _recuperarCodigoDeBarrasDoProduto(
+        produtoId: produtoId,
+      );
+
+      if (codigoStorage == null || codigoStorage.trim().isEmpty) {
+        combinacoesSemCodigo.add('$corExibicao/$tamanho');
+        continue;
+      }
+
+      for (var i = 0; i < quantidade; i++) {
+        requisicoes.add(
+          _RequisicaoEtiqueta(
+            cor: cor,
+            corExibicao: corExibicao,
+            tamanho: tamanho,
+            codigoBarras: codigoStorage.trim(),
+          ),
+        );
+      }
+    }
+
+    if (combinacoesSemCodigo.isNotEmpty) {
+      final combinacoesOrdenadas = combinacoesSemCodigo.toSet().toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final detalhes = combinacoesOrdenadas.join(', ');
+
+      return (
+        itens: const <EtiquetaImpressaoItem>[],
+        erro:
+            'Nao foi possivel adicionar. As seguintes combinacoes estao sem codigo de barras cadastrado: $detalhes.',
+      );
+    }
+
+    if (requisicoes.isEmpty) {
+      return (
+        itens: const <EtiquetaImpressaoItem>[],
+        erro: 'Informe ao menos uma quantidade maior que zero na grade.',
+      );
+    }
+
+    // "Vias" sao COLUNAS de uma mesma linha fisica impressa (MesclaEtiquetas junta N vias
+    // consecutivas num unico ^XA/^XZ = 1 linha/adesivo). Cada coluna deve mostrar um item
+    // DIFERENTE da fila -- por isso agrupa as requisicoes em blocos do tamanho de
+    // viasOrdenadas.length, e dentro de cada bloco casa requisicao[j] com via[j] (posicao =
+    // coluna). Ex: etiqueta de 2 vias, 5 itens (X1..X5) -> blocos [X1,X2] [X3,X4] [X5] = 2
+    // linhas completas + 1 linha final com o item que sobrou (coluna 2 fica em branco, ja que
+    // o bloco final tem só 1 item -- nao duplica o ultimo item pra preencher a coluna vazia).
+    //
+    // Bug anterior: pra cada requisicao gerava TODAS as vias com os MESMOS dados (mesma
+    // requisicao repetida em todas as colunas) -- "X e Y" saia "X e X" numa linha e "Y e Y" em
+    // outra, em vez de "X e Y" numa linha so.
+    for (
+      var inicio = 0;
+      inicio < requisicoes.length;
+      inicio += viasOrdenadas.length
+    ) {
+      final bloco = requisicoes
+          .skip(inicio)
+          .take(viasOrdenadas.length)
+          .toList(growable: false);
+
+      for (var coluna = 0; coluna < bloco.length; coluna++) {
+        final requisicao = bloco[coluna];
+        final via = viasOrdenadas[coluna];
+
+        final zplProcessado = _processarEtiquetaParaImpressao(
+          templateZpl: via.zpl,
+          titulo: state.tituloEmpresaSessao,
+          cor: requisicao.cor,
+          tamanho: requisicao.tamanho,
+          codigoBarras: requisicao.codigoBarras,
+          preco: preco,
+          descricao: referenciaNome,
+          limitesCaracteres: limitesCaracteres,
+        );
+
+        novosItens.add(
+          EtiquetaImpressaoItem.create(
+            descricao:
+                '$referenciaNome | Cor: ${requisicao.corExibicao} | Tam: ${requisicao.tamanho} | Via ${via.ordem + 1}',
+            zpl: zplProcessado,
+            referencia: referenciaNome,
+            cor: requisicao.corExibicao,
+            tamanho: requisicao.tamanho,
+            viaOrdem: via.ordem,
+          ),
+        );
+      }
+    }
+
+    return (itens: novosItens, erro: null);
   }
 
   FutureOr<void> _onImprimirSolicitado(

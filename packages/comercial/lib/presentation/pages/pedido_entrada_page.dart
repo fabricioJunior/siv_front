@@ -132,12 +132,19 @@ class _Conteudo extends StatelessWidget {
                 _Pendencias(pendencias: resumo.pendencias),
                 const SizedBox(height: 12),
               ],
-              if (resumo.nfe == null)
+              if (resumo.nfe == null) ...[
                 _ContagemPorReferencia(
                   resumo: resumo,
                   salvando: salvando,
                   seletores: seletores,
                 ),
+                const SizedBox(height: 12),
+                _SemReferencia(
+                  resumo: resumo,
+                  salvando: salvando,
+                  seletores: seletores,
+                ),
+              ],
               for (final linha in resumo.linhas)
                 _CartaoLinha(
                   resumo: resumo,
@@ -156,7 +163,9 @@ class _Conteudo extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    resumo.pendencias.isEmpty
+                    resumo.contagensLivres.isNotEmpty
+                        ? 'Associe uma referência para poder conferir.'
+                        : resumo.pendencias.isEmpty
                         ? 'Sem pendências: pode seguir para a conferência.'
                         : '${resumo.pendencias.length} pendência(s) antes da conferência.',
                     style: tema.textTheme.bodySmall,
@@ -277,6 +286,221 @@ class _ContagemPorReferencia extends StatelessWidget {
                               nome: entry.value.first.referenciaNome,
                             ),
                     child: const Text('Editar'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// Nomes de cor/tamanho vistos nos seletores (a API da contagem sem referência
+// só devolve ids); o que não foi visto cai em "#id".
+final _nomesCor = <int, String>{};
+final _nomesTamanho = <int, String>{};
+
+/// Contagem de produto que ainda não tem referência: agrupada por descrição,
+/// associada depois a uma referência (existente ou criada na hora).
+class _SemReferencia extends StatelessWidget {
+  final EntradaResumo resumo;
+  final bool salvando;
+  final PedidoEntradaPage seletores;
+
+  const _SemReferencia({
+    required this.resumo,
+    required this.salvando,
+    required this.seletores,
+  });
+
+  Future<void> _contar(BuildContext context, {String? descricao}) async {
+    final bloc = context.read<PedidoEntradaBloc>();
+    for (final c in resumo.contagens) {
+      if (c.corId != null) _nomesCor[c.corId!] = c.corNome ?? '${c.corId}';
+      if (c.tamanhoId != null) {
+        _nomesTamanho[c.tamanhoId!] = c.tamanhoNome ?? '${c.tamanhoId}';
+      }
+    }
+    final itens = await showDialog<List<ItemContagem>>(
+      context: context,
+      builder: (_) => _ContagemDialog(
+        livre: true,
+        titulo: 'Contar produto sem referência',
+        descricaoInicial: descricao,
+        existentes: [
+          for (final c in resumo.contagensLivres)
+            if (c.descricao == descricao)
+              EntradaContagem(
+                produtoId: 0,
+                linhaId: null,
+                quantidade: c.quantidade,
+                corId: c.corId,
+                corNome: _nomesCor[c.corId] ?? '#${c.corId}',
+                tamanhoId: c.tamanhoId,
+                tamanhoNome: _nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}',
+              ),
+        ],
+        corSeletor: seletores.corSeletor,
+        tamanhoSeletor: seletores.tamanhoSeletor,
+      ),
+    );
+    if (itens != null && itens.isNotEmpty) {
+      bloc.add(PedidoEntradaRegistrouContagemLivre(itens));
+    }
+  }
+
+  Future<void> _associar(
+    BuildContext context,
+    String descricao,
+    List<ContagemLivre> grupo,
+  ) async {
+    final bloc = context.read<PedidoEntradaBloc>();
+    int? referenciaId;
+    int? categoriaId;
+    var criar = false;
+    final nome = TextEditingController(text: descricao);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text('Associar: $descricao'),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: false, label: Text('Existente')),
+                    ButtonSegment(value: true, label: Text('Criar referência')),
+                  ],
+                  selected: {criar},
+                  onSelectionChanged: (v) => setState(() => criar = v.first),
+                ),
+                const SizedBox(height: 12),
+                if (!criar)
+                  seletores.referenciaContagemSeletor(
+                    SeletorData(
+                      compacto: true,
+                      onChanged: (itens) => setState(
+                        () => referenciaId =
+                            itens.isEmpty ? null : itens.first.id,
+                      ),
+                    ),
+                  )
+                else ...[
+                  TextField(
+                    controller: nome,
+                    decoration: const InputDecoration(labelText: 'Nome'),
+                  ),
+                  const SizedBox(height: 12),
+                  seletores.categoriaSeletor(
+                    SeletorData(
+                      compacto: true,
+                      onChanged: (itens) => setState(
+                        () =>
+                            categoriaId = itens.isEmpty ? null : itens.first.id,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              key: const Key('sem_ref_confirmar'),
+              onPressed: (criar ? categoriaId : referenciaId) == null
+                  ? null
+                  : () => Navigator.pop(ctx, true),
+              child: Text(criar ? 'Criar e associar' : 'Associar'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok == true) {
+      bloc.add(
+        PedidoEntradaAssociouContagemLivre(
+          [for (final c in grupo) c.id],
+          referenciaId: criar ? null : referenciaId,
+          categoriaId: criar ? categoriaId : null,
+          nome: criar && nome.text.trim().isNotEmpty ? nome.text.trim() : null,
+        ),
+      );
+    }
+    nome.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context).textTheme;
+    final grupos = <String, List<ContagemLivre>>{};
+    for (final c in resumo.contagensLivres) {
+      grupos.putIfAbsent(c.descricao, () => []).add(c);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text('Sem referência', style: tema.titleMedium)),
+            OutlinedButton.icon(
+              key: const Key('entrada_contar_sem_referencia'),
+              onPressed: salvando ? null : () => _contar(context),
+              icon: const Icon(Icons.add),
+              label: const Text('Contar produto sem referência'),
+            ),
+          ],
+        ),
+        if (grupos.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Card(
+            color: Colors.amber.shade50,
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Text('Associe uma referência para poder conferir'),
+            ),
+          ),
+        ],
+        for (final entry in grupos.entries)
+          Card(
+            key: Key('entrada_sem_ref_${entry.key}'),
+            child: ListTile(
+              title: Text(entry.key),
+              subtitle: Text(
+                entry.value
+                    .map(
+                      (c) =>
+                          '${_nomesCor[c.corId] ?? '#${c.corId}'} ${_nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'}: ${_qtd(c.quantidade)}',
+                    )
+                    .join(' · '),
+              ),
+              trailing: Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    '${_qtd(entry.value.fold<double>(0, (s, c) => s + c.quantidade))} un.',
+                    style: tema.titleSmall,
+                  ),
+                  TextButton(
+                    onPressed: salvando
+                        ? null
+                        : () => _contar(context, descricao: entry.key),
+                    child: const Text('Editar'),
+                  ),
+                  FilledButton.tonal(
+                    key: Key('entrada_associar_${entry.key}'),
+                    onPressed: salvando
+                        ? null
+                        : () => _associar(context, entry.key, entry.value),
+                    child: const Text('Associar referência'),
                   ),
                 ],
               ),
@@ -654,7 +878,13 @@ class _ContagemDialog extends StatefulWidget {
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
 
+  /// Produto sem referência: descrição livre em vez de linha/referência.
+  final bool livre;
+  final String? descricaoInicial;
+
   const _ContagemDialog({
+    this.livre = false,
+    this.descricaoInicial,
     this.linha,
     this.referenciaId,
     this.titulo,
@@ -670,6 +900,7 @@ class _ContagemDialog extends StatefulWidget {
 
 class _ContagemDialogState extends State<_ContagemDialog> {
   final _simples = TextEditingController();
+  late final _descricao = TextEditingController(text: widget.descricaoInicial);
   final _cores = <int, String>{};
   final _tamanhos = <int, String>{};
   final _celulas = <String, TextEditingController>{};
@@ -696,6 +927,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
   @override
   void dispose() {
     _simples.dispose();
+    _descricao.dispose();
     for (final c in _celulas.values) {
       c.dispose();
     }
@@ -723,14 +955,18 @@ class _ContagemDialogState extends State<_ContagemDialog> {
               ),
             ];
     }
-    if (_referenciaId == null) return const [];
+    final descricao = _descricao.text.trim();
+    if (widget.livre ? descricao.isEmpty : _referenciaId == null) {
+      return const [];
+    }
     return [
       for (final cor in _cores.keys)
         for (final tam in _tamanhos.keys)
           if (_ler(_celula(cor, tam)) != null)
             ItemContagem(
               linhaId: widget.linha?.id,
-              referenciaId: _referenciaId,
+              referenciaId: widget.livre ? null : _referenciaId,
+              descricao: widget.livre ? descricao : null,
               corId: cor,
               tamanhoId: tam,
               quantidade: _ler(_celula(cor, tam))!,
@@ -796,6 +1032,17 @@ class _ContagemDialogState extends State<_ContagemDialog> {
           ),
           const SizedBox(height: 8),
         ],
+        if (widget.livre) ...[
+          TextField(
+            key: const Key('contagem_descricao'),
+            controller: _descricao,
+            maxLength: 255,
+            decoration: const InputDecoration(
+              labelText: 'Descrição (ex.: Vestido Luna)',
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
           widget.linha == null
               ? 'Digite o que foi encontrado em cada cor e tamanho.'
@@ -810,6 +1057,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
               _cores
                 ..clear()
                 ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+              _nomesCor.addAll(_cores);
             }),
           ),
         ),
@@ -821,6 +1069,7 @@ class _ContagemDialogState extends State<_ContagemDialog> {
               _tamanhos
                 ..clear()
                 ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+              _nomesTamanho.addAll(_tamanhos);
             }),
           ),
         ),

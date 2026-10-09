@@ -161,6 +161,34 @@ class EntradaContagem extends Equatable {
   List<Object?> get props => [produtoId, linhaId, quantidade];
 }
 
+/// Contagem de produto sem referência (descrição livre + cor + tamanho).
+class ContagemLivre extends Equatable {
+  final int id;
+  final String descricao;
+  final int corId;
+  final int tamanhoId;
+  final double quantidade;
+
+  const ContagemLivre({
+    required this.id,
+    required this.descricao,
+    required this.corId,
+    required this.tamanhoId,
+    required this.quantidade,
+  });
+
+  factory ContagemLivre.fromJson(Map<String, dynamic> j) => ContagemLivre(
+        id: _int(j['id']) ?? 0,
+        descricao: j['descricao'] as String? ?? '',
+        corId: _int(j['corId']) ?? 0,
+        tamanhoId: _int(j['tamanhoId']) ?? 0,
+        quantidade: _num(j['quantidade']),
+      );
+
+  @override
+  List<Object?> get props => [id, descricao, corId, tamanhoId, quantidade];
+}
+
 /// Dados do Pedido de Entrada além do pedido em si: origem, NF-e, linhas e contagem.
 class EntradaResumo extends Equatable {
   final int pedidoId;
@@ -168,6 +196,7 @@ class EntradaResumo extends Equatable {
   final EntradaNfe? nfe;
   final List<EntradaLinha> linhas;
   final List<EntradaContagem> contagens;
+  final List<ContagemLivre> contagensLivres;
   final double totalNfe;
   final double totalContado;
   final List<String> pendencias;
@@ -178,6 +207,7 @@ class EntradaResumo extends Equatable {
     required this.nfe,
     required this.linhas,
     required this.contagens,
+    this.contagensLivres = const [],
     required this.totalNfe,
     required this.totalContado,
     required this.pendencias,
@@ -197,6 +227,9 @@ class EntradaResumo extends Equatable {
       contagens: ((j['contagens'] as List<dynamic>?) ?? const [])
           .map((c) => EntradaContagem.fromJson(c as Map<String, dynamic>))
           .toList(),
+      contagensLivres: ((j['contagensLivres'] as List<dynamic>?) ?? const [])
+          .map((c) => ContagemLivre.fromJson(c as Map<String, dynamic>))
+          .toList(),
       totalNfe: _num(totais['nfe']),
       totalContado: _num(totais['contado']),
       pendencias:
@@ -208,10 +241,12 @@ class EntradaResumo extends Equatable {
       contagens.where((c) => c.linhaId == linhaId).toList();
 
   @override
-  List<Object?> get props => [pedidoId, linhas, contagens, pendencias];
+  List<Object?> get props =>
+      [pedidoId, linhas, contagens, contagensLivres, pendencias];
 }
 
 /// Item enviado na contagem (SKU existente ou referência + cor + tamanho).
+/// Na contagem sem referência vai só [descricao] + cor + tamanho.
 class ItemContagem {
   final int? linhaId;
   final int? produtoId;
@@ -219,6 +254,7 @@ class ItemContagem {
   final int? corId;
   final int? tamanhoId;
   final double quantidade;
+  final String? descricao;
 
   const ItemContagem({
     this.linhaId,
@@ -227,9 +263,11 @@ class ItemContagem {
     this.corId,
     this.tamanhoId,
     required this.quantidade,
+    this.descricao,
   });
 
   Map<String, dynamic> toJson() => {
+        if (descricao != null) 'descricao': descricao,
         if (linhaId != null) 'linhaId': linhaId,
         if (produtoId != null) 'produtoId': produtoId,
         if (referenciaId != null) 'referenciaId': referenciaId,

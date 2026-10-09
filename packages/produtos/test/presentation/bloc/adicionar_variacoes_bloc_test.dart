@@ -157,6 +157,29 @@ void main() {
     _FakeCriarProdutosEmLote(),
   );
 
+  group('AdicionarVariacoesBloc - seleção inicial -', () {
+    blocTest<AdicionarVariacoesBloc, AdicionarVariacoesState>(
+      'cores/tamanhos iniciais vêm marcados; a grade existente segue vazia',
+      build: build,
+      act: (bloc) async {
+        bloc.add(
+          AdicionarVariacoesIniciou(
+            referenciaId: 1,
+            coresSelecionadasIniciais: {1, 2},
+            tamanhosSelecionadosIniciais: {2},
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+      },
+      verify: (bloc) {
+        expect(bloc.state.coresSelecionadas, {1, 2});
+        expect(bloc.state.tamanhosSelecionados, {2});
+        expect(bloc.state.corIdsNaGrade, isEmpty);
+        expect(bloc.state.combinacoesNovas, hasLength(2));
+      },
+    );
+  });
+
   group('AdicionarVariacoesBloc - seleção de cor/tamanho já usados -', () {
     blocTest<AdicionarVariacoesBloc, AdicionarVariacoesState>(
       'cor já usada em outra variação não vem pré-selecionada, mas pode ser selecionada',

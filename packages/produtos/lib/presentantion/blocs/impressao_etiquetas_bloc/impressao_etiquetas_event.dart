@@ -53,7 +53,8 @@ class ImpressaoEtiquetasImprimirSolicitado extends ImpressaoEtiquetasEvent {}
 
 class ImpressaoEtiquetasPilhaLimpaSolicitada extends ImpressaoEtiquetasEvent {}
 
-class ImpressaoEtiquetasPilhaQuantidadeAlterada extends ImpressaoEtiquetasEvent {
+class ImpressaoEtiquetasPilhaQuantidadeAlterada
+    extends ImpressaoEtiquetasEvent {
   final String referencia;
   final String cor;
   final String tamanho;
@@ -93,3 +94,34 @@ class ImpressaoEtiquetasPilhaOrdenacaoAlterada extends ImpressaoEtiquetasEvent {
   @override
   List<Object?> get props => [ordenacao];
 }
+
+/// Produto (SKU) e quantidade a etiquetar, vindos de outra tela (ex.: pedido de entrada).
+class ItemEtiquetaInicial extends Equatable {
+  final int referenciaId;
+  final String referenciaNome;
+  final int produtoId;
+  final int quantidade;
+
+  const ItemEtiquetaInicial({
+    required this.referenciaId,
+    required this.referenciaNome,
+    required this.produtoId,
+    required this.quantidade,
+  });
+
+  @override
+  List<Object?> get props => [referenciaId, produtoId, quantidade];
+}
+
+class ImpressaoEtiquetasItensIniciaisDefinidos extends ImpressaoEtiquetasEvent {
+  final List<ItemEtiquetaInicial> itens;
+
+  ImpressaoEtiquetasItensIniciaisDefinidos(this.itens);
+
+  @override
+  List<Object?> get props => [itens];
+}
+
+/// Gera a pilha a partir dos itens iniciais (exige etiqueta e tabela escolhidas).
+class ImpressaoEtiquetasItensIniciaisAdicionarSolicitado
+    extends ImpressaoEtiquetasEvent {}

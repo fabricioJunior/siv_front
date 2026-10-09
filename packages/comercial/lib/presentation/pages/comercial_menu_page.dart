@@ -24,6 +24,12 @@ const comercialAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'PEDIDOS',
   ),
   SivMenuAcordeaoFilho(
+    label: 'Entrada por contagem',
+    rota: '/entrada_contagem',
+    componente: 'PEDFM001',
+    grupo: 'PEDIDOS',
+  ),
+  SivMenuAcordeaoFilho(
     label: 'Romaneios',
     rota: '/romaneios',
     componente: 'ROMFP001',

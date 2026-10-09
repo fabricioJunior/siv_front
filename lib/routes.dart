@@ -36,6 +36,7 @@ import 'package:promocoes/pages.dart';
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
+import 'package:produtos/use_cases.dart' show RecuperarReferencias;
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
@@ -777,6 +778,11 @@ Map<String, Widget Function(BuildContext)> routes = {
           modo: TamanhoSeletorModo.multipla,
           onChanged: data.onChanged,
         ),
+        buscarReferenciasParecidas: (nome) async =>
+            (await sl<RecuperarReferencias>().call(nome: nome, inativo: false))
+                .where((r) => r.id != null)
+                .map((r) => ReferenciaParecida(id: r.id!, nome: r.nome))
+                .toList(),
       ),
     );
   },
@@ -1092,6 +1098,16 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencias_pendentes_peso': (context) {
     return const ReferenciasPendentesPesoPage();
   },
+  // Wizard de cadastro de referência; devolve (pop) o `int?` id criado.
+  // Mesmas regras de acesso de /referencias (sem componente próprio).
+  '/referencia_cadastro': (context) {
+    final a = args(context) as Map? ?? const {};
+    return ReferenciaCadastroPage(
+      nomeInicial: a['nome'] as String?,
+      corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
+      tamanhoIdsIniciais: ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+    );
+  },
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);
   },
@@ -1159,6 +1175,15 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/impressao_etiquetas',
       child: ImpressaoDeEtiquetasPage(
+        itensIniciais: [
+          for (final i in (args(context)['itens'] as List?) ?? const [])
+            ItemEtiquetaInicial(
+              referenciaId: i['referenciaId'] as int,
+              referenciaNome: i['referenciaNome'] as String? ?? '',
+              produtoId: i['produtoId'] as int,
+              quantidade: (i['quantidade'] as num).round(),
+            ),
+        ],
         tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
           modo: TabelasDePrecoSeletorModo.unica,
           itemsSelecionadosInicial: data.itemsSelecionadosInicial,

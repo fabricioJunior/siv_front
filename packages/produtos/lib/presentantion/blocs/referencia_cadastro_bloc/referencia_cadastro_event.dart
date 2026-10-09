@@ -7,7 +7,15 @@ abstract class ReferenciaCadastroEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class ReferenciaCadastroIniciou extends ReferenciaCadastroEvent {}
+class ReferenciaCadastroIniciou extends ReferenciaCadastroEvent {
+  /// Nome sugerido (ex.: descrição contada). Quando informado, vale no lugar
+  /// do nome gerado a partir da categoria/subcategoria.
+  final String? nomeInicial;
+  ReferenciaCadastroIniciou({this.nomeInicial});
+
+  @override
+  List<Object?> get props => [nomeInicial];
+}
 
 class ReferenciaCadastroCategoriaSelecionada extends ReferenciaCadastroEvent {
   final Categoria categoria;

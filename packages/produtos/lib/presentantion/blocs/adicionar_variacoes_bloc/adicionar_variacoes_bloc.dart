@@ -49,6 +49,8 @@ class AdicionarVariacoesBloc
         estampaIdsNaGrade: event.estampaIdsNaGrade,
         chavesNaGrade: event.chavesNaGrade,
         estampasAtivo: event.estampaIdsNaGrade.isNotEmpty,
+        coresSelecionadas: event.coresSelecionadasIniciais,
+        tamanhosSelecionados: event.tamanhosSelecionadosIniciais,
       ),
     );
     try {

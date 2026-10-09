@@ -277,6 +277,7 @@ class _PassoContarState extends State<PassoContar> {
     final refs = _gruposRef;
     final livres = _gruposLivres;
     final nfe = _r.nfe != null;
+    final vazio = !nfe && refs.isEmpty && livres.isEmpty;
 
     final conteudo = ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -296,21 +297,14 @@ class _PassoContarState extends State<PassoContar> {
               seletores: widget.seletores,
               onContar: _contarLinha,
             ),
-        ] else ...[
+        ] else if (vazio)
+          _estadoVazio(context)
+        else ...[
           _secao(
             'COM REFERÊNCIA · ${qtd(refs.values.expand((e) => e).fold<double>(0, (s, c) => s + c.quantidade))}',
             textos,
             cores.textoApoio,
           ),
-          if (refs.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Nenhuma contagem ainda. Escolha (ou cadastre) a referência e '
-                'digite o que foi encontrado em cada cor e tamanho.',
-                style: textos.corpo,
-              ),
-            ),
           for (final e in refs.entries)
             _linhaGrupo(
               chave: Key('entrada_grupo_${e.key}'),
@@ -359,7 +353,7 @@ class _PassoContarState extends State<PassoContar> {
       ],
     );
 
-    if (nfe) return conteudo;
+    if (nfe || vazio) return conteudo;
     return Stack(
       children: [
         conteudo,
@@ -383,6 +377,59 @@ class _PassoContarState extends State<PassoContar> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Entrada ainda sem nenhuma contagem: explica e oferece os dois caminhos.
+  Widget _estadoVazio(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 32, 4, 0),
+      key: const Key('entrada_estado_vazio'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(Icons.fact_check_outlined, size: 44, color: cores.textoApoio),
+          const SizedBox(height: 12),
+          Text(
+            'Nenhum produto contado ainda',
+            textAlign: TextAlign.center,
+            style: textos.secao,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Conte o que chegou. Com referência: escolha a referência e digite '
+            'a quantidade de cada cor e tamanho. Sem referência: descreva o '
+            'produto e associe a uma referência depois.',
+            textAlign: TextAlign.center,
+            style: textos.corpo,
+          ),
+          const SizedBox(height: 24),
+          BotaoPrincipalEntrada(
+            key: const Key('entrada_vazio_contar_ref'),
+            rotulo: 'CONTAR COM REFERÊNCIA',
+            icone: Icons.add,
+            onPressed: widget.salvando
+                ? null
+                : () => _abrir(const _Edicao(titulo: 'Contar', novo: true)),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 52,
+            child: OutlinedButton.icon(
+              key: const Key('entrada_vazio_contar_livre'),
+              onPressed: widget.salvando
+                  ? null
+                  : () => _abrir(
+                        const _Edicao(titulo: 'Contar', novo: true, livre: true),
+                      ),
+              icon: const Icon(Icons.add),
+              label: const Text('CONTAR SEM REFERÊNCIA'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

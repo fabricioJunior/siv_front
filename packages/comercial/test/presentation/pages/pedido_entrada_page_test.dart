@@ -262,10 +262,10 @@ void main() {
     remoto.semNfe = true;
     await abrir(tester);
 
-    expect(find.textContaining('Nenhuma contagem ainda'), findsOneWidget);
+    expect(find.text('Nenhum produto contado ainda'), findsOneWidget);
     expect(find.byKey(const Key('trilha_segmentos')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     expect(find.text('COM REFERÊNCIA'), findsOneWidget);
     expect(find.text('SEM REFERÊNCIA'), findsOneWidget);
@@ -299,7 +299,7 @@ void main() {
   ) async {
     remoto.semNfe = true;
     await abrir(tester);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('aba_sem_referencia')));
     await tester.pumpAndSettle();
@@ -338,7 +338,7 @@ void main() {
       (tester) async {
     remoto.semNfe = true;
     await abrir(tester);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('escolher_referencia')));
     await tester.tap(find.byKey(const Key('escolher_cor')));
@@ -376,6 +376,26 @@ void main() {
     expect(find.text('0 peças'), findsOneWidget);
   });
 
+  testWidgets('mobile: entrada vazia mostra os dois caminhos de contagem', (
+    tester,
+  ) async {
+    remoto.semNfe = true;
+    await abrir(tester, tamanho: const Size(390, 844));
+
+    expect(find.byKey(const Key('entrada_estado_vazio')), findsOneWidget);
+    expect(find.text('CONTAR COM REFERÊNCIA'), findsOneWidget);
+    expect(find.text('CONTAR SEM REFERÊNCIA'), findsOneWidget);
+    for (final k in ['entrada_vazio_contar_ref', 'entrada_vazio_contar_livre']) {
+      expect(tester.getSize(find.byKey(Key(k))).height, greaterThanOrEqualTo(44),
+          reason: k);
+    }
+
+    // "sem referência" abre o painel já na aba sem referência
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_livre')));
+    await tester.pumpAndSettle();
+    expect(find.text('Salvar sem referência'), findsOneWidget);
+  });
+
   testWidgets('mobile: alvos de toque >= 44px e ação principal de 50-52px',
       (tester) async {
     remoto.semNfe = true;
@@ -383,13 +403,13 @@ void main() {
 
     final seg = tester.getSize(find.byKey(const Key('trilha_segmentos')));
     expect(seg.height, greaterThanOrEqualTo(44));
-    final fab = tester.getSize(find.byKey(const Key('entrada_contar')));
+    final fab = tester.getSize(find.byKey(const Key('entrada_vazio_contar_ref')));
     expect(fab.height, greaterThanOrEqualTo(44));
     final principal =
         tester.getSize(find.byKey(const Key('entrada_terminei_contar')));
     expect(principal.height, inInclusiveRange(50, 52));
 
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     for (final k in ['painel_fechar', 'aba_com_referencia', 'aba_sem_referencia']) {
       expect(tester.getSize(find.byKey(Key(k))).height, greaterThanOrEqualTo(44),
@@ -530,7 +550,7 @@ void main() {
 
     expect(find.byKey(const Key('trilha_segmentos')), findsNothing);
     expect(find.byKey(const Key('trilha_passo_3')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     // inline: a lista segue visível ao lado do painel
     expect(find.byKey(const Key('painel_fechar')), findsOneWidget);

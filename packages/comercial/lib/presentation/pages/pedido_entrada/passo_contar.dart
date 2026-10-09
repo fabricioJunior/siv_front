@@ -144,11 +144,43 @@ class _PassoContarState extends State<PassoContar> {
 
   Map<String, List<ContagemLivre>> get _gruposLivres {
     final g = <String, List<ContagemLivre>>{};
-    for (final c in _r.contagensLivres) {
+    for (final c in _r.livresSemReferencia) {
       g.putIfAbsent(c.descricao, () => []).add(c);
     }
     return g;
   }
+
+  Map<int, List<ContagemLivre>> get _gruposVariacoes {
+    final g = <int, List<ContagemLivre>>{};
+    for (final c in _r.variacoesNovas) {
+      g.putIfAbsent(c.referenciaId!, () => []).add(c);
+    }
+    return g;
+  }
+
+  /// Reabre a contagem COM referência dessa referência, com as variações
+  /// novas (e as já cadastradas) para recontar.
+  void _editarVariacao(int refId, List<ContagemLivre> itens) => _abrir(
+        _Edicao(
+          titulo: itens.first.referenciaNome ?? 'Referência',
+          referenciaId: refId,
+          referenciaNome: itens.first.referenciaNome,
+          existentes: [
+            ..._r.contagens.where((c) => c.referenciaId == refId),
+            for (final c in itens)
+              EntradaContagem(
+                produtoId: 0,
+                linhaId: null,
+                quantidade: c.quantidade,
+                referenciaId: refId,
+                corId: c.corId,
+                corNome: _corNome(c.corId),
+                tamanhoId: c.tamanhoId,
+                tamanhoNome: _tamNome(c.tamanhoId),
+              ),
+          ],
+        ),
+      );
 
   void _guardarNomes() {
     for (final c in _r.contagens) {
@@ -206,7 +238,9 @@ class _PassoContarState extends State<PassoContar> {
   Widget build(BuildContext context) {
     _guardarNomes();
     final mobile = ehMobile(context);
-    final livres = _gruposLivres.length;
+    final semRef = _gruposLivres.length;
+    final variacoes = _r.variacoesNovas.length;
+    final livres = semRef + variacoes;
     final temContagem = _r.contagens.isNotEmpty || _r.contagensLivres.isNotEmpty;
     final lista = _lista(context, mobile);
     final edicao = _edicao;
@@ -241,12 +275,20 @@ class _PassoContarState extends State<PassoContar> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${qtd(_r.totalContado)} peças · ${_gruposRef.length + livres} produtos',
+                      '${qtd(_r.totalContado)} peças · ${_gruposRef.length + _gruposLivres.length + _gruposVariacoes.length} produtos',
                       style: context.sivTextos.apoio,
                     ),
-                    if (livres > 0)
+                    if (semRef > 0)
                       Text(
-                        '$livres sem referência',
+                        '$semRef sem referência',
+                        style: context.sivTextos.apoio
+                            .copyWith(color: context.sivColors.parcialTexto),
+                      ),
+                    if (variacoes > 0)
+                      Text(
+                        variacoes == 1
+                            ? '1 variação a cadastrar'
+                            : '$variacoes variações a cadastrar',
                         style: context.sivTextos.apoio
                             .copyWith(color: context.sivColors.parcialTexto),
                       ),
@@ -277,6 +319,8 @@ class _PassoContarState extends State<PassoContar> {
     final refs = _gruposRef;
     final livres = _gruposLivres;
     final nfe = _r.nfe != null;
+    final variacoesNovas = _gruposVariacoes;
+    final vazio = !nfe && refs.isEmpty && livres.isEmpty && variacoesNovas.isEmpty;
 
     final conteudo = ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -296,21 +340,14 @@ class _PassoContarState extends State<PassoContar> {
               seletores: widget.seletores,
               onContar: _contarLinha,
             ),
-        ] else ...[
+        ] else if (vazio)
+          _estadoVazio(context)
+        else ...[
           _secao(
             'COM REFERÊNCIA · ${qtd(refs.values.expand((e) => e).fold<double>(0, (s, c) => s + c.quantidade))}',
             textos,
             cores.textoApoio,
           ),
-          if (refs.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Nenhuma contagem ainda. Escolha (ou cadastre) a referência e '
-                'digite o que foi encontrado em cada cor e tamanho.',
-                style: textos.corpo,
-              ),
-            ),
           for (final e in refs.entries)
             _linhaGrupo(
               chave: Key('entrada_grupo_${e.key}'),
@@ -322,6 +359,40 @@ class _PassoContarState extends State<PassoContar> {
               total: e.value.fold<double>(0, (s, c) => s + c.quantidade),
               onTap: widget.salvando ? null : () => _editarRef(e.key, e.value),
             ),
+          if (variacoesNovas.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              color: cores.parcialFundo,
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'VARIAÇÃO NOVA · cadastrar no passo 2',
+                      key: const Key('secao_variacao_nova'),
+                      style: textos.rotulo.copyWith(color: cores.parcialTexto),
+                    ),
+                  ),
+                  for (final e in variacoesNovas.entries)
+                    _linhaGrupo(
+                      chave: Key('entrada_variacao_${e.key}'),
+                      titulo: e.value.first.referenciaNome ?? e.value.first.descricao,
+                      resumo: e.value
+                          .map((c) =>
+                              '${_corNome(c.corId)} ${_tamNome(c.tamanhoId)}·${qtd(c.quantidade)}')
+                          .join(' · '),
+                      total:
+                          e.value.fold<double>(0, (s, c) => s + c.quantidade),
+                      onTap: widget.salvando
+                          ? null
+                          : () => _editarVariacao(e.key, e.value),
+                    ),
+                ],
+              ),
+            ),
+          ],
           if (livres.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
@@ -359,7 +430,7 @@ class _PassoContarState extends State<PassoContar> {
       ],
     );
 
-    if (nfe) return conteudo;
+    if (nfe || vazio) return conteudo;
     return Stack(
       children: [
         conteudo,
@@ -383,6 +454,59 @@ class _PassoContarState extends State<PassoContar> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Entrada ainda sem nenhuma contagem: explica e oferece os dois caminhos.
+  Widget _estadoVazio(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 32, 4, 0),
+      key: const Key('entrada_estado_vazio'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(Icons.fact_check_outlined, size: 44, color: cores.textoApoio),
+          const SizedBox(height: 12),
+          Text(
+            'Nenhum produto contado ainda',
+            textAlign: TextAlign.center,
+            style: textos.secao,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Conte o que chegou. Com referência: escolha a referência e digite '
+            'a quantidade de cada cor e tamanho. Sem referência: descreva o '
+            'produto e associe a uma referência depois.',
+            textAlign: TextAlign.center,
+            style: textos.corpo,
+          ),
+          const SizedBox(height: 24),
+          BotaoPrincipalEntrada(
+            key: const Key('entrada_vazio_contar_ref'),
+            rotulo: 'CONTAR COM REFERÊNCIA',
+            icone: Icons.add,
+            onPressed: widget.salvando
+                ? null
+                : () => _abrir(const _Edicao(titulo: 'Contar', novo: true)),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 52,
+            child: OutlinedButton.icon(
+              key: const Key('entrada_vazio_contar_livre'),
+              onPressed: widget.salvando
+                  ? null
+                  : () => _abrir(
+                        const _Edicao(titulo: 'Contar', novo: true, livre: true),
+                      ),
+              icon: const Icon(Icons.add),
+              label: const Text('CONTAR SEM REFERÊNCIA'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -117,4 +117,31 @@ void main() {
     expect(t[4].subtitulo, 'faturado');
     expect(t.take(4).every((p) => p.status == StatusPasso.concluido), isTrue);
   });
+
+  test('variações novas: Associar ativo com subtítulo próprio', () {
+    final r = _r(_base(extra: {
+      'contagensLivres': [
+        {'id': 1, 'descricao': 'X', 'corId': 1, 'tamanhoId': 2, 'quantidade': 2, 'referenciaId': 7, 'referenciaNome': 'X'},
+        {'id': 2, 'descricao': 'X', 'corId': 1, 'tamanhoId': 3, 'quantidade': 1, 'referenciaId': 7, 'referenciaNome': 'X'},
+      ],
+    }));
+    expect(r.variacoesNovas, hasLength(2));
+    expect(r.livresSemReferencia, isEmpty);
+    expect(TrilhaEntrada.etapaAtual(r), 1);
+    expect(TrilhaEntrada.etiquetasBloqueadas(r), isTrue);
+    expect(TrilhaEntrada.trilha(r, passo: 1)[1].subtitulo, '2 variações a cadastrar');
+  });
+
+  test('ContagemLivre tolera backend sem referenciaId', () {
+    final c = ContagemLivre.fromJson(
+        {'id': 1, 'descricao': 'X', 'corId': 1, 'tamanhoId': 2, 'quantidade': 1});
+    expect(c.referenciaId, isNull);
+    expect(c.ehVariacaoNova, isFalse);
+    final v = ContagemLivre.fromJson({
+      'id': 2, 'descricao': 'Y', 'corId': 1, 'tamanhoId': 2, 'quantidade': 1,
+      'referenciaId': 9, 'referenciaNome': 'Y'
+    });
+    expect(v.ehVariacaoNova, isTrue);
+    expect(v.referenciaNome, 'Y');
+  });
 }

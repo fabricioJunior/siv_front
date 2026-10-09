@@ -117,6 +117,7 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? livreEnviada;
   List<int>? associados;
   int? associadoRef;
+  int? associadoCategoria;
   bool semNfe = false;
   bool comLivre = false;
   Map<String, dynamic> extra = const {};
@@ -160,6 +161,7 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   }) async {
     associados = ids;
     associadoRef = referenciaId;
+    associadoCategoria = categoriaId;
     return EntradaResumo.fromJson(_jsonContagem(comContagem: true));
   }
 
@@ -262,10 +264,10 @@ void main() {
     remoto.semNfe = true;
     await abrir(tester);
 
-    expect(find.textContaining('Nenhuma contagem ainda'), findsOneWidget);
+    expect(find.text('Nenhum produto contado ainda'), findsOneWidget);
     expect(find.byKey(const Key('trilha_segmentos')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     expect(find.text('COM REFERÊNCIA'), findsOneWidget);
     expect(find.text('SEM REFERÊNCIA'), findsOneWidget);
@@ -299,7 +301,7 @@ void main() {
   ) async {
     remoto.semNfe = true;
     await abrir(tester);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('aba_sem_referencia')));
     await tester.pumpAndSettle();
@@ -338,7 +340,7 @@ void main() {
       (tester) async {
     remoto.semNfe = true;
     await abrir(tester);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('escolher_referencia')));
     await tester.tap(find.byKey(const Key('escolher_cor')));
@@ -376,6 +378,26 @@ void main() {
     expect(find.text('0 peças'), findsOneWidget);
   });
 
+  testWidgets('mobile: entrada vazia mostra os dois caminhos de contagem', (
+    tester,
+  ) async {
+    remoto.semNfe = true;
+    await abrir(tester, tamanho: const Size(390, 844));
+
+    expect(find.byKey(const Key('entrada_estado_vazio')), findsOneWidget);
+    expect(find.text('CONTAR COM REFERÊNCIA'), findsOneWidget);
+    expect(find.text('CONTAR SEM REFERÊNCIA'), findsOneWidget);
+    for (final k in ['entrada_vazio_contar_ref', 'entrada_vazio_contar_livre']) {
+      expect(tester.getSize(find.byKey(Key(k))).height, greaterThanOrEqualTo(44),
+          reason: k);
+    }
+
+    // "sem referência" abre o painel já na aba sem referência
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_livre')));
+    await tester.pumpAndSettle();
+    expect(find.text('Salvar sem referência'), findsOneWidget);
+  });
+
   testWidgets('mobile: alvos de toque >= 44px e ação principal de 50-52px',
       (tester) async {
     remoto.semNfe = true;
@@ -383,13 +405,13 @@ void main() {
 
     final seg = tester.getSize(find.byKey(const Key('trilha_segmentos')));
     expect(seg.height, greaterThanOrEqualTo(44));
-    final fab = tester.getSize(find.byKey(const Key('entrada_contar')));
+    final fab = tester.getSize(find.byKey(const Key('entrada_vazio_contar_ref')));
     expect(fab.height, greaterThanOrEqualTo(44));
     final principal =
         tester.getSize(find.byKey(const Key('entrada_terminei_contar')));
     expect(principal.height, inInclusiveRange(50, 52));
 
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     for (final k in ['painel_fechar', 'aba_com_referencia', 'aba_sem_referencia']) {
       expect(tester.getSize(find.byKey(Key(k))).height, greaterThanOrEqualTo(44),
@@ -524,13 +546,89 @@ void main() {
     expect(remoto.contagemEnviada!.single.quantidade, 5);
   });
 
+  Map<String, dynamic> variacoes() => {
+        'etapa': 'associando',
+        'contagensLivres': [
+          {'id': 10, 'descricao': 'Vestido Luna', 'corId': 5, 'tamanhoId': 6, 'quantidade': '2', 'referenciaId': 77, 'referenciaNome': 'Vestido Luna'},
+          {'id': 11, 'descricao': 'Vestido Luna', 'corId': 5, 'tamanhoId': 7, 'quantidade': '1', 'referenciaId': 77, 'referenciaNome': 'Vestido Luna'},
+          {'id': 12, 'descricao': 'Body Aurora', 'corId': 5, 'tamanhoId': 6, 'quantidade': '4', 'referenciaId': 88, 'referenciaNome': 'Body Aurora'},
+          {'id': 13, 'descricao': 'Peça sem ref', 'corId': 1, 'tamanhoId': 2, 'quantidade': '3'},
+        ],
+      };
+
+  testWidgets('Associar: variações novas por referência, botão manda só os ids',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    await abrir(tester);
+
+    expect(find.text('VARIAÇÕES NOVAS · cadastrar'), findsOneWidget);
+    expect(find.text('Esta cor/tamanho ainda não existe para a referência.'),
+        findsNWidgets(2));
+    expect(find.text('CADASTRAR 2 VARIAÇÕES'), findsOneWidget);
+    expect(find.text('CADASTRAR VARIAÇÃO'), findsOneWidget);
+    expect(find.byKey(const Key('cadastrar_todas_variacoes')), findsOneWidget);
+    // sem referência continua como antes
+    expect(find.byKey(const Key('grupo_associar_Peça sem ref')), findsOneWidget);
+    expect(tester.getSize(find.byKey(const Key('cadastrar_variacao_77'))).height,
+        inInclusiveRange(50, 52));
+
+    await tester.tap(find.byKey(const Key('cadastrar_variacao_77')));
+    await tester.pumpAndSettle();
+    expect(remoto.associados, [10, 11]);
+    expect(remoto.associadoRef, isNull);
+    expect(remoto.associadoCategoria, isNull);
+  });
+
+  testWidgets('Associar: CADASTRAR TODAS manda os ids de todas as variações',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    await abrir(tester);
+    await tester.ensureVisible(find.byKey(const Key('cadastrar_todas_variacoes')));
+    await tester.tap(find.byKey(const Key('cadastrar_todas_variacoes')));
+    await tester.pumpAndSettle();
+    expect(remoto.associados, [10, 11, 12]);
+  });
+
+  testWidgets('Contar separa variação nova de sem referência', (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = {...variacoes(), 'etapa': 'contando'};
+    await abrir(tester);
+
+    expect(find.text('VARIAÇÃO NOVA · cadastrar no passo 2'), findsOneWidget);
+    expect(find.byKey(const Key('entrada_variacao_77')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_variacao_88')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_sem_ref_Peça sem ref')), findsOneWidget);
+    expect(find.byKey(const Key('entrada_sem_ref_Vestido Luna')), findsNothing);
+    expect(find.text('1 sem referência'), findsOneWidget);
+    expect(find.text('3 variações a cadastrar'), findsOneWidget);
+    expect(find.text('TERMINEI · ASSOCIAR 4'), findsOneWidget);
+
+    // tocar reabre o painel COM referência dessa referência
+    await tester.tap(find.byKey(const Key('entrada_variacao_77')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('painel_fechar')), findsOneWidget);
+    expect(find.byKey(const Key('contagem_5_6')), findsOneWidget);
+    expect(find.byKey(const Key('contagem_5_7')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('contagem_5_6')), '5');
+    await tester.pump();
+    await tester.tap(find.text('SALVAR'));
+    await tester.pumpAndSettle();
+    expect(remoto.contagemEnviada!.map((e) => (e.referenciaId, e.corId, e.tamanhoId, e.quantidade)),
+        containsAll([(77, 5, 6, 5.0), (77, 5, 7, 1.0)]));
+  });
+
   testWidgets('desktop: trilha em linha e painel inline', (tester) async {
     remoto.semNfe = true;
     await abrir(tester, tamanho: const Size(1200, 900));
 
     expect(find.byKey(const Key('trilha_segmentos')), findsNothing);
     expect(find.byKey(const Key('trilha_passo_3')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('entrada_contar')));
+    await tester.tap(find.byKey(const Key('entrada_vazio_contar_ref')));
     await tester.pumpAndSettle();
     // inline: a lista segue visível ao lado do painel
     expect(find.byKey(const Key('painel_fechar')), findsOneWidget);

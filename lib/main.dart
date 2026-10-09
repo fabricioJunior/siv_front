@@ -37,7 +37,7 @@ void main() async {
       // Precisa rodar DENTRO do appRunner, não antes do SentryFlutter.init --
       // o binding e o runApp precisam estar na mesma zone, senão o Flutter
       // acusa "Zone mismatch" (SentryFlutter.init cria uma zone própria pro
-      // appRunner).
+      // appRunner). vende
       WidgetsFlutterBinding.ensureInitialized();
       try {
         await _bootstrap();

@@ -24,11 +24,13 @@ class CriarEntradaPorContagem {
   Future<EntradaResumo> call({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   }) =>
       _remote.criarPorContagem(
         pessoaId: pessoaId,
         tabelaPrecoId: tabelaPrecoId,
+        funcionarioId: funcionarioId,
         observacao: observacao,
       );
 }
@@ -184,4 +186,12 @@ class FaturarEntrada {
     await _conferir(pedidoId, processarComDivergencia: true);
     await _faturar(pedidoId, caixaId: caixaId);
   }
+}
+
+class RegistrarLeiturasEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  RegistrarLeiturasEntrada(this._remote);
+
+  Future<EntradaResumo> call(int pedidoId, Map<int, int> deltas) =>
+      _remote.registrarLeituras(pedidoId, deltas);
 }

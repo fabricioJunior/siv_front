@@ -20,6 +20,9 @@ class PedidoEntradaState extends Equatable {
 
   final bool faturado;
 
+  /// Leituras da conferência ainda não enviadas: produtoId -> variação.
+  final Map<int, int> leiturasPendentes;
+
   const PedidoEntradaState({
     this.carregando = false,
     this.salvando = false,
@@ -30,6 +33,7 @@ class PedidoEntradaState extends Equatable {
     this.passo,
     this.etiquetasLocal = false,
     this.faturado = false,
+    this.leiturasPendentes = const {},
   });
 
   int get etapaAtual => resumo == null
@@ -66,6 +70,7 @@ class PedidoEntradaState extends Equatable {
     bool limparPasso = false,
     bool? etiquetasLocal,
     bool? faturado,
+    Map<int, int>? leiturasPendentes,
   }) {
     return PedidoEntradaState(
       carregando: carregando ?? this.carregando,
@@ -77,6 +82,7 @@ class PedidoEntradaState extends Equatable {
       passo: limparPasso ? null : (passo ?? this.passo),
       etiquetasLocal: etiquetasLocal ?? this.etiquetasLocal,
       faturado: faturado ?? this.faturado,
+      leiturasPendentes: leiturasPendentes ?? this.leiturasPendentes,
     );
   }
 
@@ -91,5 +97,6 @@ class PedidoEntradaState extends Equatable {
         passo,
         etiquetasLocal,
         faturado,
+        leiturasPendentes,
       ];
 }

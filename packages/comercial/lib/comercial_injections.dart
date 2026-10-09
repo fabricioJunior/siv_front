@@ -754,11 +754,14 @@ void _presentation() {
   sl.registerFactory<RegistrarEtiquetasEntrada>(
     () => RegistrarEtiquetasEntrada(sl()),
   );
+  sl.registerFactory<RegistrarLeiturasEntrada>(
+    () => RegistrarLeiturasEntrada(sl()),
+  );
   sl.registerFactory<FaturarEntrada>(() => FaturarEntrada(sl(), sl()));
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
       sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //
-      sl(), sl(), sl(), sl(), sl(),
+      sl(), sl(), sl(), sl(), sl(), sl(),
     ),
   );
 

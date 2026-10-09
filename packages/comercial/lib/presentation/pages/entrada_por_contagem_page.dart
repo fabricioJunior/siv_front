@@ -12,11 +12,13 @@ import 'package:flutter/material.dart';
 class EntradaPorContagemPage extends StatefulWidget {
   final SeletorWidget fornecedorSeletor;
   final SeletorWidget tabelaDePrecoSeletor;
+  final SeletorWidget funcionarioSeletor;
 
   const EntradaPorContagemPage({
     super.key,
     required this.fornecedorSeletor,
     required this.tabelaDePrecoSeletor,
+    required this.funcionarioSeletor,
   });
 
   @override
@@ -27,6 +29,7 @@ class _EntradaPorContagemPageState extends State<EntradaPorContagemPage> {
   late final PedidoEntradaBloc _bloc = sl<PedidoEntradaBloc>();
   int? _fornecedorId;
   int? _tabelaDePrecoId;
+  int? _funcionarioId;
 
   @override
   void dispose() {
@@ -58,6 +61,7 @@ class _EntradaPorContagemPageState extends State<EntradaPorContagemPage> {
         builder: (context, state) {
           final podeIniciar = _fornecedorId != null &&
               _tabelaDePrecoId != null &&
+              _funcionarioId != null &&
               !state.salvando;
           return Scaffold(
             appBar: AppBar(title: const Text('Entrada por contagem')),
@@ -109,6 +113,24 @@ class _EntradaPorContagemPageState extends State<EntradaPorContagemPage> {
                             const SizedBox(height: 4),
                             Text('Preço da etiqueta e do pedido.',
                                 style: context.sivTextos.apoio),
+                            const SizedBox(height: 20),
+                            Text(
+                              '3. Funcionário responsável',
+                              style: tema.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            widget.funcionarioSeletor(
+                              SeletorData(
+                                compacto: true,
+                                onChanged: (itens) => setState(
+                                  () => _funcionarioId =
+                                      itens.isEmpty ? null : itens.first.id,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Fica no romaneio do faturamento.',
+                                style: context.sivTextos.apoio),
                             const SizedBox(height: 24),
                             const _CincoPassos(),
                           ],
@@ -127,6 +149,7 @@ class _EntradaPorContagemPageState extends State<EntradaPorContagemPage> {
                               PedidoEntradaCriouPorContagem(
                                 pessoaId: _fornecedorId!,
                                 tabelaPrecoId: _tabelaDePrecoId!,
+                                funcionarioId: _funcionarioId!,
                               ),
                             )
                         : null,

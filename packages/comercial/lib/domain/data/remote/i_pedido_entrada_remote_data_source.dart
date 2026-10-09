@@ -9,6 +9,7 @@ abstract class IPedidoEntradaRemoteDataSource {
   Future<EntradaResumo> criarPorContagem({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   });
 
@@ -79,4 +80,8 @@ abstract class IPedidoEntradaRemoteDataSource {
     int? categoriaId,
     String? nome,
   });
+
+  /// Conferência em lote: [deltas] (produtoId -> variação do lido; negativo
+  /// remove). Uma chamada, uma transação no servidor.
+  Future<EntradaResumo> registrarLeituras(int pedidoId, Map<int, int> deltas);
 }

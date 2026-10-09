@@ -30,9 +30,13 @@ class PedidoEntradaImportouNfe extends PedidoEntradaEvent {
 class PedidoEntradaCriouPorContagem extends PedidoEntradaEvent {
   final int pessoaId;
   final int tabelaPrecoId;
+
+  /// Funcionário responsável pela entrada: vai no romaneio do faturamento.
+  final int funcionarioId;
   const PedidoEntradaCriouPorContagem({
     required this.pessoaId,
     required this.tabelaPrecoId,
+    required this.funcionarioId,
   });
 
   @override
@@ -178,4 +182,29 @@ class PedidoEntradaAssociouContagemLivre extends PedidoEntradaEvent {
 
   @override
   List<Object?> get props => [ids, referenciaId, categoriaId, nome];
+}
+
+/// Bipe LOCAL (sem rede): soma [delta] (+1 bipe, -1 remover) às leituras
+/// pendentes de envio do produto.
+class PedidoEntradaLeu extends PedidoEntradaEvent {
+  final int produtoId;
+  final int delta;
+  const PedidoEntradaLeu(this.produtoId, this.delta);
+
+  @override
+  List<Object?> get props => [produtoId, delta];
+}
+
+/// Envia as leituras pendentes numa só chamada; se [irParaRevisar] e der
+/// certo, segue para o passo Revisar.
+class PedidoEntradaEnviouLeituras extends PedidoEntradaEvent {
+  final bool irParaRevisar;
+  const PedidoEntradaEnviouLeituras({this.irParaRevisar = false});
+
+  @override
+  List<Object?> get props => [irParaRevisar];
+}
+
+class PedidoEntradaDescartouLeituras extends PedidoEntradaEvent {
+  const PedidoEntradaDescartouLeituras();
 }

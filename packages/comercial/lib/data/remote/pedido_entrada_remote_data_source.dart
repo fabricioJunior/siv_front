@@ -37,6 +37,7 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   Future<EntradaResumo> criarPorContagem({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   }) async =>
       _resumo(
@@ -44,6 +45,7 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
           body: {
             'pessoaId': pessoaId,
             'tabelaPrecoId': tabelaPrecoId,
+            if (funcionarioId != null) 'funcionarioId': funcionarioId,
             if (observacao != null) 'observacao': observacao,
           },
           pathParameters: {'path': '/entrada/contagem'},
@@ -229,6 +231,24 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
           pathParameters: {
             'path': '/$pedidoId/entrada/contagem-livre/associar',
           },
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas,
+  ) async =>
+      _resumo(
+        (await put(
+          body: {
+            'itens': [
+              for (final e in deltas.entries)
+                if (e.value != 0) {'produtoId': e.key, 'quantidade': e.value},
+            ],
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/leituras'},
         ))
             .body,
       );

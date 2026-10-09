@@ -87,3 +87,31 @@ class RegistrarContagemEntrada {
   Future<EntradaResumo> call(int pedidoId, List<ItemContagem> itens) =>
       _remote.registrarContagem(pedidoId, itens);
 }
+
+class RegistrarContagemLivreEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  RegistrarContagemLivreEntrada(this._remote);
+
+  Future<EntradaResumo> call(int pedidoId, List<ItemContagem> itens) =>
+      _remote.registrarContagemLivre(pedidoId, itens);
+}
+
+class AssociarContagemLivreEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  AssociarContagemLivreEntrada(this._remote);
+
+  Future<EntradaResumo> call(
+    int pedidoId,
+    List<int> ids, {
+    int? referenciaId,
+    int? categoriaId,
+    String? nome,
+  }) =>
+      _remote.associarContagemLivre(
+        pedidoId,
+        ids,
+        referenciaId: referenciaId,
+        categoriaId: categoriaId,
+        nome: nome,
+      );
+}

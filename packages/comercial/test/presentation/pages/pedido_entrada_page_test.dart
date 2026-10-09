@@ -103,6 +103,23 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   }
 
   @override
+  Future<EntradaResumo> registrarContagemLivre(
+    int pedidoId,
+    List<ItemContagem> itens,
+  ) =>
+      throw UnimplementedError();
+
+  @override
+  Future<EntradaResumo> associarContagemLivre(
+    int pedidoId,
+    List<int> ids, {
+    int? referenciaId,
+    int? categoriaId,
+    String? nome,
+  }) =>
+      throw UnimplementedError();
+
+  @override
   Future<EntradaResumo> importarNfe({
     required String filePath,
     required int tabelaPrecoId,
@@ -149,6 +166,8 @@ void main() {
         IgnorarLinhaEntrada(remoto),
         ResolverDivergenciaEntrada(remoto),
         RegistrarContagemEntrada(remoto),
+        RegistrarContagemLivreEntrada(remoto),
+        AssociarContagemLivreEntrada(remoto),
       ),
     );
     Widget falso(String n) => Text('seletor $n');

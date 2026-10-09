@@ -148,6 +148,16 @@ class ImportacaoGuiadaBloc
         ),
       );
     } catch (e, s) {
+      if (e is HttpException && e.statusCode == 404) {
+        // Servidor sem a rota de prévia (backend mais antigo que o app): segue sem prévia, sem mostrar erro.
+        emit(
+          state.comEtapa(
+            etapa,
+            state[etapa].copyWith(carregandoPrevia: false, previa: null),
+          ),
+        );
+        return;
+      }
       emit(
         state.comEtapa(
           etapa,

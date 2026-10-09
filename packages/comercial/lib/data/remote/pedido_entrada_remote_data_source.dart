@@ -37,6 +37,7 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   Future<EntradaResumo> criarPorContagem({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   }) async =>
       _resumo(
@@ -44,6 +45,7 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
           body: {
             'pessoaId': pessoaId,
             'tabelaPrecoId': tabelaPrecoId,
+            if (funcionarioId != null) 'funcionarioId': funcionarioId,
             if (observacao != null) 'observacao': observacao,
           },
           pathParameters: {'path': '/entrada/contagem'},

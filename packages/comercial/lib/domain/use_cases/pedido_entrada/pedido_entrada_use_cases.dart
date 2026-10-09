@@ -24,11 +24,13 @@ class CriarEntradaPorContagem {
   Future<EntradaResumo> call({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   }) =>
       _remote.criarPorContagem(
         pessoaId: pessoaId,
         tabelaPrecoId: tabelaPrecoId,
+        funcionarioId: funcionarioId,
         observacao: observacao,
       );
 }

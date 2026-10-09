@@ -200,6 +200,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
       final resumo = await _criarPorContagem(
         pessoaId: event.pessoaId,
         tabelaPrecoId: event.tabelaPrecoId,
+        funcionarioId: event.funcionarioId,
       );
       _pedidoId = resumo.pedidoId;
       emit(state.copyWith(salvando: false, resumo: resumo));

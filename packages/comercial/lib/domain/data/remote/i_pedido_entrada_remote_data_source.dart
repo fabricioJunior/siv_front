@@ -9,6 +9,7 @@ abstract class IPedidoEntradaRemoteDataSource {
   Future<EntradaResumo> criarPorContagem({
     required int pessoaId,
     required int tabelaPrecoId,
+    int? funcionarioId,
     String? observacao,
   });
 

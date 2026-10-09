@@ -30,9 +30,13 @@ class PedidoEntradaImportouNfe extends PedidoEntradaEvent {
 class PedidoEntradaCriouPorContagem extends PedidoEntradaEvent {
   final int pessoaId;
   final int tabelaPrecoId;
+
+  /// Funcionário responsável pela entrada: vai no romaneio do faturamento.
+  final int funcionarioId;
   const PedidoEntradaCriouPorContagem({
     required this.pessoaId,
     required this.tabelaPrecoId,
+    required this.funcionarioId,
   });
 
   @override

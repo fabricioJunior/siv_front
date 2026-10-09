@@ -745,9 +745,20 @@ void _presentation() {
   sl.registerFactory<AssociarContagemLivreEntrada>(
     () => AssociarContagemLivreEntrada(sl()),
   );
+  sl.registerFactory<CorrigirContagemEntrada>(
+    () => CorrigirContagemEntrada(sl()),
+  );
+  sl.registerFactory<DecidirDivergenciaEntrada>(
+    () => DecidirDivergenciaEntrada(sl()),
+  );
+  sl.registerFactory<RegistrarEtiquetasEntrada>(
+    () => RegistrarEtiquetasEntrada(sl()),
+  );
+  sl.registerFactory<FaturarEntrada>(() => FaturarEntrada(sl(), sl()));
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
-      sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(),
+      sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //
+      sl(), sl(), sl(), sl(), sl(),
     ),
   );
 

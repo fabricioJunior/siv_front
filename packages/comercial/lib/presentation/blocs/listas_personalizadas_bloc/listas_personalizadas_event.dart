@@ -11,7 +11,7 @@ class ListasPersonalizadasIniciou extends ListasPersonalizadasEvent {
   /// `null` = todas as listas.
   final ListaTipo? tipo;
 
-  ListasPersonalizadasIniciou({this.tipo});
+  const ListasPersonalizadasIniciou({this.tipo});
 
   @override
   List<Object?> get props => [tipo];

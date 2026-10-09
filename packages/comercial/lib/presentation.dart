@@ -87,3 +87,7 @@ export 'presentation/widgets/lista_seletores.dart';
 export 'presentation/widgets/lista_personalizada_formulario.dart';
 export 'presentation/widgets/lista_filtro_construtor.dart';
 export 'presentation/pages/listas_personalizadas_page.dart';
+export 'presentation/blocs/listas_grupos_bloc/listas_grupos_bloc.dart';
+export 'presentation/blocs/lista_grupo_bloc/lista_grupo_bloc.dart';
+export 'presentation/pages/listas_grupos_page.dart';
+export 'presentation/pages/lista_grupo_page.dart';

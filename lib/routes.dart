@@ -546,6 +546,21 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/listas_grupos': (context) {
+    return _rotaProtegida(
+      route: '/listas_grupos',
+      child: const ListasGruposPage(),
+    );
+  },
+  '/lista_grupo': (context) {
+    final idArg = args(context)['id'];
+    return _rotaProtegida(
+      route: '/listas_grupos',
+      child: ListaGrupoPage(
+        grupoId: idArg is int ? idArg : int.tryParse(idArg?.toString() ?? ''),
+      ),
+    );
+  },
   '/ecommerce_referencias': (context) {
     final routeArgs = args(context);
     return _rotaProtegida(
@@ -1641,6 +1656,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],
   '/listas_personalizadas': ['ECOFM004'],
+  '/listas_grupos': ['ECOFM004'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],

@@ -87,6 +87,9 @@ void _remoteDataSources() {
   sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
     () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IListasGruposRemoteDataSource>(
+    () => ListasGruposRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
@@ -141,6 +144,9 @@ void _repositories() {
 
   sl.registerFactory<IEcommerceRepository>(
     () => EcommerceRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IListasGruposRepository>(
+    () => ListasGruposRepository(remoteDataSource: sl()),
   );
   sl.registerFactory<IEcommerceBannersRepository>(
     () => EcommerceBannersRepository(remoteDataSource: sl()),
@@ -463,6 +469,27 @@ void _useCases() {
   sl.registerFactory<AtualizarTituloListaPersonalizada>(
     () => AtualizarTituloListaPersonalizada(repository: sl()),
   );
+  sl.registerFactory<ListarListasGrupos>(
+    () => ListarListasGrupos(repository: sl()),
+  );
+  sl.registerFactory<RecuperarListaGrupo>(
+    () => RecuperarListaGrupo(repository: sl()),
+  );
+  sl.registerFactory<CriarListaGrupo>(
+    () => CriarListaGrupo(repository: sl()),
+  );
+  sl.registerFactory<AtualizarListaGrupo>(
+    () => AtualizarListaGrupo(repository: sl()),
+  );
+  sl.registerFactory<ExcluirListaGrupo>(
+    () => ExcluirListaGrupo(repository: sl()),
+  );
+  sl.registerFactory<DefinirListasDoGrupo>(
+    () => DefinirListasDoGrupo(repository: sl()),
+  );
+  sl.registerFactory<EnviarIconeListaGrupo>(
+    () => EnviarIconeListaGrupo(repository: sl()),
+  );
   sl.registerFactory<AtualizarListaPersonalizada>(
     () => AtualizarListaPersonalizada(repository: sl()),
   );
@@ -729,6 +756,11 @@ void _presentation() {
 
   sl.registerFactory<ListaPersonalizadaBloc>(
     () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<ListasGruposBloc>(() => ListasGruposBloc(sl(), sl()));
+  sl.registerFactory<ListaGrupoBloc>(
+    () => ListaGrupoBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ListasPersonalizadasBloc>(

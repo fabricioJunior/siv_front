@@ -22,6 +22,13 @@ class ListaGrupoDto {
     );
   }
 
+  static Map<String, dynamic> listasToJson(List<int> listaIds) => {
+        'itens': [
+          for (var i = 0; i < listaIds.length; i++)
+            {'listaId': listaIds[i], 'ordem': i},
+        ],
+      };
+
   static PaginaListasGrupos paginaFromJson(Map<String, dynamic> json) {
     final meta = json['meta'] as Map<String, dynamic>? ?? const {};
     return PaginaListasGrupos(

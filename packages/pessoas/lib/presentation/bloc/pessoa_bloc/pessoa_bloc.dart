@@ -62,7 +62,7 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
         state.copyWith(
           verificandoDocumento: false,
           avisoDocumentoDuplicado: ehOutraPessoa
-              ? 'Já existe um cliente cadastrado com esse CPF: ${pessoaEncontrada.nome}.'
+              ? 'Já existe uma pessoa cadastrada com esse documento: ${pessoaEncontrada.nome}.'
               : null,
           limparAvisoDocumentoDuplicado: !ehOutraPessoa,
         ),

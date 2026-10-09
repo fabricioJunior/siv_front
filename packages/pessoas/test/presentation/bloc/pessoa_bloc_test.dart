@@ -136,6 +136,23 @@ void main() {
   );
 
   blocTest<PessoaBloc, PessoaState>(
+    'trocar para pessoa jurídica guarda o tipo e limpa o documento (CPF não vale para CNPJ)',
+    build: () => pessoaBloc,
+    seed: () => PessoaState(
+      pessoaStep: PessoaStep.editando,
+      tipoPessoa: TipoPessoa.fisica,
+      documento: '52998224725',
+    ),
+    act: (bloc) =>
+        bloc.add(PessoaEditou(tipoPessoa: TipoPessoa.juridica, documento: '')),
+    expect: () => [
+      isA<PessoaState>()
+          .having((s) => s.tipoPessoa, 'tipoPessoa', TipoPessoa.juridica)
+          .having((s) => s.documento, 'documento', ''),
+    ],
+  );
+
+  blocTest<PessoaBloc, PessoaState>(
     'emite estado de sucesso após SALVAR pessoa',
     build: () => pessoaBloc,
     act: (bloc) => bloc.add(PessoaSalvou()),

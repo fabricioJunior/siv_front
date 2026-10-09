@@ -1098,6 +1098,16 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/referencias_pendentes_peso': (context) {
     return const ReferenciasPendentesPesoPage();
   },
+  // Wizard de cadastro de referência; devolve (pop) o `int?` id criado.
+  // Mesmas regras de acesso de /referencias (sem componente próprio).
+  '/referencia_cadastro': (context) {
+    final a = args(context) as Map? ?? const {};
+    return ReferenciaCadastroPage(
+      nomeInicial: a['nome'] as String?,
+      corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
+      tamanhoIdsIniciais: ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+    );
+  },
   '/referencia': (context) {
     return ReferenciaPage(idReferencia: args(context)['idReferencia']);
   },

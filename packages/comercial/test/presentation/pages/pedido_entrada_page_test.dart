@@ -172,6 +172,8 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
 
 void main() {
   late _Remoto remoto;
+  Object? argsCadastro;
+  int? retornoCadastro;
 
   Future<void> abrir(WidgetTester tester, {Size tamanho = const Size(420, 1400)}) async {
     tester.view.physicalSize = tamanho;
@@ -207,6 +209,21 @@ void main() {
         );
     await tester.pumpWidget(
       MaterialApp(
+        // Faz as vezes do wizard de cadastro de referência (rota do app).
+        onGenerateRoute: (settings) {
+          if (settings.name != '/referencia_cadastro') return null;
+          argsCadastro = settings.arguments;
+          return MaterialPageRoute<int>(
+            settings: settings,
+            builder: (ctx) => Scaffold(
+              body: TextButton(
+                key: const Key('fecha_wizard'),
+                onPressed: () => Navigator.of(ctx).pop(retornoCadastro),
+                child: const Text('fecha'),
+              ),
+            ),
+          );
+        },
         home: PedidoEntradaPage(
           pedidoId: 9,
           categoriaSeletor: (_) => falso('categoria'),
@@ -223,7 +240,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  setUp(() => remoto = _Remoto());
+  setUp(() {
+    remoto = _Remoto();
+    argsCadastro = null;
+    retornoCadastro = null;
+  });
   tearDown(() async => sl.reset());
 
   testWidgets('NF-e: cartões de linha dentro do passo Contar', (tester) async {
@@ -620,6 +641,61 @@ void main() {
     await tester.pumpAndSettle();
     expect(remoto.contagemEnviada!.map((e) => (e.referenciaId, e.corId, e.tamanhoId, e.quantidade)),
         containsAll([(77, 5, 6, 5.0), (77, 5, 7, 1.0)]));
+  });
+
+  testWidgets('Criar referência nova abre o wizard pré-preenchido e associa o id',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = {
+        'etapa': 'associando',
+        'contagensLivres': [
+          {'id': 20, 'descricao': 'Body rendado vinho', 'corId': 5, 'tamanhoId': 6, 'quantidade': '3'},
+          {'id': 21, 'descricao': 'Body rendado vinho', 'corId': 5, 'tamanhoId': 7, 'quantidade': '2'},
+          {'id': 22, 'descricao': 'Body rendado vinho', 'corId': 8, 'tamanhoId': 6, 'quantidade': '1'},
+        ],
+      };
+    retornoCadastro = 99;
+    await abrir(tester);
+
+    await tester.tap(find.text('Criar referência nova'));
+    await tester.pumpAndSettle();
+    // não há mais formulário mínimo (nome + categoria)
+    expect(find.text('NOME DA REFERÊNCIA'), findsNothing);
+    expect(find.text('seletor categoria'), findsNothing);
+
+    await tester.tap(
+        find.byKey(const Key('entrada_criar_referencia_Body rendado vinho')));
+    await tester.pumpAndSettle();
+    final a = argsCadastro as Map;
+    expect(a['nome'], 'Body rendado vinho');
+    expect(a['corIds'], [5, 8]);
+    expect(a['tamanhoIds'], [6, 7]);
+
+    await tester.tap(find.byKey(const Key('fecha_wizard')));
+    await tester.pumpAndSettle();
+    expect(remoto.associados, [20, 21, 22]);
+    expect(remoto.associadoRef, 99);
+    expect(remoto.associadoCategoria, isNull);
+  });
+
+  testWidgets('Criar referência nova: wizard cancelado não associa nada',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    retornoCadastro = null;
+    await abrir(tester);
+
+    await tester.tap(find.text('Criar referência nova'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+        find.byKey(const Key('entrada_criar_referencia_Vestido Luna')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('fecha_wizard')));
+    await tester.pumpAndSettle();
+    expect(argsCadastro, isNotNull);
+    expect(remoto.associados, isNull);
   });
 
   testWidgets('desktop: trilha em linha e painel inline', (tester) async {

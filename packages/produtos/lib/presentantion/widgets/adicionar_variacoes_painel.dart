@@ -30,6 +30,10 @@ class AdicionarVariacoesPainel extends StatefulWidget {
   final Set<String> chavesNaGrade;
   final bool mobile;
 
+  /// Cores/tamanhos que já abrem selecionados no rascunho.
+  final Set<int> coresSelecionadasIniciais;
+  final Set<int> tamanhosSelecionadosIniciais;
+
   /// Quando informado, o painel está embutido (ex.: wizard de cadastro) em
   /// vez de aberto como rota: em vez de `Navigator.pop`, avisa o resultado
   /// (`true` = criou variações).
@@ -44,6 +48,8 @@ class AdicionarVariacoesPainel extends StatefulWidget {
     required this.chavesNaGrade,
     this.mobile = false,
     this.onConcluir,
+    this.coresSelecionadasIniciais = const {},
+    this.tamanhosSelecionadosIniciais = const {},
   });
 
   static Future<bool?> show({
@@ -177,6 +183,8 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
           tamanhoIdsNaGrade: widget.tamanhoIdsNaGrade,
           estampaIdsNaGrade: widget.estampaIdsNaGrade,
           chavesNaGrade: widget.chavesNaGrade,
+          coresSelecionadasIniciais: widget.coresSelecionadasIniciais,
+          tamanhosSelecionadosIniciais: widget.tamanhosSelecionadosIniciais,
         ),
       );
   }

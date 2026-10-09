@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
+import 'package:core/arquivos.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/remote_data_sourcers.dart'
@@ -18,6 +19,11 @@ class ListaPersonalizadaBloc
   final RecuperarListaPersonalizada _recuperarListaPersonalizada;
   final BuscarLinkListaPersonalizada _buscarLinkListaPersonalizada;
   final AtualizarTituloListaPersonalizada _atualizarTituloListaPersonalizada;
+  final AtualizarListaPersonalizada _atualizarListaPersonalizada;
+  final EnviarIconeListaPersonalizada _enviarIconeListaPersonalizada;
+  final AdicionarItensPorFiltroListaPersonalizada _adicionarPorFiltro;
+  final RecuperarPreviaListaPersonalizada _recuperarPrevia;
+  final ArquivoService _arquivos;
 
   ListaPersonalizadaBloc(
     this._criarListaPersonalizada,
@@ -26,6 +32,11 @@ class ListaPersonalizadaBloc
     this._recuperarListaPersonalizada,
     this._buscarLinkListaPersonalizada,
     this._atualizarTituloListaPersonalizada,
+    this._atualizarListaPersonalizada,
+    this._enviarIconeListaPersonalizada,
+    this._adicionarPorFiltro,
+    this._recuperarPrevia,
+    this._arquivos,
   ) : super(const ListaPersonalizadaState()) {
     on<ListaPersonalizadaCriou>(_onCriou);
     on<ListaPersonalizadaAbriu>(_onAbriu);
@@ -33,6 +44,10 @@ class ListaPersonalizadaBloc
     on<ListaPersonalizadaReferenciasRemoveu>(_onReferenciasRemoveu);
     on<ListaPersonalizadaItensAjustou>(_onItensAjustou);
     on<ListaPersonalizadaTituloAtualizou>(_onTituloAtualizou);
+    on<ListaPersonalizadaAtualizou>(_onAtualizou);
+    on<ListaPersonalizadaIconeEscolheu>(_onIconeEscolheu);
+    on<ListaPersonalizadaItensPorFiltroAdicionou>(_onItensPorFiltro);
+    on<ListaPersonalizadaPreviaSolicitou>(_onPrevia);
   }
 
   FutureOr<void> _onCriou(
@@ -41,13 +56,22 @@ class ListaPersonalizadaBloc
   ) async {
     emit(state.copyWith(step: ListaPersonalizadaStep.salvando, erro: ''));
     try {
-      final lista = await _criarListaPersonalizada.call(
-        tabelaPrecoId: event.tabelaPrecoId,
-        dataExpiracao: event.dataExpiracao,
-        titulo: event.titulo,
-      );
+      var lista = await _criarListaPersonalizada.call(event.input);
+      final icone = state.iconeLocal;
+      if (icone != null) {
+        try {
+          lista = await _enviarIconeListaPersonalizada.call(
+            lista.id,
+            icone.bytes,
+            icone.nome,
+          );
+        } catch (e, s) {
+          emit(state.copyWith(erro: mensagemDeErroApi(e, 'Lista criada, mas o ícone não foi enviado.')));
+          addError(e, s);
+        }
+      }
       emit(state.copyWith(step: ListaPersonalizadaStep.criada, lista: lista));
-      await _carregarLink(lista.id, emit);
+      if (lista.tipo == ListaTipo.provador) await _carregarLink(lista.id, emit);
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -67,7 +91,7 @@ class ListaPersonalizadaBloc
     try {
       final lista = await _recuperarListaPersonalizada.call(event.id);
       emit(state.copyWith(step: ListaPersonalizadaStep.criada, lista: lista));
-      await _carregarLink(lista.id, emit);
+      if (lista.tipo == ListaTipo.provador) await _carregarLink(lista.id, emit);
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -199,6 +223,112 @@ class ListaPersonalizadaBloc
         state.copyWith(
           atualizandoTitulo: false,
           erro: mensagemDeErroApi(e, 'Falha ao atualizar o título da lista.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onAtualizou(
+    ListaPersonalizadaAtualizou event,
+    Emitter<ListaPersonalizadaState> emit,
+  ) async {
+    final lista = state.lista;
+    if (lista == null) return;
+
+    emit(state.copyWith(salvandoDados: true, erro: ''));
+    try {
+      final atualizada = await _atualizarListaPersonalizada.call(lista.id, event.input);
+      emit(state.copyWith(lista: atualizada, salvandoDados: false));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          salvandoDados: false,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar a lista.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onIconeEscolheu(
+    ListaPersonalizadaIconeEscolheu event,
+    Emitter<ListaPersonalizadaState> emit,
+  ) async {
+    final arquivo = await _arquivos.selecionarArquivoComBytes(
+      extensoes: const ['png', 'jpg', 'jpeg', 'webp'],
+    );
+    if (arquivo == null) return;
+
+    final lista = state.lista;
+    if (lista == null) {
+      emit(state.copyWith(iconeLocal: arquivo, erro: ''));
+      return;
+    }
+    emit(state.copyWith(salvandoDados: true, erro: ''));
+    try {
+      final atualizada = await _enviarIconeListaPersonalizada.call(
+        lista.id,
+        arquivo.bytes,
+        arquivo.nome,
+      );
+      emit(state.copyWith(lista: atualizada, salvandoDados: false));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          salvandoDados: false,
+          erro: mensagemDeErroApi(e, 'Falha ao enviar o ícone.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onItensPorFiltro(
+    ListaPersonalizadaItensPorFiltroAdicionou event,
+    Emitter<ListaPersonalizadaState> emit,
+  ) async {
+    final lista = state.lista;
+    if (lista == null) return;
+
+    emit(state.copyWith(atualizandoItens: true, erro: ''));
+    try {
+      final resultado = await _adicionarPorFiltro.call(lista.id, event.lote);
+      final atualizada = await _recuperarListaPersonalizada.call(lista.id);
+      emit(
+        state.copyWith(
+          lista: atualizada,
+          atualizandoItens: false,
+          ultimoLote: resultado,
+        ),
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          atualizandoItens: false,
+          erro: mensagemDeErroApi(e, 'Falha ao adicionar referências em lote.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onPrevia(
+    ListaPersonalizadaPreviaSolicitou event,
+    Emitter<ListaPersonalizadaState> emit,
+  ) async {
+    final lista = state.lista;
+    if (lista == null) return;
+
+    emit(state.copyWith(carregandoPrevia: true, erro: ''));
+    try {
+      final previa = await _recuperarPrevia.call(lista.id, page: event.page);
+      emit(state.copyWith(previa: previa, carregandoPrevia: false));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          carregandoPrevia: false,
+          erro: mensagemDeErroApi(e, 'Falha ao carregar a prévia da lista.'),
         ),
       );
       addError(e, s);

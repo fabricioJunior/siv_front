@@ -83,4 +83,7 @@ export 'presentation/pages/ecommerce_banner_preview_page.dart';
 export 'presentation/blocs/lista_personalizada_bloc/lista_personalizada_bloc.dart';
 export 'presentation/blocs/listas_personalizadas_bloc/listas_personalizadas_bloc.dart';
 export 'presentation/pages/lista_personalizada_page.dart';
+export 'presentation/widgets/lista_seletores.dart';
+export 'presentation/widgets/lista_personalizada_formulario.dart';
+export 'presentation/widgets/lista_filtro_construtor.dart';
 export 'presentation/pages/listas_personalizadas_page.dart';

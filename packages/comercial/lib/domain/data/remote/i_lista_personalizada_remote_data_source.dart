@@ -1,17 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:comercial/domain/models/lista_personalizada.dart';
 import 'package:comercial/domain/models/lista_personalizada_resumo.dart';
 
 abstract class IListaPersonalizadaRemoteDataSource {
-  Future<ListaPersonalizada> criar({
-    required int tabelaPrecoId,
-    required DateTime dataExpiracao,
-    List<int> referenciaIds,
-    String? titulo,
-  });
+  Future<ListaPersonalizada> criar(ListaPersonalizadaInput input);
+
+  Future<ListaPersonalizada> atualizar(int id, ListaPersonalizadaInput input);
 
   Future<ListaPersonalizada> atualizarTitulo(int id, String? titulo);
 
   Future<ListaPersonalizada> adicionarItens(int id, List<int> referenciaIds);
+
+  Future<ListaItensLoteResultado> adicionarPorFiltro(int id, ListaItensLote lote);
 
   Future<ListaPersonalizada> removerItens(int id, List<int> referenciaIds);
 
@@ -19,5 +20,13 @@ abstract class IListaPersonalizadaRemoteDataSource {
 
   Future<String> buscarLink(int id);
 
-  Future<PaginaListasPersonalizadas> listar({int page = 1, int limit = 20});
+  Future<ListaPersonalizada> enviarIcone(int id, Uint8List bytes, String fileName);
+
+  Future<ListaPrevia> previa(int id, {int page = 1, int limit = 20});
+
+  Future<PaginaListasPersonalizadas> listar({
+    int page = 1,
+    int limit = 20,
+    ListaTipo? tipo,
+  });
 }

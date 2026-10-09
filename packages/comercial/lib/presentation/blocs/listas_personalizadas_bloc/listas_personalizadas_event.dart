@@ -7,6 +7,14 @@ abstract class ListasPersonalizadasEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class ListasPersonalizadasIniciou extends ListasPersonalizadasEvent {}
+class ListasPersonalizadasIniciou extends ListasPersonalizadasEvent {
+  /// `null` = todas as listas.
+  final ListaTipo? tipo;
+
+  ListasPersonalizadasIniciou({this.tipo});
+
+  @override
+  List<Object?> get props => [tipo];
+}
 
 class ListasPersonalizadasCarregarMaisSolicitado extends ListasPersonalizadasEvent {}

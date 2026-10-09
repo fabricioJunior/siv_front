@@ -38,12 +38,12 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
 
   Future<void> _abrirNovaLista() async {
     await Navigator.pushNamed(context, '/lista_personalizada');
-    if (mounted) _bloc.add(ListasPersonalizadasIniciou());
+    if (mounted) _bloc.add(ListasPersonalizadasIniciou(tipo: _bloc.state.tipo));
   }
 
   Future<void> _abrirLista(int id) async {
     await Navigator.pushNamed(context, '/lista_personalizada', arguments: {'id': id});
-    if (mounted) _bloc.add(ListasPersonalizadasIniciou());
+    if (mounted) _bloc.add(ListasPersonalizadasIniciou(tipo: _bloc.state.tipo));
   }
 
   @override
@@ -65,6 +65,34 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SivTituloPagina(titulo: 'Minhas listas'),
+              BlocBuilder<ListasPersonalizadasBloc, ListasPersonalizadasState>(
+                buildWhen: (a, b) => a.tipo != b.tipo,
+                builder: (context, state) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final f in <(String, ListaTipo?)>[
+                        ('Todas', null),
+                        ('Provador', ListaTipo.provador),
+                        ('Catálogo', ListaTipo.catalogo),
+                      ])
+                        ChoiceChip(
+                          label: Text(f.$1),
+                          selected: state.tipo == f.$2,
+                          onSelected: (_) =>
+                              _bloc.add(ListasPersonalizadasIniciou(tipo: f.$2)),
+                        ),
+                      ActionChip(
+                        avatar: const Icon(Icons.folder_copy_outlined, size: 18),
+                        label: const Text('Grupos'),
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/listas_grupos'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               Expanded(
                 child: BlocBuilder<ListasPersonalizadasBloc,
                     ListasPersonalizadasState>(
@@ -94,7 +122,7 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
             TextButton.icon(
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
-              onPressed: () => _bloc.add(ListasPersonalizadasIniciou()),
+              onPressed: () => _bloc.add(ListasPersonalizadasIniciou(tipo: state.tipo)),
             ),
           ],
         ),
@@ -121,9 +149,14 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         }
         final lista = state.itens[index];
         return ListTile(
+          leading: lista.icone == null
+              ? null
+              : CircleAvatar(backgroundImage: NetworkImage(lista.icone!)),
           title: Text(lista.titulo?.isNotEmpty == true ? lista.titulo! : lista.hash),
           subtitle: Text(
-            '${lista.quantidadeItens} produto(s) · criada em ${_formatarData(lista.criadoEm)}',
+            '${lista.tipo == ListaTipo.catalogo ? 'Catálogo' : 'Provador'}'
+            '${lista.modo == ListaModo.filtro ? ' (filtro)' : ' · ${lista.quantidadeItens} produto(s)'}'
+            ' · criada em ${_formatarData(lista.criadoEm)}',
           ),
           trailing: SivEtiqueta(
             situacao: _etiquetaSituacao(lista.situacao),
@@ -138,12 +171,14 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
   SivEtiquetaSituacao _etiquetaSituacao(ListaPersonalizadaSituacao situacao) =>
       switch (situacao) {
         ListaPersonalizadaSituacao.ativa => SivEtiquetaSituacao.emAndamento,
+        ListaPersonalizadaSituacao.agendada => SivEtiquetaSituacao.conferido,
         ListaPersonalizadaSituacao.cancelada => SivEtiquetaSituacao.cancelado,
         ListaPersonalizadaSituacao.expirada => SivEtiquetaSituacao.cancelado,
       };
 
   String _labelSituacao(ListaPersonalizadaSituacao situacao) => switch (situacao) {
         ListaPersonalizadaSituacao.ativa => 'Ativa',
+        ListaPersonalizadaSituacao.agendada => 'Agendada',
         ListaPersonalizadaSituacao.cancelada => 'Cancelada',
         ListaPersonalizadaSituacao.expirada => 'Expirada',
       };

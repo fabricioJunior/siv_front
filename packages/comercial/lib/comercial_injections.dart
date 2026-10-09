@@ -463,6 +463,18 @@ void _useCases() {
   sl.registerFactory<AtualizarTituloListaPersonalizada>(
     () => AtualizarTituloListaPersonalizada(repository: sl()),
   );
+  sl.registerFactory<AtualizarListaPersonalizada>(
+    () => AtualizarListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<EnviarIconeListaPersonalizada>(
+    () => EnviarIconeListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<AdicionarItensPorFiltroListaPersonalizada>(
+    () => AdicionarItensPorFiltroListaPersonalizada(repository: sl()),
+  );
+  sl.registerFactory<RecuperarPreviaListaPersonalizada>(
+    () => RecuperarPreviaListaPersonalizada(repository: sl()),
+  );
   sl.registerFactory<ListarListasPersonalizadas>(
     () => ListarListasPersonalizadas(repository: sl()),
   );
@@ -716,7 +728,7 @@ void _presentation() {
   );
 
   sl.registerFactory<ListaPersonalizadaBloc>(
-    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+    () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ListasPersonalizadasBloc>(

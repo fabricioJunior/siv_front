@@ -71,6 +71,7 @@ export 'package:produtos/presentantion/widgets/cor_seletor.dart';
 export 'package:produtos/presentantion/widgets/estampa_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 export 'package:produtos/presentantion/widgets/categoria_seletor.dart';
+export 'package:produtos/presentantion/widgets/sub_categoria_seletor.dart';
 export 'package:produtos/presentantion/widgets/marca_seletor.dart';
 export 'package:produtos/presentantion/widgets/etiqueta_seletor.dart';
 export 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';

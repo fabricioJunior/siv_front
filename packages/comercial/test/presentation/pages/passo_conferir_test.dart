@@ -8,7 +8,6 @@ import 'package:comercial/presentation/pages/pedido_entrada/passo_conferir.dart'
 import 'package:comercial/presentation/pages/pedido_entrada/passo_revisar_faturar.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/leitor.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,17 +21,16 @@ class _Sessao implements IAcessoGlobalSessao {
   }
 }
 
-class _Fonte implements ILeitorDataDatasource {
-  @override
-  Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) async =>
-      null;
-  @override
-  Future<LeitorData?> getDataPorProdutoId(int id, {int? tabelaDePrecoId}) async =>
-      null;
-}
-
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   final chamadas = <String>[];
+  final lotes = <Map<int, int>>[];
+
+  @override
+  Future<EntradaResumo> registrarLeituras(int p, Map<int, int> d) async {
+    lotes.add(d);
+    return _resumo();
+  }
+
   @override
   Future<EntradaResumo> corrigirContagem(int p, int produtoId, double para,
       {String? motivo, required String origem}) async {
@@ -77,9 +75,55 @@ EntradaResumo _resumo({List<Map<String, dynamic>> divergencias = const []}) =>
       'divergencias': divergencias,
     });
 
+Future<void> _bipar(WidgetTester t, String codigo) async {
+  await t.enterText(find.byType(TextField).first, codigo);
+  await t.testTextInput.receiveAction(TextInputAction.done);
+  await t.pump();
+  await t.pump();
+  await t.pump();
+}
+
+/// Faz o papel do shell: guarda o pendente e repassa o envio.
+class _Host extends StatefulWidget {
+  static bool falha = false;
+  final List<bool> enviados;
+  final _Remoto remoto;
+  final List<int>? passos;
+  const _Host({required this.enviados, required this.remoto, this.passos});
+
+  @override
+  State<_Host> createState() => _HostState();
+}
+
+class _HostState extends State<_Host> {
+  final pend = <int, int>{};
+
+  @override
+  Widget build(BuildContext context) => PassoConferir(
+        resumo: _resumo(),
+        pendentes: pend,
+        onLeu: (id, d) => setState(() {
+          final n = (pend[id] ?? 0) + d;
+          if (n == 0) {
+            pend.remove(id);
+          } else {
+            pend[id] = n;
+          }
+        }),
+        onEnviar: ({bool irParaRevisar = false}) async {
+          widget.enviados.add(irParaRevisar);
+          if (_Host.falha) return false;
+          setState(pend.clear);
+          if (irParaRevisar) widget.passos?.add(4);
+          return true;
+        },
+        onIrParaPasso: (p) => widget.passos?.add(p),
+      );
+}
+
 void main() {
   late _Remoto remoto;
-  final bipes = <(String, int)>[];
+  final enviados = <bool>[];
 
   Future<void> montar(WidgetTester t, Widget Function() filho) async {
     t.view.physicalSize = const Size(420, 1400);
@@ -102,6 +146,7 @@ void main() {
       DecidirDivergenciaEntrada(remoto),
       RegistrarEtiquetasEntrada(remoto),
       FaturarEntrada(_Conferir(), _Faturar()),
+      RegistrarLeiturasEntrada(remoto),
       _Sessao(),
     );
     addTearDown(bloc.close);
@@ -121,20 +166,13 @@ void main() {
 
   setUp(() {
     remoto = _Remoto();
-    bipes.clear();
+    enviados.clear();
+    _Host.falha = false;
   });
   tearDown(() async => sl.reset());
 
   testWidgets('Conferir: leitor em modo conferência com câmera de 48px', (t) async {
-    await montar(
-      t,
-      () => PassoConferir(
-        resumo: _resumo(),
-        dataSource: _Fonte(),
-        onConferirCodigo: (c, q) => bipes.add((c, q)),
-        onIrParaPasso: (_) {},
-      ),
-    );
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
     expect(find.text('MODO CONFERÊNCIA · CONTADO × LIDO'), findsOneWidget);
     expect(find.text('BIPE O PRODUTO'), findsOneWidget);
     expect(t.getSize(find.byKey(const Key('leitor_camera'))).height,
@@ -142,20 +180,98 @@ void main() {
     expect(find.text('A CONFERIR · 2'), findsOneWidget);
     expect(find.text('2 de 7 peças'), findsOneWidget);
     expect(find.text('CONTINUAR · REVISAR'), findsOneWidget);
+    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+  });
+
+  testWidgets('vários bipes atualizam a tela na hora, sem nenhuma chamada remota',
+      (t) async {
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
+    for (final c in ['A', 'A', 'B', 'B', 'B']) {
+      await _bipar(t, c);
+    }
+    // A: 2+2 = 4/4 conferido; B: 3/3 conferido
+    expect(find.text('2 de 7 peças'), findsNothing);
+    expect(find.text('7 de 7 peças'), findsOneWidget);
+    expect(find.text('CONFERIDOS · 2'), findsOneWidget);
+    expect(find.text('A CONFERIR · 0'), findsOneWidget);
+    expect(find.text('5 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('ENVIAR E REVISAR'), findsOneWidget);
+    expect(remoto.lotes, isEmpty);
+    expect(enviados, isEmpty);
+
+    // mais um bipe no A: excedente
+    await _bipar(t, 'A');
+    expect(find.text('EXCEDENTES'), findsOneWidget);
+    await t.tap(find.byKey(const Key('aba_conferencia_excedentes')));
+    await t.pump();
+    expect(find.text('EXCEDENTE'), findsOneWidget);
+    expect(remoto.lotes, isEmpty);
+  });
+
+  testWidgets('remover por leitura é local e não passa de zero', (t) async {
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
+    await t.tap(find.byType(FilterChip));
+    await t.pump();
+    await _bipar(t, 'B'); // lido 0: ignora
+    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    await _bipar(t, 'A');
+    await _bipar(t, 'A');
+    await _bipar(t, 'A'); // 2 -> 0, o terceiro é ignorado
+    expect(find.text('0 de 7 peças'), findsOneWidget);
+    expect(find.text('2 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(remoto.lotes, isEmpty);
+  });
+
+  testWidgets('código fora da entrada não soma', (t) async {
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
+    await _bipar(t, 'ZZZ');
+    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    expect(find.text('Código ZZZ não pertence a esta entrada.'), findsOneWidget);
+  });
+
+  testWidgets('ENVIAR E REVISAR envia o lote e só então muda de passo', (t) async {
+    final passos = <int>[];
+    await montar(
+      t,
+      () => _Host(enviados: enviados, remoto: remoto, passos: passos),
+    );
+    await _bipar(t, 'A');
+    await _bipar(t, 'B');
+    await t.tap(find.text('ENVIAR E REVISAR'));
+    await t.pump();
+    expect(enviados, [true]);
+    expect(passos, [4]);
+
+    // falha no envio: não muda de passo e mantém o aviso
+    enviados.clear();
+    passos.clear();
+    await _bipar(t, 'B');
+    _Host.falha = true;
+    await t.tap(find.text('ENVIAR E REVISAR'));
+    await t.pump();
+    expect(enviados, [true]);
+    expect(passos, isEmpty);
+    expect(find.byKey(const Key('conferir_pendentes')), findsOneWidget);
+    _Host.falha = false;
+  });
+
+  testWidgets('"Enviar agora" envia sem sair do passo', (t) async {
+    final passos = <int>[];
+    await montar(
+      t,
+      () => _Host(enviados: enviados, remoto: remoto, passos: passos),
+    );
+    await _bipar(t, 'A');
+    await t.tap(find.byKey(const Key('conferir_enviar_agora')));
+    await t.pump();
+    expect(enviados, [false]);
+    expect(passos, isEmpty);
+    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
   });
 
   testWidgets('Conferir: Corrigir abre a folha e corrige com origem conferencia',
       (t) async {
-    await montar(
-      t,
-      () => PassoConferir(
-        resumo: _resumo(),
-        dataSource: _Fonte(),
-        onConferirCodigo: (c, q) => bipes.add((c, q)),
-        onIrParaPasso: (_) {},
-      ),
-    );
-    // só a linha parcial (lido>0) oferece Corrigir
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
     expect(find.byKey(const Key('conferencia_corrigir_1')), findsOneWidget);
     expect(find.byKey(const Key('conferencia_corrigir_2')), findsNothing);
     await t.tap(find.byKey(const Key('conferencia_corrigir_1')));
@@ -164,26 +280,26 @@ void main() {
     expect(find.text('Corrigir contagem'), findsOneWidget);
     expect(find.text('A contagem estava errada'), findsOneWidget);
     expect(find.text('Contado passa a ser 2.'), findsOneWidget);
-    expect(find.text('A contagem está certa, ainda há peças para bipar'),
-        findsOneWidget);
     expect(find.text('CORRIGIR CONTAGEM'), findsOneWidget);
 
     await t.enterText(find.byKey(const Key('corrigir_obs')), 'contei 2x a caixa');
     await t.tap(find.byKey(const Key('corrigir_confirmar')));
     await t.pumpAndSettle();
     expect(remoto.chamadas, ['corrigir 1 2.0 conferencia contei 2x a caixa']);
+    expect(enviados, isEmpty);
+  });
+
+  testWidgets('Corrigir com leitura pendente envia o lote antes', (t) async {
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
+    await _bipar(t, 'A');
+    await t.tap(find.byKey(const Key('conferencia_corrigir_1')));
+    await t.pumpAndSettle();
+    expect(enviados, [false]);
+    expect(find.text('Corrigir contagem'), findsOneWidget);
   });
 
   testWidgets('Conferir: "ainda há peças" não corrige nada', (t) async {
-    await montar(
-      t,
-      () => PassoConferir(
-        resumo: _resumo(),
-        dataSource: _Fonte(),
-        onConferirCodigo: (c, q) {},
-        onIrParaPasso: (_) {},
-      ),
-    );
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
     await t.tap(find.byKey(const Key('conferencia_corrigir_1')));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('opcao_continuar')));

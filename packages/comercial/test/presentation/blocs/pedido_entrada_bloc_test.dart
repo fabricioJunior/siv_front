@@ -43,6 +43,7 @@ class _Sessao implements IAcessoGlobalSessao {
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   Map<String, dynamic>? resposta; // sobrescreve o resumo devolvido
   final chamadas = <String>[];
+  final lotes = <Map<int, int>>[];
   List<ItemContagem>? itens;
   List<int>? ids;
   int? referenciaId;
@@ -74,6 +75,16 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
     String? observacao,
   }) async {
     chamadas.add('decidir $produtoId ${acao.name} $observacao');
+    return EntradaResumo.fromJson(resposta ?? _json());
+  }
+
+  @override
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas,
+  ) async {
+    lotes.add(Map.of(deltas));
+    if (erro != null) throw erro!;
     return EntradaResumo.fromJson(resposta ?? _json());
   }
 
@@ -153,6 +164,7 @@ void main() {
       DecidirDivergenciaEntrada(remoto),
       RegistrarEtiquetasEntrada(remoto),
       FaturarEntrada(_ConferirFalso(), _FaturarFalso()),
+      RegistrarLeiturasEntrada(remoto),
       _Sessao(),
     );
     bloc.add(const PedidoEntradaCarregou(9));
@@ -328,6 +340,101 @@ void main() {
       );
       await bloc.stream.firstWhere((s) => s.mensagem != null);
       expect(remoto.chamadas.single, 'decidir 5 manter veio a menos');
+    });
+  });
+
+  group('conferência local (leituras em lote)', () {
+    Map<String, dynamic> conf({int lido = 2, int lido2 = 0}) => {
+          ..._json(livre: false),
+          'etapa': 'conferindo',
+          'conferencia': {
+            'totalContado': 7,
+            'totalLido': lido + lido2,
+            'itens': [
+              {'produtoId': 5, 'contado': 4, 'lido': lido, 'situacao': 'parcial'},
+              {'produtoId': 6, 'contado': 3, 'lido': lido2, 'situacao': 'pendente'},
+            ],
+          },
+        };
+
+    Future<void> carregar() async {
+      remoto.resposta = conf();
+      bloc.add(const PedidoEntradaCarregou(9));
+      await bloc.stream.firstWhere((s) => s.etapaAtual == 3);
+    }
+
+    test('Leu acumula localmente, sem chamar o remote', () async {
+      await carregar();
+      bloc
+        ..add(const PedidoEntradaLeu(5, 1))
+        ..add(const PedidoEntradaLeu(5, 1))
+        ..add(const PedidoEntradaLeu(6, 1));
+      final st = await bloc.stream.firstWhere(
+        (s) => s.leiturasPendentes.length == 2 && s.leiturasPendentes[5] == 2,
+      );
+      expect(st.leiturasPendentes, {5: 2, 6: 1});
+      expect(remoto.lotes, isEmpty);
+      expect(st.salvando, isFalse);
+    });
+
+    test('lido nunca fica abaixo de zero (clamp) e produto de fora é ignorado',
+        () async {
+      await carregar();
+      bloc
+        ..add(const PedidoEntradaLeu(6, -1)) // lido 0: ignora
+        ..add(const PedidoEntradaLeu(99, 1)) // fora da entrada: ignora
+        ..add(const PedidoEntradaLeu(5, -2)) // lido 2 -> 0 ok
+        ..add(const PedidoEntradaLeu(5, -1)); // abaixo de 0: ignora
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(bloc.state.leiturasPendentes, {5: -2});
+      bloc.add(const PedidoEntradaLeu(5, 2)); // volta a zero: some do mapa
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isEmpty);
+    });
+
+    test('Enviou faz UMA chamada com os deltas, limpa e atualiza o resumo',
+        () async {
+      await carregar();
+      bloc
+        ..add(const PedidoEntradaLeu(5, 1))
+        ..add(const PedidoEntradaLeu(5, 1))
+        ..add(const PedidoEntradaLeu(6, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes[5] == 2 && s.leiturasPendentes.containsKey(6));
+      remoto.resposta = conf(lido: 4, lido2: 1);
+      bloc.add(const PedidoEntradaEnviouLeituras());
+      final st = await bloc.stream.firstWhere(
+        (s) => !s.salvando && s.leiturasPendentes.isEmpty && s.resumo!.conferencia.totalLido == 5,
+      );
+      expect(remoto.lotes, [
+        {5: 2, 6: 1},
+      ]);
+      expect(st.passoVisivel, 3);
+    });
+
+    test('Enviou com irParaRevisar segue para Revisar só no sucesso', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      remoto.erro = Exception('falhou');
+      bloc.add(const PedidoEntradaEnviouLeituras(irParaRevisar: true));
+      var st = await bloc.stream.firstWhere((s) => s.erro != null);
+      expect(st.leiturasPendentes, {5: 1}); // mantém o pendente
+      expect(st.passoVisivel, 3);
+      expect(st.salvando, isFalse);
+
+      remoto.erro = null;
+      bloc.add(const PedidoEntradaEnviouLeituras(irParaRevisar: true));
+      st = await bloc.stream.firstWhere((s) => s.passoVisivel == 4);
+      expect(st.leiturasPendentes, isEmpty);
+      expect(remoto.lotes, hasLength(2));
+    });
+
+    test('Descartou limpa o pendente sem rede', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      bloc.add(const PedidoEntradaDescartouLeituras());
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isEmpty);
+      expect(remoto.lotes, isEmpty);
     });
   });
 }

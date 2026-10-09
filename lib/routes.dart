@@ -751,6 +751,12 @@ Map<String, Widget Function(BuildContext)> routes = {
           onChanged: data.onChanged,
           titulo: 'Tabela de preço',
         ),
+        funcionarioSeletor: (data) => FuncionarioSeletor(
+          modo: FuncionarioSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial ?? const [],
+          onChanged: data.onChanged,
+          titulo: 'Funcionário responsável',
+        ),
       ),
     );
   },

@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:cpf_cnpj_validator/cpf_validator.dart';
 import 'package:date_format_field/date_format_field.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,8 @@ class DateInput extends StatelessWidget {
 }
 
 bool cpfEhValido(String value) => CPFValidator.isValid(value);
+
+bool cnpjEhValido(String value) => CNPJValidator.isValid(value);
 
 /// Formata CPF (11 dígitos) ou CNPJ (14 dígitos) para exibição.
 /// Se não tiver 11 nem 14 dígitos, retorna o valor original sem alteração.
@@ -117,6 +120,69 @@ class CPFInput extends StatelessWidget {
           return 'CPF inválido, verifique os números digitados';
         }
         return null;
+      },
+    );
+  }
+}
+
+/// Campo de documento: CPF (pessoa física) ou CNPJ (pessoa jurídica), conforme [juridica].
+/// Troca máscara, rótulo e validação; o controller/valor é do chamador (limpe-o ao trocar o tipo).
+class DocumentoInput extends StatefulWidget {
+  final bool juridica;
+  final String? valorInicial;
+  final bool? bloqueado;
+  final bool obrigatorio;
+  final void Function(String)? onChanged;
+  final TextEditingController? controller;
+
+  const DocumentoInput({
+    super.key,
+    this.juridica = false,
+    this.valorInicial,
+    this.bloqueado,
+    this.obrigatorio = true,
+    this.onChanged,
+    this.controller,
+  });
+
+  @override
+  State<DocumentoInput> createState() => _DocumentoInputState();
+}
+
+class _DocumentoInputState extends State<DocumentoInput> {
+  final _mascaraCpf = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+  final _mascaraCnpj = MaskTextInputFormatter(
+    mask: '##.###.###/####-##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final rotulo = widget.juridica ? 'CNPJ' : 'CPF';
+    return TextFormField(
+      key: ValueKey('documento_$rotulo'),
+      controller: widget.controller,
+      initialValue: widget.controller == null ? widget.valorInicial : null,
+      readOnly: widget.bloqueado ?? false,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: widget.obrigatorio ? '$rotulo *' : rotulo,
+        border: const OutlineInputBorder(),
+      ),
+      onChanged: widget.onChanged,
+      inputFormatters: [widget.juridica ? _mascaraCnpj : _mascaraCpf],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return widget.obrigatorio ? 'Informe o $rotulo' : null;
+        }
+        final valido =
+            widget.juridica ? cnpjEhValido(value) : cpfEhValido(value);
+        return valido ? null : '$rotulo inválido, verifique os números digitados';
       },
     );
   }

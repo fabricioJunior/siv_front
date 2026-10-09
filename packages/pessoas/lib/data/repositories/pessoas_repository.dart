@@ -59,7 +59,7 @@ class PessoasRepository implements IPessoasRepository {
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
     required String? uf,
-    required DateTime dataDeNascimento,
+    required DateTime? dataDeNascimento,
   }) {
     return remoteDataSource.criarPessoa(
       bloqueado: bloqueado,

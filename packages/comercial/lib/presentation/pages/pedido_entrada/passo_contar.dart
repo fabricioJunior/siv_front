@@ -94,6 +94,10 @@ class _PassoContarState extends State<PassoContar> {
           origem: _r.etiquetas.concluidas ? 'edicao' : 'contagem',
         ),
       );
+      // Editou depois das etiquetas: segue pra Etiquetas (só a diferença).
+      if (_r.etiquetas.impressasPorProduto.isNotEmpty) {
+        bloc.add(const PedidoEntradaSelecionouPasso(2));
+      }
     }
   }
 
@@ -115,6 +119,9 @@ class _PassoContarState extends State<PassoContar> {
       descricaoInicial: e.descricao,
       existentes: e.existentes,
       lidoPorProduto: _lidos,
+      impressasPorProduto: _r.etiquetas.impressasPorProduto.isEmpty
+          ? null
+          : _r.etiquetas.impressasPorProduto,
       referenciaSeletor: s.referenciaContagemSeletor,
       corSeletor: s.corSeletor,
       tamanhoSeletor: s.tamanhoSeletor,

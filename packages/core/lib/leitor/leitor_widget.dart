@@ -550,7 +550,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       ? null
                       : _escanearComCamera,
                   icon: Icon(Icons.qr_code_scanner_outlined, color: cores.aco),
-                  visualDensity: VisualDensity.compact,
+                  visualDensity: widget.modoConferencia
+                      ? VisualDensity.standard
+                      : VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: widget.modoConferencia
                       ? const BoxConstraints(minWidth: 48, minHeight: 48)

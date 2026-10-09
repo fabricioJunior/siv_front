@@ -34,6 +34,10 @@ class PainelContagemGrade extends StatefulWidget {
 
   /// produtoId -> lido na conferência (o contado nunca fica abaixo dele).
   final Map<int, double> lidoPorProduto;
+
+  /// Etiquetas já impressas por produto (não nulo = edição após etiquetas:
+  /// o salvar mostra só a diferença a imprimir).
+  final Map<int, double>? impressasPorProduto;
   final SeletorWidget? referenciaSeletor;
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
@@ -53,6 +57,7 @@ class PainelContagemGrade extends StatefulWidget {
     this.descricaoInicial,
     this.existentes = const [],
     this.lidoPorProduto = const {},
+    this.impressasPorProduto,
     this.referenciaSeletor,
     required this.corSeletor,
     required this.tamanhoSeletor,
@@ -250,6 +255,26 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     return t;
   }
 
+  /// Etiquetas a imprimir a mais com a edição atual (3c/5j).
+  double get _aImprimir {
+    final imp = widget.impressasPorProduto;
+    if (imp == null) return 0;
+    var t = 0.0;
+    for (final cor in _cores.keys) {
+      for (final tam in _tamanhos.keys) {
+        final v = _ler(_celula(cor, tam));
+        if (v == null) continue;
+        final produto = widget.existentes
+            .where((e) => e.corId == cor && e.tamanhoId == tam)
+            .map((e) => e.produtoId)
+            .firstOrNull;
+        final dif = v - (imp[produto] ?? 0);
+        if (dif > 0) t += dif;
+      }
+    }
+    return t;
+  }
+
   bool get _podeSalvar =>
       !_temViolacao && _montar().isNotEmpty;
 
@@ -393,6 +418,17 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               ],
             ),
           ),
+          if (widget.impressasPorProduto != null)
+            Container(
+              key: const Key('painel_aviso_etiquetas'),
+              width: double.infinity,
+              color: cores.parcialFundo,
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                'Etiquetas já impressas. Ao salvar, o app mostra só a diferença: quantas imprimir a mais e quantas descartar. As leituras continuam valendo.',
+                style: textos.apoio.copyWith(color: cores.parcialTexto),
+              ),
+            ),
           if (tabs) _abas(cores, textos),
           Expanded(
             child: SingleChildScrollView(
@@ -416,7 +452,11 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                   )
                 : null,
             acao: BotaoPrincipalEntrada(
-              rotulo: _livre ? 'Salvar sem referência' : 'SALVAR',
+              rotulo: _livre
+                  ? 'Salvar sem referência'
+                  : widget.impressasPorProduto != null
+                      ? 'SALVAR · IMPRIMIR ${qtd(_aImprimir)}'
+                      : 'SALVAR',
               onPressed: podeSalvar ? _salvar : null,
             ),
           ),

@@ -8,13 +8,37 @@ import 'package:produtos/presentation.dart';
 
 /// Wizard de cadastro de referência, em página inteira: categoria ->
 /// (subcategoria) -> nome -> preço -> variações. Retorna `true` se a
-/// referência foi criada.
+/// referência foi criada. Retorna o `int?` id da referência criada (null se
+/// saiu sem criar); a referência já existe na API mesmo se sair antes de
+/// concluir as variações.
 class ReferenciaCadastroPage extends StatelessWidget {
-  const ReferenciaCadastroPage({super.key});
+  /// Pré-preenchimento opcional: nome e cores/tamanhos que já abrem
+  /// selecionados no passo de variações.
+  final String? nomeInicial;
+  final List<int> corIdsIniciais;
+  final List<int> tamanhoIdsIniciais;
 
-  static Future<bool?> show({required BuildContext context}) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const ReferenciaCadastroPage()),
+  const ReferenciaCadastroPage({
+    super.key,
+    this.nomeInicial,
+    this.corIdsIniciais = const [],
+    this.tamanhoIdsIniciais = const [],
+  });
+
+  static Future<int?> show({
+    required BuildContext context,
+    String? nomeInicial,
+    List<int> corIdsIniciais = const [],
+    List<int> tamanhoIdsIniciais = const [],
+  }) {
+    return Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) => ReferenciaCadastroPage(
+          nomeInicial: nomeInicial,
+          corIdsIniciais: corIdsIniciais,
+          tamanhoIdsIniciais: tamanhoIdsIniciais,
+        ),
+      ),
     );
   }
 
@@ -22,14 +46,15 @@ class ReferenciaCadastroPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<ReferenciaCadastroBloc>(
       create: (_) =>
-          sl<ReferenciaCadastroBloc>()..add(ReferenciaCadastroIniciou()),
+          sl<ReferenciaCadastroBloc>()
+            ..add(ReferenciaCadastroIniciou(nomeInicial: nomeInicial)),
       child: BlocBuilder<ReferenciaCadastroBloc, ReferenciaCadastroState>(
         builder: (context, state) {
           final largo = MediaQuery.of(context).size.width >= 900;
-          return PopScope<bool>(
+          return PopScope<int>(
             canPop: false,
             onPopInvokedWithResult: (didPop, _) {
-              if (!didPop) Navigator.of(context).pop(state.criada);
+              if (!didPop) Navigator.of(context).pop(state.referenciaId);
             },
             child: Scaffold(
               backgroundColor: Colors.white,
@@ -44,7 +69,11 @@ class ReferenciaCadastroPage extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Expanded(child: _Corpo(state: state)),
+                          Expanded(child: _Corpo(
+                              state: state,
+                              corIds: corIdsIniciais,
+                              tamanhoIds: tamanhoIdsIniciais,
+                            )),
                           if (largo) ...[
                             const VerticalDivider(width: 1),
                             SizedBox(width: 300, child: _Resumo(state: state)),
@@ -98,7 +127,7 @@ class _Cabecalho extends StatelessWidget {
               spacing: 6,
               children: [
                 InkWell(
-                  onTap: () => Navigator.of(context).pop(state.criada),
+                  onTap: () => Navigator.of(context).pop(state.referenciaId),
                   child: Text(
                     'Produtos / Referências /',
                     style: tema.bodyMedium?.copyWith(color: Colors.black54),
@@ -111,7 +140,7 @@ class _Cabecalho extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close),
             tooltip: 'Fechar',
-            onPressed: () => Navigator.of(context).pop(state.criada),
+            onPressed: () => Navigator.of(context).pop(state.referenciaId),
           ),
         ],
       ),
@@ -258,7 +287,13 @@ class _Resumo extends StatelessWidget {
 
 class _Corpo extends StatelessWidget {
   final ReferenciaCadastroState state;
-  const _Corpo({required this.state});
+  final List<int> corIds;
+  final List<int> tamanhoIds;
+  const _Corpo({
+    required this.state,
+    this.corIds = const [],
+    this.tamanhoIds = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +368,8 @@ class _Corpo extends StatelessWidget {
         tamanhoIdsNaGrade: const {},
         estampaIdsNaGrade: const {},
         chavesNaGrade: const {},
+        coresSelecionadasIniciais: corIds.toSet(),
+        tamanhosSelecionadosIniciais: tamanhoIds.toSet(),
         mobile: MediaQuery.sizeOf(context).width < 720,
         onConcluir: (_) => context.read<ReferenciaCadastroBloc>().add(
           ReferenciaCadastroVariacoesConcluidas(),

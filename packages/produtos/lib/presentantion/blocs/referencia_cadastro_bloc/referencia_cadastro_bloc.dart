@@ -24,6 +24,8 @@ class ReferenciaCadastroBloc
   final ListarPrecosDaReferenciaPorTabela _listarPrecos;
   final SalvarPrecoDaReferencia _salvarPreco;
 
+  String? _nomeInicial;
+
   ReferenciaCadastroBloc(
     this._recuperarCategorias,
     this._recuperarSubCategorias,
@@ -71,6 +73,8 @@ class ReferenciaCadastroBloc
     ReferenciaCadastroIniciou event,
     Emitter<ReferenciaCadastroState> emit,
   ) async {
+    final nomeInicial = event.nomeInicial?.trim();
+    _nomeInicial = nomeInicial == null || nomeInicial.isEmpty ? null : nomeInicial;
     try {
       emit(state.copyWith(carregandoCategorias: true));
       final categorias = await _recuperarCategorias.call();
@@ -109,7 +113,7 @@ class ReferenciaCadastroBloc
         state.copyWith(
           carregandoSubCategorias: false,
           subCategorias: subCategorias,
-          nome: event.categoria.nome,
+          nome: _nomeInicial ?? event.categoria.nome,
           step: subCategorias.isEmpty
               ? ReferenciaCadastroStep.nome
               : ReferenciaCadastroStep.subCategoria,
@@ -133,7 +137,7 @@ class ReferenciaCadastroBloc
     emit(
       state.copyWith(
         subCategoria: () => event.subCategoria,
-        nome: event.subCategoria.nome,
+        nome: _nomeInicial ?? event.subCategoria.nome,
         step: ReferenciaCadastroStep.nome,
       ),
     );
@@ -232,6 +236,7 @@ class ReferenciaCadastroBloc
     ReferenciaCadastroReiniciar event,
     Emitter<ReferenciaCadastroState> emit,
   ) {
+    _nomeInicial = null; // "cadastrar outra": volta ao nome gerado
     final manter = event.manterCategoria && state.categoria != null;
     emit(
       ReferenciaCadastroState(

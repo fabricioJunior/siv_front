@@ -227,30 +227,31 @@ class _GrupoAssociar extends StatefulWidget {
 }
 
 class _GrupoAssociarState extends State<_GrupoAssociar> {
-  late final _nome = TextEditingController(text: widget.descricao);
   bool _criar = false;
   int? _referenciaId;
-  int? _categoriaId;
 
-  @override
-  void dispose() {
-    _nome.dispose();
-    super.dispose();
-  }
-
-  bool get _pronto => (_criar ? _categoriaId : _referenciaId) != null;
-
-  void _associar() {
+  void _associar([int? referenciaId]) {
     context.read<PedidoEntradaBloc>().add(
           PedidoEntradaAssociouContagemLivre(
             [for (final c in widget.itens) c.id],
-            referenciaId: _criar ? null : _referenciaId,
-            categoriaId: _criar ? _categoriaId : null,
-            nome: _criar && _nome.text.trim().isNotEmpty
-                ? _nome.text.trim()
-                : null,
+            referenciaId: referenciaId ?? _referenciaId,
           ),
         );
+  }
+
+  /// Abre o wizard completo de cadastro de referência (rota montada no app),
+  /// já com o nome e as cores/tamanhos contados; ao voltar com o id da
+  /// referência criada, associa o grupo a ela.
+  Future<void> _criarReferencia() async {
+    final id = await Navigator.of(context).pushNamed<int>(
+      '/referencia_cadastro',
+      arguments: {
+        'nome': widget.descricao,
+        'corIds': widget.itens.map((c) => c.corId).toSet().toList(),
+        'tamanhoIds': widget.itens.map((c) => c.tamanhoId).toSet().toList(),
+      },
+    );
+    if (id != null && mounted) _associar(id);
   }
 
   @override
@@ -300,33 +301,27 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
                 ),
               ),
             )
-          else ...[
-            Text('NOME DA REFERÊNCIA',
-                style: textos.rotulo.copyWith(color: cores.aco)),
-            TextField(controller: _nome),
-            const SizedBox(height: 12),
-            Text('CATEGORIA', style: textos.rotulo.copyWith(color: cores.aco)),
-            widget.seletores.categoriaSeletor(
-              SeletorData(
-                compacto: true,
-                onChanged: (itens) => setState(
-                  () => _categoriaId = itens.isEmpty ? null : itens.first.id,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
+          else
             Text(
-              'Fornecedor e preço vêm do pedido. As cores e tamanhos contados viram SKUs.',
+              'Abre o cadastro completo da referência, já com as cores e '
+              'tamanhos contados. Ao concluir, o grupo é associado a ela.',
               style: textos.apoio,
             ),
-          ],
           const SizedBox(height: 12),
           SizedBox(
             height: 48,
             child: FilledButton(
-              key: Key('entrada_associar_${widget.descricao}'),
-              onPressed: _pronto && !widget.salvando ? _associar : null,
-              child: const Text('Associar'),
+              key: Key(_criar
+                  ? 'entrada_criar_referencia_${widget.descricao}'
+                  : 'entrada_associar_${widget.descricao}'),
+              onPressed: widget.salvando
+                  ? null
+                  : _criar
+                      ? _criarReferencia
+                      : _referenciaId != null
+                          ? _associar
+                          : null,
+              child: Text(_criar ? 'Criar referência nova' : 'Associar'),
             ),
           ),
         ],

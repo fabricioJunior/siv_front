@@ -4,6 +4,7 @@ import 'package:comercial/models.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/remote_data_sourcers.dart';
 
 part 'ecommerce_referencias_event.dart';
 part 'ecommerce_referencias_state.dart';
@@ -362,8 +363,15 @@ class EcommerceReferenciasBloc
           referenciaId: ids[i],
         );
         adicionados++;
-      } catch (_) {
-        falhas.add(EcommerceLoteFalha(id: ids[i]));
+      } catch (e) {
+        // Guarda o motivo que o servidor deu (ex.: referência duplicada) para a tela mostrar.
+        falhas.add(
+          EcommerceLoteFalha(
+            id: ids[i],
+            referenciaId: ids[i],
+            mensagem: mensagemDeErroApi(e, 'Não foi possível adicionar a referência.'),
+          ),
+        );
       }
     }
 

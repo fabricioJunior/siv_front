@@ -15,12 +15,19 @@ class AdicionarVariacoesIniciou extends AdicionarVariacoesEvent {
   /// grade -- usadas pra calcular o diff de combinações novas.
   final Set<String> chavesNaGrade;
 
+  /// Seleção inicial do rascunho (ex.: cores/tamanhos já contados). Não é a
+  /// grade existente -- essa vai em [corIdsNaGrade]/[tamanhoIdsNaGrade].
+  final Set<int> coresSelecionadasIniciais;
+  final Set<int> tamanhosSelecionadosIniciais;
+
   AdicionarVariacoesIniciou({
     required this.referenciaId,
     this.corIdsNaGrade = const {},
     this.tamanhoIdsNaGrade = const {},
     this.estampaIdsNaGrade = const {},
     this.chavesNaGrade = const {},
+    this.coresSelecionadasIniciais = const {},
+    this.tamanhosSelecionadosIniciais = const {},
   });
 
   @override
@@ -30,6 +37,8 @@ class AdicionarVariacoesIniciou extends AdicionarVariacoesEvent {
     tamanhoIdsNaGrade,
     estampaIdsNaGrade,
     chavesNaGrade,
+    coresSelecionadasIniciais,
+    tamanhosSelecionadosIniciais,
   ];
 }
 

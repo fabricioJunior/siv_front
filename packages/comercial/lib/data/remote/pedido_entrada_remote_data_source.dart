@@ -116,12 +116,119 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<EntradaResumo> registrarContagem(
     int pedidoId,
+    List<ItemContagem> itens, {
+    String? origem,
+    String? motivo,
+  }) async =>
+      _resumo(
+        (await put(
+          body: {
+            'itens': itens.map((i) => i.toJson()).toList(),
+            if (origem != null) 'origem': origem,
+            if (motivo != null) 'motivo': motivo,
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/contagem'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> corrigirContagem(
+    int pedidoId,
+    int produtoId,
+    double para, {
+    String? motivo,
+    required String origem,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            'produtoId': produtoId,
+            'para': para,
+            'origem': origem,
+            if (motivo != null) 'motivo': motivo,
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/contagem/correcoes'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> decidirDivergencia(
+    int pedidoId,
+    int produtoId,
+    AcaoDivergencia acao, {
+    String? observacao,
+  }) async =>
+      _resumo(
+        (await put(
+          body: {
+            'acao': acao.name,
+            if (observacao != null) 'observacao': observacao,
+          },
+          pathParameters: {
+            'path': '/$pedidoId/entrada/divergencias/$produtoId',
+          },
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> registrarEtiquetas(
+    int pedidoId, {
+    Map<int, double>? itens,
+    bool pular = false,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            if (itens != null)
+              'itens': [
+                for (final e in itens.entries)
+                  {'produtoId': e.key, 'quantidade': e.value},
+              ],
+            if (pular) 'pular': true,
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/etiquetas'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> registrarContagemLivre(
+    int pedidoId,
     List<ItemContagem> itens,
   ) async =>
       _resumo(
         (await put(
           body: {'itens': itens.map((i) => i.toJson()).toList()},
-          pathParameters: {'path': '/$pedidoId/entrada/contagem'},
+          pathParameters: {'path': '/$pedidoId/entrada/contagem-livre'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> associarContagemLivre(
+    int pedidoId,
+    List<int> ids, {
+    int? referenciaId,
+    int? categoriaId,
+    String? nome,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            'ids': ids,
+            if (referenciaId != null) 'referenciaId': referenciaId,
+            if (categoriaId != null)
+              'preCadastro': {
+                'categoriaId': categoriaId,
+                if (nome != null) 'nome': nome,
+              },
+          },
+          pathParameters: {
+            'path': '/$pedidoId/entrada/contagem-livre/associar',
+          },
         ))
             .body,
       );

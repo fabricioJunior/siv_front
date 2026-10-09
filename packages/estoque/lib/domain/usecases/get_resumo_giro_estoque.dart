@@ -4,11 +4,10 @@ import 'package:estoque/domain/models/relatorio_giro_estoque.dart';
 class GetResumoGiroEstoque {
   final IRelatorioEstoqueRepository _repository;
   GetResumoGiroEstoque({required IRelatorioEstoqueRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   Future<GiroEstoqueResumo> call({
     required List<int> empresaIds,
     required FiltroGiroEstoque filtro,
-  }) =>
-      _repository.giroResumo(empresaIds: empresaIds, filtro: filtro);
+  }) => _repository.giroResumo(empresaIds: empresaIds, filtro: filtro);
 }

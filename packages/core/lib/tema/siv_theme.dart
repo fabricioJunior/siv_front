@@ -24,6 +24,17 @@ class SivColors extends ThemeExtension<SivColors> {
   final Color falhaBorda;
   final Color emAndamentoFundo;
 
+  // Conferência (conferido / parcial / excedente). Texto do excedente = [vinho].
+  final Color conferidoTexto;
+  final Color conferidoFundo;
+  final Color conferidoEtiqueta;
+  final Color parcialTexto;
+  final Color parcialFundo;
+  final Color parcialEtiqueta;
+  final Color parcialBorda;
+  final Color excedenteFundo;
+  final Color excedenteEtiqueta;
+
   const SivColors({
     required this.papel,
     required this.superficie,
@@ -43,6 +54,15 @@ class SivColors extends ThemeExtension<SivColors> {
     required this.falhaFundo,
     required this.falhaBorda,
     required this.emAndamentoFundo,
+    required this.conferidoTexto,
+    required this.conferidoFundo,
+    required this.conferidoEtiqueta,
+    required this.parcialTexto,
+    required this.parcialFundo,
+    required this.parcialEtiqueta,
+    required this.parcialBorda,
+    required this.excedenteFundo,
+    required this.excedenteEtiqueta,
   });
 
   static const SivColors padrao = SivColors(
@@ -64,6 +84,15 @@ class SivColors extends ThemeExtension<SivColors> {
     falhaFundo: Color(0xFFF6E9E9),
     falhaBorda: Color(0xFFC99B9B),
     emAndamentoFundo: Color(0xFFD6EBFF),
+    conferidoTexto: Color(0xFF2F6B45),
+    conferidoFundo: Color(0xFFE8F2EB),
+    conferidoEtiqueta: Color(0xFFCFE4D6),
+    parcialTexto: Color(0xFF7A5A12),
+    parcialFundo: Color(0xFFFBF5E6),
+    parcialEtiqueta: Color(0xFFF1E2B8),
+    parcialBorda: Color(0xFFE3CF9A),
+    excedenteFundo: Color(0xFFF8EAEA),
+    excedenteEtiqueta: Color(0xFFEFD0D0),
   );
 
   /// Texto principal sobre papel (100%).
@@ -104,6 +133,15 @@ class SivColors extends ThemeExtension<SivColors> {
     Color? falhaFundo,
     Color? falhaBorda,
     Color? emAndamentoFundo,
+    Color? conferidoTexto,
+    Color? conferidoFundo,
+    Color? conferidoEtiqueta,
+    Color? parcialTexto,
+    Color? parcialFundo,
+    Color? parcialEtiqueta,
+    Color? parcialBorda,
+    Color? excedenteFundo,
+    Color? excedenteEtiqueta,
   }) {
     return SivColors(
       papel: papel ?? this.papel,
@@ -124,6 +162,15 @@ class SivColors extends ThemeExtension<SivColors> {
       falhaFundo: falhaFundo ?? this.falhaFundo,
       falhaBorda: falhaBorda ?? this.falhaBorda,
       emAndamentoFundo: emAndamentoFundo ?? this.emAndamentoFundo,
+      conferidoTexto: conferidoTexto ?? this.conferidoTexto,
+      conferidoFundo: conferidoFundo ?? this.conferidoFundo,
+      conferidoEtiqueta: conferidoEtiqueta ?? this.conferidoEtiqueta,
+      parcialTexto: parcialTexto ?? this.parcialTexto,
+      parcialFundo: parcialFundo ?? this.parcialFundo,
+      parcialEtiqueta: parcialEtiqueta ?? this.parcialEtiqueta,
+      parcialBorda: parcialBorda ?? this.parcialBorda,
+      excedenteFundo: excedenteFundo ?? this.excedenteFundo,
+      excedenteEtiqueta: excedenteEtiqueta ?? this.excedenteEtiqueta,
     );
   }
 
@@ -157,6 +204,15 @@ class SivColors extends ThemeExtension<SivColors> {
         other.emAndamentoFundo,
         t,
       )!,
+      conferidoTexto: Color.lerp(conferidoTexto, other.conferidoTexto, t)!,
+      conferidoFundo: Color.lerp(conferidoFundo, other.conferidoFundo, t)!,
+      conferidoEtiqueta: Color.lerp(conferidoEtiqueta, other.conferidoEtiqueta, t)!,
+      parcialTexto: Color.lerp(parcialTexto, other.parcialTexto, t)!,
+      parcialFundo: Color.lerp(parcialFundo, other.parcialFundo, t)!,
+      parcialEtiqueta: Color.lerp(parcialEtiqueta, other.parcialEtiqueta, t)!,
+      parcialBorda: Color.lerp(parcialBorda, other.parcialBorda, t)!,
+      excedenteFundo: Color.lerp(excedenteFundo, other.excedenteFundo, t)!,
+      excedenteEtiqueta: Color.lerp(excedenteEtiqueta, other.excedenteEtiqueta, t)!,
     );
   }
 }

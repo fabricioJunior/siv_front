@@ -39,4 +39,18 @@ abstract class IPedidoEntradaRemoteDataSource {
     int pedidoId,
     List<ItemContagem> itens,
   );
+
+  Future<EntradaResumo> registrarContagemLivre(
+    int pedidoId,
+    List<ItemContagem> itens,
+  );
+
+  /// Informar [referenciaId] OU [categoriaId] (pré-cadastro com [nome]).
+  Future<EntradaResumo> associarContagemLivre(
+    int pedidoId,
+    List<int> ids, {
+    int? referenciaId,
+    int? categoriaId,
+    String? nome,
+  });
 }

@@ -20,6 +20,8 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   final IgnorarLinhaEntrada _ignorar;
   final ResolverDivergenciaEntrada _resolverDivergencia;
   final RegistrarContagemEntrada _registrarContagem;
+  final RegistrarContagemLivreEntrada _registrarContagemLivre;
+  final AssociarContagemLivreEntrada _associarContagemLivre;
 
   int? _pedidoId;
 
@@ -32,6 +34,8 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     this._ignorar,
     this._resolverDivergencia,
     this._registrarContagem,
+    this._registrarContagemLivre,
+    this._associarContagemLivre,
   ) : super(const PedidoEntradaState()) {
     on<PedidoEntradaCarregou>(_onCarregou);
     on<PedidoEntradaImportouNfe>(_onImportou);
@@ -63,6 +67,26 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
         emit,
         () => _registrarContagem(_pedidoId!, e.itens),
         'Contagem registrada',
+      ),
+    );
+    on<PedidoEntradaRegistrouContagemLivre>(
+      (e, emit) => _salvar(
+        emit,
+        () => _registrarContagemLivre(_pedidoId!, e.itens),
+        'Contagem sem referência registrada',
+      ),
+    );
+    on<PedidoEntradaAssociouContagemLivre>(
+      (e, emit) => _salvar(
+        emit,
+        () => _associarContagemLivre(
+          _pedidoId!,
+          e.ids,
+          referenciaId: e.referenciaId,
+          categoriaId: e.categoriaId,
+          nome: e.nome,
+        ),
+        'Contagem associada à referência',
       ),
     );
   }

@@ -87,3 +87,29 @@ class PedidoEntradaRegistrouContagem extends PedidoEntradaEvent {
   @override
   List<Object?> get props => [itens.length];
 }
+
+class PedidoEntradaRegistrouContagemLivre extends PedidoEntradaEvent {
+  final List<ItemContagem> itens;
+  const PedidoEntradaRegistrouContagemLivre(this.itens);
+
+  @override
+  List<Object?> get props => [itens.length];
+}
+
+/// Associa contagens sem referência a uma referência existente
+/// ([referenciaId]) ou a uma nova ([categoriaId] + [nome]).
+class PedidoEntradaAssociouContagemLivre extends PedidoEntradaEvent {
+  final List<int> ids;
+  final int? referenciaId;
+  final int? categoriaId;
+  final String? nome;
+  const PedidoEntradaAssociouContagemLivre(
+    this.ids, {
+    this.referenciaId,
+    this.categoriaId,
+    this.nome,
+  });
+
+  @override
+  List<Object?> get props => [ids, referenciaId, categoriaId, nome];
+}

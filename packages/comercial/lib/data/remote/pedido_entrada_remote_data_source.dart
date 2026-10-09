@@ -125,4 +125,43 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
         ))
             .body,
       );
+
+  @override
+  Future<EntradaResumo> registrarContagemLivre(
+    int pedidoId,
+    List<ItemContagem> itens,
+  ) async =>
+      _resumo(
+        (await put(
+          body: {'itens': itens.map((i) => i.toJson()).toList()},
+          pathParameters: {'path': '/$pedidoId/entrada/contagem-livre'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> associarContagemLivre(
+    int pedidoId,
+    List<int> ids, {
+    int? referenciaId,
+    int? categoriaId,
+    String? nome,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            'ids': ids,
+            if (referenciaId != null) 'referenciaId': referenciaId,
+            if (categoriaId != null)
+              'preCadastro': {
+                'categoriaId': categoriaId,
+                if (nome != null) 'nome': nome,
+              },
+          },
+          pathParameters: {
+            'path': '/$pedidoId/entrada/contagem-livre/associar',
+          },
+        ))
+            .body,
+      );
 }

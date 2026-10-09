@@ -35,10 +35,36 @@ abstract class IPedidoEntradaRemoteDataSource {
     String? observacao,
   );
 
+  /// [origem] (contagem|conferencia|revisao|edicao) e [motivo] vão pra auditoria.
   Future<EntradaResumo> registrarContagem(
     int pedidoId,
-    List<ItemContagem> itens,
-  );
+    List<ItemContagem> itens, {
+    String? origem,
+    String? motivo,
+  });
+
+  /// Corrige o contado de um produto (422 se [para] < lido).
+  Future<EntradaResumo> corrigirContagem(
+    int pedidoId,
+    int produtoId,
+    double para, {
+    String? motivo,
+    required String origem,
+  });
+
+  Future<EntradaResumo> decidirDivergencia(
+    int pedidoId,
+    int produtoId,
+    AcaoDivergencia acao, {
+    String? observacao,
+  });
+
+  /// Registra etiquetas impressas (produtoId -> quantidade) ou o passo pulado.
+  Future<EntradaResumo> registrarEtiquetas(
+    int pedidoId, {
+    Map<int, double>? itens,
+    bool pular = false,
+  });
 
   Future<EntradaResumo> registrarContagemLivre(
     int pedidoId,

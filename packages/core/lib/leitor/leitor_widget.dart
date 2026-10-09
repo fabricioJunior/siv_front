@@ -8,6 +8,7 @@ import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
 import 'package:core/leitor/leitor_bloc/leitor_bloc.dart';
 import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
+import 'package:core/leitor/produto_esperado.dart';
 import 'package:core/presentation/siv_cantos_blueprint.dart';
 import 'package:core/services/camera_scanner_service.dart';
 import 'package:core/sessao.dart';
@@ -36,6 +37,16 @@ class LeitorWidget extends StatefulWidget {
   final bool avisarCodigoDuplicado;
   final String? nomeTabelaDePreco;
 
+  /// Modo conferência (desligado por padrão): lista contado × lido em abas.
+  /// Código fora da lista -> [onErro] "Código X não pertence a esta entrada."
+  /// e não soma. Com o modo ligado, "remover por leitura" chama
+  /// [onRemoverLeitura] (o chamador é quem estorna).
+  final List<ProdutoEsperado>? produtosEsperados;
+  final void Function(ProdutoEsperado produto, int lido)? onCorrigirContagem;
+  final ValueChanged<ProdutoEsperado>? onRemoverLeitura;
+
+  bool get modoConferencia => produtosEsperados != null;
+
   const LeitorWidget({
     super.key,
     required this.dataSource,
@@ -56,6 +67,9 @@ class LeitorWidget extends StatefulWidget {
     this.mensagemQuantidadeIndisponivel,
     this.avisarCodigoDuplicado = true,
     this.nomeTabelaDePreco,
+    this.produtosEsperados,
+    this.onCorrigirContagem,
+    this.onRemoverLeitura,
   });
 
   @override
@@ -63,6 +77,8 @@ class LeitorWidget extends StatefulWidget {
 }
 
 enum _LeitorVisualizacao { porProduto, historico, grade }
+
+enum _AbaConferencia { aConferir, conferidos, todos, excedentes }
 
 class _ReferenciaAgrupada {
   final int referencia;
@@ -95,6 +111,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   bool _controllerInterno = false;
   bool _modoRemocao = false;
   _LeitorVisualizacao _visualizacao = _LeitorVisualizacao.historico;
+  _AbaConferencia _abaConferencia = _AbaConferencia.aConferir;
   bool _sincronizando = sl<IAcessoGlobalSessao>().dadosSincronizados;
   StreamSubscription<bool>? _sincronizacaoSubscription;
   int? _assinaturaPreCargaAplicada;
@@ -221,13 +238,41 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     }
 
     _codigoController.clear();
-    if (_modoRemocao) {
-      _controller.removerQuantidade(codigo);
-    } else {
-      _controller.lerCodigo(codigo);
-    }
+    _processarCodigo(codigo);
 
     _solicitarFoco();
+  }
+
+  /// Leitura/remoção de um código. No modo conferência valida a lista antes.
+  void _processarCodigo(String codigo, {int quantidade = 1}) {
+    if (widget.modoConferencia) {
+      final p = _esperadoPorCodigo(codigo);
+      if (p == null) {
+        final msg = 'Código $codigo não pertence a esta entrada.';
+        widget.onErro?.call(msg);
+        _mostrarMensagem(context, msg, Colors.red.shade700);
+        SystemSound.play(SystemSoundType.alert);
+        return;
+      }
+      if (_modoRemocao) {
+        widget.onRemoverLeitura?.call(p);
+        return;
+      }
+    }
+    if (_modoRemocao) {
+      _controller.removerQuantidade(codigo, quantidade: quantidade);
+    } else if (quantidade == 1) {
+      _controller.lerCodigo(codigo);
+    } else {
+      _controller.lerCodigoComQuantidade(codigo, quantidade);
+    }
+  }
+
+  ProdutoEsperado? _esperadoPorCodigo(String codigo) {
+    for (final p in widget.produtosEsperados ?? const <ProdutoEsperado>[]) {
+      if (p.codigoDeBarras == codigo) return p;
+    }
+    return null;
   }
 
   void _solicitarFoco() {
@@ -340,14 +385,10 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       return;
     }
 
-    final codigo = resultado.produto.codigoDeBarras;
-    final quantidade = resultado.quantidade;
-
-    if (_modoRemocao) {
-      _controller.removerQuantidade(codigo, quantidade: quantidade);
-    } else {
-      _controller.lerCodigoComQuantidade(codigo, quantidade);
-    }
+    _processarCodigo(
+      resultado.produto.codigoDeBarras,
+      quantidade: resultado.quantidade,
+    );
 
     _solicitarFoco();
   }
@@ -362,11 +403,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       return;
     }
 
-    if (_modoRemocao) {
-      _controller.removerQuantidade(codigo);
-    } else {
-      _controller.lerCodigo(codigo);
-    }
+    _processarCodigo(codigo);
   }
 
   LeitorItemContado? _itemPorCodigo(LeitorState state, String codigo) {
@@ -507,13 +544,19 @@ class _LeitorWidgetState extends State<LeitorWidget> {
               ),
               if (ehMobile) ...[
                 IconButton(
+                  key: const Key('leitor_camera'),
                   tooltip: 'Escanear com a câmera',
                   onPressed: state.processando || widget.desativado
                       ? null
                       : _escanearComCamera,
                   icon: Icon(Icons.qr_code_scanner_outlined, color: cores.aco),
-                  visualDensity: VisualDensity.compact,
+                  visualDensity: widget.modoConferencia
+                      ? VisualDensity.standard
+                      : VisualDensity.compact,
                   padding: EdgeInsets.zero,
+                  constraints: widget.modoConferencia
+                      ? const BoxConstraints(minWidth: 48, minHeight: 48)
+                      : null,
                 ),
                 if (widget.buscaDataSource != null)
                   IconButton(
@@ -1387,6 +1430,212 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     );
   }
 
+  String _lidoEsperadoTexto(LeitorItemContado ultimo) {
+    final p = _esperadoPorCodigo(ultimo.codigoDeBarras);
+    return p == null ? '' : 'Lido ${p.lido}/${p.esperado}';
+  }
+
+  List<ProdutoEsperado> _esperadosDaAba() {
+    final todos = widget.produtosEsperados ?? const <ProdutoEsperado>[];
+    return switch (_abaConferencia) {
+      _AbaConferencia.aConferir => todos
+          .where((p) =>
+              p.situacao == SituacaoEsperado.pendente ||
+              p.situacao == SituacaoEsperado.parcial)
+          .toList(),
+      _AbaConferencia.conferidos =>
+        todos.where((p) => p.situacao == SituacaoEsperado.conferido).toList(),
+      _AbaConferencia.excedentes =>
+        todos.where((p) => p.situacao == SituacaoEsperado.excedente).toList(),
+      _AbaConferencia.todos => todos,
+    };
+  }
+
+  Widget _abasConferencia(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final todos = widget.produtosEsperados ?? const <ProdutoEsperado>[];
+    int n(bool Function(ProdutoEsperado) f) => todos.where(f).length;
+    final abas = [
+      (
+        _AbaConferencia.aConferir,
+        'A CONFERIR · ${n((p) => p.situacao == SituacaoEsperado.pendente || p.situacao == SituacaoEsperado.parcial)}',
+      ),
+      (
+        _AbaConferencia.conferidos,
+        'CONFERIDOS · ${n((p) => p.situacao == SituacaoEsperado.conferido)}',
+      ),
+      (_AbaConferencia.todos, 'TODOS'),
+      (_AbaConferencia.excedentes, 'EXCEDENTES'),
+    ];
+    return Row(
+      children: [
+        for (final a in abas)
+          Expanded(
+            child: InkWell(
+              key: Key('aba_conferencia_${a.$1.name}'),
+              onTap: () => setState(() => _abaConferencia = a.$1),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 44),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _abaConferencia == a.$1
+                          ? cores.acoEscuro
+                          : cores.hairline,
+                      width: _abaConferencia == a.$1 ? 3 : 1,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  a.$2,
+                  textAlign: TextAlign.center,
+                  style: textos.rotulo.copyWith(
+                    fontSize: 10,
+                    letterSpacing: 0.5,
+                    color: _abaConferencia == a.$1
+                        ? cores.acoEscuro
+                        : cores.textoApoio,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _listaConferencia(BuildContext context, LeitorState state) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final itens = _esperadosDaAba();
+    if (itens.isEmpty) {
+      return Center(
+        child: Text('Nenhum item nesta aba.', style: textos.apoio),
+      );
+    }
+    final ultimo = state.ultimoProdutoLido?.codigoDeBarras;
+    return ListView.builder(
+      itemCount: itens.length,
+      itemBuilder: (context, i) {
+        final p = itens[i];
+        final (fundo, texto, etiqueta, rotulo) = switch (p.situacao) {
+          SituacaoEsperado.conferido => (
+              cores.conferidoFundo,
+              cores.conferidoTexto,
+              cores.conferidoEtiqueta,
+              'CONFERIDO',
+            ),
+          SituacaoEsperado.parcial => (
+              cores.parcialFundo,
+              cores.parcialTexto,
+              cores.parcialEtiqueta,
+              'PARCIAL',
+            ),
+          SituacaoEsperado.excedente => (
+              cores.excedenteFundo,
+              cores.vinho,
+              cores.excedenteEtiqueta,
+              'EXCEDENTE',
+            ),
+          SituacaoEsperado.pendente => (
+              cores.superficie,
+              cores.textoPrincipal,
+              cores.textoPrincipal.withValues(alpha: 0.08),
+              'PENDENTE',
+            ),
+        };
+        final podeCorrigir = widget.onCorrigirContagem != null &&
+            p.lido > 0 &&
+            (p.situacao == SituacaoEsperado.parcial ||
+                p.situacao == SituacaoEsperado.excedente);
+        return Container(
+          key: Key('conferencia_linha_${p.id}'),
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          decoration: BoxDecoration(
+            color: fundo,
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            border: Border(
+              left: p.codigoDeBarras == ultimo
+                  ? BorderSide(color: cores.aco, width: 3)
+                  : BorderSide(color: cores.hairline),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(p.descricao,
+                        style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      p.situacao == SituacaoEsperado.parcial
+                          ? '${p.grade} · faltam ${p.esperado - p.lido}'
+                          : p.grade,
+                      style: textos.apoio,
+                    ),
+                    const SizedBox(height: 4),
+                    LinearProgressIndicator(
+                      key: Key('conferencia_barra_${p.id}'),
+                      minHeight: 4,
+                      value: p.esperado <= 0
+                          ? (p.lido > 0 ? 1 : 0)
+                          : (p.lido / p.esperado).clamp(0, 1).toDouble(),
+                      color: texto,
+                      backgroundColor: etiqueta,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${p.lido}',
+                          style: textos.secao.copyWith(color: texto),
+                        ),
+                        TextSpan(text: '/${p.esperado}', style: textos.apoio),
+                      ],
+                    ),
+                    key: Key('conferencia_qtd_${p.id}'),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: etiqueta,
+                      borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                    ),
+                    child: Text(
+                      rotulo,
+                      style: textos.rotulo
+                          .copyWith(color: texto, fontSize: 9.5, letterSpacing: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+              if (podeCorrigir)
+                TextButton(
+                  key: Key('conferencia_corrigir_${p.id}'),
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                  onPressed: () => widget.onCorrigirContagem!(p, p.lido),
+                  child: const Text('Corrigir'),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_sincronizando) {
@@ -1434,7 +1683,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Leitor de código de barras',
+                    widget.modoConferencia
+                        ? 'MODO CONFERÊNCIA · CONTADO × LIDO'
+                        : 'Leitor de código de barras',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -1488,7 +1739,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ],
                   ),
                   const Divider(),
-                  if (ehMobile)
+                  if (widget.modoConferencia)
+                    _abasConferencia(context)
+                  else if (ehMobile)
                     _seletorVisualizacaoMobile(context)
                   else
                     _seletorVisualizacaoDesktop(context),
@@ -1523,6 +1776,12 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                          if (widget.modoConferencia)
+                            Text(
+                              _lidoEsperadoTexto(state.ultimoProdutoLido!),
+                              key: const Key('leitor_ultimo_lido_esperado'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                           if (widget.tabelaDePrecoId != null)
                             Text(
                               _descricaoPreco(state.ultimoProdutoLido!),
@@ -1534,7 +1793,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: widget.alturaLista,
-                    child: !ehMobile
+                    child: widget.modoConferencia
+                        ? _listaConferencia(context, state)
+                        : !ehMobile
                         ? switch (_visualizacao) {
                             _LeitorVisualizacao.historico =>
                               _listaDesktop(context, state),

@@ -116,12 +116,80 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<EntradaResumo> registrarContagem(
     int pedidoId,
-    List<ItemContagem> itens,
-  ) async =>
+    List<ItemContagem> itens, {
+    String? origem,
+    String? motivo,
+  }) async =>
       _resumo(
         (await put(
-          body: {'itens': itens.map((i) => i.toJson()).toList()},
+          body: {
+            'itens': itens.map((i) => i.toJson()).toList(),
+            if (origem != null) 'origem': origem,
+            if (motivo != null) 'motivo': motivo,
+          },
           pathParameters: {'path': '/$pedidoId/entrada/contagem'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> corrigirContagem(
+    int pedidoId,
+    int produtoId,
+    double para, {
+    String? motivo,
+    required String origem,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            'produtoId': produtoId,
+            'para': para,
+            'origem': origem,
+            if (motivo != null) 'motivo': motivo,
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/contagem/correcoes'},
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> decidirDivergencia(
+    int pedidoId,
+    int produtoId,
+    AcaoDivergencia acao, {
+    String? observacao,
+  }) async =>
+      _resumo(
+        (await put(
+          body: {
+            'acao': acao.name,
+            if (observacao != null) 'observacao': observacao,
+          },
+          pathParameters: {
+            'path': '/$pedidoId/entrada/divergencias/$produtoId',
+          },
+        ))
+            .body,
+      );
+
+  @override
+  Future<EntradaResumo> registrarEtiquetas(
+    int pedidoId, {
+    Map<int, double>? itens,
+    bool pular = false,
+  }) async =>
+      _resumo(
+        (await post(
+          body: {
+            if (itens != null)
+              'itens': [
+                for (final e in itens.entries)
+                  {'produtoId': e.key, 'quantidade': e.value},
+              ],
+            if (pular) 'pular': true,
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/etiquetas'},
         ))
             .body,
       );

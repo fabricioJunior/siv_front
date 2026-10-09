@@ -43,15 +43,18 @@ class _GruposDeAcessoPageState extends State<GruposDeAcessoPage> {
   Widget build(BuildContext context) {
     return BlocProvider<GruposDeAcessoBloc>.value(
       value: _bloc,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(width: 300, child: _colunaLista(context)),
-          const SizedBox(width: SivDimensoes.gapCards),
-          Expanded(child: _colunaCentro(context)),
-          const SizedBox(width: SivDimensoes.gapCards),
-          SizedBox(width: 340, child: _colunaPreview(context)),
-        ],
+      child: Padding(
+        padding: EdgeInsetsGeometry.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: 300, child: _colunaLista(context)),
+            const SizedBox(width: SivDimensoes.gapCards),
+            Expanded(child: _colunaCentro(context)),
+            const SizedBox(width: SivDimensoes.gapCards),
+            SizedBox(width: 340, child: _colunaPreview(context)),
+          ],
+        ),
       ),
     );
   }
@@ -123,7 +126,8 @@ class _GruposDeAcessoPageState extends State<GruposDeAcessoPage> {
                   Text(
                     grupo.nome,
                     style: textos.corpo.copyWith(
-                      fontWeight: selecionado ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight:
+                          selecionado ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -193,7 +197,8 @@ class _GruposDeAcessoPageState extends State<GruposDeAcessoPage> {
                   }
                 }
               }
-              final codigosDoGrupo = grupo?.permissoes.map((p) => p.id).toSet() ?? {};
+              final codigosDoGrupo =
+                  grupo?.permissoes.map((p) => p.id).toSet() ?? {};
 
               return SivMenuLateral(
                 colapsado: false,

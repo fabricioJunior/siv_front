@@ -23,6 +23,8 @@ export 'domain/models/ecommerce_referencia_produto.dart';
 export 'domain/models/ecommerce_referencias_pagina.dart';
 export 'domain/models/lista_personalizada.dart';
 export 'domain/models/lista_personalizada_resumo.dart';
+export 'domain/models/lista_grupo.dart';
+export 'domain/models/ecommerce_vitrine.dart';
 export 'domain/models/importacao_pedido_transferencia.dart';
 export 'domain/models/pedido_entrada.dart';
 export 'domain/models/importacao_venda.dart';

@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/widgets/lista_seletores.dart';
 import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comercial/presentation/widgets/transferir_credito_dialogo.dart';
 import 'package:comunicados/presentation.dart';
@@ -33,6 +34,7 @@ import 'package:pagamentos/use_cases.dart'
 import 'package:precos/presentation.dart';
 import 'package:precos/use_cases.dart' show RecuperarPrecosDasReferencias;
 import 'package:promocoes/pages.dart';
+import 'package:promocoes/presentation.dart' show PromocaoSeletor;
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
@@ -540,13 +542,30 @@ Map<String, Widget Function(BuildContext)> routes = {
       route: '/listas_personalizadas',
       child: ListaPersonalizadaPage(
         listaId: idArg is int ? idArg : int.tryParse(idArg?.toString() ?? ''),
-        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
-          modo: TabelasDePrecoSeletorModo.unica,
-          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-          onChanged: data.onChanged,
-          onlyView: data.onlyView,
-          titulo: 'Tabela de preço',
-        ),
+        seletores: _listaSeletores(),
+      ),
+    );
+  },
+  '/listas_grupos': (context) {
+    return _rotaProtegida(
+      route: '/listas_grupos',
+      child: const ListasGruposPage(),
+    );
+  },
+  '/lista_grupo': (context) {
+    final idArg = args(context)['id'];
+    return _rotaProtegida(
+      route: '/listas_grupos',
+      child: ListaGrupoPage(
+        grupoId: idArg is int ? idArg : int.tryParse(idArg?.toString() ?? ''),
+      ),
+    );
+  },
+  '/ecommerce_vitrine': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_vitrine',
+      child: EcommerceVitrinePage(
+        ecommerceId: args(context)['ecommerceId'] as int,
       ),
     );
   },
@@ -1470,6 +1489,48 @@ Map<String, Widget Function(BuildContext)> routes = {
 Map<String, dynamic> args(BuildContext context) =>
     ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
 
+ListaSeletores _listaSeletores() => ListaSeletores(
+      tabelaDePreco: (data) => TabelasDePrecoSeletor(
+        modo: TabelasDePrecoSeletorModo.unica,
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        onChanged: data.onChanged,
+        onlyView: data.onlyView,
+        titulo: 'Tabela de preço',
+      ),
+      categoria: (data) => CategoriaSeletor(
+        modo: CategoriaSeletorModo.multipla,
+        idCategoriasSelecionadasIniciais:
+            (data.itemsSelecionadosInicial ?? []).map((s) => s.id).toList(),
+        onChanged: data.onChanged,
+      ),
+      subCategoria: ({required categoriaIds, required data}) =>
+          SubCategoriaSeletor(
+        categoriaIds: categoriaIds,
+        idsSelecionadosIniciais:
+            (data.itemsSelecionadosInicial ?? []).map((s) => s.id).toList(),
+        onChanged: data.onChanged,
+      ),
+      tamanho: (data) => TamanhoSeletor(
+        modo: TamanhoSeletorModo.multipla,
+        tamanhosSelecionadosIniciais: (data.itemsSelecionadosInicial ?? [])
+            .map((s) => TamanhoDto(id: s.id, nome: s.nome, inativo: false))
+            .toList(),
+        onChanged: data.onChanged,
+      ),
+      cor: (data) => CorSeletor(
+        modo: CorSeletorModo.multipla,
+        coresSelecionadasIniciais: (data.itemsSelecionadosInicial ?? [])
+            .map((s) => CorDto(id: s.id, nome: s.nome, inativo: false))
+            .toList(),
+        onChanged: data.onChanged,
+      ),
+      promocao: (data) => PromocaoSeletor(
+        idsSelecionadosIniciais:
+            (data.itemsSelecionadosInicial ?? []).map((s) => s.id).toList(),
+        onChanged: data.onChanged,
+      ),
+    );
+
 Widget _rotaProtegida({required String route, required Widget child}) {
   final componentes = _componentesDaRota[route];
   if (componentes == null || componentes.isEmpty) {
@@ -1600,9 +1661,11 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_vitrine': ['ECOFM001'],
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],
   '/listas_personalizadas': ['ECOFM004'],
+  '/listas_grupos': ['ECOFM004'],
   '/chamar_entregador': ['ENTFM001'],
   '/relatorio_faturamento': ['RELFC001'],
   '/relatorio_curva_abc': ['RELFC002'],

@@ -4,19 +4,25 @@ class ListaPersonalizadaResumo {
   final int id;
   final String hash;
   final ListaPersonalizadaSituacao situacao;
-  final DateTime dataExpiracao;
+  final DateTime? dataExpiracao;
   final int quantidadeItens;
   final DateTime criadoEm;
   final String? titulo;
+  final String? icone;
+  final ListaTipo tipo;
+  final ListaModo modo;
 
   const ListaPersonalizadaResumo({
     required this.id,
     required this.hash,
     required this.situacao,
-    required this.dataExpiracao,
+    this.dataExpiracao,
     required this.quantidadeItens,
     required this.criadoEm,
     this.titulo,
+    this.icone,
+    this.tipo = ListaTipo.provador,
+    this.modo = ListaModo.manual,
   });
 }
 

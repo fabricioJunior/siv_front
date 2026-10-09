@@ -28,11 +28,13 @@ class ListasPersonalizadasBloc
         step: ListasPersonalizadasStep.carregando,
         itens: const [],
         page: 1,
+        tipo: event.tipo,
+        limparTipo: event.tipo == null,
         erro: '',
       ),
     );
     try {
-      final pagina = await _listarListasPersonalizadas.call(page: 1);
+      final pagina = await _listarListasPersonalizadas.call(page: 1, tipo: event.tipo);
       emit(
         state.copyWith(
           step: ListasPersonalizadasStep.carregado,
@@ -64,7 +66,7 @@ class ListasPersonalizadasBloc
     emit(state.copyWith(step: ListasPersonalizadasStep.carregandoMais, erro: ''));
 
     try {
-      final pagina = await _listarListasPersonalizadas.call(page: proximaPagina);
+      final pagina = await _listarListasPersonalizadas.call(page: proximaPagina, tipo: state.tipo);
       emit(
         state.copyWith(
           step: ListasPersonalizadasStep.carregado,

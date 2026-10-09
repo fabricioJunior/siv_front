@@ -11,12 +11,12 @@ import 'package:produtos/presentantion/widgets/referencia_seletor.dart';
 
 class ListaPersonalizadaPage extends StatefulWidget {
   final int? listaId;
-  final SeletorWidget tabelaDePrecoSeletor;
+  final ListaSeletores seletores;
 
   const ListaPersonalizadaPage({
     super.key,
     this.listaId,
-    required this.tabelaDePrecoSeletor,
+    required this.seletores,
   });
 
   @override
@@ -25,9 +25,9 @@ class ListaPersonalizadaPage extends StatefulWidget {
 
 class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
   late final ListaPersonalizadaBloc _bloc;
-  final _tituloController = TextEditingController();
-  int? _tabelaPrecoId;
-  DateTime? _dataExpiracao;
+  bool _editando = false;
+  bool _aguardandoSalvar = false;
+  ListaItensLoteResultado? _loteVisto;
 
   @override
   void initState() {
@@ -41,7 +41,6 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
   @override
   void dispose() {
     _bloc.close();
-    _tituloController.dispose();
     super.dispose();
   }
 
@@ -55,6 +54,23 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.erro!)),
             );
+          }
+          final lote = state.ultimoLote;
+          if (lote != null && !identical(lote, _loteVisto)) {
+            _loteVisto = lote;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${lote.adicionadas} referência(s) adicionada(s). Total: ${lote.total}.',
+                ),
+              ),
+            );
+          }
+          if (_aguardandoSalvar && !state.salvandoDados) {
+            _aguardandoSalvar = false;
+            if (state.erro == null || state.erro!.isEmpty) {
+              setState(() => _editando = false);
+            }
           }
         },
         builder: (context, state) {
@@ -75,7 +91,9 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                             ? const Center(
                                 child: CircularProgressIndicator.adaptive())
                             : _buildFormulario(context, state))
-                        : _buildGestao(context, state),
+                        : _editando
+                            ? _buildEdicao(context, state)
+                            : _buildGestao(context, state),
                   ),
                 ),
               ],
@@ -94,70 +112,20 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Nova lista personalizada', style: textos.rotulo),
+            Text('Nova lista', style: textos.rotulo),
             const SizedBox(height: 4),
             Text(
-              'Monte uma lista de produtos e compartilhe o link com o cliente.',
+              'Monte uma lista de produtos: provador (link para o cliente) ou catálogo do e-commerce.',
               style: textos.apoio,
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: _tituloController,
-              maxLength: 255,
-              decoration: const InputDecoration(labelText: 'Título da lista (opcional)'),
-            ),
-            const SizedBox(height: 16),
-            widget.tabelaDePrecoSeletor(
-              SeletorData(
-                onChanged: (selecionadas) => setState(() {
-                  _tabelaPrecoId =
-                      selecionadas.isEmpty ? null : selecionadas.first.id;
-                }),
-              ),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final selecionado = await showDatePicker(
-                  context: context,
-                  initialDate: _dataExpiracao ?? DateTime.now().add(const Duration(days: 7)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (selecionado != null) {
-                  setState(() => _dataExpiracao = selecionado);
-                }
-              },
-              icon: const Icon(Icons.event_outlined, size: 18),
-              label: Text(
-                _dataExpiracao == null
-                    ? 'Data de expiração'
-                    : 'Expira em: ${_formatarData(_dataExpiracao!)}',
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: state.step == ListaPersonalizadaStep.salvando ||
-                      _tabelaPrecoId == null ||
-                      _dataExpiracao == null
-                  ? null
-                  : () => _bloc.add(
-                        ListaPersonalizadaCriou(
-                          tabelaPrecoId: _tabelaPrecoId!,
-                          dataExpiracao: _dataExpiracao!,
-                          titulo: _tituloController.text.trim().isEmpty
-                              ? null
-                              : _tituloController.text.trim(),
-                        ),
-                      ),
-              icon: state.step == ListaPersonalizadaStep.salvando
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check),
-              label: const Text('Criar lista'),
+            ListaPersonalizadaFormulario(
+              seletores: widget.seletores,
+              salvando: state.step == ListaPersonalizadaStep.salvando,
+              iconeNovoNome: state.iconeLocal?.nome,
+              onEscolherIcone: () =>
+                  _bloc.add(const ListaPersonalizadaIconeEscolheu()),
+              onSalvar: (input) => _bloc.add(ListaPersonalizadaCriou(input: input)),
             ),
           ],
         ),
@@ -165,10 +133,60 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
     );
   }
 
+  Widget _buildEdicao(BuildContext context, ListaPersonalizadaState state) {
+    return SingleChildScrollView(
+      child: SivCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListaPersonalizadaFormulario(
+              lista: state.lista,
+              seletores: widget.seletores,
+              salvando: state.salvandoDados,
+              textoSalvar: 'Salvar alterações',
+              iconeNovoNome: null,
+              onEscolherIcone: () =>
+                  _bloc.add(const ListaPersonalizadaIconeEscolheu()),
+              onSalvar: (input) {
+                _aguardandoSalvar = true;
+                _bloc.add(ListaPersonalizadaAtualizou(input: input));
+              },
+            ),
+            TextButton(
+              onPressed: () => setState(() => _editando = false),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _rotuloSituacao(ListaPersonalizadaSituacao s) => switch (s) {
+        ListaPersonalizadaSituacao.ativa => 'Ativa',
+        ListaPersonalizadaSituacao.agendada => 'Agendada',
+        ListaPersonalizadaSituacao.expirada => 'Expirada',
+        ListaPersonalizadaSituacao.cancelada => 'Cancelada',
+      };
+
+  String _periodo(ListaPersonalizada lista) {
+    final ini = lista.dataInicio;
+    final fim = lista.dataExpiracao;
+    if (ini == null && fim == null) return 'Sem prazo';
+    if (ini != null && fim != null) {
+      return '${formatarDataLista(ini)} a ${formatarDataLista(fim)}';
+    }
+    return ini != null
+        ? 'A partir de ${formatarDataLista(ini)}'
+        : 'Expira em: ${formatarDataLista(fim!)}';
+  }
+
   Widget _buildGestao(BuildContext context, ListaPersonalizadaState state) {
     final lista = state.lista!;
     final textos = context.sivTextos;
     final link = state.link;
+    final catalogo = lista.tipo == ListaTipo.catalogo;
+    final filtro = lista.modo == ListaModo.filtro;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -179,6 +197,13 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
             children: [
               Row(
                 children: [
+                  if (lista.icone != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(lista.icone!),
+                      ),
+                    ),
                   Expanded(
                     child: Text(
                       lista.titulo?.isNotEmpty == true ? lista.titulo! : 'Sem título',
@@ -186,84 +211,264 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Editar título',
-                    onPressed: state.atualizandoTitulo
-                        ? null
-                        : () => _editarTitulo(context, lista),
+                    tooltip: 'Editar lista',
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    onPressed: () => setState(() => _editando = true),
                     icon: const Icon(Icons.edit_outlined, size: 18),
                   ),
                 ],
               ),
+              if (lista.descricao?.isNotEmpty == true) ...[
+                const SizedBox(height: 4),
+                Text(lista.descricao!, style: textos.corpo),
+              ],
               const SizedBox(height: 8),
-              Text('Link para o cliente', style: textos.rotulo),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: link == null
-                        ? Text('Carregando link...', style: textos.apoio)
-                        : SelectableText(link, style: textos.corpo),
-                  ),
-                  IconButton(
-                    tooltip: 'Copiar link',
-                    onPressed: link == null ? null : () => _copiarLink(context, link),
-                    icon: const Icon(Icons.copy_outlined),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
               Text(
-                'Expira em: ${_formatarData(lista.dataExpiracao)}',
+                '${catalogo ? 'Catálogo' : 'Provador'} · '
+                '${filtro ? 'por filtro' : 'itens avulsos'} · '
+                '${_rotuloSituacao(lista.situacao)}',
                 style: textos.apoio,
               ),
+              const SizedBox(height: 4),
+              Text(_periodo(lista), style: textos.apoio),
+              if (!catalogo) ...[
+                const SizedBox(height: 12),
+                Text('Link para o cliente', style: textos.rotulo),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: link == null
+                          ? Text('Carregando link...', style: textos.apoio)
+                          : SelectableText(link, style: textos.corpo),
+                    ),
+                    IconButton(
+                      tooltip: 'Copiar link',
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      onPressed:
+                          link == null ? null : () => _copiarLink(context, link),
+                      icon: const Icon(Icons.copy_outlined),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: SivDimensoes.gapCards),
-        Row(
-          children: [
-            Text('Referências na lista (${lista.itens.length})', style: textos.rotulo),
-            const Spacer(),
-            FilledButton.icon(
-              onPressed: state.atualizandoItens ? null : () => _adicionarReferencias(lista),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Adicionar referências'),
+        if (catalogo)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const Key('lista-previa'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+              onPressed: () => _abrirPrevia(),
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              label: const Text('Prévia no site'),
             ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: lista.itens.isEmpty
-              ? Center(
-                  child: Text('Nenhuma referência adicionada ainda.', style: textos.apoio),
-                )
-              : ListView.separated(
-                  itemCount: lista.itens.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final item = lista.itens[index];
-                    return ListTile(
-                      leading: item.imagemUrl == null
-                          ? const CircleAvatar(child: Icon(Icons.image_outlined))
-                          : CircleAvatar(backgroundImage: NetworkImage(item.imagemUrl!)),
-                      title: Text(item.nome),
-                      subtitle: Text('R\$ ${item.valor.toStringAsFixed(2)}'),
-                      trailing: IconButton(
-                        tooltip: 'Remover',
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: state.atualizandoItens
-                            ? null
-                            : () => _bloc.add(
-                                  ListaPersonalizadaReferenciasRemoveu(
-                                    referenciaIds: [item.referenciaId],
-                                  ),
-                                ),
-                      ),
-                    );
-                  },
+          ),
+        if (!filtro) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Referências (${lista.itens.length})',
+                  style: textos.rotulo,
                 ),
-        ),
+              ),
+              if (catalogo)
+                IconButton(
+                  key: const Key('lista-adicionar-lote'),
+                  tooltip: 'Adicionar por categoria',
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  onPressed: state.atualizandoItens ? null : _adicionarPorCategoria,
+                  icon: const Icon(Icons.category_outlined),
+                ),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                onPressed:
+                    state.atualizandoItens ? null : () => _adicionarReferencias(lista),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Adicionar'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: lista.itens.isEmpty
+                ? Center(
+                    child: Text('Nenhuma referência adicionada ainda.',
+                        style: textos.apoio),
+                  )
+                : ListView.separated(
+                    itemCount: lista.itens.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = lista.itens[index];
+                      return ListTile(
+                        leading: item.imagemUrl == null
+                            ? const CircleAvatar(child: Icon(Icons.image_outlined))
+                            : CircleAvatar(
+                                backgroundImage: NetworkImage(item.imagemUrl!),
+                              ),
+                        title: Text(item.nome),
+                        subtitle: Text('R\$ ${item.valor.toStringAsFixed(2)}'),
+                        trailing: IconButton(
+                          tooltip: 'Remover',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: state.atualizandoItens
+                              ? null
+                              : () => _bloc.add(
+                                    ListaPersonalizadaReferenciasRemoveu(
+                                      referenciaIds: [item.referenciaId],
+                                    ),
+                                  ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ] else
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Lista dinâmica: os produtos vêm do filtro. Use "Editar lista" para ajustar e "Prévia no site" para conferir.',
+              style: textos.apoio,
+            ),
+          ),
       ],
+    );
+  }
+
+  void _abrirPrevia() {
+    _bloc.add(const ListaPersonalizadaPreviaSolicitou());
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BlocProvider<ListaPersonalizadaBloc>.value(
+        value: _bloc,
+        child: BlocBuilder<ListaPersonalizadaBloc, ListaPersonalizadaState>(
+          builder: (context, state) {
+            final previa = state.previa;
+            return SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.7,
+              child: state.carregandoPrevia || previa == null
+                  ? const Center(child: CircularProgressIndicator.adaptive())
+                  : Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            '${previa.totalItems} referência(s) — página ${previa.page}/${previa.totalPages}',
+                            style: context.sivTextos.rotulo,
+                          ),
+                        ),
+                        Expanded(
+                          child: previa.items.isEmpty
+                              ? Center(
+                                  child: Text('Nenhuma referência disponível.',
+                                      style: context.sivTextos.apoio),
+                                )
+                              : ListView(
+                                  children: [
+                                    for (final i in previa.items)
+                                      ListTile(
+                                        leading: i.imagemUrl == null
+                                            ? const CircleAvatar(
+                                                child: Icon(Icons.image_outlined))
+                                            : CircleAvatar(
+                                                backgroundImage:
+                                                    NetworkImage(i.imagemUrl!)),
+                                        title: Text(i.nome),
+                                        subtitle: i.preco == null
+                                            ? null
+                                            : Text('R\$ ${i.preco!.toStringAsFixed(2)}'),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              tooltip: 'Página anterior',
+                              onPressed: previa.page > 1
+                                  ? () => _bloc.add(ListaPersonalizadaPreviaSolicitou(
+                                      page: previa.page - 1))
+                                  : null,
+                              icon: const Icon(Icons.chevron_left),
+                            ),
+                            IconButton(
+                              tooltip: 'Próxima página',
+                              onPressed: previa.page < previa.totalPages
+                                  ? () => _bloc.add(ListaPersonalizadaPreviaSolicitou(
+                                      page: previa.page + 1))
+                                  : null,
+                              icon: const Icon(Icons.chevron_right),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _adicionarPorCategoria() async {
+    var categorias = <int>[];
+    var subCategorias = <int>[];
+    var apenasPublicadas = false;
+    final seletores = widget.seletores;
+
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Adicionar por categoria',
+      textoAcao: 'Adicionar',
+      corpo: StatefulBuilder(
+        builder: (context, setLocal) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              seletores.categoria(
+                SeletorData(
+                  onChanged: (sel) =>
+                      setLocal(() => categorias = sel.map((s) => s.id).toList()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              seletores.subCategoria(
+                categoriaIds: categorias,
+                data: SeletorData(
+                  onChanged: (sel) => subCategorias = sel.map((s) => s.id).toList(),
+                ),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Só publicadas no e-commerce'),
+                value: apenasPublicadas,
+                onChanged: (v) => setLocal(() => apenasPublicadas = v),
+              ),
+            ],
+          ),
+        ),
+      ),
+      onConfirmar: (_) {
+        if (categorias.isEmpty && subCategorias.isEmpty) return;
+        _bloc.add(
+          ListaPersonalizadaItensPorFiltroAdicionou(
+            lote: ListaItensLote(
+              categoriaIds: categorias,
+              subCategoriaIds: subCategorias,
+              apenasPublicadasNoEcommerce: apenasPublicadas,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -334,33 +539,10 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
     );
   }
 
-  Future<void> _editarTitulo(BuildContext context, ListaPersonalizada lista) async {
-    final controller = TextEditingController(text: lista.titulo ?? '');
-    await SivDialogo.mostrar(
-      context,
-      titulo: 'Editar título',
-      corpo: TextField(
-        controller: controller,
-        maxLength: 255,
-        decoration: const InputDecoration(labelText: 'Título da lista'),
-      ),
-      textoAcao: 'Salvar',
-      onConfirmar: (_) {
-        final novoTitulo = controller.text.trim();
-        _bloc.add(
-          ListaPersonalizadaTituloAtualizou(titulo: novoTitulo.isEmpty ? null : novoTitulo),
-        );
-      },
-    );
-  }
-
   void _copiarLink(BuildContext context, String link) {
     Clipboard.setData(ClipboardData(text: link));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Link copiado.')),
     );
   }
-
-  String _formatarData(DateTime data) =>
-      '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
 }

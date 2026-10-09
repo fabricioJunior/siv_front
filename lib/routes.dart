@@ -1159,6 +1159,15 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/impressao_etiquetas',
       child: ImpressaoDeEtiquetasPage(
+        itensIniciais: [
+          for (final i in (args(context)['itens'] as List?) ?? const [])
+            ItemEtiquetaInicial(
+              referenciaId: i['referenciaId'] as int,
+              referenciaNome: i['referenciaNome'] as String? ?? '',
+              produtoId: i['produtoId'] as int,
+              quantidade: (i['quantidade'] as num).round(),
+            ),
+        ],
         tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
           modo: TabelasDePrecoSeletorModo.unica,
           itemsSelecionadosInicial: data.itemsSelecionadosInicial,

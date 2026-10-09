@@ -52,7 +52,11 @@ Map<String, dynamic> _json({bool contado = false}) => {
       ],
     };
 
-Map<String, dynamic> _jsonContagem({bool comContagem = false}) => {
+Map<String, dynamic> _jsonContagem({
+  bool comContagem = false,
+  bool comLivre = false,
+}) =>
+    {
       'pedidoId': 9,
       'origemEntrada': 'CONTAGEM',
       'nfe': null,
@@ -71,6 +75,17 @@ Map<String, dynamic> _jsonContagem({bool comContagem = false}) => {
               },
             ]
           : [],
+      'contagensLivres': comLivre
+          ? [
+              {
+                'id': 1,
+                'descricao': 'Vestido Luna',
+                'corId': 1,
+                'tamanhoId': 2,
+                'quantidade': '3',
+              },
+            ]
+          : [],
       'totais': {'nfe': 0, 'contado': comContagem ? 3 : 0},
       'pendencias': [],
     };
@@ -78,10 +93,12 @@ Map<String, dynamic> _jsonContagem({bool comContagem = false}) => {
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? contagemEnviada;
   bool semNfe = false;
+  bool comLivre = false;
 
   @override
-  Future<EntradaResumo> obter(int pedidoId) async =>
-      EntradaResumo.fromJson(semNfe ? _jsonContagem() : _json());
+  Future<EntradaResumo> obter(int pedidoId) async => EntradaResumo.fromJson(
+        semNfe ? _jsonContagem(comLivre: comLivre) : _json(),
+      );
 
   @override
   Future<EntradaResumo> criarPorContagem({
@@ -271,5 +288,41 @@ void main() {
     expect(item.quantidade, 3);
     expect(find.text('Vestido Luna'), findsOneWidget);
     expect(find.textContaining('Preto M: 3'), findsOneWidget);
+  });
+
+  testWidgets(
+      'etiquetas e conferência ficam desabilitadas com contagem sem referência',
+      (
+    tester,
+  ) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    await abrir(tester);
+
+    FilledButton conferir() => tester.widget<FilledButton>(
+          find.byKey(const Key('pedido_entrada_conferir_codigo_button')),
+        );
+    expect(conferir().onPressed, isNull);
+    expect(find.textContaining('Associe uma referência'), findsWidgets);
+    expect(find.byKey(const Key('pedido_entrada_conferir_button')),
+        findsOneWidget);
+  });
+
+  testWidgets('sem pendências as ações de etiqueta e conferência ficam ativas',
+      (
+    tester,
+  ) async {
+    remoto.semNfe = true;
+    await abrir(tester);
+
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('pedido_entrada_conferir_codigo_button')),
+          )
+          .onPressed,
+      isNotNull,
+    );
   });
 }

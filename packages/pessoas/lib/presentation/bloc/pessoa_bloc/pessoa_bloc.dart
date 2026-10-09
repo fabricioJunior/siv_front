@@ -303,7 +303,7 @@ class PessoaBloc extends Bloc<PessoaEvent, PessoaState> {
           tipoContato: state.tipoContato!,
           tipoPessoa: state.tipoPessoa!,
           uf: state.uf,
-          dataDeNascimento: state.dataDeNascimento!,
+          dataDeNascimento: state.dataDeNascimento,
         );
 
         if ((state.eFuncionario ?? false) && pessoa.id != null) {

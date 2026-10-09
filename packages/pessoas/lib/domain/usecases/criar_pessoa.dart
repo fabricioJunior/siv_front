@@ -20,7 +20,7 @@ class CriarPessoa {
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
     required String? uf,
-    required DateTime dataDeNascimento,
+    required DateTime? dataDeNascimento,
   }) async {
     return await _pessoasRepository.novaPessoa(
       bloqueado: bloqueado,

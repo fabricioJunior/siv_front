@@ -100,7 +100,7 @@ class PessoasRemoteDataSource extends RemoteDataSourceBase
     required TipoContato tipoContato,
     required TipoPessoa tipoPessoa,
     required String? uf,
-    required DateTime dataDeNascimento,
+    required DateTime? dataDeNascimento,
   }) async {
     var pessoa = PessoaDto(
       bloqueado: bloqueado,

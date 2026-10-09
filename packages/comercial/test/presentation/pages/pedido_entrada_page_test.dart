@@ -99,7 +99,11 @@ class _Sessao implements IAcessoGlobalSessao {
   @override
   int? get caixaIdDaSessao => 1;
   @override
-  dynamic noSuchMethod(Invocation i) => null;
+  dynamic noSuchMethod(Invocation i) {
+    if (i.memberName == #dadosSincronizados) return true;
+    if (i.memberName == #sincronizandoDados) return const Stream<bool>.empty();
+    return null;
+  }
 }
 
 class _Conferir implements ConferirPedido {
@@ -115,6 +119,7 @@ class _Faturar implements FaturarPedido {
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? contagemEnviada;
   List<ItemContagem>? livreEnviada;
+  final lotes = <Map<int, int>>[];
   List<int>? associados;
   int? associadoRef;
   int? associadoCategoria;
@@ -152,6 +157,27 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   }
 
   @override
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas,
+  ) async {
+    lotes.add(Map.of(deltas));
+    return EntradaResumo.fromJson(_jsonContagem(
+      comContagem: true,
+      extra: {
+        ...extra,
+        'conferencia': {
+          'totalContado': 4,
+          'totalLido': 4,
+          'itens': [
+            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'contado': 4, 'lido': 4},
+          ],
+        },
+      },
+    ));
+  }
+
+  @override
   Future<EntradaResumo> associarContagemLivre(
     int pedidoId,
     List<int> ids, {
@@ -180,6 +206,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await sl.reset();
+    sl.registerSingleton<IAcessoGlobalSessao>(_Sessao());
     sl.registerFactory<PedidoEntradaBloc>(
       () => PedidoEntradaBloc(
         ImportarNfeEntrada(remoto),
@@ -196,6 +223,7 @@ void main() {
         DecidirDivergenciaEntrada(remoto),
         RegistrarEtiquetasEntrada(remoto),
         FaturarEntrada(_Conferir(), _Faturar()),
+        RegistrarLeiturasEntrada(remoto),
         _Sessao(),
       ),
     );
@@ -696,6 +724,91 @@ void main() {
     await tester.pumpAndSettle();
     expect(argsCadastro, isNotNull);
     expect(remoto.associados, isNull);
+  });
+
+  Map<String, dynamic> conferindo() => {
+        'etapa': 'conferindo',
+        'etiquetas': {'puladas': true},
+        'conferencia': {
+          'totalContado': 4,
+          'totalLido': 0,
+          'itens': [
+            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'cor': 'Preto', 'tamanho': 'M', 'contado': 4, 'lido': 0},
+          ],
+        },
+      };
+
+  Future<void> bipar(WidgetTester tester, String codigo) async {
+    await tester.enterText(find.byType(TextField).first, codigo);
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    for (var i = 0; i < 3; i++) {
+      await tester.pump();
+    }
+  }
+
+  testWidgets('Conferir no shell: bipes são locais e ENVIAR E REVISAR manda 1 lote',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = conferindo();
+    await abrir(tester);
+    expect(find.text('Passo 4 de 5 · Conferir'), findsOneWidget);
+
+    await bipar(tester, 'A');
+    await bipar(tester, 'A');
+    expect(find.text('2 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('2 de 4 peças'), findsOneWidget);
+    expect(remoto.lotes, isEmpty);
+
+    await tester.tap(find.text('ENVIAR E REVISAR'));
+    await tester.pumpAndSettle();
+    expect(remoto.lotes, [
+      {5: 2},
+    ]);
+    expect(find.text('Passo 5 de 5 · Faturar'), findsOneWidget);
+  });
+
+  testWidgets('Sair do Conferir com pendência pergunta: continuar, descartar, enviar',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = conferindo();
+    await abrir(tester);
+    await bipar(tester, 'A');
+
+    Future<void> tentarSair() async {
+      await tester.tap(find.byKey(const Key('trilha_segmentos')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('trilha_passo_0')));
+      await tester.pumpAndSettle();
+    }
+
+    await tentarSair();
+    expect(find.text('Há 1 leitura(s) não enviadas'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('saida_continuar')));
+    await tester.pumpAndSettle();
+    expect(find.text('Passo 4 de 5 · Conferir'), findsOneWidget);
+    expect(find.text('1 leitura(s) ainda não enviada(s)'), findsOneWidget);
+
+    await tentarSair();
+    await tester.tap(find.byKey(const Key('saida_descartar')));
+    await tester.pumpAndSettle();
+    expect(find.text('Passo 1 de 5 · Contar'), findsOneWidget);
+    expect(remoto.lotes, isEmpty);
+
+    // volta, bipa e sai enviando
+    await tester.tap(find.byKey(const Key('trilha_segmentos')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('trilha_passo_3')));
+    await tester.pumpAndSettle();
+    await bipar(tester, 'A');
+    await tentarSair();
+    await tester.tap(find.byKey(const Key('saida_enviar')));
+    await tester.pumpAndSettle();
+    expect(remoto.lotes, [
+      {5: 1},
+    ]);
+    expect(find.text('Passo 1 de 5 · Contar'), findsOneWidget);
   });
 
   testWidgets('desktop: trilha em linha e painel inline', (tester) async {

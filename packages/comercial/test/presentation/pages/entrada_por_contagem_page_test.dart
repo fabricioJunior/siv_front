@@ -84,6 +84,7 @@ void main() {
         DecidirDivergenciaEntrada(remoto),
         RegistrarEtiquetasEntrada(remoto),
         FaturarEntrada(_Conferir(), _Faturar()),
+        RegistrarLeiturasEntrada(remoto),
         _Sessao(),
       ),
     );

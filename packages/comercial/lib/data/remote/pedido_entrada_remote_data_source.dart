@@ -234,4 +234,22 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
         ))
             .body,
       );
+
+  @override
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas,
+  ) async =>
+      _resumo(
+        (await put(
+          body: {
+            'itens': [
+              for (final e in deltas.entries)
+                if (e.value != 0) {'produtoId': e.key, 'quantidade': e.value},
+            ],
+          },
+          pathParameters: {'path': '/$pedidoId/entrada/leituras'},
+        ))
+            .body,
+      );
 }

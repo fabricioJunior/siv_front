@@ -187,3 +187,11 @@ class FaturarEntrada {
     await _faturar(pedidoId, caixaId: caixaId);
   }
 }
+
+class RegistrarLeiturasEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  RegistrarLeiturasEntrada(this._remote);
+
+  Future<EntradaResumo> call(int pedidoId, Map<int, int> deltas) =>
+      _remote.registrarLeituras(pedidoId, deltas);
+}

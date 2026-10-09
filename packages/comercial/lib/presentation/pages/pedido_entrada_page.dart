@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:comercial/presentation/blocs/pedido_bloc/pedido_bloc.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/historico_entrada.dart';
@@ -64,33 +61,68 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     buscarReferenciasParecidas: widget.buscarReferenciasParecidas,
   );
 
-  // Cada bipe vai ao servidor pelo PedidoBloc (PedidoItemConferiuPorCodigo);
-  // depois recarrega a entrada para atualizar lido × contado.
-  PedidoBloc? _pedidoBloc;
-  StreamSubscription<PedidoState>? _sub;
-
-  PedidoBloc get _pedido {
-    final existente = _pedidoBloc;
-    if (existente != null) return existente;
-    final b = _pedidoBloc = sl<PedidoBloc>()
-      ..add(PedidoIniciou(idPedido: widget.pedidoId));
-    _sub = b.stream.listen((s) {
-      if (s.step == PedidoStep.itemConferido) {
-        _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
-      } else if (s.step == PedidoStep.falha && s.erro != null && mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(s.erro!)));
-      }
-    });
-    return b;
+  /// Envia o lote de leituras pendentes (uma chamada). true = nada ficou
+  /// pendente (enviou, ou não havia nada).
+  Future<bool> _enviarLeituras({bool irParaRevisar = false}) async {
+    if (_bloc.state.leiturasPendentes.isEmpty) {
+      if (irParaRevisar) _irParaPasso(4);
+      return true;
+    }
+    _bloc.add(PedidoEntradaEnviouLeituras(irParaRevisar: irParaRevisar));
+    final fim = await _bloc.stream.firstWhere((s) => !s.salvando);
+    return fim.leiturasPendentes.isEmpty;
   }
 
-  void _irParaPasso(int p) => _bloc.add(PedidoEntradaSelecionouPasso(p));
+  /// Sair do Conferir (trocar de passo ou voltar) com leituras pendentes:
+  /// ENVIAR / DESCARTAR / CONTINUAR BIPANDO. true = pode sair.
+  Future<bool> _confirmarSaida() async {
+    final pend = _bloc.state.leiturasPendentes;
+    if (pend.isEmpty) return true;
+    final n = pend.values.fold<int>(0, (s, d) => s + d.abs());
+    final r = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text('Há $n leitura(s) não enviadas'),
+        content: const Text(
+          'Elas só valem para a conferência depois de enviadas.',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('saida_continuar'),
+            onPressed: () => Navigator.pop(ctx, 'continuar'),
+            child: const Text('CONTINUAR BIPANDO'),
+          ),
+          TextButton(
+            key: const Key('saida_descartar'),
+            onPressed: () => Navigator.pop(ctx, 'descartar'),
+            child: const Text('DESCARTAR'),
+          ),
+          FilledButton(
+            key: const Key('saida_enviar'),
+            onPressed: () => Navigator.pop(ctx, 'enviar'),
+            child: const Text('ENVIAR'),
+          ),
+        ],
+      ),
+    );
+    if (r == 'descartar') {
+      _bloc.add(const PedidoEntradaDescartouLeituras());
+      return true;
+    }
+    if (r == 'enviar') return _enviarLeituras();
+    return false;
+  }
+
+  Future<void> _irParaPasso(int p) async {
+    if (_bloc.state.passoVisivel == 3 && p != 3 && !await _confirmarSaida()) {
+      return;
+    }
+    _bloc.add(PedidoEntradaSelecionouPasso(p));
+  }
 
   @override
   void dispose() {
-    _sub?.cancel();
-    _pedidoBloc?.close();
     _bloc.close();
     super.dispose();
   }
@@ -121,15 +153,15 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
       case 3:
         return PassoConferir(
           resumo: resumo,
-          dataSource: sl<ILeitorDataDatasource>(),
-          buscaDataSource: sl<ILeitorBuscaDataDatasource>(),
+          pendentes: state.leiturasPendentes,
+          salvando: state.salvando,
+          buscaDataSource: sl.isRegistered<ILeitorBuscaDataDatasource>()
+              ? sl<ILeitorBuscaDataDatasource>()
+              : null,
           onIrParaPasso: _irParaPasso,
-          onConferirCodigo: (codigo, q) => _pedido.add(
-            PedidoItemConferiuPorCodigo(
-              codigoBarras: codigo,
-              quantidade: q.toDouble(),
-            ),
-          ),
+          onLeu: (produtoId, delta) =>
+              _bloc.add(PedidoEntradaLeu(produtoId, delta)),
+          onEnviar: _enviarLeituras,
         );
       default:
         return PassoRevisarFaturar(
@@ -177,74 +209,86 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
           final passos = state.trilha;
           final visivel = state.passoVisivel;
           final textos = context.sivTextos;
-          return Scaffold(
-            appBar: AppBar(
-              toolbarHeight: 52,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Entrada #${widget.pedidoId}'),
-                  if (resumo != null)
-                    Text(
-                      'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
-                      key: const Key('entrada_passo_x_de_5'),
-                      style: textos.apoio,
-                    ),
-                ],
-              ),
-              actions: [
-                PopupMenuButton<String>(
-                  key: const Key('entrada_menu'),
-                  onSelected: (v) {
-                    if (v == 'historico' && resumo != null) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => HistoricoEntradaPage(resumo: resumo),
-                        ),
-                      );
-                    } else if (v == 'pedido') {
-                      Navigator.of(context).pushNamed(
-                        '/pedido',
-                        arguments: {'idPedido': widget.pedidoId},
-                      );
-                    } else if (v == 'atualizar') {
-                      _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: 'historico',
-                      child: Text('Histórico do pedido'),
-                    ),
-                    PopupMenuItem(value: 'pedido', child: Text('Abrir pedido')),
-                    PopupMenuItem(value: 'atualizar', child: Text('Atualizar')),
+          return PopScope(
+            canPop: state.leiturasPendentes.isEmpty,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              if (await _confirmarSaida() && context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                toolbarHeight: 52,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Entrada #${widget.pedidoId}'),
+                    if (resumo != null)
+                      Text(
+                        'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
+                        key: const Key('entrada_passo_x_de_5'),
+                        style: textos.apoio,
+                      ),
                   ],
                 ),
-              ],
-            ),
-            body: resumo == null
-                ? Center(
-                    child: state.carregando
-                        ? const CircularProgressIndicator()
-                        : const Text('Pedido de entrada não carregado.'),
-                  )
-                : Column(
-                    children: [
-                      if (state.salvando)
-                        const LinearProgressIndicator(minHeight: 2),
-                      if (mobile)
-                        TrilhaSegmentos(
-                          passos: passos,
-                          onSelecionar: _irParaPasso,
-                        )
-                      else
-                        TrilhaPassos(
-                          passos: passos,
-                          onSelecionar: _irParaPasso,
-                        ),
-                      Expanded(child: _passo(context, state)),
+                actions: [
+                  PopupMenuButton<String>(
+                    key: const Key('entrada_menu'),
+                    onSelected: (v) {
+                      if (v == 'historico' && resumo != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                HistoricoEntradaPage(resumo: resumo),
+                          ),
+                        );
+                      } else if (v == 'pedido') {
+                        Navigator.of(context).pushNamed(
+                          '/pedido',
+                          arguments: {'idPedido': widget.pedidoId},
+                        );
+                      } else if (v == 'atualizar') {
+                        _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'historico',
+                        child: Text('Histórico do pedido'),
+                      ),
+                      PopupMenuItem(
+                          value: 'pedido', child: Text('Abrir pedido')),
+                      PopupMenuItem(
+                          value: 'atualizar', child: Text('Atualizar')),
                     ],
                   ),
+                ],
+              ),
+              body: resumo == null
+                  ? Center(
+                      child: state.carregando
+                          ? const CircularProgressIndicator()
+                          : const Text('Pedido de entrada não carregado.'),
+                    )
+                  : Column(
+                      children: [
+                        if (state.salvando)
+                          const LinearProgressIndicator(minHeight: 2),
+                        if (mobile)
+                          TrilhaSegmentos(
+                            passos: passos,
+                            onSelecionar: _irParaPasso,
+                          )
+                        else
+                          TrilhaPassos(
+                            passos: passos,
+                            onSelecionar: _irParaPasso,
+                          ),
+                        Expanded(child: _passo(context, state)),
+                      ],
+                    ),
+            ),
           );
         },
       ),

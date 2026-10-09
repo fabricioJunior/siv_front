@@ -122,3 +122,5 @@ export 'domain/use_cases/atualizar_lista_grupo.dart';
 export 'domain/use_cases/excluir_lista_grupo.dart';
 export 'domain/use_cases/definir_listas_do_grupo.dart';
 export 'domain/use_cases/enviar_icone_lista_grupo.dart';
+export 'domain/use_cases/recuperar_vitrine_ecommerce.dart';
+export 'domain/use_cases/salvar_vitrine_ecommerce.dart';

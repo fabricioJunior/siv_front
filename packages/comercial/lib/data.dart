@@ -71,3 +71,7 @@ export 'domain/data/remote/i_listas_grupos_remote_data_source.dart';
 export 'domain/data/repositories/i_listas_grupos_repository.dart';
 export 'data/remote/listas_grupos_remote_data_source.dart';
 export 'data/repositories/listas_grupos_repository.dart';
+export 'domain/data/remote/i_ecommerce_vitrine_remote_data_source.dart';
+export 'domain/data/repositories/i_ecommerce_vitrine_repository.dart';
+export 'data/remote/ecommerce_vitrine_remote_data_source.dart';
+export 'data/repositories/ecommerce_vitrine_repository.dart';

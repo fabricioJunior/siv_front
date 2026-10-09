@@ -41,3 +41,4 @@ export 'presentation/pages/lista_personalizada_page.dart';
 export 'presentation/pages/listas_personalizadas_page.dart';
 export 'presentation/pages/listas_grupos_page.dart';
 export 'presentation/pages/lista_grupo_page.dart';
+export 'presentation/pages/ecommerce_vitrine_page.dart';

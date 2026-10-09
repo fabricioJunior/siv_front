@@ -87,6 +87,9 @@ void _remoteDataSources() {
   sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
     () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IEcommerceVitrineRemoteDataSource>(
+    () => EcommerceVitrineRemoteDataSource(informacoesParaRequest: sl()),
+  );
   sl.registerFactory<IListasGruposRemoteDataSource>(
     () => ListasGruposRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -144,6 +147,9 @@ void _repositories() {
 
   sl.registerFactory<IEcommerceRepository>(
     () => EcommerceRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IEcommerceVitrineRepository>(
+    () => EcommerceVitrineRepository(remoteDataSource: sl()),
   );
   sl.registerFactory<IListasGruposRepository>(
     () => ListasGruposRepository(remoteDataSource: sl()),
@@ -490,6 +496,12 @@ void _useCases() {
   sl.registerFactory<EnviarIconeListaGrupo>(
     () => EnviarIconeListaGrupo(repository: sl()),
   );
+  sl.registerFactory<RecuperarVitrineEcommerce>(
+    () => RecuperarVitrineEcommerce(repository: sl()),
+  );
+  sl.registerFactory<SalvarVitrineEcommerce>(
+    () => SalvarVitrineEcommerce(repository: sl()),
+  );
   sl.registerFactory<AtualizarListaPersonalizada>(
     () => AtualizarListaPersonalizada(repository: sl()),
   );
@@ -758,6 +770,9 @@ void _presentation() {
     () => ListaPersonalizadaBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
+  sl.registerFactory<EcommerceVitrineBloc>(
+    () => EcommerceVitrineBloc(sl(), sl(), sl(), sl()),
+  );
   sl.registerFactory<ListasGruposBloc>(() => ListasGruposBloc(sl(), sl()));
   sl.registerFactory<ListaGrupoBloc>(
     () => ListaGrupoBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),

@@ -91,3 +91,5 @@ export 'presentation/blocs/listas_grupos_bloc/listas_grupos_bloc.dart';
 export 'presentation/blocs/lista_grupo_bloc/lista_grupo_bloc.dart';
 export 'presentation/pages/listas_grupos_page.dart';
 export 'presentation/pages/lista_grupo_page.dart';
+export 'presentation/blocs/ecommerce_vitrine_bloc/ecommerce_vitrine_bloc.dart';
+export 'presentation/pages/ecommerce_vitrine_page.dart';

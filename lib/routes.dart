@@ -561,6 +561,14 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/ecommerce_vitrine': (context) {
+    return _rotaProtegida(
+      route: '/ecommerce_vitrine',
+      child: EcommerceVitrinePage(
+        ecommerceId: args(context)['ecommerceId'] as int,
+      ),
+    );
+  },
   '/ecommerce_referencias': (context) {
     final routeArgs = args(context);
     return _rotaProtegida(
@@ -1653,6 +1661,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_vitrine': ['ECOFM001'],
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],
   '/listas_personalizadas': ['ECOFM004'],

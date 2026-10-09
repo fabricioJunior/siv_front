@@ -292,6 +292,15 @@ class _EcommerceConfiguracaoFormularioState
                             arguments: {'ecommerceId': state.id, 'titulo': state.titulo},
                           ),
                         ),
+                        _linhaAtalho(
+                          context,
+                          label: 'Vitrine do site',
+                          valor: 'Menu e home',
+                          onTap: () => Navigator.of(context).pushNamed(
+                            '/ecommerce_vitrine',
+                            arguments: {'ecommerceId': state.id},
+                          ),
+                        ),
                         // TODO: "Promoções exclusivas do site" não tem como filtrar por
                         // canal hoje -- Promocao.canal é genérico (loja/ecommerce), sem
                         // ecommerceId específico. Omitido até existir esse dado.

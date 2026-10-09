@@ -1,5 +1,7 @@
 import 'package:comercial/domain/data/remote/i_pedido_entrada_remote_data_source.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/use_cases/conferir_pedido.dart';
+import 'package:comercial/domain/use_cases/faturar_pedido.dart';
 
 // Casos de uso do Pedido de Entrada (NF-e / contagem): finos, só delegam à API.
 // O estoque NÃO muda aqui -- só no faturamento do pedido (fluxo de sempre).
@@ -84,8 +86,13 @@ class RegistrarContagemEntrada {
   final IPedidoEntradaRemoteDataSource _remote;
   RegistrarContagemEntrada(this._remote);
 
-  Future<EntradaResumo> call(int pedidoId, List<ItemContagem> itens) =>
-      _remote.registrarContagem(pedidoId, itens);
+  Future<EntradaResumo> call(
+    int pedidoId,
+    List<ItemContagem> itens, {
+    String? origem,
+    String? motivo,
+  }) =>
+      _remote.registrarContagem(pedidoId, itens, origem: origem, motivo: motivo);
 }
 
 class RegistrarContagemLivreEntrada {
@@ -114,4 +121,67 @@ class AssociarContagemLivreEntrada {
         categoriaId: categoriaId,
         nome: nome,
       );
+}
+
+class CorrigirContagemEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  CorrigirContagemEntrada(this._remote);
+
+  Future<EntradaResumo> call(
+    int pedidoId,
+    int produtoId,
+    double para, {
+    String? motivo,
+    required String origem,
+  }) =>
+      _remote.corrigirContagem(
+        pedidoId,
+        produtoId,
+        para,
+        motivo: motivo,
+        origem: origem,
+      );
+}
+
+class DecidirDivergenciaEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  DecidirDivergenciaEntrada(this._remote);
+
+  Future<EntradaResumo> call(
+    int pedidoId,
+    int produtoId,
+    AcaoDivergencia acao, {
+    String? observacao,
+  }) =>
+      _remote.decidirDivergencia(
+        pedidoId,
+        produtoId,
+        acao,
+        observacao: observacao,
+      );
+}
+
+class RegistrarEtiquetasEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  RegistrarEtiquetasEntrada(this._remote);
+
+  Future<EntradaResumo> call(
+    int pedidoId, {
+    Map<int, double>? itens,
+    bool pular = false,
+  }) =>
+      _remote.registrarEtiquetas(pedidoId, itens: itens, pular: pular);
+}
+
+/// Faturar a entrada: marca a conferência (as divergências já têm decisão) e
+/// fatura. Só o atendido (conferido) entra no estoque -- regra do servidor.
+class FaturarEntrada {
+  final ConferirPedido _conferir;
+  final FaturarPedido _faturar;
+  FaturarEntrada(this._conferir, this._faturar);
+
+  Future<void> call(int pedidoId, {required int caixaId}) async {
+    await _conferir(pedidoId, processarComDivergencia: true);
+    await _faturar(pedidoId, caixaId: caixaId);
+  }
 }

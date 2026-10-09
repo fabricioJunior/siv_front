@@ -189,6 +189,274 @@ class ContagemLivre extends Equatable {
   List<Object?> get props => [id, descricao, corId, tamanhoId, quantidade];
 }
 
+/// Situação de um item na conferência (lido × contado).
+enum SituacaoConferencia {
+  pendente,
+  parcial,
+  conferido,
+  excedente;
+
+  static SituacaoConferencia deContagem(double contado, double lido) {
+    if (lido <= 0) return pendente;
+    if (lido < contado) return parcial;
+    if (lido == contado) return conferido;
+    return excedente;
+  }
+
+  static SituacaoConferencia deValor(String? v, double contado, double lido) =>
+      SituacaoConferencia.values.firstWhere(
+        (s) => s.name == v,
+        orElse: () => deContagem(contado, lido),
+      );
+}
+
+/// Registro de impressão de etiquetas (por produto) e se o passo foi pulado.
+class EntradaEtiquetas extends Equatable {
+  final DateTime? impressasEm;
+  final bool puladas;
+  final Map<int, double> impressasPorProduto;
+
+  const EntradaEtiquetas({
+    this.impressasEm,
+    this.puladas = false,
+    this.impressasPorProduto = const {},
+  });
+
+  factory EntradaEtiquetas.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return const EntradaEtiquetas();
+    final porProduto = (j['impressasPorProduto'] as Map<String, dynamic>?) ?? {};
+    return EntradaEtiquetas(
+      impressasEm: DateTime.tryParse('${j['impressasEm'] ?? ''}'),
+      puladas: j['puladas'] == true,
+      impressasPorProduto: {
+        for (final e in porProduto.entries)
+          if (int.tryParse(e.key) != null) int.parse(e.key): _num(e.value),
+      },
+    );
+  }
+
+  bool get concluidas => impressasEm != null || puladas;
+
+  @override
+  List<Object?> get props => [impressasEm, puladas, impressasPorProduto];
+}
+
+/// Linha da conferência: contado × lido de um produto da entrada.
+class EntradaConferenciaItem extends Equatable {
+  final int produtoId;
+  final String codigoDeBarras;
+  final String descricao;
+  final int idReferencia;
+  final String cor;
+  final String tamanho;
+  final double contado;
+  final double lido;
+  final SituacaoConferencia situacao;
+
+  const EntradaConferenciaItem({
+    required this.produtoId,
+    required this.codigoDeBarras,
+    required this.descricao,
+    required this.idReferencia,
+    required this.cor,
+    required this.tamanho,
+    required this.contado,
+    required this.lido,
+    required this.situacao,
+  });
+
+  factory EntradaConferenciaItem.fromJson(Map<String, dynamic> j) {
+    final contado = _num(j['contado']);
+    final lido = _num(j['lido']);
+    return EntradaConferenciaItem(
+      produtoId: _int(j['produtoId']) ?? 0,
+      codigoDeBarras: '${j['codigoDeBarras'] ?? ''}',
+      descricao: j['descricao'] as String? ?? '',
+      idReferencia: _int(j['idReferencia']) ?? 0,
+      cor: j['cor'] as String? ?? '',
+      tamanho: j['tamanho'] as String? ?? '',
+      contado: contado,
+      lido: lido,
+      situacao: SituacaoConferencia.deValor(
+        j['situacao'] as String?,
+        contado,
+        lido,
+      ),
+    );
+  }
+
+  String get grade => [cor, tamanho].where((e) => e.isNotEmpty).join(' · ');
+
+  @override
+  List<Object?> get props => [produtoId, contado, lido, situacao];
+}
+
+class EntradaConferencia extends Equatable {
+  final double totalContado;
+  final double totalLido;
+  final int linhasConferidas;
+  final int linhasPendentes;
+  final int linhasExcedentes;
+  final List<EntradaConferenciaItem> itens;
+
+  const EntradaConferencia({
+    this.totalContado = 0,
+    this.totalLido = 0,
+    this.linhasConferidas = 0,
+    this.linhasPendentes = 0,
+    this.linhasExcedentes = 0,
+    this.itens = const [],
+  });
+
+  factory EntradaConferencia.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return const EntradaConferencia();
+    return EntradaConferencia(
+      totalContado: _num(j['totalContado']),
+      totalLido: _num(j['totalLido']),
+      linhasConferidas: _int(j['linhasConferidas']) ?? 0,
+      linhasPendentes: _int(j['linhasPendentes']) ?? 0,
+      linhasExcedentes: _int(j['linhasExcedentes']) ?? 0,
+      itens: ((j['itens'] as List<dynamic>?) ?? const [])
+          .map((i) => EntradaConferenciaItem.fromJson(i as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  @override
+  List<Object?> get props => [totalContado, totalLido, itens];
+}
+
+enum TipoDivergencia {
+  falta,
+  excede,
+  foraDaContagem;
+
+  static TipoDivergencia deValor(String? v) => TipoDivergencia.values
+      .firstWhere((t) => t.name == v, orElse: () => falta);
+}
+
+/// Decisão sobre uma divergência (valores da API em `PUT .../divergencias/{produtoId}`).
+enum AcaoDivergencia {
+  corrigir,
+  manter,
+  removerLeitura,
+  adicionarNaContagem,
+  descartarLeitura;
+
+  static AcaoDivergencia? deValor(String? v) =>
+      AcaoDivergencia.values.where((a) => a.name == v).firstOrNull;
+}
+
+class EntradaDivergencia extends Equatable {
+  final int produtoId;
+  final String descricao;
+  final String grade;
+  final double contado;
+  final double lido;
+  final TipoDivergencia tipo;
+  final AcaoDivergencia? decisao;
+  final String? observacao;
+
+  const EntradaDivergencia({
+    required this.produtoId,
+    required this.descricao,
+    required this.grade,
+    required this.contado,
+    required this.lido,
+    required this.tipo,
+    this.decisao,
+    this.observacao,
+  });
+
+  factory EntradaDivergencia.fromJson(Map<String, dynamic> j) =>
+      EntradaDivergencia(
+        produtoId: _int(j['produtoId']) ?? 0,
+        descricao: j['descricao'] as String? ?? '',
+        grade: j['grade'] as String? ?? '',
+        contado: _num(j['contado']),
+        lido: _num(j['lido']),
+        tipo: TipoDivergencia.deValor(j['tipo'] as String?),
+        decisao: AcaoDivergencia.deValor(j['decisao'] as String?),
+        observacao: j['observacao'] as String?,
+      );
+
+  bool get decidida => decisao != null;
+
+  @override
+  List<Object?> get props => [produtoId, contado, lido, tipo, decisao];
+}
+
+class EntradaRevisao extends Equatable {
+  final double contado;
+  final double conferido;
+  final double entraNoEstoque;
+  final bool? podeFaturar;
+
+  const EntradaRevisao({
+    this.contado = 0,
+    this.conferido = 0,
+    this.entraNoEstoque = 0,
+    this.podeFaturar,
+  });
+
+  factory EntradaRevisao.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return const EntradaRevisao();
+    final t = (j['totais'] as Map<String, dynamic>?) ?? const {};
+    return EntradaRevisao(
+      contado: _num(t['contado']),
+      conferido: _num(t['conferido']),
+      entraNoEstoque: _num(t['entraNoEstoque']),
+      podeFaturar: j['podeFaturar'] as bool?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [contado, conferido, entraNoEstoque, podeFaturar];
+}
+
+/// Auditoria de correção de contagem / decisão de divergência.
+class EntradaCorrecao extends Equatable {
+  final int id;
+  final int? produtoId;
+  final String tipo;
+  final double? de;
+  final double? para;
+  final String? acao;
+  final String? motivo;
+  final String origem;
+  final String? operadorNome;
+  final DateTime? criadoEm;
+
+  const EntradaCorrecao({
+    required this.id,
+    required this.produtoId,
+    required this.tipo,
+    required this.de,
+    required this.para,
+    required this.acao,
+    required this.motivo,
+    required this.origem,
+    required this.operadorNome,
+    required this.criadoEm,
+  });
+
+  factory EntradaCorrecao.fromJson(Map<String, dynamic> j) => EntradaCorrecao(
+        id: _int(j['id']) ?? 0,
+        produtoId: _int(j['produtoId']),
+        tipo: j['tipo'] as String? ?? 'contagem',
+        de: j['de'] == null ? null : _num(j['de']),
+        para: j['para'] == null ? null : _num(j['para']),
+        acao: j['acao'] as String?,
+        motivo: j['motivo'] as String?,
+        origem: j['origem'] as String? ?? 'contagem',
+        operadorNome: j['operadorNome'] as String?,
+        criadoEm: DateTime.tryParse('${j['criadoEm'] ?? ''}'),
+      );
+
+  @override
+  List<Object?> get props => [id];
+}
+
 /// Dados do Pedido de Entrada além do pedido em si: origem, NF-e, linhas e contagem.
 class EntradaResumo extends Equatable {
   final int pedidoId;
@@ -201,6 +469,14 @@ class EntradaResumo extends Equatable {
   final double totalContado;
   final List<String> pendencias;
 
+  /// Campos do redesenho (backend antigo não envia): todos com default seguro.
+  final String? etapa;
+  final EntradaEtiquetas etiquetas;
+  final EntradaConferencia conferencia;
+  final List<EntradaDivergencia> divergencias;
+  final EntradaRevisao revisao;
+  final List<EntradaCorrecao> correcoes;
+
   const EntradaResumo({
     required this.pedidoId,
     required this.origemEntrada,
@@ -211,6 +487,12 @@ class EntradaResumo extends Equatable {
     required this.totalNfe,
     required this.totalContado,
     required this.pendencias,
+    this.etapa,
+    this.etiquetas = const EntradaEtiquetas(),
+    this.conferencia = const EntradaConferencia(),
+    this.divergencias = const [],
+    this.revisao = const EntradaRevisao(),
+    this.correcoes = const [],
   });
 
   factory EntradaResumo.fromJson(Map<String, dynamic> j) {
@@ -234,6 +516,20 @@ class EntradaResumo extends Equatable {
       totalContado: _num(totais['contado']),
       pendencias:
           ((j['pendencias'] as List<dynamic>?) ?? const []).cast<String>(),
+      etapa: j['etapa'] as String?,
+      etiquetas: EntradaEtiquetas.fromJson(
+        j['etiquetas'] as Map<String, dynamic>?,
+      ),
+      conferencia: EntradaConferencia.fromJson(
+        j['conferencia'] as Map<String, dynamic>?,
+      ),
+      divergencias: ((j['divergencias'] as List<dynamic>?) ?? const [])
+          .map((d) => EntradaDivergencia.fromJson(d as Map<String, dynamic>))
+          .toList(),
+      revisao: EntradaRevisao.fromJson(j['revisao'] as Map<String, dynamic>?),
+      correcoes: ((j['correcoes'] as List<dynamic>?) ?? const [])
+          .map((c) => EntradaCorrecao.fromJson(c as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -241,8 +537,19 @@ class EntradaResumo extends Equatable {
       contagens.where((c) => c.linhaId == linhaId).toList();
 
   @override
-  List<Object?> get props =>
-      [pedidoId, linhas, contagens, contagensLivres, pendencias];
+  List<Object?> get props => [
+        pedidoId,
+        linhas,
+        contagens,
+        contagensLivres,
+        pendencias,
+        etapa,
+        etiquetas,
+        conferencia,
+        divergencias,
+        revisao,
+        correcoes,
+      ];
 }
 
 /// Item enviado na contagem (SKU existente ou referência + cor + tamanho).

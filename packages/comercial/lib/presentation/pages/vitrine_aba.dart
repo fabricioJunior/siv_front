@@ -178,11 +178,13 @@ class _BarraFerramentas extends StatelessWidget {
       segments: [
         ButtonSegment(
           value: VitrineLocal.menu,
-          label: Text('Menu do site · ${state.vitrine.menu.length}'),
+          label: Text(
+              '${mobile ? 'Menu' : 'Menu do site'} · ${state.vitrine.menu.length}'),
         ),
         ButtonSegment(
           value: VitrineLocal.home,
-          label: Text('Home do site · ${state.vitrine.home.length}'),
+          label: Text(
+              '${mobile ? 'Home' : 'Home do site'} · ${state.vitrine.home.length}'),
         ),
       ],
       selected: {local},
@@ -200,11 +202,15 @@ class _BarraFerramentas extends StatelessWidget {
 
     if (mobile) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (comId.isNotEmpty) _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
+            if (comId.isNotEmpty) ...[
+              _SeletorDeCanal(
+                  canais: comId, canalId: canalId, onCanal: onCanal),
+              const SizedBox(height: 10),
+            ],
             SizedBox(height: 46, child: segmento),
             const SizedBox(height: 8),
             apoio,
@@ -338,6 +344,17 @@ class _ListaDoLocal extends StatelessWidget {
     final bloc = context.read<EcommerceVitrineBloc>();
     final itens = state.vitrine.doLocal(local);
 
+    // No mobile "Adicionar" é o último item da lista, tracejado (3e).
+    final adicionar = Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: _BotaoTracejado(
+        chave: Key('vitrine-adicionar-${local.name}'),
+        rotulo: 'Adicionar',
+        onTap: () =>
+            mostrarAdicionarNaVitrine(context, bloc: bloc, local: local),
+      ),
+    );
+
     final linhas = itens.isEmpty
         ? Padding(
             padding: const EdgeInsets.all(24),
@@ -347,6 +364,7 @@ class _ListaDoLocal extends StatelessWidget {
           )
         : ReorderableListView.builder(
             buildDefaultDragHandles: false,
+            footer: mobile ? adicionar : null,
             shrinkWrap: !mobile,
             physics: mobile ? null : const NeverScrollableScrollPhysics(),
             itemCount: itens.length,
@@ -374,23 +392,14 @@ class _ListaDoLocal extends StatelessWidget {
           );
 
     if (mobile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: linhas),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: TextButton.icon(
-              key: Key('vitrine-adicionar-${local.name}'),
-              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
-              onPressed: () =>
-                  mostrarAdicionarNaVitrine(context, bloc: bloc, local: local),
-              icon: const Icon(SivIcones.adicionar,
-                  size: SivIcones.tamanhoBotao),
-              label: const Text('Adicionar'),
-            ),
-          ),
-        ],
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: itens.isEmpty
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [linhas, adicionar],
+              )
+            : linhas,
       );
     }
 
@@ -482,80 +491,117 @@ class VitrineLinha extends StatelessWidget {
   Future<void> _abrirPosicao(BuildContext context) async {
     final bloc = context.read<EcommerceVitrineBloc>();
     final textos = context.sivTextos;
+    final cores = context.sivColors;
     final menu = local == VitrineLocal.menu;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Mover "${item.nome}"', style: textos.secao),
+              Text('Mover "${item.nome}"',
+                  style: textos.secao.copyWith(fontSize: 21)),
+              Text(
+                '${menu ? 'Menu do site' : 'Home do site'} · hoje na posição '
+                '${index + 1} de $total',
+                style: textos.apoio,
+              ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (var p = 0; p < total; p++)
-                    SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: OutlinedButton(
-                        key: Key('vitrine-pos-${p + 1}'),
-                        style:
-                            OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          bloc.add(
-                            EcommerceVitrineItemMoveu(
-                              local: local,
-                              tipo: item.tipo,
-                              itemId: item.itemId,
-                              indice: p,
-                            ),
-                          );
-                        },
-                        child: Text('${p + 1}'),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: total,
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  mainAxisExtent: 56,
+                ),
+                itemBuilder: (_, p) {
+                  final atual = p == index;
+                  return InkWell(
+                    key: Key('vitrine-pos-${p + 1}'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      bloc.add(
+                        EcommerceVitrineItemMoveu(
+                          local: local,
+                          tipo: item.tipo,
+                          itemId: item.itemId,
+                          indice: p,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: atual ? cores.acoEscuro : cores.superficie,
+                        border: Border.all(
+                          color: atual
+                              ? cores.acoEscuro
+                              : cores.tinta.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Text(
+                        '${p + 1}',
+                        style: textos.corpo.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: atual
+                              ? cores.textoSobreEscuroTitulo
+                              : cores.acoProfundo,
+                        ),
                       ),
                     ),
-                ],
+                  );
+                },
               ),
-              const SizedBox(height: 8),
-              ListTile(
-                key: const Key('vitrine-topo'),
-                minTileHeight: 48,
-                leading: const Icon(Icons.vertical_align_top),
-                title: const Text('Mandar para o topo'),
-                enabled: index > 0,
+              const SizedBox(height: 12),
+              _AcaoPosicao(
+                chave: const Key('vitrine-topo'),
+                icone: SivIcones.mandarTopo,
+                rotulo: 'Mandar para o topo',
+                habilitado: index > 0,
                 onTap: () {
                   Navigator.pop(ctx);
                   _mover(context, 0);
                 },
               ),
-              ListTile(
-                key: const Key('vitrine-fim'),
-                minTileHeight: 48,
-                leading: const Icon(Icons.vertical_align_bottom),
-                title: const Text('Mandar para o fim'),
-                enabled: index < total - 1,
+              _AcaoPosicao(
+                chave: const Key('vitrine-fim'),
+                icone: SivIcones.mandarFim,
+                rotulo: 'Mandar para o fim',
+                habilitado: index < total - 1,
                 onTap: () {
                   Navigator.pop(ctx);
                   _mover(context, total - 1);
                 },
               ),
-              ListTile(
-                key: const Key('vitrine-tirar'),
-                minTileHeight: 48,
-                leading: const Icon(SivIcones.remover),
-                title: Text(menu ? 'Tirar do menu' : 'Tirar da home'),
+              _AcaoPosicao(
+                chave: const Key('vitrine-tirar'),
+                icone: SivIcones.remover,
+                rotulo: menu ? 'Tirar do menu' : 'Tirar da home',
+                cor: cores.vinho,
                 onTap: () {
                   Navigator.pop(ctx);
                   _remover(context);
                 },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Fechar'),
+                ),
               ),
             ],
           ),
@@ -578,7 +624,7 @@ class VitrineLinha extends StatelessWidget {
       opacity: agendada ? 0.6 : 1,
       child: Container(
         constraints: BoxConstraints(minHeight: mobile ? 68 : 64),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: mobile ? 0 : 12),
         decoration: BoxDecoration(
           color: cores.superficie,
           border: Border(bottom: BorderSide(color: cores.hairline)),
@@ -588,7 +634,7 @@ class VitrineLinha extends StatelessWidget {
             ReorderableDragStartListener(
               index: index,
               child: SizedBox(
-                width: mobile ? 28 : 24,
+                width: mobile ? 18 : 24,
                 height: SivDimensoes.alvoToqueMinimo,
                 child: Icon(
                   SivIcones.alcaArrastar,
@@ -667,6 +713,129 @@ class VitrineLinha extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Linha de 52px da folha de posição (3f): ícone de 17 + rótulo, divisória no
+/// topo. Não é `ListTile`.
+class _AcaoPosicao extends StatelessWidget {
+  final Key chave;
+  final IconData icone;
+  final String rotulo;
+  final bool habilitado;
+  final Color? cor;
+  final VoidCallback onTap;
+
+  const _AcaoPosicao({
+    required this.chave,
+    required this.icone,
+    required this.rotulo,
+    required this.onTap,
+    this.habilitado = true,
+    this.cor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final corFinal = cor ?? cores.tinta;
+    return Opacity(
+      opacity: habilitado ? 1 : 0.4,
+      child: InkWell(
+        key: chave,
+        onTap: habilitado ? onTap : null,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: cores.hairline)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 34,
+                child: Icon(icone, size: 17, color: corFinal),
+              ),
+              Text(rotulo,
+                  style: context.sivTextos.corpo.copyWith(color: corFinal)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Botão de 48px com borda tracejada ("Adicionar" no fim da lista, 3e).
+class _BotaoTracejado extends StatelessWidget {
+  final Key chave;
+  final String rotulo;
+  final VoidCallback onTap;
+
+  const _BotaoTracejado({
+    required this.chave,
+    required this.rotulo,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return InkWell(
+      key: chave,
+      onTap: onTap,
+      child: CustomPaint(
+        painter: _BordaTracejada(cores.tinta.withValues(alpha: 0.35)),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(SivIcones.adicionar,
+                  size: SivIcones.tamanhoBotao, color: cores.aco),
+              const SizedBox(width: 10),
+              Text(rotulo,
+                  style: context.sivTextos.corpo.copyWith(color: cores.aco)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BordaTracejada extends CustomPainter {
+  final Color cor;
+
+  const _BordaTracejada(this.cor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final tinta = Paint()
+      ..color = cor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    const traco = 5.0;
+    const vao = 4.0;
+    void linha(Offset de, Offset ate) {
+      final total = (ate - de).distance;
+      final passo = (ate - de) / total;
+      for (var d = 0.0; d < total; d += traco + vao) {
+        final fim = (d + traco).clamp(0.0, total);
+        canvas.drawLine(de + passo * d, de + passo * fim, tinta);
+      }
+    }
+
+    const a = Offset.zero;
+    final b = Offset(size.width, 0);
+    final c = Offset(size.width, size.height);
+    final d = Offset(0, size.height);
+    linha(a, b);
+    linha(b, c);
+    linha(c, d);
+    linha(d, a);
+  }
+
+  @override
+  bool shouldRepaint(_BordaTracejada old) => old.cor != cor;
 }
 
 class _Rodape extends StatelessWidget {

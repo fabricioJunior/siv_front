@@ -15,6 +15,10 @@ abstract final class SivIcones {
   static const IconData link = LucideIcons.link;
   static const IconData editar = LucideIcons.pencil;
 
+  /// Atalhos de ordenação (folha de posição).
+  static const IconData mandarTopo = LucideIcons.arrowUp;
+  static const IconData mandarFim = LucideIcons.arrowDown;
+
   /// Abre/fecha um grupo na prévia do menu.
   static const IconData expandir = LucideIcons.chevronDown;
 

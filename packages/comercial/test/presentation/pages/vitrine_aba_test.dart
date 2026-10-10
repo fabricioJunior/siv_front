@@ -221,8 +221,8 @@ void main() {
     expect(tester.widget<FilledButton>(publicar).onPressed, isNull);
     expect(find.text('Tudo publicado. O site está igual a esta tela.'),
         findsOneWidget);
-    expect(find.text('Menu do site · 3'), findsOneWidget);
-    expect(find.text('Home do site · 0'), findsOneWidget);
+    expect(find.text('Menu · 3'), findsOneWidget);
+    expect(find.text('Home · 0'), findsOneWidget);
   });
 
   testWidgets(
@@ -282,16 +282,16 @@ void main() {
     expect(find.byKey(const Key('vitrine-add-lista-4')), findsOneWidget);
     await tester.tap(find.byKey(const Key('vitrine-add-lista-4')));
     await tester.pump();
-    expect(find.text('Entra na posição 4.'), findsOneWidget);
+    expect(find.text('Entra no fim do menu (posição 4)'), findsOneWidget);
     await tester.tap(find.byKey(const Key('vitrine-add-confirmar')));
     await tester.pumpAndSettle();
     expect(bloc.state.vitrine.menu.map((i) => i.itemId), [1, 2, 3, 4]);
 
-    await tester.tap(find.text('Home do site · 0'));
+    await tester.tap(find.text('Home · 0'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('vitrine-adicionar-home')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Grupos'));
+    await tester.tap(find.textContaining('Grupos ·'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('vitrine-add-grupo-7')), findsNothing);
     expect(find.text('Grupos só entram no Menu.'), findsOneWidget);

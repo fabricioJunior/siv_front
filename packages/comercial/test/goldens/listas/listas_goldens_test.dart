@@ -264,6 +264,23 @@ Future<void> _montar(
   await tester.pumpAndSettle();
 }
 
+/// Listas que a vitrine (menu) referencia em 3b/3e.
+final _listasDaVitrine = [
+  _lista(
+    id: 298,
+    titulo: 'Novidades setembro',
+    modo: ListaModo.manual,
+    quantidade: 23,
+    fim: DateTime(2026, 9, 30),
+  ),
+  _lista(
+    id: 315,
+    titulo: 'Outlet',
+    modo: ListaModo.filtro,
+    quantidade: 64,
+  ),
+];
+
 void main() {
   setUpAll(_carregarFontes);
 
@@ -273,25 +290,92 @@ void main() {
       tela: const Size(1440, 900),
       dpr: 1,
       aba: ListasAba.vitrine,
-      itens: [
-        _lista(
-          id: 298,
-          titulo: 'Novidades setembro',
-          modo: ListaModo.manual,
-          quantidade: 23,
-          fim: DateTime(2026, 9, 30),
-        ),
-        _lista(
-          id: 315,
-          titulo: 'Outlet',
-          modo: ListaModo.filtro,
-          quantidade: 64,
-        ),
-      ],
+      itens: _listasDaVitrine,
     );
     await expectLater(
       find.byType(ListasPersonalizadasPage),
       matchesGoldenFile('3b-vitrine-desktop.png'),
+    );
+  });
+
+  testWidgets('3e vitrine mobile 390x844 @2x', (tester) async {
+    await _montar(
+      tester,
+      tela: const Size(390, 844),
+      dpr: 2,
+      aba: ListasAba.vitrine,
+      itens: _listasDaVitrine,
+    );
+    await expectLater(
+      find.byType(ListasPersonalizadasPage),
+      matchesGoldenFile('3e-vitrine-mobile.png'),
+    );
+  });
+
+  testWidgets('3f posição mobile 390x844 @2x', (tester) async {
+    await _montar(
+      tester,
+      tela: const Size(390, 844),
+      dpr: 2,
+      aba: ListasAba.vitrine,
+      itens: _listasDaVitrine,
+    );
+    // "Outlet": hoje na posição 4 de 5, como no mock.
+    await tester.tap(find.byKey(const Key('vitrine-posicao-menu-lista-315')));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('3f-posicao-mobile.png'),
+    );
+  });
+
+  testWidgets('3d adicionar desktop 640x720', (tester) async {
+    await _montar(
+      tester,
+      tela: const Size(1440, 900),
+      dpr: 1,
+      aba: ListasAba.vitrine,
+      itens: [
+        ..._listasDaVitrine,
+        _lista(
+            id: 340,
+            titulo: 'Moda praia 2026',
+            modo: ListaModo.filtro,
+            quantidade: 74),
+        _lista(
+            id: 330,
+            titulo: 'Kit presente',
+            modo: ListaModo.manual,
+            quantidade: 12),
+        _lista(
+            id: 311,
+            titulo: 'Lingerie em promoção',
+            modo: ListaModo.filtro,
+            quantidade: 142),
+        _lista(
+          id: 322,
+          titulo: 'Pijamas inverno',
+          modo: ListaModo.filtro,
+          quantidade: 58,
+          situacao: ListaPersonalizadaSituacao.agendada,
+          inicio: DateTime(2026, 10, 1),
+        ),
+        _lista(
+            id: 360,
+            titulo: 'Básicos algodão',
+            modo: ListaModo.manual,
+            quantidade: 31),
+      ],
+    );
+    await tester.tap(find.byKey(const Key('vitrine-adicionar-menu')));
+    await tester.pumpAndSettle();
+    // Duas marcadas, como no mock ("Adicionar 2").
+    await tester.tap(find.byKey(const Key('vitrine-add-lista-340')));
+    await tester.tap(find.byKey(const Key('vitrine-add-lista-330')));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(Dialog),
+      matchesGoldenFile('3d-adicionar-desktop.png'),
     );
   });
 

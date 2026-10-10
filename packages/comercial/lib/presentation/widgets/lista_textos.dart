@@ -1,5 +1,6 @@
 import 'package:comercial/domain/models/lista_personalizada.dart';
 import 'package:comercial/domain/models/lista_personalizada_resumo.dart';
+import 'package:core/presentation.dart';
 
 String nomeDaLista(ListaPersonalizadaResumo l) =>
     l.titulo?.isNotEmpty == true ? l.titulo! : l.hash;
@@ -47,6 +48,14 @@ String situacaoTexto(ListaPersonalizadaSituacao s) => switch (s) {
       ListaPersonalizadaSituacao.agendada => 'Agendada',
       ListaPersonalizadaSituacao.cancelada => 'Cancelada',
       ListaPersonalizadaSituacao.expirada => 'Expirada',
+    };
+
+SivEtiquetaSituacao etiquetaDaSituacao(ListaPersonalizadaSituacao s) =>
+    switch (s) {
+      ListaPersonalizadaSituacao.ativa => SivEtiquetaSituacao.emAndamento,
+      ListaPersonalizadaSituacao.agendada => SivEtiquetaSituacao.conferido,
+      ListaPersonalizadaSituacao.cancelada => SivEtiquetaSituacao.cancelado,
+      ListaPersonalizadaSituacao.expirada => SivEtiquetaSituacao.cancelado,
     };
 
 String diaMes(DateTime d) =>

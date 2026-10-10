@@ -147,15 +147,18 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
     }
   }
 
+  /// No mobile a aba usa o rótulo curto (3e).
+  static const _rotulosCurtos = {ListasAba.vitrine: 'Vitrine'};
+
   Widget _abaComContador(BuildContext context, ListasAba aba) {
     final n = _contador(aba);
     final cores = context.sivColors;
     return Tab(
-      height: 48,
+      height: mobile ? 46 : 48,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_rotulos[aba]!),
+          Text((mobile ? _rotulosCurtos[aba] : null) ?? _rotulos[aba]!),
           if (n != null) ...[
             const SizedBox(width: 6),
             Text(
@@ -221,19 +224,23 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
           ),
           if (_abas.length > 1)
             Container(
-              height: 48,
+              height: mobile ? 46 : 48,
               decoration: BoxDecoration(
                 color: cores.superficie,
                 border: Border(bottom: BorderSide(color: cores.hairline)),
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: SivDimensoes.paddingBarraTituloHorizontal,
+              padding: EdgeInsets.symmetric(
+                horizontal: mobile
+                    ? 16
+                    : SivDimensoes.paddingBarraTituloHorizontal,
               ),
               child: TabBar(
                 key: const Key('listas-abas'),
                 controller: _tabs,
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
+                labelPadding:
+                    mobile ? const EdgeInsets.only(right: 18) : null,
                 tabs: [for (final a in _abas) _abaComContador(context, a)],
               ),
             ),
@@ -419,7 +426,7 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
                         ),
                         const SizedBox(width: 8),
                         SivEtiqueta(
-                          situacao: _etiquetaSituacao(lista.situacao),
+                          situacao: etiquetaDaSituacao(lista.situacao),
                           texto: situacaoTexto(lista.situacao),
                         ),
                       ],
@@ -485,12 +492,4 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
       ),
     );
   }
-
-  SivEtiquetaSituacao _etiquetaSituacao(ListaPersonalizadaSituacao situacao) =>
-      switch (situacao) {
-        ListaPersonalizadaSituacao.ativa => SivEtiquetaSituacao.emAndamento,
-        ListaPersonalizadaSituacao.agendada => SivEtiquetaSituacao.conferido,
-        ListaPersonalizadaSituacao.cancelada => SivEtiquetaSituacao.cancelado,
-        ListaPersonalizadaSituacao.expirada => SivEtiquetaSituacao.cancelado,
-      };
 }

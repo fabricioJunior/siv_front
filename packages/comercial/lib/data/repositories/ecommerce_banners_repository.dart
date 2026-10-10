@@ -35,8 +35,17 @@ class EcommerceBannersRepository implements IEcommerceBannersRepository {
     int id, {
     int? ordem,
     bool? ativo,
+    EcommerceBannerLink? link,
+    bool limparLink = false,
   }) =>
-      remoteDataSource.atualizarBanner(ecommerceId, id, ordem: ordem, ativo: ativo);
+      remoteDataSource.atualizarBanner(
+        ecommerceId,
+        id,
+        ordem: ordem,
+        ativo: ativo,
+        link: link,
+        limparLink: limparLink,
+      );
 
   @override
   Future<void> excluirBanner(int ecommerceId, int id) =>

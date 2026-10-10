@@ -25,6 +25,7 @@ class EcommerceBannersBloc extends Bloc<EcommerceBannersEvent, EcommerceBannersS
     on<EcommerceBannersIniciou>(_onIniciou);
     on<EcommerceBannerAdicionou>(_onAdicionou);
     on<EcommerceBannerAtivoAlterou>(_onAtivoAlterou);
+    on<EcommerceBannerLinkAlterou>(_onLinkAlterou);
     on<EcommerceBannerExcluiu>(_onExcluiu);
     on<EcommerceBannerMoveu>(_onMoveu);
   }
@@ -116,6 +117,44 @@ class EcommerceBannersBloc extends Bloc<EcommerceBannersEvent, EcommerceBannersS
       await _atualizarBannerEcommerce.call(ecommerceId, event.id, ativo: event.ativo);
     } catch (e, s) {
       emit(state.copyWith(banners: anteriores, erro: mensagemDeErroApi(e, 'Falha ao atualizar o banner.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onLinkAlterou(
+    EcommerceBannerLinkAlterou event,
+    Emitter<EcommerceBannersState> emit,
+  ) async {
+    final ecommerceId = state.ecommerceId;
+    if (ecommerceId == null) return;
+
+    final anteriores = state.banners;
+    final limpar = event.link == null;
+    emit(
+      state.copyWith(
+        banners: [
+          for (final banner in anteriores)
+            if (banner.id == event.id)
+              banner.copyWith(link: event.link, limparLink: limpar)
+            else
+              banner,
+        ],
+      ),
+    );
+    try {
+      await _atualizarBannerEcommerce.call(
+        ecommerceId,
+        event.id,
+        link: event.link,
+        limparLink: limpar,
+      );
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          banners: anteriores,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar o link do banner.'),
+        ),
+      );
       addError(e, s);
     }
   }

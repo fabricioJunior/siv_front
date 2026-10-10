@@ -1,5 +1,6 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/widgets/banner_link_editor.dart';
 import 'package:core/arquivos.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -823,6 +824,32 @@ class _CardBanner extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          InkWell(
+            key: Key('banner-link-${banner.id}'),
+            onTap: () => mostrarLinkDoBanner(context, bloc: bloc, banner: banner),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 44),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: cores.hairline)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.link, size: 16, color: cores.textoApoio),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      banner.link?.rotulo ?? 'Sem link',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: banner.link == null ? textos.apoio : textos.corpo,
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 18, color: cores.textoApoio),
+                ],
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

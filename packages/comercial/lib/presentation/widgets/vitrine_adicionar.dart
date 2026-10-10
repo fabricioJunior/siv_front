@@ -16,6 +16,9 @@ Future<void> mostrarAdicionarNaVitrine(
   final mobile =
       MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
   final cores = context.sivColors;
+  // O acervo foi lido quando a aba abriu: relê agora para a lista recém-criada
+  // (nesta ou em outra tela) já aparecer como opção.
+  bloc.add(const EcommerceVitrineRecarregouCatalogo());
   Widget conteudo(bool mobile) => BlocProvider<EcommerceVitrineBloc>.value(
         value: bloc,
         child: VitrineAdicionar(local: local, mobile: mobile),

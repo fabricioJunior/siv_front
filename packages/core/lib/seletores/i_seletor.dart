@@ -33,6 +33,12 @@ typedef SeletorPorEmpresaWidget = Widget Function({
   required SeletorData data,
 });
 
+/// Seletor que depende de categorias já escolhidas (ex: subcategorias).
+typedef SeletorPorCategoriasWidget = Widget Function({
+  required List<int> categoriaIds,
+  required SeletorData data,
+});
+
 abstract class ISeletor extends Widget {
   final List<SelectData>? itemsSelecionadosInicial;
   final Function(List<SelectData>)? onChanged;

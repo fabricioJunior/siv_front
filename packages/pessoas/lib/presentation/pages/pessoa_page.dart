@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
@@ -152,7 +151,8 @@ class _PessoaPageState extends State<PessoaPage> {
               return Material(
                 elevation: 2.0,
                 child: Stepper(
-                  type: !Platform.isAndroid
+                  // defaultTargetPlatform funciona na web; Platform (dart:io) lança ali.
+                  type: defaultTargetPlatform != TargetPlatform.android
                       ? StepperType.horizontal
                       : StepperType.vertical,
                   currentStep: _stepAtual(state),

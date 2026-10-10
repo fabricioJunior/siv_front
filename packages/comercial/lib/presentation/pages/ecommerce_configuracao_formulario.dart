@@ -292,6 +292,15 @@ class _EcommerceConfiguracaoFormularioState
                             arguments: {'ecommerceId': state.id, 'titulo': state.titulo},
                           ),
                         ),
+                        _linhaAtalho(
+                          context,
+                          label: 'Vitrine do site',
+                          valor: 'Menu e home',
+                          onTap: () => Navigator.of(context).pushNamed(
+                            '/ecommerce_vitrine',
+                            arguments: {'ecommerceId': state.id},
+                          ),
+                        ),
                         // TODO: "Promoções exclusivas do site" não tem como filtrar por
                         // canal hoje -- Promocao.canal é genérico (loja/ecommerce), sem
                         // ecommerceId específico. Omitido até existir esse dado.
@@ -562,10 +571,7 @@ class _CardIntegracao extends StatelessWidget {
   }
 }
 
-// Container "blueprint": borda reta + cantos em L decorativos. Mesmo estilo
-// visual do _CardCanal em ecommerces_page.dart, duplicado aqui (widget
-// privado, ~30 linhas) pra não acoplar os dois arquivos por causa de um
-// detalhe de estilo.
+// Seção com moldura blueprint e rótulo no topo.
 class _BlueprintBox extends StatelessWidget {
   final String titulo;
   final Widget child;
@@ -574,55 +580,16 @@ class _BlueprintBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cores = context.sivColors;
-    final textos = context.sivTextos;
-    final corCanto = cores.aco.withValues(alpha: 0.4);
-
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(SivDimensoes.paddingCard),
-          decoration: BoxDecoration(
-            color: cores.superficie,
-            border: Border.all(color: cores.hairline),
-            borderRadius: BorderRadius.circular(SivDimensoes.raio),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(titulo, style: textos.rotulo),
-              const SizedBox(height: 12),
-              child,
-            ],
-          ),
-        ),
-        _canto(corCanto, top: true, left: true),
-        _canto(corCanto, top: true, left: false),
-        _canto(corCanto, top: false, left: true),
-        _canto(corCanto, top: false, left: false),
-      ],
-    );
-  }
-
-  Widget _canto(Color cor, {required bool top, required bool left}) {
-    const tamanho = 8.0;
-    return Positioned(
-      top: top ? 0 : null,
-      bottom: top ? null : 0,
-      left: left ? 0 : null,
-      right: left ? null : 0,
-      child: Container(
-        width: tamanho,
-        height: tamanho,
-        decoration: BoxDecoration(
-          border: Border(
-            top: top ? BorderSide(color: cor) : BorderSide.none,
-            bottom: !top ? BorderSide(color: cor) : BorderSide.none,
-            left: left ? BorderSide(color: cor) : BorderSide.none,
-            right: !left ? BorderSide(color: cor) : BorderSide.none,
-          ),
-        ),
+    return SivMolduraBlueprint(
+      fundo: context.sivColors.superficie,
+      padding: SivDimensoes.paddingCard,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(titulo, style: context.sivTextos.rotulo),
+          const SizedBox(height: 12),
+          child,
+        ],
       ),
     );
   }

@@ -245,6 +245,11 @@ final _itensEcommerceFilhos = <_ItemFilhoNav>[
     componentesNecessarios: ['PROMFC001'],
   ),
   const _ItemFilhoNav(
+    label: 'Vitrine do site',
+    rota: '/listas_personalizadas',
+    componentesNecessarios: ['ECOFM004'],
+  ),
+  const _ItemFilhoNav(
     label: 'Configurações',
     rota: '/configuracao_ecommerce',
     componentesNecessarios: ['ECOFM001'],
@@ -279,8 +284,8 @@ final _itensDiaADia = <_ItemDeNavegacao>[
     label: 'Comercial',
     icone: Icons.local_mall_outlined,
     // Item-acordeão (venda, devolução, pedidos, romaneios, histórico de
-    // vendas, consignações, promoções, cupons, minhas listas) -- e-commerce
-    // saiu daqui, virou item de topo próprio.
+    // vendas, consignações, promoções, cupons) -- e-commerce saiu daqui,
+    // virou item de topo próprio, e levou "Vitrine do site" junto.
     componentesNecessarios: _uniaoComponentes(_itensComercialFilhos),
     filhos: _itensComercialFilhos,
   ),

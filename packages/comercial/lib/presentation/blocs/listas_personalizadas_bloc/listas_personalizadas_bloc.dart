@@ -28,17 +28,20 @@ class ListasPersonalizadasBloc
         step: ListasPersonalizadasStep.carregando,
         itens: const [],
         page: 1,
+        tipo: event.tipo,
+        limparTipo: event.tipo == null,
         erro: '',
       ),
     );
     try {
-      final pagina = await _listarListasPersonalizadas.call(page: 1);
+      final pagina = await _listarListasPersonalizadas.call(page: 1, tipo: event.tipo);
       emit(
         state.copyWith(
           step: ListasPersonalizadasStep.carregado,
           itens: pagina.items,
           page: 1,
           totalPages: pagina.meta.totalPages,
+          totalItens: pagina.meta.totalItems,
           erro: '',
         ),
       );
@@ -64,13 +67,14 @@ class ListasPersonalizadasBloc
     emit(state.copyWith(step: ListasPersonalizadasStep.carregandoMais, erro: ''));
 
     try {
-      final pagina = await _listarListasPersonalizadas.call(page: proximaPagina);
+      final pagina = await _listarListasPersonalizadas.call(page: proximaPagina, tipo: state.tipo);
       emit(
         state.copyWith(
           step: ListasPersonalizadasStep.carregado,
           itens: [...state.itens, ...pagina.items],
           page: proximaPagina,
           totalPages: pagina.meta.totalPages,
+          totalItens: pagina.meta.totalItems,
           erro: '',
         ),
       );

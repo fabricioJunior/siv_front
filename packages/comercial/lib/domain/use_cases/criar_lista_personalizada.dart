@@ -7,16 +7,6 @@ class CriarListaPersonalizada {
   CriarListaPersonalizada({required IListaPersonalizadaRepository repository})
       : _repository = repository;
 
-  Future<ListaPersonalizada> call({
-    required int tabelaPrecoId,
-    required DateTime dataExpiracao,
-    List<int> referenciaIds = const [],
-    String? titulo,
-  }) =>
-      _repository.criar(
-        tabelaPrecoId: tabelaPrecoId,
-        dataExpiracao: dataExpiracao,
-        referenciaIds: referenciaIds,
-        titulo: titulo,
-      );
+  Future<ListaPersonalizada> call(ListaPersonalizadaInput input) =>
+      _repository.criar(input);
 }

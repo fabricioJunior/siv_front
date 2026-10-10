@@ -59,12 +59,6 @@ const comercialAcordeaoItens = <SivMenuAcordeaoFilho>[
     componente: 'CUPFC001',
     grupo: 'MARKETING',
   ),
-  SivMenuAcordeaoFilho(
-    label: 'Minhas listas',
-    rota: '/listas_personalizadas',
-    componente: 'ECOFM004',
-    grupo: 'MARKETING',
-  ),
 ];
 
 class ComercialMenuPage extends StatelessWidget {
@@ -148,8 +142,8 @@ class ComercialMenuPage extends StatelessWidget {
       ),
       const _ItemData(
         icon: Icons.playlist_add_check_outlined,
-        titulo: 'Minhas listas',
-        subtitulo: 'Listas personalizadas de produtos pra compartilhar.',
+        titulo: 'Vitrine do site',
+        subtitulo: 'Listas do catálogo, provador e ordem do menu e da home.',
         cor: Colors.blueGrey,
         componente: 'ECOFM004',
         route: '/listas_personalizadas',

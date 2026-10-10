@@ -16,5 +16,17 @@ class EcommerceLoteFalha {
   final int id;
   final List<String> motivos;
 
-  const EcommerceLoteFalha({required this.id, this.motivos = const []});
+  /// Mensagem devolvida pela API (ex.: referência já adicionada), quando houver.
+  final String? mensagem;
+
+  /// Preenchido quando [id] é o id da REFERÊNCIA (adicionar ao e-commerce), e não o do
+  /// registro do e-commerce, que é o que a publicação em lote usa.
+  final int? referenciaId;
+
+  const EcommerceLoteFalha({
+    required this.id,
+    this.motivos = const [],
+    this.mensagem,
+    this.referenciaId,
+  });
 }

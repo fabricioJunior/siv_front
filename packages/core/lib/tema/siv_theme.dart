@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+/// Famílias empacotadas em `packages/core/assets/fonts` (OFL). O prefixo
+/// `packages/core/` é exigido por fonte declarada no pubspec de um pacote.
+const String sivFonteBarlow = 'packages/core/Barlow';
+const String sivFonteCondensed = 'packages/core/BarlowCondensed';
 
 /// Paleta e medidas do redesign SIV / Vale do Ceará. Toda cor, raio e
 /// espaçamento usado em `presentation/` deve vir daqui -- nenhum widget deve
@@ -245,7 +249,8 @@ class SivTextStyles extends ThemeExtension<SivTextStyles> {
       required double altura,
       required FontWeight peso,
       double? espacamento,
-    }) => GoogleFonts.barlowCondensed(
+    }) => TextStyle(
+      fontFamily: sivFonteCondensed,
       fontSize: tamanho,
       height: altura,
       fontWeight: peso,
@@ -258,7 +263,8 @@ class SivTextStyles extends ThemeExtension<SivTextStyles> {
       required double altura,
       required FontWeight peso,
       double? espacamento,
-    }) => GoogleFonts.barlow(
+    }) => TextStyle(
+      fontFamily: sivFonteBarlow,
       fontSize: tamanho,
       height: altura,
       fontWeight: peso,
@@ -373,7 +379,7 @@ class SivTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: cores.papel,
-      fontFamily: GoogleFonts.barlow().fontFamily,
+      fontFamily: sivFonteBarlow,
       extensions: [cores, textos],
       textTheme: TextTheme(
         displayLarge: textos.display,
@@ -427,7 +433,7 @@ class SivTheme {
           disabledForegroundColor: Colors.white.withValues(alpha: 0.45),
           minimumSize: const Size(0, SivDimensoes.alvoToqueMinimo),
           textStyle: textos.corpo.copyWith(
-            fontFamily: GoogleFonts.barlowCondensed().fontFamily,
+            fontFamily: sivFonteCondensed,
             fontWeight: FontWeight.w600,
           ),
           shape: RoundedRectangleBorder(
@@ -472,6 +478,105 @@ class SivTheme {
           side: borda,
         ),
         labelStyle: textos.apoio,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: cores.aco,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: cores.aco.withValues(alpha: 0.45),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.45),
+          minimumSize: const Size(0, SivDimensoes.alvoToqueMinimo),
+          textStyle: const TextStyle(
+            fontFamily: sivFonteCondensed,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        // Sem ✓: o tema não expõe `showSelectedIcon`, então o ícone vira vazio.
+        selectedIcon: const SizedBox.shrink(),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected)
+                ? cores.acoEscuro
+                : cores.superficie,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? Colors.white : cores.tinta,
+          ),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: cores.tinta.withValues(alpha: 0.18)),
+          ),
+          shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
+          minimumSize: const WidgetStatePropertyAll(
+            Size(0, SivDimensoes.alvoToqueMinimo),
+          ),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 20),
+          ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(
+              fontFamily: sivFonteBarlow,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+      // `tabAlignment` fica fora: no tema global ele quebra toda TabBar não
+      // rolável (assert do framework). Cada tela rolável define o seu.
+      tabBarTheme: TabBarThemeData(
+        indicator: UnderlineTabIndicator(
+          borderSide: BorderSide(color: cores.aco, width: 2),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: cores.hairline,
+        labelColor: cores.tinta,
+        unselectedLabelColor: cores.tinta.withValues(alpha: 0.6),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+        labelStyle: const TextStyle(
+          fontFamily: sivFonteBarlow,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontFamily: sivFonteBarlow,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: cores.aco,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        ),
+        extendedSizeConstraints: const BoxConstraints.tightFor(height: 52),
+        extendedTextStyle: const TextStyle(
+          fontFamily: sivFonteCondensed,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.6,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        shape: const RoundedRectangleBorder(),
+        side: BorderSide(
+          width: 1.5,
+          color: cores.tinta.withValues(alpha: 0.3),
+        ),
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? cores.aco : null,
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        minVerticalPadding: 8,
+        dense: false,
       ),
       dividerTheme: DividerThemeData(color: cores.hairline, thickness: 1),
     );

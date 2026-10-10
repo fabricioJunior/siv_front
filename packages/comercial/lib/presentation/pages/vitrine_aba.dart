@@ -6,7 +6,6 @@ import 'package:core/bloc.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Pergunta antes de perder o rascunho da vitrine. `true` = pode sair.
 Future<bool> confirmarSairSemPublicar(
@@ -35,11 +34,16 @@ class VitrineAba extends StatefulWidget {
   final int? canalId;
   final ValueChanged<int> onCanalChanged;
 
+  /// Quando `true`, o seletor de canal é desenhado aqui (fallback). Na página
+  /// ele mora na barra de título, à direita.
+  final bool mostrarSeletorDeCanal;
+
   const VitrineAba({
     super.key,
     required this.canais,
     required this.canalId,
     required this.onCanalChanged,
+    this.mostrarSeletorDeCanal = false,
   });
 
   @override
@@ -54,6 +58,14 @@ class _VitrineAbaState extends State<VitrineAba> {
     final n = bloc.state.alteracoesPendentes;
     if (n > 0 && !await confirmarSairSemPublicar(context, n)) return;
     widget.onCanalChanged(id);
+  }
+
+  /// O backend não guarda o endereço do site: usa o subtítulo do canal quando
+  /// houver, senão o título.
+  String get _url {
+    final c = widget.canais.where((e) => e.id == widget.canalId).firstOrNull;
+    final s = c?.subtitulo;
+    return s != null && s.isNotEmpty ? s : (c?.titulo ?? '');
   }
 
   @override
@@ -96,29 +108,36 @@ class _VitrineAbaState extends State<VitrineAba> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Cabecalho(
-              canais: widget.canais,
+            _BarraFerramentas(
+              canais: widget.mostrarSeletorDeCanal ? widget.canais : const [],
               canalId: widget.canalId!,
               onCanal: _trocarCanal,
               local: _local,
               state: state,
               onLocal: (l) => setState(() => _local = l),
+              mobile: mobile,
             ),
             Expanded(
               child: mobile
                   ? lista
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: lista),
-                        const SizedBox(width: 24),
-                        SizedBox(
-                          width: 320,
-                          child: SingleChildScrollView(
-                            child: VitrinePrevia(local: _local, state: state),
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SivDimensoes.paddingBarraTituloHorizontal,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: lista),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: VitrinePrevia(
+                              local: _local,
+                              state: state,
+                              url: _url,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
             ),
             _Rodape(state: state, mobile: mobile),
@@ -129,61 +148,165 @@ class _VitrineAbaState extends State<VitrineAba> {
   }
 }
 
-class _Cabecalho extends StatelessWidget {
+/// Segmento Menu/Home, texto de apoio do local e "+ Adicionar".
+class _BarraFerramentas extends StatelessWidget {
   final List<Ecommerce> canais;
   final int canalId;
   final ValueChanged<int> onCanal;
   final VitrineLocal local;
   final EcommerceVitrineState state;
   final ValueChanged<VitrineLocal> onLocal;
+  final bool mobile;
 
-  const _Cabecalho({
+  const _BarraFerramentas({
     required this.canais,
     required this.canalId,
     required this.onCanal,
     required this.local,
     required this.state,
     required this.onLocal,
+    required this.mobile,
   });
 
   @override
   Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
     final comId = canais.where((c) => c.id != null).toList();
+    final segmento = SegmentedButton<VitrineLocal>(
+      showSelectedIcon: false,
+      segments: [
+        ButtonSegment(
+          value: VitrineLocal.menu,
+          label: Text('Menu do site · ${state.vitrine.menu.length}'),
+        ),
+        ButtonSegment(
+          value: VitrineLocal.home,
+          label: Text('Home do site · ${state.vitrine.home.length}'),
+        ),
+      ],
+      selected: {local},
+      onSelectionChanged: (s) => onLocal(s.first),
+    );
+    final apoio = Text(
+      local == VitrineLocal.menu
+          ? 'Listas e grupos no menu lateral do site, nesta ordem.'
+          : 'Faixas de produtos na página inicial, abaixo dos banners. Só listas.',
+      style: textos.apoio.copyWith(
+        fontSize: mobile ? 12 : 13,
+        color: cores.tinta.withValues(alpha: 0.6),
+      ),
+    );
+
+    if (mobile) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (comId.length > 1) _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
+            SizedBox(height: 46, child: segmento),
+            const SizedBox(height: 8),
+            apoio,
+          ],
+        ),
+      );
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      padding: const EdgeInsets.symmetric(
+        horizontal: SivDimensoes.paddingBarraTituloHorizontal,
+        vertical: 16,
+      ),
+      child: Row(
         children: [
-          if (comId.length > 1)
-            DropdownButton<int>(
+          if (comId.length > 1) ...[
+            _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
+            const SizedBox(width: 16),
+          ],
+          segmento,
+          const SizedBox(width: 20),
+          Expanded(child: apoio),
+          const SizedBox(width: 20),
+          OutlinedButton.icon(
+            key: Key('vitrine-adicionar-${local.name}'),
+            onPressed: () => mostrarAdicionarNaVitrine(
+                context,
+                bloc: context.read<EcommerceVitrineBloc>(),
+                local: local),
+            icon: const Icon(SivIcones.adicionar, size: SivIcones.tamanhoBotao),
+            label: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Caixa de 44px "Canal **Nome** ▾". Usada na barra de título (desktop).
+class SeletorDeCanalVitrine extends StatelessWidget {
+  final List<Ecommerce> canais;
+  final int canalId;
+  final ValueChanged<int> onCanal;
+
+  const SeletorDeCanalVitrine({
+    super.key,
+    required this.canais,
+    required this.canalId,
+    required this.onCanal,
+  });
+
+  @override
+  Widget build(BuildContext context) => _SeletorDeCanal(
+        canais: canais,
+        canalId: canalId,
+        onCanal: onCanal,
+      );
+}
+
+class _SeletorDeCanal extends StatelessWidget {
+  final List<Ecommerce> canais;
+  final int canalId;
+  final ValueChanged<int> onCanal;
+
+  const _SeletorDeCanal({
+    required this.canais,
+    required this.canalId,
+    required this.onCanal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return Container(
+      height: SivDimensoes.alvoToqueMinimo,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: cores.superficie,
+        border: Border.all(color: cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Canal',
+              style: textos.apoio.copyWith(color: cores.textoApoio)),
+          const SizedBox(width: 10),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
               key: const Key('vitrine-canal'),
               value: canalId,
+              isDense: true,
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
               items: [
-                for (final c in comId)
+                for (final c in canais)
                   DropdownMenuItem(value: c.id, child: Text(c.titulo)),
               ],
               onChanged: (v) {
                 if (v != null && v != canalId) onCanal(v);
               },
             ),
-          SegmentedButton<VitrineLocal>(
-            showSelectedIcon: false,
-            style: const ButtonStyle(
-                minimumSize: WidgetStatePropertyAll(Size(0, 44))),
-            segments: [
-              ButtonSegment(
-                value: VitrineLocal.menu,
-                label: Text('Menu do site · ${state.vitrine.menu.length}'),
-              ),
-              ButtonSegment(
-                value: VitrineLocal.home,
-                label: Text('Home do site · ${state.vitrine.home.length}'),
-              ),
-            ],
-            selected: {local},
-            onSelectionChanged: (s) => onLocal(s.first),
           ),
         ],
       ),
@@ -202,67 +325,97 @@ class _ListaDoLocal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = context.sivTextos;
+    final cores = context.sivColors;
     final bloc = context.read<EcommerceVitrineBloc>();
     final itens = state.vitrine.doLocal(local);
-    final menu = local == VitrineLocal.menu;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                menu
-                    ? 'Listas e grupos no menu lateral do site, nesta ordem.'
-                    : 'Faixas de produtos na página inicial, abaixo dos banners. Só listas.',
-                style: textos.apoio,
-              ),
+
+    final linhas = itens.isEmpty
+        ? Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+                child:
+                    Text('Nada configurado ainda.', style: textos.apoio)),
+          )
+        : ReorderableListView.builder(
+            buildDefaultDragHandles: false,
+            shrinkWrap: !mobile,
+            physics: mobile ? null : const NeverScrollableScrollPhysics(),
+            itemCount: itens.length,
+            onReorderItem: (de, para) {
+              final i = itens[de];
+              bloc.add(
+                EcommerceVitrineItemMoveu(
+                  local: local,
+                  tipo: i.tipo,
+                  itemId: i.itemId,
+                  indice: para,
+                ),
+              );
+            },
+            itemBuilder: (context, index) => VitrineLinha(
+              key: ValueKey(
+                  '${local.name}-${itens[index].tipo.name}-${itens[index].itemId}'),
+              index: index,
+              total: itens.length,
+              item: itens[index],
+              local: local,
+              state: state,
+              mobile: mobile,
             ),
-            TextButton.icon(
+          );
+
+    if (mobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: linhas),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton.icon(
               key: Key('vitrine-adicionar-${local.name}'),
-              style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
+              style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
               onPressed: () =>
                   mostrarAdicionarNaVitrine(context, bloc: bloc, local: local),
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(SivIcones.adicionar,
+                  size: SivIcones.tamanhoBotao),
               label: const Text('Adicionar'),
             ),
-          ],
-        ),
-        Expanded(
-          child: itens.isEmpty
-              ? Center(
-                  child: Text('Nada configurado ainda.', style: textos.apoio))
-              : ReorderableListView.builder(
-                  buildDefaultDragHandles: false,
-                  itemCount: itens.length,
-                  onReorderItem: (de, para) {
-                    final i = itens[de];
-                    bloc.add(
-                      EcommerceVitrineItemMoveu(
-                        local: local,
-                        tipo: i.tipo,
-                        itemId: i.itemId,
-                        indice: para,
-                      ),
-                    );
-                  },
-                  itemBuilder: (context, index) => VitrineLinha(
-                    key: ValueKey(
-                        '${local.name}-${itens[index].tipo.name}-${itens[index].itemId}'),
-                    index: index,
-                    total: itens.length,
-                    item: itens[index],
-                    local: local,
-                    state: state,
-                    mobile: mobile,
-                  ),
-                ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text('Tirar do site não apaga a lista.', style: textos.apoio),
-        ),
-      ],
+          ),
+        ],
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 6),
+            child: Row(
+              children: [
+                const SizedBox(width: 34),
+                SizedBox(width: 56, child: Text('POSIÇÃO', style: textos.rotulo)),
+                const SizedBox(width: 10),
+                Text('ITEM', style: textos.rotulo),
+              ],
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: cores.superficie,
+              border: Border.all(color: cores.hairline),
+            ),
+            child: linhas,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              'Arraste pela alça ou digite a posição. Tirar do site não apaga a lista.',
+              style: textos.apoio,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -388,7 +541,7 @@ class VitrineLinha extends StatelessWidget {
               ListTile(
                 key: const Key('vitrine-tirar'),
                 minTileHeight: 48,
-                leading: const Icon(Icons.close),
+                leading: const Icon(SivIcones.remover),
                 title: Text(menu ? 'Tirar do menu' : 'Tirar da home'),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -410,10 +563,13 @@ class VitrineLinha extends StatelessWidget {
         ? state.duplicidades[item.itemId]
         : null;
     final agendada = item.situacao == 'agendada';
+    final chaveBase = '${local.name}-${item.tipo.name}-${item.itemId}';
+
     return Opacity(
       opacity: agendada ? 0.6 : 1,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 62),
+        constraints: BoxConstraints(minHeight: mobile ? 68 : 64),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: cores.superficie,
           border: Border(bottom: BorderSide(color: cores.hairline)),
@@ -422,51 +578,62 @@ class VitrineLinha extends StatelessWidget {
           children: [
             ReorderableDragStartListener(
               index: index,
-              child: const SizedBox(
-                width: 44,
-                height: 44,
-                child: Icon(Icons.drag_indicator),
+              child: SizedBox(
+                width: mobile ? 28 : 24,
+                height: SivDimensoes.alvoToqueMinimo,
+                child: Icon(
+                  SivIcones.alcaArrastar,
+                  size: SivIcones.tamanhoLinha,
+                  color: cores.tinta.withValues(alpha: 0.4),
+                ),
               ),
             ),
-            if (mobile)
-              SizedBox(
-                width: 44,
-                height: 44,
-                child: OutlinedButton(
-                  key: Key(
-                      'vitrine-posicao-${local.name}-${item.tipo.name}-${item.itemId}'),
-                  style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-                  onPressed: () => _abrirPosicao(context),
-                  child: Text('${index + 1}'),
-                ),
-              )
-            else
-              _CampoIndice(
-                total: total,
-                posicao: index + 1,
-                onSubmit: (p) => _mover(context, p - 1),
-                chave: Key(
-                    'vitrine-indice-${local.name}-${item.tipo.name}-${item.itemId}'),
+            const SizedBox(width: 10),
+            SivCampoPosicao(
+              key: Key(mobile
+                  ? 'vitrine-posicao-$chaveBase'
+                  : 'vitrine-indice-$chaveBase'),
+              posicao: index + 1,
+              total: total,
+              onMover: (p) => _mover(context, p - 1),
+              aoAbrir: mobile ? () => _abrirPosicao(context) : null,
+            ),
+            const SizedBox(width: 10),
+            if (!mobile) ...[
+              Icon(
+                item.tipo == VitrineItemTipo.grupo
+                    ? SivIcones.grupo
+                    : SivIcones.lista,
+                size: 20,
+                color: cores.aco,
               ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 10),
+            ],
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(item.nome, style: textos.corpo),
-                    Text(_meta(), style: textos.apoio),
+                    Text(
+                      item.nome,
+                      style: textos.corpo.copyWith(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    Text(
+                      _meta(),
+                      style: textos.apoio
+                          .copyWith(fontSize: mobile ? 11.5 : 12),
+                    ),
                     if (dup != null)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        color: cores.atencaoFundo,
-                        child: Text(
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: SivAvisoAtencao(
                           'Também aparece dentro de $dup (duplicado no menu)',
                           key: const Key('vitrine-duplicado'),
-                          style: textos.apoio.copyWith(color: cores.atencao),
                         ),
                       ),
                   ],
@@ -475,76 +642,18 @@ class VitrineLinha extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Remover',
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              constraints: const BoxConstraints(
+                minWidth: SivDimensoes.alvoToqueMinimo,
+                minHeight: SivDimensoes.alvoToqueMinimo,
+              ),
               onPressed: () => _remover(context),
-              icon: const Icon(Icons.close),
+              icon: Icon(
+                SivIcones.remover,
+                size: SivIcones.tamanhoLinha,
+                color: cores.tinta.withValues(alpha: 0.55),
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CampoIndice extends StatefulWidget {
-  final int posicao;
-  final int total;
-  final ValueChanged<int> onSubmit;
-  final Key chave;
-
-  const _CampoIndice({
-    required this.posicao,
-    required this.total,
-    required this.onSubmit,
-    required this.chave,
-  });
-
-  @override
-  State<_CampoIndice> createState() => _CampoIndiceState();
-}
-
-class _CampoIndiceState extends State<_CampoIndice> {
-  late final TextEditingController _c =
-      TextEditingController(text: '${widget.posicao}');
-
-  @override
-  void didUpdateWidget(_CampoIndice old) {
-    super.didUpdateWidget(old);
-    if (old.posicao != widget.posicao) _c.text = '${widget.posicao}';
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  void _enviar() {
-    final n = int.tryParse(_c.text.trim());
-    if (n == null) {
-      _c.text = '${widget.posicao}';
-      return;
-    }
-    widget.onSubmit(n.clamp(1, widget.total));
-    _c.text = '${n.clamp(1, widget.total)}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 60,
-      child: Focus(
-        onFocusChange: (f) {
-          if (!f) _enviar();
-        },
-        child: TextField(
-          key: widget.chave,
-          controller: _c,
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onSubmitted: (_) => _enviar(),
-          decoration: const InputDecoration(isDense: true),
         ),
       ),
     );
@@ -562,7 +671,6 @@ class _Rodape extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textos = context.sivTextos;
     final cores = context.sivColors;
     final bloc = context.read<EcommerceVitrineBloc>();
     final n = state.alteracoesPendentes;
@@ -574,172 +682,263 @@ class _Rodape extends StatelessWidget {
             ? 'Publicado no site às ${_hora(state.publicadoEm!)}'
             : 'Tudo publicado. O site está igual a esta tela.';
 
-    final statusW = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: n > 0 ? cores.atencao : cores.aco,
-          ),
+    return SivRodapeAcoes(
+      key: const Key('vitrine-status'),
+      mobile: mobile,
+      status: status,
+      corStatus: n > 0 ? cores.atencao : cores.aco,
+      secundaria: TextButton(
+        key: const Key('vitrine-descartar'),
+        onPressed: n == 0 || state.publicando
+            ? null
+            : () => bloc.add(const EcommerceVitrineDescartou()),
+        child: const Text('Descartar'),
+      ),
+      primaria: FilledButton(
+        key: const Key('vitrine-publicar'),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 26),
         ),
-        const SizedBox(width: 8),
-        Flexible(
-            child: Text(status,
-                key: const Key('vitrine-status'), style: textos.apoio)),
-      ],
-    );
-    final descartar = TextButton(
-      key: const Key('vitrine-descartar'),
-      style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
-      onPressed: n == 0 || state.publicando
-          ? null
-          : () => bloc.add(const EcommerceVitrineDescartou()),
-      child: const Text('Descartar'),
-    );
-    final publicar = FilledButton(
-      key: const Key('vitrine-publicar'),
-      style: FilledButton.styleFrom(minimumSize: const Size(0, 52)),
-      onPressed: n == 0 || state.publicando
-          ? null
-          : () => bloc.add(const EcommerceVitrinePublicou()),
-      child: state.publicando
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-            )
-          : const Text('Publicar no site'),
-    );
-
-    return Container(
-      padding: const EdgeInsets.only(top: 8, bottom: 8),
-      decoration:
-          BoxDecoration(border: Border(top: BorderSide(color: cores.hairline))),
-      child: mobile
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                statusW,
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    descartar,
-                    const SizedBox(width: 8),
-                    Expanded(child: publicar),
-                  ],
-                ),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(
-                    child:
-                        Align(alignment: Alignment.centerLeft, child: statusW)),
-                descartar,
-                const SizedBox(width: 12),
-                SizedBox(width: 220, child: publicar),
-              ],
-            ),
+        onPressed: n == 0 || state.publicando
+            ? null
+            : () => bloc.add(const EcommerceVitrinePublicou()),
+        child: state.publicando
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+              )
+            : Text(mobile ? 'PUBLICAR NO SITE' : 'Publicar no site'),
+      ),
     );
   }
 }
 
-/// Prévia do site (desktop): menu lateral com grupos expandidos, ou faixas da
-/// home abaixo do bloco de banners. Lista agendada aparece apagada.
+/// Prévia do site (desktop) dentro de uma moldura de navegador: menu lateral
+/// com os grupos expandidos, ou as faixas da home abaixo dos banners.
 class VitrinePrevia extends StatelessWidget {
   final VitrineLocal local;
   final EcommerceVitrineState state;
+  final String url;
 
-  const VitrinePrevia({super.key, required this.local, required this.state});
+  const VitrinePrevia({
+    super.key,
+    required this.local,
+    required this.state,
+    this.url = '',
+  });
 
   @override
   Widget build(BuildContext context) {
     final textos = context.sivTextos;
-    final cores = context.sivColors;
-    final itens = state.vitrine.doLocal(local);
-    final filhos = <Widget>[];
-
-    if (local == VitrineLocal.home) {
-      filhos.add(
-        Container(
-          padding: const EdgeInsets.all(12),
-          color: cores.superficieRecuada,
-          child: Text('Banners da home · editar na aba Design do canal',
-              style: textos.apoio),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            local == VitrineLocal.menu
+                ? 'ASSIM FICA NO SITE · MENU'
+                : 'ASSIM FICA NO SITE · HOME',
+            style: textos.rotulo,
+          ),
         ),
-      );
-    }
+        Expanded(
+          child: SivMolduraNavegador(
+            key: const Key('vitrine-previa'),
+            url: url,
+            child: local == VitrineLocal.menu
+                ? _PreviaMenu(state: state)
+                : _PreviaHome(state: state),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PreviaMenu extends StatelessWidget {
+  final EcommerceVitrineState state;
+
+  const _PreviaMenu({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final itens = state.vitrine.menu;
+    final linhas = <Widget>[];
+
     for (final i in itens) {
       final agendada = i.situacao == 'agendada';
-      final dup = local == VitrineLocal.menu &&
-          i.tipo == VitrineItemTipo.lista &&
+      final dup = i.tipo == VitrineItemTipo.lista &&
           state.duplicidades.containsKey(i.itemId);
-      final cor = dup ? cores.atencao : null;
       final grupo = i.tipo == VitrineItemTipo.grupo
           ? state.grupos.where((g) => g.id == i.itemId).firstOrNull
           : null;
-      final inicio = i.tipo == VitrineItemTipo.lista
-          ? state.listas.where((l) => l.id == i.itemId).firstOrNull?.dataInicio
-          : null;
-      filhos.add(
+      linhas.add(
         Opacity(
-          opacity: agendada ? 0.5 : 1,
+          opacity: agendada ? 0.45 : 1,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            child: Row(
               children: [
-                Text(
-                  i.nome,
-                  style: (i.tipo == VitrineItemTipo.grupo
-                          ? textos.rotulo
-                          : textos.corpo)
-                      .copyWith(color: cor),
-                ),
-                if (agendada)
-                  Text(
-                    inicio == null
-                        ? 'agendada'
-                        : 'aparece a partir de ${diaMes(inicio)}',
-                    style: textos.apoio,
-                  ),
-                if (grupo != null)
-                  for (final l in ([
-                    ...grupo.listas
-                  ]..sort((a, b) => a.ordem.compareTo(b.ordem))))
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 2),
-                      child: Text(l.nome, style: textos.apoio),
+                Flexible(
+                  child: Text(
+                    i.nome,
+                    style: textos.corpo.copyWith(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: dup ? cores.atencao : null,
                     ),
+                  ),
+                ),
+                if (grupo != null) ...[
+                  const SizedBox(width: 6),
+                  Icon(SivIcones.expandir, size: 12, color: cores.textoApoio),
+                ],
               ],
             ),
           ),
         ),
       );
+      if (grupo != null) {
+        for (final l in [...grupo.listas]
+          ..sort((a, b) => a.ordem.compareTo(b.ordem))) {
+          linhas.add(
+            Padding(
+              padding: const EdgeInsets.only(left: 28, right: 16, bottom: 9),
+              child: Text(
+                l.nome,
+                style: textos.corpo.copyWith(
+                  fontSize: 12.5,
+                  color: cores.tinta.withValues(alpha: 0.65),
+                ),
+              ),
+            ),
+          );
+        }
+      }
     }
-    return Container(
-      key: const Key('vitrine-previa'),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cores.superficie,
-        border: Border.all(color: cores.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            local == VitrineLocal.menu
-                ? 'ASSIM APARECE NO MENU'
-                : 'ASSIM APARECE NA HOME',
-            style: textos.apoio,
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          width: 220,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(right: BorderSide(color: cores.hairline)),
           ),
-          const SizedBox(height: 8),
-          ...filhos,
-        ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: linhas,
+            ),
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.all(16),
+            crossAxisCount: 3,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 4 / 5,
+            children: [
+              for (var i = 0; i < 6; i++)
+                const SivMiniatura(
+                    largura: double.infinity, altura: double.infinity),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PreviaHome extends StatelessWidget {
+  final EcommerceVitrineState state;
+
+  const _PreviaHome({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          height: 90,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            // ponytail: borda sólida no lugar da tracejada do mock -- tracejado
+            // exigiria um CustomPainter só para isso.
+            border: Border.all(color: cores.atencaoBorda),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Banners da home', style: textos.corpo),
+              Text('editar na aba Design do canal',
+                  style: textos.apoio.copyWith(color: cores.acoProfundo)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        for (final i in state.vitrine.home)
+          _FaixaHome(
+            item: i,
+            inicio: state.listas
+                .where((l) => l.id == i.itemId)
+                .firstOrNull
+                ?.dataInicio,
+          ),
+      ],
+    );
+  }
+}
+
+class _FaixaHome extends StatelessWidget {
+  final EcommerceVitrineItem item;
+  final DateTime? inicio;
+
+  const _FaixaHome({required this.item, this.inicio});
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final agendada = item.situacao == 'agendada';
+    return Opacity(
+      opacity: agendada ? 0.45 : 1,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.nome,
+              style: textos.secao.copyWith(fontSize: 15),
+            ),
+            if (agendada)
+              Text(
+                inicio == null
+                    ? 'agendada'
+                    : 'aparece a partir de ${diaMes(inicio!)}',
+                style: textos.apoio.copyWith(fontSize: 11.5),
+              ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                for (var n = 0; n < 5; n++)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: SivMiniatura(largura: 42, altura: 52),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

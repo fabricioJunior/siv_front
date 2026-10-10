@@ -41,6 +41,7 @@ class ListasPersonalizadasBloc
           itens: pagina.items,
           page: 1,
           totalPages: pagina.meta.totalPages,
+          totalItens: pagina.meta.totalItems,
           erro: '',
         ),
       );
@@ -73,6 +74,7 @@ class ListasPersonalizadasBloc
           itens: [...state.itens, ...pagina.items],
           page: proximaPagina,
           totalPages: pagina.meta.totalPages,
+          totalItens: pagina.meta.totalItems,
           erro: '',
         ),
       );

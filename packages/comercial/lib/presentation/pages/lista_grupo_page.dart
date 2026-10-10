@@ -118,6 +118,14 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Voltar'),
+                  ),
+                ),
                 SivTituloPagina(
                   titulo: widget.grupoId == null ? 'Novo grupo' : 'Editar grupo',
                 ),

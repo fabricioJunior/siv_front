@@ -82,6 +82,14 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Voltar'),
+                  ),
+                ),
                 const SivTituloPagina(titulo: 'Lista personalizada'),
                 Expanded(
                   child: ConstrainedBox(

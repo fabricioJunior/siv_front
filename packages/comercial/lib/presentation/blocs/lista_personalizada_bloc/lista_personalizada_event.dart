@@ -8,18 +8,46 @@ abstract class ListaPersonalizadaEvent extends Equatable {
 }
 
 class ListaPersonalizadaCriou extends ListaPersonalizadaEvent {
-  final int tabelaPrecoId;
-  final DateTime dataExpiracao;
-  final String? titulo;
+  final ListaPersonalizadaInput input;
 
-  const ListaPersonalizadaCriou({
-    required this.tabelaPrecoId,
-    required this.dataExpiracao,
-    this.titulo,
-  });
+  const ListaPersonalizadaCriou({required this.input});
 
   @override
-  List<Object?> get props => [tabelaPrecoId, dataExpiracao, titulo];
+  List<Object?> get props => [input];
+}
+
+/// Edita os dados da lista já criada (PATCH).
+class ListaPersonalizadaAtualizou extends ListaPersonalizadaEvent {
+  final ListaPersonalizadaInput input;
+
+  const ListaPersonalizadaAtualizou({required this.input});
+
+  @override
+  List<Object?> get props => [input];
+}
+
+/// Abre o seletor de imagem. Com lista criada envia na hora; sem lista
+/// guarda no estado e envia logo após a criação.
+class ListaPersonalizadaIconeEscolheu extends ListaPersonalizadaEvent {
+  const ListaPersonalizadaIconeEscolheu();
+}
+
+class ListaPersonalizadaItensPorFiltroAdicionou extends ListaPersonalizadaEvent {
+  final ListaItensLote lote;
+
+  const ListaPersonalizadaItensPorFiltroAdicionou({required this.lote});
+
+  @override
+  List<Object?> get props => [lote];
+}
+
+class ListaPersonalizadaPreviaSolicitou extends ListaPersonalizadaEvent {
+  final int page;
+
+  const ListaPersonalizadaPreviaSolicitou({this.page = 1});
+
+  @override
+  List<Object?> get props => [page];
 }
 
 class ListaPersonalizadaTituloAtualizou extends ListaPersonalizadaEvent {

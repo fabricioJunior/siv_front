@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:comercial/domain/data/remote/i_lista_personalizada_remote_data_source.dart';
 import 'package:comercial/domain/data/repositories/i_lista_personalizada_repository.dart';
 import 'package:comercial/domain/models/lista_personalizada.dart';
@@ -9,18 +11,12 @@ class ListaPersonalizadaRepository implements IListaPersonalizadaRepository {
   ListaPersonalizadaRepository({required this.remoteDataSource});
 
   @override
-  Future<ListaPersonalizada> criar({
-    required int tabelaPrecoId,
-    required DateTime dataExpiracao,
-    List<int> referenciaIds = const [],
-    String? titulo,
-  }) =>
-      remoteDataSource.criar(
-        tabelaPrecoId: tabelaPrecoId,
-        dataExpiracao: dataExpiracao,
-        referenciaIds: referenciaIds,
-        titulo: titulo,
-      );
+  Future<ListaPersonalizada> criar(ListaPersonalizadaInput input) =>
+      remoteDataSource.criar(input);
+
+  @override
+  Future<ListaPersonalizada> atualizar(int id, ListaPersonalizadaInput input) =>
+      remoteDataSource.atualizar(id, input);
 
   @override
   Future<ListaPersonalizada> atualizarTitulo(int id, String? titulo) =>
@@ -29,6 +25,10 @@ class ListaPersonalizadaRepository implements IListaPersonalizadaRepository {
   @override
   Future<ListaPersonalizada> adicionarItens(int id, List<int> referenciaIds) =>
       remoteDataSource.adicionarItens(id, referenciaIds);
+
+  @override
+  Future<ListaItensLoteResultado> adicionarPorFiltro(int id, ListaItensLote lote) =>
+      remoteDataSource.adicionarPorFiltro(id, lote);
 
   @override
   Future<ListaPersonalizada> removerItens(int id, List<int> referenciaIds) =>
@@ -41,6 +41,18 @@ class ListaPersonalizadaRepository implements IListaPersonalizadaRepository {
   Future<String> buscarLink(int id) => remoteDataSource.buscarLink(id);
 
   @override
-  Future<PaginaListasPersonalizadas> listar({int page = 1, int limit = 20}) =>
-      remoteDataSource.listar(page: page, limit: limit);
+  Future<ListaPersonalizada> enviarIcone(int id, Uint8List bytes, String fileName) =>
+      remoteDataSource.enviarIcone(id, bytes, fileName);
+
+  @override
+  Future<ListaPrevia> previa(int id, {int page = 1, int limit = 20}) =>
+      remoteDataSource.previa(id, page: page, limit: limit);
+
+  @override
+  Future<PaginaListasPersonalizadas> listar({
+    int page = 1,
+    int limit = 20,
+    ListaTipo? tipo,
+  }) =>
+      remoteDataSource.listar(page: page, limit: limit, tipo: tipo);
 }

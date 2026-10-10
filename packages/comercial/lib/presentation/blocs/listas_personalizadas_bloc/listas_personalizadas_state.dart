@@ -7,6 +7,8 @@ class ListasPersonalizadasState extends Equatable {
   final List<ListaPersonalizadaResumo> itens;
   final int page;
   final int totalPages;
+  final int totalItens;
+  final ListaTipo? tipo;
   final String? erro;
 
   const ListasPersonalizadasState({
@@ -14,6 +16,8 @@ class ListasPersonalizadasState extends Equatable {
     this.itens = const [],
     this.page = 1,
     this.totalPages = 0,
+    this.totalItens = 0,
+    this.tipo,
     this.erro,
   });
 
@@ -24,6 +28,9 @@ class ListasPersonalizadasState extends Equatable {
     List<ListaPersonalizadaResumo>? itens,
     int? page,
     int? totalPages,
+    int? totalItens,
+    ListaTipo? tipo,
+    bool limparTipo = false,
     String? erro,
   }) {
     return ListasPersonalizadasState(
@@ -31,10 +38,12 @@ class ListasPersonalizadasState extends Equatable {
       itens: itens ?? this.itens,
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,
+      totalItens: totalItens ?? this.totalItens,
+      tipo: limparTipo ? null : (tipo ?? this.tipo),
       erro: erro,
     );
   }
 
   @override
-  List<Object?> get props => [step, itens, page, totalPages, erro];
+  List<Object?> get props => [step, itens, page, totalPages, totalItens, tipo, erro];
 }

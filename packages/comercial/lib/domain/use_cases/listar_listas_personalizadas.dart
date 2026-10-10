@@ -1,4 +1,5 @@
 import 'package:comercial/domain/data/repositories/i_lista_personalizada_repository.dart';
+import 'package:comercial/domain/models/lista_personalizada.dart';
 import 'package:comercial/domain/models/lista_personalizada_resumo.dart';
 
 class ListarListasPersonalizadas {
@@ -7,6 +8,10 @@ class ListarListasPersonalizadas {
   ListarListasPersonalizadas({required IListaPersonalizadaRepository repository})
       : _repository = repository;
 
-  Future<PaginaListasPersonalizadas> call({int page = 1, int limit = 20}) =>
-      _repository.listar(page: page, limit: limit);
+  Future<PaginaListasPersonalizadas> call({
+    int page = 1,
+    int limit = 20,
+    ListaTipo? tipo,
+  }) =>
+      _repository.listar(page: page, limit: limit, tipo: tipo);
 }

@@ -39,3 +39,6 @@ export 'presentation/pages/ecommerce_referencias_page.dart';
 export 'presentation/pages/ecommerce_referencia_detalhe_page.dart';
 export 'presentation/pages/lista_personalizada_page.dart';
 export 'presentation/pages/listas_personalizadas_page.dart';
+export 'presentation/pages/grupos_aba.dart';
+export 'presentation/pages/lista_grupo_page.dart';
+export 'presentation/pages/vitrine_aba.dart';

@@ -193,7 +193,8 @@ void main() {
   testWidgets('deep link abre a aba Vitrine com o canal', (tester) async {
     await _montarPagina(tester, vitrine: true, aba: ListasAba.vitrine);
     expect(find.byKey(const Key('vitrine-publicar')), findsOneWidget);
-    expect(find.byKey(const Key('vitrine-canal')), findsNothing); // 1 canal só
+    // Com 1 canal o nome aparece como texto (sem dropdown), uma vez só.
+    expect(find.byKey(const Key('vitrine-canal')), findsOneWidget);
   });
 
   testWidgets(

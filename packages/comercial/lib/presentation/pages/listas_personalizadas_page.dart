@@ -206,7 +206,11 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
                   child: Text('Listas do e-commerce',
                       style: context.sivTextos.secao, maxLines: 1),
                 ),
-                if (vitrineAberta && canais.length > 1 && _canalId != null)
+                // No mobile quem desenha é a barra de ferramentas da aba.
+                if (vitrineAberta &&
+                    canais.isNotEmpty &&
+                    _canalId != null &&
+                    !mobile)
                   SeletorDeCanalVitrine(
                     canais: canais,
                     canalId: _canalId!,
@@ -269,6 +273,9 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
     );
   }
 
+  bool get mobile =>
+      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
   Widget _corpoDaAba(BuildContext context) {
     switch (_aba) {
       case ListasAba.grupos:
@@ -285,8 +292,7 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
             canais: state.ecommerces,
             canalId: _canalId,
             // No desktop o seletor fica na barra de título.
-            mostrarSeletorDeCanal: MediaQuery.sizeOf(context).width <
-                SivDimensoes.breakpointMenuDrawer,
+            mostrarSeletorDeCanal: mobile,
             onCanalChanged: _selecionarCanal,
           ),
         );

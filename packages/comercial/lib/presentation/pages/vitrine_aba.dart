@@ -204,7 +204,7 @@ class _BarraFerramentas extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (comId.length > 1) _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
+            if (comId.isNotEmpty) _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
             SizedBox(height: 46, child: segmento),
             const SizedBox(height: 8),
             apoio,
@@ -220,7 +220,7 @@ class _BarraFerramentas extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (comId.length > 1) ...[
+          if (comId.isNotEmpty) ...[
             _SeletorDeCanal(canais: comId, canalId: canalId, onCanal: onCanal),
             const SizedBox(width: 16),
           ],
@@ -293,7 +293,16 @@ class _SeletorDeCanal extends StatelessWidget {
           Text('Canal',
               style: textos.apoio.copyWith(color: cores.textoApoio)),
           const SizedBox(width: 10),
-          DropdownButtonHideUnderline(
+          // Com um canal só não há o que escolher: mostra só o nome, para a
+          // tela sempre dizer de qual e-commerce é esta vitrine.
+          if (canais.length <= 1)
+            Text(
+              canais.firstOrNull?.titulo ?? '',
+              key: const Key('vitrine-canal'),
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+            )
+          else
+            DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               key: const Key('vitrine-canal'),
               value: canalId,

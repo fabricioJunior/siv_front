@@ -7,6 +7,7 @@ class ListaPersonalizadaResumoDto {
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       hash: json['hash']?.toString() ?? '',
       situacao: situacaoDeJson(json['situacao']?.toString()),
+      dataInicio: DateTime.tryParse(json['dataInicio']?.toString() ?? ''),
       dataExpiracao: DateTime.tryParse(json['dataExpiracao']?.toString() ?? ''),
       quantidadeItens: int.tryParse(json['quantidadeItens']?.toString() ?? '') ?? 0,
       criadoEm: DateTime.tryParse(json['criadoEm']?.toString() ?? '') ?? DateTime.now(),

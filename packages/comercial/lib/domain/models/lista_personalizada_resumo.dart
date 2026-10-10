@@ -4,6 +4,7 @@ class ListaPersonalizadaResumo {
   final int id;
   final String hash;
   final ListaPersonalizadaSituacao situacao;
+  final DateTime? dataInicio;
   final DateTime? dataExpiracao;
   final int quantidadeItens;
   final DateTime criadoEm;
@@ -16,6 +17,7 @@ class ListaPersonalizadaResumo {
     required this.id,
     required this.hash,
     required this.situacao,
+    this.dataInicio,
     this.dataExpiracao,
     required this.quantidadeItens,
     required this.criadoEm,

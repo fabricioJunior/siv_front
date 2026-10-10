@@ -20,6 +20,7 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
   final _nome = TextEditingController();
   final _descricao = TextEditingController();
   List<int> _listaIds = [];
+  bool _ativo = true;
   bool _inicializado = false;
 
   @override
@@ -43,6 +44,7 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
     if (g == null) return;
     _nome.text = g.nome;
     _descricao.text = g.descricao ?? '';
+    _ativo = g.ativo;
     final ordenadas = [...g.listas]..sort((a, b) => a.ordem.compareTo(b.ordem));
     _listaIds = ordenadas.map((l) => l.listaId).toList();
   }
@@ -140,6 +142,13 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
                                 decoration: const InputDecoration(
                                   labelText: 'Descrição (opcional)',
                                 ),
+                              ),
+                              SwitchListTile(
+                                key: const Key('grupo-ativo'),
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Ativo no site'),
+                                value: _ativo,
+                                onChanged: (v) => setState(() => _ativo = v),
                               ),
                               const SizedBox(height: 12),
                               Row(
@@ -250,6 +259,7 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
                                             nome: _nome.text,
                                             descricao: _descricao.text,
                                             listaIds: _listaIds,
+                                            ativo: _ativo,
                                           ),
                                         ),
                                 icon: salvando

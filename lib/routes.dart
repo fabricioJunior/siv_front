@@ -549,7 +549,7 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/listas_grupos': (context) {
     return _rotaProtegida(
       route: '/listas_grupos',
-      child: const ListasGruposPage(),
+      child: const ListasPersonalizadasPage(abaInicial: ListasAba.grupos),
     );
   },
   '/lista_grupo': (context) {
@@ -564,8 +564,9 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/ecommerce_vitrine': (context) {
     return _rotaProtegida(
       route: '/ecommerce_vitrine',
-      child: EcommerceVitrinePage(
-        ecommerceId: args(context)['ecommerceId'] as int,
+      child: ListasPersonalizadasPage(
+        abaInicial: ListasAba.vitrine,
+        ecommerceIdInicial: args(context)['ecommerceId'] as int?,
       ),
     );
   },

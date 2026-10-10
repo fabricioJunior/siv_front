@@ -14,7 +14,7 @@ class _GruposRepo implements IListasGruposRepository {
   final chamadas = <String>[];
 
   @override
-  Future<ListaGrupo> criar({required String nome, String? descricao}) async {
+  Future<ListaGrupo> criar({required String nome, String? descricao, bool? ativo}) async {
     chamadas.add('criar($nome)');
     return ListaGrupo(id: 8, nome: nome);
   }

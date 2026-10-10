@@ -771,7 +771,7 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceVitrineBloc>(
-    () => EcommerceVitrineBloc(sl(), sl(), sl(), sl()),
+    () => EcommerceVitrineBloc(sl(), sl(), sl(), sl(), sl()),
   );
   sl.registerFactory<ListasGruposBloc>(() => ListasGruposBloc(sl(), sl()));
   sl.registerFactory<ListaGrupoBloc>(

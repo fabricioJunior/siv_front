@@ -6,6 +6,6 @@ class CriarListaGrupo {
 
   CriarListaGrupo({required IListasGruposRepository repository}) : _repository = repository;
 
-  Future<ListaGrupo> call({required String nome, String? descricao}) =>
-      _repository.criar(nome: nome, descricao: descricao);
+  Future<ListaGrupo> call({required String nome, String? descricao, bool? ativo}) =>
+      _repository.criar(nome: nome, descricao: descricao, ativo: ativo);
 }

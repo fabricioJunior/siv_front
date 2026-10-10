@@ -65,11 +65,34 @@ class EcommerceVitrineItemMoveu extends EcommerceVitrineEvent {
   List<Object?> get props => [local, tipo, itemId, indice];
 }
 
-class EcommerceVitrineSalvou extends EcommerceVitrineEvent {
-  final VitrineLocal local;
+class VitrineItemRef extends Equatable {
+  final VitrineItemTipo tipo;
+  final int itemId;
 
-  const EcommerceVitrineSalvou({required this.local});
+  const VitrineItemRef(this.tipo, this.itemId);
 
   @override
-  List<Object?> get props => [local];
+  List<Object?> get props => [tipo, itemId];
+}
+
+/// Multi-seleção do diálogo Adicionar: entra no fim do [local], na ordem dada.
+class EcommerceVitrineItensAdicionou extends EcommerceVitrineEvent {
+  final VitrineLocal local;
+  final List<VitrineItemRef> itens;
+
+  const EcommerceVitrineItensAdicionou(
+      {required this.local, required this.itens});
+
+  @override
+  List<Object?> get props => [local, itens];
+}
+
+/// Publica (PUT) só os locais que diferem do publicado.
+class EcommerceVitrinePublicou extends EcommerceVitrineEvent {
+  const EcommerceVitrinePublicou();
+}
+
+/// Restaura o rascunho para a versão publicada.
+class EcommerceVitrineDescartou extends EcommerceVitrineEvent {
+  const EcommerceVitrineDescartou();
 }

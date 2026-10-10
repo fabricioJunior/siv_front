@@ -17,12 +17,12 @@ class ListasGruposRepository implements IListasGruposRepository {
   Future<ListaGrupo> buscarPorId(int id) => remoteDataSource.buscarPorId(id);
 
   @override
-  Future<ListaGrupo> criar({required String nome, String? descricao}) =>
-      remoteDataSource.criar(nome: nome, descricao: descricao);
+  Future<ListaGrupo> criar({required String nome, String? descricao, bool? ativo}) =>
+      remoteDataSource.criar(nome: nome, descricao: descricao, ativo: ativo);
 
   @override
-  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao}) =>
-      remoteDataSource.atualizar(id, nome: nome, descricao: descricao);
+  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao, bool? ativo}) =>
+      remoteDataSource.atualizar(id, nome: nome, descricao: descricao, ativo: ativo);
 
   @override
   Future<void> excluir(int id) => remoteDataSource.excluir(id);

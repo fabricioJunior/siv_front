@@ -88,11 +88,12 @@ class ListaGrupoBloc extends Bloc<ListaGrupoEvent, ListaGrupoState> {
     emit(state.copyWith(step: ListaGrupoStep.salvando, erro: ''));
     try {
       var grupo = state.grupo == null
-          ? await _criar.call(nome: event.nome, descricao: event.descricao)
+          ? await _criar.call(nome: event.nome, descricao: event.descricao, ativo: event.ativo)
           : await _atualizar.call(
               state.grupo!.id,
               nome: event.nome,
               descricao: event.descricao,
+              ativo: event.ativo,
             );
       await _definirListas.call(grupo.id, event.listaIds);
       final icone = state.iconeLocal;

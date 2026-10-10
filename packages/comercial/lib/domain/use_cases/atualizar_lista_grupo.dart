@@ -6,6 +6,6 @@ class AtualizarListaGrupo {
 
   AtualizarListaGrupo({required IListasGruposRepository repository}) : _repository = repository;
 
-  Future<ListaGrupo> call(int id, {required String nome, String? descricao}) =>
-      _repository.atualizar(id, nome: nome, descricao: descricao);
+  Future<ListaGrupo> call(int id, {required String nome, String? descricao, bool? ativo}) =>
+      _repository.atualizar(id, nome: nome, descricao: descricao, ativo: ativo);
 }

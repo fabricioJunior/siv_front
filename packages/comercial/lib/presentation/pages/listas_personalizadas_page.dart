@@ -3,24 +3,63 @@ import 'package:comercial/presentation.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:comercial/presentation/widgets/lista_textos.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
+enum ListasAba { catalogo, provador, grupos, vitrine }
+
 class ListasPersonalizadasPage extends StatefulWidget {
-  const ListasPersonalizadasPage({super.key});
+  final ListasAba abaInicial;
+  final int? ecommerceIdInicial;
+
+  /// Permissão por componente; injetável para teste.
+  final bool Function(String idComponente) temAcesso;
+
+  const ListasPersonalizadasPage({
+    super.key,
+    this.abaInicial = ListasAba.catalogo,
+    this.ecommerceIdInicial,
+    this.temAcesso = PermissaoPorNome.acessoPermitido,
+  });
 
   @override
-  State<ListasPersonalizadasPage> createState() => _ListasPersonalizadasPageState();
+  State<ListasPersonalizadasPage> createState() =>
+      _ListasPersonalizadasPageState();
 }
 
-class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
+class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage>
+    with SingleTickerProviderStateMixin {
   late final ListasPersonalizadasBloc _bloc;
+  EcommerceVitrineBloc? _vitrineBloc;
+  EcommercesBloc? _ecommercesBloc;
+  late final TabController _tabs;
+  late final List<ListasAba> _abas;
   final _scrollController = ScrollController();
+  int? _canalId;
 
   @override
   void initState() {
     super.initState();
-    _bloc = sl<ListasPersonalizadasBloc>()..add(ListasPersonalizadasIniciou());
+    final listas = widget.temAcesso('ECOFM004');
+    _abas = [
+      if (listas) ...[ListasAba.catalogo, ListasAba.provador, ListasAba.grupos],
+      if (widget.temAcesso('ECOFM001')) ListasAba.vitrine,
+    ];
+    final inicial = _abas.indexOf(widget.abaInicial);
+    _tabs = TabController(
+      length: _abas.length,
+      vsync: this,
+      initialIndex: inicial < 0 ? 0 : inicial,
+    )..addListener(_aoTrocarAba);
+
+    _bloc = sl<ListasPersonalizadasBloc>();
+    if (_abas.contains(ListasAba.vitrine)) {
+      _vitrineBloc = sl<EcommerceVitrineBloc>();
+      _ecommercesBloc = sl<EcommercesBloc>()
+        ..add(const EcommercesCarregarSolicitado());
+    }
+    if (listas) _bloc.add(ListasPersonalizadasIniciou(tipo: _tipoDaAba));
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -29,10 +68,42 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
     });
   }
 
+  ListasAba get _aba => _abas.isEmpty ? ListasAba.catalogo : _abas[_tabs.index];
+
+  ListaTipo get _tipoDaAba =>
+      _aba == ListasAba.provador ? ListaTipo.provador : ListaTipo.catalogo;
+
+  void _aoTrocarAba() {
+    if (_tabs.indexIsChanging) return;
+    if (_aba == ListasAba.catalogo || _aba == ListasAba.provador) {
+      _bloc.add(ListasPersonalizadasIniciou(tipo: _tipoDaAba));
+    }
+    setState(() {});
+  }
+
+  void _canaisCarregados(EcommercesState state) {
+    if (state.status != EcommercesStatus.carregado || _canalId != null) return;
+    final ids = state.ecommerces.map((e) => e.id).whereType<int>().toList();
+    if (ids.isEmpty) return;
+    _selecionarCanal(
+      ids.contains(widget.ecommerceIdInicial)
+          ? widget.ecommerceIdInicial!
+          : ids.first,
+    );
+  }
+
+  void _selecionarCanal(int id) {
+    setState(() => _canalId = id);
+    _vitrineBloc!.add(EcommerceVitrineIniciou(ecommerceId: id));
+  }
+
   @override
   void dispose() {
+    _tabs.dispose();
     _scrollController.dispose();
     _bloc.close();
+    _vitrineBloc?.close();
+    _ecommercesBloc?.close();
     super.dispose();
   }
 
@@ -42,68 +113,108 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
   }
 
   Future<void> _abrirLista(int id) async {
-    await Navigator.pushNamed(context, '/lista_personalizada', arguments: {'id': id});
+    await Navigator.pushNamed(context, '/lista_personalizada',
+        arguments: {'id': id});
     if (mounted) _bloc.add(ListasPersonalizadasIniciou(tipo: _bloc.state.tipo));
   }
 
+  void _irParaVitrine() {
+    final i = _abas.indexOf(ListasAba.vitrine);
+    if (i >= 0) _tabs.animateTo(i);
+  }
+
+  static const _rotulos = {
+    ListasAba.catalogo: 'Catálogo',
+    ListasAba.provador: 'Provador',
+    ListasAba.grupos: 'Grupos',
+    ListasAba.vitrine: 'Vitrine do site',
+  };
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ListasPersonalizadasBloc>.value(
-      value: _bloc,
-      child: Scaffold(
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _abrirNovaLista,
-          icon: const Icon(Icons.add),
-          label: const Text('Nova lista'),
+    final mostrarNovaLista =
+        _aba == ListasAba.catalogo || _aba == ListasAba.provador;
+    Widget scaffold = Scaffold(
+      floatingActionButton: mostrarNovaLista
+          ? FloatingActionButton.extended(
+              onPressed: _abrirNovaLista,
+              icon: const Icon(Icons.add),
+              label: const Text('Nova lista'),
+            )
+          : null,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: SivDimensoes.paginaHorizontal,
+          vertical: SivDimensoes.paginaVertical,
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SivDimensoes.paginaHorizontal,
-            vertical: SivDimensoes.paginaVertical,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SivTituloPagina(titulo: 'Minhas listas'),
-              BlocBuilder<ListasPersonalizadasBloc, ListasPersonalizadasState>(
-                buildWhen: (a, b) => a.tipo != b.tipo,
-                builder: (context, state) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final f in <(String, ListaTipo?)>[
-                        ('Todas', null),
-                        ('Provador', ListaTipo.provador),
-                        ('Catálogo', ListaTipo.catalogo),
-                      ])
-                        ChoiceChip(
-                          label: Text(f.$1),
-                          selected: state.tipo == f.$2,
-                          onSelected: (_) =>
-                              _bloc.add(ListasPersonalizadasIniciou(tipo: f.$2)),
-                        ),
-                      ActionChip(
-                        avatar: const Icon(Icons.folder_copy_outlined, size: 18),
-                        label: const Text('Grupos'),
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/listas_grupos'),
-                      ),
-                    ],
-                  ),
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SivTituloPagina(titulo: 'Listas do e-commerce'),
+            if (_abas.length > 1)
+              TabBar(
+                key: const Key('listas-abas'),
+                controller: _tabs,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [for (final a in _abas) Tab(text: _rotulos[a])],
               ),
-              Expanded(
-                child: BlocBuilder<ListasPersonalizadasBloc,
-                    ListasPersonalizadasState>(
-                  builder: (context, state) => _buildConteudo(context, state),
-                ),
-              ),
-            ],
+            const SizedBox(height: 8),
+            Expanded(child: _corpoDaAba(context)),
+          ],
+        ),
+      ),
+    );
+
+    scaffold = BlocProvider<ListasPersonalizadasBloc>.value(
+        value: _bloc, child: scaffold);
+    final vitrine = _vitrineBloc;
+    if (vitrine == null) return scaffold;
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<EcommerceVitrineBloc>.value(value: vitrine),
+        BlocProvider<EcommercesBloc>.value(value: _ecommercesBloc!),
+      ],
+      child: BlocListener<EcommercesBloc, EcommercesState>(
+        listener: (_, state) => _canaisCarregados(state),
+        child: BlocBuilder<EcommerceVitrineBloc, EcommerceVitrineState>(
+          buildWhen: (a, b) =>
+              (a.alteracoesPendentes > 0) != (b.alteracoesPendentes > 0),
+          builder: (context, state) => PopScope(
+            canPop: state.alteracoesPendentes == 0,
+            onPopInvokedWithResult: (didPop, _) async {
+              if (didPop) return;
+              final nav = Navigator.of(context);
+              if (await confirmarSairSemPublicar(
+                  context, state.alteracoesPendentes)) {
+                nav.pop();
+              }
+            },
+            child: scaffold,
           ),
         ),
       ),
     );
+  }
+
+  Widget _corpoDaAba(BuildContext context) {
+    switch (_aba) {
+      case ListasAba.grupos:
+        return const GruposAba();
+      case ListasAba.vitrine:
+        return BlocBuilder<EcommercesBloc, EcommercesState>(
+          builder: (context, state) => VitrineAba(
+            canais: state.ecommerces,
+            canalId: _canalId,
+            onCanalChanged: _selecionarCanal,
+          ),
+        );
+      case ListasAba.catalogo:
+      case ListasAba.provador:
+        return BlocBuilder<ListasPersonalizadasBloc, ListasPersonalizadasState>(
+          builder: (context, state) => _buildConteudo(context, state),
+        );
+    }
   }
 
   Widget _buildConteudo(BuildContext context, ListasPersonalizadasState state) {
@@ -117,12 +228,14 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(state.erro ?? 'Falha ao carregar as listas.', style: textos.corpo),
+            Text(state.erro ?? 'Falha ao carregar as listas.',
+                style: textos.corpo),
             const SizedBox(height: 8),
             TextButton.icon(
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
-              onPressed: () => _bloc.add(ListasPersonalizadasIniciou(tipo: state.tipo)),
+              onPressed: () =>
+                  _bloc.add(ListasPersonalizadasIniciou(tipo: state.tipo)),
             ),
           ],
         ),
@@ -130,11 +243,13 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
     }
     if (state.itens.isEmpty) {
       return Center(
-        child: Text('Nenhuma lista personalizada criada ainda.', style: textos.apoio),
+        child: Text('Nenhuma lista personalizada criada ainda.',
+            style: textos.apoio),
       );
     }
 
-    final exibirLoaderFinal = state.step == ListasPersonalizadasStep.carregandoMais;
+    final exibirLoaderFinal =
+        state.step == ListasPersonalizadasStep.carregandoMais;
 
     return ListView.separated(
       controller: _scrollController,
@@ -144,27 +259,70 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         if (index >= state.itens.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator.adaptive(strokeWidth: 2.5)),
+            child: Center(
+                child: CircularProgressIndicator.adaptive(strokeWidth: 2.5)),
           );
         }
         final lista = state.itens[index];
-        return ListTile(
-          leading: lista.icone == null
-              ? null
-              : CircleAvatar(backgroundImage: NetworkImage(lista.icone!)),
-          title: Text(lista.titulo?.isNotEmpty == true ? lista.titulo! : lista.hash),
-          subtitle: Text(
-            '${lista.tipo == ListaTipo.catalogo ? 'Catálogo' : 'Provador'}'
-            '${lista.modo == ListaModo.filtro ? ' (filtro)' : ' · ${lista.quantidadeItens} produto(s)'}'
-            ' · criada em ${_formatarData(lista.criadoEm)}',
-          ),
-          trailing: SivEtiqueta(
-            situacao: _etiquetaSituacao(lista.situacao),
-            texto: _labelSituacao(lista.situacao),
-          ),
-          onTap: () => _abrirLista(lista.id),
+        final vitrineBloc = _vitrineBloc;
+        if (vitrineBloc == null || lista.tipo != ListaTipo.catalogo) {
+          return _card(lista, null);
+        }
+        return BlocBuilder<EcommerceVitrineBloc, EcommerceVitrineState>(
+          bloc: vitrineBloc,
+          buildWhen: (a, b) =>
+              a.publicada != b.publicada ||
+              a.grupos != b.grupos ||
+              a.step != b.step,
+          builder: (context, v) =>
+              _card(lista, v.step == EcommerceVitrineStep.pronto ? v : null),
         );
       },
+    );
+  }
+
+  /// [vitrine] só vem preenchido para catálogo com a vitrine do canal carregada.
+  Widget _card(ListaPersonalizadaResumo lista, EcommerceVitrineState? vitrine) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    final onde = vitrine?.ondeAparece(lista.id) ?? const <String>[];
+    final foraDoSite = vitrine != null && onde.isEmpty;
+    return ListTile(
+      leading: lista.icone == null
+          ? null
+          : CircleAvatar(backgroundImage: NetworkImage(lista.icone!)),
+      title: Text(nomeDaLista(lista)),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            lista.tipo == ListaTipo.catalogo
+                ? modoEContagem(lista)
+                : 'Provador · ${modoEContagem(lista)}',
+            style: textos.apoio,
+          ),
+          if (onde.isNotEmpty) Text(onde.join(' · '), style: textos.apoio),
+          if (foraDoSite)
+            InkWell(
+              key: Key('lista-fora-do-site-${lista.id}'),
+              onTap: _irParaVitrine,
+              child: Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                color: cores.atencaoFundo,
+                child: Text(
+                  'Não está no site',
+                  style: textos.apoio.copyWith(color: cores.atencao),
+                ),
+              ),
+            ),
+        ],
+      ),
+      trailing: SivEtiqueta(
+        situacao: _etiquetaSituacao(lista.situacao),
+        texto: situacaoTexto(lista.situacao),
+      ),
+      onTap: () => _abrirLista(lista.id),
     );
   }
 
@@ -175,14 +333,4 @@ class _ListasPersonalizadasPageState extends State<ListasPersonalizadasPage> {
         ListaPersonalizadaSituacao.cancelada => SivEtiquetaSituacao.cancelado,
         ListaPersonalizadaSituacao.expirada => SivEtiquetaSituacao.cancelado,
       };
-
-  String _labelSituacao(ListaPersonalizadaSituacao situacao) => switch (situacao) {
-        ListaPersonalizadaSituacao.ativa => 'Ativa',
-        ListaPersonalizadaSituacao.agendada => 'Agendada',
-        ListaPersonalizadaSituacao.cancelada => 'Cancelada',
-        ListaPersonalizadaSituacao.expirada => 'Expirada',
-      };
-
-  String _formatarData(DateTime data) =>
-      '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
 }

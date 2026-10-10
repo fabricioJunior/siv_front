@@ -7,9 +7,9 @@ abstract class IListasGruposRemoteDataSource {
 
   Future<ListaGrupo> buscarPorId(int id);
 
-  Future<ListaGrupo> criar({required String nome, String? descricao});
+  Future<ListaGrupo> criar({required String nome, String? descricao, bool? ativo});
 
-  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao});
+  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao, bool? ativo});
 
   Future<void> excluir(int id);
 

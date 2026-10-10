@@ -12,9 +12,10 @@ class ListasGruposRemoteDataSource extends RemoteDataSourceBase
   @override
   String get path => '/v1/listas-personalizadas-grupos{sufixo}';
 
-  Map<String, dynamic> _corpo(String nome, String? descricao) => {
+  Map<String, dynamic> _corpo(String nome, String? descricao, bool? ativo) => {
         'nome': nome.trim(),
         'descricao': (descricao?.trim().isEmpty ?? true) ? null : descricao!.trim(),
+        if (ativo != null) 'ativo': ativo,
       };
 
   @override
@@ -33,19 +34,19 @@ class ListasGruposRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
-  Future<ListaGrupo> criar({required String nome, String? descricao}) async {
+  Future<ListaGrupo> criar({required String nome, String? descricao, bool? ativo}) async {
     final response = await post(
       pathParameters: const {'sufixo': ''},
-      body: _corpo(nome, descricao),
+      body: _corpo(nome, descricao, ativo),
     );
     return ListaGrupoDto.fromJson(response.body as Map<String, dynamic>);
   }
 
   @override
-  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao}) async {
+  Future<ListaGrupo> atualizar(int id, {required String nome, String? descricao, bool? ativo}) async {
     final response = await patch(
       pathParameters: {'sufixo': '/$id'},
-      body: _corpo(nome, descricao),
+      body: _corpo(nome, descricao, ativo),
     );
     return ListaGrupoDto.fromJson(response.body as Map<String, dynamic>);
   }

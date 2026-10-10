@@ -14,7 +14,7 @@ void main() {
 
   test('CRUD usa /v1/listas-personalizadas-grupos', () async {
     await ds.criar(nome: ' Verão ', descricao: '');
-    await ds.atualizar(4, nome: 'Verão', descricao: 'Peças leves');
+    await ds.atualizar(4, nome: 'Verão', descricao: 'Peças leves', ativo: false);
     await ds.excluir(4);
 
     expect(http.chamadas, [
@@ -23,7 +23,7 @@ void main() {
       'DELETE /v1/listas-personalizadas-grupos/4',
     ]);
     expect(http.bodies[0], {'nome': 'Verão', 'descricao': null});
-    expect(http.bodies[1], {'nome': 'Verão', 'descricao': 'Peças leves'});
+    expect(http.bodies[1], {'nome': 'Verão', 'descricao': 'Peças leves', 'ativo': false});
   });
 
   test('definirListas faz PUT com a posição como ordem', () async {

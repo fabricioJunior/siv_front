@@ -26,13 +26,15 @@ class ListaGrupoSalvou extends ListaGrupoEvent {
   final String nome;
   final String? descricao;
   final List<int> listaIds;
+  final bool? ativo;
 
   const ListaGrupoSalvou({
     required this.nome,
     this.descricao,
     required this.listaIds,
+    this.ativo,
   });
 
   @override
-  List<Object?> get props => [nome, descricao, listaIds];
+  List<Object?> get props => [nome, descricao, listaIds, ativo];
 }

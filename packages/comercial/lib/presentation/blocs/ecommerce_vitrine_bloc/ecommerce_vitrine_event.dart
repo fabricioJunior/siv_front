@@ -96,3 +96,9 @@ class EcommerceVitrinePublicou extends EcommerceVitrineEvent {
 class EcommerceVitrineDescartou extends EcommerceVitrineEvent {
   const EcommerceVitrineDescartou();
 }
+
+/// Relê listas e grupos sem mexer na vitrine em edição -- lista criada em outra
+/// aba (ou por outra pessoa) só aparecia no diálogo depois de reabrir a página.
+class EcommerceVitrineRecarregouCatalogo extends EcommerceVitrineEvent {
+  const EcommerceVitrineRecarregouCatalogo();
+}

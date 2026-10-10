@@ -31,6 +31,7 @@ class EcommerceVitrineBloc
     on<EcommerceVitrineItensAdicionou>(_onItensAdicionou);
     on<EcommerceVitrinePublicou>(_onPublicou);
     on<EcommerceVitrineDescartou>(_onDescartou);
+    on<EcommerceVitrineRecarregouCatalogo>(_onRecarregouCatalogo);
   }
 
   Future<void> _onIniciou(
@@ -70,6 +71,28 @@ class EcommerceVitrineBloc
           erro: mensagemDeErroApi(e, 'Falha ao carregar a vitrine.'),
         ),
       );
+      addError(e, s);
+    }
+  }
+
+  // Só o acervo: a vitrine em edição e o que já foi publicado continuam como estão.
+  Future<void> _onRecarregouCatalogo(
+    EcommerceVitrineRecarregouCatalogo event,
+    Emitter<EcommerceVitrineState> emit,
+  ) async {
+    if (state.step != EcommerceVitrineStep.pronto) return;
+    try {
+      final resultados = await Future.wait([_todasListas(), _todosGrupos()]);
+      final grupos =
+          await _comListasDosGrupos(resultados[1] as List<ListaGrupo>);
+      emit(
+        state.copyWith(
+          listas: resultados[0] as List<ListaPersonalizadaResumo>,
+          grupos: grupos,
+        ),
+      );
+    } catch (e, s) {
+      // Falhar aqui não pode derrubar a tela: segue com o acervo que já estava em memória.
       addError(e, s);
     }
   }

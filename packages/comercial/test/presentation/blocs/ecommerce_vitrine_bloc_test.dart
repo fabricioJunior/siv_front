@@ -31,6 +31,9 @@ class _VitrineRepo implements IEcommerceVitrineRepository {
 class _ListasRepo implements IListaPersonalizadaRepository {
   final paginasPedidas = <int>[];
 
+  /// Listas criadas depois que a aba já abriu (ex.: pela aba Catálogo).
+  final extras = <ListaPersonalizadaResumo>[];
+
   ListaPersonalizadaResumo _l(int id, String nome) => ListaPersonalizadaResumo(
         id: id,
         hash: 'h$id',
@@ -54,7 +57,7 @@ class _ListasRepo implements IListaPersonalizadaRepository {
         totalPages: 2,
         currentPage: page,
       ),
-      items: page == 1 ? [_l(1, 'A'), _l(2, 'B')] : [_l(3, 'C')],
+      items: page == 1 ? [_l(1, 'A'), _l(2, 'B')] : [_l(3, 'C'), ...extras],
     );
   }
 
@@ -294,6 +297,41 @@ void main() {
     final (bloc, _) = await _pronto();
     expect(bloc.state.ondeAparece(1), ['Menu · 1º']);
     expect(bloc.state.ondeAparece(2), isEmpty);
+    await bloc.close();
+  });
+
+  test('lista criada depois de abrir a aba aparece ao reabrir o diálogo',
+      () async {
+    final repo = _VitrineRepo();
+    final grupos = _GruposRepo();
+    final listas = _ListasRepo();
+    final bloc = EcommerceVitrineBloc(
+      RecuperarVitrineEcommerce(repository: repo),
+      SalvarVitrineEcommerce(repository: repo),
+      ListarListasPersonalizadas(repository: listas),
+      ListarListasGrupos(repository: grupos),
+      RecuperarListaGrupo(repository: grupos),
+    );
+    bloc.add(const EcommerceVitrineIniciou(ecommerceId: 9));
+    await bloc.stream.firstWhere((s) => s.step == EcommerceVitrineStep.pronto);
+    expect(bloc.state.listas.map((l) => l.titulo), ['A', 'B', 'C']);
+
+    // Rascunho pendente: recarregar o acervo não pode descartá-lo.
+    bloc.add(const EcommerceVitrineItemRemoveu(
+      local: VitrineLocal.menu,
+      tipo: VitrineItemTipo.lista,
+      itemId: 1,
+    ));
+    await Future<void>.delayed(Duration.zero);
+    expect(bloc.state.alteracoesPendentes, 1);
+
+    listas.extras.add(listas._l(4, 'Jeans'));
+    bloc.add(const EcommerceVitrineRecarregouCatalogo());
+    await bloc.stream.firstWhere((s) => s.listas.length == 4);
+
+    expect(bloc.state.listas.map((l) => l.titulo), contains('Jeans'));
+    expect(bloc.state.alteracoesPendentes, 1);
+    expect(bloc.state.vitrine.menu, isEmpty);
     await bloc.close();
   });
 }

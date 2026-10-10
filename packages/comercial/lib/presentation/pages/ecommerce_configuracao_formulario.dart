@@ -628,13 +628,15 @@ class _EcommerceBannersBloco extends StatelessWidget {
           const _EcommerceBannersCard(
             dispositivo: EcommerceBannerDispositivo.desktop,
             titulo: 'Banners do site — Desktop',
-            ajudaResolucao: 'Recomendado: 1920x672px (proporção 20:7)',
+            ajudaResolucao: 'Foto deitada. Recomendado: 2400x1200px (proporção 2:1). '
+                'Assunto no centro: o site preenche a tela e corta as bordas.',
           ),
           const SizedBox(height: SivDimensoes.gapCards),
           const _EcommerceBannersCard(
             dispositivo: EcommerceBannerDispositivo.mobile,
             titulo: 'Banners do site — Mobile',
-            ajudaResolucao: 'Recomendado: 1080x720px (proporção 3:2)',
+            ajudaResolucao: 'Foto em pé. Recomendado: 1080x1920px (proporção 9:16). '
+                'Assunto no centro, sem nada importante na parte de baixo.',
           ),
         ],
       ),

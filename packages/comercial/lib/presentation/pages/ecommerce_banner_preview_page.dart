@@ -3,9 +3,13 @@ import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
-/// Preview EXATO de como os banners aparecem no hero do site (use_por_onde_flor) --
-/// mesmos aspect-ratio literais do CSS de produção (20/7 desktop, 3/2 mobile) e
+/// Preview de como os banners aparecem no hero do site (use_por_onde_flor), com
 /// BoxFit.cover, pra quem cadastra ver o corte antes de publicar.
+///
+/// O hero virou foto em tela cheia: a forma não vem mais do arquivo, e sim do que
+/// sobra da viewport abaixo do topo fixo. As proporções abaixo são a tela típica --
+/// 1440x730 no desktop (~2:1) e 390x728 no iPhone (~9:16) -- e batem com o tamanho
+/// de arquivo recomendado no formulário.
 class EcommerceBannerPreviewPage extends StatefulWidget {
   final List<EcommerceBanner> banners;
 
@@ -39,7 +43,7 @@ class _EcommerceBannerPreviewPageState extends State<EcommerceBannerPreviewPage>
 
     final blocoDesktop = _BlocoPreviewHero(
       titulo: 'Preview Desktop',
-      aspectRatio: 20 / 7,
+      aspectRatio: 2 / 1,
       banners: ativosDesktop,
       indiceAtual: _indiceDesktop,
       onIndiceChanged: (i) => setState(() => _indiceDesktop = i),
@@ -47,7 +51,8 @@ class _EcommerceBannerPreviewPageState extends State<EcommerceBannerPreviewPage>
     );
     final blocoMobile = _BlocoPreviewHero(
       titulo: 'Preview Mobile',
-      aspectRatio: 3 / 2,
+      aspectRatio: 9 / 16,
+      larguraMaxima: 300,
       banners: ativosMobile,
       indiceAtual: _indiceMobile,
       onIndiceChanged: (i) => setState(() => _indiceMobile = i),
@@ -93,6 +98,9 @@ class _EcommerceBannerPreviewPageState extends State<EcommerceBannerPreviewPage>
 class _BlocoPreviewHero extends StatelessWidget {
   final String titulo;
   final double aspectRatio;
+
+  /// `null` = usa a largura toda (desktop). O mobile limita, senão 9:16 vira uma torre.
+  final double? larguraMaxima;
   final List<EcommerceBanner> banners;
   final int indiceAtual;
   final ValueChanged<int> onIndiceChanged;
@@ -101,6 +109,7 @@ class _BlocoPreviewHero extends StatelessWidget {
   const _BlocoPreviewHero({
     required this.titulo,
     required this.aspectRatio,
+    this.larguraMaxima,
     required this.banners,
     required this.indiceAtual,
     required this.onIndiceChanged,
@@ -120,10 +129,16 @@ class _BlocoPreviewHero extends StatelessWidget {
         children: [
           Text(titulo, style: textos.rotulo),
           const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(SivDimensoes.raio),
-            child: AspectRatio(
-              aspectRatio: aspectRatio,
+          // Em 9:16 o bloco ocuparia a coluna inteira em altura: limita à largura
+          // de um celular, como no site.
+          Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: larguraMaxima ?? double.infinity),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(SivDimensoes.raio),
+                child: AspectRatio(
+                  aspectRatio: aspectRatio,
               child: banner == null
                   ? Container(
                       color: cores.superficieRecuada,
@@ -148,6 +163,8 @@ class _BlocoPreviewHero extends StatelessWidget {
                             child: Icon(Icons.image_not_supported_outlined, color: cores.textoApoio),
                           ),
                         ),
+                ),
+              ),
             ),
           ),
           if (banners.length > 1) ...[

@@ -199,6 +199,10 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                               label: Text('Referências'),
                             ),
                             ButtonSegment(
+                              value: TipoEscopo.categorias,
+                              label: Text('Categorias'),
+                            ),
+                            ButtonSegment(
                               value: TipoEscopo.comboKit,
                               label: Text('Combo/Kit'),
                             ),
@@ -226,12 +230,22 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                           key: ValueKey('escopo-${state.tipoEscopo}'),
                           tipoEscopo: state.tipoEscopo,
                           referenciaIdsIniciais: state.referenciaIds ?? const [],
+                          categoriasIniciais: state.categorias ?? const [],
+                          excecaoReferenciaIdsIniciais:
+                              state.excecaoReferenciaIds ?? const [],
                           comboKitInicial: state.comboKit ?? const [],
                           quantidadeLevaInicial: state.quantidadeLeva,
                           quantidadePagaInicial: state.quantidadePaga,
                           faixasInicial: state.faixas ?? const [],
                           onReferenciaIdsChanged: (ids) =>
                               _onCampoAlterado(context, referenciaIds: ids),
+                          onCategoriasChanged: (categorias) =>
+                              _onCampoAlterado(context, categorias: categorias),
+                          onExcecaoReferenciaIdsChanged: (ids) =>
+                              _onCampoAlterado(
+                            context,
+                            excecaoReferenciaIds: ids,
+                          ),
                           onComboKitChanged: (itens) =>
                               _onCampoAlterado(context, comboKit: itens),
                           onQuantidadeLevaChanged: (valor) => _onCampoAlterado(
@@ -434,6 +448,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     int? quantidadeMinima,
     double? precoFixo,
     List<int>? referenciaIds,
+    List<PromocaoCategoria>? categorias,
+    List<int>? excecaoReferenciaIds,
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
@@ -462,6 +478,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             quantidadeMinima: quantidadeMinima,
             precoFixo: precoFixo,
             referenciaIds: referenciaIds,
+            categorias: categorias,
+            excecaoReferenciaIds: excecaoReferenciaIds,
             comboKit: comboKit,
             quantidadeLeva: quantidadeLeva,
             quantidadePaga: quantidadePaga,

@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
@@ -10,11 +11,15 @@ import 'package:promocoes/domain/models/regra_desconto.dart';
 class EscopoSelecionavelWidget extends StatefulWidget {
   final TipoEscopo tipoEscopo;
   final List<int> referenciaIdsIniciais;
+  final List<PromocaoCategoria> categoriasIniciais;
+  final List<int> excecaoReferenciaIdsIniciais;
   final List<ItemComboKit> comboKitInicial;
   final int? quantidadeLevaInicial;
   final int? quantidadePagaInicial;
   final List<PromocaoFaixa> faixasInicial;
   final ValueChanged<List<int>> onReferenciaIdsChanged;
+  final ValueChanged<List<PromocaoCategoria>>? onCategoriasChanged;
+  final ValueChanged<List<int>>? onExcecaoReferenciaIdsChanged;
   final ValueChanged<List<ItemComboKit>> onComboKitChanged;
   final ValueChanged<int?> onQuantidadeLevaChanged;
   final ValueChanged<int?> onQuantidadePagaChanged;
@@ -24,11 +29,15 @@ class EscopoSelecionavelWidget extends StatefulWidget {
     super.key,
     required this.tipoEscopo,
     this.referenciaIdsIniciais = const [],
+    this.categoriasIniciais = const [],
+    this.excecaoReferenciaIdsIniciais = const [],
     this.comboKitInicial = const [],
     this.quantidadeLevaInicial,
     this.quantidadePagaInicial,
     this.faixasInicial = const [],
     required this.onReferenciaIdsChanged,
+    this.onCategoriasChanged,
+    this.onExcecaoReferenciaIdsChanged,
     required this.onComboKitChanged,
     required this.onQuantidadeLevaChanged,
     required this.onQuantidadePagaChanged,
@@ -45,6 +54,12 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
   late List<_FaixaLinha> _linhasFaixa;
   late List<int> _referenciaIds;
   int _referenciaSeletorVersao = 0;
+  // Escopo por categoria: categorias escolhidas + subcategorias escolhidas
+  // (agrupadas pela categoria delas) -- os pares PromocaoCategoria sao
+  // derivados dos dois em _notificarCategorias.
+  late Set<int> _categoriaIds;
+  late Map<int, Set<int>> _subCategoriaIdsPorCategoria;
+  late List<int> _excecaoReferenciaIds;
 
   @override
   void initState() {
@@ -66,6 +81,17 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
         )
         .toList();
     _referenciaIds = List.of(widget.referenciaIdsIniciais);
+    _categoriaIds = widget.categoriasIniciais
+        .map((categoria) => categoria.categoriaId)
+        .toSet();
+    _subCategoriaIdsPorCategoria = {};
+    for (final par in widget.categoriasIniciais) {
+      if (par.subCategoriaId == null) continue;
+      _subCategoriaIdsPorCategoria
+          .putIfAbsent(par.categoriaId, () => <int>{})
+          .add(par.subCategoriaId!);
+    }
+    _excecaoReferenciaIds = List.of(widget.excecaoReferenciaIdsIniciais);
   }
 
   @override
@@ -100,6 +126,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
             ),
           ],
         );
+      case TipoEscopo.categorias:
+        return _buildCategorias(context);
       case TipoEscopo.comboLevePague:
         return _buildLevePague(context);
       case TipoEscopo.comboKit:
@@ -120,6 +148,122 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
       _referenciaSeletorVersao++;
     });
     widget.onReferenciaIdsChanged(_referenciaIds);
+  }
+
+  // Escopo "categoria mais excecoes": a promocao vale pras categorias/
+  // subcategorias escolhidas, menos as referencias listadas em Excecoes.
+  Widget _buildCategorias(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final categoriaIds = _categoriaIds.toList();
+    final subIdsSelecionados = [
+      for (final subs in _subCategoriaIdsPorCategoria.values) ...subs,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Promoção vale para as categorias escolhidas',
+          style: textos.apoio,
+        ),
+        const SizedBox(height: SivDimensoes.gapCards),
+        CategoriaSeletor(
+          modo: CategoriaSeletorModo.multipla,
+          titulo: 'Categorias',
+          idCategoriasSelecionadasIniciais: categoriaIds,
+          onCategoriaChanged: (categorias) {
+            setState(() {
+              _categoriaIds = categorias
+                  .map((categoria) => categoria.id)
+                  .whereType<int>()
+                  .toSet();
+            });
+            _notificarCategorias();
+          },
+        ),
+        const SizedBox(height: SivDimensoes.gapCards),
+        SubCategoriaSeletor(
+          categoriaIds: categoriaIds,
+          idsSelecionadosIniciais: subIdsSelecionados,
+          titulo: 'Subcategorias (opcional)',
+          onSubCategoriaChanged: (subs) {
+            final agrupadas = <int, Set<int>>{};
+            for (final sub in subs) {
+              if (sub.id == null) continue;
+              agrupadas
+                  .putIfAbsent(sub.categoriaId, () => <int>{})
+                  .add(sub.id!);
+            }
+            setState(() => _subCategoriaIdsPorCategoria = agrupadas);
+            _notificarCategorias();
+          },
+        ),
+        const SizedBox(height: SivDimensoes.gapCards),
+        Text('Exceções (ficam de fora)', style: textos.secao),
+        const SizedBox(height: SivDimensoes.gapItemMenu),
+        Text(
+          'Referências que não entram na promoção mesmo estando nas '
+          'categorias escolhidas.',
+          style: textos.apoio,
+        ),
+        const SizedBox(height: SivDimensoes.gapItemMenu),
+        ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.multipla,
+          idReferenciasSelecionadasIniciais: _excecaoReferenciaIds,
+          titulo: 'Referências excluídas',
+          onReferenciaChanged: (referencias) {
+            _excecaoReferenciaIds = referencias
+                .map((referencia) => referencia.id)
+                .whereType<int>()
+                .toList();
+            widget.onExcecaoReferenciaIdsChanged?.call(_excecaoReferenciaIds);
+          },
+        ),
+        if (widget.referenciaIdsIniciais.isNotEmpty) ...[
+          const SizedBox(height: SivDimensoes.gapCards),
+          Container(
+            constraints: const BoxConstraints(
+              minHeight: SivDimensoes.alvoToqueMinimo,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SivDimensoes.itemMenuHorizontal,
+              vertical: SivDimensoes.itemMenuVertical,
+            ),
+            decoration: BoxDecoration(
+              color: cores.selecaoFundo,
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Hoje a regra atinge '
+              '${widget.referenciaIdsIniciais.length} referências.',
+              style: textos.corpo,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _notificarCategorias() {
+    final pares = <PromocaoCategoria>[];
+    for (final categoriaId in _categoriaIds) {
+      final subs = _subCategoriaIdsPorCategoria[categoriaId] ?? const <int>{};
+      if (subs.isEmpty) {
+        pares.add(PromocaoCategoria(categoriaId: categoriaId));
+        continue;
+      }
+      pares.addAll(
+        subs.map(
+          (subId) => PromocaoCategoria(
+            categoriaId: categoriaId,
+            subCategoriaId: subId,
+          ),
+        ),
+      );
+    }
+    widget.onCategoriasChanged?.call(pares);
   }
 
   Widget _buildLevePague(BuildContext context) {

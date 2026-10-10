@@ -293,4 +293,63 @@ void main() {
       ]);
     },
   );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'bloqueia salvar escopo por categoria sem nenhuma categoria',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo categorias',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          tipoEscopo: TipoEscopo.categorias,
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    skip: 3,
+    expect: () => [
+      isA<PromocaoState>()
+          .having((s) => s.step, 'step', PromocaoStep.validacaoInvalida)
+          .having((s) => s.erro, 'erro', 'Selecione ao menos uma categoria.'),
+    ],
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'salva escopo por categoria com categorias e excecoes',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Promo categorias',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoDesconto: TipoDesconto.percentual,
+          valorPercentual: 10,
+          tipoEscopo: TipoEscopo.categorias,
+          categorias: const [
+            PromocaoCategoria(categoriaId: 1),
+            PromocaoCategoria(categoriaId: 2, subCategoriaId: 30),
+          ],
+          excecaoReferenciaIds: const [99],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    verify: (bloc) {
+      expect(bloc.state.step, PromocaoStep.criado);
+      expect(bloc.state.categorias, const [
+        PromocaoCategoria(categoriaId: 1),
+        PromocaoCategoria(categoriaId: 2, subCategoriaId: 30),
+      ]);
+      expect(bloc.state.excecaoReferenciaIds, const [99]);
+    },
+  );
 }

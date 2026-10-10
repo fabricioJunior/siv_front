@@ -229,7 +229,8 @@ class CupomBloc extends Bloc<CupomEvent, CupomState> {
         }
         return null;
       case TipoEscopo.faixaQuantidade:
-        // Cupom nao oferece esse escopo -- inalcancavel a partir do form.
+      case TipoEscopo.categorias:
+        // Cupom nao oferece esses escopos -- inalcancaveis a partir do form.
         return null;
     }
   }

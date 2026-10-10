@@ -31,6 +31,7 @@ class SubCategoriaSeletor extends StatefulWidget implements ISeletor {
   final List<int> categoriaIds;
   final List<int> idsSelecionadosIniciais;
   final String titulo;
+  final ValueChanged<List<SubCategoria>>? onSubCategoriaChanged;
 
   @override
   final Function(List<SelectData>)? onChanged;
@@ -40,6 +41,7 @@ class SubCategoriaSeletor extends StatefulWidget implements ISeletor {
     required this.categoriaIds,
     this.idsSelecionadosIniciais = const [],
     this.onChanged,
+    this.onSubCategoriaChanged,
     this.titulo = 'Subcategorias',
   });
 
@@ -103,11 +105,16 @@ class _SubCategoriaSeletorState extends State<SubCategoriaSeletor> {
           selecionadosIniciais: subs
               .where((s) => widget.idsSelecionadosIniciais.contains(s.id))
               .toList(),
-          onChanged: (sel) => widget.onChanged?.call(
-            sel
-                .map((s) => SelectData(id: s.id!, nome: s.nome, data: const {}))
-                .toList(),
-          ),
+          onChanged: (sel) {
+            widget.onSubCategoriaChanged?.call(sel);
+            widget.onChanged?.call(
+              sel
+                  .map(
+                    (s) => SelectData(id: s.id!, nome: s.nome, data: const {}),
+                  )
+                  .toList(),
+            );
+          },
           titulo: widget.titulo,
           hintText: 'Digite para buscar uma subcategoria',
           maxSugestoes: 5,

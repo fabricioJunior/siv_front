@@ -34,6 +34,7 @@ enum TipoDesconto {
 enum TipoEscopo {
   geral,
   referencias,
+  categorias,
   comboKit,
   comboLevePague,
   faixaQuantidade;
@@ -42,6 +43,8 @@ enum TipoEscopo {
     switch (value) {
       case 'referencias':
         return TipoEscopo.referencias;
+      case 'categorias':
+        return TipoEscopo.categorias;
       case 'combo_kit':
         return TipoEscopo.comboKit;
       case 'combo_leve_pague':
@@ -58,6 +61,8 @@ enum TipoEscopo {
     switch (this) {
       case TipoEscopo.referencias:
         return 'referencias';
+      case TipoEscopo.categorias:
+        return 'categorias';
       case TipoEscopo.comboKit:
         return 'combo_kit';
       case TipoEscopo.comboLevePague:
@@ -68,6 +73,33 @@ enum TipoEscopo {
         return 'geral';
     }
   }
+}
+
+// Alvo do escopo por categoria: a categoria inteira (subCategoriaId null) ou
+// so uma subcategoria dela. Usado quando tipoEscopo=categorias.
+class PromocaoCategoria extends Equatable {
+  final int categoriaId;
+  final int? subCategoriaId;
+
+  const PromocaoCategoria({required this.categoriaId, this.subCategoriaId});
+
+  factory PromocaoCategoria.fromJson(Map<String, dynamic> json) {
+    return PromocaoCategoria(
+      categoriaId: (json['categoriaId'] as num).toInt(),
+      subCategoriaId: (json['subCategoriaId'] as num?)?.toInt(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'categoriaId': categoriaId,
+        if (subCategoriaId != null) 'subCategoriaId': subCategoriaId,
+      };
+
+  @override
+  List<Object?> get props => [categoriaId, subCategoriaId];
+
+  @override
+  bool? get stringify => true;
 }
 
 // Item do combo (referencia exigida + quantidade), usado quando tipoEscopo=comboKit.

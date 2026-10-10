@@ -23,6 +23,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final double? precoFixo;
   final TipoEscopo? tipoEscopo;
   final List<int>? referenciaIds;
+  final List<PromocaoCategoria>? categorias;
+  final List<int>? excecaoReferenciaIds;
   final List<ItemComboKit>? comboKit;
   final int? quantidadeLeva;
   final int? quantidadePaga;
@@ -36,7 +38,7 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final bool? restringirFormasPagamento;
   final List<PromocaoFormaPagamento>? formasPagamento;
   // true quando o tipoEscopo mudou -- limpa os campos do escopo anterior
-  // (referenciaIds/comboKit/quantidadeLeva/quantidadePaga) em vez de manter
+  // (referenciaIds/categorias/comboKit/quantidadeLeva/quantidadePaga) em vez de manter
   // valores que nao fazem mais sentido pro novo tipoEscopo.
   final bool limparEscopo;
 
@@ -55,6 +57,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
     this.precoFixo,
     this.tipoEscopo,
     this.referenciaIds,
+    this.categorias,
+    this.excecaoReferenciaIds,
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,

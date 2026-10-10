@@ -36,6 +36,10 @@ class PromocaoDto implements Promocao {
   @override
   final List<int>? referenciaIds;
   @override
+  final List<PromocaoCategoria>? categorias;
+  @override
+  final List<int>? excecaoReferenciaIds;
+  @override
   final List<ItemComboKit>? comboKit;
   @override
   final int? quantidadeLeva;
@@ -83,6 +87,8 @@ class PromocaoDto implements Promocao {
     this.precoFixo,
     required this.tipoEscopo,
     this.referenciaIds,
+    this.categorias,
+    this.excecaoReferenciaIds,
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
@@ -118,6 +124,12 @@ class PromocaoDto implements Promocao {
       precoFixo: _parseDouble(json['precoFixo']),
       tipoEscopo: TipoEscopo.fromString(json['tipoEscopo'] as String?),
       referenciaIds: (json['referenciaIds'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
+      categorias: (json['categorias'] as List<dynamic>?)
+          ?.map((e) => PromocaoCategoria.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      excecaoReferenciaIds: (json['excecaoReferenciaIds'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
           .toList(),
       comboKit: (json['comboKit'] as List<dynamic>?)
@@ -167,6 +179,8 @@ class PromocaoDto implements Promocao {
       precoFixo: promocao.precoFixo,
       tipoEscopo: promocao.tipoEscopo,
       referenciaIds: promocao.referenciaIds,
+      categorias: promocao.categorias,
+      excecaoReferenciaIds: promocao.excecaoReferenciaIds,
       comboKit: promocao.comboKit,
       quantidadeLeva: promocao.quantidadeLeva,
       quantidadePaga: promocao.quantidadePaga,
@@ -203,7 +217,12 @@ class PromocaoDto implements Promocao {
       if (quantidadeMinima != null) 'quantidadeMinima': quantidadeMinima,
       if (precoFixo != null) 'precoFixo': precoFixo,
       'tipoEscopo': tipoEscopo.value,
-      if (referenciaIds != null) 'referenciaIds': referenciaIds,
+      if (referenciaIds != null && tipoEscopo != TipoEscopo.categorias)
+        'referenciaIds': referenciaIds,
+      if (categorias != null)
+        'categorias': categorias!.map((item) => item.toJson()).toList(),
+      if (excecaoReferenciaIds != null)
+        'excecaoReferenciaIds': excecaoReferenciaIds,
       if (comboKit != null)
         'comboKit': comboKit!.map((item) => item.toJson()).toList(),
       if (quantidadeLeva != null) 'quantidadeLeva': quantidadeLeva,
@@ -245,6 +264,8 @@ class PromocaoDto implements Promocao {
         precoFixo,
         tipoEscopo,
         referenciaIds,
+        categorias,
+        excecaoReferenciaIds,
         comboKit,
         quantidadeLeva,
         quantidadePaga,

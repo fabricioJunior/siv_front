@@ -75,6 +75,8 @@ abstract class Promocao implements Equatable {
   double? get precoFixo;
   TipoEscopo get tipoEscopo;
   List<int>? get referenciaIds;
+  List<PromocaoCategoria>? get categorias;
+  List<int>? get excecaoReferenciaIds;
   List<ItemComboKit>? get comboKit;
   int? get quantidadeLeva;
   int? get quantidadePaga;
@@ -108,6 +110,8 @@ abstract class Promocao implements Equatable {
     double? precoFixo,
     required TipoEscopo tipoEscopo,
     List<int>? referenciaIds,
+    List<PromocaoCategoria>? categorias,
+    List<int>? excecaoReferenciaIds,
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
@@ -143,6 +147,8 @@ abstract class Promocao implements Equatable {
         precoFixo,
         tipoEscopo,
         referenciaIds,
+        categorias,
+        excecaoReferenciaIds,
         comboKit,
         quantidadeLeva,
         quantidadePaga,
@@ -198,6 +204,10 @@ class _PromocaoImpl implements Promocao {
   @override
   final List<int>? referenciaIds;
   @override
+  final List<PromocaoCategoria>? categorias;
+  @override
+  final List<int>? excecaoReferenciaIds;
+  @override
   final List<ItemComboKit>? comboKit;
   @override
   final int? quantidadeLeva;
@@ -245,6 +255,8 @@ class _PromocaoImpl implements Promocao {
     this.precoFixo,
     required this.tipoEscopo,
     this.referenciaIds,
+    this.categorias,
+    this.excecaoReferenciaIds,
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
@@ -280,6 +292,8 @@ class _PromocaoImpl implements Promocao {
         precoFixo,
         tipoEscopo,
         referenciaIds,
+        categorias,
+        excecaoReferenciaIds,
         comboKit,
         quantidadeLeva,
         quantidadePaga,

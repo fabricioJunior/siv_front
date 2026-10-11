@@ -14,14 +14,20 @@ class ConfiguracaoFreteBloc
   final RecuperarConfiguracaoFrete _recuperarConfiguracao;
   final ListarTransportadorasFrete _listarTransportadoras;
   final SalvarTransportadorasFrete _salvarTransportadoras;
+  final SalvarIntegracaoFrete _salvarIntegracao;
+  final ObterUrlAutorizacaoFrete _obterUrlAutorizacao;
 
   ConfiguracaoFreteBloc(
     this._recuperarConfiguracao,
     this._listarTransportadoras,
     this._salvarTransportadoras,
+    this._salvarIntegracao,
+    this._obterUrlAutorizacao,
   ) : super(const ConfiguracaoFreteState.initial()) {
     on<ConfiguracaoFreteIniciou>(_onIniciou);
     on<ConfiguracaoFreteSalvar>(_onSalvar);
+    on<ConfiguracaoFreteSalvarIntegracao>(_onSalvarIntegracao);
+    on<ConfiguracaoFreteAutorizar>(_onAutorizar);
   }
 
   FutureOr<void> _onIniciou(
@@ -31,7 +37,7 @@ class ConfiguracaoFreteBloc
     try {
       emit(state.copyWith(step: ConfiguracaoFreteStep.carregando));
       final config = await _recuperarConfiguracao.call();
-      final transportadoras = config.provider != null && config.ativo
+      final transportadoras = config.provider != null && config.ativo && config.autorizado
           ? await _listarTransportadoras.call()
           : <String>[];
       emit(state.copyWith(
@@ -63,6 +69,50 @@ class ConfiguracaoFreteBloc
       emit(state.copyWith(
         step: ConfiguracaoFreteStep.falha,
         erro: mensagemDeErroApi(e, 'Falha ao salvar configuração de frete.'),
+      ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onSalvarIntegracao(
+    ConfiguracaoFreteSalvarIntegracao event,
+    Emitter<ConfiguracaoFreteState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(step: ConfiguracaoFreteStep.salvando));
+      final secret = event.clientSecret?.trim();
+      await _salvarIntegracao.call(
+        ativo: event.ativo,
+        sandbox: event.sandbox,
+        clientId: event.clientId.trim(),
+        clientSecret: secret == null || secret.isEmpty ? null : secret,
+      );
+      emit(state.copyWith(step: ConfiguracaoFreteStep.salvo));
+      add(ConfiguracaoFreteIniciou());
+    } catch (e, s) {
+      emit(state.copyWith(
+        step: ConfiguracaoFreteStep.falha,
+        erro: mensagemDeErroApi(e, 'Falha ao salvar integração de frete.'),
+      ));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onAutorizar(
+    ConfiguracaoFreteAutorizar event,
+    Emitter<ConfiguracaoFreteState> emit,
+  ) async {
+    try {
+      emit(state.copyWith(step: ConfiguracaoFreteStep.autorizando));
+      final url = await _obterUrlAutorizacao.call();
+      emit(state.copyWith(
+        urlAutorizacao: url,
+        step: ConfiguracaoFreteStep.urlPronta,
+      ));
+    } catch (e, s) {
+      emit(state.copyWith(
+        step: ConfiguracaoFreteStep.falha,
+        erro: mensagemDeErroApi(e, 'Falha ao obter link de autorização.'),
       ));
       addError(e, s);
     }

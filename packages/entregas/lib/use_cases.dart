@@ -8,3 +8,5 @@ export 'domain/use_cases/cancelar_solicitacao_entrega.dart';
 export 'domain/use_cases/recuperar_configuracao_frete.dart';
 export 'domain/use_cases/listar_transportadoras_frete.dart';
 export 'domain/use_cases/salvar_transportadoras_frete.dart';
+export 'domain/use_cases/salvar_integracao_frete.dart';
+export 'domain/use_cases/obter_url_autorizacao_frete.dart';

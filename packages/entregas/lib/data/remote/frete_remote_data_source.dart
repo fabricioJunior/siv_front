@@ -38,4 +38,31 @@ class FreteRemoteDataSource extends RemoteDataSourceBase
       },
     );
   }
+
+  @override
+  Future<void> salvarIntegracao({
+    required bool ativo,
+    required bool sandbox,
+    required String clientId,
+    String? clientSecret,
+  }) async {
+    await post(
+      pathParameters: {'path': '/configuracao'},
+      body: {
+        'provider': 'melhor_envio',
+        'ativo': ativo,
+        'configuracao': {
+          'clientId': clientId,
+          'sandbox': sandbox,
+          if (clientSecret != null) 'clientSecret': clientSecret,
+        },
+      },
+    );
+  }
+
+  @override
+  Future<String> getUrlAutorizacao() async {
+    final response = await get(pathParameters: {'path': '/autorizar-url'});
+    return (response.body as Map<String, dynamic>)['url'] as String;
+  }
 }

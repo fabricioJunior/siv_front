@@ -14,15 +14,30 @@ void _remoteDataSources() {
   sl.registerFactory<IIntegracaoEntregaRemoteDataSource>(
     () => IntegracaoEntregaRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IFreteRemoteDataSource>(
+    () => FreteRemoteDataSource(informacoesParaRequest: sl()),
+  );
 }
 
 void _repositories() {
+  sl.registerFactory<IFreteRepository>(
+    () => FreteRepository(remoteDataSource: sl()),
+  );
   sl.registerFactory<IIntegracaoEntregaRepository>(
     () => IntegracaoEntregaRepository(remoteDataSource: sl()),
   );
 }
 
 void _useCases() {
+  sl.registerFactory<RecuperarConfiguracaoFrete>(
+    () => RecuperarConfiguracaoFrete(repository: sl()),
+  );
+  sl.registerFactory<ListarTransportadorasFrete>(
+    () => ListarTransportadorasFrete(repository: sl()),
+  );
+  sl.registerFactory<SalvarTransportadorasFrete>(
+    () => SalvarTransportadorasFrete(repository: sl()),
+  );
   sl.registerFactory<RecuperarConfiguracaoEntrega>(
     () => RecuperarConfiguracaoEntrega(repository: sl()),
   );
@@ -47,6 +62,9 @@ void _useCases() {
 }
 
 void _presentation() {
+  sl.registerFactory<ConfiguracaoFreteBloc>(
+    () => ConfiguracaoFreteBloc(sl(), sl(), sl()),
+  );
   sl.registerFactory<ConfiguracaoEntregaBloc>(
     () => ConfiguracaoEntregaBloc(sl(), sl()),
   );

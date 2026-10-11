@@ -24,4 +24,21 @@ class FreteRepository implements IFreteRepository {
         ativo: ativo,
         transportadoras: transportadoras,
       );
+
+  @override
+  Future<void> salvarIntegracao({
+    required bool ativo,
+    required bool sandbox,
+    required String clientId,
+    String? clientSecret,
+  }) =>
+      remoteDataSource.salvarIntegracao(
+        ativo: ativo,
+        sandbox: sandbox,
+        clientId: clientId,
+        clientSecret: clientSecret,
+      );
+
+  @override
+  Future<String> getUrlAutorizacao() => remoteDataSource.getUrlAutorizacao();
 }

@@ -53,7 +53,29 @@ class _ConfiguracaoFretePageState extends State<ConfiguracaoFretePage> {
               _clientSecretController.clear();
             });
           } else if (state.step == ConfiguracaoFreteStep.urlPronta) {
-            sl<LinkService>().abrirLink(state.urlAutorizacao!);
+            // Abrir direto aqui é bloqueado como pop-up no web (depois de await, sem clique do
+            // usuário): o botão do diálogo abre o link a partir de um clique.
+            final url = state.urlAutorizacao!;
+            showDialog<void>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Autorizar no Melhor Envio'),
+                content: SelectableText(url),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Fechar'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      sl<LinkService>().abrirLink(url);
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Abrir'),
+                  ),
+                ],
+              ),
+            );
           } else if (state.step == ConfiguracaoFreteStep.salvo) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Configuração salva com sucesso!')),

@@ -287,7 +287,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
             Expanded(
               child: TextFormField(
                 initialValue: widget.quantidadeLevaInicial?.toString() ?? '',
-                decoration: const InputDecoration(labelText: 'Leva (quantidade)'),
+                decoration:
+                    const InputDecoration(labelText: 'Leva (quantidade)'),
                 keyboardType: TextInputType.number,
                 onChanged: (value) =>
                     widget.onQuantidadeLevaChanged(int.tryParse(value)),
@@ -297,7 +298,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
             Expanded(
               child: TextFormField(
                 initialValue: widget.quantidadePagaInicial?.toString() ?? '',
-                decoration: const InputDecoration(labelText: 'Paga (quantidade)'),
+                decoration:
+                    const InputDecoration(labelText: 'Paga (quantidade)'),
                 keyboardType: TextInputType.number,
                 onChanged: (value) =>
                     widget.onQuantidadePagaChanged(int.tryParse(value)),
@@ -363,7 +365,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
             ),
           ),
         OutlinedButton.icon(
-          onPressed: () => setState(() => _linhasComboKit.add(_ComboKitLinha())),
+          onPressed: () =>
+              setState(() => _linhasComboKit.add(_ComboKitLinha())),
           icon: const Icon(Icons.add),
           label: const Text('Adicionar item'),
         ),
@@ -393,7 +396,8 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
           ),
         ),
         const SizedBox(height: 12),
-        Text('Faixas progressivas', style: Theme.of(context).textTheme.titleSmall),
+        Text('Faixas progressivas',
+            style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         for (final linha in linhasOrdenadas)
           Padding(

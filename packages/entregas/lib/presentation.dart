@@ -4,3 +4,5 @@ export 'presentation/blocs/configuracao_entrega_bloc/configuracao_entrega_bloc.d
 export 'presentation/blocs/chamar_entregador_bloc/chamar_entregador_bloc.dart';
 export 'presentation/pages/configuracao_entrega_page.dart';
 export 'presentation/pages/chamar_entregador_page.dart';
+export 'presentation/blocs/configuracao_frete_bloc/configuracao_frete_bloc.dart';
+export 'presentation/pages/configuracao_frete_page.dart';

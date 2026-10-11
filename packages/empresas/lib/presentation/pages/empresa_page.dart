@@ -21,6 +21,7 @@ enum _SecaoEmpresa {
   notaFiscalEmail('Nota fiscal / e-mail', Icons.mail_outline),
   configFiscal('Config. fiscal', Icons.receipt_long_outlined),
   configEntrega('Config. entrega', Icons.local_shipping_outlined),
+  configFrete('Config. frete', Icons.route_outlined),
   integracaoMeta('Integração Meta', Icons.campaign_outlined);
 
   final String label;
@@ -419,6 +420,14 @@ class _EmpresaPageState extends State<EmpresaPage> {
           titulo: 'Configuração de entrega',
           descricao: 'Regras de frete e entregadores da empresa.',
           rota: '/configuracao_entrega',
+          empresa: empresa,
+        );
+      case _SecaoEmpresa.configFrete:
+        return _cardAtalho(
+          context,
+          titulo: 'Configuração de frete',
+          descricao: 'Transportadoras permitidas nas cotações (Melhor Envio).',
+          rota: '/configuracao_frete',
           empresa: empresa,
         );
       case _SecaoEmpresa.integracaoMeta:

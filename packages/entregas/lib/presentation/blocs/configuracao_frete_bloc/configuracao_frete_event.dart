@@ -9,3 +9,21 @@ class ConfiguracaoFreteSalvar extends ConfiguracaoFreteEvent {
 
   ConfiguracaoFreteSalvar(this.transportadoras);
 }
+
+class ConfiguracaoFreteSalvarIntegracao extends ConfiguracaoFreteEvent {
+  final bool ativo;
+  final bool sandbox;
+  final String clientId;
+
+  /// Vazio/null = não alterar.
+  final String? clientSecret;
+
+  ConfiguracaoFreteSalvarIntegracao({
+    required this.ativo,
+    required this.sandbox,
+    required this.clientId,
+    this.clientSecret,
+  });
+}
+
+class ConfiguracaoFreteAutorizar extends ConfiguracaoFreteEvent {}

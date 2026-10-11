@@ -35,6 +35,12 @@ void _useCases() {
   sl.registerFactory<ListarTransportadorasFrete>(
     () => ListarTransportadorasFrete(repository: sl()),
   );
+  sl.registerFactory<SalvarIntegracaoFrete>(
+    () => SalvarIntegracaoFrete(repository: sl()),
+  );
+  sl.registerFactory<ObterUrlAutorizacaoFrete>(
+    () => ObterUrlAutorizacaoFrete(repository: sl()),
+  );
   sl.registerFactory<SalvarTransportadorasFrete>(
     () => SalvarTransportadorasFrete(repository: sl()),
   );
@@ -63,7 +69,7 @@ void _useCases() {
 
 void _presentation() {
   sl.registerFactory<ConfiguracaoFreteBloc>(
-    () => ConfiguracaoFreteBloc(sl(), sl(), sl()),
+    () => ConfiguracaoFreteBloc(sl(), sl(), sl(), sl(), sl()),
   );
   sl.registerFactory<ConfiguracaoEntregaBloc>(
     () => ConfiguracaoEntregaBloc(sl(), sl()),

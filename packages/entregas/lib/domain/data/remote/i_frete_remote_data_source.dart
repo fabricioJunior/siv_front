@@ -9,4 +9,13 @@ abstract class IFreteRemoteDataSource {
     required bool ativo,
     required List<String> transportadoras,
   });
+
+  Future<void> salvarIntegracao({
+    required bool ativo,
+    required bool sandbox,
+    required String clientId,
+    String? clientSecret,
+  });
+
+  Future<String> getUrlAutorizacao();
 }

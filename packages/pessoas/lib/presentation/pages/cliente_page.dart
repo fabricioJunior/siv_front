@@ -11,6 +11,8 @@ import 'package:pessoas/presentation/bloc/pontos_bloc/pontos_bloc.dart';
 import '../widgets/cliente_abas.dart';
 import '../widgets/cliente_cabecalho.dart';
 import '../widgets/cliente_dados_aba.dart';
+import '../widgets/cliente_enderecos_aba.dart';
+import '../widgets/cliente_pontos_aba.dart';
 
 typedef ClienteAbaBuilder = Widget Function(
   BuildContext context,
@@ -184,8 +186,8 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
         widget.abaComprasBuilder?.call(context, id, nome) ?? _emBreve(),
       ClienteAba.credito =>
         widget.abaCreditoBuilder?.call(context, id, nome) ?? _emBreve(),
-      // Placeholders: substituídos por cliente_enderecos_aba/cliente_pontos_aba.
-      ClienteAba.enderecos || ClienteAba.pontos => _emBreve(),
+      ClienteAba.enderecos => ClienteEnderecosAba(idPessoa: id),
+      ClienteAba.pontos => ClientePontosAba(idPessoa: id),
     };
   }
 

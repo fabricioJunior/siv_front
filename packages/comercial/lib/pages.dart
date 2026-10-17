@@ -4,7 +4,6 @@ export 'presentation/pages/entrada_por_contagem_page.dart';
 export 'presentation/pages/importar_nfe_page.dart';
 export 'presentation/pages/pedido_entrada_page.dart';
 export 'presentation/pages/importar_vendas_csv_page.dart';
-export 'presentation/pages/credito_devolucao_movimentacoes_page.dart';
 export 'presentation/pages/criar_romaneio_por_parametros_page.dart';
 export 'presentation/pages/devolucao_page.dart';
 export 'presentation/pages/pedidos_page.dart';

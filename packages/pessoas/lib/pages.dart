@@ -1,9 +1,10 @@
 export 'presentation/pages/pessoas_page.dart';
 export 'presentation/pages/pessoa_page.dart';
-export 'presentation/pages/pessoa_visualizacao_page.dart';
+export 'presentation/pages/cliente_page.dart';
 export 'presentation/pages/enderecos_page.dart';
 export 'presentation/pages/endereco_cadastro_page.dart';
 export 'presentation/pages/selecionar_pessoa_page.dart';
 export 'presentation/pages/selecionar_endereco_page.dart';
 export 'presentation/widgets/seletor_pessoa.dart';
 export 'presentation/widgets/funcionario_seletor.dart';
+export 'presentation/widgets/cliente_abas.dart';

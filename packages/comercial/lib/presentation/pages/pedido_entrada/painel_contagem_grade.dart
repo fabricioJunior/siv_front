@@ -30,6 +30,8 @@ class PainelContagemGrade extends StatefulWidget {
   final int? referenciaId;
   final String? referenciaNome;
   final String? descricaoInicial;
+  final int? estampaIdInicial;
+  final String? estampaNomeInicial;
   final List<EntradaContagem> existentes;
 
   /// produtoId -> lido na conferência (o contado nunca fica abaixo dele).
@@ -41,6 +43,8 @@ class PainelContagemGrade extends StatefulWidget {
   final SeletorWidget? referenciaSeletor;
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
+  final SeletorWidget? estampaSeletor;
+  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
   final BuscaReferenciasParecidas? buscarParecidas;
   final void Function(bool livre, List<ItemContagem> itens) onSalvar;
   final VoidCallback onFechar;
@@ -55,12 +59,16 @@ class PainelContagemGrade extends StatefulWidget {
     this.referenciaId,
     this.referenciaNome,
     this.descricaoInicial,
+    this.estampaIdInicial,
+    this.estampaNomeInicial,
     this.existentes = const [],
     this.lidoPorProduto = const {},
     this.impressasPorProduto,
     this.referenciaSeletor,
     required this.corSeletor,
     required this.tamanhoSeletor,
+    this.estampaSeletor,
+    this.carregarTamanhos,
     this.buscarParecidas,
     required this.onSalvar,
     required this.onFechar,
@@ -84,6 +92,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   late bool _livre = widget.livreInicial;
   late int? _referenciaId = widget.referenciaId ?? widget.linha?.referenciaId;
   late String? _referenciaNome = widget.referenciaNome;
+  late int? _estampaId = widget.estampaIdInicial;
+  bool? _tamanhosNumericos;
+  bool _carregandoTamanhos = false;
   String? _focado;
   List<ReferenciaParecida> _parecidas = const [];
   int _buscaSeq = 0;
@@ -236,6 +247,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             ItemContagem(
               linhaId: widget.linha?.id,
               referenciaId: _livre ? null : _referenciaId,
+              estampaId: _livre ? null : _estampaId,
               descricao: _livre ? descricao : null,
               corId: cor,
               tamanhoId: tam,
@@ -549,16 +561,38 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
         ),
         const SizedBox(height: 12),
-        widget.tamanhoSeletor(
-          SeletorData(
-            onChanged: (itens) {
-              _tamanhosSeletor
-                ..clear()
-                ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-              _sincronizarSeletores();
-            },
+        if (!_livre && widget.linha == null && widget.estampaSeletor != null) ...[
+          // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
+          if (widget.estampaIdInicial != null)
+            Text(
+              'Estampa: ${widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'}',
+              key: const Key('contagem_estampa_fixa'),
+              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+            )
+          else
+            widget.estampaSeletor!(
+              SeletorData(
+                compacto: true,
+                onChanged: (itens) => setState(
+                  () => _estampaId = itens.isEmpty ? null : itens.first.id,
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+        ],
+        if (widget.carregarTamanhos != null)
+          _tipoTamanho(cores, textos)
+        else
+          widget.tamanhoSeletor(
+            SeletorData(
+              onChanged: (itens) {
+                _tamanhosSeletor
+                  ..clear()
+                  ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+                _sincronizarSeletores();
+              },
+            ),
           ),
-        ),
         const SizedBox(height: 16),
         if (_cores.isNotEmpty && _tamanhos.isNotEmpty) _grade(cores, textos),
         if (_livre) ...[
@@ -571,6 +605,56 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       ],
     );
   }
+
+  /// "Numérico | Letras": carrega a grade com todos os tamanhos do tipo.
+  Future<void> _escolherTipoTamanho(bool numerico) async {
+    setState(() {
+      _tamanhosNumericos = numerico;
+      _carregandoTamanhos = true;
+    });
+    try {
+      final todos = await widget.carregarTamanhos!();
+      if (!mounted) return;
+      _tamanhosSeletor
+        ..clear()
+        ..addEntries(
+          todos
+              .where((t) => t.numerico == numerico)
+              .map((t) => MapEntry(t.id, t.nome)),
+        );
+      _sincronizarSeletores();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível carregar os tamanhos.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _carregandoTamanhos = false);
+    }
+  }
+
+  Widget _tipoTamanho(SivColors cores, SivTextStyles textos) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _rotulo('TIPO DE TAMANHO', cores, textos),
+          SegmentedButton<bool>(
+            key: const Key('tipo_tamanho'),
+            emptySelectionAllowed: true,
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: true, label: Text('NUMÉRICO')),
+              ButtonSegment(value: false, label: Text('LETRAS')),
+            ],
+            selected: {if (_tamanhosNumericos != null) _tamanhosNumericos!},
+            onSelectionChanged: _carregandoTamanhos
+                ? null
+                : (s) {
+                    if (s.isNotEmpty) _escolherTipoTamanho(s.first);
+                  },
+          ),
+        ],
+      );
 
   List<Widget> _campoReferencia(SivColors cores, SivTextStyles textos) {
     final fixa = widget.referenciaId != null || widget.linha != null;

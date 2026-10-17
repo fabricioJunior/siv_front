@@ -15,6 +15,8 @@ class _Edicao {
   final int? referenciaId;
   final String? referenciaNome;
   final String? descricao;
+  final int? estampaId;
+  final String? estampaNome;
   final EntradaLinha? linha;
   final List<EntradaContagem> existentes;
 
@@ -25,6 +27,8 @@ class _Edicao {
     this.referenciaId,
     this.referenciaNome,
     this.descricao,
+    this.estampaId,
+    this.estampaNome,
     this.linha,
     this.existentes = const [],
   });
@@ -116,6 +120,8 @@ class _PassoContarState extends State<PassoContar> {
       linha: e.linha,
       referenciaId: e.referenciaId,
       referenciaNome: e.referenciaNome,
+      estampaIdInicial: e.estampaId,
+      estampaNomeInicial: e.estampaNome,
       descricaoInicial: e.descricao,
       existentes: e.existentes,
       lidoPorProduto: _lidos,
@@ -125,6 +131,8 @@ class _PassoContarState extends State<PassoContar> {
       referenciaSeletor: s.referenciaContagemSeletor,
       corSeletor: s.corSeletor,
       tamanhoSeletor: s.tamanhoSeletor,
+      estampaSeletor: s.estampaSeletor,
+      carregarTamanhos: s.carregarTamanhos,
       buscarParecidas: s.buscarReferenciasParecidas,
       onSalvar: onSalvar,
       onFechar: onFechar,
@@ -133,11 +141,12 @@ class _PassoContarState extends State<PassoContar> {
 
   // --- agrupamentos ---------------------------------------------------------
 
-  Map<int, List<EntradaContagem>> get _gruposRef {
-    final g = <int, List<EntradaContagem>>{};
+  /// (referenciaId, estampaId): a mesma referência em estampas diferentes são contagens separadas.
+  Map<(int, int), List<EntradaContagem>> get _gruposRef {
+    final g = <(int, int), List<EntradaContagem>>{};
     for (final c in _r.contagens) {
       if (c.linhaId != null) continue; // NF-e aparece nos cartões
-      g.putIfAbsent(c.referenciaId ?? 0, () => []).add(c);
+      g.putIfAbsent((c.referenciaId ?? 0, c.estampaId ?? 0), () => []).add(c);
     }
     return g;
   }
@@ -166,7 +175,7 @@ class _PassoContarState extends State<PassoContar> {
           referenciaId: refId,
           referenciaNome: itens.first.referenciaNome,
           existentes: [
-            ..._r.contagens.where((c) => c.referenciaId == refId),
+            ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == null),
             for (final c in itens)
               EntradaContagem(
                 produtoId: 0,
@@ -194,11 +203,19 @@ class _PassoContarState extends State<PassoContar> {
   String _corNome(int id) => nomesCor[id] ?? '#$id';
   String _tamNome(int id) => nomesTamanho[id] ?? '#$id';
 
+  String _tituloRef(List<EntradaContagem> itens) {
+    final nome = itens.first.referenciaNome ?? 'Referência';
+    final estampa = itens.first.estampaNome;
+    return estampa == null ? nome : '$nome · $estampa';
+  }
+
   void _editarRef(int refId, List<EntradaContagem> itens) => _abrir(
         _Edicao(
-          titulo: itens.first.referenciaNome ?? 'Referência',
+          titulo: _tituloRef(itens),
           referenciaId: refId == 0 ? null : refId,
           referenciaNome: itens.first.referenciaNome,
+          estampaId: itens.first.estampaId,
+          estampaNome: itens.first.estampaNome,
           existentes: itens,
         ),
       );
@@ -230,6 +247,64 @@ class _PassoContarState extends State<PassoContar> {
           referenciaId: linha.referenciaId,
           existentes: _r.contagensDaLinha(linha.id),
         ),
+      );
+
+  // --- exclusão ---------------------------------------------------------------
+
+  Future<void> _excluir(String titulo, {required VoidCallback confirmar}) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir contagem?'),
+        content: Text('Remove a contagem de “$titulo”. Fica registrado no histórico.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            key: const Key('excluir_confirmar'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('EXCLUIR'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) confirmar();
+  }
+
+  void _excluirRef(List<EntradaContagem> itens) => _excluir(
+        _tituloRef(itens),
+        confirmar: () => _enviar(context.read<PedidoEntradaBloc>(), false, [
+          for (final c in itens)
+            ItemContagem(produtoId: c.produtoId, quantidade: 0),
+        ]),
+      );
+
+  void _excluirVariacao(int refId, List<ContagemLivre> itens) => _excluir(
+        itens.first.referenciaNome ?? itens.first.descricao,
+        confirmar: () => _enviar(context.read<PedidoEntradaBloc>(), false, [
+          for (final c in itens)
+            ItemContagem(
+              referenciaId: refId,
+              corId: c.corId,
+              tamanhoId: c.tamanhoId,
+              quantidade: 0,
+            ),
+        ]),
+      );
+
+  void _excluirLivre(String descricao, List<ContagemLivre> itens) => _excluir(
+        descricao,
+        confirmar: () => _enviar(context.read<PedidoEntradaBloc>(), true, [
+          for (final c in itens)
+            ItemContagem(
+              descricao: descricao,
+              corId: c.corId,
+              tamanhoId: c.tamanhoId,
+              quantidade: 0,
+            ),
+        ]),
       );
 
   // --- build ----------------------------------------------------------------
@@ -350,14 +425,16 @@ class _PassoContarState extends State<PassoContar> {
           ),
           for (final e in refs.entries)
             _linhaGrupo(
-              chave: Key('entrada_grupo_${e.key}'),
-              titulo: e.value.first.referenciaNome ?? 'Referência',
+              chave: Key('entrada_grupo_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
+              titulo: _tituloRef(e.value),
               resumo: e.value
                   .map((c) =>
                       '${c.corNome ?? '-'} ${c.tamanhoNome ?? ''}·${qtd(c.quantidade)}')
                   .join(' · '),
               total: e.value.fold<double>(0, (s, c) => s + c.quantidade),
-              onTap: widget.salvando ? null : () => _editarRef(e.key, e.value),
+              onTap: widget.salvando ? null : () => _editarRef(e.key.$1, e.value),
+              onExcluir:
+                  widget.salvando ? null : () => _excluirRef(e.value),
             ),
           if (variacoesNovas.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -388,6 +465,9 @@ class _PassoContarState extends State<PassoContar> {
                       onTap: widget.salvando
                           ? null
                           : () => _editarVariacao(e.key, e.value),
+                      onExcluir: widget.salvando
+                          ? null
+                          : () => _excluirVariacao(e.key, e.value),
                     ),
                 ],
               ),
@@ -421,6 +501,9 @@ class _PassoContarState extends State<PassoContar> {
                       onTap: widget.salvando
                           ? null
                           : () => _editarLivre(e.key, e.value),
+                      onExcluir: widget.salvando
+                          ? null
+                          : () => _excluirLivre(e.key, e.value),
                     ),
                 ],
               ),
@@ -521,6 +604,7 @@ class _PassoContarState extends State<PassoContar> {
     required String resumo,
     required double total,
     required VoidCallback? onTap,
+    VoidCallback? onExcluir,
   }) {
     final textos = context.sivTextos;
     final cores = context.sivColors;
@@ -550,6 +634,13 @@ class _PassoContarState extends State<PassoContar> {
             ),
             const SizedBox(width: 8),
             Text(qtd(total), style: textos.secao),
+            IconButton(
+              key: Key('excluir_$titulo'),
+              tooltip: 'Excluir contagem',
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              onPressed: onExcluir,
+              icon: const Icon(Icons.delete_outline),
+            ),
           ],
         ),
       ),

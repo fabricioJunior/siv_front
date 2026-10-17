@@ -27,6 +27,7 @@ class ImpressaoDeEtiquetasPage extends StatelessWidget {
             ..add(ImpressaoEtiquetasItensIniciaisDefinidos(itensIniciais)),
       child: _ImpressaoDeEtiquetasView(
         tabelasDePrecoSeletor: tabelasDePrecoSeletor,
+        fechaAoImprimir: itensIniciais.isNotEmpty,
       ),
     );
   }
@@ -35,7 +36,13 @@ class ImpressaoDeEtiquetasPage extends StatelessWidget {
 class _ImpressaoDeEtiquetasView extends StatefulWidget {
   final SeletorWidget tabelasDePrecoSeletor;
 
-  const _ImpressaoDeEtiquetasView({required this.tabelasDePrecoSeletor});
+  /// Vindo de um fluxo com itens prontos (ex.: entrada): ao imprimir, fecha devolvendo true.
+  final bool fechaAoImprimir;
+
+  const _ImpressaoDeEtiquetasView({
+    required this.tabelasDePrecoSeletor,
+    required this.fechaAoImprimir,
+  });
 
   @override
   State<_ImpressaoDeEtiquetasView> createState() =>
@@ -417,8 +424,9 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                             onPressed:
                                 state.imprimindo || state.pilhaImpressao.isEmpty
                                 ? null
-                                : () {
-                                    Navigator.of(context).pushNamed(
+                                : () async {
+                                    final navigator = Navigator.of(context);
+                                    final impresso = await navigator.pushNamed(
                                       '/impressao_progress',
                                       arguments: {
                                         'itens': state.pilhaImpressao,
@@ -430,6 +438,11 @@ class _ImpressaoDeEtiquetasViewState extends State<_ImpressaoDeEtiquetasView> {
                                             1,
                                       },
                                     );
+                                    if (impresso == true &&
+                                        widget.fechaAoImprimir &&
+                                        navigator.mounted) {
+                                      navigator.pop(true);
+                                    }
                                   },
                             icon: const Icon(Icons.print),
                             label: const Text('Imprimir etiquetas'),

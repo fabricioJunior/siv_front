@@ -4,6 +4,7 @@ import 'package:core/presentation/debouncer.dart';
 import 'package:flutter/material.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/presentation.dart';
+import 'package:promocoes/presentation/widgets/form_promocional_layout.dart';
 
 class PromocoesPage extends StatelessWidget {
   final bloc = sl<PromocoesBloc>();
@@ -33,9 +34,12 @@ class PromocoesPage extends StatelessWidget {
               onPressed: carregando
                   ? null
                   : () async {
-                      final result = await Navigator.of(
+                      final result = await FormPromocionalLayout.abrir(
                         context,
-                      ).pushNamed('/promocao/form');
+                        rota: '/promocao/form',
+                        arguments: const {},
+                        pagina: (_) => const PromocaoFormPage(),
+                      );
 
                       if (result == true) {
                         // ignore: use_build_context_synchronously
@@ -165,9 +169,11 @@ class _PromocaoCard extends StatelessWidget {
           ],
         ),
         onTap: () async {
-          final result = await Navigator.of(context).pushNamed(
-            '/promocao/form',
+          final result = await FormPromocionalLayout.abrir(
+            context,
+            rota: '/promocao/form',
             arguments: {'idPromocao': item.id},
+            pagina: (_) => PromocaoFormPage(idPromocao: item.id),
           );
 
           if (result == true && context.mounted) {

@@ -35,6 +35,14 @@ class CreditoDevolucaoMovimentacaoDto implements CreditoDevolucaoMovimentacao {
   final String? motivoCancelamento;
   @override
   final int operadorId;
+  @override
+  final int? creditoId;
+  @override
+  final String? origem;
+  @override
+  final String? motivo;
+  @override
+  final String? operadorNome;
 
   const CreditoDevolucaoMovimentacaoDto({
     required this.criadoEm,
@@ -54,6 +62,10 @@ class CreditoDevolucaoMovimentacaoDto implements CreditoDevolucaoMovimentacao {
     required this.cancelado,
     this.motivoCancelamento,
     required this.operadorId,
+    this.creditoId,
+    this.origem,
+    this.motivo,
+    this.operadorNome,
   });
 
   factory CreditoDevolucaoMovimentacaoDto.fromJson(Map<String, dynamic> json) {
@@ -75,6 +87,10 @@ class CreditoDevolucaoMovimentacaoDto implements CreditoDevolucaoMovimentacao {
       cancelado: json['cancelado'] == true,
       motivoCancelamento: json['motivoCancelamento']?.toString(),
       operadorId: _toInt(json['operadorId']) ?? 0,
+      creditoId: _toInt(json['creditoId']),
+      origem: json['origem']?.toString(),
+      motivo: json['motivo']?.toString(),
+      operadorNome: json['operadorNome']?.toString(),
     );
   }
 
@@ -111,6 +127,10 @@ class CreditoDevolucaoMovimentacaoDto implements CreditoDevolucaoMovimentacao {
         cancelado,
         motivoCancelamento,
         operadorId,
+        creditoId,
+        origem,
+        motivo,
+        operadorNome,
       ];
 
   @override

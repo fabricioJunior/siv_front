@@ -269,6 +269,26 @@ void _useCases() {
     () => BuscarSaldoCreditoDevolucao(repository: sl()),
   );
 
+  sl.registerFactory<BuscarCreditosDevolucao>(
+    () => BuscarCreditosDevolucao(repository: sl()),
+  );
+
+  sl.registerFactory<BuscarResumoCreditoDevolucao>(
+    () => BuscarResumoCreditoDevolucao(repository: sl()),
+  );
+
+  sl.registerFactory<AdicionarCreditoAvulso>(
+    () => AdicionarCreditoAvulso(repository: sl()),
+  );
+
+  sl.registerFactory<RemoverCreditoDevolucao>(
+    () => RemoverCreditoDevolucao(repository: sl()),
+  );
+
+  sl.registerFactory<ExpirarCreditoDevolucao>(
+    () => ExpirarCreditoDevolucao(repository: sl()),
+  );
+
   sl.registerFactory<VerificarElegibilidadeFidelidade>(
     () => VerificarElegibilidadeFidelidade(repository: sl()),
   );
@@ -727,6 +747,11 @@ void _presentation() {
   sl.registerFactory<RelatorioClientesAniversariantesBloc>(
     () => RelatorioClientesAniversariantesBloc(sl()),
   );
+  sl.registerFactory<CreditosDevolucaoBloc>(
+    () => CreditosDevolucaoBloc(
+        sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+  );
+
   sl.registerFactory<TransferirCreditoBloc>(
     () => TransferirCreditoBloc(sl(), sl()),
   );

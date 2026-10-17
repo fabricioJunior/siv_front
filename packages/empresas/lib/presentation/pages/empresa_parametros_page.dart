@@ -1,7 +1,9 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:empresas/domain/entities/empresa_parametro.dart';
+import 'package:core/presentation.dart';
 import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_parametros_bloc.dart';
+import 'package:empresas/presentation/widgets/empresa_credito_devolucao_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -83,12 +85,17 @@ class EmpresaParametrosPage extends StatelessWidget {
               }
 
               final secoes = _agruparPorSecao(state.parametros);
+              final comCard = PermissaoPorNome.acessoPermitido('ADMFM011');
 
               return SafeArea(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: secoes.length + 1,
-                  itemBuilder: (context, index) {
+                  itemCount: secoes.length + 1 + (comCard ? 1 : 0),
+                  itemBuilder: (context, i) {
+                    if (comCard && i == 0) {
+                      return EmpresaCreditoDevolucaoCard(idEmpresa: idEmpresa);
+                    }
+                    final index = comCard ? i - 1 : i;
                     if (index == secoes.length) {
                       return _StatusRodape(step: state.step);
                     }

@@ -5,7 +5,7 @@ import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
 import 'package:comercial/use_cases.dart'
-    show BuscarSaldoCreditoDevolucao, GetComprasDoCliente;
+    show BuscarResumoCreditoDevolucao, GetComprasDoCliente;
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
 import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comercial/presentation/widgets/transferir_credito_dialogo.dart';
@@ -1492,10 +1492,22 @@ Widget _clientePage(BuildContext context, ClienteAba aba, {Object? idPessoa}) {
     aba: aba,
     abaComprasBuilder: (_, idPessoa, __) =>
         ClienteComprasAba(pessoaId: idPessoa),
-    abaCreditoBuilder: (_, idPessoa, __) =>
-        ClienteCreditoAba(pessoaId: idPessoa),
-    buscarSaldoCredito: (idPessoa) =>
-        sl<BuscarSaldoCreditoDevolucao>().call(pessoaId: idPessoa),
+    abaCreditoBuilder: (_, idPessoa, nome) =>
+        ClienteCreditoAba(pessoaId: idPessoa, nome: nome),
+    buscarSaldoCredito: (idPessoa) async {
+      final r = await sl<BuscarResumoCreditoDevolucao>().call(pessoaId: idPessoa);
+      final venc = r.proximoVencimento;
+      final hoje = DateTime.now();
+      return (
+        saldo: r.saldoDisponivel,
+        vencem: r.venceEm30Dias,
+        dias: venc == null
+            ? null
+            : DateTime(venc.year, venc.month, venc.day)
+                .difference(DateTime(hoje.year, hoje.month, hoje.day))
+                .inDays,
+      );
+    },
     buscarUltimaCompra: (idPessoa) async {
       final empresaId = sl<IAcessoGlobalSessao>().empresaIdDaSessao;
       if (empresaId == null) return null;

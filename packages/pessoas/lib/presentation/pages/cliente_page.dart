@@ -36,7 +36,7 @@ class PessoaVisualizacaoPage extends StatefulWidget {
   final ClienteAbaBuilder? abaCreditoBuilder;
 
   /// Dados do card Resumo que vêm de comercial, montados em routes.dart.
-  final Future<double> Function(int idPessoa)? buscarSaldoCredito;
+  final Future<ResumoCreditoCliente> Function(int idPessoa)? buscarSaldoCredito;
   final Future<String?> Function(int idPessoa)? buscarUltimaCompra;
 
   const PessoaVisualizacaoPage({
@@ -60,7 +60,7 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
   late final EnderecosBloc _enderecos;
   final _acoes = ClienteAcoes();
   late ClienteAba _aba = widget.aba;
-  Future<double>? _saldo;
+  Future<ResumoCreditoCliente>? _saldo;
   Future<String?>? _ultimaCompra;
 
   @override
@@ -159,7 +159,7 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
         ClienteAbas(
           selecionada: _aba,
           mobile: mobile,
-          aoSelecionar: (a) => setState(() => _aba = a),
+          aoSelecionar: _abrirAba,
         ),
         Expanded(child: _conteudo(context, nome, mobile)),
         if (mobile && principal != null)
@@ -180,7 +180,7 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
           mobile: mobile,
           saldoCredito: _saldo,
           ultimaCompra: _ultimaCompra,
-          aoAbrirAba: (a) => setState(() => _aba = a),
+          aoAbrirAba: _abrirAba,
         ),
       ClienteAba.compras =>
         widget.abaComprasBuilder?.call(context, id, nome) ?? _emBreve(),
@@ -190,6 +190,12 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
       ClienteAba.pontos => ClientePontosAba(idPessoa: id),
     };
   }
+
+  /// Ao voltar para Dados, recarrega o resumo (crédito pode ter mudado).
+  void _abrirAba(ClienteAba a) => setState(() {
+        if (a == ClienteAba.dados && _aba != a) _carregarResumo();
+        _aba = a;
+      });
 
   Widget _emBreve() => Center(
         child: Text(

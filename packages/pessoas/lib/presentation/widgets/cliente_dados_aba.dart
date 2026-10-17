@@ -19,13 +19,17 @@ String _moeda(double v) {
   return 'R\$ ${_milhar(partes[0])},${partes[1]}';
 }
 
+/// Linha de crédito do Resumo: saldo e, quando houver, quanto vence e em
+/// quantos dias (montado em routes.dart a partir do resumo de comercial).
+typedef ResumoCreditoCliente = ({double saldo, double vencem, int? dias});
+
 String _ou(String? v) => (v?.trim().isEmpty ?? true) ? '-' : v!.trim();
 
 /// Aba Dados (3a/3e): cards Identificação, Contato, Vínculo e Resumo.
 /// Exige PessoaBloc, PontosBloc e EnderecosBloc acima na árvore.
 class ClienteDadosAba extends StatelessWidget {
   final bool mobile;
-  final Future<double>? saldoCredito;
+  final Future<ResumoCreditoCliente>? saldoCredito;
   final Future<String?>? ultimaCompra;
   final ValueChanged<ClienteAba> aoAbrirAba;
 
@@ -150,7 +154,7 @@ class _Cartao extends StatelessWidget {
 }
 
 class _Resumo extends StatelessWidget {
-  final Future<double>? saldoCredito;
+  final Future<ResumoCreditoCliente>? saldoCredito;
   final Future<String?>? ultimaCompra;
   final ValueChanged<ClienteAba> aoAbrirAba;
 
@@ -180,13 +184,21 @@ class _Resumo extends StatelessWidget {
             ),
           ),
           if (saldoCredito != null)
-            FutureBuilder<double>(
+            FutureBuilder<ResumoCreditoCliente>(
               future: saldoCredito,
-              builder: (_, s) => _Linha(
-                'Crédito de devolução',
-                s.hasData ? _moeda(s.data!) : '-',
-                () => aoAbrirAba(ClienteAba.credito),
-              ),
+              builder: (_, s) {
+                final r = s.data;
+                final vence = r != null && r.vencem > 0 && r.dias != null
+                    ? '${_moeda(r.vencem)} vencem em '
+                        '${r.dias} ${r.dias == 1 ? 'dia' : 'dias'}'
+                    : null;
+                return _Linha(
+                  'Crédito de devolução',
+                  r == null ? '-' : _moeda(r.saldo),
+                  () => aoAbrirAba(ClienteAba.credito),
+                  aviso: vence,
+                );
+              },
             ),
           _Linha(
             'Pontos',
@@ -221,8 +233,10 @@ class _Linha extends StatelessWidget {
   final String valor;
   final VoidCallback aoPressionar;
   final bool grande;
+  final String? aviso;
 
-  const _Linha(this.rotulo, this.valor, this.aoPressionar, {this.grande = true});
+  const _Linha(this.rotulo, this.valor, this.aoPressionar,
+      {this.grande = true, this.aviso});
 
   @override
   Widget build(BuildContext context) {
@@ -251,6 +265,11 @@ class _Linha extends StatelessWidget {
                         ? textos.secao.copyWith(fontSize: 19)
                         : textos.corpo,
                   ),
+                  if (aviso != null)
+                    Text(
+                      aviso!,
+                      style: textos.apoio.copyWith(color: cores.atencao),
+                    ),
                 ],
               ),
             ),

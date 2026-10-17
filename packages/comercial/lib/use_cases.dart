@@ -1,6 +1,7 @@
 export 'domain/use_cases/adicionar_item_romaneio.dart';
 export 'domain/use_cases/buscar_credito_devolucao_movimentacoes.dart';
 export 'domain/use_cases/buscar_saldo_credito_devolucao.dart';
+export 'domain/use_cases/creditos_devolucao_use_cases.dart';
 export 'domain/use_cases/get_creditos_transferiveis.dart';
 export 'domain/use_cases/transferir_creditos_devolucao.dart';
 export 'domain/use_cases/atualizar_observacao_romaneio.dart';

@@ -7,3 +7,4 @@ export 'presentation/pages/selecionar_endereco_page.dart';
 export 'presentation/widgets/seletor_pessoa.dart';
 export 'presentation/widgets/funcionario_seletor.dart';
 export 'presentation/widgets/cliente_abas.dart';
+export 'presentation/widgets/cliente_dados_aba.dart' show ResumoCreditoCliente;

@@ -1,9 +1,24 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/tema.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/presentation.dart';
+import 'package:promocoes/presentation/widgets/campo_data.dart';
+import 'package:promocoes/presentation/widgets/form_promocional_layout.dart';
+
+/// 8 caracteres pronunciaveis (consoante/vogal alternadas), sem 0/O/1/I.
+String gerarCodigoCupom([Random? r]) {
+  const consoantes = 'BCDFGHJKLMNPQRSTVWXZ';
+  const vogais = 'AEU';
+  final rnd = r ?? Random();
+  return List.generate(8, (i) {
+    final base = i.isEven ? consoantes : vogais;
+    return base[rnd.nextInt(base.length)];
+  }).join();
+}
 
 class CupomFormPage extends StatefulWidget {
   final int? idCupom;
@@ -45,205 +60,176 @@ class _CupomFormPageState extends State<CupomFormPage> {
             Navigator.of(context).pop(true);
           }
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(widget.idCupom == null ? 'Novo cupom' : 'Editar cupom'),
-          ),
-          floatingActionButton: BlocBuilder<CupomBloc, CupomState>(
-            builder: (context, state) {
-              final salvando = state.step == CupomStep.salvando ||
-                  state.step == CupomStep.carregando;
+        child: BlocBuilder<CupomBloc, CupomState>(
+          builder: (context, state) {
+            final carregando = state.step == CupomStep.carregando;
+            final salvando = state.step == CupomStep.salvando || carregando;
+            if (!carregando) _sincronizarControllers(state);
 
-              return FloatingActionButton(
-                onPressed: salvando
-                    ? null
-                    : () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          context.read<CupomBloc>().add(CupomSalvou());
-                        }
-                      },
-                child: salvando
-                    ? const CircularProgressIndicator.adaptive()
-                    : const Icon(Icons.check),
-              );
-            },
-          ),
-          body: BlocBuilder<CupomBloc, CupomState>(
-            builder: (context, state) {
-              if (state.step == CupomStep.carregando) {
-                return const Center(child: CircularProgressIndicator.adaptive());
-              }
-
-              _sincronizarControllers(state);
-
-              return SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Configuração básica',
-                          style: Theme.of(context).textTheme.titleMedium,
+            return Form(
+              key: _formKey,
+              child: FormPromocionalLayout(
+                titulo: widget.idCupom == null ? 'Novo cupom' : 'Editar cupom',
+                rotuloSalvar: 'Salvar cupom',
+                salvando: salvando,
+                onSalvar: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    context.read<CupomBloc>().add(CupomSalvou());
+                  }
+                },
+                corpo: carregando
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator.adaptive(),
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _codigoController,
-                          decoration: const InputDecoration(labelText: 'Código'),
-                          textCapitalization: TextCapitalization.characters,
-                          inputFormatters: [UpperCaseTextFormatter()],
-                          validator: (value) => (value == null || value.trim().isEmpty)
-                              ? 'Informe o código'
-                              : null,
-                          onChanged: (value) =>
-                              _onCampoAlterado(context, codigo: value),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _SeletorData(
-                                titulo: 'Início',
-                                data: state.dataInicio,
-                                onSelecionado: (data) =>
-                                    _onCampoAlterado(context, dataInicio: data),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _SeletorData(
-                                titulo: 'Fim',
-                                data: state.dataFim,
-                                onSelecionado: (data) =>
-                                    _onCampoAlterado(context, dataFim: data),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        RegraDescontoFormWidget(
-                          tipoDesconto: state.tipoDesconto,
-                          valorPercentual: state.valorPercentual,
-                          valorDescontoMaximo: state.valorDescontoMaximo,
-                          valorFixo: state.valorFixo,
-                          valorMinimoCompra: state.valorMinimoCompra,
-                          quantidadeMinima: state.quantidadeMinima,
-                          precoFixo: state.precoFixo,
-                          onTipoDescontoChanged: (tipo) =>
-                              _onCampoAlterado(context, tipoDesconto: tipo),
-                          onValorPercentualChanged: (valor) => _onCampoAlterado(
-                            context,
-                            valorPercentual: valor,
-                          ),
-                          onValorDescontoMaximoChanged: (valor) =>
-                              _onCampoAlterado(
-                            context,
-                            valorDescontoMaximo: valor,
-                          ),
-                          onValorFixoChanged: (valor) =>
-                              _onCampoAlterado(context, valorFixo: valor),
-                          onValorMinimoCompraChanged: (valor) =>
-                              _onCampoAlterado(context, valorMinimoCompra: valor),
-                          onQuantidadeMinimaChanged: (valor) =>
-                              _onCampoAlterado(context, quantidadeMinima: valor),
-                          onPrecoFixoChanged: (valor) =>
-                              _onCampoAlterado(context, precoFixo: valor),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Escopo',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        SegmentedButton<TipoEscopo>(
-                          segments: const [
-                            ButtonSegment(
-                              value: TipoEscopo.geral,
-                              label: Text('Geral'),
-                            ),
-                            ButtonSegment(
-                              value: TipoEscopo.referencias,
-                              label: Text('Referências'),
-                            ),
-                            ButtonSegment(
-                              value: TipoEscopo.comboKit,
-                              label: Text('Combo/Kit'),
-                            ),
-                            ButtonSegment(
-                              value: TipoEscopo.comboLevePague,
-                              label: Text('Leve e pague'),
-                            ),
-                          ],
-                          selected: {state.tipoEscopo},
-                          onSelectionChanged: (selecionados) => context
-                              .read<CupomBloc>()
-                              .add(
-                                CupomCampoAlterado(
-                                  tipoEscopo: selecionados.first,
-                                  limparEscopo: true,
-                                ),
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        EscopoSelecionavelWidget(
-                          key: ValueKey('escopo-${state.tipoEscopo}'),
-                          tipoEscopo: state.tipoEscopo,
-                          referenciaIdsIniciais: state.referenciaIds ?? const [],
-                          comboKitInicial: state.comboKit ?? const [],
-                          quantidadeLevaInicial: state.quantidadeLeva,
-                          quantidadePagaInicial: state.quantidadePaga,
-                          onReferenciaIdsChanged: (ids) =>
-                              _onCampoAlterado(context, referenciaIds: ids),
-                          onComboKitChanged: (itens) =>
-                              _onCampoAlterado(context, comboKit: itens),
-                          onQuantidadeLevaChanged: (valor) => _onCampoAlterado(
-                            context,
-                            quantidadeLeva: valor,
-                          ),
-                          onQuantidadePagaChanged: (valor) => _onCampoAlterado(
-                            context,
-                            quantidadePaga: valor,
-                          ),
-                          // Cupom nao oferece o escopo faixaQuantidade --
-                          // callback inalcancavel a partir deste form.
-                          onFaixasChanged: (_) {},
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Limites',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _limiteUsosController,
-                          decoration: const InputDecoration(
-                            labelText: 'Limite de usos (opcional)',
-                          ),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) => _onCampoAlterado(
-                            context,
-                            limiteUsos: int.tryParse(value),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Ativo'),
-                          value: state.ativa,
-                          onChanged: (value) =>
-                              _onCampoAlterado(context, ativa: value),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+                      )
+                    : _corpo(context, state),
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _corpo(BuildContext context, CupomState state) {
+    const gap = SizedBox(height: 16);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RotuloCampo(
+          rotulo: 'Código',
+          filho: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _codigoController,
+                  style: context.sivTextos.codigo,
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [UpperCaseTextFormatter()],
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? 'Informe o código'
+                      : null,
+                  onChanged: (value) => _onCampoAlterado(context, codigo: value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, SivDimensoes.alvoToqueMinimo),
+                ),
+                onPressed: () =>
+                    _onCampoAlterado(context, codigo: gerarCodigoCupom()),
+                child: const Text('Gerar código'),
+              ),
+            ],
+          ),
+        ),
+        gap,
+        RegraDescontoFormWidget(
+          tipoDesconto: state.tipoDesconto,
+          valorPercentual: state.valorPercentual,
+          valorDescontoMaximo: state.valorDescontoMaximo,
+          valorFixo: state.valorFixo,
+          valorMinimoCompra: state.valorMinimoCompra,
+          quantidadeMinima: state.quantidadeMinima,
+          precoFixo: state.precoFixo,
+          onTipoDescontoChanged: (tipo) =>
+              _onCampoAlterado(context, tipoDesconto: tipo),
+          onValorPercentualChanged: (valor) =>
+              _onCampoAlterado(context, valorPercentual: valor),
+          onValorDescontoMaximoChanged: (valor) =>
+              _onCampoAlterado(context, valorDescontoMaximo: valor),
+          onValorFixoChanged: (valor) =>
+              _onCampoAlterado(context, valorFixo: valor),
+          onValorMinimoCompraChanged: (valor) =>
+              _onCampoAlterado(context, valorMinimoCompra: valor),
+          onQuantidadeMinimaChanged: (valor) =>
+              _onCampoAlterado(context, quantidadeMinima: valor),
+          onPrecoFixoChanged: (valor) =>
+              _onCampoAlterado(context, precoFixo: valor),
+        ),
+        gap,
+        RotuloCampo(
+          rotulo: 'Escopo',
+          filho: SegmentoOpcoes<TipoEscopo>(
+            opcoes: const {
+              TipoEscopo.geral: 'Geral',
+              TipoEscopo.referencias: 'Referências',
+              TipoEscopo.comboKit: 'Combo/Kit',
+              TipoEscopo.comboLevePague: 'Leve e pague',
+            },
+            selecionado: state.tipoEscopo,
+            onChanged: (tipo) => context.read<CupomBloc>().add(
+                  CupomCampoAlterado(tipoEscopo: tipo, limparEscopo: true),
+                ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        EscopoSelecionavelWidget(
+          key: ValueKey('escopo-${state.tipoEscopo}'),
+          tipoEscopo: state.tipoEscopo,
+          referenciaIdsIniciais: state.referenciaIds ?? const [],
+          comboKitInicial: state.comboKit ?? const [],
+          quantidadeLevaInicial: state.quantidadeLeva,
+          quantidadePagaInicial: state.quantidadePaga,
+          onReferenciaIdsChanged: (ids) =>
+              _onCampoAlterado(context, referenciaIds: ids),
+          onComboKitChanged: (itens) =>
+              _onCampoAlterado(context, comboKit: itens),
+          onQuantidadeLevaChanged: (valor) =>
+              _onCampoAlterado(context, quantidadeLeva: valor),
+          onQuantidadePagaChanged: (valor) =>
+              _onCampoAlterado(context, quantidadePaga: valor),
+          // Cupom nao oferece o escopo faixaQuantidade.
+          onFaixasChanged: (_) {},
+        ),
+        gap,
+        RotuloCampo(
+          rotulo: 'Limite de usos (opcional)',
+          filho: TextFormField(
+            controller: _limiteUsosController,
+            keyboardType: TextInputType.number,
+            onChanged: (value) =>
+                _onCampoAlterado(context, limiteUsos: int.tryParse(value)),
+          ),
+        ),
+        gap,
+        Row(
+          children: [
+            Expanded(
+              child: CampoData(
+                rotulo: 'Início',
+                data: state.dataInicio,
+                onSelecionado: (data) =>
+                    _onCampoAlterado(context, dataInicio: data),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: CampoData(
+                rotulo: 'Fim',
+                data: state.dataFim,
+                onSelecionado: (data) => _onCampoAlterado(context, dataFim: data),
+              ),
+            ),
+          ],
+        ),
+        gap,
+        Row(
+          children: [
+            Expanded(
+              child: Text('Ativo', style: context.sivTextos.corpo),
+            ),
+            Switch.adaptive(
+              value: state.ativa,
+              onChanged: (value) => _onCampoAlterado(context, ativa: value),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -315,39 +301,5 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     return newValue.copyWith(text: newValue.text.toUpperCase());
-  }
-}
-
-class _SeletorData extends StatelessWidget {
-  final String titulo;
-  final DateTime? data;
-  final ValueChanged<DateTime> onSelecionado;
-
-  const _SeletorData({
-    required this.titulo,
-    required this.data,
-    required this.onSelecionado,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () async {
-        final selecionado = await showDatePicker(
-          context: context,
-          initialDate: data ?? DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-        if (selecionado != null) {
-          onSelecionado(selecionado);
-        }
-      },
-      child: Text(
-        data == null
-            ? titulo
-            : '$titulo: ${data!.day.toString().padLeft(2, '0')}/${data!.month.toString().padLeft(2, '0')}/${data!.year}',
-      ),
-    );
   }
 }

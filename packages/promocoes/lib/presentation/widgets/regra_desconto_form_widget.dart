@@ -1,5 +1,8 @@
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
+
+import 'form_promocional_layout.dart';
 
 // Reaproveitado no form de promocao e no form de cupom -- os dois tem o
 // mesmo shape de regra de desconto (tipoDesconto + campos condicionais).
@@ -39,117 +42,137 @@ class RegraDescontoFormWidget extends StatelessWidget {
     required this.onPrecoFixoChanged,
   });
 
+  Widget _campo({
+    required String chave,
+    required String rotulo,
+    required Object? valor,
+    required ValueChanged<String> onChanged,
+    String? sufixo,
+    bool inteiro = false,
+    String? erro,
+  }) {
+    return RotuloCampo(
+      rotulo: rotulo,
+      filho: TextFormField(
+        key: ValueKey('$chave-$valor'),
+        initialValue: valor?.toString() ?? '',
+        decoration: InputDecoration(suffixText: sufixo),
+        keyboardType: inteiro
+            ? TextInputType.number
+            : const TextInputType.numberWithOptions(decimal: true),
+        validator: erro == null
+            ? null
+            : (v) => double.tryParse(v ?? '') == null ? erro : null,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  // Duas colunas no desktop, empilhado no mobile.
+  Widget _linha(BuildContext context, List<Widget> campos) {
+    final duas =
+        MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
+    if (!duas) {
+      return Column(
+        children: [
+          for (final c in campos)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: c,
+            ),
+        ],
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < 2; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(child: i < campos.length ? campos[i] : const SizedBox()),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mostra = !ocultarCamposDeValor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tipo de desconto', style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 8),
-        SegmentedButton<TipoDesconto>(
-          segments: const [
-            ButtonSegment(
-              value: TipoDesconto.percentual,
-              label: Text('Percentual'),
-            ),
-            ButtonSegment(
-              value: TipoDesconto.valorFixo,
-              label: Text('Valor fixo'),
-            ),
-            ButtonSegment(
-              value: TipoDesconto.precoFixo,
-              label: Text('Preço fixo'),
-            ),
-          ],
-          selected: {tipoDesconto},
-          onSelectionChanged: (selecionados) =>
-              onTipoDescontoChanged(selecionados.first),
+        RotuloCampo(
+          rotulo: 'Tipo de desconto',
+          filho: SegmentoOpcoes<TipoDesconto>(
+            opcoes: const {
+              TipoDesconto.percentual: 'Percentual',
+              TipoDesconto.valorFixo: 'Valor fixo',
+              TipoDesconto.precoFixo: 'Preço fixo',
+            },
+            selecionado: tipoDesconto,
+            onChanged: onTipoDescontoChanged,
+          ),
         ),
-        const SizedBox(height: 12),
-        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.percentual) ...[
-          TextFormField(
-            key: ValueKey('valorPercentual-$valorPercentual'),
-            initialValue: valorPercentual?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Percentual de desconto (%)',
+        if (mostra && tipoDesconto == TipoDesconto.percentual)
+          _linha(context, [
+            _campo(
+              chave: 'valorPercentual',
+              rotulo: 'Valor do desconto',
+              valor: valorPercentual,
+              sufixo: '%',
+              erro: 'Informe um percentual válido',
+              onChanged: (v) => onValorPercentualChanged(double.tryParse(v)),
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (value) {
-              if (double.tryParse(value ?? '') == null) {
-                return 'Informe um percentual válido';
-              }
-              return null;
-            },
-            onChanged: (value) =>
-                onValorPercentualChanged(double.tryParse(value)),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            key: ValueKey('valorDescontoMaximo-$valorDescontoMaximo'),
-            initialValue: valorDescontoMaximo?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Teto de desconto (R\$) - opcional',
+            _campo(
+              chave: 'valorDescontoMaximo',
+              rotulo: 'Teto de desconto (opcional)',
+              valor: valorDescontoMaximo,
+              sufixo: 'R\$',
+              onChanged: (v) =>
+                  onValorDescontoMaximoChanged(double.tryParse(v)),
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (value) =>
-                onValorDescontoMaximoChanged(double.tryParse(value)),
-          ),
+          ]),
+        if (mostra && tipoDesconto == TipoDesconto.valorFixo) ...[
+          _linha(context, [
+            _campo(
+              chave: 'valorFixo',
+              rotulo: 'Valor do desconto',
+              valor: valorFixo,
+              sufixo: 'R\$',
+              erro: 'Informe um valor válido',
+              onChanged: (v) => onValorFixoChanged(double.tryParse(v)),
+            ),
+            _campo(
+              chave: 'valorMinimoCompra',
+              rotulo: 'Pedido mínimo (opcional)',
+              valor: valorMinimoCompra,
+              sufixo: 'R\$',
+              onChanged: (v) => onValorMinimoCompraChanged(double.tryParse(v)),
+            ),
+          ]),
+          _linha(context, [
+            _campo(
+              chave: 'quantidadeMinima',
+              rotulo: 'Quantidade mínima (opcional)',
+              valor: quantidadeMinima,
+              inteiro: true,
+              onChanged: (v) => onQuantidadeMinimaChanged(int.tryParse(v)),
+            ),
+          ]),
         ],
-        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.valorFixo) ...[
-          TextFormField(
-            key: ValueKey('valorFixo-$valorFixo'),
-            initialValue: valorFixo?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Valor fixo de desconto (R\$)',
+        if (mostra && tipoDesconto == TipoDesconto.precoFixo)
+          _linha(context, [
+            _campo(
+              chave: 'precoFixo',
+              rotulo: 'Preço fixo',
+              valor: precoFixo,
+              sufixo: 'R\$',
+              erro: 'Informe um preço válido',
+              onChanged: (v) => onPrecoFixoChanged(double.tryParse(v)),
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (value) {
-              if (double.tryParse(value ?? '') == null) {
-                return 'Informe um valor válido';
-              }
-              return null;
-            },
-            onChanged: (value) => onValorFixoChanged(double.tryParse(value)),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            key: ValueKey('valorMinimoCompra-$valorMinimoCompra'),
-            initialValue: valorMinimoCompra?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Valor mínimo de compra (R\$) - opcional',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (value) =>
-                onValorMinimoCompraChanged(double.tryParse(value)),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            key: ValueKey('quantidadeMinima-$quantidadeMinima'),
-            initialValue: quantidadeMinima?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Quantidade mínima - opcional',
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (value) =>
-                onQuantidadeMinimaChanged(int.tryParse(value)),
-          ),
-        ],
-        if (!ocultarCamposDeValor && tipoDesconto == TipoDesconto.precoFixo)
-          TextFormField(
-            key: ValueKey('precoFixo-$precoFixo'),
-            initialValue: precoFixo?.toString() ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Preço fixo (R\$)',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (value) {
-              if (double.tryParse(value ?? '') == null) {
-                return 'Informe um preço válido';
-              }
-              return null;
-            },
-            onChanged: (value) => onPrecoFixoChanged(double.tryParse(value)),
-          ),
+          ]),
       ],
     );
   }

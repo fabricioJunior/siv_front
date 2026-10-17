@@ -315,7 +315,7 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Itens do combo', style: Theme.of(context).textTheme.titleSmall),
+        Text('Itens do combo', style: context.sivTextos.secao),
         const SizedBox(height: 8),
         for (var i = 0; i < _linhasComboKit.length; i++)
           Padding(
@@ -397,7 +397,7 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
         ),
         const SizedBox(height: 12),
         Text('Faixas progressivas',
-            style: Theme.of(context).textTheme.titleSmall),
+            style: context.sivTextos.secao),
         const SizedBox(height: 8),
         for (final linha in linhasOrdenadas)
           Padding(

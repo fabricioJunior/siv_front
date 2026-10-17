@@ -5,6 +5,7 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/presentation.dart';
+import 'package:promocoes/presentation/widgets/form_promocional_layout.dart';
 
 class CuponsPage extends StatelessWidget {
   final bloc = sl<CuponsBloc>();
@@ -13,16 +14,23 @@ class CuponsPage extends StatelessWidget {
   CuponsPage({super.key});
 
   Future<void> _abrirNovo(BuildContext context) async {
-    final result = await Navigator.of(context).pushNamed('/cupom/form');
+    final result = await FormPromocionalLayout.abrir(
+      context,
+      rota: '/cupom/form',
+      arguments: {},
+      pagina: (_) => const CupomFormPage(),
+    );
     if (result == true && context.mounted) {
       context.read<CuponsBloc>().add(CuponsIniciou());
     }
   }
 
   Future<void> _abrirEdicao(BuildContext context, Cupom item) async {
-    final result = await Navigator.of(context).pushNamed(
-      '/cupom/form',
+    final result = await FormPromocionalLayout.abrir(
+      context,
+      rota: '/cupom/form',
       arguments: {'idCupom': item.id},
+      pagina: (_) => CupomFormPage(idCupom: item.id),
     );
     if (result == true && context.mounted) {
       context.read<CuponsBloc>().add(CuponsIniciou());

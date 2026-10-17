@@ -9,6 +9,8 @@ import 'package:comercial/use_cases.dart'
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
 import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comercial/presentation/widgets/transferir_credito_dialogo.dart';
+import 'package:comercial/presentation/widgets/cliente_compras_aba.dart';
+import 'package:comercial/presentation/widgets/cliente_credito_aba.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
@@ -1488,10 +1490,10 @@ Widget _clientePage(BuildContext context, ClienteAba aba, {Object? idPessoa}) {
   return PessoaVisualizacaoPage(
     idPessoa: id is int ? id : int.parse('$id'),
     aba: aba,
-    abaComprasBuilder: (_, idPessoa, nome) =>
-        ComprasDoClientePage(pessoaId: idPessoa, nomeCliente: nome),
+    abaComprasBuilder: (_, idPessoa, __) =>
+        ClienteComprasAba(pessoaId: idPessoa),
     abaCreditoBuilder: (_, idPessoa, __) =>
-        CreditoDevolucaoMovimentacoesPage(pessoaId: idPessoa),
+        ClienteCreditoAba(pessoaId: idPessoa),
     buscarSaldoCredito: (idPessoa) =>
         sl<BuscarSaldoCreditoDevolucao>().call(pessoaId: idPessoa),
     buscarUltimaCompra: (idPessoa) async {

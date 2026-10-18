@@ -116,7 +116,12 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(route: '/pessoas', child: const PessoasPage());
   },
   '/pessoa': (context) {
-    return PessoaPage(idPessoa: args(context)['idPessoa']);
+    return PessoaPage(
+      idPessoa: args(context)['idPessoa'],
+      modo: ['completo', PessoaFormularioModo.completo].contains(args(context)['modo'])
+          ? PessoaFormularioModo.completo
+          : PessoaFormularioModo.cliente,
+    );
   },
   '/pessoa_visualizacao': (context) =>
       _clientePage(context, ClienteAba.de(args(context)['aba'])),

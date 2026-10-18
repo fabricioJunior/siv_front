@@ -1,3 +1,5 @@
+import 'package:estoque/domain/models/relatorio_posicao_estoque.dart';
+import 'package:estoque/data/remote/dtos/relatorio_posicao_estoque_dto.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:estoque/data/remote/dtos/relatorio_produtos_defasados_dto.dart';
 import 'package:estoque/domain/data/remote/i_relatorio_estoque_remote_data_source.dart';
@@ -135,5 +137,34 @@ class RelatorioEstoqueRemoteDataSource extends RemoteDataSourceBase
       queryParameters: _queryGiro(empresaIds, filtro),
     );
     return giroVariacoesFromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioPosicaoEstoque> posicaoEstoque({
+    required List<int> empresaIds,
+    String? dataReferencia,
+    List<int>? categoriaIds,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    String? situacao,
+    String ordenarPor = 'valor',
+    String ordem = 'desc',
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/posicao'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        if (dataReferencia != null) 'dataReferencia': dataReferencia,
+        if (categoriaIds != null && categoriaIds.isNotEmpty)
+          'categoriaIds': categoriaIds.join(','),
+        if (corIds != null && corIds.isNotEmpty) 'corIds': corIds.join(','),
+        if (tamanhoIds != null && tamanhoIds.isNotEmpty)
+          'tamanhoIds': tamanhoIds.join(','),
+        if (situacao != null) 'situacao': situacao,
+        'ordenarPor': ordenarPor,
+        'ordem': ordem,
+      },
+    );
+    return posicaoEstoqueFromJson(response.body as Map<String, dynamic>);
   }
 }

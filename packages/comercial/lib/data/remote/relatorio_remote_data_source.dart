@@ -1,3 +1,5 @@
+import 'package:comercial/data/remote/dtos/relatorio_movimentacoes_dto.dart';
+import 'package:comercial/domain/models/relatorio_movimentacoes.dart';
 import 'package:comercial/data/remote/dtos/relatorio_dto.dart';
 import 'package:comercial/domain/data/remote/i_relatorio_remote_data_source.dart';
 import 'package:comercial/domain/models/relatorios.dart';
@@ -220,5 +222,30 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
     );
     return RelatorioClienteComprasDto.fromJson(
         response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioMovimentacoes> movimentacoes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<String>? tipos,
+    String? busca,
+    int page = 1,
+    int limit = 50,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/movimentacoes'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        if (tipos != null && tipos.isNotEmpty) 'tipos': tipos.join(','),
+        if (busca != null && busca.isNotEmpty) 'busca': busca,
+        'page': '$page',
+        'limit': '$limit',
+      },
+    );
+    return movimentacoesFromJson(response.body as Map<String, dynamic>);
   }
 }

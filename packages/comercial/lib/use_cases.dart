@@ -76,6 +76,7 @@ export 'domain/use_cases/reenviar_email_documento_fiscal.dart';
 export 'domain/use_cases/reprocessar_documento_fiscal.dart';
 export 'domain/use_cases/get_documento_fiscal_detalhe.dart';
 export 'domain/use_cases/get_relatorio_faturamento.dart';
+export 'domain/use_cases/get_relatorio_movimentacoes.dart';
 export 'domain/use_cases/get_relatorio_faturamento_comparativo.dart';
 export 'domain/use_cases/get_relatorio_curva_abc.dart';
 export 'domain/use_cases/get_relatorio_clientes_ativos.dart';

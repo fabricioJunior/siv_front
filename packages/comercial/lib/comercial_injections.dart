@@ -368,6 +368,9 @@ void _useCases() {
   sl.registerFactory<GetRelatorioFaturamento>(
     () => GetRelatorioFaturamento(sl()),
   );
+  sl.registerFactory<GetRelatorioMovimentacoes>(
+    () => GetRelatorioMovimentacoes(sl()),
+  );
   sl.registerFactory<GetRelatorioFaturamentoComparativo>(
     () => GetRelatorioFaturamentoComparativo(sl()),
   );

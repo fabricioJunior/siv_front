@@ -1,3 +1,4 @@
+import 'package:estoque/domain/models/relatorio_posicao_estoque.dart';
 import 'package:estoque/domain/models/relatorio_produtos_defasados.dart';
 import 'package:estoque/domain/models/relatorio_giro_estoque.dart';
 
@@ -39,5 +40,16 @@ abstract class IRelatorioEstoqueRepository {
     required int referenciaId,
     required List<int> empresaIds,
     required FiltroGiroEstoque filtro,
+  });
+
+  Future<RelatorioPosicaoEstoque> posicaoEstoque({
+    required List<int> empresaIds,
+    String? dataReferencia,
+    List<int>? categoriaIds,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    String? situacao,
+    String ordenarPor = 'valor',
+    String ordem = 'desc',
   });
 }

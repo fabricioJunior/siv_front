@@ -1,9 +1,10 @@
+import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_curva_abc_bloc/relatorio_curva_abc_bloc.dart';
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
-import 'package:core/presentation/debouncer.dart';
-import 'package:core/presentation/filtro_chip.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
@@ -52,8 +53,6 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
   bool _exportandoPdf = false;
   List<int> _referenciaIdsSelecionados = [];
   List<int> _categoriaIdsSelecionados = [];
-  final _buscaController = TextEditingController();
-  final _debouncer = Debouncer(milliseconds: 380);
 
   @override
   void initState() {
@@ -67,34 +66,15 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
 
   @override
   void dispose() {
-    _debouncer.cancel();
-    _buscaController.dispose();
     _bloc.close();
     super.dispose();
   }
 
-  void _onBuscaAlterada(String valor) {
-    _debouncer.run(() {
-      final busca = valor.trim();
-      _bloc.add(RelatorioCurvaAbcCarregar(
-        dataInicial: _dataInicial,
-        dataFinal: _dataFinal,
-        busca: busca.isEmpty ? null : busca,
-        page: 1,
-        agruparPor: _agruparPor,
-        referenciaIds: _referenciaIdsSelecionados,
-        categoriaIds: _categoriaIdsSelecionados,
-      ));
-    });
-  }
-
   void _aplicar({int page = 1}) {
-    final busca = _buscaController.text.trim();
     _bloc.add(RelatorioCurvaAbcCarregar(
       dataInicial: _dataInicial,
       dataFinal: _dataFinal,
-      busca: busca.isEmpty ? null : busca,
-      page: page,
+            page: page,
       agruparPor: _agruparPor,
       referenciaIds: _referenciaIdsSelecionados,
       categoriaIds: _categoriaIdsSelecionados,
@@ -323,232 +303,126 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
     );
   }
 
+  String _rotuloAgrupar(String v) => switch (v) {
+    'referencia' => 'Referência',
+    'categoria' => 'Categoria',
+    _ => 'Produto',
+  };
+
+  Future<void> _exportar(RelatorioCurvaAbcState state) async {
+    setState(() => _exportandoPdf = true);
+    await RelatorioPdfExporter.exportarCurvaAbc(
+      state.dados!,
+      state.dataInicial,
+      state.dataFinal,
+    );
+    if (mounted) setState(() => _exportandoPdf = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RelatorioCurvaAbcBloc>.value(
       value: _bloc,
       child: BlocBuilder<RelatorioCurvaAbcBloc, RelatorioCurvaAbcState>(
         builder: (context, state) {
+          final d = state.dados;
+          final pronto = state.step == RelatorioCurvaAbcStep.sucesso && d != null;
+          final falha = state.step == RelatorioCurvaAbcStep.falha;
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Curva ABC de Produtos'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.help_outline),
-                  tooltip: 'Como funciona a curva ABC',
-                  onPressed: _mostrarComoFunciona,
-                ),
-                if (state.step == RelatorioCurvaAbcStep.sucesso &&
-                    state.dados != null)
-                  _exportandoPdf
-                      ? const Padding(
-                          padding: EdgeInsets.all(14),
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.picture_as_pdf_outlined),
-                          tooltip: 'Exportar PDF',
-                          onPressed: () async {
-                            setState(() => _exportandoPdf = true);
-                            await RelatorioPdfExporter.exportarCurvaAbc(
-                              state.dados!,
-                              state.dataInicial,
-                              state.dataFinal,
-                            );
-                            if (mounted) setState(() => _exportandoPdf = false);
-                          },
-                        ),
-              ],
-            ),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                // Filtros
-                TextField(
-                  controller: _buscaController,
-                  onChanged: _onBuscaAlterada,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por referência ou código...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    isDense: true,
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: () {
-                        _buscaController.clear();
-                        _onBuscaAlterada('');
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+            body: SafeArea(
+              child: RelatorioScaffold(
+                titulo: 'Curva ABC',
+                carregando: !pronto && !falha,
+                erro: falha
+                    ? (state.erro ?? 'Falha ao carregar curva ABC.')
+                    : null,
+                onTentarDeNovo: _aplicar,
+                vazio: pronto && d.items.isEmpty,
+                filtros: [
+                  RelatorioFiltroChip(
+                    rotulo: 'Período',
+                    valor:
+                        '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                    onTap: _abrirFiltroPeriodo,
                   ),
-                  onSubmitted: (_) => _aplicar(),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 'produto',
-                        label: Text('Produto'),
-                        icon: Icon(Icons.checkroom_outlined, size: 16),
-                      ),
-                      ButtonSegment(
-                        value: 'referencia',
-                        label: Text('Referência'),
-                        icon: Icon(Icons.style_outlined, size: 16),
-                      ),
-                      ButtonSegment(
-                        value: 'categoria',
-                        label: Text('Categoria'),
-                        icon: Icon(Icons.category_outlined, size: 16),
-                      ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Agrupar por',
+                    onSelected: _onAgruparPorAlterado,
+                    itemBuilder: (_) => [
+                      for (final k in const ['produto', 'referencia', 'categoria'])
+                        PopupMenuItem(value: k, child: Text(_rotuloAgrupar(k))),
                     ],
-                    selected: {_agruparPor},
-                    onSelectionChanged: (selecao) =>
-                        _onAgruparPorAlterado(selecao.first),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FiltroChip(
-                      icon: Icons.event,
-                      label:
-                          '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
-                      onTap: _abrirFiltroPeriodo,
-                    ),
-                    if (_agruparPor == 'produto')
-                      FiltroChip(
-                        icon: Icons.style_outlined,
-                        label: _referenciaIdsSelecionados.isEmpty
-                            ? 'Referência'
-                            : '${_referenciaIdsSelecionados.length} referência(s)',
-                        onTap: _abrirFiltroReferenciaOuCategoria,
-                        onLimpar: _referenciaIdsSelecionados.isEmpty
-                            ? null
-                            : () => _onReferenciaSelecionada(const []),
-                      )
-                    else if (_agruparPor == 'referencia')
-                      FiltroChip(
-                        icon: Icons.category_outlined,
-                        label: _categoriaIdsSelecionados.isEmpty
-                            ? 'Categoria'
-                            : '${_categoriaIdsSelecionados.length} categoria(s)',
-                        onTap: _abrirFiltroReferenciaOuCategoria,
-                        onLimpar: _categoriaIdsSelecionados.isEmpty
-                            ? null
-                            : () => _onCategoriaSelecionada(const []),
+                    child: IgnorePointer(
+                      child: RelatorioFiltroChip(
+                        rotulo: 'Agrupar',
+                        valor: _rotuloAgrupar(_agruparPor),
+                        onTap: () {},
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                if (state.step == RelatorioCurvaAbcStep.carregando)
-                  const _EstadoCard(
-                      titulo: 'Carregando curva ABC',
-                      descricao: 'Classificando produtos...',
-                      loading: true)
-                else if (state.step == RelatorioCurvaAbcStep.falha)
-                  _EstadoCard(
-                    titulo: 'Falha ao carregar',
-                    descricao: state.erro ?? '',
-                    onRetry: _aplicar,
-                  )
-                else if (state.step == RelatorioCurvaAbcStep.inicial)
-                  const _EstadoCard(
-                    titulo: 'Aplique o filtro',
-                    descricao: 'Selecione o período e toque em Consultar.',
-                  )
-                else if (state.dados != null) ...[
-                  _ResumoAbcCard(
-                    totalItems: state.dados!.meta.totalItems,
-                    itens: state.dados!.items,
-                  ),
-                  const SizedBox(height: 16),
-                  _CurvaAbcVisual(itens: state.dados!.items),
-                  const SizedBox(height: 16),
-                  // Legenda ABC
-                  Row(
-                    children: [
-                      Tooltip(
-                        message:
-                            'Classe A: os itens que, somados, já respondem por 80% do faturamento do período. São os mais importantes — evite ruptura de estoque.',
-                        child: _LegendaChip(
-                            cor: Colors.green, label: 'A — até 80%'),
-                      ),
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message:
-                            'Classe B: itens que somam entre 80% e 95% do faturamento acumulado. Relevantes, mas não prioridade máxima.',
-                        child: _LegendaChip(
-                            cor: Colors.amber, label: 'B — 80-95%'),
-                      ),
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message:
-                            'Classe C: itens que representam os últimos 5% do faturamento. Costumam ser a maioria do catálogo, mas vendem pouco — candidatos a promoção ou corte.',
-                        child:
-                            _LegendaChip(cor: Colors.red, label: 'C — >95%'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Total: ${state.dados!.meta.totalItems} produtos '
-                    '(${state.dados!.items.length} nesta página)',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 8),
-                  ...state.dados!.items.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _CurvaAbcCard(item: item),
                     ),
                   ),
-                  // Paginação
-                  if (state.totalPages > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton.icon(
-                            icon: const Icon(Icons.chevron_left),
-                            label: const Text('Anterior'),
-                            onPressed: state.page > 1
-                                ? () => _aplicar(page: state.page - 1)
-                                : null,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              '${state.page}/${state.totalPages}',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          TextButton.icon(
-                            icon: const Icon(Icons.chevron_right),
-                            label: const Text('Próxima'),
-                            onPressed: state.page < state.totalPages
-                                ? () => _aplicar(page: state.page + 1)
-                                : null,
-                          ),
-                        ],
-                      ),
+                  if (_agruparPor == 'produto')
+                    RelatorioFiltroChip(
+                      rotulo: 'Referência',
+                      valor: _referenciaIdsSelecionados.isEmpty
+                          ? 'Todas'
+                          : '${_referenciaIdsSelecionados.length}',
+                      onTap: _abrirFiltroReferenciaOuCategoria,
+                    )
+                  else if (_agruparPor == 'referencia')
+                    RelatorioFiltroChip(
+                      rotulo: 'Categoria',
+                      valor: _categoriaIdsSelecionados.isEmpty
+                          ? 'Todas'
+                          : '${_categoriaIdsSelecionados.length}',
+                      onTap: _abrirFiltroReferenciaOuCategoria,
                     ),
                 ],
-              ],
+                acoes: [
+                  IconButton(
+                    icon: const Icon(Icons.help_outline),
+                    tooltip: 'Como funciona a curva ABC',
+                    onPressed: _mostrarComoFunciona,
+                  ),
+                  if (pronto)
+                    _exportandoPdf
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : OutlinedButton.icon(
+                            icon: const Icon(Icons.picture_as_pdf_outlined,
+                                size: 18),
+                            label: const Text('PDF'),
+                            onPressed: () => _exportar(state),
+                          ),
+                ],
+                kpis: pronto && d.resumo != null
+                    ? [
+                        for (final c in d.resumo!.classes)
+                          _ClasseCard(classe: c),
+                      ]
+                    : const [],
+                corpo: pronto
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _Tabela(
+                            itens: d.items,
+                            inicio: (state.page - 1) * d.meta.itemsPerPage,
+                          ),
+                          if (state.totalPages > 1) _Paginacao(
+                            page: state.page,
+                            totalPages: state.totalPages,
+                            onPagina: (p) => _aplicar(page: p),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ),
           );
         },
@@ -557,187 +431,196 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
   }
 }
 
-class _LegendaChip extends StatelessWidget {
-  final Color cor;
-  final String label;
-  const _LegendaChip({required this.cor, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11)),
-        ],
-      );
-}
-
-class _CurvaAbcCard extends StatelessWidget {
-  final dynamic item;
-  const _CurvaAbcCard({required this.item});
-
-  Color get _cor => item.classeAbc == 'A'
-      ? Colors.green
-      : item.classeAbc == 'B'
-          ? Colors.amber
-          : Colors.red;
+class _ClasseCard extends StatelessWidget {
+  final RelatorioCurvaAbcClasse classe;
+  const _ClasseCard({required this.classe});
 
   @override
   Widget build(BuildContext context) {
-    final cor = _cor;
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: cor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
-                ),
-              ),
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final mobile = relatorioMobile(context);
+    final destaque = classe.classe == 'A';
+    final pct = '${classe.percentualFaturamento.round()}%';
+    final rotulo = mobile
+        ? 'CLASSE ${classe.classe}'
+        : 'CLASSE ${classe.classe} · ${classe.percentualItens.round()}% dos itens';
+    final valor = mobile
+        ? '$pct do fat.'
+        : '$pct do faturamento · ${_fmtMoedaInt(classe.valorTotal)}';
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: mobile ? 14 : 18,
+        vertical: mobile ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: cores.superficie,
+        border: Border.all(color: destaque ? cores.aco : cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            rotulo,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textos.apoio.copyWith(
+              fontSize: mobile ? 9.5 : 10.5,
+              letterSpacing: mobile ? 1.1 : 1.47,
+              color: destaque ? cores.acoAtivo : cores.textoApoio,
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                item.referenciaNome ??
-                                    item.categoriaNome ??
-                                    'Sem categoria',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13),
-                              ),
-                              if (item.corNome != null ||
-                                  item.tamanhoNome != null)
-                                Text(
-                                  [item.corNome, item.tamanhoNome]
-                                      .whereType<String>()
-                                      .join(' · '),
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Colors.black54),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              _fmtMoeda(item.valorTotalVendido as double),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 13),
-                            ),
-                            Tooltip(
-                              message:
-                                  'Participação: quanto este item sozinho representa do faturamento total do período filtrado.',
-                              child: Text(
-                                '${item.quantidadeVendida} un. · '
-                                '${(item.percentualParticipacao as double).toStringAsFixed(1)}%',
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.black54),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 8),
-                        Tooltip(
-                          message: item.classeAbc == 'A'
-                              ? 'Classe A: item entre os que somam 80% do faturamento — mais importante, evite ruptura.'
-                              : item.classeAbc == 'B'
-                                  ? 'Classe B: item na faixa de 80% a 95% do faturamento acumulado — relevante, atenção intermediária.'
-                                  : 'Classe C: item nos últimos 5% do faturamento — vende pouco, candidato a promoção ou corte.',
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: cor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              item.classeAbc as String,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: cor,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _BarraAcumulada(
-                      percentual: item.percentualAcumulado as double,
-                      cor: cor,
-                    ),
-                  ],
-                ),
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            valor,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textos.titulo.copyWith(
+              fontSize: mobile ? 15 : 19,
+              color: cores.tinta,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _BarraAcumulada extends StatelessWidget {
-  final double percentual;
-  final Color cor;
-  const _BarraAcumulada({required this.percentual, required this.cor});
+String _fmtMoedaInt(double v) => _fmtMoeda(v).replaceAll(RegExp(r',\d{2}$'), '');
+
+class _Tabela extends StatelessWidget {
+  final List<RelatorioCurvaAbcItem> itens;
+  final int inicio;
+  const _Tabela({required this.itens, required this.inicio});
+
+  static String _nome(RelatorioCurvaAbcItem i) =>
+      i.referenciaNome ?? i.categoriaNome ?? 'Sem categoria';
+
+  static String _pos(int n) => n.toString().padLeft(2, '0');
 
   @override
   Widget build(BuildContext context) {
-    final fracao = (percentual / 100).clamp(0.0, 1.0);
-    return Row(
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: fracao,
-              minHeight: 5,
-              backgroundColor: Colors.black.withValues(alpha: 0.06),
-              valueColor: AlwaysStoppedAnimation(cor),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Tooltip(
-          message:
-              'Acumulado: soma das participações de todos os itens até este, na lista ordenada do maior para o menor faturamento. É esse número que decide a classe (A/B/C).',
-          child: Text(
-            '${percentual.toStringAsFixed(1)}% acum.',
-            style: const TextStyle(fontSize: 10, color: Colors.black45),
-          ),
-        ),
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    return RelatorioTabela<RelatorioCurvaAbcItem>(
+      colunas: const [
+        RelatorioColuna(id: 'pos', titulo: '#', ordenavel: false),
+        RelatorioColuna(id: 'produto', titulo: 'Produto', ordenavel: false, flex: 5),
+        RelatorioColuna(
+            id: 'faturamento', titulo: 'Faturamento', numerica: true, ordenavel: false, flex: 2),
+        RelatorioColuna(
+            id: 'acum', titulo: '% acum.', numerica: true, ordenavel: false, flex: 2),
+        RelatorioColuna(id: 'classe', titulo: 'Classe', ordenavel: false),
       ],
+      itens: itens,
+      celulas: (context, i) {
+        final idx = itens.indexOf(i);
+        final a = i.classeAbc == 'A';
+        final detalhe = [i.corNome, i.tamanhoNome].whereType<String>().join(' · ');
+        return [
+          Text(_pos(inicio + idx + 1),
+              style: textos.apoio.copyWith(color: cores.textoApoio)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _nome(i),
+                style: textos.corpo.copyWith(
+                  fontWeight: a ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+              if (detalhe.isNotEmpty)
+                Text(detalhe,
+                    style: textos.apoio.copyWith(color: cores.textoApoio)),
+            ],
+          ),
+          Text(_fmtMoeda(i.valorTotalVendido), style: textos.corpo),
+          Text('${i.percentualAcumulado.toStringAsFixed(1).replaceAll('.', ',')}%',
+              style: textos.corpo),
+          _TagClasse(classe: i.classeAbc),
+        ];
+      },
+      itemMobile: (context, i) {
+        final idx = itens.indexOf(i);
+        final detalhe = [i.corNome, i.tamanhoNome].whereType<String>().join(' · ');
+        return RelatorioItemMobile(
+          titulo: '${_pos(inicio + idx + 1)}  ${_nome(i)}',
+          apoio: [
+            if (detalhe.isNotEmpty) detalhe,
+            '${i.percentualAcumulado.toStringAsFixed(1).replaceAll('.', ',')}% acum.',
+            'Classe ${i.classeAbc}',
+          ],
+          valor: _fmtMoeda(i.valorTotalVendido),
+        );
+      },
     );
   }
+}
+
+class _TagClasse extends StatelessWidget {
+  final String classe;
+  const _TagClasse({required this.classe});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sivColors;
+    final (fundo, texto) = switch (classe) {
+      'A' => (c.acoEscuro, c.textoSobreEscuroTitulo),
+      'B' => (c.classeBTagFundo, c.classeBTagTexto),
+      _ => (c.classeCTagFundo, c.classeCTagTexto),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: fundo,
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
+      ),
+      child: Text(
+        classe,
+        style: context.sivTextos.apoio
+            .copyWith(color: texto, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _Paginacao extends StatelessWidget {
+  final int page;
+  final int totalPages;
+  final ValueChanged<int> onPagina;
+  const _Paginacao({
+    required this.page,
+    required this.totalPages,
+    required this.onPagina,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.chevron_left),
+              label: const Text('Anterior'),
+              onPressed: page > 1 ? () => onPagina(page - 1) : null,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text('$page/$totalPages',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.chevron_right),
+              label: const Text('Próxima'),
+              onPressed: page < totalPages ? () => onPagina(page + 1) : null,
+            ),
+          ],
+        ),
+      );
 }
 
 class _DateBtn extends StatelessWidget {
@@ -752,8 +635,7 @@ class _DateBtn extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             border: Border.all(color: Theme.of(context).dividerColor),
             borderRadius: BorderRadius.circular(10),
@@ -761,8 +643,8 @@ class _DateBtn extends StatelessWidget {
           child: Row(
             children: [
               Text('$label: ',
-                  style: const TextStyle(
-                      fontSize: 12, color: Colors.black54)),
+                  style: TextStyle(
+                      fontSize: 12, color: context.sivColors.textoApoio)),
               Expanded(
                 child: Text(date,
                     style: const TextStyle(
@@ -771,129 +653,6 @@ class _DateBtn extends StatelessWidget {
               const Icon(Icons.calendar_today_outlined, size: 16),
             ],
           ),
-        ),
-      );
-}
-
-class _EstadoCard extends StatelessWidget {
-  final String titulo;
-  final String descricao;
-  final bool loading;
-  final VoidCallback? onRetry;
-
-  const _EstadoCard({
-    required this.titulo,
-    required this.descricao,
-    this.loading = false,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) => Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              if (loading)
-                const CircularProgressIndicator.adaptive()
-              else
-                const Icon(Icons.bar_chart, size: 40),
-              const SizedBox(height: 12),
-              Text(titulo,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              Text(descricao,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium),
-              if (onRetry != null) ...[
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Tentar novamente'),
-                  onPressed: onRetry,
-                ),
-              ],
-            ],
-          ),
-        ),
-      );
-}
-
-class _ResumoAbcCard extends StatelessWidget {
-  final int totalItems;
-  final List<dynamic> itens;
-  const _ResumoAbcCard({required this.totalItems, required this.itens});
-
-  @override
-  Widget build(BuildContext context) {
-    final valorTotal = itens.fold<double>(
-        0, (soma, item) => soma + (item.valorTotalVendido as double));
-    final qtdA = itens.where((i) => i.classeAbc == 'A').length;
-    final qtdB = itens.where((i) => i.classeAbc == 'B').length;
-    final qtdC = itens.where((i) => i.classeAbc == 'C').length;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Resumo (nesta página)',
-            style: TextStyle(
-                color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _Kpi(label: 'Produtos (total)', valor: '$totalItems'),
-              _Kpi(label: 'Valor vendido', valor: _fmtMoeda(valorTotal)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _Kpi(label: 'Classe A', valor: '$qtdA'),
-              _Kpi(label: 'Classe B', valor: '$qtdB'),
-              _Kpi(label: 'Classe C', valor: '$qtdC'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Kpi extends StatelessWidget {
-  final String label;
-  final String valor;
-  const _Kpi({required this.label, required this.valor});
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(fontSize: 10, color: Colors.white70)),
-            Text(valor,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-          ],
         ),
       );
 }
@@ -930,19 +689,19 @@ class _ComoFuncionaSheet extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _ComoFuncionaItem(
-                cor: Colors.green,
+                cor: context.sivColors.acoEscuro,
                 titulo: 'Classe A',
                 texto:
                     'Poucos itens, mas respondem por 80% do faturamento. São os campeões de venda — nunca deixe faltar em estoque.',
               ),
               _ComoFuncionaItem(
-                cor: Colors.amber,
+                cor: context.sivColors.classeBTagTexto,
                 titulo: 'Classe B',
                 texto:
                     'Itens que somam mais 15% do faturamento (de 80% a 95% acumulado). Bons, mas não são prioridade máxima.',
               ),
               _ComoFuncionaItem(
-                cor: Colors.red,
+                cor: context.sivColors.classeCBarra,
                 titulo: 'Classe C',
                 texto:
                     'O restante, apenas 5% do faturamento — geralmente a maioria dos itens do catálogo. Vendem pouco: candidatos a promoção, queima de estoque ou corte.',
@@ -1042,88 +801,9 @@ class _ComoFuncionaCampo extends StatelessWidget {
             Text(titulo, style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 2),
             Text(texto,
-                style: const TextStyle(fontSize: 12.5, color: Colors.black54)),
+                style: TextStyle(
+                    fontSize: 12.5, color: context.sivColors.textoApoio)),
           ],
         ),
       );
-}
-
-class _CurvaAbcVisual extends StatelessWidget {
-  final List<dynamic> itens;
-  const _CurvaAbcVisual({required this.itens});
-
-  @override
-  Widget build(BuildContext context) {
-    final total = itens.length;
-    final qtdA = itens.where((i) => i.classeAbc == 'A').length;
-    final qtdB = itens.where((i) => i.classeAbc == 'B').length;
-    final qtdC = total - qtdA - qtdB;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Distribuição da curva ABC',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            if (total == 0)
-              const Text('Sem dados para exibir.',
-                  style: TextStyle(color: Colors.black54, fontSize: 12))
-            else ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  height: 18,
-                  child: Row(
-                    children: [
-                      if (qtdA > 0)
-                        Expanded(
-                          flex: qtdA,
-                          child: Container(color: Colors.green),
-                        ),
-                      if (qtdB > 0)
-                        Expanded(
-                          flex: qtdB,
-                          child: Container(color: Colors.amber),
-                        ),
-                      if (qtdC > 0)
-                        Expanded(
-                          flex: qtdC,
-                          child: Container(color: Colors.red),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _LegendaChip(
-                      cor: Colors.green,
-                      label:
-                          'A: $qtdA (${(qtdA * 100 / total).toStringAsFixed(0)}%)'),
-                  _LegendaChip(
-                      cor: Colors.amber,
-                      label:
-                          'B: $qtdB (${(qtdB * 100 / total).toStringAsFixed(0)}%)'),
-                  _LegendaChip(
-                      cor: Colors.red,
-                      label:
-                          'C: $qtdC (${(qtdC * 100 / total).toStringAsFixed(0)}%)'),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }

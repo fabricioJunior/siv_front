@@ -13,6 +13,7 @@ import '../widgets/cliente_cabecalho.dart';
 import '../widgets/cliente_dados_aba.dart';
 import '../widgets/cliente_enderecos_aba.dart';
 import '../widgets/cliente_pontos_aba.dart';
+import '../widgets/pessoa_documento.dart';
 
 typedef ClienteAbaBuilder = Widget Function(
   BuildContext context,
@@ -133,7 +134,7 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
         .where((e) => e.principal)
         .firstOrNull
         ?.municipio;
-    final subtitulo = [_mascarar(state.documento), cidade]
+    final subtitulo = [mascararDocumento(state.documento), cidade]
         .whereType<String>()
         .where((s) => s.isNotEmpty)
         .join(' · ');
@@ -266,15 +267,6 @@ class _PessoaVisualizacaoPageState extends State<PessoaVisualizacaoPage> {
       ClienteAba.compras => <ClienteAcaoBotao?>[],
     };
     return lista.whereType<ClienteAcaoBotao>().toList();
-  }
-
-  String? _mascarar(String? documento) {
-    final d = (documento ?? '').replaceAll(RegExp(r'[^0-9]'), '');
-    if (d.length == 11) return '${d.substring(0, 3)}.***.***-${d.substring(9)}';
-    if (d.length == 14) {
-      return '${d.substring(0, 2)}.***.***/****-${d.substring(12)}';
-    }
-    return null;
   }
 
   Future<void> _editarPessoa() async {

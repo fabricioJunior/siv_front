@@ -1,6 +1,7 @@
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_clientes_bloc/relatorio_clientes_bloc.dart';
 import 'package:comercial/presentation/relatorios/csv/relatorio_csv_exporter.dart';
+import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -16,6 +17,14 @@ String _fmtMoeda(double v) {
   );
   return 'R\$ $inteiro,${p[1]}';
 }
+
+String _fmtData(String iso) {
+  final p = iso.split('-');
+  return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : iso;
+}
+
+String _isoDate(DateTime d) =>
+    '${d.year}-${_d2(d.month)}-${_d2(d.day)}';
 
 String _d2(int n) => n.toString().padLeft(2, '0');
 
@@ -55,6 +64,8 @@ class _RelatorioClientesAtivosPageState
     extends State<RelatorioClientesAtivosPage> {
   late final RelatorioClientesBloc _bloc;
   int _dias = 30;
+  String? _dataReferencia;
+  bool _exportandoPdf = false;
   bool _exportandoCsv = false;
   late final TextEditingController _diasController;
 
@@ -78,8 +89,31 @@ class _RelatorioClientesAtivosPageState
     setState(() => _dias = dias.clamp(1, 365));
     _bloc.add(RelatorioClientesCarregar(
       dias: _dias,
+      dataReferencia: _dataReferencia,
       page: page,
     ));
+  }
+
+  Future<void> _selecionarDataRef() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(_dataReferencia ?? '') ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked == null) return;
+    _dataReferencia = _isoDate(picked);
+    _aplicar();
+  }
+
+  Future<void> _exportarPdf(RelatorioClientesState state) async {
+    setState(() => _exportandoPdf = true);
+    await RelatorioPdfExporter.exportarClientesAtivos(
+      state.dados!,
+      state.dias,
+      state.dataReferencia,
+    );
+    if (mounted) setState(() => _exportandoPdf = false);
   }
 
   Future<void> _escolherDias() async {
@@ -192,6 +226,13 @@ class _RelatorioClientesAtivosPageState
                     valor: '${state.dias} dias',
                     onTap: _escolherDias,
                   ),
+                  RelatorioFiltroChip(
+                    rotulo: 'Data de referência',
+                    valor: _dataReferencia == null
+                        ? 'Hoje'
+                        : _fmtData(_dataReferencia!),
+                    onTap: _selecionarDataRef,
+                  ),
                 ],
                 acoes: [
                   if (pronto)
@@ -209,6 +250,22 @@ class _RelatorioClientesAtivosPageState
                                 size: 18),
                             label: const Text('Excel'),
                             onPressed: _exportarCsv,
+                          ),
+                  if (pronto)
+                    _exportandoPdf
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : OutlinedButton.icon(
+                            icon: const Icon(Icons.picture_as_pdf_outlined,
+                                size: 18),
+                            label: const Text('PDF'),
+                            onPressed: () => _exportarPdf(state),
                           ),
                 ],
                 carregando: state.step == RelatorioClientesStep.carregando ||

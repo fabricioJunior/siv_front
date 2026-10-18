@@ -51,6 +51,8 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
   late String _dataFinal;
   String _agruparPor = 'produto';
   bool _exportandoPdf = false;
+  final _buscaController = TextEditingController();
+  final _debouncer = Debouncer(milliseconds: 380);
   List<int> _referenciaIdsSelecionados = [];
   List<int> _categoriaIdsSelecionados = [];
 
@@ -66,20 +68,27 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
 
   @override
   void dispose() {
+    _debouncer.cancel();
+    _buscaController.dispose();
     _bloc.close();
     super.dispose();
   }
 
   void _aplicar({int page = 1}) {
+    final busca = _buscaController.text.trim();
     _bloc.add(RelatorioCurvaAbcCarregar(
       dataInicial: _dataInicial,
       dataFinal: _dataFinal,
-            page: page,
+      busca: busca.isEmpty ? null : busca,
+      page: page,
       agruparPor: _agruparPor,
       referenciaIds: _referenciaIdsSelecionados,
       categoriaIds: _categoriaIdsSelecionados,
     ));
   }
+
+  void _onBuscaAlterada(String valor) =>
+      _debouncer.run(() => _aplicar(page: 1));
 
   void _onAgruparPorAlterado(String valor) {
     if (_agruparPor == valor) return;
@@ -339,6 +348,32 @@ class _RelatorioCurvaAbcPageState extends State<RelatorioCurvaAbcPage> {
                 onTentarDeNovo: _aplicar,
                 vazio: pronto && d.items.isEmpty,
                 filtros: [
+                  SizedBox(
+                    width: 240,
+                    child: TextField(
+                      controller: _buscaController,
+                      onChanged: _onBuscaAlterada,
+                      onSubmitted: (_) => _aplicar(),
+                      style: context.sivTextos.corpo,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar referência ou código',
+                        prefixIcon: const Icon(Icons.search, size: 18),
+                        isDense: true,
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          tooltip: 'Limpar busca',
+                          onPressed: () {
+                            _buscaController.clear();
+                            _onBuscaAlterada('');
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(SivDimensoes.raio),
+                        ),
+                      ),
+                    ),
+                  ),
                   RelatorioFiltroChip(
                     rotulo: 'Período',
                     valor:

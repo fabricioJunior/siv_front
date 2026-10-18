@@ -393,13 +393,72 @@ class RelatorioCurvaAbcMetaDto implements RelatorioCurvaAbcMeta {
       );
 }
 
+class RelatorioCurvaAbcClasseDto implements RelatorioCurvaAbcClasse {
+  @override
+  final String classe;
+  @override
+  final int quantidadeItens;
+  @override
+  final double percentualItens;
+  @override
+  final double valorTotal;
+  @override
+  final double percentualFaturamento;
+
+  const RelatorioCurvaAbcClasseDto({
+    required this.classe,
+    required this.quantidadeItens,
+    required this.percentualItens,
+    required this.valorTotal,
+    required this.percentualFaturamento,
+  });
+
+  factory RelatorioCurvaAbcClasseDto.fromJson(Map<String, dynamic> j) =>
+      RelatorioCurvaAbcClasseDto(
+        classe: j['classe'] as String? ?? '',
+        quantidadeItens: (j['quantidadeItens'] as num?)?.toInt() ?? 0,
+        percentualItens: (j['percentualItens'] as num?)?.toDouble() ?? 0,
+        valorTotal: (j['valorTotal'] as num?)?.toDouble() ?? 0,
+        percentualFaturamento:
+            (j['percentualFaturamento'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class RelatorioCurvaAbcResumoDto implements RelatorioCurvaAbcResumo {
+  @override
+  final double valorTotal;
+  @override
+  final int quantidadeItens;
+  @override
+  final List<RelatorioCurvaAbcClasse> classes;
+
+  const RelatorioCurvaAbcResumoDto({
+    required this.valorTotal,
+    required this.quantidadeItens,
+    required this.classes,
+  });
+
+  factory RelatorioCurvaAbcResumoDto.fromJson(Map<String, dynamic> j) =>
+      RelatorioCurvaAbcResumoDto(
+        valorTotal: (j['valorTotal'] as num?)?.toDouble() ?? 0,
+        quantidadeItens: (j['quantidadeItens'] as num?)?.toInt() ?? 0,
+        classes: (j['classes'] as List<dynamic>? ?? [])
+            .map((e) =>
+                RelatorioCurvaAbcClasseDto.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 class RelatorioCurvaAbcDto implements RelatorioCurvaAbc {
   @override
   final List<RelatorioCurvaAbcItem> items;
   @override
   final RelatorioCurvaAbcMeta meta;
+  @override
+  final RelatorioCurvaAbcResumo? resumo;
 
-  const RelatorioCurvaAbcDto({required this.items, required this.meta});
+  const RelatorioCurvaAbcDto(
+      {required this.items, required this.meta, this.resumo});
 
   factory RelatorioCurvaAbcDto.fromJson(Map<String, dynamic> j) =>
       RelatorioCurvaAbcDto(
@@ -409,6 +468,10 @@ class RelatorioCurvaAbcDto implements RelatorioCurvaAbc {
             .toList(),
         meta: RelatorioCurvaAbcMetaDto.fromJson(
             j['meta'] as Map<String, dynamic>),
+        resumo: j['resumo'] is Map<String, dynamic>
+            ? RelatorioCurvaAbcResumoDto.fromJson(
+                j['resumo'] as Map<String, dynamic>)
+            : null,
       );
 }
 
@@ -428,6 +491,10 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
   @override
   final String? clienteTelefone;
   @override
+  final String? clienteMunicipio;
+  @override
+  final String? clienteUf;
+  @override
   final String dataUltimaCompra;
   @override
   final int quantidadeCompras;
@@ -442,6 +509,8 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
     required this.clienteDocumento,
     this.clienteEmail,
     this.clienteTelefone,
+    this.clienteMunicipio,
+    this.clienteUf,
     required this.dataUltimaCompra,
     required this.quantidadeCompras,
     required this.valorTotalComprado,
@@ -456,6 +525,8 @@ class RelatorioClienteAtivoItemDto implements RelatorioClienteAtivoItem {
         clienteDocumento: j['clienteDocumento'] as String? ?? '',
         clienteEmail: j['clienteEmail'] as String?,
         clienteTelefone: j['clienteTelefone'] as String?,
+        clienteMunicipio: j['clienteMunicipio'] as String?,
+        clienteUf: j['clienteUf'] as String?,
         dataUltimaCompra: j['dataUltimaCompra'] as String? ?? '',
         quantidadeCompras: (j['quantidadeCompras'] as num).toInt(),
         valorTotalComprado: (j['valorTotalComprado'] as num).toDouble(),
@@ -492,13 +563,46 @@ class RelatorioClienteAtivoMetaDto implements RelatorioClienteAtivoMeta {
       );
 }
 
+class RelatorioClientesAtivosResumoDto implements RelatorioClientesAtivosResumo {
+  @override
+  final int quantidadeClientes;
+  @override
+  final double valorTotalComprado;
+  @override
+  final int quantidadeCompras;
+  @override
+  final double ticketMedio;
+  @override
+  final double comprasPorCliente;
+
+  const RelatorioClientesAtivosResumoDto({
+    required this.quantidadeClientes,
+    required this.valorTotalComprado,
+    required this.quantidadeCompras,
+    required this.ticketMedio,
+    required this.comprasPorCliente,
+  });
+
+  factory RelatorioClientesAtivosResumoDto.fromJson(Map<String, dynamic> j) =>
+      RelatorioClientesAtivosResumoDto(
+        quantidadeClientes: (j['quantidadeClientes'] as num?)?.toInt() ?? 0,
+        valorTotalComprado: (j['valorTotalComprado'] as num?)?.toDouble() ?? 0,
+        quantidadeCompras: (j['quantidadeCompras'] as num?)?.toInt() ?? 0,
+        ticketMedio: (j['ticketMedio'] as num?)?.toDouble() ?? 0,
+        comprasPorCliente: (j['comprasPorCliente'] as num?)?.toDouble() ?? 0,
+      );
+}
+
 class RelatorioClientesAtivosDto implements RelatorioClientesAtivos {
   @override
   final List<RelatorioClienteAtivoItem> items;
   @override
   final RelatorioClienteAtivoMeta meta;
+  @override
+  final RelatorioClientesAtivosResumo? resumo;
 
-  const RelatorioClientesAtivosDto({required this.items, required this.meta});
+  const RelatorioClientesAtivosDto(
+      {required this.items, required this.meta, this.resumo});
 
   factory RelatorioClientesAtivosDto.fromJson(Map<String, dynamic> j) =>
       RelatorioClientesAtivosDto(
@@ -508,6 +612,10 @@ class RelatorioClientesAtivosDto implements RelatorioClientesAtivos {
             .toList(),
         meta: RelatorioClienteAtivoMetaDto.fromJson(
             j['meta'] as Map<String, dynamic>),
+        resumo: j['resumo'] is Map<String, dynamic>
+            ? RelatorioClientesAtivosResumoDto.fromJson(
+                j['resumo'] as Map<String, dynamic>)
+            : null,
       );
 }
 

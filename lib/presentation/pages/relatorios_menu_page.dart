@@ -57,6 +57,12 @@ const relatoriosAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'CLIENTES',
   ),
   SivMenuAcordeaoFilho(
+    label: 'Frequência de clientes',
+    rota: '/relatorio_frequencia_clientes',
+    componente: 'RELFC016',
+    grupo: 'CLIENTES',
+  ),
+  SivMenuAcordeaoFilho(
     label: 'Compras de Clientes',
     rota: '/relatorio_compras_clientes',
     componente: 'RELFC007',
@@ -81,9 +87,21 @@ const relatoriosAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'ESTOQUE E PRODUTOS',
   ),
   SivMenuAcordeaoFilho(
+    label: 'Estoque',
+    rota: '/relatorio_estoque',
+    componente: 'RELFC014',
+    grupo: 'ESTOQUE E PRODUTOS',
+  ),
+  SivMenuAcordeaoFilho(
     label: 'Giro de Estoque',
     rota: '/relatorio_giro_estoque',
     componente: 'RELFC013',
+    grupo: 'ESTOQUE E PRODUTOS',
+  ),
+  SivMenuAcordeaoFilho(
+    label: 'Movimentações do sistema',
+    rota: '/relatorio_movimentacoes',
+    componente: 'RELFC015',
     grupo: 'ESTOQUE E PRODUTOS',
   ),
   SivMenuAcordeaoFilho(
@@ -173,6 +191,14 @@ const _todosOsRelatorios = <_ItemData>[
     route: '/relatorio_clientes_ativos',
   ),
   _ItemData(
+    icon: Icons.repeat_outlined,
+    titulo: 'Frequência de clientes',
+    subtitulo: 'Curva ABC de clientes, visitas e quem parou de voltar.',
+    grupo: GrupoRelatorio.clientes,
+    componente: 'RELFC016',
+    route: '/relatorio_frequencia_clientes',
+  ),
+  _ItemData(
     icon: Icons.shopping_bag_outlined,
     titulo: 'Compras de Clientes',
     subtitulo: 'Clientes vs. categoria, referência ou produto comprado.',
@@ -205,12 +231,28 @@ const _todosOsRelatorios = <_ItemData>[
     route: '/relatorio_produtos_defasados',
   ),
   _ItemData(
+    icon: Icons.inventory_2_outlined,
+    titulo: 'Estoque',
+    subtitulo: 'Saldo e valor do estoque atual por categoria.',
+    grupo: GrupoRelatorio.estoque,
+    componente: 'RELFC014',
+    route: '/relatorio_estoque',
+  ),
+  _ItemData(
     icon: Icons.speed_outlined,
     titulo: 'Giro de Estoque',
     subtitulo: 'Velocidade de venda por lote, reposição e estoque parado.',
     grupo: GrupoRelatorio.estoque,
     componente: 'RELFC013',
     route: '/relatorio_giro_estoque',
+  ),
+  _ItemData(
+    icon: Icons.swap_horiz_outlined,
+    titulo: 'Movimentações do sistema',
+    subtitulo: 'Venda, devolução, transferência, compra e consignação',
+    grupo: GrupoRelatorio.estoque,
+    componente: 'RELFC015',
+    route: '/relatorio_movimentacoes',
   ),
   _ItemData(
     icon: Icons.history,

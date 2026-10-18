@@ -607,6 +607,24 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioClientesAtivosPage(),
     );
   },
+  '/relatorio_frequencia_clientes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_frequencia_clientes',
+      child: const RelatorioFrequenciaClientesPage(),
+    );
+  },
+  '/relatorio_estoque': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_estoque',
+      child: const RelatorioEstoquePage(),
+    );
+  },
+  '/relatorio_movimentacoes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_movimentacoes',
+      child: const RelatorioMovimentacoesPage(),
+    );
+  },
   '/relatorio_compras_clientes': (context) {
     return _rotaProtegida(
       route: '/relatorio_compras_clientes',
@@ -1734,6 +1752,9 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_ativos': ['RELFC003'],
   '/relatorio_produtos_defasados': ['RELFC008'],
   '/relatorio_giro_estoque': ['RELFC013'],
+  '/relatorio_frequencia_clientes': ['RELFC016'],
+  '/relatorio_estoque': ['RELFC014'],
+  '/relatorio_movimentacoes': ['RELFC015'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],
@@ -1795,6 +1816,9 @@ const Map<String, List<String>> _componentesDaRota = {
     'RELFC009',
     'RELFC010',
     'RELFC013',
+    'RELFC014',
+    'RELFC015',
+    'RELFC016',
     'ROMFP001',
     'FCXFP008',
   ],

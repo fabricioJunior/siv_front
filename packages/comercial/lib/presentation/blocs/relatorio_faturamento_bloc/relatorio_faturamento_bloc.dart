@@ -32,6 +32,7 @@ class RelatorioFaturamentoBloc
         step: RelatorioFaturamentoStep.carregando,
         dataInicial: event.dataInicial,
         dataFinal: event.dataFinal,
+        zerarAnterior: true,
       ));
       final dados = await _useCase.call(
         empresaIds: [empresaId],
@@ -42,6 +43,21 @@ class RelatorioFaturamentoBloc
         step: RelatorioFaturamentoStep.sucesso,
         dados: dados,
       ));
+      // Período anterior de mesmo tamanho, só para variação; falha é ignorada.
+      final ini = DateTime.tryParse(event.dataInicial);
+      final fim = DateTime.tryParse(event.dataFinal);
+      if (ini == null || fim == null) return;
+      final dias = fim.difference(ini).inDays + 1;
+      final antFim = ini.subtract(const Duration(days: 1));
+      final antIni = antFim.subtract(Duration(days: dias - 1));
+      try {
+        final anterior = await _useCase.call(
+          empresaIds: [empresaId],
+          dataInicial: _iso(antIni),
+          dataFinal: _iso(antFim),
+        );
+        emit(state.copyWith(anteriorDados: anterior));
+      } catch (_) {}
     } catch (e, s) {
       emit(state.copyWith(
         step: RelatorioFaturamentoStep.falha,
@@ -61,17 +77,42 @@ class RelatorioFaturamentoBloc
       emit(state.copyWith(
         comparativoStep: RelatorioFaturamentoComparativoStep.carregando,
         agruparPor: event.agruparPor,
+        zerarAnoAnterior: true,
       ));
+      // Backend só agrupa por dia/mes; semana é agregada aqui.
+      final semana = event.agruparPor == 'semana';
+      final grupo = semana ? 'dia' : event.agruparPor;
       final dados = await _useCaseComparativo.call(
         empresaIds: [empresaId],
         dataInicial: event.dataInicial,
         dataFinal: event.dataFinal,
-        agruparPor: event.agruparPor,
+        agruparPor: grupo,
       );
       emit(state.copyWith(
         comparativoStep: RelatorioFaturamentoComparativoStep.sucesso,
-        comparativoDados: dados,
+        comparativoDados: semana ? _porSemana(dados.pontos) : dados,
       ));
+      final ini = DateTime.tryParse(event.dataInicial);
+      final fim = DateTime.tryParse(event.dataFinal);
+      if (ini == null || fim == null) return;
+      try {
+        final anoAnt = await _useCaseComparativo.call(
+          empresaIds: [empresaId],
+          dataInicial: _iso(_mesmoDiaAnoAnterior(ini)),
+          dataFinal: _iso(_mesmoDiaAnoAnterior(fim)),
+          agruparPor: grupo,
+        );
+        // Chaves deslocadas +1 ano para casar com a série atual.
+        final deslocados = [
+          for (final p in anoAnt.pontos)
+            _Ponto(_chaveMaisUmAno(p.periodo), p.faturamento,
+                p.quantidadeVendas),
+        ];
+        emit(state.copyWith(
+          anoAnteriorDados:
+              semana ? _porSemana(deslocados) : _Comparativo(deslocados),
+        ));
+      } catch (_) {}
     } catch (e, s) {
       emit(state.copyWith(
         comparativoStep: RelatorioFaturamentoComparativoStep.falha,
@@ -79,4 +120,45 @@ class RelatorioFaturamentoBloc
       addError(e, s);
     }
   }
+}
+
+String _iso(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+DateTime _mesmoDiaAnoAnterior(DateTime d) => DateTime(d.year - 1, d.month, d.day);
+
+String _chaveMaisUmAno(String k) {
+  final ano = int.tryParse(k.substring(0, 4));
+  return ano == null ? k : '${ano + 1}${k.substring(4)}';
+}
+
+class _Ponto implements RelatorioFaturamentoComparativoPonto {
+  @override
+  final String periodo;
+  @override
+  final double faturamento;
+  @override
+  final int quantidadeVendas;
+  _Ponto(this.periodo, this.faturamento, this.quantidadeVendas);
+}
+
+class _Comparativo implements RelatorioFaturamentoComparativo {
+  @override
+  final List<RelatorioFaturamentoComparativoPonto> pontos;
+  _Comparativo(this.pontos);
+}
+
+/// Agrega pontos diários em semanas (chave = segunda-feira, AAAA-MM-DD).
+_Comparativo _porSemana(List<RelatorioFaturamentoComparativoPonto> dias) {
+  final fat = <String, double>{};
+  final vnd = <String, int>{};
+  for (final p in dias) {
+    final d = DateTime.tryParse(p.periodo);
+    if (d == null) continue;
+    final k = _iso(d.subtract(Duration(days: d.weekday - 1)));
+    fat[k] = (fat[k] ?? 0) + p.faturamento;
+    vnd[k] = (vnd[k] ?? 0) + p.quantidadeVendas;
+  }
+  final chaves = fat.keys.toList()..sort();
+  return _Comparativo([for (final k in chaves) _Ponto(k, fat[k]!, vnd[k]!)]);
 }

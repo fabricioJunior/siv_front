@@ -371,6 +371,9 @@ void _useCases() {
   sl.registerFactory<GetRelatorioMovimentacoes>(
     () => GetRelatorioMovimentacoes(sl()),
   );
+  sl.registerFactory<GetRelatorioFrequenciaClientes>(
+    () => GetRelatorioFrequenciaClientes(sl()),
+  );
   sl.registerFactory<GetRelatorioFaturamentoComparativo>(
     () => GetRelatorioFaturamentoComparativo(sl()),
   );

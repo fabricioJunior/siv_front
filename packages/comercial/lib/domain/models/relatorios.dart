@@ -212,10 +212,14 @@ abstract class RelatorioClienteCompraItem {
   String get empresaNome;
   String get data;
   double get valorLiquido;
+  String? get numeroCupom;
+  int? get quantidadeItens;
+  String? get formaPagamento;
 }
 
 abstract class RelatorioClienteCompras {
   List<RelatorioClienteCompraItem> get items;
+  int? get totalNoPeriodo;
 }
 
 abstract class RelatorioPontoFidelidadeItem {

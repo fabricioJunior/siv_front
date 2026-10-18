@@ -724,6 +724,12 @@ class RelatorioClienteCompraItemDto implements RelatorioClienteCompraItem {
   final String data;
   @override
   final double valorLiquido;
+  @override
+  final String? numeroCupom;
+  @override
+  final int? quantidadeItens;
+  @override
+  final String? formaPagamento;
 
   const RelatorioClienteCompraItemDto({
     required this.romaneioId,
@@ -731,6 +737,9 @@ class RelatorioClienteCompraItemDto implements RelatorioClienteCompraItem {
     required this.empresaNome,
     required this.data,
     required this.valorLiquido,
+    this.numeroCupom,
+    this.quantidadeItens,
+    this.formaPagamento,
   });
 
   factory RelatorioClienteCompraItemDto.fromJson(Map<String, dynamic> j) =>
@@ -740,17 +749,23 @@ class RelatorioClienteCompraItemDto implements RelatorioClienteCompraItem {
         empresaNome: j['empresaNome'] as String? ?? '',
         data: j['data'] as String? ?? '',
         valorLiquido: (j['valorLiquido'] as num).toDouble(),
+        numeroCupom: j['numeroCupom'] as String?,
+        quantidadeItens: (j['quantidadeItens'] as num?)?.toInt(),
+        formaPagamento: j['formaPagamento'] as String?,
       );
 }
 
 class RelatorioClienteComprasDto implements RelatorioClienteCompras {
   @override
   final List<RelatorioClienteCompraItem> items;
+  @override
+  final int? totalNoPeriodo;
 
-  const RelatorioClienteComprasDto({required this.items});
+  const RelatorioClienteComprasDto({required this.items, this.totalNoPeriodo});
 
   factory RelatorioClienteComprasDto.fromJson(Map<String, dynamic> j) =>
       RelatorioClienteComprasDto(
+        totalNoPeriodo: (j['totalNoPeriodo'] as num?)?.toInt(),
         items: (j['items'] as List<dynamic>? ?? [])
             .map((e) => RelatorioClienteCompraItemDto.fromJson(
                 e as Map<String, dynamic>))

@@ -1,3 +1,5 @@
+import 'package:comercial/data/remote/dtos/relatorio_frequencia_clientes_dto.dart';
+import 'package:comercial/domain/models/relatorio_frequencia_clientes.dart';
 import 'package:comercial/data/remote/dtos/relatorio_movimentacoes_dto.dart';
 import 'package:comercial/domain/models/relatorio_movimentacoes.dart';
 import 'package:comercial/data/remote/dtos/relatorio_dto.dart';
@@ -212,12 +214,16 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
     required List<int> empresaIds,
     required int pessoaId,
     int limit = 10,
+    String? dataInicial,
+    String? dataFinal,
   }) async {
     final response = await get(
       pathParameters: {'path': '/clientes/$pessoaId/compras'},
       queryParameters: {
         'empresaIds': empresaIds.join(','),
         'limit': '$limit',
+        if (dataInicial != null) 'dataInicial': dataInicial,
+        if (dataFinal != null) 'dataFinal': dataFinal,
       },
     );
     return RelatorioClienteComprasDto.fromJson(
@@ -247,5 +253,42 @@ class RelatorioRemoteDataSource extends RemoteDataSourceBase
       },
     );
     return movimentacoesFromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RelatorioFrequenciaClientes> frequenciaClientes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<int>? funcionarioIds,
+    List<int>? categoriaIds,
+    String? classe,
+    bool atrasados = false,
+    String? busca,
+    String ordenarPor = 'rank',
+    String ordem = 'asc',
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/clientes/frequencia'},
+      queryParameters: {
+        'empresaIds': empresaIds.join(','),
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        if (funcionarioIds != null && funcionarioIds.isNotEmpty)
+          'funcionarioIds': funcionarioIds.join(','),
+        if (categoriaIds != null && categoriaIds.isNotEmpty)
+          'categoriaIds': categoriaIds.join(','),
+        if (classe != null) 'classe': classe,
+        if (atrasados) 'atrasados': 'true',
+        if (busca != null && busca.isNotEmpty) 'busca': busca,
+        'ordenarPor': ordenarPor,
+        'ordem': ordem,
+        'page': '$page',
+        'limit': '$limit',
+      },
+    );
+    return frequenciaClientesFromJson(response.body as Map<String, dynamic>);
   }
 }

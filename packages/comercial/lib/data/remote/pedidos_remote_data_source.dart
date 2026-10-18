@@ -6,6 +6,8 @@ import 'package:comercial/domain/data/remote/i_pedidos_remote_data_source.dart';
 import 'package:comercial/models.dart';
 import 'package:core/remote_data_sourcers.dart';
 
+const _incluirNaLista = ['pessoaNome', 'funcionarioNome', 'valorTotal'];
+
 class PedidosRemoteDataSource extends RemoteDataSourceBase
     implements IPedidosRemoteDataSource {
   PedidosRemoteDataSource({required super.informacoesParaRequest});
@@ -157,6 +159,9 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
           for (var i = 0; i < origens.length; i++) 'origens[$i]': origens[i],
         if (dataInicial != null) 'dataInicial': dataInicial.toIso8601String(),
         if (dataFinal != null) 'dataFinal': dataFinal.toIso8601String(),
+        // Lista enxuta: só o que a tela de pedidos exibe (o detalhe e os itens vêm por id).
+        for (var i = 0; i < _incluirNaLista.length; i++)
+          'incluir[$i]': _incluirNaLista[i],
       },
     );
     return (response.body as List<dynamic>)

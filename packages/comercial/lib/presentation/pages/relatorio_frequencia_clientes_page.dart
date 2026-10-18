@@ -1,10 +1,15 @@
 import 'package:comercial/domain/use_cases/get_relatorio_frequencia_clientes.dart';
 import 'package:comercial/presentation/blocs/relatorio_frequencia_clientes_bloc/relatorio_frequencia_clientes_bloc.dart';
+import 'package:comercial/presentation/widgets/frequencia/frequencia_cartao_mobile.dart';
 import 'package:comercial/presentation/widgets/frequencia/frequencia_criterios.dart';
 import 'package:comercial/presentation/widgets/frequencia/frequencia_curva_abc.dart';
 import 'package:comercial/presentation/widgets/frequencia/frequencia_distribuicao.dart';
+import 'package:comercial/presentation/widgets/frequencia/frequencia_exportar.dart';
+import 'package:comercial/presentation/widgets/frequencia/frequencia_filtros.dart';
 import 'package:comercial/presentation/widgets/frequencia/frequencia_formato.dart';
+import 'package:comercial/presentation/widgets/frequencia/frequencia_paginacao.dart';
 import 'package:comercial/presentation/widgets/frequencia/frequencia_painel.dart';
+import 'package:comercial/presentation/widgets/frequencia/frequencia_tabela.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -90,13 +95,89 @@ class _RelatorioFrequenciaClientesPageState
     }
   }
 
-  // L: exportar CSV de todas as páginas (com o filtro atual de [s]).
-  void _exportar(RelatorioFrequenciaClientesState s) {}
+  Future<void> _exportar(RelatorioFrequenciaClientesState s) async {
+    final msg = ScaffoldMessenger.of(context);
+    try {
+      final (destino, total) = await exportarFrequenciaCsv(s);
+      msg.showSnackBar(SnackBar(
+        content: Text(destino == null
+            ? 'CSV gerado ($total clientes).'
+            : 'CSV salvo em $destino ($total clientes).'),
+      ));
+    } catch (e) {
+      msg.showSnackBar(SnackBar(content: Text('Falha ao exportar CSV: $e')));
+    }
+  }
 
-  // L: filtros, tabela, cartões, paginação.
-  // Recebe o estado; eventos via `_bloc.add(...)`. Mobile: s.acumulando == true.
-  Widget _buildLista(BuildContext context, RelatorioFrequenciaClientesState s) =>
-      const SizedBox.shrink();
+  Widget _buildLista(BuildContext context, RelatorioFrequenciaClientesState s) {
+    final mobile = relatorioMobile(context);
+    final c = context.sivColors;
+    final apoio = context.sivTextos.apoio.copyWith(color: c.textoApoio);
+    final Widget lista;
+    if (s.items.isEmpty) {
+      lista = s.carregandoLista
+          ? const FrequenciaListaEsqueleto()
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Column(
+                children: [
+                  Text('Nenhum cliente com esse filtro.', style: context.sivTextos.corpo.copyWith(color: c.textoApoio)),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => _bloc.add(const FrequenciaLimpouFiltros()),
+                    child: const Text('Limpar filtros'),
+                  ),
+                ],
+              ),
+            );
+    } else if (mobile) {
+      lista = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FrequenciaCartoesMobile(
+            state: s,
+            onAlternar: (id) => _bloc.add(FrequenciaAlternouLinha(id)),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(frequenciaRodape(s, pagina: false), textAlign: TextAlign.center, style: apoio),
+          ),
+        ],
+      );
+    } else {
+      lista = FrequenciaTabela(
+        state: s,
+        onOrdenar: (col) => _bloc.add(FrequenciaMudouOrdenacao(col)),
+        onAlternar: (id) => _bloc.add(FrequenciaAlternouLinha(id)),
+        rodape: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(child: Text(frequenciaRodape(s), style: apoio)),
+            FrequenciaPaginacao(
+              pagina: s.page,
+              totalPaginas: s.totalPages,
+              onPagina: (p) => _bloc.add(FrequenciaMudouPagina(p)),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FrequenciaFiltros(state: s, bloc: _bloc, mobile: mobile),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 2,
+          child: s.carregandoLista
+              ? LinearProgressIndicator(color: c.aco, backgroundColor: c.hairline)
+              : null,
+        ),
+        const SizedBox(height: 6),
+        lista,
+      ],
+    );
+  }
 
   bool _onScroll(ScrollNotification n) {
     if (n.depth == 0 && n.metrics.extentAfter < 300) {

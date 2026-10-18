@@ -74,8 +74,7 @@ class _RelatorioVendasPorFuncionarioPageState
   Future<void> _abrirFiltroPeriodo() async {
     final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      dataInicioAtual:
-          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataInicioAtual: DateTime.tryParse(_dataInicial) ?? DateTime.now(),
       dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
@@ -163,67 +162,72 @@ class _RelatorioVendasPorFuncionarioPageState
           final soma = dados.fold<double>(0, (s, i) => s + i.total);
           final inicial =
               state.step == RelatorioVendasPorFuncionarioStep.inicial;
-          return RelatorioScaffold(
-            titulo: 'Vendas por Funcionário',
-            filtros: [
-              RelatorioFiltroChip(
-                rotulo: 'Período',
-                valor: '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
-                onTap: _abrirFiltroPeriodo,
-              ),
-              RelatorioFiltroChip(
-                rotulo: 'Funcionário',
-                valor: _rotuloFuncionarios,
-                onTap: _abrirFuncionarios,
-              ),
-            ],
-            carregando:
-                state.step == RelatorioVendasPorFuncionarioStep.carregando,
-            erro: state.step == RelatorioVendasPorFuncionarioStep.falha
-                ? (state.erro ?? 'Erro desconhecido')
-                : null,
-            onTentarDeNovo: _aplicarFiltro,
-            vazio: !inicial &&
-                state.step == RelatorioVendasPorFuncionarioStep.sucesso &&
-                dados.isEmpty,
-            corpo: inicial
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 48),
-                    child: Text(
-                      'Selecione o funcionário para consultar.',
-                      textAlign: TextAlign.center,
-                      style: textos.corpo.copyWith(color: cores.textoApoio),
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final i in dados)
-                        _BarraFuncionario(
-                          item: i,
-                          maior: maior,
-                          onTap: () => _detalhe(i),
+          return Scaffold(
+            body: SafeArea(
+              child: RelatorioScaffold(
+                titulo: 'Vendas por Funcionário',
+                filtros: [
+                  RelatorioFiltroChip(
+                    rotulo: 'Período',
+                    valor:
+                        '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                    onTap: _abrirFiltroPeriodo,
+                  ),
+                  RelatorioFiltroChip(
+                    rotulo: 'Funcionário',
+                    valor: _rotuloFuncionarios,
+                    onTap: _abrirFuncionarios,
+                  ),
+                ],
+                carregando:
+                    state.step == RelatorioVendasPorFuncionarioStep.carregando,
+                erro: state.step == RelatorioVendasPorFuncionarioStep.falha
+                    ? (state.erro ?? 'Erro desconhecido')
+                    : null,
+                onTentarDeNovo: _aplicarFiltro,
+                vazio: !inicial &&
+                    state.step == RelatorioVendasPorFuncionarioStep.sucesso &&
+                    dados.isEmpty,
+                corpo: inicial
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48),
+                        child: Text(
+                          'Selecione o funcionário para consultar.',
+                          textAlign: TextAlign.center,
+                          style: textos.corpo.copyWith(color: cores.textoApoio),
                         ),
-                      const SizedBox(height: 8),
-                      Divider(color: cores.hairline),
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        spacing: 16,
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            '${dados.length} funcionários com venda no período',
-                            style: textos.apoio
-                                .copyWith(color: cores.textoApoio),
-                          ),
-                          Text(
-                            'Total: ${_fmtMoeda(soma)}',
-                            style: textos.corpo
-                                .copyWith(fontWeight: FontWeight.w700),
+                          for (final i in dados)
+                            _BarraFuncionario(
+                              item: i,
+                              maior: maior,
+                              onTap: () => _detalhe(i),
+                            ),
+                          const SizedBox(height: 8),
+                          Divider(color: cores.hairline),
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            spacing: 16,
+                            children: [
+                              Text(
+                                '${dados.length} funcionários com venda no período',
+                                style: textos.apoio
+                                    .copyWith(color: cores.textoApoio),
+                              ),
+                              Text(
+                                'Total: ${_fmtMoeda(soma)}',
+                                style: textos.corpo
+                                    .copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+              ),
+            ),
           );
         },
       ),

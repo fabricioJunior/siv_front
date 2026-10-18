@@ -105,8 +105,16 @@ class RelatorioScaffold extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Flexible(child: nome),
-                  const Spacer(),
-                  Wrap(spacing: 8, children: [...filtros, ...acoes]),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 3,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [...filtros, ...acoes],
+                    ),
+                  ),
                 ],
               );
 

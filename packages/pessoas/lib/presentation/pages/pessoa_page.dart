@@ -1,16 +1,24 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:pessoas/models.dart';
 import 'package:pessoas/presentation/bloc/pessoa_bloc/pessoa_bloc.dart';
 import 'package:pessoas/presentation/widgets/funcionario_vinculos_painel.dart';
 
+enum PessoaFormularioModo { cliente, completo }
+
 class PessoaPage extends StatefulWidget {
   final int? idPessoa;
+  final PessoaFormularioModo modo;
 
-  const PessoaPage({this.idPessoa, super.key});
+  const PessoaPage({
+    this.idPessoa,
+    this.modo = PessoaFormularioModo.cliente,
+    super.key,
+  });
 
   @override
   State<PessoaPage> createState() => _PessoaPageState();
@@ -44,6 +52,7 @@ class _PessoaPageState extends State<PessoaPage> {
   late final PessoaBloc _bloc;
   int _currentStep = 0;
   bool _camposHidratados = false;
+  late bool _completo = widget.modo == PessoaFormularioModo.completo;
 
   @override
   void initState() {
@@ -107,6 +116,10 @@ class _PessoaPageState extends State<PessoaPage> {
                       state.pessoaStep == PessoaStep.criada)) {
                 _hidratatCamposComState(state);
                 _camposHidratados = true;
+                // Funcionário existente: mantém o formulário completo para não perder o vínculo.
+                if ((state.eFuncionario ?? false) && !_completo) {
+                  setState(() => _completo = true);
+                }
               }
 
               if (state.pessoaStep == PessoaStep.criada ||
@@ -130,7 +143,9 @@ class _PessoaPageState extends State<PessoaPage> {
             },
           ),
         ],
-        child: Scaffold(
+        child: !_completo
+            ? _buildCliente(context, isCadastro)
+            : Scaffold(
           appBar: AppBar(
             title: Text(
               isCadastro ? 'Cadastro de pessoa' : 'Pessoa #${widget.idPessoa}',
@@ -342,6 +357,354 @@ class _PessoaPageState extends State<PessoaPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCliente(BuildContext context, bool isCadastro) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final mobile =
+        MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+    return BlocBuilder<PessoaBloc, PessoaState>(
+      builder: (context, state) {
+        if (state.pessoaStep == PessoaStep.carregando && state.nome == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final carregando = state.pessoaStep == PessoaStep.carregando;
+        final podeSalvar = PermissaoPorNome.acessoPermitido('PESFM001');
+        final seletorTipo = _seletorTipoCliente(context, state);
+
+        return Scaffold(
+          backgroundColor: cores.papel,
+          resizeToAvoidBottomInset: true,
+          body: Column(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: Container(
+                  height: SivDimensoes.alturaBarraTitulo,
+                  padding: EdgeInsets.symmetric(
+                    horizontal:
+                        mobile ? 8 : SivDimensoes.paddingBarraTituloHorizontal,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cores.superficie,
+                    border: Border(bottom: BorderSide(color: cores.hairline)),
+                  ),
+                  child: Row(
+                    children: [
+                      const BackButton(),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          isCadastro ? 'Novo cliente' : 'Editar cadastro',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textos.secao.copyWith(fontSize: 21),
+                        ),
+                      ),
+                      if (!mobile) seletorTipo,
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.all(mobile ? 16 : 32),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: Form(
+                        key: _formKeyPessoa,
+                        child: _camposCliente(context, state, mobile, seletorTipo),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SivRodapeAcoes(
+                status: '',
+                mobile: mobile,
+                secundaria: TextButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  child: const Text('Cancelar'),
+                ),
+                primaria: FilledButton(
+                  onPressed: carregando || !podeSalvar
+                      ? null
+                      : () {
+                          if (!_podeAvancar(context, state, 0)) return;
+                          _sincronizarDadosPessoaNoBloc(context, state);
+                          context.read<PessoaBloc>().add(PessoaSalvou());
+                        },
+                  child: const Text('Salvar cliente'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _seletorTipoCliente(BuildContext context, PessoaState state) {
+    return SegmentedButton<TipoPessoa>(
+      key: const Key('tipo_pessoa_selector'),
+      showSelectedIcon: false,
+      segments: const [
+        ButtonSegment(value: TipoPessoa.fisica, label: Text('Pessoa física')),
+        ButtonSegment(
+            value: TipoPessoa.juridica, label: Text('Pessoa jurídica')),
+      ],
+      selected: {state.tipoPessoa ?? TipoPessoa.fisica},
+      onSelectionChanged: (selecao) {
+        _cpfController.clear();
+        context.read<PessoaBloc>().add(
+              PessoaEditou(tipoPessoa: selecao.first, documento: ''),
+            );
+      },
+    );
+  }
+
+  Widget _linhaCliente(bool mobile, Widget a, [Widget? b]) {
+    if (b == null) return a;
+    if (mobile) {
+      return Column(children: [a, const SizedBox(height: 16), b]);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: a),
+        const SizedBox(width: 16),
+        Expanded(child: b),
+      ],
+    );
+  }
+
+  Widget _camposCliente(
+    BuildContext context,
+    PessoaState state,
+    bool mobile,
+    Widget seletorTipo,
+  ) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final juridica = _ehJuridica(state);
+    const espaco = SizedBox(height: 16);
+
+    final documento = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DocumentoInput(
+          controller: _cpfController,
+          juridica: juridica,
+          valorInicial: state.documento,
+          onChanged: (value) => _aoAlterarDocumento(context, value, juridica),
+        ),
+        if (state.verificandoDocumento)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Verificando documento...',
+              style: textos.apoio.copyWith(color: cores.textoApoio),
+            ),
+          )
+        else if (state.avisoDocumentoDuplicado != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              state.avisoDocumentoDuplicado!,
+              style: textos.apoio.copyWith(color: cores.vinho),
+            ),
+          ),
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (mobile) ...[seletorTipo, espaco],
+        TextFormField(
+          key: const Key('nome_pessoa_text_field'),
+          controller: _nomeController,
+          decoration: InputDecoration(
+            labelText: juridica ? 'Razão social' : 'Nome completo',
+          ),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Informe o nome da pessoa.'
+              : null,
+        ),
+        espaco,
+        if (juridica) ...[
+          documento,
+          espaco,
+        ] else ...[
+          _linhaCliente(
+            mobile,
+            documento,
+            DateInput(
+              externalController: _dataNascimentoController,
+              dataInicial: state.dataDeNascimento,
+              labelText: 'Data de nascimento',
+              onComplete: (value) => _dataNascimentoSelecionada = value,
+            ),
+          ),
+          espaco,
+        ],
+        _linhaCliente(
+          mobile,
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'E-mail'),
+            validator: (value) {
+              final email = value?.trim() ?? '';
+              return email.isNotEmpty && !_emailValido(email)
+                  ? 'Informe um e-mail válido ou deixe em branco.'
+                  : null;
+            },
+          ),
+          CelularInput(
+            controller: _contatoController,
+            valorInicial: state.contato,
+            labelText: 'Celular',
+          ),
+        ),
+        espaco,
+        Text('Vínculo', style: textos.apoio),
+        const SizedBox(height: 6),
+        SegmentedButton<TipoPessoaSeletor>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+                value: TipoPessoaSeletor.cliente, label: Text('Cliente')),
+            ButtonSegment(
+                value: TipoPessoaSeletor.fornecedor, label: Text('Fornecedor')),
+          ],
+          selected: {
+            _valorInicial(state) == TipoPessoaSeletor.fornecedor
+                ? TipoPessoaSeletor.fornecedor
+                : TipoPessoaSeletor.cliente,
+          },
+          onSelectionChanged: (selecao) {
+            context.read<PessoaBloc>().add(
+                  PessoaEditou(
+                    eCliente: selecao.first == TipoPessoaSeletor.cliente,
+                    eFornecedor: selecao.first == TipoPessoaSeletor.fornecedor,
+                    eFuncionario: false,
+                  ),
+                );
+          },
+        ),
+        const SizedBox(height: 28),
+        _enderecoClienteGrade(context, state, mobile),
+      ],
+    );
+  }
+
+  Widget _enderecoClienteGrade(
+    BuildContext context,
+    PessoaState state,
+    bool mobile,
+  ) {
+    const espaco = SizedBox(height: 16);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('ENDEREÇO', style: context.sivTextos.rotulo),
+        espaco,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _enderecoCepController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'CEP',
+                  errorText: state.enderecoErroCep,
+                  suffixIcon: state.enderecoBuscandoCep
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: state.enderecoBuscandoCep
+                  ? null
+                  : () => context.read<PessoaBloc>().add(
+                        PessoaBuscarCepEndereco(
+                          cep: _enderecoCepController.text.trim(),
+                        ),
+                      ),
+              child: const Text('Buscar CEP'),
+            ),
+          ],
+        ),
+        espaco,
+        TextFormField(
+          controller: _enderecoLogradouroController,
+          decoration: const InputDecoration(labelText: 'Logradouro'),
+        ),
+        espaco,
+        _linhaCliente(
+          mobile,
+          TextFormField(
+            controller: _enderecoNumeroController,
+            decoration: const InputDecoration(labelText: 'Número'),
+          ),
+          TextFormField(
+            controller: _enderecoComplementoController,
+            decoration: const InputDecoration(labelText: 'Complemento'),
+          ),
+        ),
+        espaco,
+        _linhaCliente(
+          mobile,
+          TextFormField(
+            controller: _enderecoBairroController,
+            decoration: const InputDecoration(labelText: 'Bairro'),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextFormField(
+                  controller: _enderecoMunicipioController,
+                  decoration: const InputDecoration(labelText: 'Município'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextFormField(
+                  controller: _enderecoUfController,
+                  decoration: const InputDecoration(
+                    labelText: 'UF',
+                    counterText: '',
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  maxLength: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

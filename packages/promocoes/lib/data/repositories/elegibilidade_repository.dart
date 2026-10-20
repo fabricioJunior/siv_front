@@ -11,12 +11,12 @@ class ElegibilidadeRepository implements IElegibilidadeRepository {
   Future<ResultadoElegibilidade> apurar({
     int? clienteId,
     required List<ItemApuracaoElegibilidade> itens,
-    String? codigoCupom,
+    List<String> codigosCupom = const [],
   }) {
     return remoteDataSource.apurar(
       clienteId: clienteId,
       itens: itens,
-      codigoCupom: codigoCupom,
+      codigosCupom: codigosCupom,
     );
   }
 }

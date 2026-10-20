@@ -200,7 +200,7 @@ class PagamentosRealizadosEmailNotaAlterado extends PagamentosRealizadosEvent {
 
 // Dispara a apuracao de elegibilidade (promocoes/cupom) pros produtos do
 // carrinho -- disparado internamente ao final do carregamento do resumo em
-// _onIniciado. Sem parametros: usa state.resumo/pessoaId/cupomCodigoAplicado
+// _onIniciado. Sem parametros: usa state.resumo/pessoaId/cuponsAplicados
 // ja carregados.
 class PagamentosRealizadosCarregouElegibilidade
     extends PagamentosRealizadosEvent {
@@ -252,5 +252,10 @@ class PagamentosRealizadosCupomInformado extends PagamentosRealizadosEvent {
 }
 
 class PagamentosRealizadosCupomRemovido extends PagamentosRealizadosEvent {
-  const PagamentosRealizadosCupomRemovido();
+  final String codigo;
+
+  const PagamentosRealizadosCupomRemovido({required this.codigo});
+
+  @override
+  List<Object?> get props => [codigo];
 }

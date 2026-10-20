@@ -20,7 +20,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     double? valorTaxaEntrega,
     List<Map<String, dynamic>> descontosItens = const [],
     List<Map<String, dynamic>> descontosPromocao = const [],
-    Map<String, dynamic>? cupom,
+    List<Map<String, dynamic>>? cupons,
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
@@ -47,7 +47,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         if (descontosItens.isNotEmpty) 'descontosItens': descontosItens,
         if (descontosPromocao.isNotEmpty)
           'descontosPromocao': descontosPromocao,
-        if (cupom != null) 'cupom': cupom,
+        if (cupons != null && cupons.isNotEmpty) 'cupons': cupons,
         'incluirCpfNaNota': incluirCpfNaNota,
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
           'cpfNaNota': cpfNaNota.trim(),
@@ -91,7 +91,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
     List<Map<String, dynamic>> descontosItens = const [],
     List<Map<String, dynamic>> descontosPromocao = const [],
-    Map<String, dynamic>? cupom,
+    List<Map<String, dynamic>>? cupons,
     double? valorTaxaEntrega,
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
@@ -122,7 +122,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
         if (descontosItens.isNotEmpty) 'descontosItens': descontosItens,
         if (descontosPromocao.isNotEmpty)
           'descontosPromocao': descontosPromocao,
-        if (cupom != null) 'cupom': cupom,
+        if (cupons != null && cupons.isNotEmpty) 'cupons': cupons,
         if (valorTaxaEntrega != null) 'valorTaxaEntrega': valorTaxaEntrega,
         'incluirCpfNaNota': incluirCpfNaNota,
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)

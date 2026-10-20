@@ -10,12 +10,12 @@ class ApurarElegibilidade {
   Future<ResultadoElegibilidade> call({
     int? clienteId,
     required List<ItemApuracaoElegibilidade> itens,
-    String? codigoCupom,
+    List<String> codigosCupom = const [],
   }) {
     return _repository.apurar(
       clienteId: clienteId,
       itens: itens,
-      codigoCupom: codigoCupom,
+      codigosCupom: codigosCupom,
     );
   }
 }

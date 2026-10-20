@@ -286,7 +286,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           descontosPromocao: event.descontosPromocao
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false),
-          cupom: event.cupom,
+          cupons: event.cupons,
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
           pontuarFidelidade: event.pontuarFidelidade,

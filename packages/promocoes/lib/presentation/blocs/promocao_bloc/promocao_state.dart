@@ -16,6 +16,8 @@ class PromocaoState extends Equatable {
   final double? precoFixo;
   final TipoEscopo tipoEscopo;
   final List<int>? referenciaIds;
+  final List<PromocaoCategoria>? categorias;
+  final List<int>? excecaoReferenciaIds;
   final List<ItemComboKit>? comboKit;
   final int? quantidadeLeva;
   final int? quantidadePaga;
@@ -49,6 +51,8 @@ class PromocaoState extends Equatable {
     this.precoFixo,
     this.tipoEscopo = TipoEscopo.geral,
     this.referenciaIds,
+    this.categorias,
+    this.excecaoReferenciaIds,
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
@@ -86,6 +90,8 @@ class PromocaoState extends Equatable {
         precoFixo = origem.precoFixo,
         tipoEscopo = origem.tipoEscopo,
         referenciaIds = origem.referenciaIds,
+        categorias = origem.categorias,
+        excecaoReferenciaIds = origem.excecaoReferenciaIds,
         comboKit = origem.comboKit,
         quantidadeLeva = origem.quantidadeLeva,
         quantidadePaga = origem.quantidadePaga,
@@ -117,6 +123,8 @@ class PromocaoState extends Equatable {
     double? precoFixo,
     TipoEscopo? tipoEscopo,
     List<int>? referenciaIds,
+    List<PromocaoCategoria>? categorias,
+    List<int>? excecaoReferenciaIds,
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
@@ -151,6 +159,10 @@ class PromocaoState extends Equatable {
       precoFixo: precoFixo ?? this.precoFixo,
       tipoEscopo: tipoEscopo ?? this.tipoEscopo,
       referenciaIds: limparEscopo ? null : (referenciaIds ?? this.referenciaIds),
+      categorias: limparEscopo ? null : (categorias ?? this.categorias),
+      excecaoReferenciaIds: limparEscopo
+          ? null
+          : (excecaoReferenciaIds ?? this.excecaoReferenciaIds),
       comboKit: limparEscopo ? null : (comboKit ?? this.comboKit),
       quantidadeLeva: limparEscopo ? null : (quantidadeLeva ?? this.quantidadeLeva),
       quantidadePaga: limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
@@ -190,6 +202,8 @@ class PromocaoState extends Equatable {
         precoFixo,
         tipoEscopo,
         referenciaIds,
+        categorias,
+        excecaoReferenciaIds,
         comboKit,
         quantidadeLeva,
         quantidadePaga,

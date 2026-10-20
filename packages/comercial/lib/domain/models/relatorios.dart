@@ -94,9 +94,24 @@ abstract class RelatorioCurvaAbcMeta {
   int get currentPage;
 }
 
+abstract class RelatorioCurvaAbcClasse {
+  String get classe;
+  int get quantidadeItens;
+  double get percentualItens;
+  double get valorTotal;
+  double get percentualFaturamento;
+}
+
+abstract class RelatorioCurvaAbcResumo {
+  double get valorTotal;
+  int get quantidadeItens;
+  List<RelatorioCurvaAbcClasse> get classes;
+}
+
 abstract class RelatorioCurvaAbc {
   List<RelatorioCurvaAbcItem> get items;
   RelatorioCurvaAbcMeta get meta;
+  RelatorioCurvaAbcResumo? get resumo;
 }
 
 abstract class RelatorioClienteAtivoItem {
@@ -107,6 +122,8 @@ abstract class RelatorioClienteAtivoItem {
   String get clienteDocumento;
   String? get clienteEmail;
   String? get clienteTelefone;
+  String? get clienteMunicipio;
+  String? get clienteUf;
   String get dataUltimaCompra;
   int get quantidadeCompras;
   double get valorTotalComprado;
@@ -120,9 +137,18 @@ abstract class RelatorioClienteAtivoMeta {
   int get currentPage;
 }
 
+abstract class RelatorioClientesAtivosResumo {
+  int get quantidadeClientes;
+  double get valorTotalComprado;
+  int get quantidadeCompras;
+  double get ticketMedio;
+  double get comprasPorCliente;
+}
+
 abstract class RelatorioClientesAtivos {
   List<RelatorioClienteAtivoItem> get items;
   RelatorioClienteAtivoMeta get meta;
+  RelatorioClientesAtivosResumo? get resumo;
 }
 
 abstract class RelatorioCompraClienteItem {
@@ -186,10 +212,14 @@ abstract class RelatorioClienteCompraItem {
   String get empresaNome;
   String get data;
   double get valorLiquido;
+  String? get numeroCupom;
+  int? get quantidadeItens;
+  String? get formaPagamento;
 }
 
 abstract class RelatorioClienteCompras {
   List<RelatorioClienteCompraItem> get items;
+  int? get totalNoPeriodo;
 }
 
 abstract class RelatorioPontoFidelidadeItem {

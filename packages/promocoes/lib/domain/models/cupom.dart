@@ -22,6 +22,8 @@ abstract class Cupom implements Equatable {
   int? get limiteUsos;
   int get usosRealizados;
   bool get ativa;
+  // Soma desconto com outros cupons cumulativos no checkout do site.
+  bool get cumulativo;
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;
 
@@ -46,6 +48,7 @@ abstract class Cupom implements Equatable {
     int? limiteUsos,
     int usosRealizados,
     bool ativa,
+    bool cumulativo,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
   }) = _CupomImpl;
@@ -72,6 +75,7 @@ abstract class Cupom implements Equatable {
         limiteUsos,
         usosRealizados,
         ativa,
+        cumulativo,
         criadoEm,
         atualizadoEm,
       ];
@@ -122,6 +126,8 @@ class _CupomImpl implements Cupom {
   @override
   final bool ativa;
   @override
+  final bool cumulativo;
+  @override
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
@@ -147,6 +153,7 @@ class _CupomImpl implements Cupom {
     this.limiteUsos,
     this.usosRealizados = 0,
     this.ativa = true,
+    this.cumulativo = false,
     this.criadoEm,
     this.atualizadoEm,
   });
@@ -173,6 +180,7 @@ class _CupomImpl implements Cupom {
         limiteUsos,
         usosRealizados,
         ativa,
+        cumulativo,
         criadoEm,
         atualizadoEm,
       ];

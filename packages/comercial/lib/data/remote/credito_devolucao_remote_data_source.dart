@@ -1,3 +1,4 @@
+import 'package:comercial/data/remote/dtos/credito_devolucao_dto.dart';
 import 'package:comercial/data/remote/dtos/credito_devolucao_movimentacao_dto.dart';
 import 'package:comercial/domain/data/remote/i_credito_devolucao_remote_data_source.dart';
 import 'package:comercial/models.dart';
@@ -8,7 +9,10 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
   CreditoDevolucaoRemoteDataSource({required super.informacoesParaRequest});
 
   @override
-  String get path => '/v1/pessoas/{pessoaId}/extrato/credito-de-devolucao{sufixo}';
+  String get path => '/v1/pessoas/{pessoaId}{sufixo}';
+
+  static const _extrato = '/extrato/credito-de-devolucao';
+  static const _creditos = '/creditos-de-devolucao';
 
   @override
   Future<List<CreditoDevolucaoMovimentacao>> buscarMovimentacoes({
@@ -25,7 +29,7 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
     };
 
     final response = await get(
-      pathParameters: {'pessoaId': pessoaId},
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': _extrato},
       queryParameters: query,
     );
 
@@ -42,7 +46,10 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
     required int pessoaId,
   }) async {
     final response = await get(
-      pathParameters: {'pessoaId': pessoaId, 'sufixo': '/nao-cadastrado'},
+      pathParameters: {
+        'pessoaId': pessoaId,
+        'sufixo': '$_extrato/nao-cadastrado'
+      },
     );
     final body = response.body as List<dynamic>? ?? const [];
     return body.whereType<Map<String, dynamic>>().map((j) {
@@ -63,7 +70,7 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
     required List<int> romaneioIds,
   }) async {
     final response = await post(
-      pathParameters: {'pessoaId': pessoaId, 'sufixo': '/transferir'},
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': '$_extrato/transferir'},
       body: {'romaneioIds': romaneioIds},
     );
     final j = response.body as Map<String, dynamic>;
@@ -71,6 +78,91 @@ class CreditoDevolucaoRemoteDataSource extends RemoteDataSourceBase
       valorTotal: _num(j['valorTotal']),
       saldoCreditoDevolucaoDestino: _num(j['saldoCreditoDevolucaoDestino']),
     );
+  }
+
+  @override
+  Future<List<CreditoDevolucao>> buscarCreditos({
+    required int pessoaId,
+    required String situacao,
+  }) async {
+    final response = await get(
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': _creditos},
+      queryParameters: {'situacao': situacao},
+    );
+    final body = response.body as List<dynamic>? ?? const [];
+    return body
+        .whereType<Map<String, dynamic>>()
+        .map(creditoDevolucaoDeJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<ResumoCreditoDevolucao> buscarResumo({required int pessoaId}) async {
+    final response = await get(
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': '$_creditos/resumo'},
+    );
+    return resumoCreditoDevolucaoDeJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ResultadoAcaoCredito> adicionar({
+    required int pessoaId,
+    required double valor,
+    required String motivo,
+    required String observacao,
+    DateTime? validade,
+    int? empresaId,
+  }) async {
+    final response = await post(
+      pathParameters: {'pessoaId': pessoaId, 'sufixo': _creditos},
+      body: {
+        'valor': valor,
+        'motivo': motivo,
+        'observacao': observacao,
+        'validade': validade?.toIso8601String().split('T').first,
+        if (empresaId != null) 'empresaId': empresaId,
+      },
+    );
+    return resultadoAcaoCreditoDeJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ResultadoAcaoCredito> remover({
+    required int pessoaId,
+    required int creditoId,
+    double? valor,
+    required String motivo,
+    String? observacao,
+  }) async {
+    final response = await post(
+      pathParameters: {
+        'pessoaId': pessoaId,
+        'sufixo': '$_creditos/$creditoId/remover',
+      },
+      body: {
+        'valor': valor,
+        'motivo': motivo,
+        if (observacao != null && observacao.isNotEmpty)
+          'observacao': observacao,
+      },
+    );
+    return resultadoAcaoCreditoDeJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
+  Future<ResultadoAcaoCredito> expirar({
+    required int pessoaId,
+    required int creditoId,
+    String? motivo,
+  }) async {
+    final response = await post(
+      pathParameters: {
+        'pessoaId': pessoaId,
+        'sufixo': '$_creditos/$creditoId/expirar',
+      },
+      body: {if (motivo != null && motivo.isNotEmpty) 'motivo': motivo},
+    );
+    return resultadoAcaoCreditoDeJson(response.body as Map<String, dynamic>);
   }
 
   int _int(dynamic v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;

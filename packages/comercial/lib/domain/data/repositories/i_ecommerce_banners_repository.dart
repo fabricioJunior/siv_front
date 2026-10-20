@@ -18,6 +18,8 @@ abstract class IEcommerceBannersRepository {
     int id, {
     int? ordem,
     bool? ativo,
+    EcommerceBannerLink? link,
+    bool limparLink,
   });
 
   Future<void> excluirBanner(int ecommerceId, int id);

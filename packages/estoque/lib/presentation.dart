@@ -13,6 +13,7 @@ export 'presentation/pages/entrada_manual_de_produtos_page.dart';
 export 'presentation/pages/historico_estoque_page.dart';
 export 'presentation/pages/relatorio_produtos_defasados_page.dart';
 export 'presentation/pages/relatorio_giro_estoque_page.dart';
+export 'presentation/pages/relatorio_estoque_page.dart';
 export 'presentation/pages/importar_estoque_csv_page.dart';
 export 'presentation/pages/gerencia_estoque_menu_page.dart';
 export 'presentation/pages/balanco/balancos_page.dart';

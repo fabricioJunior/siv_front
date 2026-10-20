@@ -1,3 +1,5 @@
+import 'package:comercial/domain/models/relatorio_frequencia_clientes.dart';
+import 'package:comercial/domain/models/relatorio_movimentacoes.dart';
 import 'package:comercial/domain/models/relatorios.dart';
 
 abstract class IRelatorioRemoteDataSource {
@@ -75,5 +77,32 @@ abstract class IRelatorioRemoteDataSource {
     required List<int> empresaIds,
     required int pessoaId,
     int limit = 10,
+    String? dataInicial,
+    String? dataFinal,
+  });
+
+  Future<RelatorioMovimentacoes> movimentacoes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<String>? tipos,
+    String? busca,
+    int page = 1,
+    int limit = 50,
+  });
+
+  Future<RelatorioFrequenciaClientes> frequenciaClientes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<int>? funcionarioIds,
+    List<int>? categoriaIds,
+    String? classe,
+    bool atrasados = false,
+    String? busca,
+    String ordenarPor = 'rank',
+    String ordem = 'asc',
+    int page = 1,
+    int limit = 20,
   });
 }

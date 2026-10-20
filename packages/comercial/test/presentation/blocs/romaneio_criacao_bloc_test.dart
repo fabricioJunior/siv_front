@@ -227,7 +227,7 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
     double? valorTaxaEntrega,
     List<Map<String, dynamic>> descontosItens = const [],
     List<Map<String, dynamic>> descontosPromocao = const [],
-    Map<String, dynamic>? cupom,
+    List<Map<String, dynamic>>? cupons,
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
@@ -257,7 +257,7 @@ class StubCriarVendaCompleta implements CriarVendaCompleta {
     required List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
     List<Map<String, dynamic>> descontosItens = const [],
     List<Map<String, dynamic>> descontosPromocao = const [],
-    Map<String, dynamic>? cupom,
+    List<Map<String, dynamic>>? cupons,
     double? valorTaxaEntrega,
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
@@ -444,7 +444,9 @@ void main() {
           formasDePagamentoRealizadas: [
             {'controle': 1, 'formaDePagamentoId': 1, 'parcela': 1, 'valor': 0.0},
           ],
-          cupom: {'codigo': 'PRICILLA200', 'produtoIds': [1]},
+          cupons: [
+            {'codigo': 'PRICILLA200', 'produtoIds': [1]},
+          ],
         ),
       ),
       wait: const Duration(milliseconds: 100),

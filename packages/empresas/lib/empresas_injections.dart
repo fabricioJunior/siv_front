@@ -1,6 +1,11 @@
 import 'package:core/empresas_portas.dart';
 import 'package:core/injecoes.dart';
+import 'package:empresas/data/remote_data_sourcers/config_credito_devolucao_remote_data_source.dart';
 import 'package:empresas/data/remote_data_sourcers/empresas_remote_data_source.dart';
+import 'package:empresas/data/repositories/config_credito_devolucao_repository.dart';
+import 'package:empresas/domain/data/remote_data_sourcers/i_config_credito_devolucao_remote_data_source.dart';
+import 'package:empresas/domain/data/repositories/i_config_credito_devolucao_repository.dart';
+import 'package:empresas/presentation/blocs/config_credito_devolucao_bloc/config_credito_devolucao_bloc.dart';
 import 'package:empresas/domain/adapters/porta_verificar_exige_cliente_na_venda_impl.dart';
 import 'package:empresas/domain/adapters/porta_verificar_permite_nota_fiscal_email_impl.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
@@ -39,6 +44,10 @@ void resolverDependenciasEmpresas() {
 }
 
 void _remoteDataSourcers() {
+  sl.registerFactory<IConfigCreditoDevolucaoRemoteDataSource>(
+    () => ConfigCreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IEmpresasRemoteDataSource>(
     () => EmpresasRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -61,6 +70,10 @@ void _remoteDataSourcers() {
 }
 
 void _repositories() {
+  sl.registerFactory<IConfigCreditoDevolucaoRepository>(
+    () => ConfigCreditoDevolucaoRepository(remoteDataSource: sl()),
+  );
+
   sl.registerFactory<IEmpresasRepository>(
     () => EmpresasRepository(empresasRemoteDataSource: sl()),
   );
@@ -83,6 +96,14 @@ void _repositories() {
 }
 
 void _useCases() {
+  sl.registerFactory<RecuperarConfigCreditoDevolucao>(
+    () => RecuperarConfigCreditoDevolucao(repository: sl()),
+  );
+
+  sl.registerFactory<SalvarConfigCreditoDevolucao>(
+    () => SalvarConfigCreditoDevolucao(repository: sl()),
+  );
+
   sl.registerFactory<CriarEmpresa>(() => CriarEmpresa(sl()));
 
   sl.registerFactory<RecuperarEmpresas>(
@@ -152,6 +173,10 @@ void _useCases() {
 }
 
 void _presentantion() {
+  sl.registerFactory<ConfigCreditoDevolucaoBloc>(
+    () => ConfigCreditoDevolucaoBloc(sl(), sl()),
+  );
+
   sl.registerFactory<EmpresasBloc>(() => EmpresasBloc(sl()));
 
   sl.registerFactory<EmpresaBloc>(() => EmpresaBloc(sl(), sl(), sl()));

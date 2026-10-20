@@ -223,7 +223,7 @@ class _ImpressaoProgressView extends StatelessWidget {
 						),
 						const SizedBox(height: 32),
 						FilledButton.icon(
-							onPressed: () => Navigator.of(context).pop(),
+							onPressed: () => Navigator.of(context).pop(true),
 							icon: const Icon(Icons.check),
 							label: const Text('Fechar'),
 						),

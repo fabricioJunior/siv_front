@@ -1,3 +1,5 @@
+import 'package:comercial/domain/models/relatorio_frequencia_clientes.dart';
+import 'package:comercial/domain/models/relatorio_movimentacoes.dart';
 import 'package:comercial/domain/data/remote/i_relatorio_remote_data_source.dart';
 import 'package:comercial/domain/data/repositories/i_relatorio_repository.dart';
 import 'package:comercial/domain/models/relatorios.dart';
@@ -153,10 +155,64 @@ class RelatorioRepository implements IRelatorioRepository {
     required List<int> empresaIds,
     required int pessoaId,
     int limit = 10,
+    String? dataInicial,
+    String? dataFinal,
   }) =>
       _remoteDataSource.comprasDoCliente(
         empresaIds: empresaIds,
         pessoaId: pessoaId,
+        limit: limit,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
+      );
+
+  @override
+  Future<RelatorioMovimentacoes> movimentacoes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<String>? tipos,
+    String? busca,
+    int page = 1,
+    int limit = 50,
+  }) =>
+      _remoteDataSource.movimentacoes(
+        empresaIds: empresaIds,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
+        tipos: tipos,
+        busca: busca,
+        page: page,
+        limit: limit,
+      );
+
+  @override
+  Future<RelatorioFrequenciaClientes> frequenciaClientes({
+    required List<int> empresaIds,
+    required String dataInicial,
+    required String dataFinal,
+    List<int>? funcionarioIds,
+    List<int>? categoriaIds,
+    String? classe,
+    bool atrasados = false,
+    String? busca,
+    String ordenarPor = 'rank',
+    String ordem = 'asc',
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remoteDataSource.frequenciaClientes(
+        empresaIds: empresaIds,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
+        funcionarioIds: funcionarioIds,
+        categoriaIds: categoriaIds,
+        classe: classe,
+        atrasados: atrasados,
+        busca: busca,
+        ordenarPor: ordenarPor,
+        ordem: ordem,
+        page: page,
         limit: limit,
       );
 }

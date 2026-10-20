@@ -20,7 +20,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final double desconto;
   final List<Map<String, dynamic>> descontosItens;
   final List<Map<String, dynamic>> descontosPromocao;
-  final Map<String, dynamic>? cupom;
+  final List<Map<String, dynamic>>? cupons;
   final double valorTaxaEntrega;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
@@ -37,7 +37,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     this.desconto = 0,
     this.descontosItens = const [],
     this.descontosPromocao = const [],
-    this.cupom,
+    this.cupons,
     this.valorTaxaEntrega = 0,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
@@ -59,7 +59,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             desconto: desconto,
             descontosItens: descontosItens,
             descontosPromocao: descontosPromocao,
-            cupom: cupom,
+            cupons: cupons,
             valorTaxaEntrega: valorTaxaEntrega,
             incluirCpfNaNota: incluirCpfNaNota,
             cpfNaNota: cpfNaNota,
@@ -163,7 +163,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                                 desconto: desconto,
                                 descontosItens: descontosItens,
                                 descontosPromocao: descontosPromocao,
-                                cupom: cupom,
+                                cupons: cupons,
                                 valorTaxaEntrega: valorTaxaEntrega,
                                 incluirCpfNaNota: incluirCpfNaNota,
                                 cpfNaNota: cpfNaNota,

@@ -43,6 +43,8 @@ class CupomDto implements Cupom {
   @override
   final bool ativa;
   @override
+  final bool cumulativo;
+  @override
   final DateTime? criadoEm;
   @override
   final DateTime? atualizadoEm;
@@ -68,6 +70,7 @@ class CupomDto implements Cupom {
     this.limiteUsos,
     this.usosRealizados = 0,
     this.ativa = true,
+    this.cumulativo = false,
     this.criadoEm,
     this.atualizadoEm,
   });
@@ -98,6 +101,7 @@ class CupomDto implements Cupom {
       limiteUsos: (json['limiteUsos'] as num?)?.toInt(),
       usosRealizados: (json['usosRealizados'] as num?)?.toInt() ?? 0,
       ativa: json['ativa'] as bool? ?? true,
+      cumulativo: json['cumulativo'] as bool? ?? false,
       criadoEm: _parseDateTime(json['criadoEm']),
       atualizadoEm: _parseDateTime(json['atualizadoEm']),
     );
@@ -125,6 +129,7 @@ class CupomDto implements Cupom {
       limiteUsos: cupom.limiteUsos,
       usosRealizados: cupom.usosRealizados,
       ativa: cupom.ativa,
+      cumulativo: cupom.cumulativo,
       criadoEm: cupom.criadoEm,
       atualizadoEm: cupom.atualizadoEm,
     );
@@ -153,6 +158,7 @@ class CupomDto implements Cupom {
       if (quantidadePaga != null) 'quantidadePaga': quantidadePaga,
       if (limiteUsos != null) 'limiteUsos': limiteUsos,
       'ativa': ativa,
+      'cumulativo': cumulativo,
     };
   }
 
@@ -180,6 +186,7 @@ class CupomDto implements Cupom {
         limiteUsos,
         usosRealizados,
         ativa,
+        cumulativo,
         criadoEm,
         atualizadoEm,
       ];

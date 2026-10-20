@@ -19,6 +19,7 @@ class CupomState extends Equatable {
   final int? quantidadePaga;
   final int? limiteUsos;
   final bool ativa;
+  final bool cumulativo;
   final Cupom? cupom;
   final String? erro;
   final CupomStep step;
@@ -42,6 +43,7 @@ class CupomState extends Equatable {
     this.quantidadePaga,
     this.limiteUsos,
     this.ativa = true,
+    this.cumulativo = false,
     this.cupom,
     this.erro,
     required this.step,
@@ -66,6 +68,7 @@ class CupomState extends Equatable {
         quantidadePaga = origem.quantidadePaga,
         limiteUsos = origem.limiteUsos,
         ativa = origem.ativa,
+        cumulativo = origem.cumulativo,
         cupom = origem,
         erro = null,
         step = step ?? CupomStep.editando;
@@ -89,6 +92,7 @@ class CupomState extends Equatable {
     bool limparEscopo = false,
     int? limiteUsos,
     bool? ativa,
+    bool? cumulativo,
     Cupom? cupom,
     String? erro,
     CupomStep? step,
@@ -106,12 +110,16 @@ class CupomState extends Equatable {
       quantidadeMinima: quantidadeMinima ?? this.quantidadeMinima,
       precoFixo: precoFixo ?? this.precoFixo,
       tipoEscopo: tipoEscopo ?? this.tipoEscopo,
-      referenciaIds: limparEscopo ? null : (referenciaIds ?? this.referenciaIds),
+      referenciaIds:
+          limparEscopo ? null : (referenciaIds ?? this.referenciaIds),
       comboKit: limparEscopo ? null : (comboKit ?? this.comboKit),
-      quantidadeLeva: limparEscopo ? null : (quantidadeLeva ?? this.quantidadeLeva),
-      quantidadePaga: limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
+      quantidadeLeva:
+          limparEscopo ? null : (quantidadeLeva ?? this.quantidadeLeva),
+      quantidadePaga:
+          limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
       limiteUsos: limiteUsos ?? this.limiteUsos,
       ativa: ativa ?? this.ativa,
+      cumulativo: cumulativo ?? this.cumulativo,
       cupom: cupom ?? this.cupom,
       erro: erro,
       step: step ?? this.step,
@@ -138,6 +146,7 @@ class CupomState extends Equatable {
         quantidadePaga,
         limiteUsos,
         ativa,
+        cumulativo,
         cupom,
         erro,
         step,

@@ -313,7 +313,7 @@ class RomaneioBloc extends Bloc<RomaneioEvent, RomaneioState> {
         desconto: event.desconto,
         valorTaxaEntrega: event.valorTaxaEntrega,
         descontosPromocao: event.descontosPromocao,
-        cupom: event.cupom,
+        cupons: event.cupons,
         incluirCpfNaNota: event.incluirCpfNaNota,
         cpfNaNota: event.cpfNaNota,
         pontuarFidelidade: event.pontuarFidelidade,

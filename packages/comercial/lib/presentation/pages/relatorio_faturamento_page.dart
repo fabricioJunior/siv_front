@@ -4,16 +4,14 @@ import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dar
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-// Comparativo só é buscado/exibido quando o intervalo selecionado
-// ultrapassa 30 dias (equivalente a mais de 1 mês corrido).
-const int _diasMinimoParaComparativo = 30;
+const int _maxPontosGrafico = 12;
 
 String _fmtMoeda(double v) {
-  final s = v.toStringAsFixed(2);
-  final p = s.split('.');
+  final p = v.toStringAsFixed(2).split('.');
   final inteiro = p[0].replaceAllMapped(
     RegExp(r'(\d)(?=(\d{3})+$)'),
     (m) => '${m[1]}.',
@@ -22,19 +20,35 @@ String _fmtMoeda(double v) {
 }
 
 String _fmtData(String iso) {
-  if (iso.isEmpty) return '-';
   final p = iso.split('-');
   return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : iso;
 }
 
-(String, String) _hoje() {
-  final now = DateTime.now();
-  final iso = _isoDate(now);
-  return (iso, iso);
-}
-
 String _isoDate(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+const _rotulosAgrupar = {'dia': 'Dia', 'semana': 'Semana', 'mes': 'Mês'};
+
+String _fmtPeriodo(String periodo, String agruparPor) {
+  final p = periodo.split('-');
+  if (agruparPor == 'mes' && p.length == 2) {
+    const meses = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+    ];
+    final i = int.tryParse(p[1]);
+    if (i == null || i < 1 || i > 12) return periodo;
+    return '${meses[i - 1]}/${p[0].substring(2)}';
+  }
+  if (p.length == 3) return '${p[2]}/${p[1]}';
+  return periodo;
+}
+
+/// Variação % (atual vs anterior). `null` = sem base de comparação.
+double? _variacao(num atual, num anterior) =>
+    anterior == 0 ? null : (atual - anterior) / anterior * 100;
+
+double _pecasPorVenda(int pecas, int vendas) => vendas == 0 ? 0 : pecas / vendas;
 
 class RelatorioFaturamentoPage extends StatefulWidget {
   const RelatorioFaturamentoPage({super.key});
@@ -48,39 +62,17 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
   late final RelatorioFaturamentoBloc _bloc;
   late String _dataInicial;
   late String _dataFinal;
-  String _agruparPor = 'mes';
+  String _agruparPor = 'dia';
   bool _exportandoPdf = false;
 
   @override
   void initState() {
     super.initState();
-    final (ini, fim) = _hoje();
-    _dataInicial = ini;
-    _dataFinal = fim;
-    _bloc = sl<RelatorioFaturamentoBloc>()
-      ..add(RelatorioFaturamentoCarregar(
-          dataInicial: ini, dataFinal: fim));
-  }
-
-  bool get _intervaloElegivelParaComparativo {
-    final ini = DateTime.tryParse(_dataInicial);
-    final fim = DateTime.tryParse(_dataFinal);
-    if (ini == null || fim == null) return false;
-    return fim.difference(ini).inDays > _diasMinimoParaComparativo;
-  }
-
-  void _dispararComparativoSeElegivel() {
-    if (!_intervaloElegivelParaComparativo) return;
-    _bloc.add(RelatorioFaturamentoComparativoCarregar(
-      dataInicial: _dataInicial,
-      dataFinal: _dataFinal,
-      agruparPor: _agruparPor,
-    ));
-  }
-
-  void _onAgruparPorAlterado(String valor) {
-    setState(() => _agruparPor = valor);
-    _dispararComparativoSeElegivel();
+    final hoje = DateTime.now();
+    _dataInicial = _isoDate(DateTime(hoje.year, hoje.month, 1));
+    _dataFinal = _isoDate(hoje);
+    _bloc = sl<RelatorioFaturamentoBloc>();
+    _aplicarFiltro();
   }
 
   @override
@@ -89,28 +81,84 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
     super.dispose();
   }
 
+  void _aplicarFiltro() {
+    _bloc
+      ..add(RelatorioFaturamentoCarregar(
+          dataInicial: _dataInicial, dataFinal: _dataFinal))
+      ..add(RelatorioFaturamentoComparativoCarregar(
+        dataInicial: _dataInicial,
+        dataFinal: _dataFinal,
+        agruparPor: _agruparPor,
+      ));
+  }
+
+  void _onAgruparPorAlterado(String valor) {
+    setState(() => _agruparPor = valor);
+    _bloc.add(RelatorioFaturamentoComparativoCarregar(
+      dataInicial: _dataInicial,
+      dataFinal: _dataFinal,
+      agruparPor: valor,
+    ));
+  }
+
   Future<void> _abrirFiltroPeriodo() async {
-    final resultado = await abrirFiltroPeriodoSheet(
+    final r = await abrirFiltroPeriodoSheet(
       context: context,
-      dataInicioAtual:
-          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataInicioAtual: DateTime.tryParse(_dataInicial) ?? DateTime.now(),
       dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       permitirHora: false,
     );
-    if (resultado == null || !mounted) return;
+    if (r == null || !mounted) return;
     setState(() {
-      _dataInicial = _isoDate(resultado.dataInicio);
-      _dataFinal = _isoDate(resultado.dataFim);
+      _dataInicial = _isoDate(r.dataInicio);
+      _dataFinal = _isoDate(r.dataFim);
     });
     _aplicarFiltro();
   }
 
-  void _aplicarFiltro() {
-    _bloc.add(RelatorioFaturamentoCarregar(
-        dataInicial: _dataInicial, dataFinal: _dataFinal));
-    _dispararComparativoSeElegivel();
+  Future<void> _exportar(RelatorioFaturamentoState state) async {
+    setState(() => _exportandoPdf = true);
+    await RelatorioPdfExporter.exportarFaturamento(
+      state.dados!,
+      state.dataInicial,
+      state.dataFinal,
+    );
+    if (mounted) setState(() => _exportandoPdf = false);
+  }
+
+  List<Widget> _kpis(RelatorioFaturamento d, RelatorioFaturamento? a) {
+    final pecas = _pecasPorVenda(d.quantidadeProdutosVendidos, d.quantidadeVendas);
+    return [
+      _Kpi(
+        rotulo: 'Faturamento',
+        valor: _fmtMoeda(d.total),
+        variacao: a == null ? null : _variacao(d.total, a.total),
+        destaque: true,
+      ),
+      _Kpi(
+        rotulo: 'Ticket médio',
+        valor: _fmtMoeda(d.ticketMedio),
+        variacao: a == null ? null : _variacao(d.ticketMedio, a.ticketMedio),
+      ),
+      _Kpi(
+        rotulo: 'Vendas',
+        valor: '${d.quantidadeVendas}',
+        variacao:
+            a == null ? null : _variacao(d.quantidadeVendas, a.quantidadeVendas),
+      ),
+      _Kpi(
+        rotulo: 'Peças por venda',
+        valor: pecas.toStringAsFixed(1).replaceAll('.', ','),
+        variacao: a == null
+            ? null
+            : _variacao(
+                pecas,
+                _pecasPorVenda(
+                    a.quantidadeProdutosVendidos, a.quantidadeVendas)),
+      ),
+    ];
   }
 
   @override
@@ -119,85 +167,76 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
       value: _bloc,
       child: BlocBuilder<RelatorioFaturamentoBloc, RelatorioFaturamentoState>(
         builder: (context, state) {
+          final d = state.dados;
+          final pronto = state.step == RelatorioFaturamentoStep.sucesso && d != null;
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Faturamento e Ticket Médio'),
-              actions: [
-                if (state.step == RelatorioFaturamentoStep.sucesso &&
-                    state.dados != null)
-                  _exportandoPdf
-                      ? const Padding(
-                          padding: EdgeInsets.all(14),
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.picture_as_pdf_outlined),
-                          tooltip: 'Exportar PDF',
-                          onPressed: () async {
-                            setState(() => _exportandoPdf = true);
-                            await RelatorioPdfExporter.exportarFaturamento(
-                              state.dados!,
-                              state.dataInicial,
-                              state.dataFinal,
-                            );
-                            if (mounted) setState(() => _exportandoPdf = false);
-                          },
-                        ),
-              ],
-            ),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                _FiltroCard(
-                  dataInicial: _dataInicial,
-                  dataFinal: _dataFinal,
-                  onSelecionarPeriodo: _abrirFiltroPeriodo,
-                  onAplicar: _aplicarFiltro,
-                ),
-                const SizedBox(height: 16),
-                if (state.step == RelatorioFaturamentoStep.carregando)
-                  const _EstadoCard(
-                    icon: Icons.hourglass_top,
-                    titulo: 'Carregando relatório',
-                    descricao: 'Consultando dados de faturamento...',
-                    loading: true,
-                  )
-                else if (state.step == RelatorioFaturamentoStep.falha)
-                  _EstadoCard(
-                    icon: Icons.error_outline,
-                    titulo: 'Falha ao carregar',
-                    descricao: state.erro ?? 'Erro desconhecido',
-                    onRetry: _aplicarFiltro,
-                  )
-                else if (state.step == RelatorioFaturamentoStep.inicial)
-                  const _EstadoCard(
-                    icon: Icons.bar_chart_outlined,
-                    titulo: 'Aplique o filtro',
-                    descricao: 'Selecione o período e toque em Consultar.',
-                  )
-                else if (state.dados != null) ...[
-                  _HeaderKpi(relatorio: state.dados!),
-                  const SizedBox(height: 16),
-                  if (_intervaloElegivelParaComparativo) ...[
-                    _ComparativoCard(
-                      step: state.comparativoStep,
-                      dados: state.comparativoDados,
-                      agruparPor: _agruparPor,
-                      onAgruparPorAlterado: _onAgruparPorAlterado,
+            body: SafeArea(
+              child: RelatorioScaffold(
+                titulo: 'Faturamento e Ticket',
+                carregando: !pronto &&
+                    state.step != RelatorioFaturamentoStep.falha,
+                erro: state.step == RelatorioFaturamentoStep.falha
+                    ? (state.erro ?? 'Falha ao carregar relatório de faturamento.')
+                    : null,
+                onTentarDeNovo: _aplicarFiltro,
+                vazio: pronto && d.quantidadeVendas == 0 && d.empresas.isEmpty,
+                filtros: [
+                  RelatorioFiltroChip(
+                    rotulo: 'Período',
+                    valor: '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                    onTap: _abrirFiltroPeriodo,
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Agrupar por',
+                    onSelected: _onAgruparPorAlterado,
+                    itemBuilder: (_) => [
+                      for (final e in _rotulosAgrupar.entries)
+                        PopupMenuItem(value: e.key, child: Text(e.value)),
+                    ],
+                    child: IgnorePointer(
+                      child: RelatorioFiltroChip(
+                        rotulo: 'Agrupar por',
+                        valor: _rotulosAgrupar[_agruparPor],
+                        onTap: () {},
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  ...state.dados!.empresas.map((emp) =>
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _EmpresaCard(empresa: emp),
-                      )),
+                  ),
                 ],
-              ],
+                acoes: [
+                  if (pronto)
+                    _exportandoPdf
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : OutlinedButton.icon(
+                            icon: const Icon(Icons.picture_as_pdf_outlined,
+                                size: 18),
+                            label: const Text('PDF'),
+                            onPressed: () => _exportar(state),
+                          ),
+                ],
+                kpis: pronto ? _kpis(d, state.anteriorDados) : const [],
+                corpo: pronto
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _GraficoCard(
+                            step: state.comparativoStep,
+                            atual: state.comparativoDados,
+                            anoAnterior: state.anoAnteriorDados,
+                            agruparPor: _agruparPor,
+                          ),
+                          const SizedBox(height: 16),
+                          _Quebra(empresas: d.empresas),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ),
           );
         },
@@ -206,349 +245,223 @@ class _RelatorioFaturamentoPageState extends State<RelatorioFaturamentoPage> {
   }
 }
 
-class _FiltroCard extends StatelessWidget {
-  final String dataInicial;
-  final String dataFinal;
-  final VoidCallback onSelecionarPeriodo;
-  final VoidCallback onAplicar;
+/// KPI; variação < 0,5% vira "estável" (sem seta).
+class _Kpi extends StatelessWidget {
+  final String rotulo;
+  final String valor;
+  final double? variacao;
+  final bool destaque;
 
-  const _FiltroCard({
-    required this.dataInicial,
-    required this.dataFinal,
-    required this.onSelecionarPeriodo,
-    required this.onAplicar,
+  const _Kpi({
+    required this.rotulo,
+    required this.valor,
+    required this.variacao,
+    this.destaque = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filtros',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+    final estavel = variacao != null && variacao!.abs() < 0.5;
+    final card = RelatorioKpiCard(
+      rotulo: rotulo,
+      valor: valor,
+      variacao: estavel ? null : variacao,
+      destaque: destaque,
+    );
+    if (!estavel) return card;
+    final mobile = relatorioMobile(context);
+    return Stack(
+      children: [
+        card,
+        Positioned(
+          left: mobile ? 14 : 18,
+          bottom: mobile ? 3 : 5,
+          child: Text(
+            'estável',
+            style: context.sivTextos.apoio.copyWith(
+              fontSize: mobile ? 11 : 12,
+              color: context.sivColors.textoApoio,
             ),
-            const SizedBox(height: 10),
-            _DateButton(
-              label: 'Período',
-              date: '${_fmtData(dataInicial)} - ${_fmtData(dataFinal)}',
-              onTap: onSelecionarPeriodo,
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onAplicar,
-                icon: const Icon(Icons.search),
-                label: const Text('Consultar'),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _DateButton extends StatelessWidget {
-  final String label;
-  final String date;
-  final VoidCallback onTap;
+class _GraficoCard extends StatelessWidget {
+  final RelatorioFaturamentoComparativoStep step;
+  final RelatorioFaturamentoComparativo? atual;
+  final RelatorioFaturamentoComparativo? anoAnterior;
+  final String agruparPor;
 
-  const _DateButton(
-      {required this.label, required this.date, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Text('$label: ',
-                style: const TextStyle(
-                    fontSize: 12, color: Colors.black54)),
-            Expanded(
-              child: Text(date,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
-            ),
-            const Icon(Icons.calendar_today_outlined, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderKpi extends StatelessWidget {
-  final dynamic relatorio;
-  const _HeaderKpi({required this.relatorio});
+  const _GraficoCard({
+    required this.step,
+    required this.atual,
+    required this.anoAnterior,
+    required this.agruparPor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final mobile = relatorioMobile(context);
+    final unidade = switch (agruparPor) {
+      'mes' => 'MÊS',
+      'semana' => 'SEMANA',
+      _ => 'DIA',
+    };
+    final pontos = atual?.pontos ?? const <RelatorioFaturamentoComparativoPonto>[];
+    final Widget conteudo;
+    if (step == RelatorioFaturamentoComparativoStep.carregando ||
+        step == RelatorioFaturamentoComparativoStep.ocioso) {
+      conteudo = const SizedBox(
+        height: 160,
+        child: Center(child: CircularProgressIndicator.adaptive()),
+      );
+    } else if (step == RelatorioFaturamentoComparativoStep.falha) {
+      conteudo = const SizedBox(
+        height: 80,
+        child: Center(child: Text('Falha ao carregar o gráfico.')),
+      );
+    } else if (pontos.isEmpty) {
+      conteudo = const SizedBox(
+        height: 80,
+        child: Center(child: Text('Sem dados para o período.')),
+      );
+    } else {
+      conteudo = _Linhas(
+        pontos: pontos.length > _maxPontosGrafico
+            ? pontos.sublist(pontos.length - _maxPontosGrafico)
+            : pontos,
+        anoAnterior: {
+          for (final p in anoAnterior?.pontos ?? const []) p.periodo: p.faturamento,
+        },
+        agruparPor: agruparPor,
+        mobile: mobile,
+      );
+    }
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(mobile ? 14 : 18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
-        ),
+        color: cores.superficie,
+        border: Border.all(color: cores.hairline),
+        borderRadius: BorderRadius.circular(SivDimensoes.raio),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Resumo do período',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold),
+          Text(
+            'FATURAMENTO POR $unidade',
+            style: textos.apoio.copyWith(
+              fontSize: 10.5,
+              letterSpacing: 1.47,
+              color: cores.acoAtivo,
+            ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _Kpi(
-                  label: 'Faturamento',
-                  valor: _fmtMoeda(relatorio.total as double)),
-              _Kpi(
-                  label: 'Ticket médio',
-                  valor: _fmtMoeda(relatorio.ticketMedio as double)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _Kpi(
-                  label: 'Valor bruto de vendas',
-                  valor: _fmtMoeda(relatorio.valorBrutoVendas as double)),
-              _Kpi(
-                  label: 'Valor das devoluções',
-                  valor: _fmtMoeda(relatorio.valorDevolucoes as double)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _Kpi(
-                  label: 'Vendas',
-                  valor: '${relatorio.quantidadeVendas}'),
-              _Kpi(
-                  label: 'Produtos vendidos',
-                  valor: '${relatorio.quantidadeProdutosVendidos}'),
-            ],
-          ),
+          conteudo,
         ],
       ),
     );
   }
 }
 
-class _Kpi extends StatelessWidget {
-  final String label;
-  final String valor;
-  const _Kpi({required this.label, required this.valor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white70)),
-          Text(valor,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-        ],
-      ),
-    );
-  }
-}
-
-String _fmtPeriodo(String periodo, String agruparPor) {
-  final p = periodo.split('-');
-  if (agruparPor == 'mes' && p.length == 2) {
-    const meses = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
-    ];
-    final mesIdx = int.tryParse(p[1]);
-    if (mesIdx == null || mesIdx < 1 || mesIdx > 12) return periodo;
-    final anoCurto = p[0].length == 4 ? p[0].substring(2) : p[0];
-    return '${meses[mesIdx - 1]}/$anoCurto';
-  }
-  if (agruparPor == 'dia' && p.length == 3) {
-    return '${p[2]}/${p[1]}';
-  }
-  return periodo;
-}
-
-class _ComparativoCard extends StatelessWidget {
-  final RelatorioFaturamentoComparativoStep step;
-  final RelatorioFaturamentoComparativo? dados;
+class _Linhas extends StatelessWidget {
+  final List<RelatorioFaturamentoComparativoPonto> pontos;
+  final Map<String, double> anoAnterior;
   final String agruparPor;
-  final void Function(String) onAgruparPorAlterado;
+  final bool mobile;
 
-  const _ComparativoCard({
-    required this.step,
-    required this.dados,
+  const _Linhas({
+    required this.pontos,
+    required this.anoAnterior,
     required this.agruparPor,
-    required this.onAgruparPorAlterado,
+    required this.mobile,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Comparativo',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'mes', label: Text('Mês')),
-                    ButtonSegment(value: 'dia', label: Text('Dia')),
-                  ],
-                  selected: {agruparPor},
-                  onSelectionChanged: (selecao) =>
-                      onAgruparPorAlterado(selecao.first),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            if (step == RelatorioFaturamentoComparativoStep.carregando)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator.adaptive()),
-              )
-            else if (step == RelatorioFaturamentoComparativoStep.falha)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                    child: Text('Falha ao carregar o comparativo.')),
-              )
-            else if (dados == null || dados!.pontos.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: Text('Sem dados para o período.')),
-              )
-            else
-              _ComparativoBarChart(pontos: dados!.pontos, agruparPor: agruparPor),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ComparativoBarChart extends StatelessWidget {
-  final List<RelatorioFaturamentoComparativoPonto> pontos;
-  final String agruparPor;
-
-  const _ComparativoBarChart(
-      {required this.pontos, required this.agruparPor});
-
-  @override
-  Widget build(BuildContext context) {
-    final maxY = pontos.fold<double>(
-        0, (acc, p) => p.faturamento > acc ? p.faturamento : acc);
+    final cores = context.sivColors;
+    final apoio = context.sivTextos.apoio;
+    final atualSpots = [
+      for (var i = 0; i < pontos.length; i++)
+        FlSpot(i.toDouble(), pontos[i].faturamento),
+    ];
+    final anteriorSpots = [
+      for (var i = 0; i < pontos.length; i++)
+        FlSpot(i.toDouble(), anoAnterior[pontos[i].periodo] ?? 0),
+    ];
+    final maxY = [...atualSpots, ...anteriorSpots]
+        .fold<double>(0, (a, s) => s.y > a ? s.y : a);
+    final passo = pontos.length > 6 ? 2 : 1;
     return SizedBox(
-      height: 220,
-      child: BarChart(
-        BarChartData(
+      height: mobile ? 160 : 240,
+      child: LineChart(
+        LineChartData(
+          minY: 0,
           maxY: maxY == 0 ? 1 : maxY * 1.15,
-          alignment: BarChartAlignment.spaceAround,
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barTouchData: BarTouchData(
-            touchTooltipData: BarTouchTooltipData(
-              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                final ponto = pontos[group.x.toInt()];
-                return BarTooltipItem(
-                  '${_fmtPeriodo(ponto.periodo, agruparPor)}\n${_fmtMoeda(ponto.faturamento)}',
-                  const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12),
-                );
-              },
-            ),
+          gridData: FlGridData(
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (_) =>
+                FlLine(color: cores.hairline, strokeWidth: 1),
           ),
+          borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
+            leftTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 28,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx < 0 || idx >= pontos.length) {
+                reservedSize: 26,
+                interval: 1,
+                getTitlesWidget: (v, meta) {
+                  final i = v.toInt();
+                  if (i < 0 || i >= pontos.length || i % passo != 0) {
                     return const SizedBox.shrink();
                   }
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
-                      _fmtPeriodo(pontos[idx].periodo, agruparPor),
-                      style: const TextStyle(fontSize: 10),
+                      _fmtPeriodo(pontos[i].periodo, agruparPor),
+                      style: apoio.copyWith(
+                          fontSize: 10, color: cores.textoApoio),
                     ),
                   );
                 },
               ),
             ),
           ),
-          barGroups: [
-            for (var i = 0; i < pontos.length; i++)
-              BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    toY: pontos[i].faturamento,
-                    color: const Color(0xFF2E7D32),
-                    width: 16,
-                    borderRadius: BorderRadius.circular(4),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => cores.superficie,
+              getTooltipItems: (spots) => [
+                for (final s in spots)
+                  LineTooltipItem(
+                    '${s.barIndex == 0 ? '' : 'Ano ant.: '}'
+                    '${_fmtMoeda(s.y)}',
+                    apoio.copyWith(color: cores.tinta),
                   ),
-                ],
-              ),
+              ],
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: atualSpots,
+              color: cores.aco,
+              barWidth: 2.5,
+              isCurved: false,
+              dotData: FlDotData(show: !mobile),
+            ),
+            LineChartBarData(
+              spots: anteriorSpots,
+              color: cores.aco.withValues(alpha: 0.45),
+              barWidth: 2,
+              dashArray: [5, 4],
+              dotData: const FlDotData(show: false),
+            ),
           ],
         ),
       ),
@@ -556,187 +469,61 @@ class _ComparativoBarChart extends StatelessWidget {
   }
 }
 
-class _EmpresaCard extends StatelessWidget {
-  final dynamic empresa;
-  const _EmpresaCard({required this.empresa});
+class _Quebra extends StatelessWidget {
+  final List<RelatorioFaturamentoEmpresa> empresas;
+  const _Quebra({required this.empresas});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: const BoxDecoration(
-                color: Color(0xFF2E7D32),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 4),
-                title: Text(
-                  empresa.empresaNome as String,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 14),
-                ),
-                subtitle: Text(
-                  '${_fmtMoeda(empresa.total as double)} · Ticket: ${_fmtMoeda(empresa.ticketMedio as double)}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if ((empresa.vendedores as List).isNotEmpty) ...[
-                          const _SectionLabel('Vendedores'),
-                          for (final v in empresa.vendedores as List)
-                            _VendedorRow(v: v),
-                        ],
-                        if ((empresa.produtos as List).isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          const _SectionLabel('Top produtos'),
-                          for (final p
-                              in (empresa.produtos as List).take(5))
-                            _ProdutoRow(p: p),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    final linhas = <_Linha>[
+      for (final e in empresas) ...[
+        _Linha(e.empresaNome, e.total, e.quantidadeVendas, e.ticketMedio,
+            empresa: true),
+        for (final v in e.vendedores)
+          _Linha(v.funcionarioNome.toUpperCase(), v.total, v.quantidadeVendas,
+              v.ticketMedio),
+      ],
+    ];
+    if (linhas.isEmpty) return const SizedBox.shrink();
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    Widget txt(String s, {bool forte = false}) => Text(
+          s,
+          style: forte
+              ? textos.corpo.copyWith(fontWeight: FontWeight.w600)
+              : textos.corpo.copyWith(color: cores.tinta),
+        );
+    return RelatorioTabela<_Linha>(
+      colunas: const [
+        RelatorioColuna(id: 'nome', titulo: 'Loja / Vendedor', ordenavel: false, flex: 3),
+        RelatorioColuna(id: 'total', titulo: 'Faturamento', numerica: true, ordenavel: false),
+        RelatorioColuna(id: 'vendas', titulo: 'Vendas', numerica: true, ordenavel: false),
+        RelatorioColuna(id: 'ticket', titulo: 'Ticket médio', numerica: true, ordenavel: false),
+      ],
+      itens: linhas,
+      celulas: (_, l) => [
+        Padding(
+          padding: EdgeInsets.only(left: l.empresa ? 0 : 16),
+          child: txt(l.nome, forte: l.empresa),
         ),
+        txt(_fmtMoeda(l.total), forte: l.empresa),
+        txt('${l.vendas}', forte: l.empresa),
+        txt(_fmtMoeda(l.ticket), forte: l.empresa),
+      ],
+      itemMobile: (_, l) => RelatorioItemMobile(
+        titulo: l.nome,
+        apoio: ['${l.vendas} vendas', 'ticket ${_fmtMoeda(l.ticket)}'],
+        valor: _fmtMoeda(l.total),
       ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  final String label;
-  const _SectionLabel(this.label);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.black54)),
-      );
-}
-
-class _VendedorRow extends StatelessWidget {
-  final dynamic v;
-  const _VendedorRow({required this.v});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          children: [
-            Expanded(
-                child: Text((v.funcionarioNome as String).toUpperCase(),
-                    style: const TextStyle(fontSize: 12))),
-            Text(_fmtMoeda(v.total as double),
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 8),
-            Text('${v.quantidadeVendas} vnd.',
-                style: const TextStyle(fontSize: 11, color: Colors.black54)),
-          ],
-        ),
-      );
-}
-
-class _ProdutoRow extends StatelessWidget {
-  final dynamic p;
-  const _ProdutoRow({required this.p});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${p.referenciaNome} ${p.corNome} ${p.tamanhoNome}',
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-            Text(_fmtMoeda(p.total as double),
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 8),
-            Text('${p.quantidadeProdutosVendidos} un.',
-                style: const TextStyle(fontSize: 11, color: Colors.black54)),
-          ],
-        ),
-      );
-}
-
-class _EstadoCard extends StatelessWidget {
-  final IconData icon;
-  final String titulo;
-  final String descricao;
-  final bool loading;
-  final VoidCallback? onRetry;
-
-  const _EstadoCard({
-    required this.icon,
-    required this.titulo,
-    required this.descricao,
-    this.loading = false,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            if (loading)
-              const CircularProgressIndicator.adaptive()
-            else
-              Icon(icon, size: 40),
-            const SizedBox(height: 12),
-            Text(titulo,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text(descricao,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium),
-            if (onRetry != null) ...[
-              const SizedBox(height: 12),
-              TextButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Tentar novamente'),
-                onPressed: onRetry,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+class _Linha {
+  final String nome;
+  final double total;
+  final int vendas;
+  final double ticket;
+  final bool empresa;
+  _Linha(this.nome, this.total, this.vendas, this.ticket, {this.empresa = false});
 }

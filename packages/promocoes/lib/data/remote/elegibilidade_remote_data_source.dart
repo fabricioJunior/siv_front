@@ -13,14 +13,13 @@ class ElegibilidadeRemoteDataSource extends RemoteDataSourceBase
   Future<ResultadoElegibilidade> apurar({
     int? clienteId,
     required List<ItemApuracaoElegibilidade> itens,
-    String? codigoCupom,
+    List<String> codigosCupom = const [],
   }) async {
     final response = await post(
       body: {
         if (clienteId != null) 'clienteId': clienteId,
         'itens': itens.map((item) => item.toJson()).toList(),
-        if (codigoCupom != null && codigoCupom.trim().isNotEmpty)
-          'codigoCupom': codigoCupom,
+        if (codigosCupom.isNotEmpty) 'codigosCupom': codigosCupom,
       },
     );
 

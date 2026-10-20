@@ -1,8 +1,10 @@
+import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_vendas_por_funcionario_bloc/relatorio_vendas_por_funcionario_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
+import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
 String _fmtMoeda(double v) {
@@ -72,8 +74,7 @@ class _RelatorioVendasPorFuncionarioPageState
   Future<void> _abrirFiltroPeriodo() async {
     final resultado = await abrirFiltroPeriodoSheet(
       context: context,
-      dataInicioAtual:
-          DateTime.tryParse(_dataInicial) ?? DateTime.now(),
+      dataInicioAtual: DateTime.tryParse(_dataInicial) ?? DateTime.now(),
       dataFimAtual: DateTime.tryParse(_dataFinal) ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
@@ -94,106 +95,138 @@ class _RelatorioVendasPorFuncionarioPageState
     ));
   }
 
+  Future<void> _abrirFuncionarios() async {
+    await SivModal.mostrar<void>(
+      context,
+      titulo: 'Funcionário',
+      larguraMaxima: 480,
+      corpo: Padding(
+        padding: const EdgeInsets.all(SivDimensoes.paddingCard),
+        child: widget.funcionariosSeletor.call(
+          SeletorData(
+            itemsSelecionadosInicial: _funcionariosSelecionados,
+            onChanged: (selecionados) =>
+                setState(() => _funcionariosSelecionados = selecionados),
+          ),
+        ),
+      ),
+      acoes: [
+        Builder(
+          builder: (ctx) => FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Consultar'),
+          ),
+        ),
+      ],
+    );
+    if (mounted && _funcionariosSelecionados.isNotEmpty) _aplicarFiltro();
+  }
+
+  String get _rotuloFuncionarios {
+    final n = _funcionariosSelecionados.length;
+    if (n == 0) return 'Selecione';
+    if (n == 1) return _funcionariosSelecionados.first.nome;
+    return '$n selecionados';
+  }
+
+  void _detalhe(RelatorioVendasPorFuncionarioItem item) {
+    final corpo = _Detalhe(item: item);
+    if (relatorioMobile(context)) {
+      showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        builder: (_) => SafeArea(child: corpo),
+      );
+    } else {
+      SivModal.mostrar<void>(
+        context,
+        titulo: item.funcionarioNome,
+        larguraMaxima: 420,
+        corpo: corpo,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
     return BlocProvider<RelatorioVendasPorFuncionarioBloc>.value(
       value: _bloc,
       child: BlocBuilder<RelatorioVendasPorFuncionarioBloc,
           RelatorioVendasPorFuncionarioState>(
         builder: (context, state) {
+          final dados = [...state.dados]
+            ..sort((a, b) => b.total.compareTo(a.total));
+          final maior = dados.isEmpty ? 0.0 : dados.first.total;
+          final soma = dados.fold<double>(0, (s, i) => s + i.total);
+          final inicial =
+              state.step == RelatorioVendasPorFuncionarioStep.inicial;
           return Scaffold(
-            appBar: AppBar(title: const Text('Vendas por Funcionário')),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Filtros',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        widget.funcionariosSeletor.call(
-                          SeletorData(
-                            itemsSelecionadosInicial:
-                                _funcionariosSelecionados,
-                            onChanged: (selecionados) {
-                              setState(() {
-                                _funcionariosSelecionados = selecionados;
-                              });
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _DateButton(
-                          label: 'Período',
-                          date:
-                              '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
-                          onTap: _abrirFiltroPeriodo,
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _funcionariosSelecionados.isEmpty
-                                ? null
-                                : _aplicarFiltro,
-                            icon: const Icon(Icons.search),
-                            label: const Text('Consultar'),
-                          ),
-                        ),
-                      ],
-                    ),
+            body: SafeArea(
+              child: RelatorioScaffold(
+                titulo: 'Vendas por Funcionário',
+                filtros: [
+                  RelatorioFiltroChip(
+                    rotulo: 'Período',
+                    valor:
+                        '${_fmtData(_dataInicial)} - ${_fmtData(_dataFinal)}',
+                    onTap: _abrirFiltroPeriodo,
                   ),
-                ),
-                const SizedBox(height: 16),
-                if (state.step == RelatorioVendasPorFuncionarioStep.carregando)
-                  const _EstadoCard(
-                    icon: Icons.hourglass_top,
-                    titulo: 'Carregando relatório',
-                    descricao: 'Consultando vendas dos funcionários...',
-                    loading: true,
-                  )
-                else if (state.step == RelatorioVendasPorFuncionarioStep.falha)
-                  _EstadoCard(
-                    icon: Icons.error_outline,
-                    titulo: 'Falha ao carregar',
-                    descricao: state.erro ?? 'Erro desconhecido',
-                    onRetry: _aplicarFiltro,
-                  )
-                else if (state.step ==
-                    RelatorioVendasPorFuncionarioStep.inicial)
-                  const _EstadoCard(
-                    icon: Icons.groups_outlined,
-                    titulo: 'Selecione os funcionários',
-                    descricao:
-                        'Escolha um ou mais funcionários e o período, depois toque em Consultar.',
-                  )
-                else if (state.dados.isEmpty)
-                  const _EstadoCard(
-                    icon: Icons.search_off,
-                    titulo: 'Nenhuma venda encontrada',
-                    descricao:
-                        'Não há romaneios de venda encerrados para os funcionários e período selecionados.',
-                  )
-                else
-                  ...state.dados.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _FuncionarioCard(item: item),
-                    ),
+                  RelatorioFiltroChip(
+                    rotulo: 'Funcionário',
+                    valor: _rotuloFuncionarios,
+                    onTap: _abrirFuncionarios,
                   ),
-              ],
+                ],
+                carregando:
+                    state.step == RelatorioVendasPorFuncionarioStep.carregando,
+                erro: state.step == RelatorioVendasPorFuncionarioStep.falha
+                    ? (state.erro ?? 'Erro desconhecido')
+                    : null,
+                onTentarDeNovo: _aplicarFiltro,
+                vazio: !inicial &&
+                    state.step == RelatorioVendasPorFuncionarioStep.sucesso &&
+                    dados.isEmpty,
+                corpo: inicial
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48),
+                        child: Text(
+                          'Selecione o funcionário para consultar.',
+                          textAlign: TextAlign.center,
+                          style: textos.corpo.copyWith(color: cores.textoApoio),
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final i in dados)
+                            _BarraFuncionario(
+                              item: i,
+                              maior: maior,
+                              onTap: () => _detalhe(i),
+                            ),
+                          const SizedBox(height: 8),
+                          Divider(color: cores.hairline),
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            spacing: 16,
+                            children: [
+                              Text(
+                                '${dados.length} funcionários com venda no período',
+                                style: textos.apoio
+                                    .copyWith(color: cores.textoApoio),
+                              ),
+                              Text(
+                                'Total: ${_fmtMoeda(soma)}',
+                                style: textos.corpo
+                                    .copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+              ),
             ),
           );
         },
@@ -202,171 +235,118 @@ class _RelatorioVendasPorFuncionarioPageState
   }
 }
 
-class _DateButton extends StatelessWidget {
-  final String label;
-  final String date;
+class _BarraFuncionario extends StatelessWidget {
+  final RelatorioVendasPorFuncionarioItem item;
+  final double maior;
   final VoidCallback onTap;
-
-  const _DateButton(
-      {required this.label, required this.date, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Text('$label: ',
-                style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            Expanded(
-              child: Text(date,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
-            ),
-            const Icon(Icons.calendar_today_outlined, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FuncionarioCard extends StatelessWidget {
-  final dynamic item;
-  const _FuncionarioCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              (item.funcionarioNome as String).toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: [
-                _Metrica(
-                  label: 'Valor bruto de vendas',
-                  valor: _fmtMoeda(item.valorBrutoVendas as double),
-                ),
-                _Metrica(
-                  label: 'Valor das devoluções',
-                  valor: _fmtMoeda(item.valorDevolucoes as double),
-                ),
-                _Metrica(
-                  label: 'Faturamento',
-                  valor: _fmtMoeda(item.total as double),
-                ),
-                _Metrica(
-                  label: 'Ticket médio',
-                  valor: _fmtMoeda(item.ticketMedio as double),
-                ),
-                _Metrica(
-                  label: 'Quantidade de vendas',
-                  valor: '${item.quantidadeVendas}',
-                ),
-                _Metrica(
-                  label: 'Produtos vendidos',
-                  valor: '${item.quantidadeProdutosVendidos}',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Metrica extends StatelessWidget {
-  final String label;
-  final String valor;
-  const _Metrica({required this.label, required this.valor});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 160,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(fontSize: 11, color: Colors.black54)),
-          const SizedBox(height: 2),
-          Text(valor,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EstadoCard extends StatelessWidget {
-  final IconData icon;
-  final String titulo;
-  final String descricao;
-  final bool loading;
-  final VoidCallback? onRetry;
-
-  const _EstadoCard({
-    required this.icon,
-    required this.titulo,
-    required this.descricao,
-    this.loading = false,
-    this.onRetry,
+  const _BarraFuncionario({
+    required this.item,
+    required this.maior,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            if (loading)
-              const CircularProgressIndicator.adaptive()
-            else
-              Icon(icon, size: 40),
-            const SizedBox(height: 12),
-            Text(titulo,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text(descricao,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium),
-            if (onRetry != null) ...[
-              const SizedBox(height: 12),
-              TextButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Tentar novamente'),
-                onPressed: onRetry,
-              ),
-            ],
-          ],
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final frac = maior > 0 ? (item.total / maior).clamp(0.0, 1.0) : 0.0;
+    final nome = Text(
+      item.funcionarioNome,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: textos.corpo,
+    );
+    final valor = Text(
+      _fmtMoeda(item.total),
+      style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
+    );
+    final barra = ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        height: 14,
+        color: cores.selecaoFundo,
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: frac,
+          child: Container(color: cores.aco),
         ),
+      ),
+    );
+    final mobile = relatorioMobile(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: mobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: nome),
+                      const SizedBox(width: 8),
+                      valor,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  barra,
+                ],
+              )
+            : Row(
+                children: [
+                  SizedBox(width: 170, child: nome),
+                  const SizedBox(width: 12),
+                  Expanded(child: barra),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 120,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: valor,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _Detalhe extends StatelessWidget {
+  final RelatorioVendasPorFuncionarioItem item;
+  const _Detalhe({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    Widget linha(String r, String v) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(r, style: textos.corpo.copyWith(color: cores.textoApoio)),
+              Text(v,
+                  style: textos.corpo.copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.all(SivDimensoes.paddingCard),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (relatorioMobile(context))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(item.funcionarioNome, style: textos.secao),
+            ),
+          linha('Ticket médio', _fmtMoeda(item.ticketMedio)),
+          linha('Vendas', '${item.quantidadeVendas}'),
+          linha('Peças', '${item.quantidadeProdutosVendidos}'),
+          linha('Devoluções', _fmtMoeda(item.valorDevolucoes)),
+        ],
       ),
     );
   }

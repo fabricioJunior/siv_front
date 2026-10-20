@@ -18,8 +18,7 @@ class _StubCarregarResumo implements CarregarResumoPagamentosRealizados {
       throw UnimplementedError();
 }
 
-class _StubBuscarSaldoCreditoDevolucao
-    implements BuscarSaldoCreditoDevolucao {
+class _StubBuscarSaldoCreditoDevolucao implements BuscarSaldoCreditoDevolucao {
   @override
   Future<double> call({
     required int pessoaId,
@@ -90,6 +89,7 @@ class _FakeAcessoGlobalSessao implements IAcessoGlobalSessao {
 
 class _FakeApurarElegibilidade implements ApurarElegibilidade {
   final ResultadoElegibilidade resultado;
+  final chamadas = <List<String>>[];
 
   _FakeApurarElegibilidade(this.resultado);
 
@@ -97,9 +97,11 @@ class _FakeApurarElegibilidade implements ApurarElegibilidade {
   Future<ResultadoElegibilidade> call({
     int? clienteId,
     required List<ItemApuracaoElegibilidade> itens,
-    String? codigoCupom,
-  }) async =>
-      resultado;
+    List<String> codigosCupom = const [],
+  }) async {
+    chamadas.add(codigosCupom);
+    return resultado;
+  }
 }
 
 class _FakeLeitorData with LeitorData {
@@ -235,18 +237,17 @@ void main() {
         valorTotalProdutos: 199,
       ),
     ),
-    act: (bloc) =>
-        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    act: (bloc) => bloc
+        .add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
       expect(bloc.state.cupomErro, isNull);
-      expect(bloc.state.cupomCodigoAplicado, 'PRICILLA200');
-      expect(bloc.state.promocaoEscolhidaPorItem[9]?.ehCupom, isTrue);
+      expect(bloc.state.cuponsAplicados, ['PRICILLA200']);
+      expect(bloc.state.cuponsEscolhidosPorItem[9]?.single.ehCupom, isTrue);
       expect(bloc.state.valorDescontoPromocaoTotal, 199);
       expect(bloc.state.valorTotalComDesconto, 0);
     },
   );
-
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
     'cupom: resposta REAL da apuracao em producao (JSON) zera produto de 199',
@@ -274,16 +275,15 @@ void main() {
         valorTotalProdutos: 199,
       ),
     ),
-    act: (bloc) =>
-        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    act: (bloc) => bloc
+        .add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
       expect(bloc.state.cupomErro, isNull);
-      expect(bloc.state.promocaoEscolhidaPorItem[9]?.ehCupom, isTrue);
+      expect(bloc.state.cuponsEscolhidosPorItem[9]?.single.ehCupom, isTrue);
       expect(bloc.state.valorTotalComDesconto, 0);
     },
   );
-
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
     'cupom valido mas sem nenhum item elegivel: nao mostra "aplicado" e explica o motivo',
@@ -295,7 +295,9 @@ void main() {
       _FakeAcessoGlobalSessao(),
       _FakeApurarElegibilidade(
         ResultadoElegibilidade(
-          itens: [ItemElegibilidade(referenciaId: 900, opcoesElegiveis: const [])],
+          itens: [
+            ItemElegibilidade(referenciaId: 900, opcoesElegiveis: const [])
+          ],
         ),
       ),
       _FakeLeitorDataDatasource({9: 900}),
@@ -308,13 +310,13 @@ void main() {
         valorTotalProdutos: 199,
       ),
     ),
-    act: (bloc) =>
-        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    act: (bloc) => bloc
+        .add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
-      expect(bloc.state.cupomCodigoAplicado, isNull);
       expect(bloc.state.possuiCupomAplicado, isFalse);
-      expect(bloc.state.cupomErro, contains('nenhum item do carrinho é elegível'));
+      expect(
+          bloc.state.cupomErro, contains('nenhum item do carrinho é elegível'));
       expect(bloc.state.valorTotalComDesconto, 199);
     },
   );
@@ -356,8 +358,8 @@ void main() {
         valorTotalProdutos: 199,
       ),
     ),
-    act: (bloc) =>
-        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
+    act: (bloc) => bloc
+        .add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
       expect(bloc.state.possuiCupomAplicado, isFalse);
@@ -365,8 +367,302 @@ void main() {
     },
   );
 
+  OpcaoElegivel cupomOpcao(int id, String codigo, double desconto) =>
+      OpcaoElegivel(
+        tipo: 'cupom',
+        id: id,
+        nome: 'Cupom $codigo',
+        codigo: codigo,
+        valorDesconto: desconto,
+        valorFinalUnitario: 199 - desconto,
+      );
 
-  PagamentosRealizadosState estadoVendaDe199({required bool comCupom, String valorTexto = ''}) =>
+  const estadoCarrinho199 = PagamentosRealizadosState(
+    resumo: PagamentosRealizadosResumo(
+      listaCompartilhada: null,
+      produtosCompartilhados: [_produto199],
+      quantidadeTotalProdutos: 1,
+      valorTotalProdutos: 199,
+    ),
+  );
+
+  PagamentosRealizadosBloc blocComApuracao(_FakeApurarElegibilidade fake) =>
+      PagamentosRealizadosBloc(
+        _StubCarregarResumo(),
+        _StubBuscarSaldoCreditoDevolucao(),
+        _StubVerificarElegibilidadeFidelidade(),
+        _StubVerificarPermiteNotaFiscalEmail(),
+        _FakeAcessoGlobalSessao(),
+        fake,
+        _FakeLeitorDataDatasource({9: 900}),
+      );
+
+  ResultadoElegibilidade apuracaoCom(List<OpcaoElegivel> opcoes,
+          {String? invalido, Map<String, String> recusados = const {}}) =>
+      ResultadoElegibilidade(
+        itens: [ItemElegibilidade(referenciaId: 900, opcoesElegiveis: opcoes)],
+        cupomInvalido: invalido ?? recusados.values.firstOrNull,
+        cuponsRecusados: recusados,
+      );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    '2 cupons: soma os descontos, envia ambos na apuracao e agrupa payload por codigo',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom([cupomOpcao(1, 'CUP5', 5), cupomOpcao(2, 'CUP8', 8)]),
+    )),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['CUP5'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'CUP5', 5)],
+      },
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'cup8')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, ['CUP5', 'CUP8']);
+      expect(bloc.state.cuponsEscolhidosPorItem[9], hasLength(2));
+      expect(bloc.state.valorDescontoPromocaoTotal, 13);
+      expect(bloc.state.valorTotalComDesconto, 186);
+      expect(bloc.state.cuponsParaPayload, [
+        {
+          'codigo': 'CUP5',
+          'produtoIds': [9]
+        },
+        {
+          'codigo': 'CUP8',
+          'produtoIds': [9]
+        },
+      ]);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'soma de cupons tem teto no preco unitario',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom([cupomOpcao(1, 'A', 150), cupomOpcao(2, 'B', 150)]),
+    )),
+    seed: () => estadoCarrinho199,
+    act: (bloc) async {
+      bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'A'));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'B'));
+    },
+    wait: const Duration(milliseconds: 80),
+    verify: (bloc) {
+      expect(bloc.state.valorDescontoPromocaoTotal, 199);
+      expect(bloc.state.valorTotalComDesconto, 0);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom recusado nao derruba os ja aplicados e diz qual cupom e por que',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom(
+        [cupomOpcao(1, 'CUP5', 5)],
+        recusados: {
+          'X': 'não é cumulativo e não pode ser usado junto com outros cupons',
+        },
+      ),
+    )),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['CUP5'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'CUP5', 5)],
+      },
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'X')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, ['CUP5']);
+      expect(bloc.state.cuponsEscolhidosPorItem[9], hasLength(1));
+      expect(
+        bloc.state.cupomErro,
+        'Cupom X: não é cumulativo e não pode ser usado junto com outros cupons.',
+      );
+      expect(bloc.state.valorDescontoPromocaoTotal, 5);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'novo cupom barrado por um ja aplicado que nao e cumulativo: nomeia o antigo',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom(
+        [cupomOpcao(2, 'CUP8', 8)],
+        recusados: {
+          'EXCL':
+              'não é cumulativo e não pode ser usado junto com outros cupons',
+        },
+      ),
+    )),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['EXCL'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'EXCL', 5)],
+      },
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'CUP8')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, ['EXCL']);
+      expect(
+        bloc.state.cupomErro,
+        'Cupom CUP8 não pôde ser somado: o cupom EXCL não é cumulativo e não pode ser usado junto com outros cupons.',
+      );
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'remover um de 2 cupons reapura so com o restante',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom([cupomOpcao(1, 'CUP5', 5)]),
+    )),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['CUP5', 'CUP8'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'CUP5', 5), cupomOpcao(2, 'CUP8', 8)],
+      },
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomRemovido(codigo: 'CUP8')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, ['CUP5']);
+      expect(bloc.state.cuponsEscolhidosPorItem[9]?.map((o) => o.codigo),
+          ['CUP5']);
+      expect(bloc.state.valorDescontoPromocaoTotal, 5);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'remover o unico cupom limpa tudo (comportamento antigo)',
+    build: () => blocComApuracao(
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: []))),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['CUP5'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'CUP5', 5)],
+      },
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomRemovido(codigo: 'CUP5')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.possuiCupomAplicado, isFalse);
+      expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
+      expect(bloc.state.valorTotalComDesconto, 199);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupom ja aplicado ou alem de 5 e barrado sem chamar a apuracao',
+    build: () => blocComApuracao(
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: []))),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['A', 'B', 'C', 'D', 'E'],
+    ),
+    act: (bloc) async {
+      bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'e'));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'F'));
+    },
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, hasLength(5));
+      expect(bloc.state.cupomErro, contains('Máximo de 5'));
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'cupons nao entram em produto com promocao: exclusividade',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom(
+          [_opcao(77), cupomOpcao(1, 'CUP5', 5), cupomOpcao(2, 'CUP8', 8)]),
+    )),
+    seed: () => estadoCarrinho199,
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'CUP5')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, isEmpty);
+      expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
+      expect(bloc.state.cupomErro, contains('não é acumulável'));
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'escolher promocao no item tira os cupons dele',
+    build: () => blocComApuracao(
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: []))),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['CUP5'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'CUP5', 5)],
+      },
+    ),
+    act: (bloc) => bloc.add(
+      PagamentosRealizadosPromocaoEscolhida(produtoId: 9, opcao: _opcao(77)),
+    ),
+    verify: (bloc) {
+      expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
+      expect(bloc.state.promocaoEscolhidaPorItem[9]?.id, 77);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'venda zerada por 2 cupons fecha com pagamento de valor 0',
+    build: () => blocComApuracao(
+        _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: []))),
+    seed: () => estadoCarrinho199.copyWith(
+      cuponsAplicados: ['A', 'B'],
+      cuponsEscolhidosPorItem: {
+        9: [cupomOpcao(1, 'A', 100), cupomOpcao(2, 'B', 99)],
+      },
+      linhas: [
+        PagamentoRealizadoLinha(
+          id: 'l1',
+          formaDePagamento: SelectData(
+            id: 1,
+            nome: 'Dinheiro',
+            data: const {'tipo': 'dinheiro'},
+          ),
+          valorTexto: '',
+          parcelasTexto: '1',
+        ),
+      ],
+    ),
+    act: (bloc) => bloc.add(const PagamentosRealizadosFinalizacaoSolicitada()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.erro, isNull);
+      expect(bloc.state.step, PagamentosRealizadosStep.concluido);
+      expect(bloc.state.resultado.single['valor'], 0);
+    },
+  );
+
+  test('payload agrupa produtoIds por codigo em varios produtos', () {
+    final estado = estadoCarrinho199.copyWith(
+      cuponsEscolhidosPorItem: {
+        1: [cupomOpcao(1, 'A', 5)],
+        2: [cupomOpcao(1, 'A', 5), cupomOpcao(2, 'B', 8)],
+      },
+    );
+    expect(estado.cuponsParaPayload, [
+      {
+        'codigo': 'A',
+        'produtoIds': [1, 2]
+      },
+      {
+        'codigo': 'B',
+        'produtoIds': [2]
+      },
+    ]);
+  });
+
+  PagamentosRealizadosState estadoVendaDe199(
+          {required bool comCupom, String valorTexto = ''}) =>
       PagamentosRealizadosState(
         resumo: const PagamentosRealizadosResumo(
           listaCompartilhada: null,
@@ -374,18 +670,21 @@ void main() {
           quantidadeTotalProdutos: 1,
           valorTotalProdutos: 199,
         ),
-        promocaoEscolhidaPorItem: comCupom
+        cuponsEscolhidosPorItem: comCupom
             ? {
-                9: const OpcaoElegivel(
-                  tipo: 'cupom',
-                  id: 3,
-                  nome: 'Cupom PRICILLA200',
-                  valorDesconto: 199,
-                  valorFinalUnitario: 0,
-                ),
+                9: [
+                  const OpcaoElegivel(
+                    tipo: 'cupom',
+                    id: 3,
+                    nome: 'Cupom PRICILLA200',
+                    codigo: 'PRICILLA200',
+                    valorDesconto: 199,
+                    valorFinalUnitario: 0,
+                  ),
+                ],
               }
             : const {},
-        cupomCodigoAplicado: comCupom ? 'PRICILLA200' : null,
+        cuponsAplicados: comCupom ? ['PRICILLA200'] : const [],
         linhas: [
           PagamentoRealizadoLinha(
             id: 'l1',
@@ -437,7 +736,8 @@ void main() {
   );
 
   group('crédito de devolução na tela de pagamento', () {
-    PagamentosRealizadosBloc blocCom(_SaldoCreditoFake saldo) => PagamentosRealizadosBloc(
+    PagamentosRealizadosBloc blocCom(_SaldoCreditoFake saldo) =>
+        PagamentosRealizadosBloc(
           _StubCarregarResumo(),
           saldo,
           _StubVerificarElegibilidadeFidelidade(),
@@ -447,7 +747,8 @@ void main() {
           _FakeLeitorDataDatasource(const {}),
         );
 
-    PagamentosRealizadosIniciado iniciadoCom({required bool generico}) => PagamentosRealizadosIniciado(
+    PagamentosRealizadosIniciado iniciadoCom({required bool generico}) =>
+        PagamentosRealizadosIniciado(
           hashLista: 'hash',
           pessoaId: 2208,
           clienteGenerico: generico,
@@ -459,7 +760,9 @@ void main() {
           ),
         );
 
-    test('cliente genérico ("Cliente não cadastrado") não consulta nem mostra o saldo da pessoa compartilhada', () async {
+    test(
+        'cliente genérico ("Cliente não cadastrado") não consulta nem mostra o saldo da pessoa compartilhada',
+        () async {
       final saldo = _SaldoCreditoFake();
       final bloc = blocCom(saldo)..add(iniciadoCom(generico: true));
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -493,8 +796,10 @@ void main() {
       _FakeApurarElegibilidade(
         ResultadoElegibilidade(
           itens: [
-            ItemElegibilidade(referenciaId: 100, opcoesElegiveis: [_opcao(501)]),
-            ItemElegibilidade(referenciaId: 200, opcoesElegiveis: [_opcao(502)]),
+            ItemElegibilidade(
+                referenciaId: 100, opcoesElegiveis: [_opcao(501)]),
+            ItemElegibilidade(
+                referenciaId: 200, opcoesElegiveis: [_opcao(502)]),
             ItemElegibilidade(
               referenciaId: 300,
               opcoesElegiveis: [_opcao(601), _opcao(602)],

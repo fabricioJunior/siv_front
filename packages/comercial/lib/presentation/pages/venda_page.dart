@@ -96,7 +96,7 @@ class _VendaPageState extends State<VendaPage> {
                 'desconto': state.valorDesconto,
                 'descontosItens': state.descontosItens,
                 'descontosPromocao': state.descontosPromocao,
-                'cupom': state.cupom,
+                'cupons': state.cupons,
                 'valorTaxaEntrega': state.valorTaxaEntrega,
                 'incluirCpfNaNota': state.incluirCpfNaNota,
                 'cpfNaNota': state.cpfNaNota,
@@ -886,7 +886,7 @@ class _VendaPageState extends State<VendaPage> {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
-    final cupom = pagamentoResultado['cupom'] as Map<String, dynamic>?;
+    final cupons = pagamentoResultado['cupons'] as List<Map<String, dynamic>>?;
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
@@ -917,7 +917,7 @@ class _VendaPageState extends State<VendaPage> {
         valorTaxaEntrega: valorTaxaEntrega,
         descontosItens: descontosItens,
         descontosPromocao: descontosPromocao,
-        cupom: cupom,
+        cupons: cupons,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,

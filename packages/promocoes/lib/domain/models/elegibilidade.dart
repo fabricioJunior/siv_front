@@ -73,6 +73,8 @@ class OpcaoElegivel extends Equatable {
   final String tipo; // 'promocao' | 'cupom'
   final int id;
   final String nome;
+  // Codigo digitado do cupom (so tipo 'cupom'; null em backend antigo).
+  final String? codigo;
   final double valorDesconto;
   final double valorFinalUnitario;
   // Presente e preenchido só quando a promoção restringe forma de
@@ -86,6 +88,7 @@ class OpcaoElegivel extends Equatable {
     required this.tipo,
     required this.id,
     required this.nome,
+    this.codigo,
     required this.valorDesconto,
     required this.valorFinalUnitario,
     this.formasPagamentoPermitidasIds,
@@ -97,6 +100,7 @@ class OpcaoElegivel extends Equatable {
       tipo: json['tipo'] as String,
       id: (json['id'] as num).toInt(),
       nome: json['nome'] as String,
+      codigo: json['codigo'] as String?,
       valorDesconto: (json['valorDesconto'] as num).toDouble(),
       valorFinalUnitario: (json['valorFinalUnitario'] as num).toDouble(),
       formasPagamentoPermitidasIds:
@@ -151,6 +155,7 @@ class OpcaoElegivel extends Equatable {
         tipo,
         id,
         nome,
+        codigo,
         valorDesconto,
         valorFinalUnitario,
         formasPagamentoPermitidasIds,
@@ -162,10 +167,14 @@ class OpcaoElegivel extends Equatable {
 class ItemElegibilidade extends Equatable {
   final int referenciaId;
   final List<OpcaoElegivel> opcoesElegiveis;
+  // Soma unitaria (com teto no preco) das opcoes de cupom; so vem com 2+
+  // cupons aplicaveis no item.
+  final double? descontoCuponsSomado;
 
   const ItemElegibilidade({
     required this.referenciaId,
     required this.opcoesElegiveis,
+    this.descontoCuponsSomado,
   });
 
   factory ItemElegibilidade.fromJson(Map<String, dynamic> json) {
@@ -175,21 +184,29 @@ class ItemElegibilidade extends Equatable {
       opcoesElegiveis: opcoes
           .map((o) => OpcaoElegivel.fromJson(o as Map<String, dynamic>))
           .toList(),
+      descontoCuponsSomado: (json['descontoCuponsSomado'] as num?)?.toDouble(),
     );
   }
 
   @override
-  List<Object?> get props => [referenciaId, opcoesElegiveis];
+  List<Object?> get props =>
+      [referenciaId, opcoesElegiveis, descontoCuponsSomado];
 }
 
 // Espelha ElegibilidadeResponse do backend.
 class ResultadoElegibilidade extends Equatable {
   final List<ItemElegibilidade> itens;
   final String? cupomInvalido;
+  // Codigos de cupom aceitos pela apuracao; null = backend antigo (nao manda).
+  final List<String>? cuponsAceitos;
+  // Motivo de recusa por código (só os recusados), em maiúsculas.
+  final Map<String, String> cuponsRecusados;
 
   const ResultadoElegibilidade({
     required this.itens,
     this.cupomInvalido,
+    this.cuponsAceitos,
+    this.cuponsRecusados = const {},
   });
 
   factory ResultadoElegibilidade.fromJson(Map<String, dynamic> json) {
@@ -199,9 +216,18 @@ class ResultadoElegibilidade extends Equatable {
           .map((i) => ItemElegibilidade.fromJson(i as Map<String, dynamic>))
           .toList(),
       cupomInvalido: json['cupomInvalido'] as String?,
+      cuponsAceitos: (json['cupons'] as List<dynamic>?)
+          ?.map((c) => (c as Map<String, dynamic>)['codigo'] as String)
+          .toList(),
+      cuponsRecusados: {
+        for (final c in (json['cupons'] as List<dynamic>? ?? const []))
+          if ((c as Map<String, dynamic>)['invalido'] != null)
+            (c['codigo'] as String).toUpperCase(): c['invalido'] as String,
+      },
     );
   }
 
   @override
-  List<Object?> get props => [itens, cupomInvalido];
+  List<Object?> get props =>
+      [itens, cupomInvalido, cuponsAceitos, cuponsRecusados];
 }

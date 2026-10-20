@@ -4,6 +4,6 @@ abstract class IElegibilidadeRemoteDataSource {
   Future<ResultadoElegibilidade> apurar({
     int? clienteId,
     required List<ItemApuracaoElegibilidade> itens,
-    String? codigoCupom,
+    List<String> codigosCupom = const [],
   });
 }

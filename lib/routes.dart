@@ -4,9 +4,13 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/use_cases.dart'
+    show BuscarResumoCreditoDevolucao, GetComprasDoCliente;
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
 import 'package:comercial/presentation/widgets/ultima_compra_cliente_info.dart';
 import 'package:comercial/presentation/widgets/transferir_credito_dialogo.dart';
+import 'package:comercial/presentation/widgets/cliente_compras_aba.dart';
+import 'package:comercial/presentation/widgets/cliente_credito_aba.dart';
 import 'package:comunicados/presentation.dart';
 import 'package:core/produtos_compartilhados.dart' show OrigemCompartilhadaTipo;
 import 'package:entregas/pages.dart';
@@ -27,7 +31,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pessoas/models.dart' show TipoFuncionario;
 import 'package:pessoas/pages.dart';
-import 'package:pessoas/presentation/pages/pontos_page.dart';
 import 'package:pagamentos/pages.dart';
 import 'package:pagamentos/use_cases.dart'
     show RecuperarProvidersPagamentosAvulsos;
@@ -38,7 +41,7 @@ import 'package:promocoes/presentation.dart' show PromocaoSeletor;
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
-import 'package:produtos/use_cases.dart' show RecuperarReferencias;
+import 'package:produtos/use_cases.dart' show RecuperarReferencias, RecuperarTamanhos;
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
@@ -113,34 +116,17 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(route: '/pessoas', child: const PessoasPage());
   },
   '/pessoa': (context) {
-    return PessoaPage(idPessoa: args(context)['idPessoa']);
-  },
-  '/pessoa_visualizacao': (context) {
-    return PessoaVisualizacaoPage(
+    return PessoaPage(
       idPessoa: args(context)['idPessoa'],
-      aoTransferirCredito: (ctx, idPessoa, nome) async {
-        final r = await TransferirCreditoDialogo.mostrar(
-          ctx,
-          pessoaId: idPessoa,
-          nomeDestino: nome,
-        );
-        if (r != null && ctx.mounted) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text('${formatarMoedaBr(r.valorTotal)} transferidos'),
-            ),
-          );
-        }
-        return r != null;
-      },
+      modo: ['completo', PessoaFormularioModo.completo].contains(args(context)['modo'])
+          ? PessoaFormularioModo.completo
+          : PessoaFormularioModo.cliente,
     );
   },
-  '/pontos_page': (context) {
-    return PontosPage(idPessoa: args(context)['idPessoa']);
-  },
-  '/enderecos_page': (context) {
-    return EnderecosPage(idPessoa: args(context)['idPessoa']);
-  },
+  '/pessoa_visualizacao': (context) =>
+      _clientePage(context, ClienteAba.de(args(context)['aba'])),
+  '/pontos_page': (context) => _clientePage(context, ClienteAba.pontos),
+  '/enderecos_page': (context) => _clientePage(context, ClienteAba.enderecos),
   '/selecionar_endereco': (context) {
     return SelecionarEnderecoPage(
       idPessoa: args(context)['idPessoa'],
@@ -408,14 +394,13 @@ Map<String, Widget Function(BuildContext)> routes = {
     );
   },
   '/credito_devolucao_movimentacoes': (context) {
-    final pessoaIdArg = args(context)['pessoaId'];
-    final pessoaId = pessoaIdArg is int
-        ? pessoaIdArg
-        : int.tryParse(pessoaIdArg?.toString() ?? '');
-
     return _rotaProtegida(
       route: '/credito_devolucao_movimentacoes',
-      child: CreditoDevolucaoMovimentacoesPage(pessoaId: pessoaId ?? 0),
+      child: _clientePage(
+        context,
+        ClienteAba.credito,
+        idPessoa: args(context)['pessoaId'],
+      ),
     );
   },
   '/documentos_fiscais': (context) {
@@ -622,6 +607,24 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioClientesAtivosPage(),
     );
   },
+  '/relatorio_frequencia_clientes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_frequencia_clientes',
+      child: const RelatorioFrequenciaClientesPage(),
+    );
+  },
+  '/relatorio_estoque': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_estoque',
+      child: const RelatorioEstoquePage(),
+    );
+  },
+  '/relatorio_movimentacoes': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_movimentacoes',
+      child: const RelatorioMovimentacoesPage(),
+    );
+  },
   '/relatorio_compras_clientes': (context) {
     return _rotaProtegida(
       route: '/relatorio_compras_clientes',
@@ -810,6 +813,16 @@ Map<String, Widget Function(BuildContext)> routes = {
           modo: TamanhoSeletorModo.multipla,
           onChanged: data.onChanged,
         ),
+        estampaSeletor: (data) => EstampaSeletor(
+          modo: EstampaSeletorModo.unica,
+          onChanged: data.onChanged,
+          titulo: 'Estampa (opcional)',
+        ),
+        carregarTamanhos: () async =>
+            (await sl<RecuperarTamanhos>().call(inativo: false))
+                .where((t) => t.id != null)
+                .map((t) => TamanhoOpcao(id: t.id!, nome: t.nome))
+                .toList(),
         buscarReferenciasParecidas: (nome) async =>
             (await sl<RecuperarReferencias>().call(nome: nome, inativo: false))
                 .where((r) => r.id != null)
@@ -1493,6 +1506,65 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
 };
 
+/// Tela do cliente com abas; abas de comercial e resumo entram por builders
+/// porque pessoas não depende de comercial.
+Widget _clientePage(BuildContext context, ClienteAba aba, {Object? idPessoa}) {
+  final id = args(context)['idPessoa'] ?? idPessoa;
+  return PessoaVisualizacaoPage(
+    idPessoa: id is int ? id : int.parse('$id'),
+    aba: aba,
+    abaComprasBuilder: (_, idPessoa, __) =>
+        ClienteComprasAba(pessoaId: idPessoa),
+    abaCreditoBuilder: (_, idPessoa, nome) =>
+        ClienteCreditoAba(pessoaId: idPessoa, nome: nome),
+    buscarSaldoCredito: (idPessoa) async {
+      final r = await sl<BuscarResumoCreditoDevolucao>().call(pessoaId: idPessoa);
+      final venc = r.proximoVencimento;
+      final hoje = DateTime.now();
+      return (
+        saldo: r.saldoDisponivel,
+        vencem: r.venceEm30Dias,
+        dias: venc == null
+            ? null
+            : DateTime(venc.year, venc.month, venc.day)
+                .difference(DateTime(hoje.year, hoje.month, hoje.day))
+                .inDays,
+      );
+    },
+    buscarUltimaCompra: (idPessoa) async {
+      final empresaId = sl<IAcessoGlobalSessao>().empresaIdDaSessao;
+      if (empresaId == null) return null;
+      try {
+        final dados = await sl<GetComprasDoCliente>().call(
+          empresaIds: [empresaId],
+          pessoaId: idPessoa,
+          limit: 1,
+        );
+        if (dados.items.isEmpty) return null;
+        final p = dados.items.first.data.split('-');
+        return p.length == 3 ? '${p[2]}/${p[1]}/${p[0]}' : dados.items.first.data;
+      } catch (_) {
+        return null;
+      }
+    },
+    aoTransferirCredito: (ctx, idPessoa, nome) async {
+      final r = await TransferirCreditoDialogo.mostrar(
+        ctx,
+        pessoaId: idPessoa,
+        nomeDestino: nome,
+      );
+      if (r != null && ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: Text('${formatarMoedaBr(r.valorTotal)} transferidos'),
+          ),
+        );
+      }
+      return r != null;
+    },
+  );
+}
+
 Map<String, dynamic> args(BuildContext context) =>
     ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
 
@@ -1680,6 +1752,9 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_clientes_ativos': ['RELFC003'],
   '/relatorio_produtos_defasados': ['RELFC008'],
   '/relatorio_giro_estoque': ['RELFC013'],
+  '/relatorio_frequencia_clientes': ['RELFC016'],
+  '/relatorio_estoque': ['RELFC014'],
+  '/relatorio_movimentacoes': ['RELFC015'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],
@@ -1741,6 +1816,9 @@ const Map<String, List<String>> _componentesDaRota = {
     'RELFC009',
     'RELFC010',
     'RELFC013',
+    'RELFC014',
+    'RELFC015',
+    'RELFC016',
     'ROMFP001',
     'FCXFP008',
   ],

@@ -16,39 +16,25 @@ void main() {
       await app.configs();
       await AutenticacaoUtils.logarComUsuarioDeTeste();
     });
-    testWidgets('exibe carregamento quando acessa a página', (tester) async {
+    testWidgets('exibe barra de título, busca e filtro', (tester) async {
       await tester.pumpWidget(application);
-
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      var carregamento = find.byKey(const Key('pessoas_carregamento'));
-
-      expect(carregamento, findsOneWidget);
-    });
-
-    testWidgets('exibe pessoas cadastradas', (tester) async {
-      await tester.pumpWidget(application);
-
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      var developUserTest = 'apollo';
-      var card = find.text(developUserTest);
-      expect(card, findsOneWidget);
-    });
-    testWidgets('abre pagina do usuário', (tester) async {
-      await tester.pumpWidget(application);
-
-      Navigator.of(application.navigatorKey.currentContext!)
-          .pushNamed('/usuarios');
 
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      var developUserTest = 'apollo';
-      var card = find.text(developUserTest);
-      await tester.tap(card);
 
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      expect(find.text('Pessoas'), findsOneWidget);
+      expect(find.text('Buscar por nome, CPF/CNPJ'), findsOneWidget);
+      expect(find.text('Clientes'), findsOneWidget);
+      expect(find.text('Fornecedores'), findsOneWidget);
+    });
 
-      var nomeTextField = find.byKey(const Key('nome_page_nome_text_field'));
+    testWidgets('alterna para fornecedores', (tester) async {
+      await tester.pumpWidget(application);
 
-      expect(nomeTextField, findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.tap(find.text('Fornecedores'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      expect(find.text('Fornecedores'), findsOneWidget);
     });
   });
 }

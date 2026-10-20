@@ -1,3 +1,4 @@
+import 'package:core/tema.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/presentation.dart';
 import 'package:flutter/material.dart';
@@ -37,10 +38,7 @@ class FormasPagamentoFormWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Formas de pagamento',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text('Formas de pagamento', style: context.sivTextos.secao),
         const SizedBox(height: 8),
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,

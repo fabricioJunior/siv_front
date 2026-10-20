@@ -74,12 +74,13 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
       });
       registro[l.$1] = q;
     }
-    await Navigator.of(context).pushNamed(
+    final impresso = await Navigator.of(context).pushNamed<bool>(
       '/impressao_etiquetas',
       arguments: {'itens': itens},
     );
+    // Só registra se imprimiu de fato; sair da tela sem imprimir deixa o passo como estava.
     // Soma ao já impresso: o registro guarda a quantidade desta impressão.
-    if (mounted) bloc.add(PedidoEntradaImprimiuEtiquetas(registro));
+    if (mounted && impresso == true) bloc.add(PedidoEntradaImprimiuEtiquetas(registro));
   }
 
   @override

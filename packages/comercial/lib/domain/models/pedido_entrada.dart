@@ -132,6 +132,8 @@ class EntradaContagem extends Equatable {
   final String? corNome;
   final int? tamanhoId;
   final String? tamanhoNome;
+  final int? estampaId;
+  final String? estampaNome;
 
   const EntradaContagem({
     required this.produtoId,
@@ -143,6 +145,8 @@ class EntradaContagem extends Equatable {
     this.corNome,
     this.tamanhoId,
     this.tamanhoNome,
+    this.estampaId,
+    this.estampaNome,
   });
 
   factory EntradaContagem.fromJson(Map<String, dynamic> j) => EntradaContagem(
@@ -155,6 +159,8 @@ class EntradaContagem extends Equatable {
         corNome: j['corNome'] as String?,
         tamanhoId: _int(j['tamanhoId']),
         tamanhoNome: j['tamanhoNome'] as String?,
+        estampaId: _int(j['estampaId']),
+        estampaNome: j['estampaNome'] as String?,
       );
 
   @override
@@ -580,6 +586,7 @@ class ItemContagem {
   final int? referenciaId;
   final int? corId;
   final int? tamanhoId;
+  final int? estampaId;
   final double quantidade;
   final String? descricao;
 
@@ -589,6 +596,7 @@ class ItemContagem {
     this.referenciaId,
     this.corId,
     this.tamanhoId,
+    this.estampaId,
     required this.quantidade,
     this.descricao,
   });
@@ -600,6 +608,7 @@ class ItemContagem {
         if (referenciaId != null) 'referenciaId': referenciaId,
         if (corId != null) 'corId': corId,
         if (tamanhoId != null) 'tamanhoId': tamanhoId,
+        if (estampaId != null) 'estampaId': estampaId,
         'quantidade': quantidade,
       };
 }

@@ -39,6 +39,14 @@ class SivColors extends ThemeExtension<SivColors> {
   final Color excedenteFundo;
   final Color excedenteEtiqueta;
 
+  // Relatórios/Frequência: classe A = acoEscuro, classe B barra = aco.
+  final Color verde;
+  final Color classeBTagFundo;
+  final Color classeBTagTexto;
+  final Color classeCBarra;
+  final Color classeCTagFundo;
+  final Color classeCTagTexto;
+
   const SivColors({
     required this.papel,
     required this.superficie,
@@ -67,6 +75,12 @@ class SivColors extends ThemeExtension<SivColors> {
     required this.parcialBorda,
     required this.excedenteFundo,
     required this.excedenteEtiqueta,
+    required this.verde,
+    required this.classeBTagFundo,
+    required this.classeBTagTexto,
+    required this.classeCBarra,
+    required this.classeCTagFundo,
+    required this.classeCTagTexto,
   });
 
   static const SivColors padrao = SivColors(
@@ -97,6 +111,12 @@ class SivColors extends ThemeExtension<SivColors> {
     parcialBorda: Color(0xFFE3CF9A),
     excedenteFundo: Color(0xFFF8EAEA),
     excedenteEtiqueta: Color(0xFFEFD0D0),
+    verde: Color(0xFF2F6A3A),
+    classeBTagFundo: Color(0xFFDDE7F1),
+    classeBTagTexto: Color(0xFF2F4A63),
+    classeCBarra: Color(0xFFB9C6D2),
+    classeCTagFundo: Color(0xFFE6E6E7),
+    classeCTagTexto: Color(0xFF4A4C4E),
   );
 
   /// Texto principal sobre papel (100%).
@@ -146,6 +166,12 @@ class SivColors extends ThemeExtension<SivColors> {
     Color? parcialBorda,
     Color? excedenteFundo,
     Color? excedenteEtiqueta,
+    Color? verde,
+    Color? classeBTagFundo,
+    Color? classeBTagTexto,
+    Color? classeCBarra,
+    Color? classeCTagFundo,
+    Color? classeCTagTexto,
   }) {
     return SivColors(
       papel: papel ?? this.papel,
@@ -175,6 +201,12 @@ class SivColors extends ThemeExtension<SivColors> {
       parcialBorda: parcialBorda ?? this.parcialBorda,
       excedenteFundo: excedenteFundo ?? this.excedenteFundo,
       excedenteEtiqueta: excedenteEtiqueta ?? this.excedenteEtiqueta,
+      verde: verde ?? this.verde,
+      classeBTagFundo: classeBTagFundo ?? this.classeBTagFundo,
+      classeBTagTexto: classeBTagTexto ?? this.classeBTagTexto,
+      classeCBarra: classeCBarra ?? this.classeCBarra,
+      classeCTagFundo: classeCTagFundo ?? this.classeCTagFundo,
+      classeCTagTexto: classeCTagTexto ?? this.classeCTagTexto,
     );
   }
 
@@ -217,6 +249,12 @@ class SivColors extends ThemeExtension<SivColors> {
       parcialBorda: Color.lerp(parcialBorda, other.parcialBorda, t)!,
       excedenteFundo: Color.lerp(excedenteFundo, other.excedenteFundo, t)!,
       excedenteEtiqueta: Color.lerp(excedenteEtiqueta, other.excedenteEtiqueta, t)!,
+      verde: Color.lerp(verde, other.verde, t)!,
+      classeBTagFundo: Color.lerp(classeBTagFundo, other.classeBTagFundo, t)!,
+      classeBTagTexto: Color.lerp(classeBTagTexto, other.classeBTagTexto, t)!,
+      classeCBarra: Color.lerp(classeCBarra, other.classeCBarra, t)!,
+      classeCTagFundo: Color.lerp(classeCTagFundo, other.classeCTagFundo, t)!,
+      classeCTagTexto: Color.lerp(classeCTagTexto, other.classeCTagTexto, t)!,
     );
   }
 }

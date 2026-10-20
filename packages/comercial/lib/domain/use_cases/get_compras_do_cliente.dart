@@ -9,10 +9,14 @@ class GetComprasDoCliente {
     required List<int> empresaIds,
     required int pessoaId,
     int limit = 10,
+    String? dataInicial,
+    String? dataFinal,
   }) =>
       _repository.comprasDoCliente(
         empresaIds: empresaIds,
         pessoaId: pessoaId,
         limit: limit,
+        dataInicial: dataInicial,
+        dataFinal: dataFinal,
       );
 }

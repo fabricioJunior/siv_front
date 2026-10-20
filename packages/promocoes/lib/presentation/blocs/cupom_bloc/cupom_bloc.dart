@@ -81,6 +81,7 @@ class CupomBloc extends Bloc<CupomEvent, CupomState> {
         limparEscopo: event.limparEscopo,
         limiteUsos: event.limiteUsos,
         ativa: event.ativa,
+        cumulativo: event.cumulativo,
         step: CupomStep.editando,
         erro: null,
       ),
@@ -158,6 +159,10 @@ class CupomBloc extends Bloc<CupomEvent, CupomState> {
         limiteUsos: state.limiteUsos,
         usosRealizados: state.cupom?.usosRealizados ?? 0,
         ativa: state.ativa,
+        // Backend só aceita cumulativo em escopo geral/referências (desconto unitário por item).
+        cumulativo: state.cumulativo &&
+            (state.tipoEscopo == TipoEscopo.geral ||
+                state.tipoEscopo == TipoEscopo.referencias),
         criadoEm: state.cupom?.criadoEm,
         atualizadoEm: state.cupom?.atualizadoEm,
       );
@@ -229,7 +234,8 @@ class CupomBloc extends Bloc<CupomEvent, CupomState> {
         }
         return null;
       case TipoEscopo.faixaQuantidade:
-        // Cupom nao oferece esse escopo -- inalcancavel a partir do form.
+      case TipoEscopo.categorias:
+        // Cupom nao oferece esses escopos -- inalcancaveis a partir do form.
         return null;
     }
   }

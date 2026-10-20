@@ -363,7 +363,7 @@ void main() {
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
       expect(bloc.state.possuiCupomAplicado, isFalse);
-      expect(bloc.state.cupomErro, contains('não é acumulável'));
+      expect(bloc.state.cupomErro, contains('não soma com promoção'));
     },
   );
 
@@ -588,7 +588,7 @@ void main() {
     verify: (bloc) {
       expect(bloc.state.cuponsAplicados, isEmpty);
       expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
-      expect(bloc.state.cupomErro, contains('não é acumulável'));
+      expect(bloc.state.cupomErro, contains('não soma com promoção'));
     },
   );
 

@@ -1192,8 +1192,7 @@ class PagamentosRealizadosBloc
             opcoesElegiveisPorItem: opcoesPorItem,
             carregandoElegibilidade: false,
             cupomErro: haviaOpcaoDeCupom
-                ? 'Cupom válido, mas os itens elegíveis já têm promoção ou '
-                    'desconto aplicado. O cupom não é acumulável.'
+                ? 'Cupom $codigo válido, mas ${_motivoBloqueioCupom(codigo, opcoesPorItem, promocoes)}'
                 : 'Cupom válido, mas nenhum item do carrinho é elegível '
                     '(verifique produtos, valor mínimo e vigência).',
           ),
@@ -1228,6 +1227,32 @@ class PagamentosRealizadosBloc
       );
       addError(e, s);
     }
+  }
+
+  // Por que um cupom elegivel nao entrou em nenhum item: o bloqueio e por
+  // item (promocao ou desconto manual), nunca por outro cupom -- esses somam
+  // quando cumulativos (recusa entre cupons vem por outro caminho).
+  String _motivoBloqueioCupom(
+    String codigo,
+    Map<int, List<OpcaoElegivel>> opcoesPorItem,
+    Map<int, OpcaoElegivel> promocoes,
+  ) {
+    final motivos = <String>{};
+    for (final entrada in opcoesPorItem.entries) {
+      if (!entrada.value.any((o) => o.ehCupom && _opcaoDoCupom(o, codigo))) {
+        continue;
+      }
+      final promocao = promocoes[entrada.key];
+      if (promocao != null) {
+        motivos.add('o item já tem a promoção "${promocao.nome}"');
+      } else if ((state.descontosItensAplicado[entrada.key] ?? 0) > 0) {
+        motivos.add('o item já tem desconto manual (remova-o para usar o cupom)');
+      } else if (entrada.value.any((o) => !o.ehCupom)) {
+        motivos.add('o item tem promoção disponível (escolha entre promoção e cupom)');
+      }
+    }
+    final lista = motivos.isEmpty ? 'o item já tem desconto' : motivos.join('; ');
+    return '$lista. Cupom não soma com promoção nem desconto manual.';
   }
 
   // codigo null = backend antigo (1 cupom so), vale pra qualquer codigo.

@@ -1,5 +1,6 @@
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:promocoes/domain/models/regra_desconto.dart';
 
 import 'form_promocional_layout.dart';
@@ -53,16 +54,12 @@ class RegraDescontoFormWidget extends StatelessWidget {
   }) {
     return RotuloCampo(
       rotulo: rotulo,
-      filho: TextFormField(
-        key: ValueKey('$chave-$valor'),
-        initialValue: valor?.toString() ?? '',
-        decoration: InputDecoration(suffixText: sufixo),
-        keyboardType: inteiro
-            ? TextInputType.number
-            : const TextInputType.numberWithOptions(decimal: true),
-        validator: erro == null
-            ? null
-            : (v) => double.tryParse(v ?? '') == null ? erro : null,
+      filho: _CampoNumerico(
+        key: ValueKey(chave),
+        valor: valor,
+        sufixo: sufixo,
+        inteiro: inteiro,
+        erro: erro,
         onChanged: onChanged,
       ),
     );
@@ -174,6 +171,74 @@ class RegraDescontoFormWidget extends StatelessWidget {
             ),
           ]),
       ],
+    );
+  }
+}
+
+// Controller próprio: a key não pode depender do valor, senão cada tecla
+// recria o campo e o foco some. Só ressincroniza quando o valor vem de fora.
+class _CampoNumerico extends StatefulWidget {
+  final Object? valor;
+  final String? sufixo;
+  final bool inteiro;
+  final String? erro;
+  final ValueChanged<String> onChanged;
+
+  const _CampoNumerico({
+    super.key,
+    required this.valor,
+    required this.onChanged,
+    this.sufixo,
+    this.inteiro = false,
+    this.erro,
+  });
+
+  @override
+  State<_CampoNumerico> createState() => _CampoNumericoState();
+}
+
+class _CampoNumericoState extends State<_CampoNumerico> {
+  late final _controller =
+      TextEditingController(text: widget.valor?.toString() ?? '');
+
+  @override
+  void didUpdateWidget(_CampoNumerico antigo) {
+    super.didUpdateWidget(antigo);
+    final texto = widget.valor?.toString() ?? '';
+    if (double.tryParse(_controller.text) == double.tryParse(texto)) return;
+    // Notificar o controller durante o build derruba o Form.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _controller.text = texto;
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final erro = widget.erro;
+    return TextFormField(
+      controller: _controller,
+      decoration: InputDecoration(suffixText: widget.sufixo),
+      keyboardType: widget.inteiro
+          ? TextInputType.number
+          : const TextInputType.numberWithOptions(decimal: true),
+      validator: erro == null
+          ? null
+          : (v) => double.tryParse(v ?? '') == null ? erro : null,
+      inputFormatters: [
+        TextInputFormatter.withFunction((antigo, novo) {
+          // Vírgula vira ponto; só dígitos e um separador decimal.
+          final texto = novo.text.replaceAll(',', '.');
+          final valido = RegExp(widget.inteiro ? r'^\d*$' : r'^\d*\.?\d*$');
+          return valido.hasMatch(texto) ? novo.copyWith(text: texto) : antigo;
+        }),
+      ],
+      onChanged: widget.onChanged,
     );
   }
 }

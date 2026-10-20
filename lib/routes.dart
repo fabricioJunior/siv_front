@@ -940,7 +940,11 @@ Map<String, Widget Function(BuildContext)> routes = {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
-    final cupom = argumentos['cupom'] as Map<String, dynamic>?;
+    final cuponsRaw = argumentos['cupons'] as List<dynamic>? ?? const [];
+    final cupons = cuponsRaw
+        .whereType<Map<String, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
     final valorTaxaEntregaArg = argumentos['valorTaxaEntrega'];
     final valorTaxaEntrega = valorTaxaEntregaArg is num
         ? valorTaxaEntregaArg.toDouble()
@@ -969,7 +973,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         desconto: desconto,
         descontosItens: descontosItens,
         descontosPromocao: descontosPromocao,
-        cupom: cupom,
+        cupons: cupons.isEmpty ? null : cupons,
         valorTaxaEntrega: valorTaxaEntrega,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,

@@ -112,7 +112,8 @@ class _CupomFormPageState extends State<CupomFormPage> {
                   validator: (value) => (value == null || value.trim().isEmpty)
                       ? 'Informe o código'
                       : null,
-                  onChanged: (value) => _onCampoAlterado(context, codigo: value),
+                  onChanged: (value) =>
+                      _onCampoAlterado(context, codigo: value),
                 ),
               ),
               const SizedBox(width: 8),
@@ -212,11 +213,31 @@ class _CupomFormPageState extends State<CupomFormPage> {
               child: CampoData(
                 rotulo: 'Fim',
                 data: state.dataFim,
-                onSelecionado: (data) => _onCampoAlterado(context, dataFim: data),
+                onSelecionado: (data) =>
+                    _onCampoAlterado(context, dataFim: data),
               ),
             ),
           ],
         ),
+        if (state.tipoEscopo == TipoEscopo.geral ||
+            state.tipoEscopo == TipoEscopo.referencias) ...[
+          gap,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Cumulativo (soma com outros cupons no site)',
+                  style: context.sivTextos.corpo,
+                ),
+              ),
+              Switch.adaptive(
+                value: state.cumulativo,
+                onChanged: (value) =>
+                    _onCampoAlterado(context, cumulativo: value),
+              ),
+            ],
+          ),
+        ],
         gap,
         Row(
           children: [
@@ -270,6 +291,7 @@ class _CupomFormPageState extends State<CupomFormPage> {
     int? quantidadePaga,
     int? limiteUsos,
     bool? ativa,
+    bool? cumulativo,
   }) {
     context.read<CupomBloc>().add(
           CupomCampoAlterado(
@@ -289,6 +311,7 @@ class _CupomFormPageState extends State<CupomFormPage> {
             quantidadePaga: quantidadePaga,
             limiteUsos: limiteUsos,
             ativa: ativa,
+            cumulativo: cumulativo,
           ),
         );
   }

@@ -61,10 +61,13 @@ void main() {
         expect(find.text('Preço fixo'), findsNWidgets(2)); // segmento + rotulo do campo
 
         expect(find.text('Itens do combo'), findsNothing);
+        // cumulativo so em escopo de desconto unitario (geral/referencias); backend rejeita em combo
+        expect(find.textContaining('Cumulativo'), findsOneWidget);
         await t.ensureVisible(find.text('Combo/Kit'));
         await t.tap(find.text('Combo/Kit'));
         await t.pumpAndSettle();
         expect(find.text('Itens do combo'), findsOneWidget);
+        expect(find.textContaining('Cumulativo'), findsNothing);
       });
 
       testWidgets('Salvar dispara CupomSalvou e fecha com true', (t) async {

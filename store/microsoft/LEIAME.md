@@ -71,6 +71,7 @@ simples). Não use a conta administrativa nem credenciais de produção.
 
 | Mensagem | Causa | Solução |
 |---|---|---|
+| `Os pacotes .msix e .appx ... devem ser identificados de forma exclusiva pelos seus nomes completos ... ValedoCear.SivFront_1.0.3.0_X64_` | A versão enviada já existe na Store com conteúdo diferente. | Já resolvido: o CI (`build-windows.yml`) gera a versão `1.1.<nº da execução>.0` a cada build na master. Baixe o artefato `siv_front-msix` **da execução mais recente**; nunca reenvie um pacote antigo com outro conteúdo. |
 | `PublisherDisplayName ... é Vale do Ceara, que não corresponde ao nome de exibição do fornecedor: Vale do Ceará` | `msix_config.publisher_display_name` sem acento | Corrigido no `pubspec.yaml` (`Vale do Ceará`, igual ao cadastro do Partner Center). Gere o pacote de novo (versão **1.0.3.0**). |
 | `You must upload at least one package` | o pacote com erro foi removido do envio | Suba o `.msix` novo (artefato `siv_front-msix` do CI) e **remova o pacote antigo de 19,2 MB** (gerado antes das correções de tile). |
 | `restricted capabilities ... runFullTrust` (aviso) | todo app desktop Flutter empacotado em MSIX declara `runFullTrust` | Não é erro: justifique em *Submission options → Restricted capabilities* (texto abaixo). |

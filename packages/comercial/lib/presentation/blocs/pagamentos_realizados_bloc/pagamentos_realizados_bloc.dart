@@ -1132,17 +1132,29 @@ class PagamentosRealizadosBloc
         '${resultado.itens.map((i) => "ref ${i.referenciaId}: [${i.opcoesElegiveis.map((o) => "${o.tipo}#${o.id} desc/un=${o.valorDesconto} final/un=${o.valorFinalUnitario}").join(", ")}]").join(" | ")}',
       );
 
-      // Recusado: descarta só o código novo, os já aplicados ficam.
-      final recusado = resultado.cupomInvalido != null ||
-          (resultado.cuponsAceitos != null &&
-              !resultado.cuponsAceitos!
-                  .any((c) => c.toUpperCase() == codigo));
-      if (recusado) {
+      // Recusado: descarta só o código novo, os já aplicados ficam. Diz qual
+      // cupom foi recusado e por quê (o motivo vem por código da apuração).
+      final motivoDoNovo = resultado.cuponsRecusados[codigo];
+      final outroRecusado = resultado.cuponsRecusados.entries
+          .where((e) => e.key != codigo)
+          .firstOrNull;
+      final String? mensagemRecusa = motivoDoNovo != null
+          ? 'Cupom $codigo: $motivoDoNovo.'
+          : outroRecusado != null
+              ? 'Cupom $codigo não pôde ser somado: o cupom '
+                  '${outroRecusado.key} ${outroRecusado.value}.'
+              : resultado.cupomInvalido != null
+                  ? 'Cupom $codigo: ${resultado.cupomInvalido}.'
+                  : (resultado.cuponsAceitos != null &&
+                          !resultado.cuponsAceitos!
+                              .any((c) => c.toUpperCase() == codigo))
+                      ? 'Cupom $codigo não pôde ser aplicado.'
+                      : null;
+      if (mensagemRecusa != null) {
         emit(
           state.copyWith(
             carregandoElegibilidade: false,
-            cupomErro: resultado.cupomInvalido ??
-                'Cupom $codigo não pôde ser aplicado.',
+            cupomErro: mensagemRecusa,
           ),
         );
         return;

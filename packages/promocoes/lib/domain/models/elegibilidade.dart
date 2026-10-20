@@ -199,11 +199,14 @@ class ResultadoElegibilidade extends Equatable {
   final String? cupomInvalido;
   // Codigos de cupom aceitos pela apuracao; null = backend antigo (nao manda).
   final List<String>? cuponsAceitos;
+  // Motivo de recusa por código (só os recusados), em maiúsculas.
+  final Map<String, String> cuponsRecusados;
 
   const ResultadoElegibilidade({
     required this.itens,
     this.cupomInvalido,
     this.cuponsAceitos,
+    this.cuponsRecusados = const {},
   });
 
   factory ResultadoElegibilidade.fromJson(Map<String, dynamic> json) {
@@ -216,9 +219,15 @@ class ResultadoElegibilidade extends Equatable {
       cuponsAceitos: (json['cupons'] as List<dynamic>?)
           ?.map((c) => (c as Map<String, dynamic>)['codigo'] as String)
           .toList(),
+      cuponsRecusados: {
+        for (final c in (json['cupons'] as List<dynamic>? ?? const []))
+          if ((c as Map<String, dynamic>)['invalido'] != null)
+            (c['codigo'] as String).toUpperCase(): c['invalido'] as String,
+      },
     );
   }
 
   @override
-  List<Object?> get props => [itens, cupomInvalido, cuponsAceitos];
+  List<Object?> get props =>
+      [itens, cupomInvalido, cuponsAceitos, cuponsRecusados];
 }

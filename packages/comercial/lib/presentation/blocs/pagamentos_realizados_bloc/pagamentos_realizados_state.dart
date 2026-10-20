@@ -56,7 +56,12 @@ class PagamentosRealizadosState extends Equatable {
   final Map<int, OpcaoElegivel> promocaoEscolhidaPorItem;
   final Map<int, int> referenciaIdPorProdutoId;
   final bool carregandoElegibilidade;
-  final String? cupomCodigoAplicado;
+  // Promocao/cupom sao exclusivos por produto: item tem 1 promocao
+  // (promocaoEscolhidaPorItem, so nao-cupom) OU N cupons cumulativos aqui
+  // (todas as opcoes de cupom dos codigos aplicados que servem ao item).
+  final Map<int, List<OpcaoElegivel>> cuponsEscolhidosPorItem;
+  // Codigos aplicados na venda (maiusculos, sem repeticao, max 5).
+  final List<String> cuponsAplicados;
   final String? cupomErro;
 
   const PagamentosRealizadosState({
@@ -93,7 +98,8 @@ class PagamentosRealizadosState extends Equatable {
     this.promocaoEscolhidaPorItem = const {},
     this.referenciaIdPorProdutoId = const {},
     this.carregandoElegibilidade = false,
-    this.cupomCodigoAplicado,
+    this.cuponsEscolhidosPorItem = const {},
+    this.cuponsAplicados = const [],
     this.cupomErro,
   });
 
@@ -108,9 +114,13 @@ class PagamentosRealizadosState extends Equatable {
   double get valorTotalProdutosSemPromocao {
     final produtos = resumo?.produtosCompartilhados ?? const [];
     return produtos
-        .where((p) => !promocaoEscolhidaPorItem.containsKey(p.produtoId))
+        .where((p) => !produtoIdsComPromocaoOuCupom.contains(p.produtoId))
         .fold<double>(0, (soma, p) => soma + p.quantidade * p.valorUnitario);
   }
+  // Produtos que ja tem desconto de promocao OU cupom (exclusivos entre si
+  // e com desconto manual).
+  Set<int> get produtoIdsComPromocaoOuCupom =>
+      {...promocaoEscolhidaPorItem.keys, ...cuponsEscolhidosPorItem.keys};
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
   // Forma de pagamento escolhida, só quando há exatamente 1 linha com forma
@@ -131,13 +141,24 @@ class PagamentosRealizadosState extends Equatable {
   // Recalcula pela forma de pagamento escolhida quando a promoção tiver
   // override pra ela (ver OpcaoElegivel.valorDescontoParaForma).
   double get valorDescontoPromocaoTotal {
-    if (promocaoEscolhidaPorItem.isEmpty) return 0;
+    if (promocaoEscolhidaPorItem.isEmpty && cuponsEscolhidosPorItem.isEmpty) {
+      return 0;
+    }
     final valorUnitarioPorProduto = {
       for (final produto in resumo?.produtosCompartilhados ?? const [])
         produto.produtoId: produto,
     };
     final formaId = formaDePagamentoUnicaId;
-    return promocaoEscolhidaPorItem.entries.fold<double>(0, (soma, entrada) {
+    final cupons = cuponsEscolhidosPorItem.entries.fold<double>(0,
+        (soma, entrada) {
+      final produto = valorUnitarioPorProduto[entrada.key];
+      if (produto == null) return soma;
+      return soma +
+          descontoCuponsUnitario(entrada.value, produto.valorUnitario) *
+              produto.quantidade;
+    });
+    return cupons +
+        promocaoEscolhidaPorItem.entries.fold<double>(0, (soma, entrada) {
       final produto = valorUnitarioPorProduto[entrada.key];
       if (produto == null) return soma;
       final desconto = entrada.value.valorDescontoParaForma(
@@ -146,6 +167,31 @@ class PagamentosRealizadosState extends Equatable {
       );
       return soma + (desconto * produto.quantidade);
     });
+  }
+
+  // Cupons cumulativos: cada um desconta isolado sobre o preco base; a soma
+  // tem teto no preco unitario (mesma regra do backend).
+  static double descontoCuponsUnitario(
+    List<OpcaoElegivel> cupons,
+    double valorUnitario,
+  ) {
+    final soma = cupons.fold<double>(0, (a, o) => a + o.valorDesconto);
+    return soma > valorUnitario ? valorUnitario : soma;
+  }
+
+  // Payload `cupons` do fechamento: produtoIds agrupados por codigo.
+  List<Map<String, dynamic>> get cuponsParaPayload {
+    final porCodigo = <String, List<int>>{};
+    for (final entrada in cuponsEscolhidosPorItem.entries) {
+      for (final opcao in entrada.value) {
+        final codigo = opcao.codigo ??
+            (cuponsAplicados.isNotEmpty ? cuponsAplicados.first : '');
+        porCodigo.putIfAbsent(codigo, () => []).add(entrada.key);
+      }
+    }
+    return [
+      for (final e in porCodigo.entries) {'codigo': e.key, 'produtoIds': e.value},
+    ];
   }
 
   // Desconto do romaneio geral (valorDescontoAplicado) é distribuído pelos
@@ -179,8 +225,9 @@ class PagamentosRealizadosState extends Equatable {
       double.parse(valorDescontoAplicado.toStringAsFixed(2));
   double get valorTaxaEntregaAplicadoArredondado =>
       double.parse(valorTaxaEntregaAplicado.toStringAsFixed(2));
-  bool get possuiCupomAplicado =>
-      cupomCodigoAplicado != null && cupomCodigoAplicado!.isNotEmpty;
+  bool get possuiCupomAplicado => cuponsAplicados.isNotEmpty;
+  static const maxCupons = 5;
+  bool get podeAdicionarCupom => cuponsAplicados.length < maxCupons;
   // Interseção das formas de pagamento permitidas pelas promoções escolhidas
   // com restrição (null = nenhuma promoção escolhida restringe forma de
   // pagamento). Interseção vazia é estado válido (nenhuma forma serve).
@@ -234,7 +281,8 @@ class PagamentosRealizadosState extends Equatable {
     Map<int, OpcaoElegivel>? promocaoEscolhidaPorItem,
     Map<int, int>? referenciaIdPorProdutoId,
     bool? carregandoElegibilidade,
-    Object? cupomCodigoAplicado = _sentinela,
+    Map<int, List<OpcaoElegivel>>? cuponsEscolhidosPorItem,
+    List<String>? cuponsAplicados,
     Object? cupomErro = _sentinela,
   }) {
     return PagamentosRealizadosState(
@@ -293,9 +341,9 @@ class PagamentosRealizadosState extends Equatable {
           referenciaIdPorProdutoId ?? this.referenciaIdPorProdutoId,
       carregandoElegibilidade:
           carregandoElegibilidade ?? this.carregandoElegibilidade,
-      cupomCodigoAplicado: identical(cupomCodigoAplicado, _sentinela)
-          ? this.cupomCodigoAplicado
-          : cupomCodigoAplicado as String?,
+      cuponsEscolhidosPorItem:
+          cuponsEscolhidosPorItem ?? this.cuponsEscolhidosPorItem,
+      cuponsAplicados: cuponsAplicados ?? this.cuponsAplicados,
       cupomErro: identical(cupomErro, _sentinela)
           ? this.cupomErro
           : cupomErro as String?,
@@ -337,7 +385,8 @@ class PagamentosRealizadosState extends Equatable {
         promocaoEscolhidaPorItem,
         referenciaIdPorProdutoId,
         carregandoElegibilidade,
-        cupomCodigoAplicado,
+        cuponsEscolhidosPorItem,
+        cuponsAplicados,
         cupomErro,
       ];
 }

@@ -1145,7 +1145,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
         .whereType<Map<String, dynamic>>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
-    final cupom = pagamentoResultado['cupom'] as Map<String, dynamic>?;
+    final cupons = pagamentoResultado['cupons'] as List<Map<String, dynamic>>?;
 
     final incluirCpfNaNota =
         pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
@@ -1161,7 +1161,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
         desconto: descontoTotal,
         valorTaxaEntrega: valorTaxaEntrega,
         descontosPromocao: descontosPromocao,
-        cupom: cupom,
+        cupons: cupons,
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,

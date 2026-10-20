@@ -51,7 +51,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   final double? desconto;
   final double? valorTaxaEntrega;
   final List<Map<String, dynamic>> descontosPromocao;
-  final Map<String, dynamic>? cupom;
+  final List<Map<String, dynamic>>? cupons;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
@@ -61,7 +61,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
     this.desconto,
     this.valorTaxaEntrega,
     this.descontosPromocao = const [],
-    this.cupom,
+    this.cupons,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,

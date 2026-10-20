@@ -116,7 +116,7 @@ class PagamentosRealizadosBloc
       // já existentes pra corrigir ou zerar esse valor, em vez de criar UI
       // nova. Mesma distribuição proporcional usada em _onDescontoAlterado.
       final produtosSemPromocaoSeed = resumo.produtosCompartilhados
-          .where((p) => !state.promocaoEscolhidaPorItem.containsKey(
+          .where((p) => !state.produtoIdsComPromocaoOuCupom.contains(
                 p.produtoId,
               ))
           .toList(growable: false);
@@ -399,7 +399,7 @@ class PagamentosRealizadosBloc
     // erro de arredondamento por soma).
     final distribuicao = _recalcularDistribuicaoDesconto(
       descontoAplicado,
-      state.promocaoEscolhidaPorItem,
+      state.produtoIdsComPromocaoOuCupom,
     );
 
     emit(
@@ -475,10 +475,10 @@ class PagamentosRealizadosBloc
     Map<int, double> aplicado,
   }) _recalcularDistribuicaoDesconto(
     double descontoTotal,
-    Map<int, OpcaoElegivel> promocaoEscolhidaPorItem,
+    Set<int> produtoIdsComDesconto,
   ) {
     final produtos = (state.resumo?.produtosCompartilhados ?? const [])
-        .where((p) => !promocaoEscolhidaPorItem.containsKey(p.produtoId))
+        .where((p) => !produtoIdsComDesconto.contains(p.produtoId))
         .toList(growable: false);
     final valorBase = produtos.fold<double>(
       0,
@@ -624,6 +624,9 @@ class PagamentosRealizadosBloc
     final promocaoMap = Map<int, OpcaoElegivel>.from(
       state.promocaoEscolhidaPorItem,
     )..remove(event.produtoId);
+    final cuponsMap = Map<int, List<OpcaoElegivel>>.from(
+      state.cuponsEscolhidosPorItem,
+    )..remove(event.produtoId);
 
     emit(
       state.copyWith(
@@ -631,6 +634,7 @@ class PagamentosRealizadosBloc
         descontosItensValorTexto: valorTextoMap,
         descontosItensAplicado: aplicadoMap,
         promocaoEscolhidaPorItem: promocaoMap,
+        cuponsEscolhidosPorItem: cuponsMap,
         erro: null,
       ),
     );
@@ -669,7 +673,7 @@ class PagamentosRealizadosBloc
     // Venda 100% zerada por cupom: o backend aceita linha de pagamento de valor 0
     // (ReceberService.validarValoresDePagamento) -- só nesse caso; sem cupom o valor continua > 0.
     final vendaZeradaPorCupom = state.valorTotalAPagar <= 0.01 &&
-        state.promocaoEscolhidaPorItem.values.any((opcao) => opcao.ehCupom);
+        state.cuponsEscolhidosPorItem.isNotEmpty;
 
     if (vendaZeradaPorCupom && state.linhas.isEmpty) {
       emit(
@@ -786,9 +790,9 @@ class PagamentosRealizadosBloc
       return linha.toJson(controle: entry.key + 1);
     }).toList(growable: false);
     _logCupom(
-      'FECHAMENTO | cupomAplicado=${state.cupomCodigoAplicado} | '
+      'FECHAMENTO | cuponsAplicados=${state.cuponsAplicados} | '
       'escolhas: ${_descreverOpcoes(state.promocaoEscolhidaPorItem)} | '
-      'total produtos=${state.valorTotalProdutos} desc promo/cupom=${state.valorDescontoPromocaoTotal} '
+      'cupons: ${state.cuponsParaPayload} | total produtos=${state.valorTotalProdutos} desc promo/cupom=${state.valorDescontoPromocaoTotal} '
       'total a pagar=$totalAPagar | linhas pgto=${linhasValidadas.length}',
     );
 
@@ -872,10 +876,15 @@ class PagamentosRealizadosBloc
       final resultado = await _apurarElegibilidade.call(
         clienteId: state.pessoaId,
         itens: itens.values.toList(),
-        codigoCupom: state.cupomCodigoAplicado,
+        codigosCupom: state.cuponsAplicados,
       );
 
       final opcoesPorItem = _mapearOpcoesPorProduto(itens, resultado);
+      final promocoes = _autoAplicarPromocaoUnica(
+        opcoesPorItem,
+        state.promocaoEscolhidaPorItem,
+        state.descontosItensAplicado,
+      );
 
       emit(
         state.copyWith(
@@ -883,9 +892,11 @@ class PagamentosRealizadosBloc
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
           ),
-          promocaoEscolhidaPorItem: _autoAplicarPromocaoUnica(
+          promocaoEscolhidaPorItem: promocoes,
+          cuponsEscolhidosPorItem: _autoAplicarCupons(
             opcoesPorItem,
-            state.promocaoEscolhidaPorItem,
+            state.cuponsAplicados,
+            promocoes,
             state.descontosItensAplicado,
           ),
           carregandoElegibilidade: false,
@@ -964,6 +975,11 @@ class PagamentosRealizadosBloc
     } else {
       promocaoMap[event.produtoId] = event.opcao!;
     }
+    // Promocao e cupons sao exclusivos no produto: escolher/desmarcar aqui
+    // tira os cupons do item.
+    final cuponsMap = Map<int, List<OpcaoElegivel>>.from(
+      state.cuponsEscolhidosPorItem,
+    )..remove(event.produtoId);
 
     // Mutuamente exclusivo com desconto manual do mesmo produto (sentido
     // inverso de _onDescontoItemAlterado).
@@ -986,7 +1002,7 @@ class PagamentosRealizadosBloc
     if (state.valorDescontoAplicado > 0) {
       final distribuicao = _recalcularDistribuicaoDesconto(
         state.valorDescontoAplicado,
-        promocaoMap,
+        {...promocaoMap.keys, ...cuponsMap.keys},
       );
       if (distribuicao.aplicado.isEmpty) {
         valorDescontoAplicado = 0;
@@ -1007,6 +1023,7 @@ class PagamentosRealizadosBloc
     emit(
       state.copyWith(
         promocaoEscolhidaPorItem: promocaoMap,
+        cuponsEscolhidosPorItem: cuponsMap,
         descontoTipo: descontoTipo,
         descontoValorTexto: descontoValorTexto,
         valorDescontoAplicado: valorDescontoAplicado,
@@ -1045,6 +1062,7 @@ class PagamentosRealizadosBloc
 
     for (final entrada in state.opcoesElegiveisPorItem.entries) {
       final produtoId = entrada.key;
+      if (state.cuponsEscolhidosPorItem.containsKey(produtoId)) continue;
       final opcaoExistente = promocaoMap[produtoId];
       if (opcaoExistente != null && opcaoExistente.id != event.promocaoId) {
         continue;
@@ -1076,15 +1094,26 @@ class PagamentosRealizadosBloc
     PagamentosRealizadosCupomInformado event,
     Emitter<PagamentosRealizadosState> emit,
   ) async {
-    final codigo = event.codigo.trim();
+    final codigo = event.codigo.trim().toUpperCase();
     if (codigo.isEmpty) {
       emit(state.copyWith(erro: 'Informe o código do cupom.'));
       return;
     }
+    if (state.cuponsAplicados.contains(codigo)) {
+      emit(state.copyWith(cupomErro: 'Cupom $codigo já foi aplicado.'));
+      return;
+    }
+    if (!state.podeAdicionarCupom) {
+      emit(state.copyWith(
+        cupomErro: 'Máximo de ${PagamentosRealizadosState.maxCupons} cupons por venda.',
+      ));
+      return;
+    }
 
+    final codigos = [...state.cuponsAplicados, codigo];
     final produtos = state.resumo?.produtosCompartilhados ?? const [];
     _logCupom(
-      'APLICAR "$codigo" | cliente=${state.pessoaId} | carrinho='
+      'APLICAR "$codigo" (aplicados=${state.cuponsAplicados}) | cliente=${state.pessoaId} | carrinho='
       '${produtos.map((p) => "produto ${p.produtoId} qtd ${p.quantidade} un=${p.valorUnitario}").join(" | ")} '
       '| escolhas atuais: ${_descreverOpcoes(state.promocaoEscolhidaPorItem)} '
       '| desconto manual por item: ${state.descontosItensAplicado}',
@@ -1096,50 +1125,60 @@ class PagamentosRealizadosBloc
       final resultado = await _apurarElegibilidade.call(
         clienteId: state.pessoaId,
         itens: itens.values.toList(),
-        codigoCupom: codigo,
+        codigosCupom: codigos,
       );
       _logCupom(
         'RESPOSTA apuração: cupomInvalido=${resultado.cupomInvalido} | '
         '${resultado.itens.map((i) => "ref ${i.referenciaId}: [${i.opcoesElegiveis.map((o) => "${o.tipo}#${o.id} desc/un=${o.valorDesconto} final/un=${o.valorFinalUnitario}").join(", ")}]").join(" | ")}',
       );
 
-      if (resultado.cupomInvalido != null) {
+      // Recusado: descarta só o código novo, os já aplicados ficam.
+      final recusado = resultado.cupomInvalido != null ||
+          (resultado.cuponsAceitos != null &&
+              !resultado.cuponsAceitos!
+                  .any((c) => c.toUpperCase() == codigo));
+      if (recusado) {
         emit(
           state.copyWith(
             carregandoElegibilidade: false,
-            cupomErro: resultado.cupomInvalido,
-            cupomCodigoAplicado: null,
+            cupomErro: resultado.cupomInvalido ??
+                'Cupom $codigo não pôde ser aplicado.',
           ),
         );
         return;
       }
 
       final opcoesPorItem = _mapearOpcoesPorProduto(itens, resultado);
-      final escolhas = _autoAplicarPromocaoUnica(
+      final promocoes = _autoAplicarPromocaoUnica(
         opcoesPorItem,
         state.promocaoEscolhidaPorItem,
         state.descontosItensAplicado,
       );
+      final cupons = _autoAplicarCupons(
+        opcoesPorItem,
+        codigos,
+        promocoes,
+        state.descontosItensAplicado,
+      );
       _logCupom(
         'opções por produto: ${opcoesPorItem.entries.map((e) => "produto ${e.key}: ${e.value.length} opção(ões) [${e.value.map((o) => "${o.tipo}#${o.id}").join(",")}]").join(" | ")} '
-        '=> escolhas após auto-aplicar: ${_descreverOpcoes(escolhas)}',
+        '=> promoções: ${_descreverOpcoes(promocoes)} cupons: ${cupons.map((k, v) => MapEntry(k, v.map((o) => o.codigo).toList()))}',
       );
 
-      // Cupom válido mas que não chegou a nenhum item: não mostrar "Cupom aplicado"
-      // (falso positivo) -- diz o motivo e deixa o campo livre pra outro código.
-      if (!escolhas.values.any((opcao) => opcao.ehCupom)) {
+      // Cupom válido mas que não chegou a nenhum item: não mostrar como
+      // aplicado (falso positivo) -- diz o motivo e deixa o campo livre.
+      final chegouEmItem = cupons.values.any(
+        (opcoes) => opcoes.any((o) => _opcaoDoCupom(o, codigo)),
+      );
+      if (!chegouEmItem) {
         final haviaOpcaoDeCupom = opcoesPorItem.values.any(
-          (opcoes) => opcoes.any((opcao) => opcao.ehCupom),
+          (opcoes) => opcoes.any((o) => o.ehCupom && _opcaoDoCupom(o, codigo)),
         );
-        _logCupom(
-          'NÃO APLICADO "$codigo": haviaOpcaoDeCupom=$haviaOpcaoDeCupom '
-          '(false = apuração não devolveu cupom p/ nenhum item; true = item já tinha promoção/desconto)',
-        );
+        _logCupom('NÃO APLICADO "$codigo": haviaOpcaoDeCupom=$haviaOpcaoDeCupom');
         emit(
           state.copyWith(
             opcoesElegiveisPorItem: opcoesPorItem,
             carregandoElegibilidade: false,
-            cupomCodigoAplicado: null,
             cupomErro: haviaOpcaoDeCupom
                 ? 'Cupom válido, mas os itens elegíveis já têm promoção ou '
                     'desconto aplicado. O cupom não é acumulável.'
@@ -1156,9 +1195,10 @@ class PagamentosRealizadosBloc
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
           ),
-          promocaoEscolhidaPorItem: escolhas,
+          promocaoEscolhidaPorItem: promocoes,
+          cuponsEscolhidosPorItem: cupons,
+          cuponsAplicados: codigos,
           carregandoElegibilidade: false,
-          cupomCodigoAplicado: codigo,
           cupomErro: null,
         ),
       );
@@ -1178,20 +1218,18 @@ class PagamentosRealizadosBloc
     }
   }
 
+  // codigo null = backend antigo (1 cupom so), vale pra qualquer codigo.
+  bool _opcaoDoCupom(OpcaoElegivel opcao, String codigo) =>
+      opcao.ehCupom &&
+      (opcao.codigo == null || opcao.codigo!.toUpperCase() == codigo);
+
   // Para cada produto, se ele tiver exatamente 1 opcao elegivel nao-cupom,
   // aplica ela automaticamente nesse produto -- independente de quantas
   // promocoes distintas existem no carrinho como um todo. Produto com 2+
   // opcoes elegiveis simultaneas (conflito real) continua exigindo escolha
   // manual (dialog de promocoes globais, que so lista nao-cupom).
-  //
-  // Cupom cai no mesmo auto-apply quando o produto NAO tem nenhuma opcao
-  // nao-cupom (senao a promoção normal, que tem seletor manual pra resolver
-  // conflito, ganharia prioridade) -- nao existe em lugar nenhum da tela um
-  // seletor manual pra cupom por item (o campo de código só valida o cupom,
-  // ver _CupomField/_onCupomInformado), então sem isso aqui o cupom validava
-  // com sucesso e nunca descontava nada.
   // Defensivo: nunca sobrescreve item que ja tem promocao escolhida ou
-  // desconto manual ja aplicado.
+  // desconto manual ja aplicado. Cupom nao entra aqui (ver _autoAplicarCupons).
   Map<int, OpcaoElegivel> _autoAplicarPromocaoUnica(
     Map<int, List<OpcaoElegivel>> opcoesPorItem,
     Map<int, OpcaoElegivel> promocaoAtual,
@@ -1206,16 +1244,34 @@ class PagamentosRealizadosBloc
 
       final naoCupom =
           entrada.value.where((opcao) => !opcao.ehCupom).toList();
-      if (naoCupom.length == 1) {
-        resultado[produtoId] = naoCupom.first;
-        continue;
-      }
-      if (naoCupom.isNotEmpty) continue;
+      if (naoCupom.length == 1) resultado[produtoId] = naoCupom.first;
+    }
 
-      final cupons = entrada.value.where((opcao) => opcao.ehCupom).toList();
-      if (cupons.length == 1) {
-        resultado[produtoId] = cupons.first;
-      }
+    return resultado;
+  }
+
+  // Cupons aplicados em todo produto que servem (todas as opcoes de cupom
+  // dos codigos aplicados). Pula produto com promocao (escolhida ou
+  // elegivel pendente de escolha) ou desconto manual -- exclusividade.
+  // Recalculado do zero a cada apuracao.
+  Map<int, List<OpcaoElegivel>> _autoAplicarCupons(
+    Map<int, List<OpcaoElegivel>> opcoesPorItem,
+    List<String> codigos,
+    Map<int, OpcaoElegivel> promocoes,
+    Map<int, double> descontosItensAplicado,
+  ) {
+    final resultado = <int, List<OpcaoElegivel>>{};
+
+    for (final entrada in opcoesPorItem.entries) {
+      final produtoId = entrada.key;
+      if (promocoes.containsKey(produtoId)) continue;
+      if ((descontosItensAplicado[produtoId] ?? 0) > 0) continue;
+      if (entrada.value.any((opcao) => !opcao.ehCupom)) continue;
+
+      final cupons = entrada.value
+          .where((o) => codigos.any((c) => _opcaoDoCupom(o, c)))
+          .toList();
+      if (cupons.isNotEmpty) resultado[produtoId] = cupons;
     }
 
     return resultado;
@@ -1225,17 +1281,22 @@ class PagamentosRealizadosBloc
     PagamentosRealizadosCupomRemovido event,
     Emitter<PagamentosRealizadosState> emit,
   ) async {
-    // Limpa a escolha de qualquer item que estava usando o cupom removido
-    // (promocoes escolhidas continuam intactas).
-    final promocaoMap = Map<int, OpcaoElegivel>.from(
-      state.promocaoEscolhidaPorItem,
-    )..removeWhere((_, opcao) => opcao.ehCupom);
+    final codigo = event.codigo.trim().toUpperCase();
+    final restantes = state.cuponsAplicados.where((c) => c != codigo).toList();
+    // Tira o cupom removido dos itens (promocoes escolhidas intactas); a
+    // reapuracao abaixo recalcula os demais.
+    final cuponsMap = <int, List<OpcaoElegivel>>{};
+    for (final entrada in state.cuponsEscolhidosPorItem.entries) {
+      final ficam =
+          entrada.value.where((o) => !_opcaoDoCupom(o, codigo)).toList();
+      if (ficam.isNotEmpty) cuponsMap[entrada.key] = ficam;
+    }
 
     emit(
       state.copyWith(
-        cupomCodigoAplicado: null,
+        cuponsAplicados: restantes,
         cupomErro: null,
-        promocaoEscolhidaPorItem: promocaoMap,
+        cuponsEscolhidosPorItem: cuponsMap,
       ),
     );
 

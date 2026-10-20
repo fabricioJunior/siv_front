@@ -988,15 +988,20 @@ class _ProdutosCard extends StatelessWidget {
               // ponytail: prévia só recalcula p/ pagamento em 1 forma só,
               // split fica com valor base -- cálculo final de verdade é
               // sempre do backend (ver formaDePagamentoUnicaId no state).
-              final descontoPromocaoItem =
-                  ((promocaoAplicada?.valorDescontoParaForma(
-                            state.formaDePagamentoUnicaId,
-                            valorUnitario: produto.valorUnitario,
-                          ) ??
-                          0) +
+              final promocaoUnitario = promocaoAplicada?.valorDescontoParaForma(
+                    state.formaDePagamentoUnicaId,
+                    valorUnitario: produto.valorUnitario,
+                  ) ??
+                  0;
+              final manualUnitario = produto.quantidade > 0
+                  ? descontoAplicado / produto.quantidade
+                  : 0.0;
+              // Cupom soma com promocao e desconto manual, ate o teto do preco.
+              final descontoPromocaoItem = (promocaoUnitario +
                       PagamentosRealizadosState.descontoCuponsUnitario(
                         cuponsItem,
                         produto.valorUnitario,
+                        jaDescontadoUnitario: promocaoUnitario + manualUnitario,
                       )) *
                   produto.quantidade;
               final temDesconto = descontoAplicado > 0 ||

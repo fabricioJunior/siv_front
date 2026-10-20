@@ -114,13 +114,11 @@ class PagamentosRealizadosState extends Equatable {
   double get valorTotalProdutosSemPromocao {
     final produtos = resumo?.produtosCompartilhados ?? const [];
     return produtos
-        .where((p) => !produtoIdsComPromocaoOuCupom.contains(p.produtoId))
+        .where((p) => !produtoIdsComPromocao.contains(p.produtoId))
         .fold<double>(0, (soma, p) => soma + p.quantidade * p.valorUnitario);
   }
-  // Produtos que ja tem desconto de promocao OU cupom (exclusivos entre si
-  // e com desconto manual).
-  Set<int> get produtoIdsComPromocaoOuCupom =>
-      {...promocaoEscolhidaPorItem.keys, ...cuponsEscolhidosPorItem.keys};
+  // Produtos com promocao (exclusiva com desconto manual; cupom soma com ambos).
+  Set<int> get produtoIdsComPromocao => promocaoEscolhidaPorItem.keys.toSet();
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
   // Forma de pagamento escolhida, só quando há exatamente 1 linha com forma
@@ -153,8 +151,22 @@ class PagamentosRealizadosState extends Equatable {
         (soma, entrada) {
       final produto = valorUnitarioPorProduto[entrada.key];
       if (produto == null) return soma;
+      // Cupom soma com promocao e desconto manual do item, ate o teto do preco.
+      final promocao = promocaoEscolhidaPorItem[entrada.key];
+      final jaDescontado = (promocao?.valorDescontoParaForma(
+                formaId,
+                valorUnitario: produto.valorUnitario,
+              ) ??
+              0) +
+          (produto.quantidade > 0
+              ? (descontosItensAplicado[entrada.key] ?? 0) / produto.quantidade
+              : 0);
       return soma +
-          descontoCuponsUnitario(entrada.value, produto.valorUnitario) *
+          descontoCuponsUnitario(
+                entrada.value,
+                produto.valorUnitario,
+                jaDescontadoUnitario: jaDescontado,
+              ) *
               produto.quantidade;
     });
     return cupons +
@@ -173,10 +185,12 @@ class PagamentosRealizadosState extends Equatable {
   // tem teto no preco unitario (mesma regra do backend).
   static double descontoCuponsUnitario(
     List<OpcaoElegivel> cupons,
-    double valorUnitario,
-  ) {
+    double valorUnitario, {
+    double jaDescontadoUnitario = 0,
+  }) {
     final soma = cupons.fold<double>(0, (a, o) => a + o.valorDesconto);
-    return soma > valorUnitario ? valorUnitario : soma;
+    final teto = (valorUnitario - jaDescontadoUnitario).clamp(0, valorUnitario);
+    return soma > teto ? teto.toDouble() : soma;
   }
 
   // Payload `cupons` do fechamento: produtoIds agrupados por codigo.

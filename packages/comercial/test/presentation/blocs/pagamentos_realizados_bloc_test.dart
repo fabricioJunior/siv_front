@@ -322,7 +322,7 @@ void main() {
   );
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
-    'cupom perde para promocao ja escolhida no item: avisa que nao e acumulavel',
+    'cupom soma com a promocao do item (nao e exclusivo)',
     build: () => PagamentosRealizadosBloc(
       _StubCarregarResumo(),
       _StubBuscarSaldoCreditoDevolucao(),
@@ -362,8 +362,11 @@ void main() {
         .add(const PagamentosRealizadosCupomInformado(codigo: 'PRICILLA200')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
-      expect(bloc.state.possuiCupomAplicado, isFalse);
-      expect(bloc.state.cupomErro, contains('não é acumulável'));
+      expect(bloc.state.possuiCupomAplicado, isTrue);
+      expect(bloc.state.cupomErro, isNull);
+      expect(bloc.state.cuponsEscolhidosPorItem[9], hasLength(1));
+      // desconto total nunca passa do preco (promocao + cupom de 199)
+      expect(bloc.state.valorTotalComDesconto, 0);
     },
   );
 
@@ -576,7 +579,7 @@ void main() {
   );
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
-    'cupons nao entram em produto com promocao: exclusividade',
+    'cupom soma com a promocao do mesmo item',
     build: () => blocComApuracao(_FakeApurarElegibilidade(
       apuracaoCom(
           [_opcao(77), cupomOpcao(1, 'CUP5', 5), cupomOpcao(2, 'CUP8', 8)]),
@@ -586,14 +589,34 @@ void main() {
         bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'CUP5')),
     wait: const Duration(milliseconds: 50),
     verify: (bloc) {
-      expect(bloc.state.cuponsAplicados, isEmpty);
-      expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
-      expect(bloc.state.cupomErro, contains('não é acumulável'));
+      expect(bloc.state.cuponsAplicados, ['CUP5']);
+      expect(bloc.state.cuponsEscolhidosPorItem[9], hasLength(1));
+      expect(bloc.state.cupomErro, isNull);
     },
   );
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
-    'escolher promocao no item tira os cupons dele',
+    'cupom soma com o desconto manual do item, com teto no preco',
+    build: () => blocComApuracao(_FakeApurarElegibilidade(
+      apuracaoCom([cupomOpcao(1, 'CUP5', 5)]),
+    )),
+    seed: () => estadoCarrinho199.copyWith(
+      descontosItensAplicado: {9: 197},
+    ),
+    act: (bloc) =>
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'CUP5')),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.cuponsAplicados, ['CUP5']);
+      expect(bloc.state.cupomErro, isNull);
+      // 199 - 197 manual = 2 restantes; cupom de 5 e limitado a 2
+      expect(bloc.state.valorTotalComDesconto, 0);
+      expect(bloc.state.valorDescontoPromocaoTotal, 2);
+    },
+  );
+
+  blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+    'escolher promocao no item mantem os cupons dele',
     build: () => blocComApuracao(
         _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: []))),
     seed: () => estadoCarrinho199.copyWith(
@@ -606,7 +629,7 @@ void main() {
       PagamentosRealizadosPromocaoEscolhida(produtoId: 9, opcao: _opcao(77)),
     ),
     verify: (bloc) {
-      expect(bloc.state.cuponsEscolhidosPorItem, isEmpty);
+      expect(bloc.state.cuponsEscolhidosPorItem[9], hasLength(1));
       expect(bloc.state.promocaoEscolhidaPorItem[9]?.id, 77);
     },
   );

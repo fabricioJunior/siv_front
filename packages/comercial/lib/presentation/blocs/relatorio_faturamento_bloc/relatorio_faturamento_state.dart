@@ -18,6 +18,8 @@ class RelatorioFaturamentoState {
   final RelatorioFaturamentoComparativoStep comparativoStep;
   final RelatorioFaturamentoComparativo? comparativoDados;
   final String agruparPor;
+  final RelatorioFaturamento? anteriorDados;
+  final RelatorioFaturamentoComparativo? anoAnteriorDados;
 
   const RelatorioFaturamentoState({
     required this.step,
@@ -28,6 +30,8 @@ class RelatorioFaturamentoState {
     this.comparativoStep = RelatorioFaturamentoComparativoStep.ocioso,
     this.comparativoDados,
     this.agruparPor = 'mes',
+    this.anteriorDados,
+    this.anoAnteriorDados,
   });
 
   factory RelatorioFaturamentoState.initial() {
@@ -48,6 +52,10 @@ class RelatorioFaturamentoState {
     RelatorioFaturamentoComparativoStep? comparativoStep,
     RelatorioFaturamentoComparativo? comparativoDados,
     String? agruparPor,
+    RelatorioFaturamento? anteriorDados,
+    RelatorioFaturamentoComparativo? anoAnteriorDados,
+    bool zerarAnterior = false,
+    bool zerarAnoAnterior = false,
   }) =>
       RelatorioFaturamentoState(
         step: step ?? this.step,
@@ -58,6 +66,11 @@ class RelatorioFaturamentoState {
         comparativoStep: comparativoStep ?? this.comparativoStep,
         comparativoDados: comparativoDados ?? this.comparativoDados,
         agruparPor: agruparPor ?? this.agruparPor,
+        anteriorDados:
+            zerarAnterior ? null : anteriorDados ?? this.anteriorDados,
+        anoAnteriorDados: zerarAnoAnterior
+            ? null
+            : anoAnteriorDados ?? this.anoAnteriorDados,
       );
 }
 

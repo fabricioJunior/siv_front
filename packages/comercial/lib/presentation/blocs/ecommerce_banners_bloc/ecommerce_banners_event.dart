@@ -41,6 +41,17 @@ class EcommerceBannerAtivoAlterou extends EcommerceBannersEvent {
   List<Object?> get props => [id, ativo];
 }
 
+/// `link: null` limpa o destino do banner.
+class EcommerceBannerLinkAlterou extends EcommerceBannersEvent {
+  final int id;
+  final EcommerceBannerLink? link;
+
+  const EcommerceBannerLinkAlterou({required this.id, this.link});
+
+  @override
+  List<Object?> get props => [id, link?.tipo, link?.url, link?.listaId];
+}
+
 class EcommerceBannerExcluiu extends EcommerceBannersEvent {
   final int id;
 

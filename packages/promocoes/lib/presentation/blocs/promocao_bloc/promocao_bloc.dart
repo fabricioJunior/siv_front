@@ -91,6 +91,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         precoFixo: event.precoFixo,
         tipoEscopo: event.tipoEscopo,
         referenciaIds: event.referenciaIds,
+        categorias: event.categorias,
+        excecaoReferenciaIds: event.excecaoReferenciaIds,
         comboKit: event.comboKit,
         quantidadeLeva: event.quantidadeLeva,
         quantidadePaga: event.quantidadePaga,
@@ -203,6 +205,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         precoFixo: state.precoFixo,
         tipoEscopo: state.tipoEscopo,
         referenciaIds: state.referenciaIds,
+        categorias: state.categorias,
+        excecaoReferenciaIds: state.excecaoReferenciaIds,
         comboKit: state.comboKit,
         quantidadeLeva: state.quantidadeLeva,
         quantidadePaga: state.quantidadePaga,
@@ -269,6 +273,11 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
       case TipoEscopo.referencias:
         if (state.referenciaIds == null || state.referenciaIds!.isEmpty) {
           return 'Selecione ao menos uma referência.';
+        }
+        return null;
+      case TipoEscopo.categorias:
+        if (state.categorias == null || state.categorias!.isEmpty) {
+          return 'Selecione ao menos uma categoria.';
         }
         return null;
       case TipoEscopo.comboKit:

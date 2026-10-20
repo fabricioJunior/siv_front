@@ -6,6 +6,7 @@ abstract class RelatorioProdutoDefasadoItem {
   int get referenciaId;
   String get referenciaIdExterno;
   String get referenciaNome;
+  String? get marcaNome;
   int? get corId;
   String get corNome;
   int? get tamanhoId;

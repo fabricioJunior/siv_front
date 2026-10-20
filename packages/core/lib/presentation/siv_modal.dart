@@ -12,6 +12,7 @@ class SivModal extends StatelessWidget {
   final String? contadorSelecao;
   final List<Widget> acoes;
   final bool fechavel;
+  final double larguraMaxima;
 
   const SivModal({
     super.key,
@@ -20,6 +21,7 @@ class SivModal extends StatelessWidget {
     this.contadorSelecao,
     this.acoes = const [],
     this.fechavel = true,
+    this.larguraMaxima = 720,
   });
 
   static Future<T?> mostrar<T>(
@@ -29,6 +31,7 @@ class SivModal extends StatelessWidget {
     String? contadorSelecao,
     List<Widget> acoes = const [],
     bool fechavel = true,
+    double larguraMaxima = 720,
   }) {
     return showDialog<T>(
       context: context,
@@ -40,6 +43,7 @@ class SivModal extends StatelessWidget {
         contadorSelecao: contadorSelecao,
         acoes: acoes,
         fechavel: fechavel,
+        larguraMaxima: larguraMaxima,
       ),
     );
   }
@@ -52,7 +56,7 @@ class SivModal extends StatelessWidget {
     return Dialog(
       insetPadding: const EdgeInsets.all(40),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 640),
+        constraints: BoxConstraints(maxWidth: larguraMaxima, maxHeight: 640),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

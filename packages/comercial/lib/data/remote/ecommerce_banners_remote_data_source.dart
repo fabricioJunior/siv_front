@@ -48,12 +48,15 @@ class EcommerceBannersRemoteDataSource extends RemoteDataSourceBase
     int id, {
     int? ordem,
     bool? ativo,
+    EcommerceBannerLink? link,
+    bool limparLink = false,
   }) async {
     await put(
       pathParameters: {'id': '$ecommerceId/banners/$id'},
       body: {
         if (ordem != null) 'ordem': ordem,
         if (ativo != null) 'ativo': ativo,
+        ...EcommerceBannerDto.linkParaJson(link, limparLink: limparLink),
       },
     );
   }

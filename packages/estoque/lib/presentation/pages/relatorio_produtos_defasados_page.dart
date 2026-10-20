@@ -1,5 +1,7 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/presentation.dart';
+import 'package:core/tema.dart';
 import 'package:estoque/domain/models/relatorio_produtos_defasados.dart';
 import 'package:estoque/presentation/blocs/relatorio_produtos_defasados_bloc/relatorio_produtos_defasados_bloc.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +43,8 @@ class _RelatorioProdutosDefasadosPageState
   List<Tamanho> _tamanhos = [];
   ModoAgrupamentoReferencia _modoAgrupamento =
       ModoAgrupamentoReferencia.todos;
+  String _ordenarPor = 'dias';
+  bool _ascendente = false;
 
   @override
   void initState() {
@@ -80,222 +84,169 @@ class _RelatorioProdutosDefasadosPageState
     ));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider<RelatorioProdutosDefasadosBloc>.value(
-      value: _bloc,
-      child: BlocBuilder<RelatorioProdutosDefasadosBloc,
-          RelatorioProdutosDefasadosState>(
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Produtos Defasados')),
-            body: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                if (state.step == RelatorioProdutosDefasadosStep.sucesso &&
-                    state.dados != null)
-                  _ResumoCard(resumo: state.dados!.resumo),
+  int _dias() => (int.tryParse(_diasController.text) ?? 90).clamp(1, 3650);
 
-                // Filtros
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Filtros',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _diasController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: 'Dias sem movimentação',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            isDense: true,
-                            suffixText: 'dias',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _buscaController,
-                          decoration: InputDecoration(
-                            labelText: 'Buscar',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            isDense: true,
-                            prefixIcon: const Icon(Icons.search),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('Tipo de movimentação',
-                            style: Theme.of(context).textTheme.bodySmall),
-                        const SizedBox(height: 6),
-                        SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment<String>(
-                              value: 'entrada',
-                              icon: Icon(Icons.arrow_downward),
-                              label: Text('Entrada'),
-                            ),
-                            ButtonSegment<String>(
-                              value: 'saida',
-                              icon: Icon(Icons.arrow_upward),
-                              label: Text('Saída'),
-                            ),
-                            ButtonSegment<String>(
-                              value: 'ambas',
-                              icon: Icon(Icons.swap_vert),
-                              label: Text('Ambas'),
-                            ),
-                          ],
-                          selected: {_tipoMovimentacao},
-                          onSelectionChanged: (selection) {
-                            setState(
-                                () => _tipoMovimentacao = selection.first);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CorSeletor(
-                          modo: CorSeletorModo.multipla,
-                          coresSelecionadasIniciais: _cores,
-                          onCorChanged: (cores) =>
-                              setState(() => _cores = cores),
-                        ),
-                        const SizedBox(height: 12),
-                        TamanhoSeletor(
-                          modo: TamanhoSeletorModo.multipla,
-                          tamanhosSelecionadosIniciais: _tamanhos,
-                          onTamanhosChanged: (tamanhos) =>
-                              setState(() => _tamanhos = tamanhos),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('Visualização',
-                            style: Theme.of(context).textTheme.bodySmall),
-                        const SizedBox(height: 6),
-                        SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment<String>(
-                              value: 'produto',
-                              icon: Icon(Icons.inventory_2_outlined),
-                              label: Text('Por produto'),
-                            ),
-                            ButtonSegment<String>(
-                              value: 'referencia',
-                              icon: Icon(Icons.category_outlined),
-                              label: Text('Por referência'),
-                            ),
-                          ],
-                          selected: {_visualizacao},
-                          onSelectionChanged: (selection) {
-                            setState(() => _visualizacao = selection.first);
-                          },
-                        ),
-                        if (_visualizacao == 'referencia') ...[
-                          const SizedBox(height: 12),
-                          Text('Quando a referência conta como defasada',
-                              style: Theme.of(context).textTheme.bodySmall),
-                          const SizedBox(height: 6),
-                          SegmentedButton<ModoAgrupamentoReferencia>(
-                            segments: const [
-                              ButtonSegment<ModoAgrupamentoReferencia>(
-                                value: ModoAgrupamentoReferencia.todos,
-                                label: Text('Todos os produtos defasados'),
-                              ),
-                              ButtonSegment<ModoAgrupamentoReferencia>(
-                                value: ModoAgrupamentoReferencia.qualquer,
-                                label:
-                                    Text('Pelo menos um produto defasado'),
-                              ),
-                            ],
-                            selected: {_modoAgrupamento},
-                            onSelectionChanged: (selection) {
-                              setState(
-                                  () => _modoAgrupamento = selection.first);
-                            },
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _aplicar,
-                            icon: const Icon(Icons.search),
-                            label: const Text('Consultar'),
-                          ),
-                        ),
-                      ],
-                    ),
+  String get _rotuloTipo => switch (_tipoMovimentacao) {
+        'entrada' => 'Somente entrada',
+        'saida' => 'Somente saída',
+        _ => 'Entrada e saída',
+      };
+
+  Object? _chave(RelatorioProdutoDefasadoItem i, String id) => switch (id) {
+        'produto' => i.referenciaNome.toLowerCase(),
+        'grade' => '${i.corNome} ${i.tamanhoNome}'.toLowerCase(),
+        'saldo' => i.saldo,
+        'valor' => i.valorTotal,
+        _ => i.diasSemMovimentacao ?? -1,
+      };
+
+  List<RelatorioProdutoDefasadoItem> _ordenar(
+      List<RelatorioProdutoDefasadoItem> itens) {
+    final l = [...itens];
+    l.sort((a, b) {
+      final c = Comparable.compare(
+          _chave(a, _ordenarPor) as Comparable, _chave(b, _ordenarPor) as Comparable);
+      return _ascendente ? c : -c;
+    });
+    return l;
+  }
+
+  void _ordenarColuna(String id) => setState(() {
+        if (_ordenarPor == id) {
+          _ascendente = !_ascendente;
+        } else {
+          _ordenarPor = id;
+          _ascendente = id == 'produto' || id == 'grade';
+        }
+      });
+
+  Future<void> _abrirFiltros() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          void s(VoidCallback f) {
+            setState(f);
+            setS(() {});
+          }
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+                16, 0, 16, 16 + MediaQuery.viewInsetsOf(ctx).bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _diasController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Dias sem movimentação',
+                    isDense: true,
+                    suffixText: 'dias',
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                if (state.step == RelatorioProdutosDefasadosStep.carregando)
-                  const _EstadoCard(
-                    titulo: 'Carregando produtos',
-                    descricao: 'Buscando produtos defasados...',
-                    loading: true,
-                  )
-                else if (state.step == RelatorioProdutosDefasadosStep.falha)
-                  _EstadoCard(
-                    titulo: 'Falha ao carregar',
-                    descricao: state.erro ?? '',
-                    onRetry: _aplicar,
-                  )
-                else if (state.step == RelatorioProdutosDefasadosStep.inicial)
-                  const _EstadoCard(
-                    titulo: 'Aplique o filtro',
-                    descricao: 'Informe os filtros e toque em Consultar.',
-                  )
-                else if (state.dados != null) ...[
-                  if (state.dados!.items.isEmpty)
-                    const _EstadoCard(
-                      titulo: 'Nenhum produto encontrado',
-                      descricao:
-                          'Nenhum produto defasado com os filtros informados.',
-                    )
-                  else
-                    ...state.dados!.items.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _ProdutoDefasadoCard(item: item),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _buscaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Buscar',
+                    isDense: true,
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('Tipo de movimentação',
+                    style: Theme.of(ctx).textTheme.bodySmall),
+                const SizedBox(height: 6),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment<String>(
+                      value: 'entrada',
+                      icon: Icon(Icons.arrow_downward),
+                      label: Text('Entrada'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'saida',
+                      icon: Icon(Icons.arrow_upward),
+                      label: Text('Saída'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'ambas',
+                      icon: Icon(Icons.swap_vert),
+                      label: Text('Ambas'),
+                    ),
+                  ],
+                  selected: {_tipoMovimentacao},
+                  onSelectionChanged: (v) =>
+                      s(() => _tipoMovimentacao = v.first),
+                ),
+                const SizedBox(height: 12),
+                CorSeletor(
+                  modo: CorSeletorModo.multipla,
+                  coresSelecionadasIniciais: _cores,
+                  onCorChanged: (cores) => s(() => _cores = cores),
+                ),
+                const SizedBox(height: 12),
+                TamanhoSeletor(
+                  modo: TamanhoSeletorModo.multipla,
+                  tamanhosSelecionadosIniciais: _tamanhos,
+                  onTamanhosChanged: (t) => s(() => _tamanhos = t),
+                ),
+                const SizedBox(height: 12),
+                Text('Visualização',
+                    style: Theme.of(ctx).textTheme.bodySmall),
+                const SizedBox(height: 6),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment<String>(
+                      value: 'produto',
+                      icon: Icon(Icons.inventory_2_outlined),
+                      label: Text('Por produto'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'referencia',
+                      icon: Icon(Icons.category_outlined),
+                      label: Text('Por referência'),
+                    ),
+                  ],
+                  selected: {_visualizacao},
+                  onSelectionChanged: (v) => s(() => _visualizacao = v.first),
+                ),
+                if (_visualizacao == 'referencia') ...[
+                  const SizedBox(height: 12),
+                  Text('Quando a referência conta como defasada',
+                      style: Theme.of(ctx).textTheme.bodySmall),
+                  const SizedBox(height: 6),
+                  SegmentedButton<ModoAgrupamentoReferencia>(
+                    segments: const [
+                      ButtonSegment<ModoAgrupamentoReferencia>(
+                        value: ModoAgrupamentoReferencia.todos,
+                        label: Text('Todos os produtos defasados'),
                       ),
-                    ),
-                  if (state.totalPages > 1)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.chevron_left),
-                          label: const Text('Anterior'),
-                          onPressed: state.page > 1
-                              ? () => _aplicar(page: state.page - 1)
-                              : null,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            '${state.page}/${state.totalPages}',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.chevron_right),
-                          label: const Text('Próxima'),
-                          onPressed: state.page < state.totalPages
-                              ? () => _aplicar(page: state.page + 1)
-                              : null,
-                        ),
-                      ],
-                    ),
+                      ButtonSegment<ModoAgrupamentoReferencia>(
+                        value: ModoAgrupamentoReferencia.qualquer,
+                        label: Text('Pelo menos um produto defasado'),
+                      ),
+                    ],
+                    selected: {_modoAgrupamento},
+                    onSelectionChanged: (v) =>
+                        s(() => _modoAgrupamento = v.first),
+                  ),
                 ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _aplicar();
+                    },
+                    icon: const Icon(Icons.search),
+                    label: const Text('Consultar'),
+                  ),
+                ),
               ],
             ),
           );
@@ -303,214 +254,159 @@ class _RelatorioProdutosDefasadosPageState
       ),
     );
   }
-}
-
-class _ResumoCard extends StatelessWidget {
-  final dynamic resumo;
-  const _ResumoCard({required this.resumo});
 
   @override
   Widget build(BuildContext context) {
-    final percentual = (resumo.percentualDefasado as double);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFB71C1C), Color(0xFFE53935)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                backgroundColor: Colors.white24,
-                child: Icon(Icons.warning_amber_outlined, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Produtos defasados',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text(
-                    '${resumo.quantidadeDefasados}',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold),
+    return BlocProvider<RelatorioProdutosDefasadosBloc>.value(
+      value: _bloc,
+      child: BlocBuilder<RelatorioProdutosDefasadosBloc,
+          RelatorioProdutosDefasadosState>(
+        builder: (context, state) {
+          final dados = state.dados;
+          final ok =
+              state.step == RelatorioProdutosDefasadosStep.sucesso &&
+                  dados != null;
+          return Scaffold(
+            body: SafeArea(
+              child: RelatorioScaffold(
+                titulo: 'Produtos Defasados',
+                filtros: [
+                  RelatorioFiltroChip(
+                    rotulo: 'Sem giro há ${_dias()}+ dias',
+                    onTap: _abrirFiltros,
+                  ),
+                  RelatorioFiltroChip(
+                    rotulo: _rotuloTipo,
+                    onTap: _abrirFiltros,
+                  ),
+                  RelatorioFiltroChip(
+                    rotulo: _visualizacao == 'produto'
+                        ? 'Cor / Tamanho'
+                        : 'Por referência',
+                    onTap: _abrirFiltros,
                   ),
                 ],
+                kpis: ok
+                    ? [
+                        RelatorioKpiCard(
+                          rotulo: 'Itens defasados',
+                          valor: '${dados.resumo.quantidadeDefasados}',
+                          tom: RelatorioKpiTom.atencao,
+                        ),
+                        RelatorioKpiCard(
+                          rotulo: 'Valor em estoque',
+                          valor: _fmtMoeda(dados.resumo.valorTotalDefasado),
+                        ),
+                      ]
+                    : const [],
+                carregando:
+                    state.step == RelatorioProdutosDefasadosStep.carregando ||
+                        state.step == RelatorioProdutosDefasadosStep.inicial,
+                erro: state.step == RelatorioProdutosDefasadosStep.falha
+                    ? (state.erro ?? 'Falha ao carregar')
+                    : null,
+                onTentarDeNovo: _aplicar,
+                vazio: ok && dados.items.isEmpty,
+                corpo: ok ? _corpo(context, state, dados) : const SizedBox(),
               ),
-              const SizedBox(width: 24),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('% do estoque',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text(
-                    '${percentual.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Valor total defasado: ${_fmtMoeda(resumo.valorTotalDefasado as double)}',
-            style: const TextStyle(
-                color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            'Total em estoque: ${resumo.totalEmEstoque}',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-          ),
-        ],
+            ),
+          );
+        },
       ),
     );
   }
-}
 
-class _ProdutoDefasadoCard extends StatelessWidget {
-  final dynamic item;
-  const _ProdutoDefasadoCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final dias = item.diasSemMovimentacao as int?;
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB71C1C),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${item.referenciaNome} · ${item.corNome} · ${item.tamanhoNome}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 13),
-                          ),
-                        ),
-                        Text(
-                          _fmtMoeda(item.valorTotal as double),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Saldo: ${item.saldo} · Últ. entrada: ${_fmtData(item.ultimaEntrada as String?)} · '
-                            'Últ. saída: ${_fmtData(item.ultimaSaida as String?)}',
-                            style: const TextStyle(
-                                fontSize: 11, color: Colors.black54),
-                          ),
-                        ),
-                        if (dias != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFEBEE),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$dias dias',
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFB71C1C)),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+  Widget _corpo(BuildContext context, RelatorioProdutosDefasadosState state,
+      RelatorioProdutosDefasados dados) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return Column(
+      children: [
+        RelatorioTabela<RelatorioProdutoDefasadoItem>(
+          colunas: const [
+            RelatorioColuna(id: 'produto', titulo: 'Produto', flex: 4),
+            RelatorioColuna(id: 'grade', titulo: 'Grade', flex: 3),
+            RelatorioColuna(id: 'saldo', titulo: 'Saldo'),
+            RelatorioColuna(id: 'valor', titulo: 'Valor', numerica: true, flex: 2),
+            RelatorioColuna(id: 'dias', titulo: 'Sem giro há', flex: 2),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EstadoCard extends StatelessWidget {
-  final String titulo;
-  final String descricao;
-  final bool loading;
-  final VoidCallback? onRetry;
-
-  const _EstadoCard({
-    required this.titulo,
-    required this.descricao,
-    this.loading = false,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) => Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              if (loading)
-                const CircularProgressIndicator.adaptive()
-              else
-                const Icon(Icons.inventory_2_outlined, size: 40),
-              const SizedBox(height: 12),
-              Text(titulo,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              Text(descricao,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium),
-              if (onRetry != null) ...[
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Tentar novamente'),
-                  onPressed: onRetry,
+          itens: _ordenar(dados.items),
+          ordenarPor: _ordenarPor,
+          ascendente: _ascendente,
+          onOrdenar: _ordenarColuna,
+          celulas: (_, i) => [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(i.referenciaNome,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  'REF ${i.referenciaIdExterno}'
+                  '${i.marcaNome == null ? '' : ' · ${i.marcaNome}'}',
+                  style: textos.apoio.copyWith(color: cores.textoApoio),
                 ),
               ],
+            ),
+            Text('${i.corNome} · ${i.tamanhoNome}', style: textos.corpo),
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                '${i.saldo}',
+                textAlign: TextAlign.center,
+                style: textos.corpo
+                    .copyWith(fontFamily: sivFonteCondensed, fontSize: 16),
+              ),
+            ),
+            Text(_fmtMoeda(i.valorTotal), style: textos.corpo),
+            Text(
+              i.diasSemMovimentacao == null
+                  ? '-'
+                  : '${i.diasSemMovimentacao} dias',
+              style: textos.corpo.copyWith(
+                  color: cores.atencao, fontWeight: FontWeight.w700),
+            ),
+          ],
+          itemMobile: (_, i) => RelatorioItemMobile(
+            titulo: '${i.referenciaNome} · ${i.corNome} · ${i.tamanhoNome}',
+            apoio: [
+              'REF ${i.referenciaIdExterno}'
+                  '${i.marcaNome == null ? '' : ' · ${i.marcaNome}'}',
+              'Saldo ${i.saldo}',
+              if (i.diasSemMovimentacao != null)
+                '${i.diasSemMovimentacao} dias sem giro',
+              'Últ. entrada ${_fmtData(i.ultimaEntrada)}',
+              'Últ. saída ${_fmtData(i.ultimaSaida)}',
             ],
+            valor: _fmtMoeda(i.valorTotal),
           ),
         ),
-      );
+        if (state.totalPages > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.chevron_left),
+                label: const Text('Anterior'),
+                onPressed:
+                    state.page > 1 ? () => _aplicar(page: state.page - 1) : null,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text('${state.page}/${state.totalPages}',
+                    style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.chevron_right),
+                label: const Text('Próxima'),
+                onPressed: state.page < state.totalPages
+                    ? () => _aplicar(page: state.page + 1)
+                    : null,
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 }

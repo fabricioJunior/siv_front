@@ -18,6 +18,12 @@ abstract class CreditoDevolucaoMovimentacao implements Equatable {
   bool get cancelado;
   String? get motivoCancelamento;
   int get operadorId;
+  int? get creditoId;
+
+  /// devolucao | avulso | transferencia | uso_venda | remocao | expiracao.
+  String? get origem;
+  String? get motivo;
+  String? get operadorNome;
 
   factory CreditoDevolucaoMovimentacao.create({
     required DateTime criadoEm,
@@ -37,6 +43,10 @@ abstract class CreditoDevolucaoMovimentacao implements Equatable {
     required bool cancelado,
     String? motivoCancelamento,
     required int operadorId,
+    int? creditoId,
+    String? origem,
+    String? motivo,
+    String? operadorNome,
   }) = _CreditoDevolucaoMovimentacaoImpl;
 
   double get valorAssinado {
@@ -71,6 +81,10 @@ abstract class CreditoDevolucaoMovimentacao implements Equatable {
         cancelado,
         motivoCancelamento,
         operadorId,
+        creditoId,
+        origem,
+        motivo,
+        operadorNome,
       ];
 
   @override
@@ -113,6 +127,14 @@ class _CreditoDevolucaoMovimentacaoImpl
   final String? motivoCancelamento;
   @override
   final int operadorId;
+  @override
+  final int? creditoId;
+  @override
+  final String? origem;
+  @override
+  final String? motivo;
+  @override
+  final String? operadorNome;
 
   const _CreditoDevolucaoMovimentacaoImpl({
     required this.criadoEm,
@@ -132,6 +154,10 @@ class _CreditoDevolucaoMovimentacaoImpl
     required this.cancelado,
     this.motivoCancelamento,
     required this.operadorId,
+    this.creditoId,
+    this.origem,
+    this.motivo,
+    this.operadorNome,
   });
 
   @override
@@ -153,11 +179,15 @@ class _CreditoDevolucaoMovimentacaoImpl
         cancelado,
         motivoCancelamento,
         operadorId,
+        creditoId,
+        origem,
+        motivo,
+        operadorNome,
       ];
 
   @override
   bool? get stringify => true;
-  
+
   @override
   double get valorAssinado => 0;
 }

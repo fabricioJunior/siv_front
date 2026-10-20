@@ -98,16 +98,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
                   .where((e) => !e.value.ehCupom)
                   .map((e) => {'produtoId': e.key, 'promocaoId': e.value.id})
                   .toList(),
-              'cupom': state.promocaoEscolhidaPorItem.values
-                      .any((opcao) => opcao.ehCupom)
-                  ? {
-                      'codigo': state.cupomCodigoAplicado,
-                      'produtoIds': state.promocaoEscolhidaPorItem.entries
-                          .where((e) => e.value.ehCupom)
-                          .map((e) => e.key)
-                          .toList(),
-                    }
-                  : null,
+              'cupons': state.cuponsParaPayload,
               'valorTaxaEntrega': state.valorTaxaEntregaAplicado,
               'resumoFormasDePagamento': state.linhas
                   .where((linha) => linha.formaDePagamento != null)
@@ -302,6 +293,11 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
   @override
   void didUpdateWidget(covariant _ResumoPagamentoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Cupom novo aceito: limpa o campo pra digitar o próximo.
+    if (widget.state.cuponsAplicados.length >
+        oldWidget.state.cuponsAplicados.length) {
+      _cupomController.clear();
+    }
     if (widget.state.cpfNaNota != _cpfController.text &&
         widget.state.cpfNaNota != oldWidget.state.cpfNaNota) {
       _cpfController.text = widget.state.cpfNaNota;
@@ -580,19 +576,7 @@ class _CupomField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.possuiCupomAplicado) {
-      return Chip(
-        avatar: const Icon(Icons.confirmation_number, size: 16),
-        label: Text('Cupom aplicado: ${state.cupomCodigoAplicado}'),
-        onDeleted: habilitado
-            ? () => context
-                .read<PagamentosRealizadosBloc>()
-                .add(const PagamentosRealizadosCupomRemovido())
-            : null,
-      );
-    }
-
-    return Row(
+    final campo = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
@@ -600,7 +584,9 @@ class _CupomField extends StatelessWidget {
             controller: controller,
             enabled: habilitado && !state.carregandoElegibilidade,
             decoration: InputDecoration(
-              labelText: 'Código do cupom',
+              labelText: state.possuiCupomAplicado
+                  ? 'Adicionar outro cupom'
+                  : 'Código do cupom',
               border: const OutlineInputBorder(),
               isDense: true,
               errorText: state.cupomErro,
@@ -623,6 +609,49 @@ class _CupomField extends StatelessWidget {
                 )
               : const Text('Aplicar'),
         ),
+      ],
+    );
+
+    if (!state.possuiCupomAplicado) return campo;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final codigo in state.cuponsAplicados)
+              InputChip(
+                avatar: const Icon(Icons.confirmation_number, size: 16),
+                label: Text('Cupom $codigo'),
+                onDeleted: habilitado
+                    ? () => context.read<PagamentosRealizadosBloc>().add(
+                          PagamentosRealizadosCupomRemovido(codigo: codigo),
+                        )
+                    : null,
+              ),
+          ],
+        ),
+        if (state.podeAdicionarCupom) ...[
+          const SizedBox(height: 8),
+          campo,
+        ] else
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Máximo de ${PagamentosRealizadosState.maxCupons} cupons por venda.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        if (state.cupomErro != null && !state.podeAdicionarCupom)
+          Text(
+            state.cupomErro!,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.error),
+          ),
       ],
     );
   }
@@ -953,18 +982,26 @@ class _ProdutosCard extends StatelessWidget {
                   state.descontosItensAplicado[produto.produtoId] ?? 0;
               final promocaoAplicada =
                   state.promocaoEscolhidaPorItem[produto.produtoId];
+              final cuponsItem =
+                  state.cuponsEscolhidosPorItem[produto.produtoId] ??
+                      const <OpcaoElegivel>[];
               // ponytail: prévia só recalcula p/ pagamento em 1 forma só,
               // split fica com valor base -- cálculo final de verdade é
               // sempre do backend (ver formaDePagamentoUnicaId no state).
               final descontoPromocaoItem =
-                  (promocaoAplicada?.valorDescontoParaForma(
-                        state.formaDePagamentoUnicaId,
-                        valorUnitario: produto.valorUnitario,
-                      ) ??
-                      0) *
+                  ((promocaoAplicada?.valorDescontoParaForma(
+                            state.formaDePagamentoUnicaId,
+                            valorUnitario: produto.valorUnitario,
+                          ) ??
+                          0) +
+                      PagamentosRealizadosState.descontoCuponsUnitario(
+                        cuponsItem,
+                        produto.valorUnitario,
+                      )) *
                   produto.quantidade;
-              final temDesconto =
-                  descontoAplicado > 0 || promocaoAplicada != null;
+              final temDesconto = descontoAplicado > 0 ||
+                  promocaoAplicada != null ||
+                  cuponsItem.isNotEmpty;
               final opcoesElegiveis =
                   state.opcoesElegiveisPorItem[produto.produtoId] ?? const [];
               final descricao = [
@@ -1048,6 +1085,29 @@ class _ProdutosCard extends StatelessWidget {
                                         promocaoAplicada,
                                       )
                                   : null,
+                              onDeleted: podeEditar
+                                  ? () => context
+                                      .read<PagamentosRealizadosBloc>()
+                                      .add(
+                                        PagamentosRealizadosPromocaoEscolhida(
+                                          produtoId: produto.produtoId,
+                                          opcao: null,
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                          if (cuponsItem.isNotEmpty)
+                            InputChip(
+                              avatar: const Icon(
+                                Icons.confirmation_number,
+                                size: 16,
+                              ),
+                              label: Text(
+                                cuponsItem
+                                    .map((o) => o.codigo ?? o.nome)
+                                    .join(' + '),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               onDeleted: podeEditar
                                   ? () => context
                                       .read<PagamentosRealizadosBloc>()
@@ -1466,7 +1526,7 @@ Future<void> _abrirDialogoPromocaoItem(
     context: context,
     builder: (dialogContext) {
       return AlertDialog(
-        title: const Text('Promoções e cupons elegíveis'),
+        title: const Text('Promoções elegíveis'),
         content: SizedBox(
           width: 420,
           child: SingleChildScrollView(
@@ -1481,7 +1541,7 @@ Future<void> _abrirDialogoPromocaoItem(
                     const _NenhumaOpcaoSelecionada(),
                   ),
                 ),
-                ...opcoes.map(
+                ...opcoes.where((opcao) => !opcao.ehCupom).map(
                   (opcao) => RadioListTile<OpcaoElegivel?>(
                     title: Text(opcao.nome),
                     subtitle: Text(

@@ -13,7 +13,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final double desconto;
   final List<Map<String, dynamic>> descontosItens;
   final List<Map<String, dynamic>> descontosPromocao;
-  final Map<String, dynamic>? cupom;
+  final List<Map<String, dynamic>>? cupons;
   final double valorTaxaEntrega;
   final bool incluirCpfNaNota;
   final String cpfNaNota;
@@ -29,7 +29,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
     this.desconto = 0,
     this.descontosItens = const [],
     this.descontosPromocao = const [],
-    this.cupom,
+    this.cupons,
     this.valorTaxaEntrega = 0,
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
@@ -47,7 +47,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
         desconto,
         descontosItens,
         descontosPromocao,
-        cupom,
+        cupons,
         valorTaxaEntrega,
         incluirCpfNaNota,
         cpfNaNota,

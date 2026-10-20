@@ -1,3 +1,4 @@
+import 'package:estoque/domain/models/relatorio_posicao_estoque.dart';
 import 'package:estoque/domain/data/remote/i_relatorio_estoque_remote_data_source.dart';
 import 'package:estoque/domain/data/repositorios/i_relatorio_estoque_repository.dart';
 import 'package:estoque/domain/models/relatorio_produtos_defasados.dart';
@@ -82,5 +83,27 @@ class RelatorioEstoqueRepository implements IRelatorioEstoqueRepository {
         referenciaId: referenciaId,
         empresaIds: empresaIds,
         filtro: filtro,
+      );
+
+  @override
+  Future<RelatorioPosicaoEstoque> posicaoEstoque({
+    required List<int> empresaIds,
+    String? dataReferencia,
+    List<int>? categoriaIds,
+    List<int>? corIds,
+    List<int>? tamanhoIds,
+    String? situacao,
+    String ordenarPor = 'valor',
+    String ordem = 'desc',
+  }) =>
+      _remoteDataSource.posicaoEstoque(
+        empresaIds: empresaIds,
+        dataReferencia: dataReferencia,
+        categoriaIds: categoriaIds,
+        corIds: corIds,
+        tamanhoIds: tamanhoIds,
+        situacao: situacao,
+        ordenarPor: ordenarPor,
+        ordem: ordem,
       );
 }

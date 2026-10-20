@@ -5,6 +5,7 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/presentation.dart';
+import 'package:promocoes/presentation/widgets/form_promocional_layout.dart';
 
 class CuponsPage extends StatelessWidget {
   final bloc = sl<CuponsBloc>();
@@ -13,16 +14,23 @@ class CuponsPage extends StatelessWidget {
   CuponsPage({super.key});
 
   Future<void> _abrirNovo(BuildContext context) async {
-    final result = await Navigator.of(context).pushNamed('/cupom/form');
+    final result = await FormPromocionalLayout.abrir(
+      context,
+      rota: '/cupom/form',
+      arguments: {},
+      pagina: (_) => const CupomFormPage(),
+    );
     if (result == true && context.mounted) {
       context.read<CuponsBloc>().add(CuponsIniciou());
     }
   }
 
   Future<void> _abrirEdicao(BuildContext context, Cupom item) async {
-    final result = await Navigator.of(context).pushNamed(
-      '/cupom/form',
+    final result = await FormPromocionalLayout.abrir(
+      context,
+      rota: '/cupom/form',
       arguments: {'idCupom': item.id},
+      pagina: (_) => CupomFormPage(idCupom: item.id),
     );
     if (result == true && context.mounted) {
       context.read<CuponsBloc>().add(CuponsIniciou());
@@ -33,103 +41,107 @@ class CuponsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<CuponsBloc>(
       create: (context) => bloc..add(CuponsIniciou()),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 340),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Buscar por código',
-                      prefixIcon: Icon(Icons.search_outlined),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 340),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar por código',
+                        prefixIcon: Icon(Icons.search_outlined),
+                      ),
+                      onChanged: (value) => debouncer.run(
+                        () => bloc.add(CuponsIniciou(busca: value)),
+                      ),
+                      onSubmitted: (value) =>
+                          bloc.add(CuponsIniciou(busca: value)),
                     ),
-                    onChanged: (value) => debouncer.run(
-                      () => bloc.add(CuponsIniciou(busca: value)),
-                    ),
-                    onSubmitted: (value) =>
-                        bloc.add(CuponsIniciou(busca: value)),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              BlocBuilder<CuponsBloc, CuponsState>(
+                const SizedBox(width: 12),
+                BlocBuilder<CuponsBloc, CuponsState>(
+                  builder: (context, state) {
+                    final carregando = state is CuponsCarregarEmProgresso;
+                    return FilledButton.icon(
+                      onPressed: carregando ? null : () => _abrirNovo(context),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Novo cupom'),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: SivDimensoes.gapCards),
+            Expanded(
+              child: BlocBuilder<CuponsBloc, CuponsState>(
                 builder: (context, state) {
-                  final carregando = state is CuponsCarregarEmProgresso;
-                  return FilledButton.icon(
-                    onPressed: carregando ? null : () => _abrirNovo(context),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Novo cupom'),
+                  if (state is CuponsCarregarEmProgresso) {
+                    return const Center(
+                      child: CircularProgressIndicator.adaptive(),
+                    );
+                  }
+
+                  if (state is CuponsCarregarFalha) {
+                    return Center(
+                      child: Text(
+                        'Falha ao carregar cupons.',
+                        style: context.sivTextos.corpo
+                            .copyWith(color: context.sivColors.vinho),
+                      ),
+                    );
+                  }
+
+                  final itens = state.cupons;
+                  if (itens.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Nenhum cupom cadastrado.',
+                        style: context.sivTextos.corpo,
+                      ),
+                    );
+                  }
+
+                  final mobile = MediaQuery.sizeOf(context).width <
+                      SivDimensoes.breakpointMenuDrawer;
+
+                  if (mobile) {
+                    return ListView.separated(
+                      itemCount: itens.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 9),
+                      itemBuilder: (context, index) => _CupomCardMobile(
+                        item: itens[index],
+                        onTap: () => _abrirEdicao(context, itens[index]),
+                      ),
+                    );
+                  }
+
+                  return SingleChildScrollView(
+                    child: SivTabela(
+                      colunas: const [
+                        SivTabelaColuna(titulo: 'CÓDIGO', flex: 3),
+                        SivTabelaColuna(titulo: 'DESCONTO', flex: 2),
+                        SivTabelaColuna(titulo: 'VIGÊNCIA', flex: 2),
+                        SivTabelaColuna(titulo: 'SITUAÇÃO', flex: 1),
+                      ],
+                      quantidadeLinhas: itens.length,
+                      onLinhaTap: (indice) =>
+                          _abrirEdicao(context, itens[indice]),
+                      linhaBuilder: (context, indice) =>
+                          _linhaTabela(context, itens[indice]),
+                    ),
                   );
                 },
               ),
-            ],
-          ),
-          const SizedBox(height: SivDimensoes.gapCards),
-          Expanded(
-            child: BlocBuilder<CuponsBloc, CuponsState>(
-              builder: (context, state) {
-                if (state is CuponsCarregarEmProgresso) {
-                  return const Center(
-                    child: CircularProgressIndicator.adaptive(),
-                  );
-                }
-
-                if (state is CuponsCarregarFalha) {
-                  return Center(
-                    child: Text(
-                      'Falha ao carregar cupons.',
-                      style: context.sivTextos.corpo
-                          .copyWith(color: context.sivColors.vinho),
-                    ),
-                  );
-                }
-
-                final itens = state.cupons;
-                if (itens.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Nenhum cupom cadastrado.',
-                      style: context.sivTextos.corpo,
-                    ),
-                  );
-                }
-
-                final mobile = MediaQuery.sizeOf(context).width <
-                    SivDimensoes.breakpointMenuDrawer;
-
-                if (mobile) {
-                  return ListView.separated(
-                    itemCount: itens.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 9),
-                    itemBuilder: (context, index) => _CupomCardMobile(
-                      item: itens[index],
-                      onTap: () => _abrirEdicao(context, itens[index]),
-                    ),
-                  );
-                }
-
-                return SingleChildScrollView(
-                  child: SivTabela(
-                    colunas: const [
-                      SivTabelaColuna(titulo: 'CÓDIGO', flex: 3),
-                      SivTabelaColuna(titulo: 'DESCONTO', flex: 2),
-                      SivTabelaColuna(titulo: 'VIGÊNCIA', flex: 2),
-                      SivTabelaColuna(titulo: 'SITUAÇÃO', flex: 1),
-                    ],
-                    quantidadeLinhas: itens.length,
-                    onLinhaTap: (indice) => _abrirEdicao(context, itens[indice]),
-                    linhaBuilder: (context, indice) =>
-                        _linhaTabela(context, itens[indice]),
-                  ),
-                );
-              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -139,11 +151,14 @@ class CuponsPage extends StatelessWidget {
     return [
       Text(
         item.codigo,
-        style: textos.codigo.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+        style:
+            textos.codigo.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
       ),
-      Text(_descricaoDesconto(item), style: textos.corpo.copyWith(fontSize: 13.5)),
+      Text(_descricaoDesconto(item),
+          style: textos.corpo.copyWith(fontSize: 13.5)),
       Text(_vigencia(item), style: textos.corpo.copyWith(fontSize: 13)),
-      Align(alignment: Alignment.centerRight, child: _tagSituacao(context, item)),
+      Align(
+          alignment: Alignment.centerRight, child: _tagSituacao(context, item)),
     ];
   }
 

@@ -18,4 +18,36 @@ abstract class ICreditoDevolucaoRepository {
     required int pessoaId,
     required List<int> romaneioIds,
   });
+
+  /// [situacao]: disponivel | encerrado | todos.
+  Future<List<CreditoDevolucao>> buscarCreditos({
+    required int pessoaId,
+    required String situacao,
+  });
+
+  Future<ResumoCreditoDevolucao> buscarResumo({required int pessoaId});
+
+  Future<ResultadoAcaoCredito> adicionar({
+    required int pessoaId,
+    required double valor,
+    required String motivo,
+    required String observacao,
+    DateTime? validade,
+    int? empresaId,
+  });
+
+  /// [valor] nulo remove todo o restante.
+  Future<ResultadoAcaoCredito> remover({
+    required int pessoaId,
+    required int creditoId,
+    double? valor,
+    required String motivo,
+    String? observacao,
+  });
+
+  Future<ResultadoAcaoCredito> expirar({
+    required int pessoaId,
+    required int creditoId,
+    String? motivo,
+  });
 }

@@ -102,6 +102,9 @@ void _useCases() {
   sl.registerFactory<GetRelatorioGiroEstoque>(
     () => GetRelatorioGiroEstoque(repository: sl()),
   );
+  sl.registerFactory<GetRelatorioPosicaoEstoque>(
+    () => GetRelatorioPosicaoEstoque(repository: sl()),
+  );
   sl.registerFactory<GetResumoGiroEstoque>(
     () => GetResumoGiroEstoque(repository: sl()),
   );

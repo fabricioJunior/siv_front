@@ -1,1 +1,1 @@
-[]
+[{"family":"packages/core/Barlow","fonts":[{"asset":"packages/core/assets/fonts/Barlow-Regular.ttf"},{"weight":500,"asset":"packages/core/assets/fonts/Barlow-Medium.ttf"},{"weight":600,"asset":"packages/core/assets/fonts/Barlow-SemiBold.ttf"}]},{"family":"packages/core/BarlowCondensed","fonts":[{"asset":"packages/core/assets/fonts/BarlowCondensed-Regular.ttf"},{"weight":600,"asset":"packages/core/assets/fonts/BarlowCondensed-SemiBold.ttf"}]}]

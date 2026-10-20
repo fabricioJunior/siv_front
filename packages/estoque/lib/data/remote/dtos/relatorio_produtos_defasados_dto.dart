@@ -12,6 +12,8 @@ class RelatorioProdutoDefasadoItemDto implements RelatorioProdutoDefasadoItem {
   @override
   final String referenciaNome;
   @override
+  final String? marcaNome;
+  @override
   final int? corId;
   @override
   final String corNome;
@@ -48,6 +50,7 @@ class RelatorioProdutoDefasadoItemDto implements RelatorioProdutoDefasadoItem {
     required this.saldo,
     required this.valorUnitario,
     required this.valorTotal,
+    this.marcaNome,
     this.ultimaEntrada,
     this.ultimaSaida,
     this.diasSemMovimentacao,
@@ -60,6 +63,7 @@ class RelatorioProdutoDefasadoItemDto implements RelatorioProdutoDefasadoItem {
         referenciaId: (j['referenciaId'] as num).toInt(),
         referenciaIdExterno: j['referenciaIdExterno'] as String? ?? '',
         referenciaNome: j['referenciaNome'] as String? ?? '',
+        marcaNome: j['marcaNome'] as String?,
         corId: (j['corId'] as num?)?.toInt(),
         corNome: j['corNome'] as String? ?? '',
         tamanhoId: (j['tamanhoId'] as num?)?.toInt(),

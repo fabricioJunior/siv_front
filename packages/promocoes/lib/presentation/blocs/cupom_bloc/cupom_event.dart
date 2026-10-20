@@ -26,6 +26,7 @@ class CupomCampoAlterado extends CupomEvent {
   final int? quantidadePaga;
   final int? limiteUsos;
   final bool? ativa;
+  final bool? cumulativo;
   // true quando o tipoEscopo mudou -- limpa os campos do escopo anterior.
   final bool limparEscopo;
 
@@ -47,6 +48,7 @@ class CupomCampoAlterado extends CupomEvent {
     this.quantidadePaga,
     this.limiteUsos,
     this.ativa,
+    this.cumulativo,
     this.limparEscopo = false,
   });
 }

@@ -26,6 +26,13 @@ class SeletoresEntrada {
   final SeletorWidget tamanhoSeletor;
   final BuscaReferenciasParecidas? buscarReferenciasParecidas;
 
+  /// Estampa opcional da contagem (nulo = sem o campo).
+  final SeletorWidget? estampaSeletor;
+
+  /// Todos os tamanhos ativos; com isso o painel oferece "Numérico | Letras"
+  /// no lugar de selecionar tamanho por tamanho.
+  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
+
   const SeletoresEntrada({
     required this.categoriaSeletor,
     required this.referenciaSeletor,
@@ -33,7 +40,18 @@ class SeletoresEntrada {
     required this.corSeletor,
     required this.tamanhoSeletor,
     this.buscarReferenciasParecidas,
+    this.estampaSeletor,
+    this.carregarTamanhos,
   });
+}
+
+class TamanhoOpcao {
+  final int id;
+  final String nome;
+  const TamanhoOpcao({required this.id, required this.nome});
+
+  /// Numérico = nome só com número (36, 38, 40,5); o resto é letras (P, M, GG).
+  bool get numerico => RegExp(r'^\d+([.,]\d+)?$').hasMatch(nome.trim());
 }
 
 String qtd(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';

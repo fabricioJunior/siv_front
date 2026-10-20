@@ -25,3 +25,7 @@ export 'presentation/siv_modal.dart';
 export 'presentation/siv_page_fab.dart';
 export 'presentation/siv_titulo_pagina.dart';
 export 'permissoes/componente_controlado_wiget.dart';
+export 'presentation/relatorio/relatorio_filtro_chip.dart';
+export 'presentation/relatorio/relatorio_kpi_card.dart';
+export 'presentation/relatorio/relatorio_scaffold.dart';
+export 'presentation/relatorio/relatorio_tabela.dart';

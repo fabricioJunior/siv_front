@@ -1,99 +1,10 @@
 import 'package:comercial/presentation.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc_test.dart';
-import 'package:core/empresas_portas.dart';
-import 'package:core/produtos_compartilhados.dart';
 import 'package:core/seletores.dart';
-import 'package:core/sessao.dart';
-import 'package:estoque/domain/usecases/balanco_usecases.dart';
-import 'package:financeiro/use_cases.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pessoas/domain/usecases/recuperar_cliente_nao_cadastrado.dart';
 
-class _Pedido implements CriarPedido {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _ItemPedido implements AdicionarItemPedido {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _SalvarOrcamento implements SalvarOrcamento {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _CarregarOrcamento implements CarregarOrcamento {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _ExcluirOrcamento implements ExcluirOrcamento {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _Caixa implements RecuperarCaixaAberto {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _Balanco implements ObterBalancoEmAndamentoUseCase {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _Reenviar implements ReenviarEmailDocumentoFiscal {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _Reprocessar implements ReprocessarDocumentoFiscal {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _Salvar implements SalvarListaDeProdutosCompartilhada {
-  int chamadas = 0;
-
-  @override
-  Future<ListaDeProdutosCompartilhada> call({
-    required ListaDeProdutosCompartilhada listaCompartilhada,
-    required List<ProdutoCompartilhado> produtos,
-  }) async {
-    chamadas++;
-    return listaCompartilhada;
-  }
-}
-
-class _Sessao implements IAcessoGlobalSessao {
-  @override
-  int? get empresaIdDaSessao => 1;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
-class _ExigeCliente implements PortaVerificarExigeClienteNaVenda {
-  @override
-  Future<bool> call({required int empresaId}) async => false;
-}
-
-class _Limite implements PortaDescontoMaximoVendedor {
-  final double percentual;
-
-  _Limite(this.percentual);
-
-  @override
-  Future<double> call({required int empresaId}) async => percentual;
-}
-
-class _NaoCadastrado implements RecuperarClienteNaoCadastrado {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
+import '../../support/venda_fakes.dart';
 
 void main() {
   final cliente = SelectData(id: 1, nome: 'Cliente', data: const {});
@@ -109,25 +20,25 @@ void main() {
     {'produtoId': 1, 'quantidade': 2, 'valorUnitario': 50.0},
   ];
 
-  late _Salvar salvar;
+  late FakeSalvar salvar;
 
   VendaBloc criar({double limite = 0}) {
-    salvar = _Salvar();
+    salvar = FakeSalvar();
     return VendaBloc(
       salvar,
-      _Pedido(),
-      _ItemPedido(),
-      _SalvarOrcamento(),
-      _CarregarOrcamento(),
-      _ExcluirOrcamento(),
-      _Caixa(),
-      _Balanco(),
-      _Sessao(),
-      _NaoCadastrado(),
-      VerificarExigeClienteNaVenda(_ExigeCliente()),
-      RecuperarDescontoMaximoVendedor(_Limite(limite)),
-      _Reenviar(),
-      _Reprocessar(),
+      FakePedido(),
+      FakeItemPedido(),
+      FakeSalvarOrcamento(),
+      FakeCarregarOrcamento(),
+      FakeExcluirOrcamento(),
+      FakeCaixa(),
+      FakeBalanco(),
+      FakeSessao(),
+      FakeNaoCadastrado(),
+      VerificarExigeClienteNaVenda(FakeExigeCliente()),
+      RecuperarDescontoMaximoVendedor(FakeLimite(limite)),
+      FakeReenviar(),
+      FakeReprocessar(),
     );
   }
 

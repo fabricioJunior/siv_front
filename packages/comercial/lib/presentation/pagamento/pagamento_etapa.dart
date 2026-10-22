@@ -80,15 +80,28 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
 
   final _descontoGeral = ValueNotifier(false);
   final _focoValor = FocusNode();
+  final _foco = FocusNode();
   bool _online = false;
   String? _linhaAtivaId;
 
   PagamentoContexto get _c => widget.contexto;
 
+  // A etapa entra na página sem rota própria (a leitura segue montada por
+  // baixo, com o foco no campo de código): toma o foco ao montar para
+  // F9/Esc/F4 valerem de cara; ao sair, o foco volta ao campo anterior.
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _foco.requestFocus();
+    });
+  }
+
   @override
   void dispose() {
     _descontoGeral.dispose();
     _focoValor.dispose();
+    _foco.dispose();
     super.dispose();
   }
 
@@ -207,10 +220,8 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
               const SingleActivator(LogicalKeyboardKey.f4): () =>
                   _descontoGeral.value = !_descontoGeral.value,
           },
-          // Sem rota própria (a origem monta a etapa na página), o foco
-          // precisa nascer aqui para F9/Esc/F4 valerem de cara.
           child: Focus(
-            autofocus: true,
+            focusNode: _foco,
             child: Material(
               color: cores.papel,
               child: Column(

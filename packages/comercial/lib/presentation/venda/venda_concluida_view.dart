@@ -5,6 +5,39 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Toma o foco ao montar, mesmo com a leitura (e o campo de código) montada
+/// por baixo; ao desmontar o foco volta ao campo.
+class _FocoAoMontar extends StatefulWidget {
+  final Widget child;
+
+  const _FocoAoMontar({required this.child});
+
+  @override
+  State<_FocoAoMontar> createState() => _FocoAoMontarState();
+}
+
+class _FocoAoMontarState extends State<_FocoAoMontar> {
+  final _foco = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _foco.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _foco.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Focus(focusNode: _foco, child: widget.child);
+}
+
 class VendaProcessandoView extends StatelessWidget {
   const VendaProcessandoView({super.key});
 
@@ -89,8 +122,7 @@ class VendaConcluidaView extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.numpadEnter): onNovaVenda,
         const SingleActivator(LogicalKeyboardKey.keyP): onImprimir,
       },
-      child: Focus(
-        autofocus: true,
+      child: _FocoAoMontar(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -217,8 +249,7 @@ class VendaPendenciaView extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.numpadEnter):
             onTentarNovamente,
       },
-      child: Focus(
-        autofocus: true,
+      child: _FocoAoMontar(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
@@ -44,6 +46,7 @@ class _VendaPageState extends State<VendaPage> {
   bool _trocandoVendedor = false;
   bool _editandoDesconto = false;
   final _descontoController = TextEditingController();
+  final _focoDesconto = FocusNode();
 
   // O pagamento e a criação do romaneio vivem na página: Esc no pagamento
   // preserva as linhas (mesmo bloc) e a Concluída/Pendência ficam na tela até
@@ -51,6 +54,9 @@ class _VendaPageState extends State<VendaPage> {
   PagamentosRealizadosBloc? _pagamentoBloc;
   String? _pagamentoAssinatura;
   RomaneioCriacaoBloc? _criacao;
+  StreamSubscription<RomaneioCriacaoState>? _criacaoSub;
+  RomaneioCriacaoState? _criacaoState;
+  RomaneioCriacaoStep? _ultimoPasso;
   Map<String, dynamic> _resultado = const {};
   DateTime _concluidaEm = DateTime.now();
   bool _orcamentoExcluido = false;
@@ -66,7 +72,9 @@ class _VendaPageState extends State<VendaPage> {
     SivPageFab.limpar();
     _leitorController.dispose();
     _descontoController.dispose();
+    _focoDesconto.dispose();
     _pagamentoBloc?.close();
+    _criacaoSub?.cancel();
     _criacao?.close();
     super.dispose();
   }
@@ -93,7 +101,7 @@ class _VendaPageState extends State<VendaPage> {
           if (erro != null) {
             final pagamento = _pagamentoBloc;
             if (pagamento != null &&
-                etapaDaVenda(state, _criacao?.state) == VendaEtapa.pagamento) {
+                etapaDaVenda(state, _criacaoState) == VendaEtapa.pagamento) {
               pagamento.add(PagamentosRealizadosReaberto(erro: erro));
             } else {
               SivAviso.mostrar(context,
@@ -107,7 +115,7 @@ class _VendaPageState extends State<VendaPage> {
           }
 
           if (_editandoDesconto && state.descontoContador > 0) {
-            setState(() => _editandoDesconto = false);
+            _fecharDesconto();
           }
 
           if (state.orcamentoSalvoContador != _ultimoOrcamentoSalvoContador) {
@@ -119,7 +127,7 @@ class _VendaPageState extends State<VendaPage> {
 
           if (state.finalizacaoContador != _ultimaFinalizacao) {
             _ultimaFinalizacao = state.finalizacaoContador;
-            _iniciarCriacao(state);
+            _iniciarCriacao(context, state);
           }
 
           final pedidoCriadoId = state.pedidoCriadoId;
@@ -135,25 +143,20 @@ class _VendaPageState extends State<VendaPage> {
             );
           }
         },
-        builder: (context, state) {
-          final criacao = _criacao;
-          if (criacao == null) return _buildEtapa(context, state, null);
-
-          return BlocProvider.value(
-            key: ObjectKey(criacao),
-            value: criacao,
-            child: BlocConsumer<RomaneioCriacaoBloc, RomaneioCriacaoState>(
-              listenWhen: (previous, current) => previous.step != current.step,
-              listener: _aoMudarCriacao,
-              builder: (context, cs) => _buildEtapa(context, state, cs),
-            ),
-          );
-        },
+        builder: (context, state) =>
+            _buildEtapa(context, state, _criacaoState),
       ),
     );
   }
 
+  // Assinado direto no stream (não por widget): o romaneio pode terminar antes
+  // do primeiro frame com o bloc novo, e a transição não pode se perder. Também
+  // evita um BlocProvider na árvore, que remontaria o leitor e perderia os itens.
   void _aoMudarCriacao(BuildContext context, RomaneioCriacaoState cs) {
+    if (!mounted) return;
+    setState(() => _criacaoState = cs);
+    if (cs.step == _ultimoPasso) return;
+    _ultimoPasso = cs.step;
     final venda = context.read<VendaBloc>();
     final romaneioCriado = cs.listaCompartilhada?.idLista != null;
 
@@ -178,7 +181,9 @@ class _VendaPageState extends State<VendaPage> {
     final orcamentoId = venda.state.orcamentoId;
     if (orcamentoId != null && !_orcamentoExcluido) {
       _orcamentoExcluido = true;
-      venda.add(VendaOrcamentoExcluirAposFinalizarSolicitado(hash: orcamentoId));
+      venda.add(
+        VendaOrcamentoExcluirAposFinalizarSolicitado(hash: orcamentoId),
+      );
     }
   }
 
@@ -190,9 +195,9 @@ class _VendaPageState extends State<VendaPage> {
     final etapa = etapaDaVenda(state, cs);
     final venda = context.read<VendaBloc>();
 
-    final corpo = switch (etapa) {
+    final outra = switch (etapa) {
       VendaEtapa.configuracao => _buildConfiguracaoCard(context, state),
-      VendaEtapa.itens => _buildLeituraAtiva(context, state),
+      VendaEtapa.itens => null,
       VendaEtapa.pagamento => _buildPagamento(context, state),
       VendaEtapa.processando => const VendaProcessandoView(),
       VendaEtapa.concluida => _buildConcluida(context, state, cs!),
@@ -217,7 +222,21 @@ class _VendaPageState extends State<VendaPage> {
       children: [
         if (etapa != VendaEtapa.configuracao)
           VendaIndicadorEtapas(etapa: etapa),
-        Expanded(child: corpo),
+        // A leitura fica montada por baixo das outras etapas: o LeitorWidget
+        // recria o próprio estado ao remontar e perderia os itens lidos.
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (state.leituraIniciada)
+                Offstage(
+                  offstage: etapa != VendaEtapa.itens,
+                  child: _buildLeituraAtiva(context, state),
+                ),
+              if (outra != null) outra,
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -334,8 +353,10 @@ class _VendaPageState extends State<VendaPage> {
         );
   }
 
-  void _iniciarCriacao(VendaState s) {
+  void _iniciarCriacao(BuildContext context, VendaState s) {
     final anterior = _criacao;
+    _criacaoSub?.cancel();
+    _ultimoPasso = null;
     final bloc = sl<RomaneioCriacaoBloc>()
       ..add(
         RomaneioCriacaoSolicitada(
@@ -353,7 +374,13 @@ class _VendaPageState extends State<VendaPage> {
           emailNota: s.emailNota,
         ),
       );
-    setState(() => _criacao = bloc);
+    _criacaoSub = bloc.stream.listen((cs) {
+      if (context.mounted) _aoMudarCriacao(context, cs);
+    });
+    setState(() {
+      _criacao = bloc;
+      _criacaoState = bloc.state;
+    });
     anterior?.close();
   }
 
@@ -410,11 +437,13 @@ class _VendaPageState extends State<VendaPage> {
   void _novaVenda(VendaBloc venda) {
     _leitorController.limpar();
     _pagamentoBloc?.close();
+    _criacaoSub?.cancel();
     _criacao?.close();
     setState(() {
       _pagamentoBloc = null;
       _pagamentoAssinatura = null;
       _criacao = null;
+      _criacaoState = null;
       _resultado = const {};
       _orcamentoExcluido = false;
       _ultimaFinalizacao = 0;
@@ -530,16 +559,26 @@ class _VendaPageState extends State<VendaPage> {
     );
   }
 
+  void _fecharDesconto() {
+    _focoDesconto.unfocus(
+      disposition: UnfocusDisposition.previouslyFocusedChild,
+    );
+    setState(() => _editandoDesconto = false);
+  }
+
   void _abrirDesconto(VendaState state) {
     if (_leitorController.itens.isEmpty || state.processando) return;
     if (_editandoDesconto) {
-      setState(() => _editandoDesconto = false);
+      _fecharDesconto();
       return;
     }
     _descontoController.text = state.descontoRascunho > 0
         ? state.descontoRascunho.toStringAsFixed(2).replaceAll('.', ',')
         : '';
     setState(() => _editandoDesconto = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focoDesconto.requestFocus();
+    });
   }
 
   Widget _buildPainelDireito(BuildContext context, VendaState state) {
@@ -666,19 +705,22 @@ class _VendaPageState extends State<VendaPage> {
                 const SizedBox(height: 8),
                 CallbackShortcuts(
                   bindings: {
-                    const SingleActivator(LogicalKeyboardKey.escape): () =>
-                        setState(() => _editandoDesconto = false),
+                    const SingleActivator(LogicalKeyboardKey.escape):
+                        _fecharDesconto,
                   },
                   child: TextField(
                     controller: _descontoController,
-                    autofocus: true,
+                    focusNode: _focoDesconto,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
                       isDense: true,
                       hintText: 'Desconto em R\$ ou % (ex.: 20,00 ou 10%)',
                     ),
-                    onSubmitted: (_) => bloc.add(
+                    // onEditingComplete evita o unfocus padrão (vai pro escopo
+                    // da rota): com erro o campo segue focado; aplicado, o
+                    // foco volta ao campo de código (_fecharDesconto).
+                    onEditingComplete: () => bloc.add(
                       VendaDescontoAlterado(
                         texto: _descontoController.text,
                         subtotal: _leitorController.valorTotalLido,
@@ -705,8 +747,10 @@ class _VendaPageState extends State<VendaPage> {
             children: [
               Text('Total', style: textos.corpo.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
-              Text(_formatarMoeda((subtotal - desconto).clamp(0, double.infinity)),
-                  style: textos.display.copyWith(color: Colors.white)),
+              Text(
+                _formatarMoeda((subtotal - desconto).clamp(0, double.infinity)),
+                style: textos.display.copyWith(color: Colors.white),
+              ),
             ],
           ),
         ),

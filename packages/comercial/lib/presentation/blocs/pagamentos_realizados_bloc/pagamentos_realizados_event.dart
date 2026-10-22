@@ -14,6 +14,8 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final String? cpfClienteInicial;
   final double descontoJaAplicadoNoRomaneio;
   final double taxaEntregaJaAplicadaNoRomaneio;
+  // Adiantado/já lançado: reduz o valor a pagar (ver valorTotalAPagar).
+  final double abatimentoTotal;
   final bool clienteGenerico;
   final String? emailClienteInicial;
   final bool enviarNotaPorEmailInicial;
@@ -25,6 +27,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.cpfClienteInicial,
     this.descontoJaAplicadoNoRomaneio = 0,
     this.taxaEntregaJaAplicadaNoRomaneio = 0,
+    this.abatimentoTotal = 0,
     this.clienteGenerico = false,
     this.emailClienteInicial,
     this.enviarNotaPorEmailInicial = false,
@@ -38,6 +41,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         cpfClienteInicial,
         descontoJaAplicadoNoRomaneio,
         taxaEntregaJaAplicadaNoRomaneio,
+        abatimentoTotal,
         clienteGenerico,
         emailClienteInicial,
         enviarNotaPorEmailInicial,
@@ -143,6 +147,13 @@ class PagamentosRealizadosDescontosItensLimpos
 class PagamentosRealizadosFinalizacaoSolicitada
     extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
+}
+
+// Volta de `concluido` para `editando` mantendo linhas/descontos/cupom --
+// a tela de origem dispara quando o resultado não pôde ser usado (falha) ou
+// o operador voltou com Esc.
+class PagamentosRealizadosReaberto extends PagamentosRealizadosEvent {
+  const PagamentosRealizadosReaberto();
 }
 
 class PagamentosRealizadosIncluirCpfAlterado extends PagamentosRealizadosEvent {

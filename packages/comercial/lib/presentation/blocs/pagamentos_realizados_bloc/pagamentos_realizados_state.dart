@@ -28,6 +28,7 @@ class PagamentosRealizadosState extends Equatable {
   final double valorDescontoAplicado;
   final String taxaEntregaValorTexto;
   final double valorTaxaEntregaAplicado;
+  final double abatimentoTotal;
   final Map<int, DescontoTipo> descontosItensTipo;
   final Map<int, String> descontosItensValorTexto;
   final Map<int, double> descontosItensAplicado;
@@ -78,6 +79,7 @@ class PagamentosRealizadosState extends Equatable {
     this.valorDescontoAplicado = 0,
     this.taxaEntregaValorTexto = '',
     this.valorTaxaEntregaAplicado = 0,
+    this.abatimentoTotal = 0,
     this.descontosItensTipo = const {},
     this.descontosItensValorTexto = const {},
     this.descontosItensAplicado = const {},
@@ -222,8 +224,10 @@ class PagamentosRealizadosState extends Equatable {
           .toDouble();
   // Taxa de entrega é somada FORA do desconto -- nunca sofre desconto,
   // mesma regra do frete FOB no backend.
+  // Abatimento (adiantado/já lançado) só incide sobre itens − desconto.
   double get valorTotalAPagar =>
-      valorTotalComDesconto + valorTaxaEntregaAplicado;
+      (valorTotalComDesconto - abatimentoTotal).clamp(0, double.infinity) +
+      valorTaxaEntregaAplicado;
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
   double get valorTotalBruto =>
       linhas.fold<double>(0, (soma, linha) => soma + linha.valor);
@@ -275,6 +279,7 @@ class PagamentosRealizadosState extends Equatable {
     double? valorDescontoAplicado,
     String? taxaEntregaValorTexto,
     double? valorTaxaEntregaAplicado,
+    double? abatimentoTotal,
     Map<int, DescontoTipo>? descontosItensTipo,
     Map<int, String>? descontosItensValorTexto,
     Map<int, double>? descontosItensAplicado,
@@ -323,6 +328,7 @@ class PagamentosRealizadosState extends Equatable {
           taxaEntregaValorTexto ?? this.taxaEntregaValorTexto,
       valorTaxaEntregaAplicado:
           valorTaxaEntregaAplicado ?? this.valorTaxaEntregaAplicado,
+      abatimentoTotal: abatimentoTotal ?? this.abatimentoTotal,
       descontosItensTipo: descontosItensTipo ?? this.descontosItensTipo,
       descontosItensValorTexto:
           descontosItensValorTexto ?? this.descontosItensValorTexto,
@@ -379,6 +385,7 @@ class PagamentosRealizadosState extends Equatable {
         valorDescontoAplicadoArredondado,
         taxaEntregaValorTexto,
         valorTaxaEntregaAplicadoArredondado,
+        abatimentoTotal,
         descontosItensTipo,
         descontosItensValorTexto,
         descontosItensAplicado,

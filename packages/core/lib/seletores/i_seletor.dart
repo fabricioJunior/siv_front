@@ -39,6 +39,34 @@ typedef SeletorPorCategoriasWidget = Widget Function({
   required SeletorData data,
 });
 
+/// Dados da grade tipo → forma de pagamento (etapa de pagamento, ref. 2b).
+class FormaPagamentoGradeData {
+  final SelectData? selecionada;
+  final void Function(SelectData forma) onEscolhida;
+
+  /// `'manual'`/`'online'` filtram as formas; null mostra todas.
+  final String? tipoOperacao;
+
+  /// Formas fora do conjunto aparecem bloqueadas (promoção restrita).
+  final Set<int>? idsPermitidos;
+
+  /// Saldo do cliente (crédito de devolução + adiantamento); o tipo "Saldo
+  /// do cliente" só aparece com saldo > 0.
+  final double saldoCliente;
+
+  const FormaPagamentoGradeData({
+    required this.onEscolhida,
+    this.selecionada,
+    this.tipoOperacao,
+    this.idsPermitidos,
+    this.saldoCliente = 0,
+  });
+}
+
+typedef FormaPagamentoGradeWidget = Widget Function(
+  FormaPagamentoGradeData data,
+);
+
 abstract class ISeletor extends Widget {
   final List<SelectData>? itemsSelecionadosInicial;
   final Function(List<SelectData>)? onChanged;

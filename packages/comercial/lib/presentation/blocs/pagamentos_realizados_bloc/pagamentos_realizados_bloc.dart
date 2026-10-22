@@ -62,6 +62,10 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosDescontoItemAlterado>(_onDescontoItemAlterado);
     on<PagamentosRealizadosDescontosItensLimpos>(_onDescontosItensLimpos);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
+    on<PagamentosRealizadosReaberto>(
+      (event, emit) =>
+          emit(state.copyWith(step: PagamentosRealizadosStep.editando)),
+    );
     on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
     on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);
     on<PagamentosRealizadosPontuarFidelidadeAlterado>(
@@ -155,6 +159,7 @@ class PagamentosRealizadosBloc
               ? event.taxaEntregaJaAplicadaNoRomaneio.toStringAsFixed(2)
               : '',
           valorTaxaEntregaAplicado: event.taxaEntregaJaAplicadaNoRomaneio,
+          abatimentoTotal: event.abatimentoTotal,
           descontosItensTipo: {
             for (final produto in resumo.produtosCompartilhados)
               produto.produtoId: DescontoTipo.valorBruto,

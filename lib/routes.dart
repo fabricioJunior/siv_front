@@ -891,6 +891,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         onChanged: data.onChanged,
         onlyView: data.onlyView,
       ),
+      formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
     );
   },
   '/cancelar_romaneio': (context) {

@@ -1,5 +1,7 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
+import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_fiscal_pdf_exporter.dart';
 import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
@@ -22,6 +24,7 @@ class RomaneioPage extends StatefulWidget {
   final SeletorWidget tableDePrecoSeletor;
   final SeletorWidget funcionarioSeletor;
   final SeletorWidget pessoaSeletor;
+  final FormaPagamentoGradeWidget formaPagamentoGrade;
 
   const RomaneioPage({
     super.key,
@@ -30,6 +33,7 @@ class RomaneioPage extends StatefulWidget {
     required this.tableDePrecoSeletor,
     required this.funcionarioSeletor,
     required this.pessoaSeletor,
+    required this.formaPagamentoGrade,
   });
 
   @override
@@ -45,14 +49,14 @@ class _RomaneioPageState extends State<RomaneioPage> {
   final _tabelaPrecoIdController = TextEditingController();
   final _observacaoController = TextEditingController();
   bool _exportandoPdf = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  // Etapa de pagamento aberta = contexto não nulo. O bloc sobrevive ao Esc.
+  PagamentoContexto? _pagamentoContexto;
+  PagamentosRealizadosBloc? _pagamentoBloc;
+  String? _pagamentoAssinatura;
 
   @override
   void dispose() {
+    _pagamentoBloc?.close();
     _pessoaIdController.dispose();
     _funcionarioIdController.dispose();
     _tabelaPrecoIdController.dispose();
@@ -243,6 +247,23 @@ class _RomaneioPageState extends State<RomaneioPage> {
             return;
           }
 
+          if (_pagamentoContexto != null) {
+            if (state.step == RomaneioStep.pagamentoRecebido) {
+              _pagamentoBloc?.close();
+              setState(() {
+                _pagamentoContexto = null;
+                _pagamentoBloc = null;
+                _pagamentoAssinatura = null;
+              });
+            } else if (state.step == RomaneioStep.validacaoInvalida ||
+                state.step == RomaneioStep.falha) {
+              _pagamentoBloc?.add(PagamentosRealizadosReaberto(
+                erro: state.erro ?? 'Falha ao receber o pagamento.',
+              ));
+              return;
+            }
+          }
+
           if (state.step == RomaneioStep.pagamentoRecebido) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -301,7 +322,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
               _sincronizarControllers(state);
             }
 
-            return Scaffold(
+            final contextoPagamento = _pagamentoContexto;
+            final scaffold = Scaffold(
               appBar: AppBar(
                 title: Text(widget.idRomaneio == null
                     ? 'Novo romaneio'
@@ -360,6 +382,28 @@ class _RomaneioPageState extends State<RomaneioPage> {
                               ),
                       ),
                     ),
+            );
+            return Stack(
+              children: [
+                scaffold,
+                if (contextoPagamento != null)
+                  Positioned.fill(
+                    child: BlocProvider.value(
+                      value: _pagamentoBloc!,
+                      child: PagamentoEtapa(
+                        contexto: contextoPagamento,
+                        formaPagamentoGrade: widget.formaPagamentoGrade,
+                        onConfirmado: (resultado) =>
+                            _confirmarPagamento(context, resultado),
+                        onVoltar: () {
+                          if (!carregando) {
+                            setState(() => _pagamentoContexto = null);
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -1055,17 +1099,15 @@ class _RomaneioPageState extends State<RomaneioPage> {
         _operacoesComPagamento.contains(state.romaneio?.operacao);
   }
 
-  Future<void> _irParaPagamento(
-    BuildContext context,
-    RomaneioState state,
-  ) async {
+  // Esc fecha a etapa e F9 reabre com o mesmo bloc; mudou item, desconto,
+  // taxa ou cliente, o resumo do bloc ficou velho e ele é recriado.
+  void _irParaPagamento(BuildContext context, RomaneioState state) {
     if (state.id == null) return;
 
-    final bloc = context.read<RomaneioBloc>();
     // Alvo é o valor BRUTO (não valorLiquido, que pode não refletir um
     // desconto já persistido -- ex: aplicado na criação, antes de existirem
-    // itens). O desconto já existente é pré-carregado no diálogo abaixo
-    // (descontoJaAplicadoNoRomaneio), que o reduz do alvo do jeito certo.
+    // itens). O desconto já existente é pré-carregado na etapa
+    // (descontoInicial), que o reduz do alvo do jeito certo.
     final valorEsperado = state.romaneio?.valorBruto ?? 0;
     final produtosCompartilhados = state.itens
         .where((item) => item.produtoId != null)
@@ -1081,39 +1123,44 @@ class _RomaneioPageState extends State<RomaneioPage> {
         )
         .toList(growable: false);
 
-    final pagamentoResultado = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return PagamentosRealizadosWidget(
-          hashLista: 'romaneio-${state.id}',
-          resumoInicial: PagamentosRealizadosResumo(
-            listaCompartilhada: null,
-            produtosCompartilhados: produtosCompartilhados,
-            quantidadeTotalProdutos: produtosCompartilhados.fold<int>(
-              0,
-              (soma, produto) => soma + produto.quantidade,
-            ),
-            valorTotalProdutos: valorEsperado,
-          ),
-          pessoaId: state.pessoaId,
-          descontoJaAplicadoNoRomaneio: state.romaneio?.desconto ?? 0,
-          taxaEntregaJaAplicadaNoRomaneio:
-              state.romaneio?.valorTaxaEntrega ?? 0,
-          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Forma de pagamento',
-            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-            idsPermitidos: data.idsPermitidos,
-          ),
-        );
-      },
+    final contexto = PagamentoContexto.romaneio(
+      hashLista: 'romaneio-${state.id}',
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: produtosCompartilhados,
+        quantidadeTotalProdutos: produtosCompartilhados.fold<int>(
+          0,
+          (soma, produto) => soma + produto.quantidade,
+        ),
+        valorTotalProdutos: valorEsperado,
+      ),
+      titulo: 'Romaneio #${state.id} · pagamento',
+      subtitulo: state.romaneio?.pessoaNome,
+      pessoaId: state.pessoaId,
+      descontoInicial: state.romaneio?.desconto ?? 0,
+      taxaEntregaInicial: state.romaneio?.valorTaxaEntrega ?? 0,
     );
+    final assinatura = [
+      for (final i in state.itens)
+        '${i.produtoId}x${i.quantidade}@${i.valorUnitario}',
+      valorEsperado,
+      state.romaneio?.desconto,
+      state.romaneio?.valorTaxaEntrega,
+      state.pessoaId,
+    ].join('|');
+    if (_pagamentoBloc == null || _pagamentoAssinatura != assinatura) {
+      _pagamentoBloc?.close();
+      _pagamentoAssinatura = assinatura;
+      _pagamentoBloc = contexto.criarBloc();
+    }
+    setState(() => _pagamentoContexto = contexto);
+  }
 
-    if (pagamentoResultado == null || !context.mounted) return;
+  void _confirmarPagamento(
+    BuildContext context,
+    Map<String, dynamic> pagamentoResultado,
+  ) {
+    final bloc = context.read<RomaneioBloc>();
 
     final formasDePagamentoRaw =
         pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??

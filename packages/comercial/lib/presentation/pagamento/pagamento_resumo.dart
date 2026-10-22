@@ -97,7 +97,13 @@ class PagamentoResumo extends StatelessWidget {
         _Linha('Subtotal', pagamentoMoeda(state.valorTotalProdutos)),
         if (state.valorDescontoPromocaoTotal > 0)
           _Linha(
-            'Promoções',
+            // Pedido grava o desconto padrão; a forma de pagamento pode mudá-lo no faturamento.
+            contexto.origem == PagamentoOrigem.pedido &&
+                    state.promocaoEscolhidaPorItem.values.any(
+                      (o) => o.overridesPorFormaPagamento?.isNotEmpty ?? false,
+                    )
+                ? 'Promoções (estimado)'
+                : 'Promoções',
             '−${pagamentoMoeda(state.valorDescontoPromocaoTotal)}',
           ),
         if (_r.descontoGeral || state.valorDescontoItensTotal > 0)

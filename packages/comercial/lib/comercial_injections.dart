@@ -181,6 +181,12 @@ void _useCases() {
   sl.registerFactory<AplicarDescontoPedido>(
     () => AplicarDescontoPedido(repository: sl()),
   );
+  sl.registerFactory<AplicarDescontosPromocionaisPedido>(
+    () => AplicarDescontosPromocionaisPedido(repository: sl()),
+  );
+  sl.registerFactory<SalvarOpcoesFiscaisPedido>(
+    () => SalvarOpcoesFiscaisPedido(repository: sl()),
+  );
   sl.registerFactory<ConferirPedido>(() => ConferirPedido(repository: sl()));
   sl.registerFactory<MarcarConferido>(() => MarcarConferido(repository: sl()));
   sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
@@ -587,6 +593,8 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

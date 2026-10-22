@@ -59,6 +59,8 @@ class PagamentoContexto {
   final String? subtitulo;
   final String rotuloVoltar;
   final String rotuloConfirmar;
+  // Segmentado ONLINE (tipoOperacao escolher): o primário muda de rótulo.
+  final String? rotuloConfirmarOnline;
   final String? avisoConfirmar;
   final PagamentosRealizadosResumo? resumo;
   final double descontoInicial;
@@ -81,6 +83,7 @@ class PagamentoContexto {
     required this.recursos,
     this.subtitulo,
     this.rotuloVoltar = 'Voltar',
+    this.rotuloConfirmarOnline,
     this.avisoConfirmar,
     this.resumo,
     this.descontoInicial = 0,
@@ -186,6 +189,7 @@ class PagamentoContexto {
       PagamentoContexto(
         origem: PagamentoOrigem.pedido,
         recursos: PagamentoRecursos.pedido,
+        rotuloConfirmarOnline: 'Gerar cobrança online',
         hashLista: hashLista,
         resumo: resumo,
         titulo: titulo,
@@ -248,10 +252,11 @@ class PagamentoContexto {
         pessoaId: pessoaId,
         cpfClienteInicial: cpfInicial,
         clienteGenerico: clienteGenerico,
-        descontoJaAplicadoNoRomaneio: descontoInicial,
-        taxaEntregaJaAplicadaNoRomaneio: taxaEntregaInicial,
+        descontoInicial: descontoInicial,
+        taxaEntregaInicial: taxaEntregaInicial,
         abatimentoTotal: abatimentoTotal,
         abatimentoPermiteZero: origem == PagamentoOrigem.consignacaoAcerto,
+        descontosTravados: descontosTravados,
         emailClienteInicial: emailInicial,
         enviarNotaPorEmailInicial:
             recursos.emailNota && enviarNotaPorEmailInicial,

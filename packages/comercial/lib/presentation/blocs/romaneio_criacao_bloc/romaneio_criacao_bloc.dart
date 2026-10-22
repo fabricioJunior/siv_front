@@ -166,7 +166,7 @@ class RomaneioCriacaoBloc
         // CriarVendaCompletaDto não tem campo de desconto escalar (diferente de Romaneio.create
         // usado no fluxo de baixo) -- só descontosItens, cada item exigindo produtoId
         // (DescontoItemDto). Repassa event.descontosItens (já vem no formato {produtoId, valor} do
-        // PagamentosRealizadosWidget) em vez de sintetizar um item com só {'valor': descontoTotal},
+        // PagamentoEtapa) em vez de sintetizar um item com só {'valor': descontoTotal},
         // que o backend rejeitava com "produtoId should not be empty".
         final romaneioRecebido = await _criarVendaCompleta.call(
           caixaId: caixaId,

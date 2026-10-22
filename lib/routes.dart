@@ -25,7 +25,6 @@ import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
-import 'package:financeiro/models.dart' show TipoOperacaoFormaPagamento;
 import 'package:financeiro/pages.dart';
 import 'package:financeiro/presentation.dart' show FormasDePagamentoGrade;
 import 'package:flutter/material.dart';
@@ -847,6 +846,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         onlyView: data.onlyView,
         titulo: 'Tabela de preço',
       ),
+      formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
     );
   },
   '/romaneios': (context) {

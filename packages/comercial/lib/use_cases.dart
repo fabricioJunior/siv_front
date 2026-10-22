@@ -7,6 +7,8 @@ export 'domain/use_cases/transferir_creditos_devolucao.dart';
 export 'domain/use_cases/atualizar_observacao_romaneio.dart';
 export 'domain/use_cases/finalizar_romaneio.dart';
 export 'domain/use_cases/aplicar_desconto_pedido.dart';
+export 'domain/use_cases/aplicar_descontos_promocionais_pedido.dart';
+export 'domain/use_cases/salvar_opcoes_fiscais_pedido.dart';
 export 'domain/use_cases/atualizar_pedido.dart';
 export 'domain/use_cases/atualizar_romaneio.dart';
 export 'domain/use_cases/atualizar_vendedor_romaneio.dart';

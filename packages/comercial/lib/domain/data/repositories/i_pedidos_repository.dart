@@ -21,6 +21,18 @@ abstract class IPedidosRepository {
   Future<Pedido> criarPedido(Pedido pedido);
   Future<Pedido> atualizarPedido(Pedido pedido);
   Future<Pedido> aplicarDesconto(int id, {required double desconto});
+  Future<Pedido> aplicarDescontosPromocionais(
+    int id, {
+    required List<Map<String, dynamic>> descontosPromocao,
+    Map<String, dynamic>? cupom,
+  });
+  Future<Pedido> salvarOpcoesFiscais(
+    int id, {
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
+    bool? enviarNotaPorEmail,
+    String? emailNota,
+  });
   Future<void> conferirPedido(int id, {bool processarComDivergencia = false});
   Future<void> marcarConferido(int id);
   Future<void> faturarPedido(int id, {required int caixaId});

@@ -29,7 +29,7 @@ class PagamentoEtapa extends StatefulWidget {
     required this.onVoltar,
   });
 
-  /// Mesmo formato de saída do antigo `PagamentosRealizadosWidget`; recurso
+  /// Mesmo formato de saída do antigo widget de pagamentos (removido); recurso
   /// desligado no contexto não sai com valor.
   static Map<String, dynamic> resultado(
     PagamentosRealizadosState state,
@@ -232,6 +232,9 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                   if (state.step == PagamentosRealizadosStep.editando)
                     _Rodape(
                       contexto: _c,
+                      rotulo: _online && _c.rotuloConfirmarOnline != null
+                          ? _c.rotuloConfirmarOnline!
+                          : _c.rotuloConfirmar,
                       state: state,
                       ativaTemForma: _ativa(state).formaDePagamento != null,
                       onDividir: _dividir,
@@ -816,6 +819,7 @@ class _Marca extends StatelessWidget {
 
 class _Rodape extends StatelessWidget {
   final PagamentoContexto contexto;
+  final String rotulo;
   final PagamentosRealizadosState state;
   final bool ativaTemForma;
   final VoidCallback onDividir;
@@ -823,6 +827,7 @@ class _Rodape extends StatelessWidget {
 
   const _Rodape({
     required this.contexto,
+    required this.rotulo,
     required this.state,
     required this.ativaTemForma,
     required this.onDividir,
@@ -854,7 +859,7 @@ class _Rodape extends StatelessWidget {
       height: 48,
       child: FilledButton(
         onPressed: onConfirmar,
-        child: Text('${contexto.rotuloConfirmar} · F9'),
+        child: Text('$rotulo · F9'),
       ),
     );
 

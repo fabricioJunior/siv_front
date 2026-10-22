@@ -31,6 +31,44 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
     return PedidoDto.fromJson(response.body as Map<String, dynamic>);
   }
 
+  // PUT de substituição: descontosPromocao vazio + sem cupom limpa tudo (400 se já há pagamento lançado).
+  @override
+  Future<Pedido> aplicarDescontosPromocionais(
+    int id, {
+    required List<Map<String, dynamic>> descontosPromocao,
+    Map<String, dynamic>? cupom,
+  }) async {
+    final response = await put(
+      pathParameters: {'id': '$id/descontos-promocionais'},
+      body: {
+        'descontosPromocao': descontosPromocao,
+        if (cupom != null) 'cupom': cupom,
+      },
+    );
+    return PedidoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  // PUT de substituição: campo omitido volta a NULL no pedido.
+  @override
+  Future<Pedido> salvarOpcoesFiscais(
+    int id, {
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
+    bool? enviarNotaPorEmail,
+    String? emailNota,
+  }) async {
+    final response = await put(
+      pathParameters: {'id': '$id/opcoes-fiscais'},
+      body: {
+        if (incluirCpfNaNota != null) 'incluirCpfNaNota': incluirCpfNaNota,
+        if (cpfNaNota != null) 'cpfNaNota': cpfNaNota,
+        if (enviarNotaPorEmail != null) 'enviarNotaPorEmail': enviarNotaPorEmail,
+        if (emailNota != null) 'emailNota': emailNota,
+      },
+    );
+    return PedidoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
   @override
   Future<void> cancelarPedido(
     int id, {

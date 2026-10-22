@@ -134,7 +134,7 @@ class PagamentosRealizadosBloc
       );
       final descontosItensSeed = _distribuirDescontoProporcional(
         produtos: produtosSemPromocaoSeed,
-        descontoTotal: event.descontoJaAplicadoNoRomaneio,
+        descontoTotal: event.descontoInicial,
         valorBase: valorBaseSemPromocaoSeed,
       );
 
@@ -156,13 +156,13 @@ class PagamentosRealizadosBloc
               ? DescontoTipo.valorBruto
               : null,
           descontoValorTexto: descontosItensSeed.isNotEmpty
-              ? event.descontoJaAplicadoNoRomaneio.toStringAsFixed(2)
+              ? event.descontoInicial.toStringAsFixed(2)
               : '',
-          valorDescontoAplicado: event.descontoJaAplicadoNoRomaneio,
-          taxaEntregaValorTexto: event.taxaEntregaJaAplicadaNoRomaneio > 0
-              ? event.taxaEntregaJaAplicadaNoRomaneio.toStringAsFixed(2)
+          valorDescontoAplicado: event.descontoInicial,
+          taxaEntregaValorTexto: event.taxaEntregaInicial > 0
+              ? event.taxaEntregaInicial.toStringAsFixed(2)
               : '',
-          valorTaxaEntregaAplicado: event.taxaEntregaJaAplicadaNoRomaneio,
+          valorTaxaEntregaAplicado: event.taxaEntregaInicial,
           abatimentoTotal: event.abatimentoTotal,
           descontosItensTipo: {
             for (final produto in resumo.produtosCompartilhados)
@@ -213,7 +213,9 @@ class PagamentosRealizadosBloc
         }
       }
 
-      add(const PagamentosRealizadosCarregouElegibilidade());
+      if (!event.descontosTravados) {
+        add(const PagamentosRealizadosCarregouElegibilidade());
+      }
     } catch (e, s) {
       emit(
         state.copyWith(

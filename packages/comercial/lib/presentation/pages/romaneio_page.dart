@@ -1170,8 +1170,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
         .map((item) => Map<String, dynamic>.from(item))
         .toList(growable: false);
 
-    // O diálogo já foi pré-carregado com o desconto que existia no romaneio
-    // (descontoJaAplicadoNoRomaneio, acima) via seeding no
+    // A etapa já foi pré-carregada com o desconto que existia no romaneio
+    // (descontoInicial, acima) via seeding no
     // PagamentosRealizadosBloc -- então `descontosItens` aqui já representa
     // o total CORRETO e final (igual ao que já tinha, se o usuário não mexeu
     // em nada; editado ou zerado, se usou "Editar desconto"/"Remover

@@ -83,10 +83,13 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosCupomRemovido>(_onCupomRemovido);
   }
 
+  bool _abatimentoPermiteZero = false;
+
   FutureOr<void> _onIniciado(
     PagamentosRealizadosIniciado event,
     Emitter<PagamentosRealizadosState> emit,
   ) async {
+    _abatimentoPermiteZero = event.abatimentoPermiteZero;
     emit(
       state.copyWith(
         step: PagamentosRealizadosStep.carregando,
@@ -673,9 +676,11 @@ class PagamentosRealizadosBloc
     }
 
     // Venda 100% zerada por cupom: o backend aceita linha de pagamento de valor 0
-    // (ReceberService.validarValoresDePagamento) -- só nesse caso; sem cupom o valor continua > 0.
+    // (ReceberService.validarValoresDePagamento) -- só nesse caso e no acerto de consignação
+    // coberto pelo adiantado; fora disso o valor continua > 0.
     final vendaZeradaPorCupom = state.valorTotalAPagar <= 0.01 &&
-        state.cuponsEscolhidosPorItem.isNotEmpty;
+        (state.cuponsEscolhidosPorItem.isNotEmpty ||
+            (_abatimentoPermiteZero && state.abatimentoTotal > 0));
 
     if (vendaZeradaPorCupom && state.linhas.isEmpty) {
       emit(

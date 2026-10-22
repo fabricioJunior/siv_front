@@ -16,6 +16,8 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final double taxaEntregaJaAplicadaNoRomaneio;
   // Adiantado/já lançado: reduz o valor a pagar (ver valorTotalAPagar).
   final double abatimentoTotal;
+  // Acerto coberto pelo adiantado: o backend aceita linha de pagamento de valor 0.
+  final bool abatimentoPermiteZero;
   final bool clienteGenerico;
   final String? emailClienteInicial;
   final bool enviarNotaPorEmailInicial;
@@ -28,6 +30,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.descontoJaAplicadoNoRomaneio = 0,
     this.taxaEntregaJaAplicadaNoRomaneio = 0,
     this.abatimentoTotal = 0,
+    this.abatimentoPermiteZero = false,
     this.clienteGenerico = false,
     this.emailClienteInicial,
     this.enviarNotaPorEmailInicial = false,
@@ -42,6 +45,7 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         descontoJaAplicadoNoRomaneio,
         taxaEntregaJaAplicadaNoRomaneio,
         abatimentoTotal,
+        abatimentoPermiteZero,
         clienteGenerico,
         emailClienteInicial,
         enviarNotaPorEmailInicial,

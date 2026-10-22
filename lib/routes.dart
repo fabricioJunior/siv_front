@@ -1069,15 +1069,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         route: '/consignacao_acerto',
         child: ConsignacaoAcertoPage(
           consignacao: consignacao,
-          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Forma de pagamento',
-            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-            idsPermitidos: data.idsPermitidos,
-          ),
+          formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
         ),
       ),
     );

@@ -251,6 +251,7 @@ class PagamentoContexto {
         descontoJaAplicadoNoRomaneio: descontoInicial,
         taxaEntregaJaAplicadaNoRomaneio: taxaEntregaInicial,
         abatimentoTotal: abatimentoTotal,
+        abatimentoPermiteZero: origem == PagamentoOrigem.consignacaoAcerto,
         emailClienteInicial: emailInicial,
         enviarNotaPorEmailInicial:
             recursos.emailNota && enviarNotaPorEmailInicial,

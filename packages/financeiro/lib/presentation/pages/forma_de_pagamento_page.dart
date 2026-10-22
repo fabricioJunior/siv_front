@@ -9,10 +9,10 @@ class FormaDePagamentoPage extends StatefulWidget {
   static const tipos = [
     'Dinheiro',
     'Pix',
-    'Cartão',
+    TiposFormaPagamento.cartaoCredito,
+    TiposFormaPagamento.cartaoDebito,
     'Fatura',
     'Cheque',
-    'Troco',
     'Voucher',
     'TED/DOC',
     'Adiantamento',
@@ -33,6 +33,15 @@ class FormaDePagamentoPage extends StatefulWidget {
 }
 
 class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
+  // Forma legada com tipo fora da lista (ex.: 'Troco') segue exibindo o valor salvo.
+  List<String> _tiposDoDropdown(String? atual) => [
+        ...FormaDePagamentoPage.tipos,
+        if (atual != null &&
+            atual.isNotEmpty &&
+            !FormaDePagamentoPage.tipos.contains(atual))
+          atual,
+      ];
+
   final _formKey = GlobalKey<FormState>();
   final _descricaoController = TextEditingController();
   final _inicioController = TextEditingController();
@@ -161,17 +170,17 @@ class _FormaDePagamentoPageState extends State<FormaDePagamentoPage> {
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           initialValue:
-                              FormaDePagamentoPage.tipos.contains(state.tipo)
+                              _tiposDoDropdown(state.tipo).contains(state.tipo)
                                   ? state.tipo
                                   : FormaDePagamentoPage.tipos.first,
                           decoration: const InputDecoration(
                             labelText: 'Tipo',
                           ),
-                          items: FormaDePagamentoPage.tipos
+                          items: _tiposDoDropdown(state.tipo)
                               .map(
                                 (tipo) => DropdownMenuItem<String>(
                                   value: tipo,
-                                  child: Text(tipo),
+                                  child: Text(TiposFormaPagamento.rotulo(tipo)),
                                 ),
                               )
                               .toList(),

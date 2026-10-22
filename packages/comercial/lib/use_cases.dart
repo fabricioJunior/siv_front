@@ -116,6 +116,7 @@ export 'domain/use_cases/importacao/baixar_template_importacao_vendas.dart';
 export 'domain/use_cases/importacao/importar_vendas_csv.dart';
 export 'domain/use_cases/importacao/consultar_importacao_venda.dart';
 export 'domain/use_cases/verificar_exige_cliente_na_venda.dart';
+export 'domain/use_cases/recuperar_desconto_maximo_vendedor.dart';
 export 'domain/use_cases/verificar_permite_nota_fiscal_email.dart';
 export 'domain/use_cases/listar_listas_grupos.dart';
 export 'domain/use_cases/recuperar_lista_grupo.dart';

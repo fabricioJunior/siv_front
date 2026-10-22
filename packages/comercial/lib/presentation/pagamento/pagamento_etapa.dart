@@ -207,22 +207,27 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
               const SingleActivator(LogicalKeyboardKey.f4): () =>
                   _descontoGeral.value = !_descontoGeral.value,
           },
-          child: Material(
-            color: cores.papel,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _Cabecalho(contexto: _c, onVoltar: widget.onVoltar),
-                Expanded(child: corpo),
-                if (state.step == PagamentosRealizadosStep.editando)
-                  _Rodape(
-                    contexto: _c,
-                    state: state,
-                    ativaTemForma: _ativa(state).formaDePagamento != null,
-                    onDividir: _dividir,
-                    onConfirmar: _confirmar,
-                  ),
-              ],
+          // Sem rota própria (a origem monta a etapa na página), o foco
+          // precisa nascer aqui para F9/Esc/F4 valerem de cara.
+          child: Focus(
+            autofocus: true,
+            child: Material(
+              color: cores.papel,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Cabecalho(contexto: _c, onVoltar: widget.onVoltar),
+                  Expanded(child: corpo),
+                  if (state.step == PagamentosRealizadosStep.editando)
+                    _Rodape(
+                      contexto: _c,
+                      state: state,
+                      ativaTemForma: _ativa(state).formaDePagamento != null,
+                      onDividir: _dividir,
+                      onConfirmar: _confirmar,
+                    ),
+                ],
+              ),
             ),
           ),
         );

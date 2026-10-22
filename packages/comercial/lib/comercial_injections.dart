@@ -567,6 +567,9 @@ void _useCases() {
   sl.registerFactory<VerificarExigeClienteNaVenda>(
     () => VerificarExigeClienteNaVenda(sl()),
   );
+  sl.registerFactory<RecuperarDescontoMaximoVendedor>(
+    () => RecuperarDescontoMaximoVendedor(sl()),
+  );
   sl.registerFactory<VerificarPermiteNotaFiscalEmail>(
     () => VerificarPermiteNotaFiscalEmail(sl()),
   );
@@ -673,6 +676,9 @@ void _presentation() {
 
   sl.registerFactory<VendaBloc>(
     () => VendaBloc(
+      sl(),
+      sl(),
+      sl(),
       sl(),
       sl(),
       sl(),

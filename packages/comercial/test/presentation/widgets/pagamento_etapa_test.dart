@@ -356,4 +356,31 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text(cpf), findsOneWidget);
   });
+
+  testWidgets(
+      'falha total: reabre com a mensagem junto do botão, linhas preservadas, F9 tenta de novo',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.venda);
+    final bloc = _bloc(c);
+    var confirmacoes = 0;
+    await _pump(t, bloc, c, onConfirmado: (_) => confirmacoes++);
+
+    await t.tap(find.textContaining('GRADE'));
+    await t.pumpAndSettle();
+    await t.sendKeyEvent(LogicalKeyboardKey.f9);
+    await t.pumpAndSettle();
+    expect(confirmacoes, 1);
+    expect(bloc.state.step, PagamentosRealizadosStep.concluido);
+
+    bloc.add(const PagamentosRealizadosReaberto(erro: 'Saldo insuficiente'));
+    await t.pumpAndSettle();
+
+    expect(find.text('Saldo insuficiente'), findsOneWidget);
+    expect(find.text('Confirmar e emitir · F9'), findsOneWidget);
+    expect(bloc.state.linhas.single.valorTexto, '100,00');
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f9);
+    await t.pumpAndSettle();
+    expect(confirmacoes, 2);
+  });
 }

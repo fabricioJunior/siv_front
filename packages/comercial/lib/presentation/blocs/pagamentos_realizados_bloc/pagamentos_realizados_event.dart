@@ -153,7 +153,13 @@ class PagamentosRealizadosFinalizacaoSolicitada
 // a tela de origem dispara quando o resultado não pôde ser usado (falha) ou
 // o operador voltou com Esc.
 class PagamentosRealizadosReaberto extends PagamentosRealizadosEvent {
-  const PagamentosRealizadosReaberto();
+  /// Mensagem da falha que fez a origem reabrir; aparece junto do botão.
+  final String? erro;
+
+  const PagamentosRealizadosReaberto({this.erro});
+
+  @override
+  List<Object?> get props => [erro];
 }
 
 class PagamentosRealizadosIncluirCpfAlterado extends PagamentosRealizadosEvent {

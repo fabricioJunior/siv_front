@@ -63,8 +63,9 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosDescontosItensLimpos>(_onDescontosItensLimpos);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
     on<PagamentosRealizadosReaberto>(
-      (event, emit) =>
-          emit(state.copyWith(step: PagamentosRealizadosStep.editando)),
+      (event, emit) => emit(
+        state.copyWith(step: PagamentosRealizadosStep.editando, erro: event.erro),
+      ),
     );
     on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
     on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);

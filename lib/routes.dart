@@ -948,6 +948,7 @@ Map<String, Widget Function(BuildContext)> routes = {
     final incluirCpfNaNota = argumentos['incluirCpfNaNota'] as bool? ?? true;
     final cpfNaNota = argumentos['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade = argumentos['pontuarFidelidade'] as bool? ?? false;
+    final resgatePontos = argumentos['resgatePontos'] as Map<String, dynamic>?;
     final enviarNotaPorEmail =
         argumentos['enviarNotaPorEmail'] as bool? ?? false;
     final emailNota = argumentos['emailNota']?.toString() ?? '';
@@ -974,6 +975,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,
+        resgatePontos: resgatePontos,
         enviarNotaPorEmail: enviarNotaPorEmail,
         emailNota: emailNota,
         consignacaoId: consignacaoId,

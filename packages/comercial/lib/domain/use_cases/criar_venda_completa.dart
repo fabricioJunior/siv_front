@@ -24,6 +24,7 @@ class CriarVendaCompleta {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) {
@@ -41,6 +42,7 @@ class CriarVendaCompleta {
       incluirCpfNaNota: incluirCpfNaNota,
       cpfNaNota: cpfNaNota,
       pontuarFidelidade: pontuarFidelidade,
+      resgatePontos: resgatePontos,
       enviarNotaPorEmail: enviarNotaPorEmail,
       emailNota: emailNota,
     );

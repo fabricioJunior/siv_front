@@ -293,6 +293,10 @@ void _useCases() {
     () => VerificarElegibilidadeFidelidade(repository: sl()),
   );
 
+  sl.registerFactory<RecuperarOpcoesResgatePontos>(
+    () => RecuperarOpcoesResgatePontos(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarRomaneios>(
     () => RecuperarRomaneios(repository: sl()),
   );
@@ -703,6 +707,7 @@ void _presentation() {
       sl(),
       sl<ApurarElegibilidade>(),
       sl<ILeitorDataDatasource>(),
+      sl<RecuperarOpcoesResgatePontos>(),
     ),
   );
 

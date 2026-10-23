@@ -23,6 +23,7 @@ class VendaState extends Equatable {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final Map<String, dynamic>? resgatePontos;
   final bool enviarNotaPorEmail;
   final String emailNota;
   final int? pedidoCriadoId;
@@ -50,6 +51,7 @@ class VendaState extends Equatable {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.resgatePontos,
     this.enviarNotaPorEmail = false,
     this.emailNota = '',
     this.pedidoCriadoId,
@@ -91,6 +93,7 @@ class VendaState extends Equatable {
     bool? incluirCpfNaNota,
     String? cpfNaNota,
     bool? pontuarFidelidade,
+    Object? resgatePontos = _sentinela,
     bool? enviarNotaPorEmail,
     String? emailNota,
     Object? pedidoCriadoId = _sentinela,
@@ -133,6 +136,9 @@ class VendaState extends Equatable {
       incluirCpfNaNota: incluirCpfNaNota ?? this.incluirCpfNaNota,
       cpfNaNota: cpfNaNota ?? this.cpfNaNota,
       pontuarFidelidade: pontuarFidelidade ?? this.pontuarFidelidade,
+      resgatePontos: identical(resgatePontos, _sentinela)
+          ? this.resgatePontos
+          : resgatePontos as Map<String, dynamic>?,
       enviarNotaPorEmail: enviarNotaPorEmail ?? this.enviarNotaPorEmail,
       emailNota: emailNota ?? this.emailNota,
       pedidoCriadoId: identical(pedidoCriadoId, _sentinela)
@@ -169,6 +175,7 @@ class VendaState extends Equatable {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        resgatePontos,
         enviarNotaPorEmail,
         emailNota,
         pedidoCriadoId,

@@ -4,6 +4,7 @@ import 'package:empresas/domain/entities/empresa_parametro.dart';
 import 'package:core/presentation.dart';
 import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_parametros_bloc.dart';
 import 'package:empresas/presentation/widgets/empresa_credito_devolucao_card.dart';
+import 'package:empresas/presentation/widgets/empresa_descontos_fidelidade_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -86,16 +87,21 @@ class EmpresaParametrosPage extends StatelessWidget {
 
               final secoes = _agruparPorSecao(state.parametros);
               final comCard = PermissaoPorNome.acessoPermitido('ADMFM011');
+              final comFidelidade = PermissaoPorNome.acessoPermitido('PESFM003');
+              final cards = (comCard ? 1 : 0) + (comFidelidade ? 1 : 0);
 
               return SafeArea(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: secoes.length + 1 + (comCard ? 1 : 0),
+                  itemCount: secoes.length + 1 + cards,
                   itemBuilder: (context, i) {
                     if (comCard && i == 0) {
                       return EmpresaCreditoDevolucaoCard(idEmpresa: idEmpresa);
                     }
-                    final index = comCard ? i - 1 : i;
+                    if (comFidelidade && i == (comCard ? 1 : 0)) {
+                      return EmpresaDescontosFidelidadeCard(idEmpresa: idEmpresa);
+                    }
+                    final index = i - cards;
                     if (index == secoes.length) {
                       return _StatusRodape(step: state.step);
                     }
@@ -188,6 +194,7 @@ class EmpresaParametrosPage extends StatelessWidget {
       'QT_DIAS_DEVOLUCAO',
       'QT_DIAS_TROCA',
       'CD_PRECO_PADRAO',
+      'QT_LIMITE_PONTOS_FIDELIDADE',
     ];
     if (chavesDeNumericos.contains(chave)) {
       return [FilteringTextInputFormatter.digitsOnly];
@@ -231,6 +238,9 @@ class EmpresaParametrosPage extends StatelessWidget {
 
   String _tituloDaSecao(String chave) {
     if (chave == 'VL_PONTO_FIDELIDADE' ||
+        chave == 'QT_LIMITE_PONTOS_FIDELIDADE' ||
+        chave == 'VL_DESCONTO_POR_PONTO_FIDELIDADE' ||
+        chave == 'FL_DESCONTO_PONTO_CUMULATIVO' ||
         chave == 'QT_DIAS_VALIDADE_PONTO_FIDELIDADE') {
       return 'Fidelidade';
     }

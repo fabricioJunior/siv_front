@@ -36,6 +36,7 @@ abstract class IRomaneiosRepository {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   });
@@ -58,6 +59,7 @@ abstract class IRomaneiosRepository {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   });

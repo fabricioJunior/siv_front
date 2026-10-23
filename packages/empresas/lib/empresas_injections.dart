@@ -6,6 +6,11 @@ import 'package:empresas/data/repositories/config_credito_devolucao_repository.d
 import 'package:empresas/domain/data/remote_data_sourcers/i_config_credito_devolucao_remote_data_source.dart';
 import 'package:empresas/domain/data/repositories/i_config_credito_devolucao_repository.dart';
 import 'package:empresas/presentation/blocs/config_credito_devolucao_bloc/config_credito_devolucao_bloc.dart';
+import 'package:empresas/presentation/blocs/descontos_fidelidade_bloc/descontos_fidelidade_bloc.dart';
+import 'package:empresas/data/remote_data_sourcers/descontos_fidelidade_remote_data_source.dart';
+import 'package:empresas/data/repositories/descontos_fidelidade_repository.dart';
+import 'package:empresas/domain/data/remote_data_sourcers/i_descontos_fidelidade_remote_data_source.dart';
+import 'package:empresas/domain/data/repositories/i_descontos_fidelidade_repository.dart';
 import 'package:empresas/domain/adapters/porta_verificar_exige_cliente_na_venda_impl.dart';
 import 'package:empresas/domain/adapters/porta_verificar_permite_nota_fiscal_email_impl.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
@@ -44,6 +49,10 @@ void resolverDependenciasEmpresas() {
 }
 
 void _remoteDataSourcers() {
+  sl.registerFactory<IDescontosFidelidadeRemoteDataSource>(
+    () => DescontosFidelidadeRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IConfigCreditoDevolucaoRemoteDataSource>(
     () => ConfigCreditoDevolucaoRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -70,6 +79,10 @@ void _remoteDataSourcers() {
 }
 
 void _repositories() {
+  sl.registerFactory<IDescontosFidelidadeRepository>(
+    () => DescontosFidelidadeRepository(remoteDataSource: sl()),
+  );
+
   sl.registerFactory<IConfigCreditoDevolucaoRepository>(
     () => ConfigCreditoDevolucaoRepository(remoteDataSource: sl()),
   );
@@ -96,6 +109,16 @@ void _repositories() {
 }
 
 void _useCases() {
+  sl.registerFactory<ListarDescontosFidelidade>(
+    () => ListarDescontosFidelidade(repository: sl()),
+  );
+  sl.registerFactory<SalvarDescontoFidelidade>(
+    () => SalvarDescontoFidelidade(repository: sl()),
+  );
+  sl.registerFactory<ExcluirDescontoFidelidade>(
+    () => ExcluirDescontoFidelidade(repository: sl()),
+  );
+
   sl.registerFactory<RecuperarConfigCreditoDevolucao>(
     () => RecuperarConfigCreditoDevolucao(repository: sl()),
   );
@@ -173,6 +196,10 @@ void _useCases() {
 }
 
 void _presentantion() {
+  sl.registerFactory<DescontosFidelidadeBloc>(
+    () => DescontosFidelidadeBloc(sl(), sl(), sl()),
+  );
+
   sl.registerFactory<ConfigCreditoDevolucaoBloc>(
     () => ConfigCreditoDevolucaoBloc(sl(), sl()),
   );

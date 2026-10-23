@@ -101,6 +101,7 @@ class _VendaPageState extends State<VendaPage> {
                 'incluirCpfNaNota': state.incluirCpfNaNota,
                 'cpfNaNota': state.cpfNaNota,
                 'pontuarFidelidade': state.pontuarFidelidade,
+                'resgatePontos': state.resgatePontos,
                 'enviarNotaPorEmail': state.enviarNotaPorEmail,
                 'emailNota': state.emailNota,
               },
@@ -892,6 +893,8 @@ class _VendaPageState extends State<VendaPage> {
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade =
         pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
+    final resgatePontos =
+        pagamentoResultado['resgatePontos'] as Map<String, dynamic>?;
     final valorTaxaEntrega =
         _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
     final enviarNotaPorEmail =
@@ -921,6 +924,7 @@ class _VendaPageState extends State<VendaPage> {
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,
+        resgatePontos: resgatePontos,
         enviarNotaPorEmail: enviarNotaPorEmail,
         emailNota: emailNota,
       ),

@@ -16,3 +16,4 @@ export 'domain/usecases/atualizar_terminal.dart';
 export 'domain/usecases/desativar_terminal.dart';
 export 'domain/usecases/recuperar_config_credito_devolucao.dart';
 export 'domain/usecases/salvar_config_credito_devolucao.dart';
+export 'domain/usecases/descontos_fidelidade_use_cases.dart';

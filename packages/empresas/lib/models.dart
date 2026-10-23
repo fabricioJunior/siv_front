@@ -4,3 +4,4 @@ export 'domain/entities/empresa_parametro.dart';
 export 'domain/entities/integracao_meta.dart';
 export 'domain/entities/terminal.dart';
 export 'domain/entities/config_credito_devolucao.dart';
+export 'domain/entities/desconto_fidelidade.dart';

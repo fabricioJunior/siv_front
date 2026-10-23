@@ -25,6 +25,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final Map<String, dynamic>? resgatePontos;
   final bool enviarNotaPorEmail;
   final String emailNota;
   final int? consignacaoId;
@@ -42,6 +43,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.resgatePontos,
     this.enviarNotaPorEmail = false,
     this.emailNota = '',
     this.consignacaoId,
@@ -64,6 +66,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
             incluirCpfNaNota: incluirCpfNaNota,
             cpfNaNota: cpfNaNota,
             pontuarFidelidade: pontuarFidelidade,
+            resgatePontos: resgatePontos,
             enviarNotaPorEmail: enviarNotaPorEmail,
             emailNota: emailNota,
             consignacaoId: consignacaoId,
@@ -168,6 +171,7 @@ class CriarRomaneioPorParametrosPage extends StatelessWidget {
                                 incluirCpfNaNota: incluirCpfNaNota,
                                 cpfNaNota: cpfNaNota,
                                 pontuarFidelidade: pontuarFidelidade,
+                                resgatePontos: resgatePontos,
                                 enviarNotaPorEmail: enviarNotaPorEmail,
                                 emailNota: emailNota,
                                 consignacaoId: consignacaoId,

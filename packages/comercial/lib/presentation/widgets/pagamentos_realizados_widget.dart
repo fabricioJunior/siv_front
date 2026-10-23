@@ -1,4 +1,5 @@
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
+import 'package:comercial/domain/models/opcoes_resgate_pontos.dart';
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
@@ -124,6 +125,7 @@ class PagamentosRealizadosWidget extends StatelessWidget {
               'cpfNaNota': state.incluirCpfNaNota ? state.cpfNaNota : '',
               'pontuarFidelidade':
                   state.clienteElegivelFidelidade && state.pontuarFidelidade,
+              'resgatePontos': state.resgatePayload,
               'enviarNotaPorEmail': state.enviarNotaPorEmail,
               'emailNota': state.enviarNotaPorEmail
                   ? (state.exigeEmailNota
@@ -422,6 +424,13 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                       }
                     : null,
               ),
+            if (widget.exibirCheckboxFidelidade &&
+                state.clienteElegivelFidelidade &&
+                state.opcoesResgate?.possuiOpcoes == true)
+              _ResgatePontosTile(
+                state: state,
+                habilitado: onDescontoPressed != null,
+              ),
             const Divider(height: 24),
             Row(
               children: [
@@ -491,6 +500,11 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
                   _InfoBox(
                     titulo: 'Desconto promoção/cupom',
                     valor: _formatarMoeda(state.valorDescontoPromocaoTotal),
+                  ),
+                if (state.valorDescontoResgate > 0)
+                  _InfoBox(
+                    titulo: 'Desconto por pontos',
+                    valor: _formatarMoeda(state.valorDescontoResgate),
                   ),
                 _InfoBox(
                   titulo: 'Total c/ desconto',
@@ -565,6 +579,147 @@ class _ResumoPagamentoCardState extends State<_ResumoPagamentoCard> {
       ),
     );
   }
+}
+
+class _ResgatePontosTile extends StatelessWidget {
+  final PagamentosRealizadosState state;
+  final bool habilitado;
+
+  const _ResgatePontosTile({required this.state, required this.habilitado});
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<PagamentosRealizadosBloc>();
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.stars_outlined),
+      title: Text('Saldo de pontos: ${state.opcoesResgate!.saldo}'),
+      subtitle: state.possuiResgate
+          ? Text(
+              'Resgate aplicado: -${_formatarMoeda(state.valorDescontoResgate)}',
+            )
+          : null,
+      trailing: Wrap(
+        children: [
+          TextButton(
+            onPressed:
+                habilitado ? () => _abrirDialogoResgate(context, state) : null,
+            child: Text(state.possuiResgate ? 'Alterar' : 'Resgatar pontos'),
+          ),
+          if (state.possuiResgate)
+            IconButton(
+              tooltip: 'Remover resgate',
+              onPressed: habilitado
+                  ? () => bloc.add(const PagamentosRealizadosResgateEscolhido())
+                  : null,
+              icon: const Icon(Icons.close),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _descricaoFaixa(FaixaResgate f) =>
+    '${f.pontos} pts → ${f.ehPercentual ? '${f.valor.toStringAsFixed(f.valor == f.valor.roundToDouble() ? 0 : 2)}%' : _formatarMoeda(f.valor)}';
+
+Future<void> _abrirDialogoResgate(
+  BuildContext context,
+  PagamentosRealizadosState state,
+) async {
+  final bloc = context.read<PagamentosRealizadosBloc>();
+  final opcoes = state.opcoesResgate!;
+  final vpp = opcoes.valorPorPonto;
+  final motivoLivres = state.motivoPontosLivresIndisponivel;
+  final controller = TextEditingController(
+    text: state.resgatePontos?.toString() ?? '',
+  );
+
+  final escolha = await showDialog<PagamentosRealizadosResgateEscolhido>(
+    context: context,
+    builder: (dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          final pontos = int.tryParse(controller.text.trim());
+          final pontosValidos =
+              pontos != null && pontos >= 1 && pontos <= state.maxPontosLivres;
+          return AlertDialog(
+            title: const Text('Resgatar pontos'),
+            content: SizedBox(
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Saldo: ${opcoes.saldo} pontos'),
+                    for (final faixa in opcoes.faixas)
+                      Builder(builder: (_) {
+                        final motivo = state.motivoFaixaIndisponivel(faixa);
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          enabled: motivo == null,
+                          selected: state.resgateFaixaId == faixa.id,
+                          title: Text(_descricaoFaixa(faixa)),
+                          subtitle: Text(
+                            motivo ??
+                                (faixa.cumulativo
+                                    ? 'Cumulativo com outros descontos'
+                                    : 'Não cumulativo'),
+                          ),
+                          onTap: motivo != null
+                              ? null
+                              : () => Navigator.of(dialogContext).pop(
+                                    PagamentosRealizadosResgateEscolhido(
+                                      faixaId: faixa.id,
+                                    ),
+                                  ),
+                        );
+                      }),
+                    if (vpp != null) ...[
+                      const Divider(),
+                      TextField(
+                        controller: controller,
+                        enabled: motivoLivres == null,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          labelText: 'Usar pontos (1 a ${state.maxPontosLivres})',
+                          helperText: motivoLivres ??
+                              (pontosValidos
+                                  ? 'Desconto: ${_formatarMoeda(double.parse((pontos * vpp).toStringAsFixed(2)))}'
+                                  : '${_formatarMoeda(vpp)} por ponto'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Fechar'),
+              ),
+              if (vpp != null)
+                FilledButton(
+                  onPressed: motivoLivres == null && pontosValidos
+                      ? () => Navigator.of(dialogContext).pop(
+                            PagamentosRealizadosResgateEscolhido(pontos: pontos),
+                          )
+                      : null,
+                  child: const Text('Aplicar pontos'),
+                ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  if (escolha != null) bloc.add(escolha);
 }
 
 class _CupomField extends StatelessWidget {
@@ -892,8 +1047,7 @@ class _LinhaPagamentoCard extends StatelessWidget {
               ],
             ),
             if (linha.ehDinheiro &&
-                bloc.state.valorTotalBruto >
-                    bloc.state.valorTotalComDesconto) ...[
+                bloc.state.valorTotalBruto > bloc.state.valorTotalAPagar) ...[
               const SizedBox(height: 8),
               Text(
                 'Troco estimado: ${_formatarMoeda(bloc.state.valorTroco)}',

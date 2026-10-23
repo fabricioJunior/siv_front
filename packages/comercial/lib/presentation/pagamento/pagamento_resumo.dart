@@ -40,11 +40,15 @@ class PagamentoResumo extends StatelessWidget {
   /// F4 abre/fecha o painel de desconto geral.
   final ValueNotifier<bool> descontoGeralAberto;
 
+  /// Chamado quando um painel de valor fecha com o foco dentro dele.
+  final VoidCallback? aoFecharPainel;
+
   const PagamentoResumo({
     super.key,
     required this.state,
     required this.contexto,
     required this.descontoGeralAberto,
+    this.aoFecharPainel,
   });
 
   PagamentoRecursos get _r => contexto.recursos;
@@ -76,6 +80,7 @@ class PagamentoResumo extends StatelessWidget {
             state: state,
             podeDescontoItem: _r.descontoItem && _editavel,
             podePromocao: _r.promocoes && _editavel,
+            aoFecharPainel: aoFecharPainel,
           ),
         if (contexto.descontosTravados) ...[
           const SizedBox(height: 8),
@@ -125,6 +130,7 @@ class PagamentoResumo extends StatelessWidget {
             valueListenable: descontoGeralAberto,
             builder: (context, aberto, _) => aberto
                 ? _PainelValor(
+                    aoFechar: aoFecharPainel,
                     key: const ValueKey('painel-desconto-geral'),
                     titulo: 'Desconto geral',
                     tiposPermitidos: _ordemDesconto,
@@ -158,7 +164,8 @@ class PagamentoResumo extends StatelessWidget {
         if (_r.taxaEntrega)
           _TaxaEntrega(
               state: state,
-              editavel: state.step == PagamentosRealizadosStep.editando)
+              editavel: state.step == PagamentosRealizadosStep.editando,
+              aoFecharPainel: aoFecharPainel)
         else if (contexto.origem == PagamentoOrigem.pedido)
           _Linha(
             'Entrega',
@@ -237,7 +244,13 @@ class _TaxaEntrega extends StatefulWidget {
   final PagamentosRealizadosState state;
   final bool editavel;
 
-  const _TaxaEntrega({required this.state, required this.editavel});
+  final VoidCallback? aoFecharPainel;
+
+  const _TaxaEntrega({
+    required this.state,
+    required this.editavel,
+    this.aoFecharPainel,
+  });
 
   @override
   State<_TaxaEntrega> createState() => _TaxaEntregaState();
@@ -265,6 +278,7 @@ class _TaxaEntregaState extends State<_TaxaEntrega> {
         ),
         if (_aberto)
           _PainelValor(
+            aoFechar: widget.aoFecharPainel,
             titulo: 'Taxa de entrega paga pelo cliente',
             textoInicial: tem ? state.taxaEntregaValorTexto : '',
             temValor: tem,
@@ -291,9 +305,11 @@ class _ItemResumo extends StatefulWidget {
   final PagamentosRealizadosState state;
   final bool podeDescontoItem;
   final bool podePromocao;
+  final VoidCallback? aoFecharPainel;
 
   const _ItemResumo({
     super.key,
+    this.aoFecharPainel,
     required this.produto,
     required this.state,
     required this.podeDescontoItem,
@@ -406,6 +422,7 @@ class _ItemResumoState extends State<_ItemResumo> {
           if (_aberto) ...[
             if (widget.podeDescontoItem)
               _PainelValor(
+                aoFechar: widget.aoFecharPainel,
                 titulo: 'Desconto no item',
                 tiposPermitidos: _ordemDesconto,
                 // O bloc semeia R$ em todo item; sem desconto aplicado vale o padrão (%).
@@ -520,9 +537,11 @@ class _PainelValor extends StatefulWidget {
   final void Function(DescontoTipo? tipo, String texto) onAplicar;
   final VoidCallback onRemover;
   final VoidCallback onFechar;
+  final VoidCallback? aoFechar;
 
   const _PainelValor({
     super.key,
+    this.aoFechar,
     required this.titulo,
     this.tiposPermitidos,
     this.tipoInicial,
@@ -543,8 +562,6 @@ class _PainelValorState extends State<_PainelValor> {
       : (widget.tipoInicial ?? DescontoTipo.porcentagem);
   late final _controller = TextEditingController(text: widget.textoInicial);
   final _foco = FocusNode();
-  // Quem tinha o foco ao abrir (grade ou valor): volta a ele ao fechar.
-  final _anterior = FocusManager.instance.primaryFocus;
 
   // O autofocus do TextField não vale com o foco já em outro nó da etapa.
   @override
@@ -566,13 +583,10 @@ class _PainelValorState extends State<_PainelValor> {
 
   @override
   void dispose() {
-    final tinhaFoco = _foco.hasFocus;
-    final anterior = _anterior;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (tinhaFoco && anterior != null && anterior.context != null) {
-        anterior.requestFocus();
-      }
-    });
+    final aoFechar = widget.aoFechar;
+    if (aoFechar != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => aoFechar());
+    }
     _foco.dispose();
     _controller.dispose();
     super.dispose();

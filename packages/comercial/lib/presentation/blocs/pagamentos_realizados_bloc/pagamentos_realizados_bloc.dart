@@ -218,7 +218,7 @@ class PagamentosRealizadosBloc
               clienteElegivelFidelidade: elegivel,
               carregandoElegibilidadeFidelidade: false,
               erroElegibilidadeFidelidade: false,
-              pontuarFidelidade: elegivel && state.pontuarFidelidade,
+              pontuarFidelidade: elegivel,
               opcoesResgate: opcoesResgate,
             ),
           );

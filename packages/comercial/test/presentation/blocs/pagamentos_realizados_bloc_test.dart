@@ -1017,6 +1017,8 @@ void main() {
         expect(bloc.state.clienteElegivelFidelidade, isTrue);
         expect(bloc.state.opcoesResgate, opcoes);
         expect(bloc.state.possuiResgate, isFalse);
+        expect(bloc.state.pontuarFidelidade, isTrue,
+            reason: 'cliente elegível pontua por padrão');
       },
     );
 

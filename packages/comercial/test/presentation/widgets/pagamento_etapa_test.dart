@@ -337,6 +337,20 @@ void main() {
     expect(x('R\$'), lessThan(x('Total')));
   });
 
+  testWidgets('desconto do item abre em % mesmo com o bloc semeando R\$',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c);
+
+    await t.tap(find.byTooltip('Desconto do item'));
+    await t.pumpAndSettle();
+
+    expect(find.text('Percentual (0 a 100)'), findsOneWidget);
+    expect(t.getTopLeft(find.text('%')).dx,
+        lessThan(t.getTopLeft(find.text('R\$')).dx));
+  });
+
   testWidgets('Esc volta e o estado (linhas e desconto) sobrevive no bloc',
       (t) async {
     final c = _ctx(PagamentoOrigem.venda);

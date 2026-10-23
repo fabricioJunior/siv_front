@@ -542,6 +542,21 @@ class _PainelValorState extends State<_PainelValor> {
       ? null
       : (widget.tipoInicial ?? DescontoTipo.porcentagem);
   late final _controller = TextEditingController(text: widget.textoInicial);
+  final _foco = FocusNode();
+  // Quem tinha o foco ao abrir (grade ou valor): volta a ele ao fechar.
+  final _anterior = FocusManager.instance.primaryFocus;
+
+  // O autofocus do TextField não vale com o foco já em outro nó da etapa.
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _foco.requestFocus();
+      _controller.selection =
+          TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+    });
+  }
 
   static const _rotulos = {
     DescontoTipo.valorBruto: 'R\$',
@@ -551,6 +566,14 @@ class _PainelValorState extends State<_PainelValor> {
 
   @override
   void dispose() {
+    final tinhaFoco = _foco.hasFocus;
+    final anterior = _anterior;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (tinhaFoco && anterior != null && anterior.context != null) {
+        anterior.requestFocus();
+      }
+    });
+    _foco.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -593,7 +616,7 @@ class _PainelValorState extends State<_PainelValor> {
           ],
           TextField(
             controller: _controller,
-            autofocus: true,
+            focusNode: _foco,
             inputFormatters: [pagamentoDecimalFormatter],
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(

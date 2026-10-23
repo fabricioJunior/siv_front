@@ -395,6 +395,32 @@ void main() {
     expect(find.text('Percentual (0 a 100)'), findsOneWidget);
   });
 
+  testWidgets('F4 leva o foco ao campo do desconto e aplicar devolve à grade',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c, grade: _gradeComTeclas);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f4);
+    await t.pumpAndSettle();
+    final foco = FocusManager.instance.primaryFocus!;
+    expect(foco.context!.findAncestorWidgetOfExactType<EditableText>(),
+        isNotNull);
+
+    await t.enterText(
+        find.descendant(
+            of: find.byKey(const ValueKey('painel-desconto-geral')),
+            matching: find.byType(TextField)),
+        '10');
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.pumpAndSettle();
+    expect(find.text('Percentual (0 a 100)'), findsNothing);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.keyD);
+    await t.pumpAndSettle();
+    expect(bloc.state.linhas.single.formaDePagamento?.id, 1);
+  });
+
   testWidgets('Esc volta e o estado (linhas e desconto) sobrevive no bloc',
       (t) async {
     final c = _ctx(PagamentoOrigem.venda);

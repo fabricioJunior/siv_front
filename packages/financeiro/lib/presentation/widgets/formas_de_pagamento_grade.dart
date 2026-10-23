@@ -70,6 +70,10 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
         _uso = uso;
         _tipo = _tipoDe(widget.data.selecionada?.data['tipo']);
       });
+      // O autofocus não vale com o foco já em outro nó (a etapa que a hospeda).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.data.foco?.requestFocus();
+      });
     } catch (_) {
       if (mounted) setState(() => _falhou = true);
     }
@@ -208,6 +212,7 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
         tipo == null ? const <FormaDePagamento>[] : _formasListadas;
 
     return Focus(
+      focusNode: widget.data.foco,
       autofocus: true,
       onKeyEvent: _tecla,
       child: Column(

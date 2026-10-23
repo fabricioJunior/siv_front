@@ -54,8 +54,13 @@ class FormaPagamentoGradeData {
   /// do cliente" só aparece com saldo > 0.
   final double saldoCliente;
 
+  /// Nó de foco da grade: quem hospeda controla para onde o teclado vai
+  /// (letras e setas só chegam à grade com o foco nela).
+  final FocusNode? foco;
+
   const FormaPagamentoGradeData({
     required this.onEscolhida,
+    this.foco,
     this.selecionada,
     this.tipoOperacao,
     this.idsPermitidos,

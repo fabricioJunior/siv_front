@@ -312,7 +312,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                       state: s,
                       contexto: _c,
                       descontoGeralAberto: _descontoGeral,
-                  aoFecharPainel: _aoFecharPainel,
+                      aoFecharPainel: _aoFecharPainel,
                     ),
                   ),
                   child: const Text('Itens e descontos'),
@@ -417,7 +417,8 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                 : null,
             onTap: () => setState(() => _linhaAtivaId = state.linhas[i].id),
           ),
-        Text('F2 alterna valor e formas · F4 desconto · F9 confirma · Esc volta',
+        Text(
+            'F2 alterna valor e formas · F4 desconto · F9 confirma · Esc volta',
             style: context.sivTextos.apoio),
         if (_temNota) ...[
           const SizedBox(height: 16),

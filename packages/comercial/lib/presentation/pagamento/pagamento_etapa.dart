@@ -62,6 +62,7 @@ class PagamentoEtapa extends StatefulWidget {
       'pontuarFidelidade': r.pontuarFidelidade &&
           state.clienteElegivelFidelidade &&
           state.pontuarFidelidade,
+      'resgatePontos': r.resgatePontos ? state.resgatePayload : null,
       'enviarNotaPorEmail': enviarEmail,
       'emailNota': enviarEmail
           ? (state.exigeEmailNota

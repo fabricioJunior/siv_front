@@ -164,5 +164,6 @@ enum TipoEmpresaParametro { checkbox, texto }
 bool ehParametroBooleanoPorChave(String chave) {
   return chave.endsWith('_HABILITADA') ||
       chave == 'DEVOLVER_SEM_ROMANEIO' ||
+      chave == 'FL_DESCONTO_PONTO_CUMULATIVO' ||
       chave == 'FATURAR_PEDIDO_SEM_CONFERENCIA';
 }

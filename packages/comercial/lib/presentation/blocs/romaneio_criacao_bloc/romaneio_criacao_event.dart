@@ -18,6 +18,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final Map<String, dynamic>? resgatePontos;
   final bool enviarNotaPorEmail;
   final String emailNota;
   final int? consignacaoId;
@@ -34,6 +35,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.resgatePontos,
     this.enviarNotaPorEmail = false,
     this.emailNota = '',
     this.consignacaoId,
@@ -52,6 +54,7 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        resgatePontos,
         enviarNotaPorEmail,
         emailNota,
         consignacaoId,

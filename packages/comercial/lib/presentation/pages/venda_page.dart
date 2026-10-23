@@ -340,6 +340,7 @@ class _VendaPageState extends State<VendaPage> {
             incluirCpfNaNota: resultado['incluirCpfNaNota'] as bool? ?? true,
             cpfNaNota: resultado['cpfNaNota']?.toString() ?? '',
             pontuarFidelidade: resultado['pontuarFidelidade'] as bool? ?? false,
+            resgatePontos: resultado['resgatePontos'] as Map<String, dynamic>?,
             enviarNotaPorEmail:
                 resultado['enviarNotaPorEmail'] as bool? ?? false,
             emailNota: resultado['emailNota']?.toString() ?? '',
@@ -364,6 +365,7 @@ class _VendaPageState extends State<VendaPage> {
           incluirCpfNaNota: s.incluirCpfNaNota,
           cpfNaNota: s.cpfNaNota,
           pontuarFidelidade: s.pontuarFidelidade,
+          resgatePontos: s.resgatePontos,
           enviarNotaPorEmail: s.enviarNotaPorEmail,
           emailNota: s.emailNota,
         ),

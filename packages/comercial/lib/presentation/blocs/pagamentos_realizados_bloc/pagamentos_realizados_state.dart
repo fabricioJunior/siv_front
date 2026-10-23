@@ -64,6 +64,11 @@ class PagamentosRealizadosState extends Equatable {
   // Codigos aplicados na venda (maiusculos, sem repeticao, max 5).
   final List<String> cuponsAplicados;
   final String? cupomErro;
+  // Resgate de pontos de fidelidade: opcoes do cliente (null = indisponivel/
+  // falha) e escolha do operador (faixa OU pontos livres, nunca os dois).
+  final OpcoesResgatePontos? opcoesResgate;
+  final int? resgateFaixaId;
+  final int? resgatePontos;
 
   const PagamentosRealizadosState({
     this.step = PagamentosRealizadosStep.inicial,
@@ -103,6 +108,9 @@ class PagamentosRealizadosState extends Equatable {
     this.cuponsEscolhidosPorItem = const {},
     this.cuponsAplicados = const [],
     this.cupomErro,
+    this.opcoesResgate,
+    this.resgateFaixaId,
+    this.resgatePontos,
   });
 
   bool get exigeEmailNota =>
@@ -226,8 +234,95 @@ class PagamentosRealizadosState extends Equatable {
   // mesma regra do frete FOB no backend.
   // Abatimento (adiantado/já lançado) só incide sobre itens − desconto.
   double get valorTotalAPagar =>
-      (valorTotalComDesconto - abatimentoTotal).clamp(0, double.infinity) +
+      (valorTotalComDesconto - valorDescontoResgate - abatimentoTotal)
+          .clamp(0, double.infinity) +
       valorTaxaEntregaAplicado;
+  // Pre-visualizacao do desconto por pontos (backend e a fonte da verdade).
+  // Percentual incide sobre o total dos itens menos os demais descontos.
+  double get valorDescontoResgate {
+    final opcoes = opcoesResgate;
+    if (opcoes == null) return 0;
+    double desconto = 0;
+    if (resgateFaixaId != null) {
+      final faixa = opcoes.faixas.where((f) => f.id == resgateFaixaId);
+      if (faixa.isEmpty) return 0;
+      desconto = faixa.first.ehPercentual
+          ? valorTotalComDesconto * faixa.first.valor / 100
+          : faixa.first.valor;
+    } else if (resgatePontos != null && opcoes.valorPorPonto != null) {
+      desconto = resgatePontos! * opcoes.valorPorPonto!;
+    }
+    return double.parse(desconto.toStringAsFixed(2));
+  }
+
+  bool get possuiResgate => resgateFaixaId != null || resgatePontos != null;
+
+  Map<String, int>? get resgatePayload => resgateFaixaId != null
+      ? {'faixaId': resgateFaixaId!}
+      : resgatePontos != null
+          ? {'pontos': resgatePontos!}
+          : null;
+
+  bool get possuiOutroDesconto =>
+      valorDescontoAplicado > 0 ||
+      valorDescontoItensTotal > 0 ||
+      promocaoEscolhidaPorItem.isNotEmpty ||
+      possuiCupomAplicado;
+
+  // Backend rejeita resgate quando todos os itens ja tem promocao/cupom.
+  bool get todosItensComPromocao {
+    final produtos = resumo?.produtosCompartilhados ?? const [];
+    return produtos.isNotEmpty &&
+        produtos.every((p) => promocaoEscolhidaPorItem.containsKey(p.produtoId));
+  }
+
+  // Maior quantidade de pontos livres cujo desconto nao excede o valor da venda.
+  int get maxPontosLivres {
+    final opcoes = opcoesResgate;
+    final vpp = opcoes?.valorPorPonto;
+    if (opcoes == null || vpp == null || vpp <= 0) return 0;
+    final porValor = (valorTotalComDesconto / vpp + 1e-9).floor();
+    return porValor < opcoes.saldo ? porValor : opcoes.saldo;
+  }
+
+  String? motivoFaixaIndisponivel(FaixaResgate f) {
+    final saldo = opcoesResgate?.saldo ?? 0;
+    if (!f.disponivel) {
+      return f.pontos > saldo
+          ? 'Faltam ${f.pontos - saldo} pontos'
+          : 'Indisponível';
+    }
+    if (todosItensComPromocao) return 'Itens já têm promoção/cupom';
+    if (!f.ehPercentual && f.valor > valorTotalComDesconto + 0.001) {
+      return 'Desconto maior que o valor da venda';
+    }
+    if (!f.cumulativo && possuiOutroDesconto) {
+      return 'Não cumulativo: remova os outros descontos';
+    }
+    return null;
+  }
+
+  String? get motivoPontosLivresIndisponivel {
+    final opcoes = opcoesResgate;
+    if (opcoes == null || opcoes.valorPorPonto == null) return 'Indisponível';
+    if (todosItensComPromocao) return 'Itens já têm promoção/cupom';
+    if (!opcoes.cumulativoValorPorPonto && possuiOutroDesconto) {
+      return 'Não cumulativo: remova os outros descontos';
+    }
+    if (maxPontosLivres < 1) return 'Sem pontos utilizáveis nesta venda';
+    return null;
+  }
+
+  // Resgate ativo que nao pode coexistir com outro desconto.
+  bool get resgateNaoCumulativoAtivo {
+    final opcoes = opcoesResgate;
+    if (opcoes == null) return false;
+    if (resgateFaixaId != null) {
+      return opcoes.faixas.any((f) => f.id == resgateFaixaId && !f.cumulativo);
+    }
+    return resgatePontos != null && !opcoes.cumulativoValorPorPonto;
+  }
+
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
   double get valorTotalBruto =>
       linhas.fold<double>(0, (soma, linha) => soma + linha.valor);
@@ -303,6 +398,9 @@ class PagamentosRealizadosState extends Equatable {
     Map<int, List<OpcaoElegivel>>? cuponsEscolhidosPorItem,
     List<String>? cuponsAplicados,
     Object? cupomErro = _sentinela,
+    Object? opcoesResgate = _sentinela,
+    Object? resgateFaixaId = _sentinela,
+    Object? resgatePontos = _sentinela,
   }) {
     return PagamentosRealizadosState(
       step: step ?? this.step,
@@ -367,6 +465,15 @@ class PagamentosRealizadosState extends Equatable {
       cupomErro: identical(cupomErro, _sentinela)
           ? this.cupomErro
           : cupomErro as String?,
+      opcoesResgate: identical(opcoesResgate, _sentinela)
+          ? this.opcoesResgate
+          : opcoesResgate as OpcoesResgatePontos?,
+      resgateFaixaId: identical(resgateFaixaId, _sentinela)
+          ? this.resgateFaixaId
+          : resgateFaixaId as int?,
+      resgatePontos: identical(resgatePontos, _sentinela)
+          ? this.resgatePontos
+          : resgatePontos as int?,
     );
   }
 
@@ -409,6 +516,9 @@ class PagamentosRealizadosState extends Equatable {
         cuponsEscolhidosPorItem,
         cuponsAplicados,
         cupomErro,
+        opcoesResgate,
+        resgateFaixaId,
+        resgatePontos,
       ];
 }
 

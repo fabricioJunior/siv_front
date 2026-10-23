@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:comercial/domain/models/opcoes_resgate_pontos.dart';
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
@@ -16,6 +17,10 @@ import 'package:promocoes/use_cases.dart';
 
 part 'pagamentos_realizados_event.dart';
 part 'pagamentos_realizados_state.dart';
+
+const _msgNaoCumulativo = 'Este desconto de pontos não pode ser somado a '
+    'outros descontos da venda. Remova o resgate de pontos para aplicar '
+    'outro desconto.';
 
 final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
@@ -41,6 +46,7 @@ class PagamentosRealizadosBloc
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final ApurarElegibilidade _apurarElegibilidade;
   final ILeitorDataDatasource _leitorDataDatasource;
+  final RecuperarOpcoesResgatePontos _recuperarOpcoesResgate;
 
   PagamentosRealizadosBloc(
     this._carregarResumo,
@@ -50,6 +56,7 @@ class PagamentosRealizadosBloc
     this._acessoGlobalSessao,
     this._apurarElegibilidade,
     this._leitorDataDatasource,
+    this._recuperarOpcoesResgate,
   ) : super(const PagamentosRealizadosState()) {
     on<PagamentosRealizadosIniciado>(_onIniciado);
     on<PagamentosRealizadosLinhaAdicionada>(_onLinhaAdicionada);
@@ -81,6 +88,7 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosPromocaoGlobalAlterada>(_onPromocaoGlobalAlterada);
     on<PagamentosRealizadosCupomInformado>(_onCupomInformado);
     on<PagamentosRealizadosCupomRemovido>(_onCupomRemovido);
+    on<PagamentosRealizadosResgateEscolhido>(_onResgateEscolhido);
   }
 
   bool _abatimentoPermiteZero = false;
@@ -103,6 +111,9 @@ class PagamentosRealizadosBloc
         pontuarFidelidade: false,
         clienteElegivelFidelidade: false,
         carregandoElegibilidadeFidelidade: false,
+        opcoesResgate: null,
+        resgateFaixaId: null,
+        resgatePontos: null,
         clienteGenerico: event.clienteGenerico,
         enviarNotaPorEmail: event.enviarNotaPorEmailInicial,
         emailNota: event.emailClienteInicial ?? '',
@@ -192,12 +203,23 @@ class PagamentosRealizadosBloc
           final elegivel = await _verificarElegibilidadeFidelidade.call(
             pessoaId: pessoaId,
           );
+          // Falha nas opcoes de resgate so esconde o resgate, nao a pontuacao.
+          OpcoesResgatePontos? opcoesResgate;
+          if (elegivel && !event.clienteGenerico) {
+            try {
+              opcoesResgate =
+                  await _recuperarOpcoesResgate.call(pessoaId: pessoaId);
+            } catch (e, s) {
+              addError(e, s);
+            }
+          }
           emit(
             state.copyWith(
               clienteElegivelFidelidade: elegivel,
               carregandoElegibilidadeFidelidade: false,
               erroElegibilidadeFidelidade: false,
               pontuarFidelidade: elegivel && state.pontuarFidelidade,
+              opcoesResgate: opcoesResgate,
             ),
           );
         } catch (e, s) {
@@ -344,6 +366,8 @@ class PagamentosRealizadosBloc
       );
       return;
     }
+
+    if (_bloqueadoPorResgate(emit)) return;
 
     final valorBase = state.valorTotalProdutosSemPromocao;
     final valorInformado = _toDouble(event.valorTexto);
@@ -567,6 +591,8 @@ class PagamentosRealizadosBloc
       return;
     }
 
+    if (_bloqueadoPorResgate(emit)) return;
+
     final produtosEncontrados = state.resumo?.produtosCompartilhados
             .where((p) => p.produtoId == event.produtoId)
             .toList() ??
@@ -692,6 +718,14 @@ class PagamentosRealizadosBloc
         ),
       );
       return;
+    }
+
+    if (state.possuiResgate) {
+      final motivo = _validarCandidatoResgate(state);
+      if (motivo != null) {
+        emit(state.copyWith(erro: 'Resgate de pontos inválido: $motivo.'));
+        return;
+      }
     }
 
     final linhasValidadas = <PagamentoRealizadoLinha>[];
@@ -901,7 +935,9 @@ class PagamentosRealizadosBloc
           referenciaIdPorProdutoId: itens.map(
             (produtoId, item) => MapEntry(produtoId, item.referenciaId),
           ),
-          promocaoEscolhidaPorItem: promocoes,
+          promocaoEscolhidaPorItem: state.resgateNaoCumulativoAtivo
+              ? state.promocaoEscolhidaPorItem
+              : promocoes,
           cuponsEscolhidosPorItem: _autoAplicarCupons(
             opcoesPorItem,
             state.cuponsAplicados,
@@ -973,6 +1009,8 @@ class PagamentosRealizadosBloc
     PagamentosRealizadosPromocaoEscolhida event,
     Emitter<PagamentosRealizadosState> emit,
   ) {
+    if (event.opcao != null && _bloqueadoPorResgate(emit)) return;
+
     final promocaoMap = Map<int, OpcaoElegivel>.from(
       state.promocaoEscolhidaPorItem,
     );
@@ -1055,6 +1093,8 @@ class PagamentosRealizadosBloc
       return;
     }
 
+    if (_bloqueadoPorResgate(emit)) return;
+
     final tipoMap = Map<int, DescontoTipo>.from(state.descontosItensTipo);
     final valorTextoMap =
         Map<int, String>.from(state.descontosItensValorTexto);
@@ -1096,6 +1136,10 @@ class PagamentosRealizadosBloc
     final codigo = event.codigo.trim().toUpperCase();
     if (codigo.isEmpty) {
       emit(state.copyWith(erro: 'Informe o código do cupom.'));
+      return;
+    }
+    if (state.resgateNaoCumulativoAtivo) {
+      emit(state.copyWith(cupomErro: _msgNaoCumulativo));
       return;
     }
     if (state.cuponsAplicados.contains(codigo)) {
@@ -1294,6 +1338,54 @@ class PagamentosRealizadosBloc
     );
 
     add(const PagamentosRealizadosCarregouElegibilidade());
+  }
+
+  bool _bloqueadoPorResgate(Emitter<PagamentosRealizadosState> emit) {
+    if (!state.resgateNaoCumulativoAtivo) return false;
+    emit(state.copyWith(erro: _msgNaoCumulativo));
+    return true;
+  }
+
+  void _onResgateEscolhido(
+    PagamentosRealizadosResgateEscolhido event,
+    Emitter<PagamentosRealizadosState> emit,
+  ) {
+    if (event.faixaId == null && event.pontos == null) {
+      emit(
+        state.copyWith(resgateFaixaId: null, resgatePontos: null, erro: null),
+      );
+      return;
+    }
+
+    // Valida contra o estado SEM a escolha atual (trocar de faixa/pontos).
+    final candidato = state.copyWith(
+      resgateFaixaId: event.faixaId,
+      resgatePontos: event.pontos,
+    );
+    final anterior = state;
+    final motivo = _validarCandidatoResgate(candidato);
+    if (motivo != null) {
+      emit(anterior.copyWith(erro: 'Resgate de pontos inválido: $motivo.'));
+      return;
+    }
+    emit(candidato.copyWith(erro: null));
+  }
+
+  // Motivo de a escolha de resgate em `s` nao poder ser aplicada (null = ok).
+  String? _validarCandidatoResgate(PagamentosRealizadosState s) {
+    final opcoes = s.opcoesResgate;
+    if (opcoes == null) return 'opções de resgate indisponíveis';
+    if (s.resgateFaixaId != null) {
+      final faixa = opcoes.faixas.where((f) => f.id == s.resgateFaixaId);
+      if (faixa.isEmpty) return 'faixa não encontrada';
+      return s.motivoFaixaIndisponivel(faixa.first);
+    }
+    final pontos = s.resgatePontos ?? 0;
+    if (pontos < 1 || pontos > s.maxPontosLivres) {
+      return s.motivoPontosLivresIndisponivel ??
+          'informe de 1 a ${s.maxPontosLivres} pontos';
+    }
+    return s.motivoPontosLivresIndisponivel;
   }
 
   double _calcularTotalBruto(List<PagamentoRealizadoLinha> linhas) {

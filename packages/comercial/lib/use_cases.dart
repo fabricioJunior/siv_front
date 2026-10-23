@@ -99,6 +99,7 @@ export 'domain/use_cases/recalcular_consignacao.dart';
 export 'domain/use_cases/fechar_consignacao.dart';
 export 'domain/use_cases/cancelar_consignacao.dart';
 export 'domain/use_cases/verificar_elegibilidade_fidelidade.dart';
+export 'domain/use_cases/recuperar_opcoes_resgate_pontos.dart';
 export 'domain/use_cases/criar_lista_personalizada.dart';
 export 'domain/use_cases/atualizar_lista_personalizada.dart';
 export 'domain/use_cases/enviar_icone_lista_personalizada.dart';

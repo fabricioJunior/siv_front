@@ -170,6 +170,15 @@ class PagamentoResumo extends StatelessWidget {
             editavel: _editavel,
             aoFecharPainel: aoFecharPainel,
           ),
+        if (_r.creditoCliente &&
+            state.pessoaId != null &&
+            !state.clienteGenerico)
+          _Linha(
+            'Crédito de devolução',
+            state.carregandoSaldoCreditoDevolucao
+                ? '…'
+                : pagamentoMoeda(state.saldoCreditoDevolucao),
+          ),
         if (_r.taxaEntrega)
           _TaxaEntrega(
               state: state,

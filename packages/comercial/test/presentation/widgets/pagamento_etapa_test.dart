@@ -3,6 +3,7 @@ import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
 import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
+import 'package:comercial/presentation/pagamento/pagamento_resumo.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/leitor.dart';
@@ -570,6 +571,15 @@ void main() {
           o == PagamentoOrigem.venda ? findsOneWidget : findsNothing,
           reason: o.name);
     }
+  });
+
+  testWidgets('saldo de crédito de devolução do cliente aparece no resumo',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.venda);
+    await _pump(t, _bloc(c), c);
+
+    expect(find.text('Crédito de devolução'), findsOneWidget);
+    expect(find.text(pagamentoMoeda(80)), findsOneWidget);
   });
 
   testWidgets('pontos: saldo zero aparece, sem ação de resgatar', (t) async {

@@ -323,6 +323,20 @@ void main() {
     expect(bloc.state.valorRestante, 0);
   });
 
+  testWidgets('desconto geral abre em % e a ordem é %, R\$, Total', (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f4);
+    await t.pumpAndSettle();
+
+    expect(find.text('Percentual (0 a 100)'), findsOneWidget);
+    final x = (String r) => t.getTopLeft(find.text(r)).dx;
+    expect(x('%'), lessThan(x('R\$')));
+    expect(x('R\$'), lessThan(x('Total')));
+  });
+
   testWidgets('Esc volta e o estado (linhas e desconto) sobrevive no bloc',
       (t) async {
     final c = _ctx(PagamentoOrigem.venda);

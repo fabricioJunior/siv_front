@@ -52,11 +52,18 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
   int _destaque = 0;
   String _filtro = '';
   bool _falhou = false;
+  final _focoFiltro = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    _focoFiltro.dispose();
+    super.dispose();
   }
 
   Future<void> _carregar() async {
@@ -126,7 +133,32 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
       _filtro = '';
       _destaque = 0;
     });
-    if (_formasDo(t).length == 1) _escolherForma(formas.first);
+    if (_formasDo(t).length == 1) {
+      _escolherForma(formas.first);
+    } else {
+      // Várias formas: o foco vai para a escolha (digitar filtra, ← → navegam).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focoFiltro.requestFocus();
+      });
+    }
+  }
+
+  // Com o foco no filtro as setas navegam as formas (e não o cursor).
+  KeyEventResult _teclaFiltro(FocusNode _, KeyEvent e) {
+    final lista = _tipo == null ? const <FormaDePagamento>[] : _formasListadas;
+    if (e is! KeyDownEvent || lista.isEmpty) return KeyEventResult.ignored;
+    if (e.logicalKey == LogicalKeyboardKey.enter && _destaque < lista.length) {
+      _escolherForma(lista[_destaque]);
+      return KeyEventResult.handled;
+    }
+    final passo = e.logicalKey == LogicalKeyboardKey.arrowRight
+        ? 1
+        : e.logicalKey == LogicalKeyboardKey.arrowLeft
+            ? -1
+            : 0;
+    if (passo == 0) return KeyEventResult.ignored;
+    setState(() => _destaque = (_destaque + passo + lista.length) % lista.length);
+    return KeyEventResult.handled;
   }
 
   void _escolherForma(FormaDePagamento f) {
@@ -252,18 +284,24 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
               style: textos.rotulo,
             ),
             const SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: 'Filtrar formas de ${tipo.rotulo.toLowerCase()}…',
+            Focus(
+              onKeyEvent: _teclaFiltro,
+              child: TextField(
+                focusNode: _focoFiltro,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Filtrar formas de ${tipo.rotulo.toLowerCase()}…',
+                ),
+                onChanged: (v) => setState(() {
+                  _filtro = v;
+                  _destaque = 0;
+                }),
+                onSubmitted: (_) {
+                  if (_destaque < listadas.length) {
+                    _escolherForma(listadas[_destaque]);
+                  }
+                },
               ),
-              onChanged: (v) => setState(() {
-                _filtro = v;
-                _destaque = 0;
-              }),
-              onSubmitted: (_) {
-                if (listadas.isNotEmpty) _escolherForma(listadas.first);
-              },
             ),
             const SizedBox(height: 8),
             Wrap(

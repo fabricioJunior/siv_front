@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
@@ -41,6 +43,7 @@ class _Repo implements IPedidosRepository {
   final log = <String>[];
   final List<PedidoPagamento> pagamentos;
   String? falharEm;
+  Completer<void>? segurarPagamento;
 
   _Repo({this.pagamentos = const []});
 
@@ -137,6 +140,7 @@ class _Repo implements IPedidosRepository {
     double? taxaAplicada,
   }) async {
     _chamou('pagamento:$formaDePagamentoId:$valorEsperado');
+    await segurarPagamento?.future;
     return PedidoPagamento.create(id: 9, formaDePagamentoId: formaDePagamentoId);
   }
 
@@ -410,6 +414,27 @@ void main() {
     expect(repo.log[3], startsWith('pagamento:1:'));
     // Etapa fechou ao lançar.
     expect(find.byType(PagamentoEtapa), findsNothing);
+  });
+
+  testWidgets('Online: mostra loading "Criando a forma de pagamento" enquanto gera',
+      (t) async {
+    final r = _Repo()..segurarPagamento = Completer<void>();
+    await abrir(t, r);
+
+    await t.tap(find.text('ONLINE · LINK / QR'));
+    await t.pumpAndSettle();
+    await t.tap(find.textContaining('GRADE'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('Criando a forma de pagamento'), findsNothing);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f9);
+    await t.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('Criando a forma de pagamento: Dinheiro'),
+        findsOneWidget);
+
+    r.segurarPagamento!.complete();
+    await t.pumpAndSettle();
+    expect(find.textContaining('Criando a forma de pagamento'), findsNothing);
   });
 
   testWidgets('Online: primário vira "Gerar cobrança online", sem AlertDialog',

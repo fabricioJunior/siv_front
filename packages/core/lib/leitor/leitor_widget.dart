@@ -125,6 +125,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _controller = widget.controller ?? LeitorController();
     _bloc = _criarBloc();
     _controller.bind(_bloc);
+    _controller._pedirFoco = _solicitarFoco;
     _aplicarProdutosPreCarregados();
     final sessao = sl<IAcessoGlobalSessao>();
     _sincronizando = !sessao.dadosSincronizados;
@@ -176,6 +177,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   void dispose() {
     _sincronizacaoSubscription?.cancel();
     _controller.unbind(_bloc);
+    if (_controller._pedirFoco == _solicitarFoco) _controller._pedirFoco = null;
     _bloc.close();
     _codigoController.dispose();
     _codigoFocusNode.dispose();
@@ -2003,6 +2005,7 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                     TextField(
                       controller: _textoController,
                       focusNode: _textoFocusNode,
+                      autofocus: true,
                       decoration: InputDecoration(
                         labelText: 'Buscar produto',
                         hintText: 'Digite o nome ou código da referência',
@@ -2288,6 +2291,10 @@ class LeitorController extends ChangeNotifier {
   int get quantidadeItensDistintos => _state.itens.length;
   bool get controlarQuantidade => _state.controlarQuantidade;
 
+  /// Devolve o foco ao campo de código (ex.: depois de fechar a busca manual).
+  VoidCallback? _pedirFoco;
+  void solicitarFoco() => _pedirFoco?.call();
+
   bool _modoRemocao = false;
   bool get modoRemocao => _modoRemocao;
   set modoRemocao(bool valor) {
@@ -2315,9 +2322,22 @@ class LeitorController extends ChangeNotifier {
         .toList(growable: false);
   }
 
+  bool _descartado = false;
+
+  @override
+  void dispose() {
+    _descartado = true;
+    super.dispose();
+  }
+
+  // Chamado do initState do LeitorWidget (fase de build): notificar aqui marca
+  // ListenableBuilders ancestrais como sujos durante o build.
   void bind(LeitorBloc bloc) {
     _bloc = bloc;
-    syncState(bloc.state);
+    _state = bloc.state;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_descartado) notifyListeners();
+    });
   }
 
   void unbind(LeitorBloc bloc) {

@@ -336,6 +336,17 @@ void main() {
     expect(find.text('Produto 789'), findsNothing, reason: 'itens zerados');
   });
 
+  testWidgets('pagamento: F4 abre o desconto da etapa e o foco fica nela',
+      (t) async {
+    await abrir(t);
+    await bipar(t, '789');
+    await tecla(t, LogicalKeyboardKey.f9);
+    expect(find.text('Confirmar e emitir · F9'), findsOneWidget);
+
+    await tecla(t, LogicalKeyboardKey.f4);
+    expect(find.text('Percentual (0 a 100)'), findsOneWidget);
+  });
+
   testWidgets('Esc no pagamento volta aos itens e o estado sobrevive',
       (t) async {
     await abrir(t);

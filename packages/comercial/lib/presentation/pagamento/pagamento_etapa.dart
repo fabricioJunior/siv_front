@@ -81,6 +81,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
   final _descontoGeral = ValueNotifier(false);
   final _focoValor = FocusNode();
   final _foco = FocusNode();
+  final _focoGrade = FocusNode();
   bool _online = false;
   String? _linhaAtivaId;
 
@@ -101,6 +102,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
   void dispose() {
     _descontoGeral.dispose();
     _focoValor.dispose();
+    _focoGrade.dispose();
     _foco.dispose();
     super.dispose();
   }
@@ -137,8 +139,16 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
         );
       }
     }
-    _focoValor.requestFocus();
+    _focarGrade();
   }
+
+  // Letras e setas só chegam à grade com o foco nela; o valor vem preenchido,
+  // então o foco volta à grade e F2 leva ao campo de valor.
+  void _focarGrade() =>
+      (_focoGrade.context != null ? _focoGrade : _foco).requestFocus();
+
+  void _alternarValorGrade() =>
+      _focoValor.hasFocus ? _focarGrade() : _focoValor.requestFocus();
 
   void _confirmar() {
     final bloc = context.read<PagamentosRealizadosBloc>();
@@ -216,6 +226,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
           bindings: {
             const SingleActivator(LogicalKeyboardKey.escape): widget.onVoltar,
             const SingleActivator(LogicalKeyboardKey.f9): _confirmar,
+            const SingleActivator(LogicalKeyboardKey.f2): _alternarValorGrade,
             if (_c.recursos.descontoGeral && !_c.descontosTravados)
               const SingleActivator(LogicalKeyboardKey.f4): () =>
                   _descontoGeral.value = !_descontoGeral.value,
@@ -379,6 +390,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
               tipoOperacao: _tipoOperacao,
               idsPermitidos: restricao,
               saldoCliente: saldo,
+              foco: _focoGrade,
               onEscolhida: (forma) => _escolherForma(state, forma),
             ),
           ),
@@ -397,6 +409,8 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                 : null,
             onTap: () => setState(() => _linhaAtivaId = state.linhas[i].id),
           ),
+        Text('F2 alterna valor e formas · F4 desconto · F9 confirma · Esc volta',
+            style: context.sivTextos.apoio),
         if (_temNota) ...[
           const SizedBox(height: 16),
           if (!compacto)

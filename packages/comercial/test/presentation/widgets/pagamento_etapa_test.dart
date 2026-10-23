@@ -148,6 +148,27 @@ Widget _grade(FormaPagamentoGradeData d) => TextButton(
       child: Text('GRADE tipoOp=${d.tipoOperacao} saldo=${d.saldoCliente}'),
     );
 
+/// Imita a grade real: o teclado só chega a ela com o foco no `foco` dela.
+Widget _gradeComTeclas(FormaPagamentoGradeData d) => Focus(
+      focusNode: d.foco,
+      autofocus: true,
+      onKeyEvent: (_, e) {
+        if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.keyD) {
+          d.onEscolhida(SelectData(
+              id: 1, nome: 'Dinheiro', data: const {'tipo': 'Dinheiro'}));
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Builder(builder: (context) {
+        // Como a grade real: assim que monta, pede o foco para si.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) d.foco?.requestFocus();
+        });
+        return const Text('GRADE-TECLAS');
+      }),
+    );
+
 Future<void> _pump(
   WidgetTester t,
   PagamentosRealizadosBloc bloc,
@@ -155,6 +176,7 @@ Future<void> _pump(
   void Function(Map<String, dynamic>)? onConfirmado,
   VoidCallback? onVoltar,
   double largura = 1400,
+  FormaPagamentoGradeWidget grade = _grade,
 }) async {
   t.view.physicalSize = Size(largura, 900);
   t.view.devicePixelRatio = 1;
@@ -174,7 +196,7 @@ Future<void> _pump(
         child: Scaffold(
           body: PagamentoEtapa(
             contexto: c,
-            formaPagamentoGrade: _grade,
+            formaPagamentoGrade: grade,
             onConfirmado: onConfirmado ?? (_) {},
             onVoltar: onVoltar ?? () {},
           ),
@@ -349,6 +371,28 @@ void main() {
     expect(find.text('Percentual (0 a 100)'), findsOneWidget);
     expect(t.getTopLeft(find.text('%')).dx,
         lessThan(t.getTopLeft(find.text('R\$')).dx));
+  });
+
+  testWidgets('letras chegam à grade, F2 alterna valor/formas, F4 abre desconto',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c, grade: _gradeComTeclas);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.keyD);
+    await t.pumpAndSettle();
+    expect(bloc.state.linhas.single.formaDePagamento?.id, 1);
+
+    // Depois de escolher, o foco segue na grade: a letra vale de novo.
+    await t.sendKeyEvent(LogicalKeyboardKey.f2);
+    await t.pumpAndSettle();
+    expect(find.byType(EditableText), findsWidgets);
+    await t.sendKeyEvent(LogicalKeyboardKey.f2);
+    await t.pumpAndSettle();
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f4);
+    await t.pumpAndSettle();
+    expect(find.text('Percentual (0 a 100)'), findsOneWidget);
   });
 
   testWidgets('Esc volta e o estado (linhas e desconto) sobrevive no bloc',

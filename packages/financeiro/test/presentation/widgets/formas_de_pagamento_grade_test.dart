@@ -69,6 +69,7 @@ Future<void> _pump(
 }
 
 void main() {
+  _grupoFoco();
   testWidgets('tipos fixos: sem tipo vazio/inativo/Troco; Saldo só com saldo',
       (t) async {
     await _pump(t, onEscolhida: (_) {});
@@ -136,5 +137,41 @@ void main() {
     expect(escolhidas, isEmpty);
     await t.tap(find.text('Dinheiro'));
     expect(escolhidas.single.id, 1);
+  });
+}
+
+void _grupoFoco() {
+  testWidgets('pede o foco ao nó da hospedeira ao carregar e a letra escolhe',
+      (t) async {
+    final foco = FocusNode();
+    final outro = FocusNode();
+    addTearDown(foco.dispose);
+    addTearDown(outro.dispose);
+    final escolhidas = <SelectData>[];
+    await t.pumpWidget(
+      MaterialApp(
+        theme: SivTheme.tema,
+        home: Scaffold(
+          body: Focus(
+            focusNode: outro,
+            autofocus: true,
+            child: FormasDePagamentoGrade(
+              carregarFormas: () async => _formas,
+              carregarUso: () async => const {},
+              data: FormaPagamentoGradeData(
+                onEscolhida: escolhidas.add,
+                foco: foco,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(foco.hasPrimaryFocus, isTrue);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.keyD);
+    await t.pumpAndSettle();
+    expect(escolhidas.single.nome, 'Dinheiro');
   });
 }

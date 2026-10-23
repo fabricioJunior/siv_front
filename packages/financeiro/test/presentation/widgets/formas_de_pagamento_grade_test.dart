@@ -70,6 +70,7 @@ Future<void> _pump(
 
 void main() {
   _grupoFoco();
+  _grupoFocoFiltro();
   testWidgets('tipos fixos: sem tipo vazio/inativo/Troco; Saldo só com saldo',
       (t) async {
     await _pump(t, onEscolhida: (_) {});
@@ -173,5 +174,29 @@ void _grupoFoco() {
     await t.sendKeyEvent(LogicalKeyboardKey.keyD);
     await t.pumpAndSettle();
     expect(escolhidas.single.nome, 'Dinheiro');
+  });
+}
+
+void _grupoFocoFiltro() {
+  testWidgets('C leva o foco ao filtro; digitar filtra e ← → Enter escolhem',
+      (t) async {
+    final escolhidas = <SelectData>[];
+    await _pump(t, onEscolhida: escolhidas.add);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.keyC);
+    await t.pumpAndSettle();
+    final foco = FocusManager.instance.primaryFocus!;
+    expect(foco.context!.findAncestorWidgetOfExactType<EditableText>(),
+        isNotNull);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await t.sendKeyEvent(LogicalKeyboardKey.enter);
+    await t.pump();
+    expect(escolhidas.single.id, 4); // 2ª da lista (Stone)
+
+    await t.enterText(find.byType(TextField), 'pag');
+    await t.pump();
+    expect(find.text('Cartão Stone x1'), findsNothing);
+    expect(find.text('Cartão PagBank x1'), findsOneWidget);
   });
 }

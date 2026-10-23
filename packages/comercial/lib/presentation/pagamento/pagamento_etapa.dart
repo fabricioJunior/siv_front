@@ -852,7 +852,9 @@ class _Rodape extends StatelessWidget {
       ],
     );
     final dividir = TextButton(
-      onPressed: ativaTemForma && state.valorRestante > 0.01 ? onDividir : null,
+      // A forma escolhida já vem com o valor que falta, então o restante é 0
+      // aqui; a divisão é reduzir o valor desta linha e escolher a outra forma.
+      onPressed: ativaTemForma ? onDividir : null,
       child: const Text('+ Dividir em outra forma'),
     );
     final primario = SizedBox(

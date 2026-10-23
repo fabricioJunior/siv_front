@@ -297,6 +297,32 @@ void main() {
     expect(resultado!['valorTotalRecebido'], 100);
   });
 
+  testWidgets('dividir em outra forma mesmo com a 1ª linha já cobrindo tudo',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c);
+
+    await t.tap(find.textContaining('GRADE'));
+    await t.pumpAndSettle();
+    expect(bloc.state.valorRestante, 0);
+
+    await t.tap(find.text('+ Dividir em outra forma'));
+    await t.pumpAndSettle();
+    expect(bloc.state.linhas.length, 2);
+
+    bloc.add(PagamentosRealizadosValorAlterado(
+      linhaId: bloc.state.linhas.first.id,
+      valorTexto: '40,00',
+    ));
+    await t.pumpAndSettle();
+    await t.tap(find.textContaining('GRADE'));
+    await t.pumpAndSettle();
+
+    expect(bloc.state.linhas.last.valorTexto, '60,00');
+    expect(bloc.state.valorRestante, 0);
+  });
+
   testWidgets('Esc volta e o estado (linhas e desconto) sobrevive no bloc',
       (t) async {
     final c = _ctx(PagamentoOrigem.venda);

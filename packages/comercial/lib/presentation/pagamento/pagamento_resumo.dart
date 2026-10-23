@@ -127,7 +127,7 @@ class PagamentoResumo extends StatelessWidget {
                 ? _PainelValor(
                     key: const ValueKey('painel-desconto-geral'),
                     titulo: 'Desconto geral',
-                    tiposPermitidos: DescontoTipo.values,
+                    tiposPermitidos: _ordemDesconto,
                     tipoInicial: state.descontoTipo,
                     textoInicial: state.valorDescontoAplicado > 0
                         ? state.descontoValorTexto
@@ -407,7 +407,7 @@ class _ItemResumoState extends State<_ItemResumo> {
             if (widget.podeDescontoItem)
               _PainelValor(
                 titulo: 'Desconto no item',
-                tiposPermitidos: DescontoTipo.values,
+                tiposPermitidos: _ordemDesconto,
                 tipoInicial: state.descontosItensTipo[id],
                 textoInicial: manual > 0
                     ? (state.descontosItensValorTexto[id] ?? '')
@@ -502,6 +502,13 @@ class _OpcaoPromocao extends StatelessWidget {
   }
 }
 
+/// Ordem dos tipos no painel de desconto; o primeiro é o padrão.
+const _ordemDesconto = [
+  DescontoTipo.porcentagem,
+  DescontoTipo.valorBruto,
+  DescontoTipo.forcaValorTotal,
+];
+
 /// Painel inline (no lugar de AlertDialog) para valor de desconto/taxa.
 class _PainelValor extends StatefulWidget {
   final String titulo;
@@ -532,7 +539,7 @@ class _PainelValor extends StatefulWidget {
 class _PainelValorState extends State<_PainelValor> {
   late DescontoTipo? _tipo = widget.tiposPermitidos == null
       ? null
-      : (widget.tipoInicial ?? DescontoTipo.valorBruto);
+      : (widget.tipoInicial ?? DescontoTipo.porcentagem);
   late final _controller = TextEditingController(text: widget.textoInicial);
 
   static const _rotulos = {

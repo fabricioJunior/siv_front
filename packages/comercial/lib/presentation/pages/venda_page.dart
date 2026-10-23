@@ -317,6 +317,12 @@ class _VendaPageState extends State<VendaPage> {
         onVoltar: () {
           if (!state.processando) {
             context.read<VendaBloc>().add(const VendaPagamentoVoltou());
+            // Voltar aos itens zera o pagamento (formas, descontos, cupom).
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _pagamentoBloc?.close();
+              _pagamentoBloc = null;
+              _pagamentoAssinatura = null;
+            });
           }
         },
       ),

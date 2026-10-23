@@ -25,8 +25,8 @@ import 'package:core/injecoes.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/sessao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
-import 'package:financeiro/models.dart' show TipoOperacaoFormaPagamento;
 import 'package:financeiro/pages.dart';
+import 'package:financeiro/presentation.dart' show FormasDePagamentoGrade;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pessoas/models.dart' show TipoFuncionario;
@@ -372,15 +372,7 @@ Map<String, Widget Function(BuildContext)> routes = {
             onlyView: data.onlyView,
             compacto: data.compacto,
           ),
-          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Forma de pagamento',
-            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-            idsPermitidos: data.idsPermitidos,
-          ),
+          formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
         ),
       ),
     );
@@ -854,6 +846,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         onlyView: data.onlyView,
         titulo: 'Tabela de preço',
       ),
+      formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
     );
   },
   '/romaneios': (context) {
@@ -898,6 +891,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         onChanged: data.onChanged,
         onlyView: data.onlyView,
       ),
+      formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
     );
   },
   '/cancelar_romaneio': (context) {
@@ -1075,15 +1069,7 @@ Map<String, Widget Function(BuildContext)> routes = {
         route: '/consignacao_acerto',
         child: ConsignacaoAcertoPage(
           consignacao: consignacao,
-          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Forma de pagamento',
-            tipoOperacaoFiltro: TipoOperacaoFormaPagamento.manual,
-            idsPermitidos: data.idsPermitidos,
-          ),
+          formaPagamentoGrade: (data) => FormasDePagamentoGrade(data: data),
         ),
       ),
     );

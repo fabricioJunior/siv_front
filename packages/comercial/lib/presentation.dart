@@ -38,7 +38,6 @@ export 'presentation/pages/romaneios_page.dart';
 export 'presentation/pages/vendas_page.dart';
 export 'presentation/pages/romaneios_entrada_manual_page.dart';
 export 'presentation/pages/venda_page.dart';
-export 'presentation/widgets/pagamentos_realizados_widget.dart';
 export 'presentation/blocs/configuracao_fiscal_bloc/configuracao_fiscal_bloc.dart';
 export 'presentation/blocs/documentos_fiscais_bloc/documentos_fiscais_bloc.dart';
 export 'presentation/blocs/documento_fiscal_detalhe_bloc/documento_fiscal_detalhe_bloc.dart';

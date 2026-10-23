@@ -6,6 +6,7 @@ import 'package:empresas/data/repositories/config_credito_devolucao_repository.d
 import 'package:empresas/domain/data/remote_data_sourcers/i_config_credito_devolucao_remote_data_source.dart';
 import 'package:empresas/domain/data/repositories/i_config_credito_devolucao_repository.dart';
 import 'package:empresas/presentation/blocs/config_credito_devolucao_bloc/config_credito_devolucao_bloc.dart';
+import 'package:empresas/domain/adapters/porta_desconto_maximo_vendedor_impl.dart';
 import 'package:empresas/domain/adapters/porta_verificar_exige_cliente_na_venda_impl.dart';
 import 'package:empresas/domain/adapters/porta_verificar_permite_nota_fiscal_email_impl.dart';
 import 'package:empresas/data/remote_data_sourcers/empresa_parametro_remote_data_source.dart';
@@ -166,6 +167,9 @@ void _useCases() {
 
   sl.registerFactory<PortaVerificarExigeClienteNaVenda>(
     () => PortaVerificarExigeClienteNaVendaImpl(sl()),
+  );
+  sl.registerFactory<PortaDescontoMaximoVendedor>(
+    () => PortaDescontoMaximoVendedorImpl(sl()),
   );
   sl.registerFactory<PortaVerificarPermiteNotaFiscalEmail>(
     () => PortaVerificarPermiteNotaFiscalEmailImpl(sl()),

@@ -62,6 +62,11 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosDescontoItemAlterado>(_onDescontoItemAlterado);
     on<PagamentosRealizadosDescontosItensLimpos>(_onDescontosItensLimpos);
     on<PagamentosRealizadosFinalizacaoSolicitada>(_onFinalizacaoSolicitada);
+    on<PagamentosRealizadosReaberto>(
+      (event, emit) => emit(
+        state.copyWith(step: PagamentosRealizadosStep.editando, erro: event.erro),
+      ),
+    );
     on<PagamentosRealizadosIncluirCpfAlterado>(_onIncluirCpfAlterado);
     on<PagamentosRealizadosCpfAlterado>(_onCpfAlterado);
     on<PagamentosRealizadosPontuarFidelidadeAlterado>(
@@ -78,10 +83,13 @@ class PagamentosRealizadosBloc
     on<PagamentosRealizadosCupomRemovido>(_onCupomRemovido);
   }
 
+  bool _abatimentoPermiteZero = false;
+
   FutureOr<void> _onIniciado(
     PagamentosRealizadosIniciado event,
     Emitter<PagamentosRealizadosState> emit,
   ) async {
+    _abatimentoPermiteZero = event.abatimentoPermiteZero;
     emit(
       state.copyWith(
         step: PagamentosRealizadosStep.carregando,
@@ -126,7 +134,7 @@ class PagamentosRealizadosBloc
       );
       final descontosItensSeed = _distribuirDescontoProporcional(
         produtos: produtosSemPromocaoSeed,
-        descontoTotal: event.descontoJaAplicadoNoRomaneio,
+        descontoTotal: event.descontoInicial,
         valorBase: valorBaseSemPromocaoSeed,
       );
 
@@ -148,13 +156,14 @@ class PagamentosRealizadosBloc
               ? DescontoTipo.valorBruto
               : null,
           descontoValorTexto: descontosItensSeed.isNotEmpty
-              ? event.descontoJaAplicadoNoRomaneio.toStringAsFixed(2)
+              ? event.descontoInicial.toStringAsFixed(2)
               : '',
-          valorDescontoAplicado: event.descontoJaAplicadoNoRomaneio,
-          taxaEntregaValorTexto: event.taxaEntregaJaAplicadaNoRomaneio > 0
-              ? event.taxaEntregaJaAplicadaNoRomaneio.toStringAsFixed(2)
+          valorDescontoAplicado: event.descontoInicial,
+          taxaEntregaValorTexto: event.taxaEntregaInicial > 0
+              ? event.taxaEntregaInicial.toStringAsFixed(2)
               : '',
-          valorTaxaEntregaAplicado: event.taxaEntregaJaAplicadaNoRomaneio,
+          valorTaxaEntregaAplicado: event.taxaEntregaInicial,
+          abatimentoTotal: event.abatimentoTotal,
           descontosItensTipo: {
             for (final produto in resumo.produtosCompartilhados)
               produto.produtoId: DescontoTipo.valorBruto,
@@ -204,7 +213,9 @@ class PagamentosRealizadosBloc
         }
       }
 
-      add(const PagamentosRealizadosCarregouElegibilidade());
+      if (!event.descontosTravados) {
+        add(const PagamentosRealizadosCarregouElegibilidade());
+      }
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -667,9 +678,11 @@ class PagamentosRealizadosBloc
     }
 
     // Venda 100% zerada por cupom: o backend aceita linha de pagamento de valor 0
-    // (ReceberService.validarValoresDePagamento) -- só nesse caso; sem cupom o valor continua > 0.
+    // (ReceberService.validarValoresDePagamento) -- só nesse caso e no acerto de consignação
+    // coberto pelo adiantado; fora disso o valor continua > 0.
     final vendaZeradaPorCupom = state.valorTotalAPagar <= 0.01 &&
-        state.cuponsEscolhidosPorItem.isNotEmpty;
+        (state.cuponsEscolhidosPorItem.isNotEmpty ||
+            (_abatimentoPermiteZero && state.abatimentoTotal > 0));
 
     if (vendaZeradaPorCupom && state.linhas.isEmpty) {
       emit(

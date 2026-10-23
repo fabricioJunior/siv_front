@@ -17,6 +17,15 @@ enum TipoOperacaoFormaPagamento {
   String get value => name;
 }
 
+/// Valores salvos de `tipo`. O valor `'Cartão'` é o crédito (só o rótulo muda).
+abstract final class TiposFormaPagamento {
+  static const cartaoCredito = 'Cartão';
+  static const cartaoDebito = 'Cartão de débito';
+
+  static String rotulo(String tipo) =>
+      tipo == cartaoCredito ? 'Cartão de crédito' : tipo;
+}
+
 abstract class FormaDePagamento implements Equatable {
   DateTime? get criadoEm;
   DateTime? get atualizadoEm;

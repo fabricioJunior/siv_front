@@ -198,7 +198,7 @@ class _FormaDePagamentoCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tipo: ${item.tipo}'),
+            Text('Tipo: ${TiposFormaPagamento.rotulo(item.tipo)}'),
             Text('Inicio: ${item.inicio} | Parcelas: ${item.parcelas}'),
             const SizedBox(height: 4),
             Wrap(
@@ -258,7 +258,8 @@ class _FormaDePagamentoCard extends StatelessWidget {
     switch (tipo) {
       case 'Pix':
         return Icons.pix;
-      case 'Cartão':
+      case TiposFormaPagamento.cartaoCredito:
+      case TiposFormaPagamento.cartaoDebito:
         return Icons.credit_card;
       case 'Dinheiro':
         return Icons.payments;

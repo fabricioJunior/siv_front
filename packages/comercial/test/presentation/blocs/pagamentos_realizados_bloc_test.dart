@@ -758,6 +758,55 @@ void main() {
     },
   );
 
+  group('acerto coberto pelo adiantado (abatimento)', () {
+    Future<PagamentosRealizadosBloc> abrirComAdiantado({
+      required bool permiteZero,
+    }) async {
+      final bloc = blocDeFechamento();
+      addTearDown(bloc.close);
+      bloc.add(PagamentosRealizadosIniciado(
+        hashLista: 'h',
+        resumoInicial: const PagamentosRealizadosResumo(
+          listaCompartilhada: null,
+          produtosCompartilhados: [_produto199],
+          quantidadeTotalProdutos: 1,
+          valorTotalProdutos: 199,
+        ),
+        abatimentoTotal: 199,
+        abatimentoPermiteZero: permiteZero,
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      bloc.add(PagamentosRealizadosFormaAlterada(
+        linhaId: bloc.state.linhas.single.id,
+        formaDePagamento: SelectData(
+          id: 1,
+          nome: 'Dinheiro',
+          data: const {'tipo': 'dinheiro'},
+        ),
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      bloc.add(const PagamentosRealizadosFinalizacaoSolicitada());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return bloc;
+    }
+
+    test('consignação: adiantado cobre tudo fecha com pagamento de valor 0',
+        () async {
+      final bloc = await abrirComAdiantado(permiteZero: true);
+      expect(bloc.state.valorTotalAPagar, 0);
+      expect(bloc.state.erro, isNull);
+      expect(bloc.state.step, PagamentosRealizadosStep.concluido);
+      expect(bloc.state.resultado.single['valor'], 0);
+    });
+
+    test('pedido: pagamentos já lançados cobrindo tudo não aceita linha zero',
+        () async {
+      final bloc = await abrirComAdiantado(permiteZero: false);
+      expect(bloc.state.step, isNot(PagamentosRealizadosStep.concluido));
+      expect(bloc.state.erro, 'Informe um valor válido em todas as linhas.');
+    });
+  });
+
   group('crédito de devolução na tela de pagamento', () {
     PagamentosRealizadosBloc blocCom(_SaldoCreditoFake saldo) =>
         PagamentosRealizadosBloc(

@@ -12,8 +12,14 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
   final PagamentosRealizadosResumo? resumoInicial;
   final int? pessoaId;
   final String? cpfClienteInicial;
-  final double descontoJaAplicadoNoRomaneio;
-  final double taxaEntregaJaAplicadaNoRomaneio;
+  final double descontoInicial;
+  final double taxaEntregaInicial;
+  // Adiantado/já lançado: reduz o valor a pagar (ver valorTotalAPagar).
+  final double abatimentoTotal;
+  // Acerto coberto pelo adiantado: o backend aceita linha de pagamento de valor 0.
+  final bool abatimentoPermiteZero;
+  // Descontos só leitura: o que o pedido já grava vale, sem reapurar promoção.
+  final bool descontosTravados;
   final bool clienteGenerico;
   final String? emailClienteInicial;
   final bool enviarNotaPorEmailInicial;
@@ -23,8 +29,11 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
     this.resumoInicial,
     this.pessoaId,
     this.cpfClienteInicial,
-    this.descontoJaAplicadoNoRomaneio = 0,
-    this.taxaEntregaJaAplicadaNoRomaneio = 0,
+    this.descontoInicial = 0,
+    this.taxaEntregaInicial = 0,
+    this.abatimentoTotal = 0,
+    this.abatimentoPermiteZero = false,
+    this.descontosTravados = false,
     this.clienteGenerico = false,
     this.emailClienteInicial,
     this.enviarNotaPorEmailInicial = false,
@@ -36,8 +45,11 @@ class PagamentosRealizadosIniciado extends PagamentosRealizadosEvent {
         resumoInicial,
         pessoaId,
         cpfClienteInicial,
-        descontoJaAplicadoNoRomaneio,
-        taxaEntregaJaAplicadaNoRomaneio,
+        descontoInicial,
+        taxaEntregaInicial,
+        abatimentoTotal,
+        abatimentoPermiteZero,
+        descontosTravados,
         clienteGenerico,
         emailClienteInicial,
         enviarNotaPorEmailInicial,
@@ -143,6 +155,19 @@ class PagamentosRealizadosDescontosItensLimpos
 class PagamentosRealizadosFinalizacaoSolicitada
     extends PagamentosRealizadosEvent {
   const PagamentosRealizadosFinalizacaoSolicitada();
+}
+
+// Volta de `concluido` para `editando` mantendo linhas/descontos/cupom --
+// a tela de origem dispara quando o resultado não pôde ser usado (falha) ou
+// o operador voltou com Esc.
+class PagamentosRealizadosReaberto extends PagamentosRealizadosEvent {
+  /// Mensagem da falha que fez a origem reabrir; aparece junto do botão.
+  final String? erro;
+
+  const PagamentosRealizadosReaberto({this.erro});
+
+  @override
+  List<Object?> get props => [erro];
 }
 
 class PagamentosRealizadosIncluirCpfAlterado extends PagamentosRealizadosEvent {

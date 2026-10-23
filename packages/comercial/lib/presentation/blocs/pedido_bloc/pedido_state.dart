@@ -303,6 +303,8 @@ enum PedidoStep {
   pagamentoAdicionado,
   pagamentoRemovido,
   descontoAlterado,
+  descontosPromocionaisAplicados,
+  opcoesFiscaisSalvas,
   dadosSalvos,
   enderecoEntregaSalvo,
   pagamentoConfirmado,

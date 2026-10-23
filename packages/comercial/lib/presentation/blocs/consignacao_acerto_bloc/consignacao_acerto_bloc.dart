@@ -159,8 +159,12 @@ class ConsignacaoAcertoBloc
         // corrigido em RomaneioCriacaoBloc pra venda).
         descontosItens: event.descontosItens,
         descontosPromocao: event.descontosPromocao,
+        cupons: event.cupons,
+        valorTaxaEntrega: event.valorTaxaEntrega,
         incluirCpfNaNota: event.incluirCpfNaNota,
         cpfNaNota: event.cpfNaNota,
+        enviarNotaPorEmail: event.enviarNotaPorEmail,
+        emailNota: event.emailNota,
       );
 
       emit(state.copyWith(step: ConsignacaoAcertoStep.sucesso, erro: null));

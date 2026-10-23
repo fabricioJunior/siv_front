@@ -92,6 +92,47 @@ class VendaFinalizarSolicitada extends VendaEvent {
       ];
 }
 
+/// F9 na leitura: valida e abre a etapa de pagamento.
+class VendaPagamentoSolicitado extends VendaEvent {
+  final double subtotal;
+
+  const VendaPagamentoSolicitado({required this.subtotal});
+
+  @override
+  List<Object?> get props => [subtotal];
+}
+
+/// Esc no pagamento: volta aos itens.
+class VendaPagamentoVoltou extends VendaEvent {
+  const VendaPagamentoVoltou();
+}
+
+/// F4 na leitura. `texto` em R$ ("20,00") ou percentual ("10%"); vazio remove.
+class VendaDescontoAlterado extends VendaEvent {
+  final String texto;
+  final double subtotal;
+
+  const VendaDescontoAlterado({required this.texto, required this.subtotal});
+
+  @override
+  List<Object?> get props => [texto, subtotal];
+}
+
+/// Enter na venda concluída: volta aos itens mantendo vendedor e tabela.
+class VendaNovaVendaSolicitada extends VendaEvent {
+  const VendaNovaVendaSolicitada();
+}
+
+/// Nota emitida: reenvia por e-mail; falha/rejeitada: reprocessa.
+class VendaNotaReenviarSolicitada extends VendaEvent {
+  final DocumentoFiscal documentoFiscal;
+
+  const VendaNotaReenviarSolicitada(this.documentoFiscal);
+
+  @override
+  List<Object?> get props => [documentoFiscal];
+}
+
 class VendaCriarPedidoSolicitado extends VendaEvent {
   final List<Map<String, dynamic>> itens;
   final int quantidadeProdutos;

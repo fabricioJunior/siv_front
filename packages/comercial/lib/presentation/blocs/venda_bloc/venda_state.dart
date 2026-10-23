@@ -1,6 +1,6 @@
 part of 'venda_bloc.dart';
 
-enum VendaStep { configuracao, leitura }
+enum VendaStep { configuracao, leitura, pagamento }
 
 enum VendaProcesso { finalizarVenda, criarPedido, salvarOrcamento }
 
@@ -30,6 +30,13 @@ class VendaState extends Equatable {
   final List<ProdutoCompartilhado> orcamentoItensPreCarregados;
   final int orcamentoSalvoContador;
   final bool exigeClienteNaVenda;
+  // Desconto digitado na leitura (F4); semeia o desconto da etapa de pagamento.
+  final double descontoRascunho;
+  final String? erroDesconto;
+  final int descontoContador;
+  // Sobe a cada confirmação do pagamento, mesmo com a mesma lista (retry).
+  final int finalizacaoContador;
+  final String? avisoNota;
 
   const VendaState({
     this.step = VendaStep.configuracao,
@@ -57,9 +64,14 @@ class VendaState extends Equatable {
     this.orcamentoItensPreCarregados = const [],
     this.orcamentoSalvoContador = 0,
     this.exigeClienteNaVenda = false,
+    this.descontoRascunho = 0,
+    this.erroDesconto,
+    this.descontoContador = 0,
+    this.finalizacaoContador = 0,
+    this.avisoNota,
   });
 
-  bool get leituraIniciada => step == VendaStep.leitura;
+  bool get leituraIniciada => step != VendaStep.configuracao;
   bool get podeIniciarLeitura =>
       !verificandoCaixa &&
       clienteSelecionado != null &&
@@ -98,6 +110,11 @@ class VendaState extends Equatable {
     List<ProdutoCompartilhado>? orcamentoItensPreCarregados,
     int? orcamentoSalvoContador,
     bool? exigeClienteNaVenda,
+    double? descontoRascunho,
+    Object? erroDesconto = _sentinela,
+    int? descontoContador,
+    int? finalizacaoContador,
+    Object? avisoNota = _sentinela,
   }) {
     return VendaState(
       step: step ?? this.step,
@@ -146,6 +163,14 @@ class VendaState extends Equatable {
       orcamentoSalvoContador:
           orcamentoSalvoContador ?? this.orcamentoSalvoContador,
       exigeClienteNaVenda: exigeClienteNaVenda ?? this.exigeClienteNaVenda,
+      descontoRascunho: descontoRascunho ?? this.descontoRascunho,
+      erroDesconto: identical(erroDesconto, _sentinela)
+          ? this.erroDesconto
+          : erroDesconto as String?,
+      descontoContador: descontoContador ?? this.descontoContador,
+      finalizacaoContador: finalizacaoContador ?? this.finalizacaoContador,
+      avisoNota:
+          identical(avisoNota, _sentinela) ? this.avisoNota : avisoNota as String?,
     );
   }
 
@@ -176,6 +201,11 @@ class VendaState extends Equatable {
         orcamentoItensPreCarregados,
         orcamentoSalvoContador,
         exigeClienteNaVenda,
+        descontoRascunho,
+        erroDesconto,
+        descontoContador,
+        finalizacaoContador,
+        avisoNota,
       ];
 }
 

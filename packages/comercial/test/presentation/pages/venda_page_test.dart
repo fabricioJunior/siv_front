@@ -347,7 +347,7 @@ void main() {
     expect(find.text('Percentual (0 a 100)'), findsOneWidget);
   });
 
-  testWidgets('Esc no pagamento volta aos itens e o estado sobrevive',
+  testWidgets('Esc no pagamento volta aos itens e o pagamento recomeça do zero',
       (t) async {
     await abrir(t);
     await bipar(t, '789');
@@ -363,7 +363,7 @@ void main() {
     expect(find.text('Confirmar e emitir · F9'), findsOneWidget);
     final bloc = t.element(find.byType(PagamentoEtapa))
         .read<PagamentosRealizadosBloc>();
-    expect(bloc.state.linhas.single.formaDePagamento?.nome, 'Dinheiro');
+    expect(bloc.state.linhas.single.formaDePagamento, isNull);
   });
 
   testWidgets('falha total fica no pagamento com a mensagem e F9 tenta de novo',

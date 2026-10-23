@@ -148,6 +148,8 @@ Widget _grade(FormaPagamentoGradeData d) => TextButton(
       child: Text('GRADE tipoOp=${d.tipoOperacao} saldo=${d.saldoCliente}'),
     );
 
+var _gradePediuFoco = false;
+
 /// Imita a grade real: o teclado só chega a ela com o foco no `foco` dela.
 Widget _gradeComTeclas(FormaPagamentoGradeData d) => Focus(
       focusNode: d.foco,
@@ -161,10 +163,13 @@ Widget _gradeComTeclas(FormaPagamentoGradeData d) => Focus(
         return KeyEventResult.ignored;
       },
       child: Builder(builder: (context) {
-        // Como a grade real: assim que monta, pede o foco para si.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) d.foco?.requestFocus();
-        });
+        // Como a grade real: pede o foco para si só ao montar (1 vez).
+        if (!_gradePediuFoco) {
+          _gradePediuFoco = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) d.foco?.requestFocus();
+          });
+        }
         return const Text('GRADE-TECLAS');
       }),
     );
@@ -178,6 +183,7 @@ Future<void> _pump(
   double largura = 1400,
   FormaPagamentoGradeWidget grade = _grade,
 }) async {
+  _gradePediuFoco = false;
   t.view.physicalSize = Size(largura, 900);
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.reset);
@@ -415,6 +421,31 @@ void main() {
     await t.testTextInput.receiveAction(TextInputAction.done);
     await t.pumpAndSettle();
     expect(find.text('Percentual (0 a 100)'), findsNothing);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.keyD);
+    await t.pumpAndSettle();
+    expect(bloc.state.linhas.single.formaDePagamento?.id, 1);
+  });
+
+  testWidgets('desconto escolhido por clique (tipo + Aplicar): letras voltam',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.romaneio);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c, grade: _gradeComTeclas);
+
+    await t.sendKeyEvent(LogicalKeyboardKey.f4);
+    await t.pumpAndSettle();
+    await t.tap(find.text('R\$').first);
+    await t.pumpAndSettle();
+    await t.enterText(
+        find.descendant(
+            of: find.byKey(const ValueKey('painel-desconto-geral')),
+            matching: find.byType(TextField)),
+        '5');
+    final painel = find.byKey(const ValueKey('painel-desconto-geral'));
+    await t.tap(find.descendant(of: painel, matching: find.text('Aplicar')));
+    await t.pumpAndSettle();
+    expect(painel, findsNothing);
 
     await t.sendKeyEvent(LogicalKeyboardKey.keyD);
     await t.pumpAndSettle();

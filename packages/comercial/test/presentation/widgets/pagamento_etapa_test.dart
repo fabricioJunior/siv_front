@@ -16,13 +16,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/use_cases.dart';
 
+int _saldoDePontos = 100;
+
 class _StubOpcoesResgate implements RecuperarOpcoesResgatePontos {
   @override
   Future<OpcoesResgatePontos> call({required int pessoaId}) async =>
-      const OpcoesResgatePontos(
-        saldo: 100,
+      OpcoesResgatePontos(
+        saldo: _saldoDePontos,
         valorPorPonto: 0.1,
-        faixas: [
+        faixas: const [
           FaixaResgate(
             id: 1,
             pontos: 50,
@@ -381,7 +383,7 @@ void main() {
     await t.pumpAndSettle();
 
     expect(find.text('Percentual (0 a 100)'), findsOneWidget);
-    final x = (String r) => t.getTopLeft(find.text(r)).dx;
+    double x(String r) => t.getTopLeft(find.text(r)).dx;
     expect(x('%'), lessThan(x('R\$')));
     expect(x('R\$'), lessThan(x('Total')));
   });
@@ -568,6 +570,16 @@ void main() {
           o == PagamentoOrigem.venda ? findsOneWidget : findsNothing,
           reason: o.name);
     }
+  });
+
+  testWidgets('pontos: saldo zero aparece, sem ação de resgatar', (t) async {
+    _saldoDePontos = 0;
+    addTearDown(() => _saldoDePontos = 100);
+    final c = _ctx(PagamentoOrigem.venda);
+    await _pump(t, _bloc(c), c);
+
+    expect(find.text('Pontos (saldo 0)'), findsOneWidget);
+    expect(find.text('resgatar'), findsNothing);
   });
 
   testWidgets('pontos: faixa reduz o A PAGAR e sai no Map', (t) async {

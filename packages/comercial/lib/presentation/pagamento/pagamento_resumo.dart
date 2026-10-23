@@ -164,7 +164,7 @@ class PagamentoResumo extends StatelessWidget {
           ),
         if (_r.resgatePontos &&
             state.clienteElegivelFidelidade &&
-            state.opcoesResgate?.possuiOpcoes == true)
+            state.opcoesResgate != null)
           _Pontos(
             state: state,
             editavel: _editavel,
@@ -322,11 +322,11 @@ class _PontosState extends State<_Pontos> {
           state.possuiResgate
               ? '−${pagamentoMoeda(state.valorDescontoResgate)}'
               : '—',
-          acao: widget.editavel
+          acao: widget.editavel && opcoes.possuiOpcoes
               ? _Acao(state.possuiResgate ? 'alterar' : 'resgatar', _alternar)
               : null,
         ),
-        if (_aberto && widget.editavel)
+        if (_aberto && widget.editavel && opcoes.possuiOpcoes)
           Container(
             margin: const EdgeInsets.symmetric(vertical: 6),
             padding: const EdgeInsets.all(12),

@@ -408,7 +408,8 @@ class _ItemResumoState extends State<_ItemResumo> {
               _PainelValor(
                 titulo: 'Desconto no item',
                 tiposPermitidos: _ordemDesconto,
-                tipoInicial: state.descontosItensTipo[id],
+                // O bloc semeia R$ em todo item; sem desconto aplicado vale o padrão (%).
+                tipoInicial: manual > 0 ? state.descontosItensTipo[id] : null,
                 textoInicial: manual > 0
                     ? (state.descontosItensValorTexto[id] ?? '')
                     : '',

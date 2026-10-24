@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_faturamento_bloc/relatorio_faturamento_bloc.dart';
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
@@ -8,7 +10,7 @@ import 'package:core/tema.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-const int _maxPontosGrafico = 12;
+const double _larguraPontoGrafico = 48;
 
 String _fmtMoeda(double v) {
   final p = v.toStringAsFixed(2).split('.');
@@ -331,15 +333,21 @@ class _GraficoCard extends StatelessWidget {
         child: Center(child: Text('Sem dados para o período.')),
       );
     } else {
-      conteudo = _Linhas(
-        pontos: pontos.length > _maxPontosGrafico
-            ? pontos.sublist(pontos.length - _maxPontosGrafico)
-            : pontos,
-        anoAnterior: {
-          for (final p in anoAnterior?.pontos ?? const []) p.periodo: p.faturamento,
-        },
-        agruparPor: agruparPor,
-        mobile: mobile,
+      conteudo = LayoutBuilder(
+        builder: (_, c) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: math.max(c.maxWidth, pontos.length * _larguraPontoGrafico),
+            child: _Linhas(
+              pontos: pontos,
+              anoAnterior: {
+                for (final p in anoAnterior?.pontos ?? const []) p.periodo: p.faturamento,
+              },
+              agruparPor: agruparPor,
+              mobile: mobile,
+            ),
+          ),
+        ),
       );
     }
     return Container(
@@ -395,7 +403,8 @@ class _Linhas extends StatelessWidget {
     ];
     final maxY = [...atualSpots, ...anteriorSpots]
         .fold<double>(0, (a, s) => s.y > a ? s.y : a);
-    final passo = pontos.length > 6 ? 2 : 1;
+    final acumAtual = _acumulado(atualSpots);
+    final acumAnterior = _acumulado(anteriorSpots);
     return SizedBox(
       height: mobile ? 160 : 240,
       child: LineChart(
@@ -419,7 +428,7 @@ class _Linhas extends StatelessWidget {
                 interval: 1,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= pontos.length || i % passo != 0) {
+                  if (i < 0 || i >= pontos.length) {
                     return const SizedBox.shrink();
                   }
                   return Padding(
@@ -440,8 +449,8 @@ class _Linhas extends StatelessWidget {
               getTooltipItems: (spots) => [
                 for (final s in spots)
                   LineTooltipItem(
-                    '${s.barIndex == 0 ? '' : 'Ano ant.: '}'
-                    '${_fmtMoeda(s.y)}',
+                    '${s.barIndex == 0 ? 'Atual' : 'Ano ant.'}: ${_fmtMoeda(s.y)}\n'
+                    'Acumulado: ${_fmtMoeda((s.barIndex == 0 ? acumAtual : acumAnterior)[s.spotIndex])}',
                     apoio.copyWith(color: cores.tinta),
                   ),
               ],
@@ -467,6 +476,11 @@ class _Linhas extends StatelessWidget {
       ),
     );
   }
+}
+
+List<double> _acumulado(List<FlSpot> spots) {
+  var soma = 0.0;
+  return [for (final s in spots) soma += s.y];
 }
 
 class _Quebra extends StatelessWidget {

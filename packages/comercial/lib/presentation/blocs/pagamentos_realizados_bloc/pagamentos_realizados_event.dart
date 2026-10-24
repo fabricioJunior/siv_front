@@ -284,3 +284,15 @@ class PagamentosRealizadosCupomRemovido extends PagamentosRealizadosEvent {
   @override
   List<Object?> get props => [codigo];
 }
+
+// Escolha unica: faixa OU pontos livres. Ambos nulos = remover resgate.
+class PagamentosRealizadosResgateEscolhido extends PagamentosRealizadosEvent {
+  final int? faixaId;
+  final int? pontos;
+
+  const PagamentosRealizadosResgateEscolhido({this.faixaId, this.pontos})
+      : assert(faixaId == null || pontos == null);
+
+  @override
+  List<Object?> get props => [faixaId, pontos];
+}

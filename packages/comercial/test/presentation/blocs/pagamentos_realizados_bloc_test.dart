@@ -51,6 +51,38 @@ class _StubVerificarElegibilidadeFidelidade
       throw UnimplementedError();
 }
 
+class _StubRecuperarOpcoesResgate implements RecuperarOpcoesResgatePontos {
+  @override
+  Future<OpcoesResgatePontos> call({required int pessoaId}) async =>
+      throw UnimplementedError();
+}
+
+class _FakeRecuperarOpcoesResgate implements RecuperarOpcoesResgatePontos {
+  final OpcoesResgatePontos opcoes;
+
+  _FakeRecuperarOpcoesResgate(this.opcoes);
+
+  @override
+  Future<OpcoesResgatePontos> call({required int pessoaId}) async => opcoes;
+}
+
+class _FakeVerificarElegibilidadeFidelidade
+    implements VerificarElegibilidadeFidelidade {
+  @override
+  Future<bool> call({required int pessoaId}) async => true;
+}
+
+class _FakeBuscarSaldoZero implements BuscarSaldoCreditoDevolucao {
+  @override
+  Future<double> call({
+    required int pessoaId,
+    List<int>? empresaIds,
+    DateTime? dataInicio,
+    DateTime? dataFim,
+  }) async =>
+      0;
+}
+
 class _StubVerificarPermiteNotaFiscalEmail
     implements VerificarPermiteNotaFiscalEmail {
   @override
@@ -228,6 +260,7 @@ void main() {
         ),
       ),
       _FakeLeitorDataDatasource({9: 900}),
+      _StubRecuperarOpcoesResgate(),
     ),
     seed: () => const PagamentosRealizadosState(
       resumo: PagamentosRealizadosResumo(
@@ -266,6 +299,7 @@ void main() {
         ),
       ),
       _FakeLeitorDataDatasource({9: 66700001}),
+      _StubRecuperarOpcoesResgate(),
     ),
     seed: () => const PagamentosRealizadosState(
       resumo: PagamentosRealizadosResumo(
@@ -301,6 +335,7 @@ void main() {
         ),
       ),
       _FakeLeitorDataDatasource({9: 900}),
+      _StubRecuperarOpcoesResgate(),
     ),
     seed: () => const PagamentosRealizadosState(
       resumo: PagamentosRealizadosResumo(
@@ -349,6 +384,7 @@ void main() {
         ),
       ),
       _FakeLeitorDataDatasource({9: 900}),
+      _StubRecuperarOpcoesResgate(),
     ),
     seed: () => const PagamentosRealizadosState(
       resumo: PagamentosRealizadosResumo(
@@ -398,6 +434,7 @@ void main() {
         _FakeAcessoGlobalSessao(),
         fake,
         _FakeLeitorDataDatasource({9: 900}),
+        _StubRecuperarOpcoesResgate(),
       );
 
   ResultadoElegibilidade apuracaoCom(List<OpcaoElegivel> opcoes,
@@ -730,6 +767,7 @@ void main() {
         _FakeAcessoGlobalSessao(),
         _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: [])),
         _FakeLeitorDataDatasource({9: 900}),
+        _StubRecuperarOpcoesResgate(),
       );
 
   blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
@@ -817,6 +855,7 @@ void main() {
           _FakeAcessoGlobalSessao(),
           _FakeApurarElegibilidade(const ResultadoElegibilidade(itens: [])),
           _FakeLeitorDataDatasource(const {}),
+          _StubRecuperarOpcoesResgate(),
         );
 
     PagamentosRealizadosIniciado iniciadoCom({required bool generico}) =>
@@ -880,6 +919,7 @@ void main() {
         ),
       ),
       _FakeLeitorDataDatasource({1: 100, 2: 200, 3: 300}),
+      _StubRecuperarOpcoesResgate(),
     ),
     act: (bloc) => bloc.add(
       const PagamentosRealizadosIniciado(
@@ -904,4 +944,209 @@ void main() {
       expect(promocoes.containsKey(3), isFalse);
     },
   );
+
+  group('resgate de pontos de fidelidade', () {
+    const resumo199 = PagamentosRealizadosResumo(
+      listaCompartilhada: null,
+      produtosCompartilhados: [_produto199],
+      quantidadeTotalProdutos: 1,
+      valorTotalProdutos: 199,
+    );
+    const opcoes = OpcoesResgatePontos(
+      saldo: 100,
+      valorPorPonto: 0.1,
+      cumulativoValorPorPonto: false,
+      faixas: [
+        FaixaResgate(
+          id: 1,
+          pontos: 50,
+          tipo: 'valor',
+          valor: 10,
+          cumulativo: true,
+          disponivel: true,
+        ),
+        FaixaResgate(
+          id: 2,
+          pontos: 80,
+          tipo: 'percentual',
+          valor: 10,
+          cumulativo: false,
+          disponivel: true,
+        ),
+        FaixaResgate(
+          id: 3,
+          pontos: 500,
+          tipo: 'valor',
+          valor: 100,
+          cumulativo: true,
+          disponivel: false,
+        ),
+      ],
+    );
+
+    PagamentosRealizadosBloc novoBloc() => PagamentosRealizadosBloc(
+          _StubCarregarResumo(),
+          _FakeBuscarSaldoZero(),
+          _FakeVerificarElegibilidadeFidelidade(),
+          _StubVerificarPermiteNotaFiscalEmail(),
+          _FakeAcessoGlobalSessao(),
+          _FakeApurarElegibilidade(ResultadoElegibilidade(itens: const [])),
+          _FakeLeitorDataDatasource({}),
+          _FakeRecuperarOpcoesResgate(opcoes),
+        );
+
+    const comOpcoes = PagamentosRealizadosState(
+      step: PagamentosRealizadosStep.editando,
+      resumo: resumo199,
+      clienteElegivelFidelidade: true,
+      opcoesResgate: opcoes,
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'carrega as opcoes de resgate junto da elegibilidade',
+      build: novoBloc,
+      act: (bloc) => bloc.add(
+        const PagamentosRealizadosIniciado(
+          hashLista: 'hash',
+          resumoInicial: resumo199,
+          pessoaId: 7,
+        ),
+      ),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.clienteElegivelFidelidade, isTrue);
+        expect(bloc.state.opcoesResgate, opcoes);
+        expect(bloc.state.possuiResgate, isFalse);
+        expect(bloc.state.pontuarFidelidade, isTrue,
+            reason: 'cliente elegível pontua por padrão');
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'aplica faixa de valor fixo: desconta do total e envia so faixaId',
+      build: novoBloc,
+      seed: () => comOpcoes,
+      act: (bloc) =>
+          bloc.add(const PagamentosRealizadosResgateEscolhido(faixaId: 1)),
+      verify: (bloc) {
+        expect(bloc.state.valorDescontoResgate, 10);
+        expect(bloc.state.valorTotalAPagar, 189);
+        expect(bloc.state.valorDescontoAplicado, 0);
+        expect(bloc.state.resgatePayload, {'faixaId': 1});
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'faixa nao cumulativa com desconto por item: bloqueada',
+      build: novoBloc,
+      seed: () => comOpcoes.copyWith(descontosItensAplicado: {9: 99}),
+      act: (bloc) =>
+          bloc.add(const PagamentosRealizadosResgateEscolhido(faixaId: 2)),
+      verify: (bloc) {
+        expect(bloc.state.resgateFaixaId, isNull);
+        expect(bloc.state.erro, contains('Não cumulativo'));
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'faixa percentual sem outros descontos: 10% de 199',
+      build: novoBloc,
+      seed: () => comOpcoes,
+      act: (bloc) =>
+          bloc.add(const PagamentosRealizadosResgateEscolhido(faixaId: 2)),
+      verify: (bloc) {
+        expect(bloc.state.valorDescontoResgate, 19.9);
+        expect(bloc.state.valorTotalAPagar, closeTo(179.1, 0.001));
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'aplica pontos livres: pontos x valorPorPonto, envia so pontos',
+      build: novoBloc,
+      seed: () => comOpcoes,
+      act: (bloc) =>
+          bloc.add(const PagamentosRealizadosResgateEscolhido(pontos: 30)),
+      verify: (bloc) {
+        expect(bloc.state.valorDescontoResgate, 3);
+        expect(bloc.state.resgatePayload, {'pontos': 30});
+        expect(bloc.state.resgateFaixaId, isNull);
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'rejeita pontos acima do saldo e faixa indisponivel',
+      build: novoBloc,
+      seed: () => comOpcoes,
+      act: (bloc) async {
+        bloc.add(const PagamentosRealizadosResgateEscolhido(pontos: 101));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const PagamentosRealizadosResgateEscolhido(faixaId: 3));
+      },
+      verify: (bloc) {
+        expect(bloc.state.possuiResgate, isFalse);
+        expect(bloc.state.erro, contains('Faltam 400 pontos'));
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'nao cumulativo com outro desconto presente: bloqueia o resgate',
+      build: novoBloc,
+      seed: () => comOpcoes.copyWith(valorDescontoAplicado: 5),
+      act: (bloc) =>
+          bloc.add(const PagamentosRealizadosResgateEscolhido(pontos: 30)),
+      verify: (bloc) {
+        expect(bloc.state.possuiResgate, isFalse);
+        expect(bloc.state.erro, contains('Não cumulativo'));
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'resgate nao cumulativo ativo bloqueia desconto manual e cupom',
+      build: novoBloc,
+      seed: () => comOpcoes.copyWith(resgatePontos: 30),
+      act: (bloc) async {
+        bloc.add(
+          const PagamentosRealizadosDescontoAlterado(
+            tipo: DescontoTipo.valorBruto,
+            valorTexto: '10',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const PagamentosRealizadosCupomInformado(codigo: 'X'));
+      },
+      verify: (bloc) {
+        expect(bloc.state.valorDescontoAplicado, 0);
+        expect(bloc.state.resgatePontos, 30);
+        expect(bloc.state.cupomErro, contains('não pode ser somado'));
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'resgate cumulativo convive com desconto manual',
+      build: novoBloc,
+      seed: () => comOpcoes.copyWith(resgateFaixaId: 1),
+      act: (bloc) => bloc.add(
+        const PagamentosRealizadosDescontoAlterado(
+          tipo: DescontoTipo.valorBruto,
+          valorTexto: '10',
+        ),
+      ),
+      verify: (bloc) {
+        expect(bloc.state.valorDescontoAplicado, 10);
+        expect(bloc.state.valorTotalAPagar, 179);
+      },
+    );
+
+    blocTest<PagamentosRealizadosBloc, PagamentosRealizadosState>(
+      'remove o resgate',
+      build: novoBloc,
+      seed: () => comOpcoes.copyWith(resgateFaixaId: 1),
+      act: (bloc) => bloc.add(const PagamentosRealizadosResgateEscolhido()),
+      verify: (bloc) {
+        expect(bloc.state.possuiResgate, isFalse);
+        expect(bloc.state.resgatePayload, isNull);
+        expect(bloc.state.valorTotalAPagar, 199);
+      },
+    );
+  });
 }

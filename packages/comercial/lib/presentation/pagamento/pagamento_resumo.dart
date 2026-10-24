@@ -1,3 +1,4 @@
+import 'package:comercial/domain/models/opcoes_resgate_pontos.dart';
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
 import 'package:core/bloc.dart';
@@ -43,8 +44,12 @@ class PagamentoResumo extends StatelessWidget {
   /// Chamado quando um painel de valor fecha com o foco dentro dele.
   final VoidCallback? aoFecharPainel;
 
+  /// Desktop: itens rolam e o extrato + A PAGAR ficam colados no fim.
+  final bool fixarTotais;
+
   const PagamentoResumo({
     super.key,
+    this.fixarTotais = false,
     required this.state,
     required this.contexto,
     required this.descontoGeralAberto,
@@ -63,131 +68,171 @@ class PagamentoResumo extends StatelessWidget {
     final bloc = context.read<PagamentosRealizadosBloc>();
     final produtos = state.resumo?.produtosCompartilhados ?? const [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text('RESUMO', style: textos.rotulo),
-        const SizedBox(height: 2),
-        Text(
-          '${produtos.length} referências · ${state.quantidadeTotalProdutos} peças',
-          style: textos.apoio,
+    final topo = <Widget>[
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text('RESUMO', style: textos.rotulo),
+          Text(
+            '${produtos.length} referências · ${state.quantidadeTotalProdutos} peças',
+            style: textos.apoio,
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      for (final produto in produtos)
+        _ItemResumo(
+          key: ValueKey('item-${produto.produtoId}'),
+          produto: produto,
+          state: state,
+          podeDescontoItem: _r.descontoItem && _editavel,
+          podePromocao: _r.promocoes && _editavel,
+          aoFecharPainel: aoFecharPainel,
         ),
+      if (contexto.descontosTravados) ...[
+        const SizedBox(height: 8),
+        const SivAvisoAtencao(
+          'Remova os pagamentos lançados para alterar descontos',
+        ),
+      ],
+      if (_r.cupom) ...[
         const SizedBox(height: 12),
-        for (final produto in produtos)
-          _ItemResumo(
-            key: ValueKey('item-${produto.produtoId}'),
-            produto: produto,
+        _Cupom(state: state, habilitado: _editavel),
+      ],
+      if (_r.promocoes &&
+          _editavel &&
+          _promocoesDistintas(state.opcoesElegiveisPorItem).isNotEmpty) ...[
+        const SizedBox(height: 8),
+        _PromocoesDisponiveis(state: state),
+      ],
+    ];
+    final totais = <Widget>[
+      const Divider(height: 28),
+      _Linha('Subtotal', pagamentoMoeda(state.valorTotalProdutos)),
+      if (state.valorDescontoPromocaoTotal > 0)
+        _Linha(
+          // Pedido grava o desconto padrão; a forma de pagamento pode mudá-lo no faturamento.
+          contexto.origem == PagamentoOrigem.pedido &&
+                  state.promocaoEscolhidaPorItem.values.any(
+                    (o) => o.overridesPorFormaPagamento?.isNotEmpty ?? false,
+                  )
+              ? 'Promoções (estimado)'
+              : 'Promoções',
+          '−${pagamentoMoeda(state.valorDescontoPromocaoTotal)}',
+        ),
+      if (_r.descontoGeral || state.valorDescontoItensTotal > 0)
+        _Linha(
+          'Desconto',
+          state.valorDescontoItensTotal > 0
+              ? '−${pagamentoMoeda(state.valorDescontoItensTotal)}'
+              : '—',
+          acao: _r.descontoGeral && _editavel
+              ? _Acao(
+                  'editar · F4',
+                  () => descontoGeralAberto.value = !descontoGeralAberto.value,
+                )
+              : null,
+        ),
+      if (_r.descontoGeral && _editavel)
+        ValueListenableBuilder<bool>(
+          valueListenable: descontoGeralAberto,
+          builder: (context, aberto, _) => aberto
+              ? _PainelValor(
+                  aoFechar: aoFecharPainel,
+                  key: const ValueKey('painel-desconto-geral'),
+                  titulo: 'Desconto geral',
+                  tiposPermitidos: _ordemDesconto,
+                  tipoInicial: state.descontoTipo,
+                  textoInicial: state.valorDescontoAplicado > 0
+                      ? state.descontoValorTexto
+                      : '',
+                  temValor: state.valorDescontoAplicado > 0,
+                  onAplicar: (tipo, texto) {
+                    bloc.add(
+                      PagamentosRealizadosDescontoAlterado(
+                        tipo: tipo,
+                        valorTexto: texto,
+                      ),
+                    );
+                    descontoGeralAberto.value = false;
+                  },
+                  onRemover: () {
+                    bloc.add(
+                      const PagamentosRealizadosDescontoAlterado(
+                        tipo: null,
+                        valorTexto: '',
+                      ),
+                    );
+                    descontoGeralAberto.value = false;
+                  },
+                  onFechar: () => descontoGeralAberto.value = false,
+                )
+              : const SizedBox.shrink(),
+        ),
+      if (_r.resgatePontos &&
+          state.clienteElegivelFidelidade &&
+          state.opcoesResgate != null)
+        _Pontos(
+          state: state,
+          editavel: _editavel,
+          aoFecharPainel: aoFecharPainel,
+        ),
+      if (_r.creditoCliente && state.pessoaId != null && !state.clienteGenerico)
+        _Linha(
+          'Crédito de devolução',
+          state.carregandoSaldoCreditoDevolucao
+              ? '…'
+              : pagamentoMoeda(state.saldoCreditoDevolucao),
+        ),
+      if (_r.taxaEntrega)
+        _TaxaEntrega(
             state: state,
-            podeDescontoItem: _r.descontoItem && _editavel,
-            podePromocao: _r.promocoes && _editavel,
-            aoFecharPainel: aoFecharPainel,
-          ),
-        if (contexto.descontosTravados) ...[
-          const SizedBox(height: 8),
-          const SivAvisoAtencao(
-            'Remova os pagamentos lançados para alterar descontos',
-          ),
-        ],
-        if (_r.cupom) ...[
-          const SizedBox(height: 12),
-          _Cupom(state: state, habilitado: _editavel),
-        ],
-        if (_r.promocoes &&
-            _editavel &&
-            _promocoesDistintas(state.opcoesElegiveisPorItem).isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _PromocoesDisponiveis(state: state),
-        ],
-        const Divider(height: 28),
-        _Linha('Subtotal', pagamentoMoeda(state.valorTotalProdutos)),
-        if (state.valorDescontoPromocaoTotal > 0)
-          _Linha(
-            // Pedido grava o desconto padrão; a forma de pagamento pode mudá-lo no faturamento.
-            contexto.origem == PagamentoOrigem.pedido &&
-                    state.promocaoEscolhidaPorItem.values.any(
-                      (o) => o.overridesPorFormaPagamento?.isNotEmpty ?? false,
-                    )
-                ? 'Promoções (estimado)'
-                : 'Promoções',
-            '−${pagamentoMoeda(state.valorDescontoPromocaoTotal)}',
-          ),
-        if (_r.descontoGeral || state.valorDescontoItensTotal > 0)
-          _Linha(
-            'Desconto',
-            state.valorDescontoItensTotal > 0
-                ? '−${pagamentoMoeda(state.valorDescontoItensTotal)}'
-                : '—',
-            acao: _r.descontoGeral && _editavel
-                ? _Acao(
-                    'editar · F4',
-                    () =>
-                        descontoGeralAberto.value = !descontoGeralAberto.value,
-                  )
-                : null,
-          ),
-        if (_r.descontoGeral && _editavel)
-          ValueListenableBuilder<bool>(
-            valueListenable: descontoGeralAberto,
-            builder: (context, aberto, _) => aberto
-                ? _PainelValor(
-                    aoFechar: aoFecharPainel,
-                    key: const ValueKey('painel-desconto-geral'),
-                    titulo: 'Desconto geral',
-                    tiposPermitidos: _ordemDesconto,
-                    tipoInicial: state.descontoTipo,
-                    textoInicial: state.valorDescontoAplicado > 0
-                        ? state.descontoValorTexto
-                        : '',
-                    temValor: state.valorDescontoAplicado > 0,
-                    onAplicar: (tipo, texto) {
-                      bloc.add(
-                        PagamentosRealizadosDescontoAlterado(
-                          tipo: tipo,
-                          valorTexto: texto,
-                        ),
-                      );
-                      descontoGeralAberto.value = false;
-                    },
-                    onRemover: () {
-                      bloc.add(
-                        const PagamentosRealizadosDescontoAlterado(
-                          tipo: null,
-                          valorTexto: '',
-                        ),
-                      );
-                      descontoGeralAberto.value = false;
-                    },
-                    onFechar: () => descontoGeralAberto.value = false,
-                  )
-                : const SizedBox.shrink(),
-          ),
-        if (_r.taxaEntrega)
-          _TaxaEntrega(
-              state: state,
-              editavel: state.step == PagamentosRealizadosStep.editando,
-              aoFecharPainel: aoFecharPainel)
-        else if (contexto.origem == PagamentoOrigem.pedido)
-          _Linha(
-            'Entrega',
-            state.valorTaxaEntregaAplicado > 0
-                ? pagamentoMoeda(state.valorTaxaEntregaAplicado)
-                : 'na entrega',
-          ),
-        for (final a in contexto.abatimentos)
-          _Linha(a.rotulo, '−${pagamentoMoeda(a.valor)}'),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(14),
-          color: cores.superficieRecuada,
-          child: Row(
-            children: [
-              Text('A PAGAR', style: textos.rotulo),
-              const Spacer(),
-              Text(
-                pagamentoMoeda(state.valorTotalAPagar),
-                style: textos.valor.copyWith(fontSize: 26),
-              ),
-            ],
+            editavel: state.step == PagamentosRealizadosStep.editando,
+            aoFecharPainel: aoFecharPainel)
+      else if (contexto.origem == PagamentoOrigem.pedido)
+        _Linha(
+          'Entrega',
+          state.valorTaxaEntregaAplicado > 0
+              ? pagamentoMoeda(state.valorTaxaEntregaAplicado)
+              : 'na entrega',
+        ),
+      for (final a in contexto.abatimentos)
+        _Linha(a.rotulo, '−${pagamentoMoeda(a.valor)}'),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.only(top: 12),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: cores.hairline)),
+        ),
+        child: Row(
+          children: [
+            Text('A PAGAR', style: textos.rotulo),
+            const Spacer(),
+            Text(
+              pagamentoMoeda(state.valorTotalAPagar),
+              style: textos.valor.copyWith(fontSize: 30),
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    if (!fixarTotais) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [...topo, ...totais],
+      );
+    }
+    // hasScrollBody:false = Spacer cola o extrato no fim; rola se não couber.
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [...topo, const Spacer(), ...totais],
           ),
         ),
       ],
@@ -236,6 +281,182 @@ class _Linha extends StatelessWidget {
           Text(valor, style: textos.corpo),
         ],
       ),
+    );
+  }
+}
+
+class _Pontos extends StatefulWidget {
+  final PagamentosRealizadosState state;
+  final bool editavel;
+  final VoidCallback? aoFecharPainel;
+
+  const _Pontos({
+    required this.state,
+    required this.editavel,
+    this.aoFecharPainel,
+  });
+
+  @override
+  State<_Pontos> createState() => _PontosState();
+}
+
+class _PontosState extends State<_Pontos> {
+  bool _aberto = false;
+  late final _controller =
+      TextEditingController(text: widget.state.resgatePontos?.toString() ?? '');
+  final _foco = FocusNode();
+
+  void _alternar() {
+    setState(() => _aberto = !_aberto);
+    if (_aberto) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _foco.requestFocus();
+      });
+    } else {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => widget.aoFecharPainel?.call());
+    }
+  }
+
+  void _escolher({int? faixaId, int? pontos}) {
+    context.read<PagamentosRealizadosBloc>().add(
+          PagamentosRealizadosResgateEscolhido(
+            faixaId: faixaId,
+            pontos: pontos,
+          ),
+        );
+    _alternar();
+  }
+
+  @override
+  void dispose() {
+    _foco.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  static String _faixa(FaixaResgate f) =>
+      '${f.pontos} pts → ${f.ehPercentual ? '${f.valor.toStringAsFixed(f.valor == f.valor.roundToDouble() ? 0 : 2)}%' : pagamentoMoeda(f.valor)}';
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final state = widget.state;
+    final opcoes = state.opcoesResgate!;
+    final vpp = opcoes.valorPorPonto;
+    final motivoLivres = state.motivoPontosLivresIndisponivel;
+    final pontos = int.tryParse(_controller.text.trim());
+    final pontosValidos =
+        pontos != null && pontos >= 1 && pontos <= state.maxPontosLivres;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Linha(
+          'Pontos (saldo ${opcoes.saldo})',
+          state.possuiResgate
+              ? '−${pagamentoMoeda(state.valorDescontoResgate)}'
+              : '—',
+          acao: widget.editavel && opcoes.possuiOpcoes
+              ? _Acao(state.possuiResgate ? 'alterar' : 'resgatar', _alternar)
+              : null,
+        ),
+        if (_aberto && widget.editavel && opcoes.possuiOpcoes)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cores.superficieRecuada,
+              border: Border.all(color: cores.hairline),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('RESGATAR PONTOS', style: textos.rotulo),
+                for (final faixa in opcoes.faixas)
+                  Builder(builder: (_) {
+                    final motivo = state.motivoFaixaIndisponivel(faixa);
+                    return Opacity(
+                      opacity: motivo == null ? 1 : 0.5,
+                      child: InkWell(
+                        onTap: motivo != null
+                            ? null
+                            : () => _escolher(faixaId: faixa.id),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(
+                                state.resgateFaixaId == faixa.id
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_unchecked,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(_faixa(faixa), style: textos.corpo),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  motivo ??
+                                      (faixa.cumulativo
+                                          ? 'Cumulativo'
+                                          : 'Não cumulativo'),
+                                  style: textos.apoio,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                if (vpp != null) ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _controller,
+                    focusNode: _foco,
+                    enabled: motivoLivres == null,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: 'Usar pontos (1 a ${state.maxPontosLivres})',
+                      helperText: motivoLivres ??
+                          (pontosValidos
+                              ? 'Desconto: ${pagamentoMoeda(double.parse((pontos * vpp).toStringAsFixed(2)))}'
+                              : '${pagamentoMoeda(vpp)} por ponto'),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) {
+                      if (pontosValidos) _escolher(pontos: pontos);
+                    },
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                        onPressed: _alternar, child: const Text('Fechar')),
+                    if (state.possuiResgate)
+                      TextButton(
+                        onPressed: _escolher,
+                        child: const Text('Remover'),
+                      ),
+                    if (vpp != null)
+                      FilledButton(
+                        onPressed: motivoLivres == null && pontosValidos
+                            ? () => _escolher(pontos: pontos)
+                            : null,
+                        child: const Text('Aplicar'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

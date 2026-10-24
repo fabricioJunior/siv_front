@@ -82,6 +82,7 @@ class _Receber implements ReceberRomaneioNoCaixa {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) async {
@@ -115,6 +116,12 @@ class _Pessoa implements RecuperarPessoa {
         generica: false,
         enviarNotaPorEmail: true,
       );
+}
+
+class _StubOpcoesResgate implements RecuperarOpcoesResgatePontos {
+  @override
+  Future<OpcoesResgatePontos> call({required int pessoaId}) async =>
+      throw UnimplementedError();
 }
 
 class _Resumo implements CarregarResumoPagamentosRealizados {
@@ -257,6 +264,7 @@ void main() {
         sessao,
         _Apurar(),
         _Leitor(),
+        _StubOpcoesResgate(),
       ),
     );
   });

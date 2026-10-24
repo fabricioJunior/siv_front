@@ -55,6 +55,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final Map<String, dynamic>? resgatePontos;
 
   RomaneioPagamentoRecebido({
     required this.formasDePagamentoRealizadas,
@@ -65,6 +66,7 @@ class RomaneioPagamentoRecebido extends RomaneioEvent {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.resgatePontos,
   });
 }
 

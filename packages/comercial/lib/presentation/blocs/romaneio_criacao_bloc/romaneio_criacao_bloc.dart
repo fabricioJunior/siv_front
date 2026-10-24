@@ -182,6 +182,7 @@ class RomaneioCriacaoBloc
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
           pontuarFidelidade: event.pontuarFidelidade,
+          resgatePontos: event.resgatePontos,
           enviarNotaPorEmail: event.enviarNotaPorEmail,
           emailNota: event.emailNota,
         );
@@ -383,6 +384,7 @@ class RomaneioCriacaoBloc
       incluirCpfNaNota: event.incluirCpfNaNota,
       cpfNaNota: event.cpfNaNota,
       pontuarFidelidade: event.pontuarFidelidade,
+      resgatePontos: event.resgatePontos,
       enviarNotaPorEmail: event.enviarNotaPorEmail,
       emailNota: event.emailNota,
     );

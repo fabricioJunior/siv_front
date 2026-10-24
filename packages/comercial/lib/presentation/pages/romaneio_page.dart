@@ -1199,6 +1199,8 @@ class _RomaneioPageState extends State<RomaneioPage> {
     final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
     final pontuarFidelidade =
         pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
+    final resgatePontos =
+        pagamentoResultado['resgatePontos'] as Map<String, dynamic>?;
     final valorTaxaEntrega =
         _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
 
@@ -1212,6 +1214,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
         incluirCpfNaNota: incluirCpfNaNota,
         cpfNaNota: cpfNaNota,
         pontuarFidelidade: pontuarFidelidade,
+        resgatePontos: resgatePontos,
       ),
     );
   }

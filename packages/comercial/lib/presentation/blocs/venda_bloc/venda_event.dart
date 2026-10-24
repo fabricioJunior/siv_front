@@ -57,6 +57,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
   final bool incluirCpfNaNota;
   final String cpfNaNota;
   final bool pontuarFidelidade;
+  final Map<String, dynamic>? resgatePontos;
   final bool enviarNotaPorEmail;
   final String emailNota;
 
@@ -71,6 +72,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
     this.incluirCpfNaNota = true,
     this.cpfNaNota = '',
     this.pontuarFidelidade = false,
+    this.resgatePontos,
     this.enviarNotaPorEmail = false,
     this.emailNota = '',
   });
@@ -87,6 +89,7 @@ class VendaFinalizarSolicitada extends VendaEvent {
         incluirCpfNaNota,
         cpfNaNota,
         pontuarFidelidade,
+        resgatePontos,
         enviarNotaPorEmail,
         emailNota,
       ];

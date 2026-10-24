@@ -177,6 +177,12 @@ class _Pessoa implements RecuperarPessoa {
       );
 }
 
+class _StubOpcoesResgate implements RecuperarOpcoesResgatePontos {
+  @override
+  Future<OpcoesResgatePontos> call({required int pessoaId}) async =>
+      throw UnimplementedError();
+}
+
 class _Resumo implements CarregarResumoPagamentosRealizados {
   @override
   Future<PagamentosRealizadosResumo> call(String hashLista) async =>
@@ -342,6 +348,7 @@ void main() {
         sessao,
         _Apurar(),
         _Leitor(),
+        _StubOpcoesResgate(),
       ),
     );
   }

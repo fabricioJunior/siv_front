@@ -157,7 +157,8 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
             ? -1
             : 0;
     if (passo == 0) return KeyEventResult.ignored;
-    setState(() => _destaque = (_destaque + passo + lista.length) % lista.length);
+    setState(
+        () => _destaque = (_destaque + passo + lista.length) % lista.length);
     return KeyEventResult.handled;
   }
 
@@ -265,6 +266,7 @@ class _FormasDePagamentoGradeState extends State<FormasDePagamentoGrade> {
                       child: _Botao(
                         tecla: t.tecla,
                         rotulo: t.rotulo,
+                        altura: 60,
                         detalhe: _formasDo(t).length > 1
                             ? '${_formasDo(t).length} formas'
                             : null,
@@ -332,6 +334,7 @@ class _Botao extends StatelessWidget {
   final bool selecionado;
   final bool destacado;
   final bool bloqueado;
+  final double? altura;
   final VoidCallback onTap;
 
   const _Botao({
@@ -341,6 +344,7 @@ class _Botao extends StatelessWidget {
     this.selecionado = false,
     this.destacado = false,
     this.bloqueado = false,
+    this.altura,
     required this.onTap,
   });
 
@@ -363,7 +367,10 @@ class _Botao extends StatelessWidget {
         child: CustomPaint(
           painter: bloqueado ? _BordaTracejada(cores.hairline) : null,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
+            // Altura fixa nos tipos: com/sem "N formas" ficam do mesmo tamanho.
+            constraints: altura == null
+                ? const BoxConstraints(minHeight: 48)
+                : BoxConstraints.tightFor(height: altura),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: bloqueado
                 ? null

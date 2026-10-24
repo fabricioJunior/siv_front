@@ -1,7 +1,9 @@
+import 'package:comercial/domain/models/opcoes_resgate_pontos.dart';
 import 'package:comercial/domain/models/pagamentos_realizados_resumo.dart';
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
 import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
+import 'package:comercial/presentation/pagamento/pagamento_resumo.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/leitor.dart';
@@ -14,6 +16,27 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:promocoes/models.dart';
 import 'package:promocoes/use_cases.dart';
+
+int _saldoDePontos = 100;
+
+class _StubOpcoesResgate implements RecuperarOpcoesResgatePontos {
+  @override
+  Future<OpcoesResgatePontos> call({required int pessoaId}) async =>
+      OpcoesResgatePontos(
+        saldo: _saldoDePontos,
+        valorPorPonto: 0.1,
+        faixas: const [
+          FaixaResgate(
+            id: 1,
+            pontos: 50,
+            tipo: 'valor',
+            valor: 5,
+            cumulativo: true,
+            disponivel: true,
+          ),
+        ],
+      );
+}
 
 class _Resumo implements CarregarResumoPagamentosRealizados {
   @override
@@ -99,6 +122,7 @@ PagamentosRealizadosBloc _bloc(PagamentoContexto c) => PagamentosRealizadosBloc(
       _Sessao(),
       _Apurar(),
       _Leitor(),
+      _StubOpcoesResgate(),
     )..add(c.eventoInicial);
 
 PagamentoContexto _ctx(PagamentoOrigem origem) {
@@ -360,7 +384,7 @@ void main() {
     await t.pumpAndSettle();
 
     expect(find.text('Percentual (0 a 100)'), findsOneWidget);
-    final x = (String r) => t.getTopLeft(find.text(r)).dx;
+    double x(String r) => t.getTopLeft(find.text(r)).dx;
     expect(x('%'), lessThan(x('R\$')));
     expect(x('R\$'), lessThan(x('Total')));
   });
@@ -537,5 +561,79 @@ void main() {
     await t.sendKeyEvent(LogicalKeyboardKey.f9);
     await t.pumpAndSettle();
     expect(confirmacoes, 2);
+  });
+
+  testWidgets('pontos: botão só na venda', (t) async {
+    for (final o in PagamentoOrigem.values) {
+      final c = _ctx(o);
+      await _pump(t, _bloc(c), c);
+      expect(find.text('Pontos (saldo 100)'),
+          o == PagamentoOrigem.venda ? findsOneWidget : findsNothing,
+          reason: o.name);
+    }
+  });
+
+  testWidgets('saldo de crédito de devolução do cliente aparece no resumo',
+      (t) async {
+    final c = _ctx(PagamentoOrigem.venda);
+    await _pump(t, _bloc(c), c);
+
+    expect(find.text('Crédito de devolução'), findsOneWidget);
+    expect(find.text(pagamentoMoeda(80)), findsOneWidget);
+  });
+
+  testWidgets('pontos: saldo zero aparece, sem ação de resgatar', (t) async {
+    _saldoDePontos = 0;
+    addTearDown(() => _saldoDePontos = 100);
+    final c = _ctx(PagamentoOrigem.venda);
+    await _pump(t, _bloc(c), c);
+
+    expect(find.text('Pontos (saldo 0)'), findsOneWidget);
+    expect(find.text('resgatar'), findsNothing);
+  });
+
+  testWidgets('pontos: faixa reduz o A PAGAR e sai no Map', (t) async {
+    final c = _ctx(PagamentoOrigem.venda);
+    final bloc = _bloc(c);
+    Map<String, dynamic>? resultado;
+    await _pump(t, bloc, c, onConfirmado: (r) => resultado = r);
+
+    await t.tap(find.text('resgatar'));
+    await t.pumpAndSettle();
+    await t.tap(find.textContaining('50 pts'));
+    await t.pumpAndSettle();
+
+    expect(bloc.state.valorTotalAPagar, 95);
+    expect(find.text('−R\$ 5,00'), findsOneWidget);
+
+    await t.tap(find.textContaining('GRADE'));
+    await t.pumpAndSettle();
+    await t.sendKeyEvent(LogicalKeyboardKey.f9);
+    await t.pumpAndSettle();
+
+    expect(resultado!['resgatePontos'], {'faixaId': 1});
+    expect(resultado!['valorTotalRecebido'], 95);
+  });
+
+  testWidgets('pontos livres: valor digitado vai no Map', (t) async {
+    final c = _ctx(PagamentoOrigem.venda);
+    final bloc = _bloc(c);
+    await _pump(t, bloc, c);
+
+    await t.tap(find.text('resgatar'));
+    await t.pumpAndSettle();
+    await t.enterText(
+      find.byWidgetPredicate((w) =>
+          w is TextField &&
+          (w.decoration?.hintText?.startsWith('Usar pontos') ?? false)),
+      '20',
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.widgetWithText(FilledButton, 'Aplicar'));
+    await t.pumpAndSettle();
+
+    expect(bloc.state.valorTotalAPagar, 98);
+    expect(PagamentoEtapa.resultado(bloc.state, c.recursos)['resgatePontos'],
+        {'pontos': 20});
   });
 }

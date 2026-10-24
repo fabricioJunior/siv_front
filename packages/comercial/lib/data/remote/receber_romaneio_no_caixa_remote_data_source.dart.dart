@@ -24,6 +24,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) async {
@@ -52,6 +53,7 @@ class ReceberRomaneioNoCaixaRemoteDataSource extends RemoteDataSourceBase
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
           'cpfNaNota': cpfNaNota.trim(),
         if (pontuarFidelidade) 'pontuarFidelidade': pontuarFidelidade,
+        if (resgatePontos != null) 'resgatePontos': resgatePontos,
         if (enviarNotaPorEmail) 'enviarNotaPorEmail': enviarNotaPorEmail,
         if (enviarNotaPorEmail && emailNota.trim().isNotEmpty)
           'emailNota': emailNota.trim(),
@@ -96,6 +98,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) async {
@@ -128,6 +131,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
         if (incluirCpfNaNota && cpfNaNota.trim().isNotEmpty)
           'cpfNaNota': cpfNaNota.trim(),
         if (pontuarFidelidade) 'pontuarFidelidade': pontuarFidelidade,
+        if (resgatePontos != null) 'resgatePontos': resgatePontos,
         if (enviarNotaPorEmail) 'enviarNotaPorEmail': enviarNotaPorEmail,
         if (enviarNotaPorEmail && emailNota.trim().isNotEmpty)
           'emailNota': emailNota.trim(),

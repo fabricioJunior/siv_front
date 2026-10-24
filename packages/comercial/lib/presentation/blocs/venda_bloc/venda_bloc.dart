@@ -428,6 +428,7 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           incluirCpfNaNota: event.incluirCpfNaNota,
           cpfNaNota: event.cpfNaNota,
           pontuarFidelidade: event.pontuarFidelidade,
+          resgatePontos: event.resgatePontos,
           enviarNotaPorEmail: event.enviarNotaPorEmail,
           emailNota: event.emailNota,
           erro: null,

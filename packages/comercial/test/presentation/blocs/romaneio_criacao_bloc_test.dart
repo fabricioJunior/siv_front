@@ -231,6 +231,7 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) {
@@ -262,6 +263,7 @@ class StubCriarVendaCompleta implements CriarVendaCompleta {
     bool incluirCpfNaNota = true,
     String cpfNaNota = '',
     bool pontuarFidelidade = false,
+    Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
   }) {

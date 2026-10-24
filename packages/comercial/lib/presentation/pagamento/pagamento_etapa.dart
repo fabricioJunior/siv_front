@@ -477,7 +477,7 @@ class _Cabecalho extends StatelessWidget {
   }
 }
 
-/// A PAGAR · RECEBIDO · FALTA RECEBER / TROCO EM DINHEIRO (+ ADIANTADO).
+/// A PAGAR · RECEBIDO · FALTA RECEBER · TROCO (+ ADIANTADO).
 class _Faixa extends StatelessWidget {
   final PagamentosRealizadosState state;
   final PagamentoContexto contexto;
@@ -501,11 +501,14 @@ class _Faixa extends StatelessWidget {
       _Celula('A PAGAR', _num(state.valorTotalAPagar)),
       if (!compacto) _Celula('RECEBIDO', _num(state.valorTotalBruto)),
       _Celula(
-        troco ? 'TROCO EM DINHEIRO' : 'FALTA RECEBER',
-        troco
-            ? pagamentoMoeda(state.valorTroco)
-            : pagamentoMoeda(state.valorRestante),
-        escura: troco || !compacto,
+        'FALTA RECEBER',
+        pagamentoMoeda(troco ? 0 : state.valorRestante),
+        escura: !troco && !compacto,
+      ),
+      _Celula(
+        'TROCO',
+        pagamentoMoeda(troco ? state.valorTroco : 0),
+        escura: troco,
       ),
     ];
 

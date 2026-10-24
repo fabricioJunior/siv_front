@@ -14,6 +14,8 @@ import 'package:siv_front/presentation/acesso_importacao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
     show administracaoAcordeaoItens;
+import 'package:siv_front/presentation/pages/sync/sync_status_icone.dart'
+    show SyncPontoMenu;
 import 'package:siv_front/presentation/pages/relatorios_menu_page.dart'
     show relatoriosAcordeaoItens;
 
@@ -122,6 +124,7 @@ class _ItemDeNavegacao {
   final String? rota;
   final List<String> componentesNecessarios;
   final List<_ItemFilhoNav> filhos;
+  final Widget? trailing;
 
   const _ItemDeNavegacao({
     required this.label,
@@ -129,6 +132,7 @@ class _ItemDeNavegacao {
     this.rota,
     this.componentesNecessarios = const [],
     this.filhos = const [],
+    this.trailing,
   });
 
   /// Chave estável de seleção/expansão -- a própria rota quando existe,
@@ -352,6 +356,7 @@ final _itensSistema = <_ItemDeNavegacao>[
     label: 'Sincronização',
     icone: Icons.sync,
     rota: '/sincronizacao',
+    trailing: SyncPontoMenu(),
   ),
 ];
 
@@ -512,6 +517,7 @@ class _AppShellCascaState extends State<_AppShellCasca> {
       label: item.label,
       icone: item.icone,
       selecionado: item.rota == widget.rotaAtual,
+      trailing: item.trailing,
       onTap: item.rota == widget.rotaAtual
           ? null
           : () => widget.navigatorKey.currentState?.pushNamed(item.rota!),

@@ -133,8 +133,7 @@ class _VendaPageState extends State<VendaPage> {
             );
           }
         },
-        builder: (context, state) =>
-            _buildEtapa(context, state, _criacaoState),
+        builder: (context, state) => _buildEtapa(context, state, _criacaoState),
       ),
     );
   }
@@ -264,30 +263,30 @@ class _VendaPageState extends State<VendaPage> {
     ].join('|');
 
     final contexto = PagamentoContexto.venda(
-        hashLista: '',
-        resumo: PagamentosRealizadosResumo(
-          listaCompartilhada: null,
-          produtosCompartilhados: _leitorController.itens
-              .map(
-                (item) => ProdutoCompartilhado.create(
-                  produtoId: item.id,
-                  quantidade: item.quantidadeLida,
-                  valorUnitario: item.valorUnitario ?? 0,
-                  nome: item.descricao,
-                  corNome: item.cor,
-                  tamanhoNome: item.tamanho,
-                ),
-              )
-              .toList(),
-          quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
-          valorTotalProdutos: _leitorController.valorTotalLido,
-        ),
-        subtitulo: cliente?.nome,
-        pessoaId: cliente?.id,
-        cpfInicial: cliente?.data['documento']?.toString(),
-        clienteGenerico: cliente?.data['generica'] == true,
-        emailInicial: cliente?.data['email']?.toString(),
-        enviarNotaPorEmailInicial: cliente?.data['enviarNotaPorEmail'] == true,
+      hashLista: '',
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: _leitorController.itens
+            .map(
+              (item) => ProdutoCompartilhado.create(
+                produtoId: item.id,
+                quantidade: item.quantidadeLida,
+                valorUnitario: item.valorUnitario ?? 0,
+                nome: item.descricao,
+                corNome: item.cor,
+                tamanhoNome: item.tamanho,
+              ),
+            )
+            .toList(),
+        quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
+        valorTotalProdutos: _leitorController.valorTotalLido,
+      ),
+      subtitulo: cliente?.nome,
+      pessoaId: cliente?.id,
+      cpfInicial: cliente?.data['documento']?.toString(),
+      clienteGenerico: cliente?.data['generica'] == true,
+      emailInicial: cliente?.data['email']?.toString(),
+      enviarNotaPorEmailInicial: cliente?.data['enviarNotaPorEmail'] == true,
     );
 
     if (_pagamentoBloc == null || _pagamentoAssinatura != assinatura) {
@@ -500,54 +499,58 @@ class _VendaPageState extends State<VendaPage> {
         LogicalKeySet(LogicalKeyboardKey.escape): () =>
             _confirmarReinicio(context),
       },
-      child: Focus(
-        autofocus: true,
-        child: ListenableBuilder(
-          listenable: _leitorController,
-          builder: (context, _) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _acoesTopo(context, state),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Focus(
+          autofocus: true,
+          child: ListenableBuilder(
+            listenable: _leitorController,
+            builder: (context, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _acoesTopo(context, state),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: LeitorWidget(
-                          controller: _leitorController,
-                          dataSource: sl<ILeitorDataDatasource>(),
-                          controlarQuantidade: true,
-                          tabelaDePrecoId: state.tabelaDePrecoId,
-                          aceitarApenasProdutosComPreco: true,
-                          buscaDataSource: sl<ILeitorBuscaDataDatasource>(),
-                          campoCodigoHint:
-                              'Bipe ou informe o código do produto',
-                          nomeTabelaDePreco:
-                              state.tabelaDePrecoSelecionada?.nome,
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: LeitorWidget(
+                            controller: _leitorController,
+                            dataSource: sl<ILeitorDataDatasource>(),
+                            controlarQuantidade: true,
+                            tabelaDePrecoId: state.tabelaDePrecoId,
+                            aceitarApenasProdutosComPreco: true,
+                            buscaDataSource: sl<ILeitorBuscaDataDatasource>(),
+                            campoCodigoHint:
+                                'Bipe ou informe o código do produto',
+                            nomeTabelaDePreco:
+                                state.tabelaDePrecoSelecionada?.nome,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: SivDimensoes.gapCards),
-                      SizedBox(
-                        width: 396,
-                        child: SingleChildScrollView(
-                          child: _buildPainelDireito(context, state),
+                        const SizedBox(width: SivDimensoes.gapCards),
+                        SizedBox(
+                          width: 396,
+                          child: SingleChildScrollView(
+                            child: _buildPainelDireito(context, state),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1070,7 +1073,6 @@ class _VendaPageState extends State<VendaPage> {
     context.read<VendaBloc>().add(const VendaResetSolicitado());
     _solicitarFocoLeitura();
   }
-
 
   String _formatarMoeda(double valor) {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';

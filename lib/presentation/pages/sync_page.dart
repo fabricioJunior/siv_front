@@ -2,37 +2,49 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:flutter/material.dart';
 import 'package:siv_front/presentation/bloc/sync_data/sync_data_bloc.dart';
+import 'package:siv_front/presentation/pages/sync/sync_confirmar_reset.dart';
+import 'package:siv_front/presentation/pages/sync/sync_modulo_card.dart';
+import 'package:siv_front/presentation/pages/sync/sync_modulos_tabela.dart';
+import 'package:siv_front/presentation/pages/sync/sync_resumo_faixa.dart';
+import 'package:siv_front/presentation/pages/sync/sync_status_icone.dart';
 
-class SyncPage extends StatefulWidget {
+class SyncPage extends StatelessWidget {
   const SyncPage({super.key});
 
-  @override
-  State<SyncPage> createState() => _SyncPageState();
-}
+  void _sincronizar() => sl<SyncDataBloc>().add(
+    const SyncDataSolicitouSincronizacao(origem: SyncDataOrigem.manual),
+  );
 
-class _SyncPageState extends State<SyncPage> {
-  void _confirmarReset(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Zerar sincronização incremental?'),
-        content: const Text(
-          'Isso apagará o histórico de sincronização e o app buscará todos os dados novamente como se fosse a primeira vez. O processo pode ser mais demorado.',
+  Widget _botaoPrimario(
+    bool sincronizando, {
+    double? altura,
+    double padH = 16,
+  }) {
+    return Opacity(
+      opacity: sincronizando ? .45 : 1,
+      child: FilledButton.icon(
+        onPressed: sincronizando ? null : _sincronizar,
+        icon: const Icon(Icons.sync, size: 15),
+        label: Text(
+          sincronizando ? 'Sincronizando…' : 'Sincronizar agora',
+          style: syncBarlow(13, w: FontWeight.w600, c: Colors.white),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
+        style: ButtonStyle(
+          shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
+          elevation: const WidgetStatePropertyAll(0),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          minimumSize: WidgetStatePropertyAll(Size(0, altura ?? 0)),
+          padding: WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: padH, vertical: 9),
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              sl<SyncDataBloc>().add(const SyncDataSolicitouResetIncremental());
-            },
-            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('Zerar e sincronizar'),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.pressed)
+                ? const Color(0xFF416180)
+                : s.contains(WidgetState.hovered)
+                ? const Color(0xFF4A6C8E)
+                : syncAcento,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -41,346 +53,157 @@ class _SyncPageState extends State<SyncPage> {
   Widget build(BuildContext context) {
     return BlocProvider<SyncDataBloc>.value(
       value: sl<SyncDataBloc>(),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Sincronização de dados')),
-        body: BlocBuilder<SyncDataBloc, SyncDataState>(
-          builder: (context, state) {
-            final modulos = state.modulos.values.toList()
-              ..sort((a, b) => a.modulo.index.compareTo(b.modulo.index));
-
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-              children: [
-                _ResumoCard(state: state),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _confirmarReset(context),
-                  icon: const Icon(Icons.restore, color: Colors.orange),
-                  label: const Text(
-                    'Zerar sincronização incremental',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.orange),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Módulos',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                for (final modulo in modulos) ...[
-                  _CardModulo(modulo: modulo),
-                  const SizedBox(height: 10),
-                ],
-              ],
-            );
-          },
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            sl<SyncDataBloc>().add(
-              const SyncDataSolicitouSincronizacao(
-                origem: SyncDataOrigem.manual,
-              ),
-            );
-          },
-          icon: const Icon(Icons.sync),
-          label: const Text('Sincronizar agora'),
-        ),
-      ),
-    );
-  }
-}
-
-String _fmtDt(DateTime? dt) {
-  if (dt == null) return '-';
-  final local = dt.toLocal();
-  final d = local.day.toString().padLeft(2, '0');
-  final m = local.month.toString().padLeft(2, '0');
-  final h = local.hour.toString().padLeft(2, '0');
-  final min = local.minute.toString().padLeft(2, '0');
-  final s = local.second.toString().padLeft(2, '0');
-  return '$d/$m/${local.year} $h:$min:$s';
-}
-
-class _ResumoCard extends StatelessWidget {
-  final SyncDataState state;
-  const _ResumoCard({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final sincronizando = state.sincronizando;
-    final cor = sincronizando ? Colors.blue : Colors.green;
-
-    final statusLabel = sincronizando
-        ? 'Sincronização em andamento...'
-        : state.finalizadoEm != null
-        ? 'Última sincronização concluída'
-        : 'Aguardando sincronização';
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: cor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        if (sincronizando) ...[
-                          SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: cor,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ] else ...[
-                          Icon(
-                            state.finalizadoEm != null
-                                ? Icons.check_circle_outline
-                                : Icons.schedule,
-                            size: 18,
-                            color: cor,
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
-                          child: Text(
-                            statusLabel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (state.iniciadoEm != null)
-                      _InfoRow(
-                        label: 'Início',
-                        value: _fmtDt(state.iniciadoEm),
-                      ),
-                    if (state.finalizadoEm != null)
-                      _InfoRow(label: 'Fim', value: _fmtDt(state.finalizadoEm)),
-                    if (state.origemUltimaSincronizacao != null)
-                      _InfoRow(
-                        label: 'Origem',
-                        value: _origemLabel(state.origemUltimaSincronizacao),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final desktop = c.maxWidth >= 720;
+          return BlocBuilder<SyncDataBloc, SyncDataState>(
+            builder: (context, state) {
+              final sinc = state.sincronizando;
+              final mods = syncModulos(state);
+              return desktop
+                  ? _desktop(context, state, mods, sinc)
+                  : _mobile(context, state, mods, sinc);
+            },
+          );
+        },
       ),
     );
   }
 
-  String _origemLabel(SyncDataOrigem? origem) => switch (origem) {
-    SyncDataOrigem.home => 'Automática (home)',
-    SyncDataOrigem.entradaDeProdutos => 'Entrada de produtos',
-    SyncDataOrigem.manual => 'Manual',
-    _ => '-',
-  };
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
+  Widget _desktop(
+    BuildContext context,
+    SyncDataState state,
+    List<SyncModuloState> mods,
+    bool sinc,
+  ) {
+    return Scaffold(
+      backgroundColor: syncFundo,
+      body: Column(
         children: [
-          Text(
-            '$label: ',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
+          Container(
+            height: 72,
+            padding: const EdgeInsets.symmetric(horizontal: 34),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: syncLinhaFina)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Sincronização de dados',
+                    style: syncCond(21, w: FontWeight.w500),
+                  ),
+                ),
+                Opacity(
+                  opacity: sinc ? .45 : 1,
+                  child: OutlinedButton.icon(
+                    onPressed: sinc
+                        ? null
+                        : () => syncConfirmarReset(context, desktop: true),
+                    icon: const Icon(Icons.restore, size: 15),
+                    label: Text('Zerar incremental', style: syncBarlow(13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: syncTexto,
+                      side: const BorderSide(color: syncLinha),
+                      shape: const RoundedRectangleBorder(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _botaoPrimario(sinc),
+              ],
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12, color: Colors.black87),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 26),
+              children: [
+                SyncResumoFaixa(state: state, compacto: false),
+                const SizedBox(height: 28),
+                SyncModulosTabela(mods: mods),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _CardModulo extends StatelessWidget {
-  final SyncModuloState modulo;
-  const _CardModulo({required this.modulo});
-
-  Color get _cor => switch (modulo.status) {
-    SyncModuloStatus.aguardando => Colors.grey,
-    SyncModuloStatus.sincronizando => Colors.blue,
-    SyncModuloStatus.concluido => Colors.green,
-    SyncModuloStatus.falha => Colors.red,
-  };
-
-  String get _statusLabel => switch (modulo.status) {
-    SyncModuloStatus.aguardando => 'Aguardando',
-    SyncModuloStatus.sincronizando => 'Sincronizando',
-    SyncModuloStatus.concluido => 'Concluído',
-    SyncModuloStatus.falha => 'Falha',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final cor = _cor;
-    final progresso = modulo.progresso;
-
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: cor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  bottomLeft: Radius.circular(14),
+  Widget _mobile(
+    BuildContext context,
+    SyncDataState state,
+    List<SyncModuloState> mods,
+    bool sinc,
+  ) {
+    return Scaffold(
+      backgroundColor: syncFundo,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 56,
+        title: Text('Sincronização', style: syncCond(19)),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: syncLinhaFina),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Zerar incremental',
+            constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+            icon: const Icon(Icons.restore, size: 19),
+            onPressed: sinc
+                ? null
+                : () => syncConfirmarReset(context, desktop: false),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          SyncResumoFaixa(state: state, compacto: true),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Módulos', style: syncCond(17)),
+              Flexible(
+                child: Text(
+                  syncContagem(mods),
+                  overflow: TextOverflow.ellipsis,
+                  style: syncBarlow(11.5, c: syncTextoSuave),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            modulo.nomeModulo,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            _statusLabel,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: cor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progresso,
-                        minHeight: 6,
-                        backgroundColor: cor.withValues(alpha: 0.12),
-                        color: cor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _InfoRow(
-                            label: 'Páginas',
-                            value:
-                                '${modulo.paginasSincronizadas}/${modulo.totalPaginas == 0 ? '-' : modulo.totalPaginas}',
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _InfoRow(
-                            label: 'Itens',
-                            value:
-                                '${modulo.itensSincronizados}/${modulo.totalItens}',
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (modulo.atualizadoEm != null)
-                      _InfoRow(
-                        label: 'Atualizado',
-                        value: _fmtDt(modulo.atualizadoEm),
-                      ),
-                    if (modulo.erro != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 14,
-                            color: Colors.red,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              modulo.erro!,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          for (var i = 0; i < mods.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            SyncModuloCard(modulo: mods[i]),
           ],
+        ],
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          20 + MediaQuery.paddingOf(context).bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: syncLinhaFina)),
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: _botaoPrimario(sinc, altura: 48),
         ),
       ),
     );

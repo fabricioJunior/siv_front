@@ -28,6 +28,9 @@ class SivMenuLateralItem {
   final bool selecionado;
   final VoidCallback? onTap;
 
+  /// Widget opcional à direita do rótulo (ex: indicador de atividade).
+  final Widget? trailing;
+
   /// Item sem permissão numa prévia de acesso (ver tela de grupo de
   /// acesso) -- risca o texto e esmaece ícone/texto, sem afetar navegação
   /// real (essa flag não desabilita [onTap]).
@@ -44,6 +47,7 @@ class SivMenuLateralItem {
     required this.icone,
     this.selecionado = false,
     this.onTap,
+    this.trailing,
     this.desabilitado = false,
     this.filhos = const [],
     this.expandido = false,
@@ -210,6 +214,7 @@ class _SivMenuLateralItemWidget extends StatelessWidget {
                   ),
                 ),
               ),
+              if (item.trailing != null) item.trailing!,
               if (item.eAcordeao)
                 Icon(
                   item.expandido ? Icons.expand_less : Icons.expand_more,

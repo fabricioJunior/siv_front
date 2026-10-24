@@ -239,8 +239,8 @@ Future<void> _pump(
 
 void main() {
   const fidelidade = 'Pontuar fidelidade';
-  const cpf = 'Incluir CPF do cliente na nota fiscal';
-  const email = 'Enviar nota fiscal por e-mail';
+  const cpf = 'CPF na nota';
+  const email = 'Nota por e-mail';
 
   testWidgets('venda: todos os recursos, inclusive fidelidade e e-mail',
       (t) async {

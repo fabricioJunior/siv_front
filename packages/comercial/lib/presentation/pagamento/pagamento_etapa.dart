@@ -271,18 +271,17 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
     return Padding(
       padding: const EdgeInsets.all(SivDimensoes.gapCards),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
             width: 480,
             child: SivCard(
-              child: SingleChildScrollView(
-                child: PagamentoResumo(
-                  state: state,
-                  contexto: _c,
-                  descontoGeralAberto: _descontoGeral,
-                  aoFecharPainel: _aoFecharPainel,
-                ),
+              child: PagamentoResumo(
+                state: state,
+                contexto: _c,
+                descontoGeralAberto: _descontoGeral,
+                aoFecharPainel: _aoFecharPainel,
+                fixarTotais: true,
               ),
             ),
           ),
@@ -423,8 +422,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
             style: context.sivTextos.apoio),
         if (_temNota) ...[
           const SizedBox(height: 16),
-          if (!compacto)
-            SivCard(child: _NotaBloco(state: state, recursos: _c.recursos)),
+          if (!compacto) _NotaBloco(state: state, recursos: _c.recursos),
         ],
         const SizedBox(height: 4),
         if (state.linhas.isNotEmpty && compacto) Text('', style: textos.apoio),
@@ -725,79 +723,115 @@ class _NotaBlocoState extends State<_NotaBloco> {
     final s = widget.state;
     final r = widget.recursos;
 
+    final cpfAtivo = !s.clienteGenerico && s.incluirCpfNaNota;
+    final emailAtivo = r.emailNota && s.permiteNotaFiscalEmail;
+    final cards = <Widget>[
+      if (r.cpfNota)
+        _Marca(
+          valor: cpfAtivo,
+          rotulo: 'CPF na nota',
+          apoio: s.clienteGenerico
+              ? 'Não disponível para cliente não cadastrado.'
+              : s.cpfNaNota.isEmpty
+                  ? null
+                  : s.cpfNaNota,
+          onChanged: s.clienteGenerico
+              ? null
+              : (v) => bloc.add(
+                    PagamentosRealizadosIncluirCpfAlterado(incluirCpfNaNota: v),
+                  ),
+        ),
+      if (emailAtivo)
+        _Marca(
+          valor: s.enviarNotaPorEmail,
+          rotulo: 'Nota por e-mail',
+          apoio: s.emailNota.isEmpty ? null : s.emailNota,
+          onChanged: (v) => bloc.add(
+            PagamentosRealizadosEnviarNotaPorEmailAlterado(
+              enviarNotaPorEmail: v,
+            ),
+          ),
+        ),
+      if (r.pontuarFidelidade)
+        _Marca(
+          valor: s.pontuarFidelidade,
+          rotulo: 'Pontuar fidelidade',
+          apoio: s.clienteElegivelFidelidade
+              ? null
+              : s.carregandoElegibilidadeFidelidade
+                  ? 'Consultando elegibilidade do cliente...'
+                  : s.erroElegibilidadeFidelidade
+                      ? 'Erro ao consultar elegibilidade -- tente novamente.'
+                      : 'Cliente sem cadastro no portal de pontos.',
+          onChanged: s.clienteElegivelFidelidade
+              ? (v) => bloc.add(
+                    PagamentosRealizadosPontuarFidelidadeAlterado(
+                      pontuarFidelidade: v,
+                    ),
+                  )
+              : null,
+        ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('NOTA FISCAL', style: textos.rotulo),
-        if (r.cpfNota) ...[
-          _Marca(
-            valor: !s.clienteGenerico && s.incluirCpfNaNota,
-            rotulo: 'Incluir CPF do cliente na nota fiscal',
-            apoio: s.clienteGenerico
-                ? 'Não disponível para cliente não cadastrado.'
-                : null,
-            onChanged: s.clienteGenerico
-                ? null
-                : (v) => bloc.add(
-                      PagamentosRealizadosIncluirCpfAlterado(
-                        incluirCpfNaNota: v,
-                      ),
-                    ),
-          ),
-          if (!s.clienteGenerico && s.incluirCpfNaNota)
-            CPFInput(
-              controller: _cpf,
-              obrigatorio: false,
-              onChanged: (v) =>
-                  bloc.add(PagamentosRealizadosCpfAlterado(cpfNaNota: v)),
-            ),
-        ],
-        if (r.emailNota && s.permiteNotaFiscalEmail) ...[
-          _Marca(
-            valor: s.enviarNotaPorEmail,
-            rotulo: 'Enviar nota fiscal por e-mail',
-            onChanged: (v) => bloc.add(
-              PagamentosRealizadosEnviarNotaPorEmailAlterado(
-                enviarNotaPorEmail: v,
+        const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, c) {
+            if (c.maxWidth < 520) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final card in cards) ...[
+                    card,
+                    const SizedBox(height: 8),
+                  ],
+                ],
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < cards.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    Expanded(child: cards[i]),
+                  ],
+                ],
               ),
-            ),
+            );
+          },
+        ),
+        if (cpfAtivo) ...[
+          const SizedBox(height: 8),
+          CPFInput(
+            controller: _cpf,
+            obrigatorio: false,
+            onChanged: (v) =>
+                bloc.add(PagamentosRealizadosCpfAlterado(cpfNaNota: v)),
           ),
-          if (s.exigeEmailNota)
-            TextField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                isDense: true,
-                hintText: 'E-mail do cliente',
-              ),
-              onChanged: (v) =>
-                  bloc.add(PagamentosRealizadosEmailNotaAlterado(emailNota: v)),
-            ),
         ],
-        if (r.pontuarFidelidade)
-          _Marca(
-            valor: s.pontuarFidelidade,
-            rotulo: 'Pontuar fidelidade',
-            apoio: s.clienteElegivelFidelidade
-                ? null
-                : s.carregandoElegibilidadeFidelidade
-                    ? 'Consultando elegibilidade do cliente...'
-                    : s.erroElegibilidadeFidelidade
-                        ? 'Erro ao consultar elegibilidade -- tente novamente.'
-                        : 'Cliente sem cadastro no portal de pontos.',
-            onChanged: s.clienteElegivelFidelidade
-                ? (v) => bloc.add(
-                      PagamentosRealizadosPontuarFidelidadeAlterado(
-                        pontuarFidelidade: v,
-                      ),
-                    )
-                : null,
+        if (emailAtivo && s.exigeEmailNota) ...[
+          const SizedBox(height: 8),
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              isDense: true,
+              hintText: 'E-mail do cliente',
+            ),
+            onChanged: (v) =>
+                bloc.add(PagamentosRealizadosEmailNotaAlterado(emailNota: v)),
           ),
+        ],
       ],
     );
   }
 }
 
+/// Card de toggle da nota (CPF, e-mail, fidelidade).
 class _Marca extends StatelessWidget {
   final bool valor;
   final String rotulo;
@@ -813,28 +847,46 @@ class _Marca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = context.sivColors;
     final textos = context.sivTextos;
+    final ativo = onChanged != null;
     return InkWell(
-      onTap: onChanged == null ? null : () => onChanged!(!valor),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Checkbox(
-              value: valor,
-              onChanged:
-                  onChanged == null ? null : (v) => onChanged!(v ?? false),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      onTap: ativo ? () => onChanged!(!valor) : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: cores.superficie,
+          border: Border.all(color: cores.hairline),
+        ),
+        child: Opacity(
+          opacity: ativo ? 1 : .55,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  Text(rotulo, style: textos.corpo),
-                  if (apoio != null) Text(apoio!, style: textos.apoio),
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: valor ? cores.aco : null,
+                      border: Border.all(color: cores.aco),
+                    ),
+                    child: valor
+                        ? const Icon(Icons.check, size: 11, color: Colors.white)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(rotulo, style: textos.corpo)),
                 ],
               ),
-            ),
-          ],
+              if (apoio != null) ...[
+                const SizedBox(height: 4),
+                Text(apoio!, style: textos.apoio),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -875,10 +927,14 @@ class _Rodape extends StatelessWidget {
           Text(contexto.avisoConfirmar!, style: textos.apoio),
       ],
     );
-    final dividir = TextButton(
+    final dividir = OutlinedButton(
       // A forma escolhida já vem com o valor que falta, então o restante é 0
       // aqui; a divisão é reduzir o valor desta linha e escolher a outra forma.
       onPressed: ativaTemForma ? onDividir : null,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+      ),
       child: const Text('+ Dividir em outra forma'),
     );
     final primario = SizedBox(

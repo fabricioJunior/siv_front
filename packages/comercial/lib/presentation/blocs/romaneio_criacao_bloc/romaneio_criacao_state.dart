@@ -24,6 +24,8 @@ class RomaneioCriacaoState extends Equatable {
   // Itens efetivamente enviados ao romaneio, usados como fallback de
   // impressao do romaneio quando nao ha nota fiscal emitida.
   final List<RomaneioItem> itensCriados;
+  // Motivo real da falha ao receber no caixa (romaneio criado, nada cobrado).
+  final String? motivoPendencia;
 
   const RomaneioCriacaoState({
     required this.step,
@@ -35,6 +37,7 @@ class RomaneioCriacaoState extends Equatable {
     this.totalItensProcessados = 0,
     this.documentoFiscal,
     this.itensCriados = const [],
+    this.motivoPendencia,
   });
 
   const RomaneioCriacaoState.initial()
@@ -46,7 +49,8 @@ class RomaneioCriacaoState extends Equatable {
         erro = null,
         totalItensProcessados = 0,
         documentoFiscal = null,
-        itensCriados = const [];
+        itensCriados = const [],
+        motivoPendencia = null;
 
   RomaneioCriacaoState copyWith({
     RomaneioCriacaoStep? step,
@@ -54,10 +58,11 @@ class RomaneioCriacaoState extends Equatable {
     ListaDeProdutosCompartilhada? listaCompartilhada,
     List<ProdutoCompartilhado>? produtosCompartilhados,
     Romaneio? romaneio,
-    String? erro,
+    Object? erro = _sentinela,
     int? totalItensProcessados,
     DocumentoFiscal? documentoFiscal,
     List<RomaneioItem>? itensCriados,
+    Object? motivoPendencia = _sentinela,
   }) {
     return RomaneioCriacaoState(
       step: step ?? this.step,
@@ -66,11 +71,14 @@ class RomaneioCriacaoState extends Equatable {
       produtosCompartilhados:
           produtosCompartilhados ?? this.produtosCompartilhados,
       romaneio: romaneio ?? this.romaneio,
-      erro: erro ?? this.erro,
+      erro: identical(erro, _sentinela) ? this.erro : erro as String?,
       totalItensProcessados:
           totalItensProcessados ?? this.totalItensProcessados,
       documentoFiscal: documentoFiscal ?? this.documentoFiscal,
       itensCriados: itensCriados ?? this.itensCriados,
+      motivoPendencia: identical(motivoPendencia, _sentinela)
+          ? this.motivoPendencia
+          : motivoPendencia as String?,
     );
   }
 
@@ -85,5 +93,8 @@ class RomaneioCriacaoState extends Equatable {
         totalItensProcessados,
         documentoFiscal,
         itensCriados,
+        motivoPendencia,
       ];
 }
+
+const Object _sentinela = Object();

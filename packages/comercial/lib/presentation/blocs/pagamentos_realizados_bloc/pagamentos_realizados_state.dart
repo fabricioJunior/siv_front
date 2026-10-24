@@ -28,6 +28,7 @@ class PagamentosRealizadosState extends Equatable {
   final double valorDescontoAplicado;
   final String taxaEntregaValorTexto;
   final double valorTaxaEntregaAplicado;
+  final double abatimentoTotal;
   final Map<int, DescontoTipo> descontosItensTipo;
   final Map<int, String> descontosItensValorTexto;
   final Map<int, double> descontosItensAplicado;
@@ -78,6 +79,7 @@ class PagamentosRealizadosState extends Equatable {
     this.valorDescontoAplicado = 0,
     this.taxaEntregaValorTexto = '',
     this.valorTaxaEntregaAplicado = 0,
+    this.abatimentoTotal = 0,
     this.descontosItensTipo = const {},
     this.descontosItensValorTexto = const {},
     this.descontosItensAplicado = const {},
@@ -114,13 +116,11 @@ class PagamentosRealizadosState extends Equatable {
   double get valorTotalProdutosSemPromocao {
     final produtos = resumo?.produtosCompartilhados ?? const [];
     return produtos
-        .where((p) => !produtoIdsComPromocaoOuCupom.contains(p.produtoId))
+        .where((p) => !produtoIdsComPromocao.contains(p.produtoId))
         .fold<double>(0, (soma, p) => soma + p.quantidade * p.valorUnitario);
   }
-  // Produtos que ja tem desconto de promocao OU cupom (exclusivos entre si
-  // e com desconto manual).
-  Set<int> get produtoIdsComPromocaoOuCupom =>
-      {...promocaoEscolhidaPorItem.keys, ...cuponsEscolhidosPorItem.keys};
+  // Produtos com promocao (exclusiva com desconto manual; cupom soma com ambos).
+  Set<int> get produtoIdsComPromocao => promocaoEscolhidaPorItem.keys.toSet();
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
   // Forma de pagamento escolhida, só quando há exatamente 1 linha com forma
@@ -153,8 +153,22 @@ class PagamentosRealizadosState extends Equatable {
         (soma, entrada) {
       final produto = valorUnitarioPorProduto[entrada.key];
       if (produto == null) return soma;
+      // Cupom soma com promocao e desconto manual do item, ate o teto do preco.
+      final promocao = promocaoEscolhidaPorItem[entrada.key];
+      final jaDescontado = (promocao?.valorDescontoParaForma(
+                formaId,
+                valorUnitario: produto.valorUnitario,
+              ) ??
+              0) +
+          (produto.quantidade > 0
+              ? (descontosItensAplicado[entrada.key] ?? 0) / produto.quantidade
+              : 0);
       return soma +
-          descontoCuponsUnitario(entrada.value, produto.valorUnitario) *
+          descontoCuponsUnitario(
+                entrada.value,
+                produto.valorUnitario,
+                jaDescontadoUnitario: jaDescontado,
+              ) *
               produto.quantidade;
     });
     return cupons +
@@ -173,10 +187,12 @@ class PagamentosRealizadosState extends Equatable {
   // tem teto no preco unitario (mesma regra do backend).
   static double descontoCuponsUnitario(
     List<OpcaoElegivel> cupons,
-    double valorUnitario,
-  ) {
+    double valorUnitario, {
+    double jaDescontadoUnitario = 0,
+  }) {
     final soma = cupons.fold<double>(0, (a, o) => a + o.valorDesconto);
-    return soma > valorUnitario ? valorUnitario : soma;
+    final teto = (valorUnitario - jaDescontadoUnitario).clamp(0, valorUnitario);
+    return soma > teto ? teto.toDouble() : soma;
   }
 
   // Payload `cupons` do fechamento: produtoIds agrupados por codigo.
@@ -208,8 +224,10 @@ class PagamentosRealizadosState extends Equatable {
           .toDouble();
   // Taxa de entrega é somada FORA do desconto -- nunca sofre desconto,
   // mesma regra do frete FOB no backend.
+  // Abatimento (adiantado/já lançado) só incide sobre itens − desconto.
   double get valorTotalAPagar =>
-      valorTotalComDesconto + valorTaxaEntregaAplicado;
+      (valorTotalComDesconto - abatimentoTotal).clamp(0, double.infinity) +
+      valorTaxaEntregaAplicado;
   int get quantidadeTotalProdutos => resumo?.quantidadeTotalProdutos ?? 0;
   double get valorTotalBruto =>
       linhas.fold<double>(0, (soma, linha) => soma + linha.valor);
@@ -261,6 +279,7 @@ class PagamentosRealizadosState extends Equatable {
     double? valorDescontoAplicado,
     String? taxaEntregaValorTexto,
     double? valorTaxaEntregaAplicado,
+    double? abatimentoTotal,
     Map<int, DescontoTipo>? descontosItensTipo,
     Map<int, String>? descontosItensValorTexto,
     Map<int, double>? descontosItensAplicado,
@@ -309,6 +328,7 @@ class PagamentosRealizadosState extends Equatable {
           taxaEntregaValorTexto ?? this.taxaEntregaValorTexto,
       valorTaxaEntregaAplicado:
           valorTaxaEntregaAplicado ?? this.valorTaxaEntregaAplicado,
+      abatimentoTotal: abatimentoTotal ?? this.abatimentoTotal,
       descontosItensTipo: descontosItensTipo ?? this.descontosItensTipo,
       descontosItensValorTexto:
           descontosItensValorTexto ?? this.descontosItensValorTexto,
@@ -365,6 +385,7 @@ class PagamentosRealizadosState extends Equatable {
         valorDescontoAplicadoArredondado,
         taxaEntregaValorTexto,
         valorTaxaEntregaAplicadoArredondado,
+        abatimentoTotal,
         descontosItensTipo,
         descontosItensValorTexto,
         descontosItensAplicado,

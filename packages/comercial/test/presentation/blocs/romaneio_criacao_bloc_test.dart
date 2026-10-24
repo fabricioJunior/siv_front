@@ -563,4 +563,132 @@ void main() {
       ],
     );
   });
+
+  group('pendência e retry', () {
+    final criados = <int>[];
+    final recebidos = <int>[];
+    final observacoes = <String>[];
+    var falhasRestantes = 1;
+
+    RomaneioCriacaoBloc criarBloc({
+      ListaDeProdutosCompartilhada? lista,
+      Future<Romaneio> Function()? vendaCompleta,
+    }) =>
+        RomaneioCriacaoBloc(
+          StubCriarRomaneio((_) async {
+            criados.add(123);
+            return romaneioCriado;
+          }),
+          StubAdicionarItemRomaneio(
+              ({required romaneioId, required item}) async {}),
+          StubRecuperarRomaneio((_) async => romaneioCriado),
+          StubAtualizarObservacaoRomaneio((_, obs) async {
+            observacoes.add(obs);
+            return romaneioCriado;
+          }),
+          StubRecuperarListaDeProdutosCompartilhada(
+            onCall: (_) async => lista ?? listaCompartilhada,
+            onRecuperarProdutos: (_) async => [produto],
+          ),
+          StubRemoverListaDeProdutosCompartilhada((_) async {}),
+          StubRemoverProdutoCompartilhado((_) async {}),
+          StubAtualizarListaCompartilhada((_) async {}),
+          StubReceberRomaneioNoCaixa(
+            ({
+              required caixaId,
+              required romaneioId,
+              required formasDePagamentoRealizadas,
+            }) async {
+              recebidos.add(romaneioId);
+              if (falhasRestantes-- > 0) throw Exception('Estoque insuficiente');
+            },
+          ),
+          StubCriarVendaCompleta(vendaCompleta ?? () async => throw UnimplementedError()),
+          const FakeAcessoGlobalSessao(caixaIdDaSessao: 999),
+          RecuperarCaixaAberto(repository: StubCaixaRepository()),
+          ListarDocumentosFiscais(repository: StubIntegracaoFiscalRepository()),
+        );
+
+    const solicitacao = RomaneioCriacaoSolicitada(
+      hashLista: hashLista,
+      formasDePagamentoRealizadas: [
+        {'controle': 1, 'formaDePagamentoId': 1, 'parcela': 1, 'valor': 20.0},
+      ],
+    );
+
+    setUp(() {
+      criados.clear();
+      recebidos.clear();
+      observacoes.clear();
+      falhasRestantes = 1;
+    });
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'parcial guarda o motivo e "tentar receber de novo" repete só o recebimento do romaneio existente',
+      build: criarBloc,
+      act: (bloc) async {
+        bloc.add(solicitacao);
+        await bloc.stream.firstWhere((s) => s.step == RomaneioCriacaoStep.falha);
+        bloc.add(const RomaneioCriacaoRecebimentoReenviado());
+        await bloc.stream
+            .firstWhere((s) => s.step == RomaneioCriacaoStep.sucesso);
+      },
+      verify: (bloc) {
+        expect(criados, hasLength(1), reason: 'não cria romaneio novo');
+        expect(recebidos, [123, 123]);
+        expect(observacoes.single, contains('Pendência de finalização'));
+        expect(bloc.state.step, RomaneioCriacaoStep.sucesso);
+        expect(bloc.state.romaneio?.id, 123);
+        expect(bloc.state.erro, isNull);
+        expect(bloc.state.motivoPendencia, isNull);
+      },
+    );
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'retry que falha de novo continua pendente com o romaneio e o novo motivo',
+      setUp: () => falhasRestantes = 2,
+      build: criarBloc,
+      act: (bloc) async {
+        bloc.add(solicitacao);
+        await bloc.stream.firstWhere((s) => s.step == RomaneioCriacaoStep.falha);
+        bloc.add(const RomaneioCriacaoRecebimentoReenviado());
+        await bloc.stream
+            .firstWhere((s) => s.step == RomaneioCriacaoStep.finalizandoVenda);
+        await bloc.stream.firstWhere((s) => s.step == RomaneioCriacaoStep.falha);
+      },
+      verify: (bloc) {
+        expect(recebidos, [123, 123]);
+        expect(bloc.state.listaCompartilhada?.idLista, 123);
+        expect(bloc.state.motivoPendencia, isNotNull);
+      },
+    );
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'falha total da venda não deixa romaneio nem motivo de pendência, e o retry não faz nada',
+      build: () => criarBloc(
+        lista: ListaDeProdutosCompartilhada(
+          hash: hashLista,
+          origem: OrigemCompartilhadaTipo.venda,
+          criadaEm: agora,
+          atualizadaEm: agora,
+          pessoaId: 5,
+          funcionarioId: 10,
+          tabelaPrecoId: 20,
+        ),
+        vendaCompleta: () async => throw Exception('Saldo insuficiente'),
+      ),
+      act: (bloc) async {
+        bloc.add(solicitacao);
+        await bloc.stream.firstWhere((s) => s.step == RomaneioCriacaoStep.falha);
+        bloc.add(const RomaneioCriacaoRecebimentoReenviado());
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.step, RomaneioCriacaoStep.falha);
+        expect(bloc.state.listaCompartilhada?.idLista, isNull);
+        expect(bloc.state.motivoPendencia, isNull);
+        expect(recebidos, isEmpty);
+      },
+    );
+  });
 }

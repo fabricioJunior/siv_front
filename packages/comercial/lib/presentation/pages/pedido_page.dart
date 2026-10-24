@@ -1,5 +1,7 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
+import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:comercial/use_cases.dart';
@@ -10,11 +12,10 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart' show mensagemDeErroApi;
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
-import 'package:financeiro/domain/models/forma_de_pagamento.dart';
-import 'package:financeiro/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pessoas/models.dart';
+import 'package:pessoas/uses_cases.dart' show RecuperarPessoa;
 import 'package:pessoas/presentation/widgets/funcionario_seletor.dart';
 
 class PedidoPage extends StatefulWidget {
@@ -22,6 +23,7 @@ class PedidoPage extends StatefulWidget {
   final SeletorWidget? pessoaSeletor;
   final SeletorWidget? funcionarioSeletor;
   final SeletorWidget? tabelaDePrecoSeletor;
+  final FormaPagamentoGradeWidget formaPagamentoGrade;
 
   const PedidoPage({
     super.key,
@@ -29,6 +31,7 @@ class PedidoPage extends StatefulWidget {
     this.pessoaSeletor,
     this.funcionarioSeletor,
     this.tabelaDePrecoSeletor,
+    required this.formaPagamentoGrade,
   });
 
   @override
@@ -53,6 +56,11 @@ class _PedidoPageState extends State<PedidoPage> {
 
   String? _enderecoEntregaResumo;
   bool _criandoPagamento = false;
+  // Etapa de pagamento aberta = contexto não nulo. O bloc sobrevive ao Esc.
+  PagamentoContexto? _pagamentoContexto;
+  PagamentosRealizadosBloc? _pagamentoBloc;
+  String? _pagamentoAssinatura;
+  bool _confirmandoPagamento = false;
   bool _reenviandoEmailEmbalado = false;
 
   @override
@@ -62,6 +70,7 @@ class _PedidoPageState extends State<PedidoPage> {
 
   @override
   void dispose() {
+    _pagamentoBloc?.close();
     _pessoaIdController.dispose();
     _funcionarioIdController.dispose();
     _tabelaPrecoIdController.dispose();
@@ -384,64 +393,35 @@ class _PedidoPageState extends State<PedidoPage> {
     return restante > 0 ? restante : 0;
   }
 
-  Future<void> _abrirDialogAdicionarPagamento(BuildContext context) async {
-    final bloc = context.read<PedidoBloc>();
-    final state = bloc.state;
+  // E-mail, CPF e preferência de nota do cliente do pedido; sem cadastro, abre sem eles.
+  Future<Pessoa?> _carregarPessoa(int? id) async {
+    if (id == null) return null;
+    try {
+      return await sl<RecuperarPessoa>().call(idPessoa: id);
+    } catch (_) {
+      return null;
+    }
+  }
 
-    final tipoEscolhido = await showDialog<TipoOperacaoFormaPagamento>(
-      context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: const Text('Como será o pagamento?'),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(
-                context,
-                TipoOperacaoFormaPagamento.manual,
-              ),
-              child: const ListTile(
-                leading: Icon(Icons.local_shipping_outlined),
-                title: Text('Pagamento no Ato da Entrega'),
-                subtitle: Text(
-                  'Dinheiro, cartão ou transferência recebidos presencialmente.',
-                ),
-              ),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(
-                context,
-                TipoOperacaoFormaPagamento.online,
-              ),
-              child: const ListTile(
-                leading: Icon(Icons.qr_code_2_outlined),
-                title: Text('Pagamento Online'),
-                subtitle: Text('Cobrança via integração de pagamento.'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  // Esc fecha a etapa e "Adicionar" reabre com o mesmo bloc; mudou item, desconto,
+  // taxa ou pagamento lançado, o resumo do bloc ficou velho e ele é recriado.
+  Future<void> _abrirPagamento(BuildContext context) async {
+    final state = context.read<PedidoBloc>().state;
+    final pessoa = await _carregarPessoa(int.tryParse(state.pessoaId ?? ''));
+    if (!mounted) return;
 
-    if (tipoEscolhido == null || !mounted) return;
-
-    final somaLancada = state.pagamentos.fold<double>(
-      0,
-      (soma, pagamento) => soma + (pagamento.valorEsperado ?? 0),
-    );
-    // Alvo passado ao diálogo é o BRUTO dos ITENS (itens - já lançado), sem descontar o desconto de
-    // nível pedido -- o próprio diálogo reduz o alvo a partir de descontoJaAplicadoNoRomaneio (mesmo
-    // padrão de romaneio_page._irParaPagamento). Evita descontar duas vezes. Taxa de entrega NÃO entra
-    // aqui -- vai à parte via taxaEntregaJaAplicadaNoRomaneio, que o diálogo soma DEPOIS do desconto
-    // (ver PagamentosRealizadosState.valorTotalAPagar), pois desconto nunca incide sobre a taxa.
-    final valorBrutoRestante = state.valorTotalItens - somaLancada;
+    // Com pagamento lançado os descontos gravados no pedido valem como estão: o resumo parte do
+    // preço líquido e não reapura promoção. Sem pagamento, parte do preço cheio e a etapa
+    // reapura; o que ela mostrar é o que vai ser gravado (PUT de substituição).
+    final travados = state.pagamentos.isNotEmpty;
     final produtosCompartilhados = state.itens
         .where((item) => item.produtoId != null)
         .map(
           (item) => ProdutoCompartilhado.create(
             produtoId: item.produtoId!,
             quantidade: (item.solicitado ?? 1).round(),
-            valorUnitario: item.valorUnitario ?? 0,
+            valorUnitario: (item.valorUnitario ?? 0) -
+                (travados ? (item.valorUnitDesconto ?? 0) : 0),
             nome: item.referenciaNome ?? '',
             corNome: item.corNome ?? '',
             tamanhoNome: item.tamanhoNome ?? '',
@@ -449,154 +429,212 @@ class _PedidoPageState extends State<PedidoPage> {
         )
         .toList(growable: false);
 
-    final resultado = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return PagamentosRealizadosWidget(
-          hashLista: 'pedido-${state.id}',
-          resumoInicial: PagamentosRealizadosResumo(
-            listaCompartilhada: null,
-            produtosCompartilhados: produtosCompartilhados,
-            quantidadeTotalProdutos: produtosCompartilhados.fold<int>(
-              0,
-              (soma, produto) => soma + produto.quantidade,
-            ),
-            valorTotalProdutos: valorBrutoRestante > 0 ? valorBrutoRestante : 0,
+    final contexto = PagamentoContexto.pedido(
+      hashLista: 'pedido-${state.id}',
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: produtosCompartilhados,
+        quantidadeTotalProdutos: produtosCompartilhados.fold<int>(
+          0,
+          (soma, produto) => soma + produto.quantidade,
+        ),
+        valorTotalProdutos: produtosCompartilhados.fold<double>(
+          0,
+          (soma, p) => soma + p.quantidade * p.valorUnitario,
+        ),
+      ),
+      titulo: 'Pedido #${state.id} · pagamento',
+      subtitulo: state.pedido?.pessoaNome,
+      descontoInicial: state.pedido?.desconto ?? 0,
+      taxaEntregaInicial: state.pedido?.valorTaxaEntrega ?? 0,
+      abatimentos: [
+        for (final p in state.pagamentos)
+          PagamentoAbatimento(
+            rotulo: '${state.formasDePagamentoPorId[p.formaDePagamentoId] ?? 'Pagamento'}'
+                ' · ${p.confirmadoEm != null ? 'confirmado' : 'aguardando'}',
+            valor: p.valorEsperado ?? 0,
           ),
-          pessoaId: int.tryParse(state.pessoaId ?? ''),
-          descontoJaAplicadoNoRomaneio: state.pedido?.desconto ?? 0,
-          taxaEntregaJaAplicadaNoRomaneio: state.pedido?.valorTaxaEntrega ?? 0,
-          permitirTaxaEntrega: false,
-          formasDePagamentoSeletor: (data) => FormasDePagamentoSeletor(
-            modo: FormasDePagamentoSeletorModo.unica,
-            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-            onChanged: data.onChanged,
-            onlyView: data.onlyView,
-            titulo: 'Forma de pagamento',
-            tipoOperacaoFiltro: tipoEscolhido,
-            idsPermitidos: data.idsPermitidos,
-          ),
-        );
-      },
+      ],
+      descontosTravados: travados,
+      pessoaId: pessoa?.id,
+      cpfInicial: pessoa?.documento,
+      clienteGenerico: pessoa?.generica ?? false,
+      emailInicial: pessoa?.email,
+      enviarNotaPorEmailInicial: pessoa?.enviarNotaPorEmail ?? false,
     );
+    final assinatura = [
+      for (final i in state.itens)
+        '${i.produtoId}x${i.solicitado}@${i.valorUnitario}-${i.valorUnitDesconto}',
+      state.pedido?.desconto,
+      state.pedido?.valorTaxaEntrega,
+      for (final p in state.pagamentos)
+        '${p.id}:${p.valorEsperado}:${p.confirmadoEm != null}',
+      pessoa?.id,
+    ].join('|');
+    if (_pagamentoBloc == null || _pagamentoAssinatura != assinatura) {
+      _pagamentoBloc?.close();
+      _pagamentoAssinatura = assinatura;
+      _pagamentoBloc = contexto.criarBloc();
+    }
+    setState(() => _pagamentoContexto = contexto);
+  }
 
-    if (resultado == null || !mounted) return;
+  void _fecharPagamento() {
+    _pagamentoBloc?.close();
+    setState(() {
+      _pagamentoContexto = null;
+      _pagamentoBloc = null;
+      _pagamentoAssinatura = null;
+    });
+  }
 
+  // Ordem: desconto do pedido, promoções/cupom, CPF/e-mail da nota e, por fim, os pagamentos.
+  // Cada passo espera o anterior (o id do pagamento é max(id)+1 no backend, ver comentário abaixo).
+  // Falha antes de lançar qualquer pagamento reabre a etapa com a mensagem junto do botão; depois
+  // de lançar algum, a etapa fecha (reabrir repetiria a linha já lançada) e o erro vai no snackbar.
+  Future<void> _confirmarPagamento(
+    PedidoBloc bloc,
+    Map<String, dynamic> resultado,
+  ) async {
     final linhas =
         (resultado['formasDePagamentoRealizadas'] as List<dynamic>? ?? const [])
             .whereType<Map<String, dynamic>>()
             .toList(growable: false);
+    final etapa = _pagamentoBloc!;
+    final state = bloc.state;
+    final travados = state.pagamentos.isNotEmpty;
 
-    if (linhas.isEmpty) return;
-
-    if (tipoEscolhido == TipoOperacaoFormaPagamento.online) {
-      final totalOnline = linhas.fold<double>(
-        0,
-        (soma, linha) => soma + (_toDouble(linha['valor']) ?? 0),
-      );
-
-      if (!mounted) return;
-      final confirmouOnline = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Pagamento online'),
-            content: Text(
-              'Você realmente deseja criar um pagamento online de '
-              'R\$ ${totalOnline.toStringAsFixed(2)}?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Confirmar'),
-              ),
-            ],
-          );
-        },
-      );
-      if (confirmouOnline != true || !mounted) return;
+    void reabrir(String? erro) => etapa.add(
+          PagamentosRealizadosReaberto(
+            erro: erro ?? 'Falha ao lançar o pagamento.',
+          ),
+        );
+    Future<PedidoState> passo(PedidoEvent evento, Set<PedidoStep> fim) async {
+      bloc.add(evento);
+      return bloc.stream
+          .firstWhere((s) => fim.contains(s.step) || s.step == PedidoStep.falha);
     }
 
-    // Troco já calculado pelo PagamentosRealizadosWidget (dinheiro digitado
-    // acima do valor pendente) -- reaproveitado aqui em vez de descartado,
-    // pra não precisar de um segundo passo manual "informar valor pra troco"
-    // depois (ver PedidoPagamentoAdicionou.valorParaTroco).
-    final valorTrocoCalculado = _toDouble(resultado['valorTroco']) ?? 0;
-
     final linhasValidas = linhas
-        .map((linha) {
-          final formaDePagamentoId = int.tryParse(
-            '${linha['formaDePagamentoId']}',
-          );
-          final valorBruto = _toDouble(linha['valor']);
-          final ehDinheiro = linha['ehDinheiro'] == true;
-          return (
-            formaDePagamentoId: formaDePagamentoId,
-            valorBruto: valorBruto,
-            ehDinheiro: ehDinheiro,
-          );
-        })
+        .map((linha) => (
+              formaDePagamentoId: int.tryParse('${linha['formaDePagamentoId']}'),
+              valorBruto: _toDouble(linha['valor']),
+              ehDinheiro: linha['ehDinheiro'] == true,
+            ))
         .where((linha) =>
             linha.formaDePagamentoId != null && (linha.valorBruto ?? 0) > 0)
         .toList(growable: false);
-
-    if (linhasValidas.isEmpty) return;
-
-    setState(() => _criandoPagamento = true);
-
-    // Desconto vem do próprio diálogo de pagamentos (mesmo padrão de romaneio_page._irParaPagamento):
-    // descontosItens já representa o total FINAL (pré-carregado com o que já existia via
-    // descontoJaAplicadoNoRomaneio acima), então sempre REESCREVE em vez de somar.
-    final descontosItensRaw =
-        resultado['descontosItens'] as List<dynamic>? ?? const [];
-    final descontoTotal =
-        descontosItensRaw.whereType<Map<String, dynamic>>().fold<double>(
-              0,
-              (soma, item) => soma + (_toDouble(item['valor']) ?? 0),
-            );
-    if (descontoTotal != (state.pedido?.desconto ?? 0)) {
-      bloc.add(PedidoDescontoAlterado(descontoTotal));
-      final descontoResultado = await bloc.stream.firstWhere(
-        (s) =>
-            s.step == PedidoStep.descontoAlterado || s.step == PedidoStep.falha,
-      );
-      if (descontoResultado.step == PedidoStep.falha) return;
+    if (linhasValidas.isEmpty) {
+      reabrir('Informe uma forma e um valor de pagamento.');
+      return;
     }
 
-    // Troco só pode vir de uma linha em dinheiro -- aplica na primeira
-    // encontrada (caso normal é só uma linha de dinheiro por pagamento).
-    // Cada linha espera a anterior terminar (mesmo padrão de
-    // pedido_itens_leitor_page._confirmarAlteracoes) -- o id do pagamento é gerado no backend via
-    // max(id)+1 (ver PedidoPagamentoService.add), então disparar várias PedidoPagamentoAdicionou em
-    // paralelo (2+ formas de pagamento na mesma confirmação) fazia os handlers lerem o mesmo max
-    // concorrentemente e colidir no insert ("já existe um registro com esse valor").
-    var trocoRestante = valorTrocoCalculado;
-    for (final linha in linhasValidas) {
-      final desconto = linha.ehDinheiro && trocoRestante > 0
-          ? (trocoRestante > linha.valorBruto!
-              ? linha.valorBruto!
-              : trocoRestante)
-          : 0.0;
-      if (desconto > 0) trocoRestante -= desconto;
+    final cupons = (resultado['cupons'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+    if (!travados && cupons.length > 1) {
+      reabrir('O pedido aceita um cupom por vez.');
+      return;
+    }
 
-      bloc.add(
-        PedidoPagamentoAdicionou(
-          formaDePagamentoId: linha.formaDePagamentoId!,
-          valorEsperado: linha.valorBruto! - desconto,
-          valorParaTroco: desconto > 0 ? linha.valorBruto : null,
+    setState(() {
+      _confirmandoPagamento = true;
+      _criandoPagamento = true;
+    });
+    var lancados = 0;
+    try {
+      // Desconto vem da própria etapa (mesmo padrão de romaneio_page._irParaPagamento):
+      // descontosItens já representa o total FINAL (pré-carregado com o que já existia via
+      // descontoInicial), então sempre REESCREVE em vez de somar.
+      final descontoTotal = (resultado['descontosItens'] as List<dynamic>? ??
+              const [])
+          .whereType<Map<String, dynamic>>()
+          .fold<double>(0, (soma, item) => soma + (_toDouble(item['valor']) ?? 0));
+      if (!travados && descontoTotal != (state.pedido?.desconto ?? 0)) {
+        final r = await passo(
+          PedidoDescontoAlterado(descontoTotal),
+          {PedidoStep.descontoAlterado},
+        );
+        if (r.step == PedidoStep.falha) return reabrir(r.erro);
+      }
+
+      final promocoes = (resultado['descontosPromocao'] as List<dynamic>? ??
+              const [])
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
+      if (!travados &&
+          (promocoes.isNotEmpty ||
+              cupons.isNotEmpty ||
+              state.itens.any((i) => (i.valorUnitDesconto ?? 0) > 0))) {
+        final r = await passo(
+          PedidoDescontosPromocionaisAplicados(
+            descontosPromocao: promocoes,
+            cupom: cupons.isEmpty ? null : cupons.first,
+          ),
+          {PedidoStep.descontosPromocionaisAplicados},
+        );
+        if (r.step == PedidoStep.falha) return reabrir(r.erro);
+      }
+
+      final incluirCpf = resultado['incluirCpfNaNota'] == true;
+      final cpf = resultado['cpfNaNota']?.toString() ?? '';
+      final enviarEmail = resultado['enviarNotaPorEmail'] == true;
+      final email = resultado['emailNota']?.toString() ?? '';
+      final r = await passo(
+        PedidoOpcoesFiscaisSalvas(
+          incluirCpfNaNota: incluirCpf,
+          cpfNaNota: incluirCpf && cpf.isNotEmpty ? cpf : null,
+          enviarNotaPorEmail: enviarEmail,
+          emailNota: enviarEmail && email.isNotEmpty ? email : null,
         ),
+        {PedidoStep.opcoesFiscaisSalvas},
       );
-      final resultado = await bloc.stream.firstWhere(
-        (s) =>
-            s.step == PedidoStep.pagamentoAdicionado ||
-            s.step == PedidoStep.falha,
-      );
-      if (resultado.step == PedidoStep.falha) break;
+      if (r.step == PedidoStep.falha) return reabrir(r.erro);
+
+      // Troco só pode vir de uma linha em dinheiro -- aplica na primeira
+      // encontrada (caso normal é só uma linha de dinheiro por pagamento).
+      // Cada linha espera a anterior terminar (mesmo padrão de
+      // pedido_itens_leitor_page._confirmarAlteracoes) -- o id do pagamento é gerado no backend via
+      // max(id)+1 (ver PedidoPagamentoService.add), então disparar várias PedidoPagamentoAdicionou em
+      // paralelo (2+ formas de pagamento na mesma confirmação) fazia os handlers lerem o mesmo max
+      // concorrentemente e colidir no insert ("já existe um registro com esse valor").
+      var trocoRestante = _toDouble(resultado['valorTroco']) ?? 0;
+      for (final linha in linhasValidas) {
+        final desconto = linha.ehDinheiro && trocoRestante > 0
+            ? (trocoRestante > linha.valorBruto!
+                ? linha.valorBruto!
+                : trocoRestante)
+            : 0.0;
+        if (desconto > 0) trocoRestante -= desconto;
+
+        final r = await passo(
+          PedidoPagamentoAdicionou(
+            formaDePagamentoId: linha.formaDePagamentoId!,
+            valorEsperado: linha.valorBruto! - desconto,
+            valorParaTroco: desconto > 0 ? linha.valorBruto : null,
+          ),
+          {PedidoStep.pagamentoAdicionado},
+        );
+        if (r.step == PedidoStep.falha) {
+          if (lancados == 0) return reabrir(r.erro);
+          _fecharPagamento();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(r.erro ?? 'Falha ao lançar o pagamento.')),
+            );
+          }
+          return;
+        }
+        lancados++;
+      }
+      if (mounted) _fecharPagamento();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _confirmandoPagamento = false;
+          _criandoPagamento = false;
+        });
+      }
     }
   }
 
@@ -1123,6 +1161,8 @@ class _PedidoPageState extends State<PedidoPage> {
 
           if (state.step == PedidoStep.validacaoInvalida ||
               state.step == PedidoStep.falha) {
+            // Durante a confirmação da etapa, _confirmarPagamento mostra o erro (junto do botão).
+            if (_confirmandoPagamento) return;
             if (_criandoPagamento) {
               setState(() => _criandoPagamento = false);
             }
@@ -1143,7 +1183,8 @@ class _PedidoPageState extends State<PedidoPage> {
               _sincronizarControllers(state);
             }
 
-            return Scaffold(
+            final contextoPagamento = _pagamentoContexto;
+            final scaffold = Scaffold(
               appBar: AppBar(
                 title: Text(widget.idPedido == null
                     ? 'Novo pedido'
@@ -1192,6 +1233,30 @@ class _PedidoPageState extends State<PedidoPage> {
                             _buildFormularioPedido(context, state, carregando),
                       ),
                     ),
+            );
+            return Stack(
+              children: [
+                scaffold,
+                if (contextoPagamento != null)
+                  Positioned.fill(
+                    child: BlocProvider.value(
+                      value: _pagamentoBloc!,
+                      child: PagamentoEtapa(
+                        contexto: contextoPagamento,
+                        formaPagamentoGrade: widget.formaPagamentoGrade,
+                        onConfirmado: (resultado) => _confirmarPagamento(
+                          context.read<PedidoBloc>(),
+                          resultado,
+                        ),
+                        onVoltar: () {
+                          if (!_confirmandoPagamento) {
+                            setState(() => _pagamentoContexto = null);
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -1999,7 +2064,7 @@ class _PedidoPageState extends State<PedidoPage> {
                 TextButton.icon(
                   onPressed: _criandoPagamento
                       ? null
-                      : () => _abrirDialogAdicionarPagamento(context),
+                      : () => _abrirPagamento(context),
                   icon: const Icon(Icons.add),
                   label: const Text('Adicionar'),
                 ),

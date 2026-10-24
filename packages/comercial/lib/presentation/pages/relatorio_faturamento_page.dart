@@ -446,6 +446,8 @@ class _Linhas extends StatelessWidget {
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
               getTooltipColor: (_) => cores.superficie,
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
               getTooltipItems: (spots) => [
                 for (final s in spots)
                   LineTooltipItem(

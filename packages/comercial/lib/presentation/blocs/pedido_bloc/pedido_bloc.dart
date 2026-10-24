@@ -17,6 +17,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final CriarPedido _criarPedido;
   final AtualizarPedido _atualizarPedido;
   final AplicarDescontoPedido _aplicarDescontoPedido;
+  final AplicarDescontosPromocionaisPedido _aplicarDescontosPromocionaisPedido;
+  final SalvarOpcoesFiscaisPedido _salvarOpcoesFiscaisPedido;
   final ConferirPedido _conferirPedido;
   final MarcarConferido _marcarConferido;
   final FaturarPedido _faturarPedido;
@@ -78,6 +80,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._acessoGlobalSessao,
     this._recuperarFormasDePagamento,
     this._recuperarEnderecosDaPessoa,
+    this._aplicarDescontosPromocionaisPedido,
+    this._salvarOpcoesFiscaisPedido,
   ) : super(const PedidoState.initial()) {
     on<PedidoIniciou>(_onIniciou);
     on<PedidoCampoAlterado>(_onCampoAlterado);
@@ -85,6 +89,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoEnderecoEntregaAlterado>(_onEnderecoEntregaAlterado);
     on<PedidoSalvou>(_onSalvou);
     on<PedidoDescontoAlterado>(_onDescontoAlterado);
+    on<PedidoDescontosPromocionaisAplicados>(_onDescontosPromocionaisAplicados);
+    on<PedidoOpcoesFiscaisSalvas>(_onOpcoesFiscaisSalvas);
     on<PedidoObservacaoSalva>(_onObservacaoSalva);
     on<PedidoTaxaEntregaSalva>(_onTaxaEntregaSalva);
     on<PedidoConferiu>(_onConferiu);
@@ -318,6 +324,55 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     }
   }
 
+  FutureOr<void> _onDescontosPromocionaisAplicados(
+    PedidoDescontosPromocionaisAplicados event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _aplicarDescontosPromocionaisPedido.call(
+        state.id!,
+        descontosPromocao: event.descontosPromocao,
+        cupom: event.cupom,
+      );
+      await _recarregarComDependencias(
+        emit,
+        PedidoStep.descontosPromocionaisAplicados,
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao aplicar promoções no pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onOpcoesFiscaisSalvas(
+    PedidoOpcoesFiscaisSalvas event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _salvarOpcoesFiscaisPedido.call(
+        state.id!,
+        incluirCpfNaNota: event.incluirCpfNaNota,
+        cpfNaNota: event.cpfNaNota,
+        enviarNotaPorEmail: event.enviarNotaPorEmail,
+        emailNota: event.emailNota,
+      );
+      await _recarregarComDependencias(emit, PedidoStep.opcoesFiscaisSalvas);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar opções da nota fiscal.')));
+      addError(e, s);
+    }
+  }
+
   // Salvam só um campo isolado (via modal, ver pedido_page) num pedido já existente -- reusa
   // _toModel/_atualizarPedido igual _onSalvou, mas SEM navegar pra fora da tela ao terminar
   // (PedidoStep.dadosSalvos, não criado/salvo -- é isso que o listener da tela usa pra decidir se
@@ -521,7 +576,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
         valorEsperado: event.valorEsperado,
         taxaAplicada: event.taxaAplicada,
       );
-      // Reaproveita o troco já calculado pelo PagamentosRealizadosWidget --
+      // Reaproveita o troco já calculado pelo PagamentoEtapa --
       // se o backend rejeitar (forma nao e dinheiro), ignora silenciosamente:
       // e um preenchimento automatico best-effort, nao uma acao explicita
       // do operador que mereça SnackBar de erro.

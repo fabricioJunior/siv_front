@@ -62,6 +62,32 @@ class PedidoDescontoAlterado extends PedidoEvent {
   PedidoDescontoAlterado(this.desconto);
 }
 
+// Promoções/cupom escolhidos na etapa de pagamento (PUT substitui; 400 se já há pagamento lançado).
+class PedidoDescontosPromocionaisAplicados extends PedidoEvent {
+  final List<Map<String, dynamic>> descontosPromocao;
+  final Map<String, dynamic>? cupom;
+
+  PedidoDescontosPromocionaisAplicados({
+    required this.descontosPromocao,
+    this.cupom,
+  });
+}
+
+// CPF/e-mail da nota escolhidos na etapa de pagamento (PUT substitui; omitido volta a NULL).
+class PedidoOpcoesFiscaisSalvas extends PedidoEvent {
+  final bool? incluirCpfNaNota;
+  final String? cpfNaNota;
+  final bool? enviarNotaPorEmail;
+  final String? emailNota;
+
+  PedidoOpcoesFiscaisSalvas({
+    this.incluirCpfNaNota,
+    this.cpfNaNota,
+    this.enviarNotaPorEmail,
+    this.emailNota,
+  });
+}
+
 // Salvam só observação/taxa de entrega de um pedido já existente (via modal, ver pedido_page) --
 // diferente de PedidoSalvou, que sempre navega pra fora da tela ao terminar (correto pra criação de
 // pedido novo, errado aqui: editar um campo isolado não deve tirar o usuário da tela).
@@ -107,7 +133,7 @@ class PedidoPagamentoAdicionou extends PedidoEvent {
   final double? taxaAplicada;
   // Preenchido quando a linha de pagamento é dinheiro e o valor digitado
   // excede o valorEsperado -- mesmo cálculo de troco já feito pelo
-  // PagamentosRealizadosWidget (state.valorTroco), reaproveitado aqui em vez
+  // PagamentoEtapa (state.valorTroco), reaproveitado aqui em vez
   // de pedir o operador informar de novo depois via valorParaTroco manual.
   final double? valorParaTroco;
 

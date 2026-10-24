@@ -29,6 +29,9 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarClienteNaoCadastrado _recuperarClienteNaoCadastrado;
   final VerificarExigeClienteNaVenda _verificarExigeClienteNaVenda;
+  final RecuperarDescontoMaximoVendedor _recuperarDescontoMaximoVendedor;
+  final ReenviarEmailDocumentoFiscal _reenviarEmailDocumentoFiscal;
+  final ReprocessarDocumentoFiscal _reprocessarDocumentoFiscal;
 
   VendaBloc(
     this._salvarListaDeProdutosCompartilhada,
@@ -42,6 +45,9 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     this._acessoGlobalSessao,
     this._recuperarClienteNaoCadastrado,
     this._verificarExigeClienteNaVenda,
+    this._recuperarDescontoMaximoVendedor,
+    this._reenviarEmailDocumentoFiscal,
+    this._reprocessarDocumentoFiscal,
   ) : super(const VendaState()) {
     on<VendaClienteSelecionado>(_onClienteSelecionado);
     on<VendaClienteNaoCadastradoSolicitado>(
@@ -51,6 +57,11 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     on<VendaTabelaDePrecoSelecionada>(_onTabelaDePrecoSelecionada);
     on<VendaLeituraSolicitada>(_onLeituraSolicitada);
     on<VendaEdicaoSolicitada>(_onEdicaoSolicitada);
+    on<VendaPagamentoSolicitado>(_onPagamentoSolicitado);
+    on<VendaPagamentoVoltou>(_onPagamentoVoltou);
+    on<VendaDescontoAlterado>(_onDescontoAlterado);
+    on<VendaNovaVendaSolicitada>(_onNovaVendaSolicitada);
+    on<VendaNotaReenviarSolicitada>(_onNotaReenviarSolicitada);
     on<VendaFinalizarSolicitada>(_onFinalizarSolicitada);
     on<VendaCriarPedidoSolicitado>(_onCriarPedidoSolicitado);
     on<VendaResetSolicitado>(_onResetSolicitado);
@@ -230,6 +241,130 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     emit(state.copyWith(step: VendaStep.configuracao, erro: null));
   }
 
+  FutureOr<void> _onPagamentoSolicitado(
+    VendaPagamentoSolicitado event,
+    Emitter<VendaState> emit,
+  ) async {
+    await _sincronizarExigeClienteNaVenda(emit);
+    final erro = _validarSelecoes() ??
+        await _validarDesconto(state.descontoRascunho, event.subtotal);
+    if (erro != null) {
+      emit(state.copyWith(erro: erro));
+      return;
+    }
+
+    emit(state.copyWith(step: VendaStep.pagamento, erro: null));
+  }
+
+  // Descarta o hash: os itens podem mudar na leitura. Só a falha total do
+  // pagamento reaproveita a lista (retry com os mesmos itens).
+  void _onPagamentoVoltou(
+    VendaPagamentoVoltou event,
+    Emitter<VendaState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        step: VendaStep.leitura,
+        listaCompartilhadaHash: null,
+        erro: null,
+      ),
+    );
+  }
+
+  FutureOr<void> _onDescontoAlterado(
+    VendaDescontoAlterado event,
+    Emitter<VendaState> emit,
+  ) async {
+    final texto = event.texto.trim();
+    final ehPercentual = texto.endsWith('%');
+    final numero = texto.isEmpty
+        ? 0.0
+        : _toDouble(ehPercentual ? texto.substring(0, texto.length - 1) : texto);
+    if (numero == null || numero < 0) {
+      emit(state.copyWith(erroDesconto: 'Informe um valor válido.'));
+      return;
+    }
+
+    final desconto = double.parse(
+      (ehPercentual ? event.subtotal * numero / 100 : numero).toStringAsFixed(2),
+    );
+    final erro = await _validarDesconto(desconto, event.subtotal);
+    if (erro != null) {
+      emit(state.copyWith(erroDesconto: erro));
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        descontoRascunho: desconto,
+        erroDesconto: null,
+        descontoContador: state.descontoContador + 1,
+      ),
+    );
+  }
+
+  // Backend aplica DESCONTO_MAXIMO_VENDEDOR (percentual, 0 = sem limite) só ao
+  // desconto manual do receber; aqui trava antes de chegar ao pagamento.
+  Future<String?> _validarDesconto(double desconto, double subtotal) async {
+    if (desconto <= 0) return null;
+    if (desconto > subtotal) {
+      return 'O desconto não pode ser maior que o subtotal.';
+    }
+
+    final limite = await _carregarDescontoMaximo();
+    final percentual = desconto / subtotal * 100;
+    if (limite > 0 && percentual > limite + 0.005) {
+      return 'Desconto de ${percentual.toStringAsFixed(2)}% excede o limite '
+          'de ${limite.toStringAsFixed(limite % 1 == 0 ? 0 : 2)}% permitido '
+          'para o vendedor.';
+    }
+    return null;
+  }
+
+  FutureOr<void> _onNovaVendaSolicitada(
+    VendaNovaVendaSolicitada event,
+    Emitter<VendaState> emit,
+  ) {
+    emit(
+      VendaState(
+        step: VendaStep.leitura,
+        vendedorSelecionado: state.vendedorSelecionado,
+        tabelaDePrecoSelecionada: state.tabelaDePrecoSelecionada,
+        exigeClienteNaVenda: state.exigeClienteNaVenda,
+      ),
+    );
+    add(const VendaClienteNaoCadastradoSolicitado());
+  }
+
+  FutureOr<void> _onNotaReenviarSolicitada(
+    VendaNotaReenviarSolicitada event,
+    Emitter<VendaState> emit,
+  ) async {
+    final documento = event.documentoFiscal;
+    try {
+      if (documento.status == 'emitida') {
+        await _reenviarEmailDocumentoFiscal(documento.id);
+      } else {
+        await _reprocessarDocumentoFiscal(documento.id);
+      }
+      emit(
+        state.copyWith(
+          avisoNota: documento.status == 'emitida'
+              ? 'Nota reenviada por e-mail.'
+              : 'Nota enviada para nova tentativa de emissão.',
+        ),
+      );
+      emit(state.copyWith(avisoNota: null));
+    } catch (e, s) {
+      emit(
+        state.copyWith(
+          erro: mensagemDeErroApi(e, 'Não foi possível reenviar a nota.'),
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
   FutureOr<void> _onFinalizarSolicitada(
     VendaFinalizarSolicitada event,
     Emitter<VendaState> emit,
@@ -260,21 +395,24 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
     );
 
     try {
-      final lista = await _salvarListaDeProdutosCompartilhada(
-        listaCompartilhada: ListaDeProdutosCompartilhada.criar(
-          origem: OrigemCompartilhadaTipo.venda,
-          pessoaId: state.clienteSelecionado?.id,
-          funcionarioId: state.vendedorSelecionado?.id,
-          tabelaPrecoId: state.tabelaDePrecoSelecionada?.id,
-        ),
-        produtos: produtos,
-      );
+      final hash = state.listaCompartilhadaHash ??
+          (await _salvarListaDeProdutosCompartilhada(
+            listaCompartilhada: ListaDeProdutosCompartilhada.criar(
+              origem: OrigemCompartilhadaTipo.venda,
+              pessoaId: state.clienteSelecionado?.id,
+              funcionarioId: state.vendedorSelecionado?.id,
+              tabelaPrecoId: state.tabelaDePrecoSelecionada?.id,
+            ),
+            produtos: produtos,
+          ))
+              .hash;
 
       emit(
         state.copyWith(
           processando: false,
           processoAtual: null,
-          listaCompartilhadaHash: lista.hash,
+          listaCompartilhadaHash: hash,
+          finalizacaoContador: state.finalizacaoContador + 1,
           formasDePagamentoRealizadas: event.formasDePagamentoRealizadas
               .map((item) => Map<String, dynamic>.from(item))
               .toList(growable: false),
@@ -561,6 +699,21 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
       } catch (e, s) {
         addError(e, s);
         return false;
+      }
+    }();
+  }
+
+  Future<double>? _descontoMaximoFuture;
+
+  Future<double> _carregarDescontoMaximo() {
+    return _descontoMaximoFuture ??= () async {
+      final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+      if (empresaId == null) return 0.0;
+      try {
+        return await _recuperarDescontoMaximoVendedor(empresaId: empresaId);
+      } catch (e, s) {
+        addError(e, s);
+        return 0.0;
       }
     }();
   }

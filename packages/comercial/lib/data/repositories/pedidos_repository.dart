@@ -21,6 +21,36 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<Pedido> aplicarDescontosPromocionais(
+    int id, {
+    required List<Map<String, dynamic>> descontosPromocao,
+    Map<String, dynamic>? cupom,
+  }) {
+    return remoteDataSource.aplicarDescontosPromocionais(
+      id,
+      descontosPromocao: descontosPromocao,
+      cupom: cupom,
+    );
+  }
+
+  @override
+  Future<Pedido> salvarOpcoesFiscais(
+    int id, {
+    bool? incluirCpfNaNota,
+    String? cpfNaNota,
+    bool? enviarNotaPorEmail,
+    String? emailNota,
+  }) {
+    return remoteDataSource.salvarOpcoesFiscais(
+      id,
+      incluirCpfNaNota: incluirCpfNaNota,
+      cpfNaNota: cpfNaNota,
+      enviarNotaPorEmail: enviarNotaPorEmail,
+      emailNota: emailNota,
+    );
+  }
+
+  @override
   Future<void> cancelarPedido(
     int id, {
     required String motivoCancelamento,

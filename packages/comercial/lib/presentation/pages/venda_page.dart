@@ -1,5 +1,13 @@
-import 'package:comercial/presentation.dart';
+import 'dart:async';
+
 import 'package:comercial/models.dart';
+import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
+import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
+import 'package:comercial/presentation/relatorios/pdf/romaneio_pdf_exporter.dart';
+import 'package:comercial/presentation/venda/venda_concluida_view.dart';
+import 'package:comercial/presentation/venda/venda_etapa.dart';
+import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes/injecoes.dart';
 import 'package:core/leitor/data_source/i_leitor_busca_data_datasource.dart';
@@ -12,36 +20,46 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-const String _resultadoRomaneioStatusKey = 'status';
-const String _resultadoRomaneioIdKey = 'romaneioId';
-const String _resultadoRomaneioStatusSucesso = 'sucesso';
-const String _resultadoRomaneioStatusFalha = 'falha';
-const String _resultadoRomaneioStatusParcial = 'parcial';
-
 class VendaPage extends StatefulWidget {
   final SeletorWidget pessoaSeletor;
   final SeletorWidget vendedoresSeletor;
   final SeletorWidget tabelasDePrecoSeletor;
-  final SeletorWidget formasDePagamentoSeletor;
+  final FormaPagamentoGradeWidget formaPagamentoGrade;
 
   const VendaPage({
     super.key,
     required this.pessoaSeletor,
     required this.vendedoresSeletor,
     required this.tabelasDePrecoSeletor,
-    required this.formasDePagamentoSeletor,
+    required this.formaPagamentoGrade,
   });
 
   @override
   State<VendaPage> createState() => _VendaPageState();
 }
 
-enum _VendaAcao { finalizar }
-
 class _VendaPageState extends State<VendaPage> {
   late final LeitorController _leitorController;
   int _ultimoOrcamentoSalvoContador = 0;
+  int _ultimaFinalizacao = 0;
   bool _trocandoCliente = false;
+  bool _trocandoVendedor = false;
+  bool _editandoDesconto = false;
+  final _descontoController = TextEditingController();
+  final _focoDesconto = FocusNode();
+
+  // O pagamento e a criação do romaneio vivem na página: Esc no pagamento
+  // preserva as linhas (mesmo bloc) e a Concluída/Pendência ficam na tela até
+  // "Nova venda".
+  PagamentosRealizadosBloc? _pagamentoBloc;
+  String? _pagamentoAssinatura;
+  RomaneioCriacaoBloc? _criacao;
+  StreamSubscription<RomaneioCriacaoState>? _criacaoSub;
+  RomaneioCriacaoState? _criacaoState;
+  RomaneioCriacaoStep? _ultimoPasso;
+  Map<String, dynamic> _resultado = const {};
+  DateTime _concluidaEm = DateTime.now();
+  bool _orcamentoExcluido = false;
 
   @override
   void initState() {
@@ -53,6 +71,11 @@ class _VendaPageState extends State<VendaPage> {
   void dispose() {
     SivPageFab.limpar();
     _leitorController.dispose();
+    _descontoController.dispose();
+    _focoDesconto.dispose();
+    _pagamentoBloc?.close();
+    _criacaoSub?.cancel();
+    _criacao?.close();
     super.dispose();
   }
 
@@ -66,16 +89,33 @@ class _VendaPageState extends State<VendaPage> {
       child: BlocConsumer<VendaBloc, VendaState>(
         listenWhen: (previous, current) =>
             (previous.erro != current.erro && current.erro != null) ||
-            (previous.listaCompartilhadaHash !=
-                    current.listaCompartilhadaHash &&
-                current.listaCompartilhadaHash != null) ||
+            (previous.avisoNota != current.avisoNota &&
+                current.avisoNota != null) ||
+            previous.finalizacaoContador != current.finalizacaoContador ||
+            previous.descontoContador != current.descontoContador ||
             (previous.pedidoCriadoId != current.pedidoCriadoId &&
                 current.pedidoCriadoId != null) ||
             previous.orcamentoSalvoContador != current.orcamentoSalvoContador,
         listener: (context, state) async {
           final erro = state.erro;
           if (erro != null) {
-            SivAviso.mostrar(context, mensagem: erro, tipo: SivAvisoTipo.falha);
+            final pagamento = _pagamentoBloc;
+            if (pagamento != null &&
+                etapaDaVenda(state, _criacaoState) == VendaEtapa.pagamento) {
+              pagamento.add(PagamentosRealizadosReaberto(erro: erro));
+            } else {
+              SivAviso.mostrar(context,
+                  mensagem: erro, tipo: SivAvisoTipo.falha);
+            }
+          }
+
+          final avisoNota = state.avisoNota;
+          if (avisoNota != null) {
+            SivAviso.mostrar(context, mensagem: avisoNota);
+          }
+
+          if (_editandoDesconto && state.descontoContador > 0) {
+            _fecharDesconto();
           }
 
           if (state.orcamentoSalvoContador != _ultimoOrcamentoSalvoContador) {
@@ -85,81 +125,9 @@ class _VendaPageState extends State<VendaPage> {
             return;
           }
 
-          final listaCompartilhadaHash = state.listaCompartilhadaHash;
-          if (listaCompartilhadaHash != null) {
-            final result = await Navigator.of(context).pushNamed(
-              '/criar_romaneio_por_parametros',
-              arguments: {
-                'listaCompartilhadaHash': listaCompartilhadaHash,
-                'formasDePagamentoRealizadas':
-                    state.formasDePagamentoRealizadas,
-                'desconto': state.valorDesconto,
-                'descontosItens': state.descontosItens,
-                'descontosPromocao': state.descontosPromocao,
-                'cupons': state.cupons,
-                'valorTaxaEntrega': state.valorTaxaEntrega,
-                'incluirCpfNaNota': state.incluirCpfNaNota,
-                'cpfNaNota': state.cpfNaNota,
-                'pontuarFidelidade': state.pontuarFidelidade,
-                'enviarNotaPorEmail': state.enviarNotaPorEmail,
-                'emailNota': state.emailNota,
-              },
-            );
-
-            if (!context.mounted) return;
-
-            final resultadoStatus = result is Map<String, dynamic>
-                ? result[_resultadoRomaneioStatusKey]?.toString()
-                : result == true
-                    ? _resultadoRomaneioStatusSucesso
-                    : null;
-            final resultadoRomaneioId = result is Map<String, dynamic>
-                ? result[_resultadoRomaneioIdKey]
-                : null;
-
-            if (resultadoStatus == _resultadoRomaneioStatusSucesso) {
-              SivAviso.mostrar(context,
-                  mensagem: 'Venda finalizada com sucesso.');
-              final orcamentoId = state.orcamentoId;
-              if (orcamentoId != null) {
-                context.read<VendaBloc>().add(
-                      VendaOrcamentoExcluirAposFinalizarSolicitado(
-                        hash: orcamentoId,
-                      ),
-                    );
-              }
-              _reiniciarFluxo(context);
-              return;
-            }
-
-            if (resultadoStatus == _resultadoRomaneioStatusFalha) {
-              SivAviso.mostrar(
-                context,
-                mensagem:
-                    'Não foi possível concluir a venda. Confira o pagamento e tente de novo.',
-                tipo: SivAvisoTipo.falha,
-              );
-              return;
-            }
-
-            if (resultadoStatus == _resultadoRomaneioStatusParcial) {
-              final romaneioId = resultadoRomaneioId?.toString() ?? '-';
-              SivAviso.mostrar(
-                context,
-                mensagem:
-                    'Venda gerou o romaneio #$romaneioId, mas o processamento não foi concluído automaticamente.',
-                tipo: SivAvisoTipo.atencao,
-              );
-              final orcamentoId = state.orcamentoId;
-              if (orcamentoId != null) {
-                context.read<VendaBloc>().add(
-                      VendaOrcamentoExcluirAposFinalizarSolicitado(
-                        hash: orcamentoId,
-                      ),
-                    );
-              }
-              _reiniciarFluxo(context);
-            }
+          if (state.finalizacaoContador != _ultimaFinalizacao) {
+            _ultimaFinalizacao = state.finalizacaoContador;
+            _iniciarCriacao(context, state);
           }
 
           final pedidoCriadoId = state.pedidoCriadoId;
@@ -175,19 +143,321 @@ class _VendaPageState extends State<VendaPage> {
             );
           }
         },
-        builder: (context, state) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        builder: (context, state) =>
+            _buildEtapa(context, state, _criacaoState),
+      ),
+    );
+  }
+
+  // Assinado direto no stream (não por widget): o romaneio pode terminar antes
+  // do primeiro frame com o bloc novo, e a transição não pode se perder. Também
+  // evita um BlocProvider na árvore, que remontaria o leitor e perderia os itens.
+  void _aoMudarCriacao(BuildContext context, RomaneioCriacaoState cs) {
+    if (!mounted) return;
+    setState(() => _criacaoState = cs);
+    if (cs.step == _ultimoPasso) return;
+    _ultimoPasso = cs.step;
+    final venda = context.read<VendaBloc>();
+    final romaneioCriado = cs.listaCompartilhada?.idLista != null;
+
+    if (cs.step == RomaneioCriacaoStep.sucesso) {
+      _concluidaEm = DateTime.now();
+      if (_resultado['enviarNotaPorEmail'] != true &&
+          cs.documentoFiscal?.status == 'emitida') {
+        tentarImprimirNotaFiscalAutomaticamente(
+          context,
+          documentoFiscal: cs.documentoFiscal!,
+          romaneio: cs.romaneio,
+        );
+      }
+    } else if (cs.step == RomaneioCriacaoStep.falha && !romaneioCriado) {
+      // Falha total: volta ao botão do pagamento com a mensagem ao lado.
+      _pagamentoBloc?.add(PagamentosRealizadosReaberto(erro: cs.erro));
+      return;
+    } else if (cs.step != RomaneioCriacaoStep.falha) {
+      return;
+    }
+
+    final orcamentoId = venda.state.orcamentoId;
+    if (orcamentoId != null && !_orcamentoExcluido) {
+      _orcamentoExcluido = true;
+      venda.add(
+        VendaOrcamentoExcluirAposFinalizarSolicitado(hash: orcamentoId),
+      );
+    }
+  }
+
+  Widget _buildEtapa(
+    BuildContext context,
+    VendaState state,
+    RomaneioCriacaoState? cs,
+  ) {
+    final etapa = etapaDaVenda(state, cs);
+    final venda = context.read<VendaBloc>();
+
+    final outra = switch (etapa) {
+      VendaEtapa.configuracao => _buildConfiguracaoCard(context, state),
+      VendaEtapa.itens => null,
+      VendaEtapa.pagamento => _buildPagamento(context, state),
+      VendaEtapa.processando => const VendaProcessandoView(),
+      VendaEtapa.concluida => _buildConcluida(context, state, cs!),
+      VendaEtapa.pendencia => VendaPendenciaView(
+          romaneioId: cs!.listaCompartilhada?.idLista,
+          motivo: cs.motivoPendencia,
+          onVerRomaneio: () => Navigator.of(context).pushNamed(
+            '/romaneio',
+            arguments: {
+              'idRomaneio': cs.listaCompartilhada?.idLista,
+              'permitirEdicao': false,
+            },
+          ),
+          onNovaVenda: () => _novaVenda(venda),
+          onTentarNovamente: () =>
+              _criacao?.add(const RomaneioCriacaoRecebimentoReenviado()),
+        ),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (etapa != VendaEtapa.configuracao)
+          VendaIndicadorEtapas(etapa: etapa),
+        // A leitura fica montada por baixo das outras etapas: o LeitorWidget
+        // recria o próprio estado ao remontar e perderia os itens lidos.
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              if (!state.leituraIniciada)
-                Expanded(child: _buildConfiguracaoCard(context, state))
-              else
-                Expanded(child: _buildLeituraAtiva(context, state)),
+              if (state.leituraIniciada)
+                Offstage(
+                  offstage: etapa != VendaEtapa.itens,
+                  child: _buildLeituraAtiva(context, state),
+                ),
+              if (outra != null) outra,
             ],
-          );
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Map<String, dynamic>> _itensDaLeitura() {
+    return _leitorController.itens
+        .map(
+          (item) => {
+            'produtoId': item.id,
+            'quantidade': item.quantidadeLida,
+            'valorUnitario': item.valorUnitario,
+            'nome': item.descricao,
+            'corNome': item.cor,
+            'tamanhoNome': item.tamanho,
+          },
+        )
+        .toList(growable: false);
+  }
+
+  void _irParaPagamento(BuildContext context, VendaState state) {
+    if (_leitorController.itens.isEmpty || state.processando) return;
+    context.read<VendaBloc>().add(
+          VendaPagamentoSolicitado(subtotal: _leitorController.valorTotalLido),
+        );
+  }
+
+  // Esc volta aos itens e F9 reabre com o mesmo bloc; mudou item, desconto ou
+  // cliente, o resumo do bloc ficou velho e ele é recriado.
+  Widget _buildPagamento(BuildContext context, VendaState state) {
+    final cliente = state.clienteSelecionado;
+    final assinatura = [
+      for (final i in _leitorController.itens)
+        '${i.id}x${i.quantidadeLida}@${i.valorUnitario}',
+      state.descontoRascunho,
+      cliente?.id,
+    ].join('|');
+
+    final contexto = PagamentoContexto.venda(
+        hashLista: '',
+        resumo: PagamentosRealizadosResumo(
+          listaCompartilhada: null,
+          produtosCompartilhados: _leitorController.itens
+              .map(
+                (item) => ProdutoCompartilhado.create(
+                  produtoId: item.id,
+                  quantidade: item.quantidadeLida,
+                  valorUnitario: item.valorUnitario ?? 0,
+                  nome: item.descricao,
+                  corNome: item.cor,
+                  tamanhoNome: item.tamanho,
+                ),
+              )
+              .toList(),
+          quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
+          valorTotalProdutos: _leitorController.valorTotalLido,
+        ),
+        subtitulo: cliente?.nome,
+        descontoInicial: state.descontoRascunho,
+        pessoaId: cliente?.id,
+        cpfInicial: cliente?.data['documento']?.toString(),
+        clienteGenerico: cliente?.data['generica'] == true,
+        emailInicial: cliente?.data['email']?.toString(),
+        enviarNotaPorEmailInicial: cliente?.data['enviarNotaPorEmail'] == true,
+    );
+
+    if (_pagamentoBloc == null || _pagamentoAssinatura != assinatura) {
+      _pagamentoBloc?.close();
+      _pagamentoAssinatura = assinatura;
+      _pagamentoBloc = contexto.criarBloc();
+    }
+
+    return BlocProvider.value(
+      value: _pagamentoBloc!,
+      child: PagamentoEtapa(
+        contexto: contexto,
+        formaPagamentoGrade: widget.formaPagamentoGrade,
+        onConfirmado: (resultado) => _confirmarPagamento(context, resultado),
+        onVoltar: () {
+          if (!state.processando) {
+            context.read<VendaBloc>().add(const VendaPagamentoVoltou());
+            // Voltar aos itens zera o pagamento (formas, descontos, cupom).
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _pagamentoBloc?.close();
+              _pagamentoBloc = null;
+              _pagamentoAssinatura = null;
+            });
+          }
         },
       ),
     );
+  }
+
+  void _confirmarPagamento(
+    BuildContext context,
+    Map<String, dynamic> resultado,
+  ) {
+    _resultado = resultado;
+    List<Map<String, dynamic>> lista(String chave) =>
+        (resultado[chave] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList(growable: false);
+
+    context.read<VendaBloc>().add(
+          VendaFinalizarSolicitada(
+            itens: _itensDaLeitura(),
+            formasDePagamentoRealizadas: lista('formasDePagamentoRealizadas'),
+            valorDesconto: _toDouble(resultado['desconto']) ?? 0,
+            valorTaxaEntrega: _toDouble(resultado['valorTaxaEntrega']) ?? 0,
+            descontosItens: lista('descontosItens'),
+            descontosPromocao: lista('descontosPromocao'),
+            cupons: resultado['cupons'] as List<Map<String, dynamic>>?,
+            incluirCpfNaNota: resultado['incluirCpfNaNota'] as bool? ?? true,
+            cpfNaNota: resultado['cpfNaNota']?.toString() ?? '',
+            pontuarFidelidade: resultado['pontuarFidelidade'] as bool? ?? false,
+            enviarNotaPorEmail:
+                resultado['enviarNotaPorEmail'] as bool? ?? false,
+            emailNota: resultado['emailNota']?.toString() ?? '',
+          ),
+        );
+  }
+
+  void _iniciarCriacao(BuildContext context, VendaState s) {
+    final anterior = _criacao;
+    _criacaoSub?.cancel();
+    _ultimoPasso = null;
+    final bloc = sl<RomaneioCriacaoBloc>()
+      ..add(
+        RomaneioCriacaoSolicitada(
+          hashLista: s.listaCompartilhadaHash!,
+          formasDePagamentoRealizadas: s.formasDePagamentoRealizadas,
+          desconto: s.valorDesconto,
+          descontosItens: s.descontosItens,
+          descontosPromocao: s.descontosPromocao,
+          cupons: s.cupons,
+          valorTaxaEntrega: s.valorTaxaEntrega,
+          incluirCpfNaNota: s.incluirCpfNaNota,
+          cpfNaNota: s.cpfNaNota,
+          pontuarFidelidade: s.pontuarFidelidade,
+          enviarNotaPorEmail: s.enviarNotaPorEmail,
+          emailNota: s.emailNota,
+        ),
+      );
+    _criacaoSub = bloc.stream.listen((cs) {
+      if (context.mounted) _aoMudarCriacao(context, cs);
+    });
+    setState(() {
+      _criacao = bloc;
+      _criacaoState = bloc.state;
+    });
+    anterior?.close();
+  }
+
+  Widget _buildConcluida(
+    BuildContext context,
+    VendaState state,
+    RomaneioCriacaoState cs,
+  ) {
+    final formas = (_resultado['resumoFormasDePagamento'] as List<dynamic>? ??
+            const [])
+        .whereType<Map<String, dynamic>>()
+        .map((f) => (f['nome']?.toString() ?? '-', _toDouble(f['valor']) ?? 0))
+        .toList(growable: false);
+    final troco = _toDouble(_resultado['valorTroco']) ?? 0;
+    final recebido = _toDouble(_resultado['valorTotalRecebido']) ?? 0;
+    final documento = cs.documentoFiscal;
+    final romaneio = cs.romaneio;
+
+    return VendaConcluidaView(
+      romaneioId: romaneio?.id,
+      cliente: state.clienteSelecionado?.nome,
+      concluidaEm: _concluidaEm,
+      formas: formas,
+      totalVenda: recebido - troco,
+      troco: troco,
+      pontuou: _resultado['pontuarFidelidade'] == true,
+      documentoFiscal: documento,
+      emailNota: _resultado['enviarNotaPorEmail'] == true
+          ? _resultado['emailNota']?.toString()
+          : null,
+      onImprimir: () {
+        if (romaneio == null) return;
+        imprimirDocumentoPdf(
+          context,
+          titulo: 'Imprimir romaneio',
+          nomeDocumento: 'Romaneio #${romaneio.id}',
+          gerarBytes: () => RomaneioPdfExporter.gerarBytes(
+            romaneio,
+            cs.itensCriados,
+            const [],
+          ),
+        );
+      },
+      onReenviarNota: () {
+        if (documento != null) {
+          context.read<VendaBloc>().add(VendaNotaReenviarSolicitada(documento));
+        }
+      },
+      onNovaVenda: () => _novaVenda(context.read<VendaBloc>()),
+    );
+  }
+
+  // Mantém vendedor e tabela; o orçamento de origem já foi excluído ao concluir.
+  void _novaVenda(VendaBloc venda) {
+    _leitorController.limpar();
+    _pagamentoBloc?.close();
+    _criacaoSub?.cancel();
+    _criacao?.close();
+    setState(() {
+      _pagamentoBloc = null;
+      _pagamentoAssinatura = null;
+      _criacao = null;
+      _criacaoState = null;
+      _resultado = const {};
+      _orcamentoExcluido = false;
+      _ultimaFinalizacao = 0;
+      _trocandoCliente = false;
+      _trocandoVendedor = false;
+      _editandoDesconto = false;
+    });
+    venda.add(const VendaNovaVendaSolicitada());
   }
 
   List<Widget> _acoesTopo(BuildContext context, VendaState state) {
@@ -236,11 +506,9 @@ class _VendaPageState extends State<VendaPage> {
       bindings: {
         LogicalKeySet(LogicalKeyboardKey.f2): () =>
             _abrirBuscaManual(context, state),
-        LogicalKeySet(LogicalKeyboardKey.f9): () {
-          if (_leitorController.itens.isNotEmpty && !state.processando) {
-            _abrirConfirmacao(context, state, _VendaAcao.finalizar);
-          }
-        },
+        LogicalKeySet(LogicalKeyboardKey.f4): () => _abrirDesconto(state),
+        LogicalKeySet(LogicalKeyboardKey.f9): () =>
+            _irParaPagamento(context, state),
         LogicalKeySet(LogicalKeyboardKey.escape): () =>
             _confirmarReinicio(context),
       },
@@ -297,9 +565,35 @@ class _VendaPageState extends State<VendaPage> {
     );
   }
 
+  void _fecharDesconto() {
+    _focoDesconto.unfocus(
+      disposition: UnfocusDisposition.previouslyFocusedChild,
+    );
+    setState(() => _editandoDesconto = false);
+  }
+
+  void _abrirDesconto(VendaState state) {
+    if (_leitorController.itens.isEmpty || state.processando) return;
+    if (_editandoDesconto) {
+      _fecharDesconto();
+      return;
+    }
+    _descontoController.text = state.descontoRascunho > 0
+        ? state.descontoRascunho.toStringAsFixed(2).replaceAll('.', ',')
+        : '';
+    setState(() => _editandoDesconto = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focoDesconto.requestFocus();
+    });
+  }
+
   Widget _buildPainelDireito(BuildContext context, VendaState state) {
     final textos = context.sivTextos;
+    final cores = context.sivColors;
+    final bloc = context.read<VendaBloc>();
     final temItens = _leitorController.itens.isNotEmpty;
+    final subtotal = _leitorController.valorTotalLido;
+    final desconto = state.descontoRascunho;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -312,11 +606,11 @@ class _VendaPageState extends State<VendaPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Cliente', style: textos.rotulo),
-                  if (state.clienteSelecionado != null)
+                  if (state.clienteSelecionado != null && !_trocandoCliente)
                     TextButton.icon(
                       onPressed: state.processando
                           ? null
-                          : () => _abrirTrocaCliente(context, state),
+                          : () => setState(() => _trocandoCliente = true),
                       icon: const Icon(Icons.swap_horiz, size: 16),
                       label: const Text('Trocar'),
                     ),
@@ -324,22 +618,10 @@ class _VendaPageState extends State<VendaPage> {
               ),
               const SizedBox(height: 8),
               if (state.clienteSelecionado != null && !_trocandoCliente)
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        state.clienteSelecionado!.nome,
-                        style: textos.corpo,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: state.processando
-                          ? null
-                          : () => setState(() => _trocandoCliente = true),
-                      child: const Text('Trocar'),
-                    ),
-                  ],
+                Text(
+                  state.clienteSelecionado!.nome,
+                  style: textos.corpo,
+                  overflow: TextOverflow.ellipsis,
                 )
               else
                 AbsorbPointer(
@@ -350,67 +632,59 @@ class _VendaPageState extends State<VendaPage> {
                           ? null
                           : [state.clienteSelecionado!],
                       onChanged: (selecionados) {
-                        context.read<VendaBloc>().add(
-                              VendaClienteSelecionado(
-                                clienteSelecionado: selecionados.isEmpty
-                                    ? null
-                                    : selecionados.first,
-                              ),
-                            );
+                        bloc.add(
+                          VendaClienteSelecionado(
+                            clienteSelecionado: selecionados.isEmpty
+                                ? null
+                                : selecionados.first,
+                          ),
+                        );
                         setState(() => _trocandoCliente = false);
                         _solicitarFocoLeitura();
                       },
                     ),
                   ),
                 ),
-              // TODO: Pessoa (packages/pessoas/lib/domain/models/pessoa.dart)
-              // não expõe cidade, limite de crédito nem situação de débito --
-              // sem esses campos não dá pra montar os chips pedidos aqui.
-            ],
-          ),
-        ),
-        const SizedBox(height: SivDimensoes.gapCards),
-        SivCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Vendedor', style: textos.rotulo),
               const SizedBox(height: 8),
-              AbsorbPointer(
-                absorbing: state.processando,
-                child: widget.vendedoresSeletor(
-                  SeletorData(
-                    itemsSelecionadosInicial: state.vendedorSelecionado == null
+              if (_trocandoVendedor)
+                AbsorbPointer(
+                  absorbing: state.processando,
+                  child: widget.vendedoresSeletor(
+                    SeletorData(
+                      itemsSelecionadosInicial:
+                          state.vendedorSelecionado == null
+                              ? null
+                              : [state.vendedorSelecionado!],
+                      onChanged: (selecionados) {
+                        bloc.add(
+                          VendaVendedorSelecionado(
+                            vendedorSelecionado: selecionados.isEmpty
+                                ? null
+                                : selecionados.first,
+                          ),
+                        );
+                        setState(() => _trocandoVendedor = false);
+                        _solicitarFocoLeitura();
+                      },
+                    ),
+                  ),
+                )
+              else
+                _linhaResumo(
+                  context,
+                  'Vendedor',
+                  state.vendedorSelecionado?.nome ?? '—',
+                  acao: TextButton(
+                    onPressed: state.processando
                         ? null
-                        : [state.vendedorSelecionado!],
-                    onChanged: (selecionados) {
-                      context.read<VendaBloc>().add(
-                            VendaVendedorSelecionado(
-                              vendedorSelecionado: selecionados.isEmpty
-                                  ? null
-                                  : selecionados.first,
-                            ),
-                          );
-                      _solicitarFocoLeitura();
-                    },
+                        : () => setState(() => _trocandoVendedor = true),
+                    child: const Text('trocar'),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text('Tabela de preço', style: textos.rotulo),
-              const SizedBox(height: 8),
-              AbsorbPointer(
-                absorbing: true,
-                child: widget.tabelasDePrecoSeletor(
-                  SeletorData(
-                    itemsSelecionadosInicial:
-                        state.tabelaDePrecoSelecionada == null
-                            ? null
-                            : [state.tabelaDePrecoSelecionada!],
-                    onlyView: true,
-                    onChanged: (_) {},
-                  ),
-                ),
+              _linhaResumo(
+                context,
+                'Tabela',
+                state.tabelaDePrecoSelecionada?.nome ?? '—',
               ),
             ],
           ),
@@ -420,14 +694,54 @@ class _VendaPageState extends State<VendaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _linhaResumo(context, 'Subtotal',
-                  _formatarMoeda(_leitorController.valorTotalLido)),
-              // TODO: desconto e entrega só são decididos na tela de
-              // pagamento (PagamentosRealizadosWidget, aberta em "Finalizar
-              // e ir ao caixa") -- não há valor de rascunho pra mostrar aqui
-              // antes disso.
-              _linhaResumo(context, 'Desconto', '—'),
-              _linhaResumo(context, 'Entrega', '—'),
+              _linhaResumo(context, 'Subtotal', _formatarMoeda(subtotal)),
+              if (desconto > 0)
+                _linhaResumo(
+                  context,
+                  'Desconto  F4',
+                  '−${_formatarMoeda(desconto)}',
+                ),
+              if (state.valorTaxaEntrega > 0)
+                _linhaResumo(
+                  context,
+                  'Entrega',
+                  _formatarMoeda(state.valorTaxaEntrega),
+                ),
+              if (_editandoDesconto) ...[
+                const SizedBox(height: 8),
+                CallbackShortcuts(
+                  bindings: {
+                    const SingleActivator(LogicalKeyboardKey.escape):
+                        _fecharDesconto,
+                  },
+                  child: TextField(
+                    controller: _descontoController,
+                    focusNode: _focoDesconto,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      hintText: 'Desconto em R\$ ou % (ex.: 20,00 ou 10%)',
+                    ),
+                    // onEditingComplete evita o unfocus padrão (vai pro escopo
+                    // da rota): com erro o campo segue focado; aplicado, o
+                    // foco volta ao campo de código (_fecharDesconto).
+                    onEditingComplete: () => bloc.add(
+                      VendaDescontoAlterado(
+                        texto: _descontoController.text,
+                        subtotal: _leitorController.valorTotalLido,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  state.erroDesconto ?? 'Enter aplica · Esc cancela',
+                  style: textos.apoio.copyWith(
+                    color: state.erroDesconto == null ? null : cores.vinho,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -439,50 +753,51 @@ class _VendaPageState extends State<VendaPage> {
             children: [
               Text('Total', style: textos.corpo.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
-              Text(_formatarMoeda(_leitorController.valorTotalLido),
-                  style: textos.display.copyWith(color: Colors.white)),
+              Text(
+                _formatarMoeda((subtotal - desconto).clamp(0, double.infinity)),
+                style: textos.display.copyWith(color: Colors.white),
+              ),
             ],
           ),
         ),
         const SizedBox(height: SivDimensoes.gapCards),
         FilledButton.icon(
           onPressed: temItens && !state.processando
-              ? () => _abrirConfirmacao(context, state, _VendaAcao.finalizar)
+              ? () => _irParaPagamento(context, state)
               : null,
-          icon: state.processoAtual == VendaProcesso.finalizarVenda
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.point_of_sale_outlined),
-          label: Text(
-            state.processoAtual == VendaProcesso.finalizarVenda
-                ? 'Encaminhando...'
-                : 'Finalizar e ir ao caixa',
-          ),
+          icon: const Icon(Icons.point_of_sale_outlined),
+          label: const Text('Ir para pagamento · F9'),
         ),
         const SizedBox(height: 10),
         Text(
-          'F9 finalizar   ·   F4 desconto*   ·   ESC cancelar',
+          'F2 buscar · F4 desconto · F9 pagamento',
           textAlign: TextAlign.center,
           style: textos.apoio,
         ),
-        // TODO: não existe limite de desconto por vendedor no domínio hoje
-        // (nenhum campo em Funcionario) -- F4 fica só como legenda até essa
-        // regra existir; o desconto real é aplicado na tela de pagamento.
       ],
     );
   }
 
-  Widget _linhaResumo(BuildContext context, String label, String valor) {
+  Widget _linhaResumo(
+    BuildContext context,
+    String label,
+    String valor, {
+    Widget? acao,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: context.sivTextos.corpo),
-          Text(valor, style: context.sivTextos.corpo),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              valor,
+              style: context.sivTextos.corpo,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (acao != null) acao,
         ],
       ),
     );
@@ -741,287 +1056,6 @@ class _VendaPageState extends State<VendaPage> {
     _solicitarFocoLeitura();
   }
 
-  Future<void> _abrirConfirmacao(
-    BuildContext context,
-    VendaState state,
-    _VendaAcao acao,
-  ) async {
-    final bloc = context.read<VendaBloc>();
-    final clienteSelecionado = state.clienteSelecionado;
-    final vendedorSelecionado = state.vendedorSelecionado;
-
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Confirmar finalização da venda'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 420,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Confira o resumo antes de continuar.',
-                    style: Theme.of(dialogContext).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoChip(
-                    icon: Icons.person_outline,
-                    label:
-                        'Cliente: ${clienteSelecionado?.nome.toUpperCase() ?? '-'}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoChip(
-                    icon: Icons.badge_outlined,
-                    label:
-                        'Vendedor: ${vendedorSelecionado?.nome.toUpperCase() ?? '-'}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoChip(
-                    icon: Icons.numbers_outlined,
-                    label:
-                        'Quantidade de produtos: ${_leitorController.quantidadeTotalLida}',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoChip(
-                    icon: Icons.payments_outlined,
-                    label:
-                        'Valor total do pedido: ${_formatarMoeda(_leitorController.valorTotalLido)}',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Voltar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Finalizar venda'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmou != true) {
-      _solicitarFocoLeitura();
-      return;
-    }
-
-    final itens = _leitorController.itens
-        .map(
-          (item) => {
-            'produtoId': item.id,
-            'quantidade': item.quantidadeLida,
-            'valorUnitario': item.valorUnitario,
-            'nome': item.descricao,
-            'corNome': item.cor,
-            'tamanhoNome': item.tamanho,
-          },
-        )
-        .toList(growable: false);
-
-    final pagamentoResultado = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return PagamentosRealizadosWidget(
-          hashLista: state.listaCompartilhadaHash ?? '',
-          resumoInicial: PagamentosRealizadosResumo(
-            listaCompartilhada: null,
-            produtosCompartilhados: _leitorController.itens
-                .map(
-                  (item) => ProdutoCompartilhado.create(
-                    produtoId: item.id,
-                    quantidade: item.quantidadeLida,
-                    valorUnitario: item.valorUnitario ?? 0,
-                    nome: item.descricao,
-                    corNome: item.cor,
-                    tamanhoNome: item.tamanho,
-                  ),
-                )
-                .toList(),
-            quantidadeTotalProdutos: _leitorController.quantidadeTotalLida,
-            valorTotalProdutos: _leitorController.valorTotalLido,
-          ),
-          pessoaId: clienteSelecionado?.id,
-          cpfClienteInicial: clienteSelecionado?.data['documento']?.toString(),
-          clienteGenerico: clienteSelecionado?.data['generica'] == true,
-          emailClienteInicial: clienteSelecionado?.data['email']?.toString(),
-          enviarNotaPorEmailInicial:
-              clienteSelecionado?.data['enviarNotaPorEmail'] == true,
-          formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
-          exibirCheckboxFidelidade: true,
-        );
-      },
-    );
-
-    if (pagamentoResultado == null) {
-      _solicitarFocoLeitura();
-      return;
-    }
-
-    final formasDePagamentoRaw =
-        pagamentoResultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
-            const [];
-    final formasDePagamentoRealizadas = formasDePagamentoRaw
-        .whereType<Map<String, dynamic>>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList(growable: false);
-    final valorDesconto = _toDouble(pagamentoResultado['desconto']) ?? 0;
-    final descontosItensRaw =
-        pagamentoResultado['descontosItens'] as List<dynamic>? ?? const [];
-    final descontosItens = descontosItensRaw
-        .whereType<Map<String, dynamic>>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList(growable: false);
-    final descontosPromocaoRaw =
-        pagamentoResultado['descontosPromocao'] as List<dynamic>? ?? const [];
-    final descontosPromocao = descontosPromocaoRaw
-        .whereType<Map<String, dynamic>>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList(growable: false);
-    final cupons = pagamentoResultado['cupons'] as List<Map<String, dynamic>>?;
-    final incluirCpfNaNota =
-        pagamentoResultado['incluirCpfNaNota'] as bool? ?? true;
-    final cpfNaNota = pagamentoResultado['cpfNaNota']?.toString() ?? '';
-    final pontuarFidelidade =
-        pagamentoResultado['pontuarFidelidade'] as bool? ?? false;
-    final valorTaxaEntrega =
-        _toDouble(pagamentoResultado['valorTaxaEntrega']) ?? 0;
-    final enviarNotaPorEmail =
-        pagamentoResultado['enviarNotaPorEmail'] as bool? ?? false;
-    final emailNota = pagamentoResultado['emailNota']?.toString() ?? '';
-
-    final confirmouEmissao = await _abrirConfirmacaoEmissao(
-      context,
-      pagamentoResultado: pagamentoResultado,
-      valorDesconto: valorDesconto,
-    );
-
-    if (confirmouEmissao != true) {
-      _solicitarFocoLeitura();
-      return;
-    }
-
-    bloc.add(
-      VendaFinalizarSolicitada(
-        itens: itens,
-        formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-        valorDesconto: valorDesconto,
-        valorTaxaEntrega: valorTaxaEntrega,
-        descontosItens: descontosItens,
-        descontosPromocao: descontosPromocao,
-        cupons: cupons,
-        incluirCpfNaNota: incluirCpfNaNota,
-        cpfNaNota: cpfNaNota,
-        pontuarFidelidade: pontuarFidelidade,
-        enviarNotaPorEmail: enviarNotaPorEmail,
-        emailNota: emailNota,
-      ),
-    );
-  }
-
-  Future<bool?> _abrirConfirmacaoEmissao(
-    BuildContext context, {
-    required Map<String, dynamic> pagamentoResultado,
-    required double valorDesconto,
-  }) {
-    final resumoFormasRaw =
-        pagamentoResultado['resumoFormasDePagamento'] as List<dynamic>? ??
-            const [];
-    final resumoFormas = resumoFormasRaw
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (item) => (
-            nome: item['nome']?.toString() ?? '-',
-            valor: _toDouble(item['valor']) ?? 0,
-          ),
-        )
-        .toList(growable: false);
-    final valorTotalRecebido =
-        _toDouble(pagamentoResultado['valorTotalRecebido']) ?? 0;
-    final valorTroco = _toDouble(pagamentoResultado['valorTroco']) ?? 0;
-
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Confirmar pagamento e emitir romaneio'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 420,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ao confirmar, o romaneio será gerado e o estoque baixado. Confira o pagamento:',
-                    style: Theme.of(dialogContext).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoChip(
-                    icon: Icons.receipt_long_outlined,
-                    label:
-                        'Valor total do pedido: ${_formatarMoeda(_leitorController.valorTotalLido)}',
-                  ),
-                  const SizedBox(height: 12),
-                  ...resumoFormas.map(
-                    (forma) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _buildInfoChip(
-                        icon: Icons.payments_outlined,
-                        label: '${forma.nome}: ${_formatarMoeda(forma.valor)}',
-                      ),
-                    ),
-                  ),
-                  if (valorDesconto > 0) ...[
-                    const Divider(height: 16),
-                    _buildInfoChip(
-                      icon: Icons.discount_outlined,
-                      label:
-                          'Desconto aplicado: ${_formatarMoeda(valorDesconto)}',
-                    ),
-                    const SizedBox(height: 8),
-                  ] else
-                    const Divider(height: 16),
-                  _buildInfoChip(
-                    icon: Icons.account_balance_wallet_outlined,
-                    label:
-                        'Total recebido: ${_formatarMoeda(valorTotalRecebido)}',
-                  ),
-                  if (valorTroco > 0) ...[
-                    const SizedBox(height: 8),
-                    _buildInfoChip(
-                      icon: Icons.currency_exchange_outlined,
-                      label: 'Troco: ${_formatarMoeda(valorTroco)}',
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Voltar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Confirmar e emitir'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _confirmarReinicio(BuildContext context) async {
     if (_leitorController.itens.isEmpty) {
       _solicitarFocoLeitura();
@@ -1052,6 +1086,11 @@ class _VendaPageState extends State<VendaPage> {
 
     if (confirmar == true) {
       _leitorController.limpar();
+      if (context.mounted) {
+        context.read<VendaBloc>().add(
+              const VendaDescontoAlterado(texto: '', subtotal: 0),
+            );
+      }
     }
     _solicitarFocoLeitura();
   }
@@ -1114,12 +1153,6 @@ class _VendaPageState extends State<VendaPage> {
     _solicitarFocoLeitura();
   }
 
-  Widget _buildInfoChip({required IconData icon, required String label}) {
-    return Chip(
-      avatar: Icon(icon, size: 18),
-      label: Text(label),
-    );
-  }
 
   String _formatarMoeda(double valor) {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
@@ -1129,34 +1162,5 @@ class _VendaPageState extends State<VendaPage> {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
-  }
-
-  void _abrirTrocaCliente(BuildContext context, VendaState state) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: SizedBox(
-            width: 420,
-            child: widget.pessoaSeletor(
-              SeletorData(
-                itemsSelecionadosInicial: [state.clienteSelecionado!],
-                onChanged: (selecionados) {
-                  context.read<VendaBloc>().add(
-                        VendaClienteSelecionado(
-                          clienteSelecionado:
-                              selecionados.isEmpty ? null : selecionados.first,
-                        ),
-                      );
-                  Navigator.of(dialogContext).pop();
-                  _solicitarFocoLeitura();
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

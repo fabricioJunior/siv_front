@@ -31,6 +31,7 @@ class RomaneioCriacaoBloc
   final RecuperarCaixaAberto _recuperarCaixaAberto;
   final ListarDocumentosFiscais _listarDocumentosFiscais;
 
+  RomaneioCriacaoSolicitada? _ultimaSolicitacao;
   Timer? _pollingDocumentoFiscalTimer;
   DateTime? _pollingDocumentoFiscalIniciadoEm;
 
@@ -53,6 +54,7 @@ class RomaneioCriacaoBloc
     this._listarDocumentosFiscais,
   ) : super(const RomaneioCriacaoState.initial()) {
     on<RomaneioCriacaoSolicitada>(_onSolicitada);
+    on<RomaneioCriacaoRecebimentoReenviado>(_onRecebimentoReenviado);
     on<RomaneioCriacaoDocumentoFiscalPollTick>(_onDocumentoFiscalPollTick);
   }
 
@@ -66,6 +68,7 @@ class RomaneioCriacaoBloc
     RomaneioCriacaoSolicitada event,
     Emitter<RomaneioCriacaoState> emit,
   ) async {
+    _ultimaSolicitacao = event;
     _pararPollingDocumentoFiscal();
     ListaDeProdutosCompartilhada? listaCompartilhada;
     var produtosCompartilhados = <ProdutoCompartilhado>[];
@@ -147,31 +150,7 @@ class RomaneioCriacaoBloc
       // ReceberService.vendaCompleta no backend. Demais operações (transferência, consignação,
       // devolução, ou venda retomando um romaneio já existente) seguem o fluxo de sempre.
       if (operacao == TipoOperacao.venda && precisaCriarRomaneio) {
-        final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
-        if (caixaId == null) {
-          throw StateError(
-            'Não foi possível receber romaneio: caixa da sessão não encontrado.',
-          );
-        }
-
-        final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
-        final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
-        if (empresaId != null && terminalId != null) {
-          final caixa = await _recuperarCaixaAberto.call(
-            idEmpresa: empresaId,
-            idTerminal: terminalId,
-          );
-
-          final contagemJaEncerrada = caixa?.contagem?.encerrada == true;
-          if (caixa == null ||
-              (caixa.situacao != SituacaoCaixa.aberto &&
-                  !contagemJaEncerrada)) {
-            throw StateError(
-              'Não foi possível receber romaneio: o caixa está em contagem ou fechado. '
-              'Finalize a contagem ou abra outro caixa antes de continuar.',
-            );
-          }
-        }
+        final caixaId = await _validarCaixa();
 
         emit(
           state.copyWith(
@@ -187,7 +166,7 @@ class RomaneioCriacaoBloc
         // CriarVendaCompletaDto não tem campo de desconto escalar (diferente de Romaneio.create
         // usado no fluxo de baixo) -- só descontosItens, cada item exigindo produtoId
         // (DescontoItemDto). Repassa event.descontosItens (já vem no formato {produtoId, valor} do
-        // PagamentosRealizadosWidget) em vez de sintetizar um item com só {'valor': descontoTotal},
+        // PagamentoEtapa) em vez de sintetizar um item com só {'valor': descontoTotal},
         // que o backend rejeitava com "produtoId should not be empty".
         final romaneioRecebido = await _criarVendaCompleta.call(
           caixaId: caixaId,
@@ -303,31 +282,7 @@ class RomaneioCriacaoBloc
           operacao == TipoOperacao.consignacao_saida ||
           operacao == TipoOperacao.consignacao_devolucao) {
         falhaAoReceberNoCaixa = true;
-        final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
-        if (caixaId == null) {
-          throw StateError(
-            'Não foi possível receber romaneio: caixa da sessão não encontrado.',
-          );
-        }
-
-        final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
-        final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
-        if (empresaId != null && terminalId != null) {
-          final caixa = await _recuperarCaixaAberto.call(
-            idEmpresa: empresaId,
-            idTerminal: terminalId,
-          );
-
-          final contagemJaEncerrada = caixa?.contagem?.encerrada == true;
-          if (caixa == null ||
-              (caixa.situacao != SituacaoCaixa.aberto &&
-                  !contagemJaEncerrada)) {
-            throw StateError(
-              'Não foi possível receber romaneio: o caixa está em contagem ou fechado. '
-              'Finalize a contagem ou abra outro caixa antes de continuar.',
-            );
-          }
-        }
+        final caixaId = await _validarCaixa();
 
         emit(
           state.copyWith(
@@ -340,68 +295,28 @@ class RomaneioCriacaoBloc
           ),
         );
 
-        // Não reenvia descontosItens aqui -- o desconto já foi persistido
-        // no romaneio na criação acima (desconto: descontoTotal), e o
-        // backend usa romaneio.desconto como base automática ao receber
-        // (receber.service.ts). Mandar os dois juntos soma o desconto em
-        // dobro, dando troco maior que o devido (bug real identificado em
-        // vendas de produção com desconto + pagamento em dinheiro).
-        await _receberRomaneioNoCaixa.call(
-          caixaId: caixaId,
-          romaneioId: romaneioId,
-          formasDePagamentoRealizadas: formasDePagamentoRealizadas,
-          valorTaxaEntrega: event.valorTaxaEntrega,
-          descontosPromocao: event.descontosPromocao,
-          cupons: event.cupons,
-          incluirCpfNaNota: event.incluirCpfNaNota,
-          cpfNaNota: event.cpfNaNota,
-          pontuarFidelidade: event.pontuarFidelidade,
-          enviarNotaPorEmail: event.enviarNotaPorEmail,
-          emailNota: event.emailNota,
-        );
+        await _receber(event, caixaId, romaneioId, formasDePagamentoRealizadas);
         falhaAoReceberNoCaixa = false;
       }
 
-      emit(
-        state.copyWith(
-          step: RomaneioCriacaoStep.carregandoDocumentoFiscal,
-          hashLista: event.hashLista,
-          listaCompartilhada: listaCompartilhada,
-          produtosCompartilhados: produtosCompartilhados,
-          erro: null,
-          totalItensProcessados: itens.length,
-        ),
+      await _emitirSucesso(
+        emit,
+        event,
+        romaneioId,
+        listaCompartilhada,
+        produtosCompartilhados,
+        itens,
       );
-
-      final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
-      final documentoFiscal = await _carregarUltimoDocumentoFiscal(romaneioId);
-      emit(
-        state.copyWith(
-          step: RomaneioCriacaoStep.sucesso,
-          hashLista: event.hashLista,
-          listaCompartilhada: listaCompartilhada,
-          produtosCompartilhados: produtosCompartilhados,
-          romaneio: romaneioAtualizado,
-          erro: null,
-          totalItensProcessados: itens.length,
-          documentoFiscal: documentoFiscal,
-          itensCriados: itens,
-        ),
-      );
-
-      if (event.enviarNotaPorEmail &&
-          _statusDocumentoFiscalEhTransitorio(documentoFiscal?.status)) {
-        _iniciarPollingDocumentoFiscal(romaneioId);
-      }
     } catch (e, s) {
       final romaneioId = listaCompartilhada?.idLista;
-      if (falhaAoReceberNoCaixa && romaneioId != null) {
-        await _salvarMotivoPendencia(romaneioId, e);
-      }
+      final motivo = falhaAoReceberNoCaixa && romaneioId != null
+          ? await _salvarMotivoPendencia(romaneioId, e)
+          : null;
 
       emit(
         state.copyWith(
           step: RomaneioCriacaoStep.falha,
+          motivoPendencia: motivo,
           hashLista: event.hashLista,
           listaCompartilhada: listaCompartilhada,
           produtosCompartilhados: produtosCompartilhados,
@@ -418,16 +333,162 @@ class RomaneioCriacaoBloc
     }
   }
 
+  Future<int> _validarCaixa() async {
+    final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
+    if (caixaId == null) {
+      throw StateError(
+        'Não foi possível receber romaneio: caixa da sessão não encontrado.',
+      );
+    }
+
+    final empresaId = _acessoGlobalSessao.empresaIdDaSessao;
+    final terminalId = _acessoGlobalSessao.terminalIdDaSessao;
+    if (empresaId != null && terminalId != null) {
+      final caixa = await _recuperarCaixaAberto.call(
+        idEmpresa: empresaId,
+        idTerminal: terminalId,
+      );
+
+      final contagemJaEncerrada = caixa?.contagem?.encerrada == true;
+      if (caixa == null ||
+          (caixa.situacao != SituacaoCaixa.aberto && !contagemJaEncerrada)) {
+        throw StateError(
+          'Não foi possível receber romaneio: o caixa está em contagem ou fechado. '
+          'Finalize a contagem ou abra outro caixa antes de continuar.',
+        );
+      }
+    }
+    return caixaId;
+  }
+
+  // Não reenvia descontosItens aqui -- o desconto já foi persistido
+  // no romaneio na criação acima (desconto: descontoTotal), e o
+  // backend usa romaneio.desconto como base automática ao receber
+  // (receber.service.ts). Mandar os dois juntos soma o desconto em
+  // dobro, dando troco maior que o devido (bug real identificado em
+  // vendas de produção com desconto + pagamento em dinheiro).
+  Future<void> _receber(
+    RomaneioCriacaoSolicitada event,
+    int caixaId,
+    int romaneioId,
+    List<RomaneioPagamentoRealizado> formasDePagamentoRealizadas,
+  ) {
+    return _receberRomaneioNoCaixa.call(
+      caixaId: caixaId,
+      romaneioId: romaneioId,
+      formasDePagamentoRealizadas: formasDePagamentoRealizadas,
+      valorTaxaEntrega: event.valorTaxaEntrega,
+      descontosPromocao: event.descontosPromocao,
+      cupons: event.cupons,
+      incluirCpfNaNota: event.incluirCpfNaNota,
+      cpfNaNota: event.cpfNaNota,
+      pontuarFidelidade: event.pontuarFidelidade,
+      enviarNotaPorEmail: event.enviarNotaPorEmail,
+      emailNota: event.emailNota,
+    );
+  }
+
+  Future<void> _emitirSucesso(
+    Emitter<RomaneioCriacaoState> emit,
+    RomaneioCriacaoSolicitada event,
+    int romaneioId,
+    ListaDeProdutosCompartilhada listaCompartilhada,
+    List<ProdutoCompartilhado> produtosCompartilhados,
+    List<RomaneioItem> itens,
+  ) async {
+    emit(
+      state.copyWith(
+        step: RomaneioCriacaoStep.carregandoDocumentoFiscal,
+        hashLista: event.hashLista,
+        listaCompartilhada: listaCompartilhada,
+        produtosCompartilhados: produtosCompartilhados,
+        erro: null,
+        motivoPendencia: null,
+        totalItensProcessados: itens.length,
+      ),
+    );
+
+    final romaneioAtualizado = await _recuperarRomaneio.call(romaneioId);
+    final documentoFiscal = await _carregarUltimoDocumentoFiscal(romaneioId);
+    emit(
+      state.copyWith(
+        step: RomaneioCriacaoStep.sucesso,
+        hashLista: event.hashLista,
+        listaCompartilhada: listaCompartilhada,
+        produtosCompartilhados: produtosCompartilhados,
+        romaneio: romaneioAtualizado,
+        erro: null,
+        totalItensProcessados: itens.length,
+        documentoFiscal: documentoFiscal,
+        itensCriados: itens,
+      ),
+    );
+
+    if (event.enviarNotaPorEmail &&
+        _statusDocumentoFiscalEhTransitorio(documentoFiscal?.status)) {
+      _iniciarPollingDocumentoFiscal(romaneioId);
+    }
+  }
+
+  // Tentar receber de novo: o romaneio e os itens já existem (a lista
+  // compartilhada foi consumida), então só repete o recebimento no caixa.
+  FutureOr<void> _onRecebimentoReenviado(
+    RomaneioCriacaoRecebimentoReenviado _,
+    Emitter<RomaneioCriacaoState> emit,
+  ) async {
+    final event = _ultimaSolicitacao;
+    final lista = state.listaCompartilhada;
+    final romaneioId = lista?.idLista;
+    if (event == null || lista == null || romaneioId == null) return;
+
+    emit(
+      state.copyWith(step: RomaneioCriacaoStep.finalizandoVenda, erro: null),
+    );
+
+    try {
+      final caixaId = await _validarCaixa();
+      await _receber(
+        event,
+        caixaId,
+        romaneioId,
+        _extrairFormasDePagamentoRealizadas(event.formasDePagamentoRealizadas),
+      );
+      await _emitirSucesso(
+        emit,
+        event,
+        romaneioId,
+        lista,
+        state.produtosCompartilhados,
+        _extrairItens(state.produtosCompartilhados),
+      );
+    } catch (e, s) {
+      final motivo = await _salvarMotivoPendencia(romaneioId, e);
+      emit(
+        state.copyWith(
+          step: RomaneioCriacaoStep.falha,
+          erro: _mensagemFalhaProcessamento(
+            erro: e,
+            listaCompartilhada: lista,
+            operacao: null,
+            falhaAoReceberNoCaixa: true,
+          ),
+          motivoPendencia: motivo,
+        ),
+      );
+      addError(e, s);
+    }
+  }
+
   // Motivo real (usuário não anota a mensagem que aparece na tela) fica
   // registrado na observação do romaneio, pra dar pra investigar depois sem
   // precisar do usuário reproduzir o erro. Nunca deixa uma falha aqui mascarar
   // o estado de falha original que já vai ser emitido de qualquer forma.
-  Future<void> _salvarMotivoPendencia(int romaneioId, Object erro) async {
+  Future<String> _salvarMotivoPendencia(int romaneioId, Object erro) async {
+    final motivoReal = mensagemDeErroApi(erro, 'motivo desconhecido');
     try {
       final romaneioAtual = await _recuperarRomaneio.call(romaneioId);
       final observacaoAtual = (romaneioAtual.observacao ?? '').trim();
-      final motivo = 'Pendência de finalização (${DateTime.now()}): '
-          '${mensagemDeErroApi(erro, 'motivo desconhecido')}';
+      final motivo = 'Pendência de finalização (${DateTime.now()}): $motivoReal';
       final novaObservacao =
           observacaoAtual.isEmpty ? motivo : '$observacaoAtual\n$motivo';
 
@@ -435,6 +496,7 @@ class RomaneioCriacaoBloc
     } catch (e, s) {
       addError(e, s);
     }
+    return motivoReal;
   }
 
   String _mensagemFalhaProcessamento({

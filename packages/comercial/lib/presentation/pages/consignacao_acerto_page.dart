@@ -1,5 +1,7 @@
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
+import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
+import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
 import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -7,15 +9,17 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
+import 'package:pessoas/models.dart' show Pessoa;
+import 'package:pessoas/uses_cases.dart' show RecuperarPessoa;
 
 class ConsignacaoAcertoPage extends StatefulWidget {
   final Consignacao consignacao;
-  final SeletorWidget formasDePagamentoSeletor;
+  final FormaPagamentoGradeWidget formaPagamentoGrade;
 
   const ConsignacaoAcertoPage({
     super.key,
     required this.consignacao,
-    required this.formasDePagamentoSeletor,
+    required this.formaPagamentoGrade,
   });
 
   @override
@@ -24,7 +28,11 @@ class ConsignacaoAcertoPage extends StatefulWidget {
 
 class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
   ConsignacaoAcertoBloc? _bloc;
-  bool _dialogoAberto = false;
+  PagamentosRealizadosBloc? _pagamentoBloc;
+  String? _assinaturaSelecao;
+  Pessoa? _pessoa;
+  // Esc na etapa de pagamento volta à seleção sem perder o acerto já criado.
+  bool _emSelecao = true;
   bool _fechando = false;
 
   late final List<ConsignacaoItem> _itensPendentesOriginais;
@@ -46,10 +54,30 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
   @override
   void dispose() {
     _bloc?.close();
+    _pagamentoBloc?.close();
     super.dispose();
   }
 
-  void _iniciarAcerto() {
+  // E-mail e preferência de nota da consignatária; sem cadastro, abre sem eles.
+  Future<Pessoa?> _carregarPessoa() async {
+    final id = widget.consignacao.pessoaId;
+    if (id == null) return null;
+    try {
+      return await sl<RecuperarPessoa>().call(idPessoa: id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _iniciarAcerto() async {
+    final assinatura = [_marcados, _quantidades].join('|');
+    if (_bloc != null && _assinaturaSelecao == assinatura) {
+      if (_bloc!.state.step == ConsignacaoAcertoStep.aguardandoPagamento) {
+        setState(() => _emSelecao = false);
+        return;
+      }
+    }
+
     final selecionados = <ConsignacaoItem>[];
     for (var i = 0; i < _itensPendentesOriginais.length; i++) {
       if (!_marcados[i]) continue;
@@ -87,7 +115,16 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
         .toSet()
         .toList();
 
+    final pessoa = await _carregarPessoa();
+    if (!mounted) return;
+
+    _bloc?.close();
+    _pagamentoBloc?.close();
+    _pagamentoBloc = null;
+    _assinaturaSelecao = assinatura;
+    _pessoa = pessoa;
     setState(() {
+      _emSelecao = false;
       _bloc = ConsignacaoAcertoBloc(
         sl(),
         sl(),
@@ -103,10 +140,85 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
     });
   }
 
+  // Valor adiantado (pago no ato da consignação) abate automaticamente no
+  // backend (ReceberService) do total exigido nesse acerto, sem gerar
+  // lançamento próprio: vira abatimento do resumo, e o operador cobra só a
+  // diferença.
+  PagamentoContexto _contexto(ConsignacaoAcertoState state) {
+    final valorTotalProdutos = state.itens.fold<double>(
+      0,
+      (a, i) => a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
+    );
+    final adiantado = (widget.consignacao.valorAdiantadoDisponivel ?? 0)
+        .clamp(0, valorTotalProdutos)
+        .toDouble();
+
+    return PagamentoContexto.consignacaoAcerto(
+      hashLista: 'consignacao-${widget.consignacao.id}',
+      resumo: PagamentosRealizadosResumo(
+        listaCompartilhada: null,
+        produtosCompartilhados: state.itens
+            .map(
+              (item) => ProdutoCompartilhado.create(
+                produtoId: item.produtoId ?? 0,
+                quantidade: (item.quantidade ?? 0).toInt(),
+                valorUnitario: item.valorUnitario ?? 0,
+                nome: item.referenciaNome ?? 'Produto',
+                corNome: item.corNome ?? '',
+                tamanhoNome: item.tamanhoNome ?? '',
+              ),
+            )
+            .toList(),
+        quantidadeTotalProdutos: state.itens
+            .fold<double>(0, (a, i) => a + (i.quantidade ?? 0))
+            .toInt(),
+        valorTotalProdutos: valorTotalProdutos,
+      ),
+      titulo: 'Consignação #${widget.consignacao.id} · acerto',
+      subtitulo: widget.consignacao.nomePessoa,
+      abatimentos: [
+        if (adiantado > 0)
+          PagamentoAbatimento(rotulo: 'Adiantado na saída', valor: adiantado),
+      ],
+      pessoaId: widget.consignacao.pessoaId,
+      emailInicial: _pessoa?.email,
+      enviarNotaPorEmailInicial: _pessoa?.enviarNotaPorEmail ?? false,
+    );
+  }
+
+  void _confirmarPagamento(
+    BuildContext context,
+    Map<String, dynamic> resultado,
+  ) {
+    List<Map<String, dynamic>> lista(String chave) =>
+        (resultado[chave] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+
+    context.read<ConsignacaoAcertoBloc>().add(
+          ConsignacaoAcertoPagamentoConfirmado(
+            formasDePagamentoRealizadas: lista('formasDePagamentoRealizadas'),
+            descontosItens: lista('descontosItens'),
+            descontosPromocao: lista('descontosPromocao'),
+            cupons: (resultado['cupons'] as List<dynamic>?)
+                ?.whereType<Map<String, dynamic>>()
+                .toList(),
+            valorTaxaEntrega:
+                (resultado['valorTaxaEntrega'] as num?)?.toDouble() ?? 0,
+            incluirCpfNaNota: resultado['incluirCpfNaNota'] as bool? ?? true,
+            cpfNaNota: resultado['cpfNaNota']?.toString() ?? '',
+            enviarNotaPorEmail:
+                resultado['enviarNotaPorEmail'] as bool? ?? false,
+            emailNota: resultado['emailNota']?.toString() ?? '',
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bloc = _bloc;
-    if (bloc == null) {
+    if (bloc == null || _emSelecao) {
       return _SelecaoItensView(
         itens: _itensPendentesOriginais,
         marcados: _marcados,
@@ -119,124 +231,36 @@ class _ConsignacaoAcertoPageState extends State<ConsignacaoAcertoPage> {
     return BlocProvider<ConsignacaoAcertoBloc>.value(
       value: bloc,
       child: BlocConsumer<ConsignacaoAcertoBloc, ConsignacaoAcertoState>(
-        listenWhen: (previous, current) => previous.step != current.step,
-        listener: (context, state) async {
-          if (state.step == ConsignacaoAcertoStep.aguardandoPagamento &&
-              !_dialogoAberto) {
-            if (state.erro != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.erro!)),
-              );
-            }
-
-            // Valor adiantado (pago no ato da consignação) abate automaticamente
-            // no backend (ReceberService) do total exigido nesse acerto, sem
-            // gerar lançamento próprio. O front precisa pedir só a diferença
-            // aqui -- senão o operador cobra o valor cheio, o backend calcula
-            // "sobra" igual ao adiantado e tenta devolver como troco, quebrando
-            // quando não há dinheiro suficiente pago pra cobrir o troco.
-            final valorTotalProdutosCheio = state.itens.fold<double>(
-              0,
-              (a, i) => a + ((i.quantidade ?? 0) * (i.valorUnitario ?? 0)),
-            );
-            final valorAdiantadoAbatido =
-                (widget.consignacao.valorAdiantadoDisponivel ?? 0)
-                    .clamp(0, valorTotalProdutosCheio);
-            final valorTotalProdutosCobranca =
-                valorTotalProdutosCheio - valorAdiantadoAbatido;
-
-            if (valorAdiantadoAbatido > 0) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'R\$ ${valorAdiantadoAbatido.toStringAsFixed(2)} do valor '
-                    'adiantado abatidos automaticamente deste acerto.',
-                  ),
-                ),
-              );
-            }
-
-            _dialogoAberto = true;
-            final resultado = await showDialog<Map<String, dynamic>>(
-              context: context,
-              barrierDismissible: false,
-              builder: (dialogContext) {
-                return PagamentosRealizadosWidget(
-                  hashLista: 'consignacao-${widget.consignacao.id}',
-                  resumoInicial: PagamentosRealizadosResumo(
-                    listaCompartilhada: null,
-                    produtosCompartilhados: state.itens
-                        .map(
-                          (item) => ProdutoCompartilhado.create(
-                            produtoId: item.produtoId ?? 0,
-                            quantidade: (item.quantidade ?? 0).toInt(),
-                            valorUnitario: item.valorUnitario ?? 0,
-                            nome: item.referenciaNome ?? 'Produto',
-                            corNome: item.corNome ?? '',
-                            tamanhoNome: item.tamanhoNome ?? '',
-                          ),
-                        )
-                        .toList(),
-                    quantidadeTotalProdutos: state.itens
-                        .fold<double>(0, (a, i) => a + (i.quantidade ?? 0))
-                        .toInt(),
-                    valorTotalProdutos: valorTotalProdutosCobranca,
-                  ),
-                  pessoaId: widget.consignacao.pessoaId,
-                  formasDePagamentoSeletor: widget.formasDePagamentoSeletor,
-                );
-              },
-            );
-
-            _dialogoAberto = false;
-            if (!context.mounted) return;
-
-            if (resultado == null) {
-              Navigator.of(context).pop(false);
-              return;
-            }
-
-            final formasRaw =
-                resultado['formasDePagamentoRealizadas'] as List<dynamic>? ??
-                    const [];
-            final formas = formasRaw
-                .whereType<Map<String, dynamic>>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList();
-            final descontosItensRaw =
-                resultado['descontosItens'] as List<dynamic>? ?? const [];
-            final descontosItens = descontosItensRaw
-                .whereType<Map<String, dynamic>>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList();
-            final descontosPromocaoRaw =
-                resultado['descontosPromocao'] as List<dynamic>? ?? const [];
-            final descontosPromocao = descontosPromocaoRaw
-                .whereType<Map<String, dynamic>>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList();
-            final incluirCpfNaNota =
-                resultado['incluirCpfNaNota'] as bool? ?? true;
-            final cpfNaNota = resultado['cpfNaNota']?.toString() ?? '';
-
-            context.read<ConsignacaoAcertoBloc>().add(
-                  ConsignacaoAcertoPagamentoConfirmado(
-                    formasDePagamentoRealizadas: formas,
-                    descontosItens: descontosItens,
-                    descontosPromocao: descontosPromocao,
-                    incluirCpfNaNota: incluirCpfNaNota,
-                    cpfNaNota: cpfNaNota,
-                  ),
-                );
-          }
-
-          if (state.step == ConsignacaoAcertoStep.falha && state.erro != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.erro!)),
-            );
-          }
-        },
+        // Falha ao receber volta a aguardandoPagamento com erro: a etapa
+        // reabre com a mensagem junto do botão.
+        listenWhen: (previous, current) =>
+            previous.step == ConsignacaoAcertoStep.finalizando &&
+            current.step == ConsignacaoAcertoStep.aguardandoPagamento,
+        listener: (context, state) => _pagamentoBloc?.add(
+          PagamentosRealizadosReaberto(
+            erro: state.erro ?? 'Falha ao receber o pagamento.',
+          ),
+        ),
         builder: (context, state) {
+          if (state.step == ConsignacaoAcertoStep.aguardandoPagamento ||
+              state.step == ConsignacaoAcertoStep.finalizando) {
+            final contexto = _contexto(state);
+            _pagamentoBloc ??= contexto.criarBloc();
+            return BlocProvider.value(
+              value: _pagamentoBloc!,
+              child: PagamentoEtapa(
+                contexto: contexto,
+                formaPagamentoGrade: widget.formaPagamentoGrade,
+                onConfirmado: (resultado) =>
+                    _confirmarPagamento(context, resultado),
+                onVoltar: () {
+                  if (state.step == ConsignacaoAcertoStep.aguardandoPagamento) {
+                    setState(() => _emSelecao = true);
+                  }
+                },
+              ),
+            );
+          }
           return Scaffold(
             appBar: AppBar(title: const Text('Finalizar consignação')),
             body: Padding(

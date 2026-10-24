@@ -59,6 +59,12 @@ class RomaneioCriacaoSolicitada extends RomaneioCriacaoEvent {
       ];
 }
 
+// Reenvia o recebimento no caixa do romaneio já criado (estado pendência),
+// com os mesmos dados de pagamento da última RomaneioCriacaoSolicitada.
+class RomaneioCriacaoRecebimentoReenviado extends RomaneioCriacaoEvent {
+  const RomaneioCriacaoRecebimentoReenviado();
+}
+
 // Evento interno disparado pelo Timer.periodic de polling do documento
 // fiscal (só usado quando enviarNotaPorEmail == true e a emissão ainda
 // está pendente/processando na tela de sucesso).

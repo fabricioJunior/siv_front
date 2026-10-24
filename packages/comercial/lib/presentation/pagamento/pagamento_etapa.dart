@@ -147,6 +147,12 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
   void _focarGrade() =>
       (_focoGrade.context != null ? _focoGrade : _foco).requestFocus();
 
+  // Ao fechar um painel de valor (aplicar, remover, tipo clicado) o foco cai
+  // em lugar nenhum útil: volta à grade.
+  void _aoFecharPainel() {
+    if (mounted) _focarGrade();
+  }
+
   void _alternarValorGrade() =>
       _focoValor.hasFocus ? _focarGrade() : _focoValor.requestFocus();
 
@@ -274,6 +280,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                   state: state,
                   contexto: _c,
                   descontoGeralAberto: _descontoGeral,
+                  aoFecharPainel: _aoFecharPainel,
                 ),
               ),
             ),
@@ -305,6 +312,7 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
                       state: s,
                       contexto: _c,
                       descontoGeralAberto: _descontoGeral,
+                  aoFecharPainel: _aoFecharPainel,
                     ),
                   ),
                   child: const Text('Itens e descontos'),

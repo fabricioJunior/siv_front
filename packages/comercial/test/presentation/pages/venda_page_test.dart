@@ -63,7 +63,7 @@ class _Busca implements ILeitorBuscaDataDatasource {
     int? tabelaDePrecoId,
     Set<int>? somenteProdutoIds,
   }) async =>
-      const [];
+      texto.isEmpty ? const [] : [_Produto('555')];
 }
 
 class _Sessao implements IAcessoGlobalSessao {
@@ -269,12 +269,8 @@ void main() {
     addTearDown(t.view.reset);
     final antigo = FlutterError.onError;
     FlutterError.onError = (d) {
-      // overflow: fonte Ahem; markNeedsBuild: LeitorWidget notifica o
-      // controller no initState (já é assim fora do teste).
-      final msg = d.exceptionAsString();
-      if (!msg.contains('overflowed') && !msg.contains('markNeedsBuild')) {
-        antigo?.call(d);
-      }
+      // overflow: fonte Ahem (markNeedsBuild no build NÃO é filtrado).
+      if (!d.exceptionAsString().contains('overflowed')) antigo?.call(d);
     };
     addTearDown(() => FlutterError.onError = antigo);
 
@@ -407,26 +403,49 @@ void main() {
     expect(tentativasVendaCompleta, 0, reason: 'não cria romaneio novo');
   });
 
-  testWidgets('F4 aplica desconto na leitura e ele chega ao pagamento; só um Trocar',
+  testWidgets('busca manual abre com foco no campo; após adicionar, F2/F9 seguem valendo',
+      (t) async {
+    await abrir(t);
+
+    await tecla(t, LogicalKeyboardKey.f2);
+    expect(find.text('Busca manual de produto'), findsOneWidget);
+    expect(
+        FocusManager.instance.primaryFocus!.context!
+            .findAncestorWidgetOfExactType<EditableText>(),
+        isNotNull,
+        reason: 'foco no campo de busca');
+
+    await t.enterText(find.byType(TextField).last, 'cam');
+    await t.pump(const Duration(milliseconds: 500));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Produto 555'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Adicionar'));
+    await t.pumpAndSettle();
+    expect(find.text('Busca manual de produto'), findsNothing);
+    expect(
+        FocusManager.instance.primaryFocus!.context!
+            .findAncestorWidgetOfExactType<EditableText>(),
+        isNotNull,
+        reason: 'foco volta ao campo de código');
+
+    await tecla(t, LogicalKeyboardKey.f2);
+    expect(find.text('Busca manual de produto'), findsOneWidget,
+        reason: 'F2 ainda funciona depois do primeiro item');
+    await tecla(t, LogicalKeyboardKey.escape);
+    await tecla(t, LogicalKeyboardKey.f9);
+    expect(find.text('Confirmar e emitir · F9'), findsOneWidget);
+  });
+
+  testWidgets('leitura: sem atalho nem linha de desconto; só um Trocar',
       (t) async {
     await abrir(t);
     await bipar(t, '789');
     expect(find.text('Trocar'), findsOneWidget);
-    expect(find.textContaining('Desconto'), findsNothing,
-        reason: 'linha some quando zerada');
+    expect(find.textContaining('F4'), findsNothing);
 
     await tecla(t, LogicalKeyboardKey.f4);
-    await t.enterText(find.byType(TextField).last, '10%');
-    await t.testTextInput.receiveAction(TextInputAction.done);
-    await t.pumpAndSettle();
-
-    expect(find.text('Desconto  F4'), findsOneWidget);
-    expect(find.text('−R\$ 1,00'), findsOneWidget);
-    expect(find.text('R\$ 9,00'), findsWidgets);
-
-    await tecla(t, LogicalKeyboardKey.f9);
-    final bloc =
-        t.element(find.byType(PagamentoEtapa)).read<PagamentosRealizadosBloc>();
-    expect(bloc.state.valorDescontoAplicado, 1);
+    expect(find.textContaining('Desconto'), findsNothing);
+    expect(find.byType(TextField), findsOneWidget, reason: 'só o código');
   });
 }

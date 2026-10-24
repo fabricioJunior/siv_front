@@ -44,9 +44,6 @@ class _VendaPageState extends State<VendaPage> {
   int _ultimaFinalizacao = 0;
   bool _trocandoCliente = false;
   bool _trocandoVendedor = false;
-  bool _editandoDesconto = false;
-  final _descontoController = TextEditingController();
-  final _focoDesconto = FocusNode();
 
   // O pagamento e a criação do romaneio vivem na página: Esc no pagamento
   // preserva as linhas (mesmo bloc) e a Concluída/Pendência ficam na tela até
@@ -71,15 +68,13 @@ class _VendaPageState extends State<VendaPage> {
   void dispose() {
     SivPageFab.limpar();
     _leitorController.dispose();
-    _descontoController.dispose();
-    _focoDesconto.dispose();
     _pagamentoBloc?.close();
     _criacaoSub?.cancel();
     _criacao?.close();
     super.dispose();
   }
 
-  void _solicitarFocoLeitura() {}
+  void _solicitarFocoLeitura() => _leitorController.solicitarFoco();
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +87,6 @@ class _VendaPageState extends State<VendaPage> {
             (previous.avisoNota != current.avisoNota &&
                 current.avisoNota != null) ||
             previous.finalizacaoContador != current.finalizacaoContador ||
-            previous.descontoContador != current.descontoContador ||
             (previous.pedidoCriadoId != current.pedidoCriadoId &&
                 current.pedidoCriadoId != null) ||
             previous.orcamentoSalvoContador != current.orcamentoSalvoContador,
@@ -112,10 +106,6 @@ class _VendaPageState extends State<VendaPage> {
           final avisoNota = state.avisoNota;
           if (avisoNota != null) {
             SivAviso.mostrar(context, mensagem: avisoNota);
-          }
-
-          if (_editandoDesconto && state.descontoContador > 0) {
-            _fecharDesconto();
           }
 
           if (state.orcamentoSalvoContador != _ultimoOrcamentoSalvoContador) {
@@ -263,14 +253,13 @@ class _VendaPageState extends State<VendaPage> {
         );
   }
 
-  // Esc volta aos itens e F9 reabre com o mesmo bloc; mudou item, desconto ou
+  // Esc volta aos itens e F9 reabre com o mesmo bloc; mudou item ou
   // cliente, o resumo do bloc ficou velho e ele é recriado.
   Widget _buildPagamento(BuildContext context, VendaState state) {
     final cliente = state.clienteSelecionado;
     final assinatura = [
       for (final i in _leitorController.itens)
         '${i.id}x${i.quantidadeLida}@${i.valorUnitario}',
-      state.descontoRascunho,
       cliente?.id,
     ].join('|');
 
@@ -294,7 +283,6 @@ class _VendaPageState extends State<VendaPage> {
           valorTotalProdutos: _leitorController.valorTotalLido,
         ),
         subtitulo: cliente?.nome,
-        descontoInicial: state.descontoRascunho,
         pessoaId: cliente?.id,
         cpfInicial: cliente?.data['documento']?.toString(),
         clienteGenerico: cliente?.data['generica'] == true,
@@ -455,7 +443,6 @@ class _VendaPageState extends State<VendaPage> {
       _ultimaFinalizacao = 0;
       _trocandoCliente = false;
       _trocandoVendedor = false;
-      _editandoDesconto = false;
     });
     venda.add(const VendaNovaVendaSolicitada());
   }
@@ -506,7 +493,6 @@ class _VendaPageState extends State<VendaPage> {
       bindings: {
         LogicalKeySet(LogicalKeyboardKey.f2): () =>
             _abrirBuscaManual(context, state),
-        LogicalKeySet(LogicalKeyboardKey.f4): () => _abrirDesconto(state),
         LogicalKeySet(LogicalKeyboardKey.f9): () =>
             _irParaPagamento(context, state),
         LogicalKeySet(LogicalKeyboardKey.escape): () =>
@@ -565,35 +551,11 @@ class _VendaPageState extends State<VendaPage> {
     );
   }
 
-  void _fecharDesconto() {
-    _focoDesconto.unfocus(
-      disposition: UnfocusDisposition.previouslyFocusedChild,
-    );
-    setState(() => _editandoDesconto = false);
-  }
-
-  void _abrirDesconto(VendaState state) {
-    if (_leitorController.itens.isEmpty || state.processando) return;
-    if (_editandoDesconto) {
-      _fecharDesconto();
-      return;
-    }
-    _descontoController.text = state.descontoRascunho > 0
-        ? state.descontoRascunho.toStringAsFixed(2).replaceAll('.', ',')
-        : '';
-    setState(() => _editandoDesconto = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focoDesconto.requestFocus();
-    });
-  }
-
   Widget _buildPainelDireito(BuildContext context, VendaState state) {
     final textos = context.sivTextos;
-    final cores = context.sivColors;
     final bloc = context.read<VendaBloc>();
     final temItens = _leitorController.itens.isNotEmpty;
     final subtotal = _leitorController.valorTotalLido;
-    final desconto = state.descontoRascunho;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -695,53 +657,12 @@ class _VendaPageState extends State<VendaPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _linhaResumo(context, 'Subtotal', _formatarMoeda(subtotal)),
-              if (desconto > 0)
-                _linhaResumo(
-                  context,
-                  'Desconto  F4',
-                  '−${_formatarMoeda(desconto)}',
-                ),
               if (state.valorTaxaEntrega > 0)
                 _linhaResumo(
                   context,
                   'Entrega',
                   _formatarMoeda(state.valorTaxaEntrega),
                 ),
-              if (_editandoDesconto) ...[
-                const SizedBox(height: 8),
-                CallbackShortcuts(
-                  bindings: {
-                    const SingleActivator(LogicalKeyboardKey.escape):
-                        _fecharDesconto,
-                  },
-                  child: TextField(
-                    controller: _descontoController,
-                    focusNode: _focoDesconto,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      hintText: 'Desconto em R\$ ou % (ex.: 20,00 ou 10%)',
-                    ),
-                    // onEditingComplete evita o unfocus padrão (vai pro escopo
-                    // da rota): com erro o campo segue focado; aplicado, o
-                    // foco volta ao campo de código (_fecharDesconto).
-                    onEditingComplete: () => bloc.add(
-                      VendaDescontoAlterado(
-                        texto: _descontoController.text,
-                        subtotal: _leitorController.valorTotalLido,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  state.erroDesconto ?? 'Enter aplica · Esc cancela',
-                  style: textos.apoio.copyWith(
-                    color: state.erroDesconto == null ? null : cores.vinho,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -754,7 +675,7 @@ class _VendaPageState extends State<VendaPage> {
               Text('Total', style: textos.corpo.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
               Text(
-                _formatarMoeda((subtotal - desconto).clamp(0, double.infinity)),
+                _formatarMoeda(subtotal),
                 style: textos.display.copyWith(color: Colors.white),
               ),
             ],
@@ -770,7 +691,7 @@ class _VendaPageState extends State<VendaPage> {
         ),
         const SizedBox(height: 10),
         Text(
-          'F2 buscar · F4 desconto · F9 pagamento',
+          'F2 buscar · F9 pagamento',
           textAlign: TextAlign.center,
           style: textos.apoio,
         ),
@@ -1086,11 +1007,6 @@ class _VendaPageState extends State<VendaPage> {
 
     if (confirmar == true) {
       _leitorController.limpar();
-      if (context.mounted) {
-        context.read<VendaBloc>().add(
-              const VendaDescontoAlterado(texto: '', subtotal: 0),
-            );
-      }
     }
     _solicitarFocoLeitura();
   }

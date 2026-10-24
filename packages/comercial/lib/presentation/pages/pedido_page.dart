@@ -56,6 +56,7 @@ class _PedidoPageState extends State<PedidoPage> {
 
   String? _enderecoEntregaResumo;
   bool _criandoPagamento = false;
+  String _criandoPagamentoTexto = '';
   // Etapa de pagamento aberta = contexto não nulo. O bloc sobrevive ao Esc.
   PagamentoContexto? _pagamentoContexto;
   PagamentosRealizadosBloc? _pagamentoBloc;
@@ -537,9 +538,17 @@ class _PedidoPageState extends State<PedidoPage> {
       return;
     }
 
+    final nomes = (resultado['resumoFormasDePagamento'] as List<dynamic>? ??
+            const [])
+        .whereType<Map<String, dynamic>>()
+        .map((l) => l['nome'])
+        .join(', ');
     setState(() {
       _confirmandoPagamento = true;
       _criandoPagamento = true;
+      _criandoPagamentoTexto = nomes.isEmpty
+          ? 'Criando a forma de pagamento selecionada…'
+          : 'Criando a forma de pagamento: $nomes…';
     });
     var lancados = 0;
     try {
@@ -1253,6 +1262,27 @@ class _PedidoPageState extends State<PedidoPage> {
                             setState(() => _pagamentoContexto = null);
                           }
                         },
+                      ),
+                    ),
+                  ),
+                if (_confirmandoPagamento)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const CircularProgressIndicator.adaptive(),
+                                const SizedBox(height: 16),
+                                Text(_criandoPagamentoTexto),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

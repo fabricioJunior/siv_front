@@ -106,6 +106,8 @@ const Map<String, List<String>> componentesPorFluxo = {
     'PRDFM007',
     'PRDFM008',
     'PRDFM009',
+    'PRDFL006',
+    'PRDFM014',
   ],
   'Etiquetas': ['PRDFM003', 'PRDFM012'],
   'Financeiro': ['GERFM001', 'FCXFP001', 'PRDFM010', 'PAGFM001'],

@@ -356,6 +356,14 @@ void _usesCases() {
     () => CriarReferencia(referenciasRepository: sl()),
   );
 
+  sl.registerFactory<RecuperarCustoReferencia>(
+    () => RecuperarCustoReferencia(referenciasRepository: sl()),
+  );
+
+  sl.registerFactory<SalvarCustoReferencia>(
+    () => SalvarCustoReferencia(referenciasRepository: sl()),
+  );
+
   sl.registerFactory<RecuperarProximoIdReferencia>(
     () => RecuperarProximoIdReferencia(referenciasRepository: sl()),
   );
@@ -566,7 +574,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ReferenciaCadastroBloc>(
-    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(
@@ -602,4 +610,3 @@ void _presentantion() {
     () => ImportarProdutosCsvBloc(sl(), sl(), sl()),
   );
 }
-

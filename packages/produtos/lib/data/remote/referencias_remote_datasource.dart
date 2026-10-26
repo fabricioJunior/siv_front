@@ -25,6 +25,18 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<double?> fetchCusto({required int id}) async {
+    final response = await get(pathParameters: {'id': '$id/custo'});
+    final body = response.body as Map<String, dynamic>;
+    return (body['custo'] as num?)?.toDouble();
+  }
+
+  @override
+  Future<void> updateCusto({required int id, double? custo}) async {
+    await put(pathParameters: {'id': '$id/custo'}, body: {'custo': custo});
+  }
+
+  @override
   Future<Referencia> createReferencia({
     required int id,
     required String nome,

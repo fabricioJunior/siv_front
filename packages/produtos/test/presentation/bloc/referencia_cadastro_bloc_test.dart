@@ -1,4 +1,5 @@
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/precos_portas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,8 +37,9 @@ class _PortaSalvar implements PortaSalvarPrecoDaReferencia {
 class _Categorias extends RecuperarCategorias {
   _Categorias() : super(categoriasRepository: _RepoCat());
   @override
-  Future<List<Categoria>> call({String? nome, bool? inativa}) async =>
-      [CategoriaDto(id: 1, inativa: false, nome: 'Body')];
+  Future<List<Categoria>> call({String? nome, bool? inativa}) async => [
+    CategoriaDto(id: 1, inativa: false, nome: 'Body'),
+  ];
 }
 
 class _SubCategorias extends RecuperarSubCategorias {
@@ -47,8 +49,7 @@ class _SubCategorias extends RecuperarSubCategorias {
     int categoriaId, {
     String? nome,
     bool? inativa,
-  }) async =>
-      const [];
+  }) async => const [];
 }
 
 class _CriarReferencia extends CriarReferencia {
@@ -57,6 +58,19 @@ class _CriarReferencia extends CriarReferencia {
 
 class _ProximoId extends RecuperarProximoIdReferencia {
   _ProximoId() : super(referenciasRepository: _RepoRef());
+}
+
+class _SalvarCusto extends SalvarCustoReferencia {
+  _SalvarCusto() : super(referenciasRepository: _RepoRef());
+}
+
+class _Permissoes implements IPermissoesController {
+  @override
+  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async =>
+      true;
+
+  @override
+  bool temAcesso({String? idComponente, int? grupoId}) => true;
 }
 
 class _ListarPrecos extends ListarPrecosDaReferenciaPorTabela {
@@ -69,17 +83,16 @@ class _SalvarPreco extends SalvarPrecoDaReferencia {
 
 void main() {
   ReferenciaCadastroBloc build() => ReferenciaCadastroBloc(
-        _Categorias(),
-        _SubCategorias(),
-        _CriarReferencia(),
-        _ProximoId(),
-        _ListarPrecos(),
-        _SalvarPreco(),
-      );
+    _Categorias(),
+    _SubCategorias(),
+    _CriarReferencia(),
+    _ProximoId(),
+    _SalvarCusto(),
+    _ListarPrecos(),
+    _SalvarPreco(),
+  );
 
-  Future<ReferenciaCadastroBloc> ate(
-    String? nomeInicial,
-  ) async {
+  Future<ReferenciaCadastroBloc> ate(String? nomeInicial) async {
     final bloc = build();
     bloc.add(ReferenciaCadastroIniciou(nomeInicial: nomeInicial));
     await bloc.stream.firstWhere((s) => s.categorias.isNotEmpty);
@@ -98,35 +111,47 @@ void main() {
     await bloc.close();
   });
 
-  test('nome inicial vale no lugar do nome gerado e não bloqueia a edição',
-      () async {
-    final bloc = await ate('  Body rendado vinho ');
-    expect(bloc.state.nome, 'Body rendado vinho');
-    bloc.add(const ReferenciaCadastroNomeAlterado(nome: 'Body Aurora'));
-    await bloc.stream.firstWhere((s) => s.nome == 'Body Aurora');
-    expect(bloc.state.criada, isFalse);
+  test(
+    'nome inicial vale no lugar do nome gerado e não bloqueia a edição',
+    () async {
+      final bloc = await ate('  Body rendado vinho ');
+      expect(bloc.state.nome, 'Body rendado vinho');
+      bloc.add(const ReferenciaCadastroNomeAlterado(nome: 'Body Aurora'));
+      await bloc.stream.firstWhere((s) => s.nome == 'Body Aurora');
+      expect(bloc.state.criada, isFalse);
+      await bloc.close();
+    },
+  );
+
+  test('custo de compra digitado fica no state', () async {
+    final bloc = await ate(null);
+    bloc.add(const ReferenciaCadastroCustoAlterado(custo: '12,50'));
+    await bloc.stream.firstWhere((s) => s.custo == '12,50');
     await bloc.close();
   });
 
-  testWidgets('wizard: sair sem criar devolve null (show -> Future<int?>)',
-      (t) async {
+  testWidgets('wizard: sair sem criar devolve null (show -> Future<int?>)', (
+    t,
+  ) async {
     t.view.physicalSize = const Size(1600, 1000);
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     await sl.reset();
     sl.registerFactory<ReferenciaCadastroBloc>(build);
+    sl.registerSingleton<IPermissoesController>(_Permissoes());
     addTearDown(sl.reset);
     int? resultado = -1;
     await t.pumpWidget(
       MaterialApp(
         home: Builder(
           builder: (context) => TextButton(
-            onPressed: () async => resultado = await ReferenciaCadastroPage.show(
-              context: context,
-              nomeInicial: 'Body',
-              corIdsIniciais: const [1],
-              tamanhoIdsIniciais: const [2],
-            ),
+            onPressed: () async =>
+                resultado = await ReferenciaCadastroPage.show(
+                  context: context,
+                  nomeInicial: 'Body',
+                  corIdsIniciais: const [1],
+                  tamanhoIdsIniciais: const [2],
+                ),
             child: const Text('abrir'),
           ),
         ),

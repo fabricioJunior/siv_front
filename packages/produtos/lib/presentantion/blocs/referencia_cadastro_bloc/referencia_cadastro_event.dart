@@ -69,6 +69,14 @@ class ReferenciaCadastroPrecoAlterado extends ReferenciaCadastroEvent {
   List<Object?> get props => [preco];
 }
 
+class ReferenciaCadastroCustoAlterado extends ReferenciaCadastroEvent {
+  final String custo;
+  const ReferenciaCadastroCustoAlterado({required this.custo});
+
+  @override
+  List<Object?> get props => [custo];
+}
+
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroVoltar extends ReferenciaCadastroEvent {}

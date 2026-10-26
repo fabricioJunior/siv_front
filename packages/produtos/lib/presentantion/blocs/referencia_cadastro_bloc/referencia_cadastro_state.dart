@@ -17,6 +17,7 @@ class ReferenciaCadastroState extends Equatable {
   final SubCategoria? subCategoria;
   final String nome;
   final String preco;
+  final String custo;
   final String unidadeMedida;
   final String descricao;
   final String composicao;
@@ -35,6 +36,7 @@ class ReferenciaCadastroState extends Equatable {
     this.subCategoria,
     this.nome = '',
     this.preco = '',
+    this.custo = '',
     this.unidadeMedida = '',
     this.descricao = '',
     this.composicao = '',
@@ -67,6 +69,7 @@ class ReferenciaCadastroState extends Equatable {
     SubCategoria? Function()? subCategoria,
     String? nome,
     String? preco,
+    String? custo,
     String? unidadeMedida,
     String? descricao,
     String? composicao,
@@ -85,6 +88,7 @@ class ReferenciaCadastroState extends Equatable {
       subCategoria: subCategoria == null ? this.subCategoria : subCategoria(),
       nome: nome ?? this.nome,
       preco: preco ?? this.preco,
+      custo: custo ?? this.custo,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
@@ -107,6 +111,7 @@ class ReferenciaCadastroState extends Equatable {
     subCategoria,
     nome,
     preco,
+    custo,
     unidadeMedida,
     descricao,
     composicao,

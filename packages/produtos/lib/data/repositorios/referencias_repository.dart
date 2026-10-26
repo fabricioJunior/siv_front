@@ -18,6 +18,16 @@ class ReferenciasRepository implements IReferenciasRepository {
   }
 
   @override
+  Future<double?> obterCusto({required int id}) {
+    return referenciasRemoteDataSource.fetchCusto(id: id);
+  }
+
+  @override
+  Future<void> salvarCusto({required int id, double? custo}) {
+    return referenciasRemoteDataSource.updateCusto(id: id, custo: custo);
+  }
+
+  @override
   Future<Referencia> atualizarReferencia({
     required int id,
     required String nome,

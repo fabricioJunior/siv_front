@@ -21,6 +21,7 @@ class ReferenciaCadastroBloc
   final RecuperarSubCategorias _recuperarSubCategorias;
   final CriarReferencia _criarReferencia;
   final RecuperarProximoIdReferencia _recuperarProximoId;
+  final SalvarCustoReferencia _salvarCusto;
   final ListarPrecosDaReferenciaPorTabela _listarPrecos;
   final SalvarPrecoDaReferencia _salvarPreco;
 
@@ -31,6 +32,7 @@ class ReferenciaCadastroBloc
     this._recuperarSubCategorias,
     this._criarReferencia,
     this._recuperarProximoId,
+    this._salvarCusto,
     this._listarPrecos,
     this._salvarPreco,
   ) : super(const ReferenciaCadastroState()) {
@@ -60,6 +62,9 @@ class ReferenciaCadastroBloc
     on<ReferenciaCadastroPrecoAlterado>(
       (e, emit) => emit(state.copyWith(preco: e.preco)),
     );
+    on<ReferenciaCadastroCustoAlterado>(
+      (e, emit) => emit(state.copyWith(custo: e.custo)),
+    );
     on<ReferenciaCadastroProximo>(_onProximo);
     on<ReferenciaCadastroVoltar>(_onVoltar);
     on<ReferenciaCadastroIrPara>(_onIrPara);
@@ -74,7 +79,9 @@ class ReferenciaCadastroBloc
     Emitter<ReferenciaCadastroState> emit,
   ) async {
     final nomeInicial = event.nomeInicial?.trim();
-    _nomeInicial = nomeInicial == null || nomeInicial.isEmpty ? null : nomeInicial;
+    _nomeInicial = nomeInicial == null || nomeInicial.isEmpty
+        ? null
+        : nomeInicial;
     try {
       emit(state.copyWith(carregandoCategorias: true));
       final categorias = await _recuperarCategorias.call();
@@ -196,8 +203,23 @@ class ReferenciaCadastroBloc
         valor: valor,
         precoJaExiste: padrao.temPreco,
       );
+      String? aviso;
+      final custo = parseValor(state.custo);
+      if (custo != null) {
+        try {
+          await _salvarCusto.call(id: id, custo: custo);
+        } catch (e, s) {
+          aviso =
+              'Referência criada, mas o custo não foi salvo. Informe-o na tela da referência.';
+          addError(e, s);
+        }
+      }
       emit(
-        state.copyWith(salvando: false, step: ReferenciaCadastroStep.variacoes),
+        state.copyWith(
+          salvando: false,
+          step: ReferenciaCadastroStep.variacoes,
+          mensagem: aviso,
+        ),
       );
     } catch (e, s) {
       emit(

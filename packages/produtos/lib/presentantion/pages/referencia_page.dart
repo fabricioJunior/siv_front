@@ -46,8 +46,8 @@ class _ReferenciaPageState extends State<ReferenciaPage>
   final _ncmController = TextEditingController();
   final _pesoController = TextEditingController();
   final _custoController = TextEditingController();
-  // Custo de compra: ver (PRDFL006) e cadastrar (PRDFM014) são permissões próprias, fora do cadastro da referência.
-  final _verCusto = PermissaoPorNome.acessoPermitido('PRDFL006');
+  // Custo de compra: ver (PRDFL007) e cadastrar (PRDFM014) são permissões próprias, fora do cadastro da referência.
+  final _verCusto = PermissaoPorNome.acessoPermitido('PRDFL007');
   final _editarCusto = PermissaoPorNome.acessoPermitido('PRDFM014');
   double? _custoSalvo;
 

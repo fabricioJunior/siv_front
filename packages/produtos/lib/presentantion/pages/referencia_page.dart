@@ -1,11 +1,13 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
+import 'package:produtos/use_cases.dart';
 import 'package:produtos/presentantion/widgets/referencia_produtos_tab.dart';
 import 'package:produtos/presentantion/widgets/referencia_precos_tab.dart';
 import 'package:produtos/presentantion/widgets/referencia_mobile.dart';
@@ -43,6 +45,11 @@ class _ReferenciaPageState extends State<ReferenciaPage>
   final _cuidadosController = TextEditingController();
   final _ncmController = TextEditingController();
   final _pesoController = TextEditingController();
+  final _custoController = TextEditingController();
+  // Custo de compra: ver (PRDFL007) e cadastrar (PRDFM014) são permissões próprias, fora do cadastro da referência.
+  final _verCusto = PermissaoPorNome.acessoPermitido('PRDFL007');
+  final _editarCusto = PermissaoPorNome.acessoPermitido('PRDFM014');
+  double? _custoSalvo;
 
   Referencia? _referencia;
   Categoria? _categoriaSelecionada;
@@ -73,6 +80,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     _cuidadosController.dispose();
     _ncmController.dispose();
     _pesoController.dispose();
+    _custoController.dispose();
     super.dispose();
   }
 
@@ -88,6 +96,38 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     _pesoController.text = referencia.pesoGramas?.toString() ?? '';
     _categoriaSelecionada = referencia.categoria;
     _subCategoriaSelecionada = referencia.subCategoria;
+    _carregarCusto(referencia.id);
+  }
+
+  Future<void> _carregarCusto(int? id) async {
+    if (!_verCusto || id == null) return;
+    try {
+      final custo = await sl<RecuperarCustoReferencia>().call(id: id);
+      if (!mounted) return;
+      _custoSalvo = custo;
+      _custoController.text =
+          custo?.toStringAsFixed(2).replaceAll('.', ',') ?? '';
+    } catch (_) {
+      // sem o custo a tela segue normal; o campo fica vazio
+    }
+  }
+
+  /// Grava o custo só se mudou. Devolve false (e avisa) quando falha.
+  Future<bool> _salvarCusto(int id) async {
+    final custo = parseValor(_custoController.text);
+    if (!_editarCusto || custo == _custoSalvo) return true;
+    try {
+      await sl<SalvarCustoReferencia>().call(id: id, custo: custo);
+      _custoSalvo = custo;
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível salvar o custo.')),
+        );
+      }
+      return false;
+    }
   }
 
   Future<void> _salvar() async {
@@ -110,6 +150,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     }
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!await _salvarCusto(referenciaId)) return;
 
     _referenciaBloc.add(
       ReferenciaAtualizou(
@@ -550,6 +591,35 @@ class _ReferenciaPageState extends State<ReferenciaPage>
                   ],
                 ),
               ),
+              if (_verCusto) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _RotuloCampo('CUSTO DE COMPRA (R\$)'),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        controller: _custoController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          TextInputFormatter.withFunction(
+                            (old, nw) =>
+                                nw.text.isEmpty ||
+                                    regexValorDigitando.hasMatch(nw.text)
+                                ? nw
+                                : old,
+                          ),
+                        ],
+                        readOnly: !_editarCusto,
+                        decoration: const InputDecoration(hintText: '0,00'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 16),

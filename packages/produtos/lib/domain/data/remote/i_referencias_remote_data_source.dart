@@ -5,6 +5,10 @@ abstract class IReferenciasRemoteDataSource {
 
   Future<int> fetchProximoId();
 
+  Future<double?> fetchCusto({required int id});
+
+  Future<void> updateCusto({required int id, double? custo});
+
   Future<Referencia> createReferencia({
     required int id,
     required String nome,

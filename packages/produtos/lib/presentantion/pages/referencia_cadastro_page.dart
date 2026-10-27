@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
@@ -69,11 +70,13 @@ class ReferenciaCadastroPage extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Expanded(child: _Corpo(
+                          Expanded(
+                            child: _Corpo(
                               state: state,
                               corIds: corIdsIniciais,
                               tamanhoIds: tamanhoIdsIniciais,
-                            )),
+                            ),
+                          ),
                           if (largo) ...[
                             const VerticalDivider(width: 1),
                             SizedBox(width: 300, child: _Resumo(state: state)),
@@ -236,6 +239,12 @@ class _Resumo extends StatelessWidget {
         state.preco.isEmpty ? null : 'R\$ ${state.preco}',
         ReferenciaCadastroStep.preco,
       ),
+      if (PermissaoPorNome.acessoPermitido('PRDFM014'))
+        (
+          'CUSTO',
+          state.custo.isEmpty ? null : 'R\$ ${state.custo}',
+          ReferenciaCadastroStep.preco,
+        ),
     ];
 
     return Container(
@@ -359,6 +368,13 @@ class _Corpo extends StatelessWidget {
         inicial: state.preco,
         onChanged: (v) => context.read<ReferenciaCadastroBloc>().add(
           ReferenciaCadastroPrecoAlterado(preco: v),
+        ),
+        rotuloSecundario: PermissaoPorNome.acessoPermitido('PRDFM014')
+            ? 'CUSTO DE COMPRA (OPCIONAL)'
+            : null,
+        inicialSecundario: state.custo,
+        onChangedSecundario: (v) => context.read<ReferenciaCadastroBloc>().add(
+          ReferenciaCadastroCustoAlterado(custo: v),
         ),
       ),
       ReferenciaCadastroStep.variacoes => AdicionarVariacoesPainel(
@@ -508,6 +524,9 @@ class _CampoStep extends StatefulWidget {
   final String? hint;
   final bool numerico;
   final ValueChanged<String> onChanged;
+  final String? rotuloSecundario;
+  final String inicialSecundario;
+  final ValueChanged<String>? onChangedSecundario;
 
   const _CampoStep({
     super.key,
@@ -519,6 +538,9 @@ class _CampoStep extends StatefulWidget {
     this.prefixo,
     this.hint,
     this.numerico = false,
+    this.rotuloSecundario,
+    this.inicialSecundario = '',
+    this.onChangedSecundario,
   });
 
   @override
@@ -527,10 +549,14 @@ class _CampoStep extends StatefulWidget {
 
 class _CampoStepState extends State<_CampoStep> {
   late final _controller = TextEditingController(text: widget.inicial);
+  late final _secundario = TextEditingController(
+    text: widget.inicialSecundario,
+  );
 
   @override
   void dispose() {
     _controller.dispose();
+    _secundario.dispose();
     super.dispose();
   }
 
@@ -580,6 +606,36 @@ class _CampoStepState extends State<_CampoStep> {
               ),
             ),
           ),
+          if (widget.rotuloSecundario != null) ...[
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: TextField(
+                controller: _secundario,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  TextInputFormatter.withFunction(
+                    (old, nw) =>
+                        nw.text.isEmpty || regexValorDigitando.hasMatch(nw.text)
+                        ? nw
+                        : old,
+                  ),
+                ],
+                decoration: InputDecoration(
+                  labelText: widget.rotuloSecundario,
+                  prefixText: 'R\$ ',
+                  hintText: '0,00',
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: widget.onChangedSecundario,
+                onSubmitted: (_) => context.read<ReferenciaCadastroBloc>().add(
+                  ReferenciaCadastroProximo(),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

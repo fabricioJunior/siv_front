@@ -5,6 +5,10 @@ abstract class IReferenciasRepository {
 
   Future<int> obterProximoId();
 
+  Future<double?> obterCusto({required int id});
+
+  Future<void> salvarCusto({required int id, double? custo});
+
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,

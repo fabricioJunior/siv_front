@@ -29,6 +29,7 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) {
     return referenciaMidiasRemoteDataSource.criarReferenciaMidia(
@@ -42,6 +43,7 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
       descricao: descricao,
       cor: cor,
       tamanho: tamanho,
+      origem: origem,
       onSendProgress: onSendProgress,
     );
   }

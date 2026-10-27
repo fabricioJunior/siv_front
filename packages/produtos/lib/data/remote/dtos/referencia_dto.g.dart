@@ -26,6 +26,14 @@ ReferenciaDto _$ReferenciaDtoFromJson(Map<String, dynamic> json) =>
       cuidados: json['cuidados'] as String?,
       ncm: json['ncm'] as String?,
       pesoGramas: (json['pesoGramas'] as num?)?.toInt(),
+      fornecedorId: (json['fornecedorId'] as num?)?.toInt(),
+      fornecedorNome: json['fornecedorNome'] as String?,
+      aguardandoReposicao: json['aguardandoReposicao'] as bool?,
+      previsaoChegada: json['previsaoChegada'] == null
+          ? null
+          : DateTime.parse(json['previsaoChegada'] as String),
+      quantidadeEsperada: (json['quantidadeEsperada'] as num?)?.toInt(),
+      status: _statusDeJson(json['status'] as Map<String, dynamic>?),
       categoria: json['categoria'] == null
           ? null
           : CategoriaDto.fromJson(json['categoria'] as Map<String, dynamic>),
@@ -52,4 +60,8 @@ Map<String, dynamic> _$ReferenciaDtoToJson(ReferenciaDto instance) =>
       'cuidados': instance.cuidados,
       'ncm': instance.ncm,
       'pesoGramas': instance.pesoGramas,
+      'fornecedorId': instance.fornecedorId,
+      'aguardandoReposicao': instance.aguardandoReposicao,
+      'previsaoChegada': _soData(instance.previsaoChegada),
+      'quantidadeEsperada': instance.quantidadeEsperada,
     };

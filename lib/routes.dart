@@ -1143,10 +1143,28 @@ Map<String, Widget Function(BuildContext)> routes = {
       nomeInicial: a['nome'] as String?,
       corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
       tamanhoIdsIniciais: ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+      fornecedorSeletor: (data) => SeletorPessoa(
+        titulo: 'Fornecedor',
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        retornarSomenteId: false,
+        onChanged: data.onChanged,
+        eFornecedor: true,
+        compacto: data.compacto,
+      ),
     );
   },
   '/referencia': (context) {
-    return ReferenciaPage(idReferencia: args(context)['idReferencia']);
+    return ReferenciaPage(
+      idReferencia: args(context)['idReferencia'],
+      fornecedorSeletor: (data) => SeletorPessoa(
+        titulo: 'Fornecedor',
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        retornarSomenteId: false,
+        onChanged: data.onChanged,
+        eFornecedor: true,
+        compacto: data.compacto,
+      ),
+    );
   },
   '/codigos_de_barras_da_referencia': (context) {
     return CodigosDeBarrasDaReferenciaPage(

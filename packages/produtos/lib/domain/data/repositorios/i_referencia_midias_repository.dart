@@ -16,6 +16,7 @@ abstract class IReferenciaMidiasRepository {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   });
 

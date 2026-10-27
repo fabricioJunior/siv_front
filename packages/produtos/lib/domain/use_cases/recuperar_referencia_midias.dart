@@ -7,9 +7,16 @@ class RecuperarReferenciaMidias {
 
   RecuperarReferenciaMidias({required this.referenciaMidiasRepository});
 
-  Future<List<ReferenciaMidia>> call(int referenciaId) async {
+  /// Por padrão devolve só as fotos do site: a foto do fornecedor é de uso
+  /// interno e nunca pode aparecer na galeria que vai para a vitrine.
+  Future<List<ReferenciaMidia>> call(
+    int referenciaId, {
+    bool doFornecedor = false,
+  }) async {
     var result = List<ReferenciaMidia>.from(
-      await referenciaMidiasRepository.recuperarReferenciasMidias(referenciaId),
+      (await referenciaMidiasRepository.recuperarReferenciasMidias(
+        referenciaId,
+      )).where((midia) => midia.doFornecedor == doFornecedor),
     );
     var defaultMidia = result.firstWhereOrNull((midia) => midia.ePrincipal);
     if (defaultMidia != null) {

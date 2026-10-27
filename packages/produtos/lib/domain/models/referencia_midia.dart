@@ -8,6 +8,9 @@ abstract class ReferenciaMidia {
   String? get tamanho;
   String? get cor;
 
+  /// 'site' (vitrine/e-commerce) ou 'fornecedor' (uso interno: nunca pública nem capa).
+  String get origem;
+
   factory ReferenciaMidia.create({
     required int id,
     required String url,
@@ -17,6 +20,7 @@ abstract class ReferenciaMidia {
     String? descricao,
     String? tamanho,
     String? cor,
+    String origem,
   }) = _ReferenciaMidiaImpl;
 }
 
@@ -38,6 +42,8 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
   final String? tamanho;
   @override
   final String? cor;
+  @override
+  final String origem;
 
   _ReferenciaMidiaImpl({
     required this.id,
@@ -48,7 +54,12 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
     this.descricao,
     this.tamanho,
     this.cor,
+    this.origem = 'site',
   });
 }
 
 enum TipoReferenciaMidia { imagem, video, documento }
+
+extension ReferenciaMidiaOrigem on ReferenciaMidia {
+  bool get doFornecedor => origem == 'fornecedor';
+}

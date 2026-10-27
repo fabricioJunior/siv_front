@@ -56,6 +56,7 @@ class ReferenciaBloc extends Bloc<ReferenciaEvent, ReferenciaState> {
         cuidados: event.cuidados,
         ncm: event.ncm,
         pesoGramas: event.pesoGramas,
+        espera: event.espera,
       );
       emit(ReferenciaSalvarSucesso(referencia: atualizada));
     } catch (e, s) {

@@ -182,10 +182,24 @@ class _ReferenciaProdutosTabState extends State<ReferenciaProdutosTab> {
             ],
           ),
         ),
-        OutlinedButton.icon(
-          onPressed: () => _abrirAdicionarVariacoes(context, state),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Adicionar variações'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pushNamed(
+                '/codigos_de_barras_da_referencia',
+                arguments: {'referenciaId': widget.referenciaId},
+              ),
+              icon: const Icon(Icons.qr_code_2, size: 18),
+              label: const Text('Códigos de barras'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _abrirAdicionarVariacoes(context, state),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Adicionar variações'),
+            ),
+          ],
         ),
       ],
     );

@@ -151,6 +151,7 @@ class _CampoData extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
             onPressed: () async {
               final hoje = DateTime.now();
               final data = await showDatePicker(

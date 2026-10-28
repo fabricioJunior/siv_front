@@ -571,6 +571,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             ),
             child: Text(
               rotulo,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: textos.rotulo.copyWith(
                 color: sel ? cores.acoEscuro : cores.textoApoio,
                 fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
@@ -603,6 +605,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                 ),
                 child: Text(
                   'ESPERADAS · ${widget.esperadas.length}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: textos.rotulo.copyWith(
                     color: _modoEsperadas ? cores.acoEscuro : cores.textoApoio,
                     fontWeight: _modoEsperadas ? FontWeight.w700 : FontWeight.w400,
@@ -835,6 +839,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             key: const Key('tipo_tamanho'),
             emptySelectionAllowed: true,
             showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(minimumSize: const Size(0, 48)),
             segments: const [
               ButtonSegment(value: true, label: Text('NUMÉRICO')),
               ButtonSegment(value: false, label: Text('LETRAS')),

@@ -3,6 +3,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/imagens.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:core/seletores/i_seletor.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
@@ -393,7 +394,7 @@ class _Corpo extends StatelessWidget {
         onChangedSecundario: (v) => context.read<ReferenciaCadastroBloc>().add(
           ReferenciaCadastroCustoAlterado(custo: v),
         ),
-        extra: _VariacoesEscolha(state: state),
+        extra: VariacoesEscolhaCadastro(state: state),
       ),
       ReferenciaCadastroStep.variacoes => AdicionarVariacoesPainel(
         key: ValueKey(state.referenciaId),
@@ -848,9 +849,10 @@ class _NomeStepState extends State<_NomeStep> {
 /// Passo do preço: escolher as variações agora ou só na chegada da peça. Em
 /// "Definir na chegada" a referência nasce sem produtos; foto e quantidade
 /// esperada ajudam o contador a reconhecê-la quando chegar.
-class _VariacoesEscolha extends StatelessWidget {
+@visibleForTesting
+class VariacoesEscolhaCadastro extends StatelessWidget {
   final ReferenciaCadastroState state;
-  const _VariacoesEscolha({required this.state});
+  const VariacoesEscolhaCadastro({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -862,6 +864,7 @@ class _VariacoesEscolha extends StatelessWidget {
         const SizedBox(height: 8),
         SegmentedButton<bool>(
           showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(minimumSize: const Size(0, 48)),
           segments: const [
             ButtonSegment(value: false, label: Text('Escolher agora')),
             ButtonSegment(value: true, label: Text('Definir na chegada')),

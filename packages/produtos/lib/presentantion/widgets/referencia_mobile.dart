@@ -1,3 +1,4 @@
+import 'package:produtos/presentantion/widgets/etiqueta_status_entrada.dart';
 import 'package:core/bloc.dart';
 import 'package:core/tema.dart';
 import 'package:core/presentation.dart';
@@ -90,12 +91,47 @@ class ReferenciaResumoMobileCard extends StatelessWidget {
                   'NCM ${referencia?.ncm ?? '-'} · ${referencia?.pesoGramas ?? '-'} g',
                   style: textos.apoio.copyWith(color: cores.textoApoio),
                 ),
-                const SizedBox(height: 4),
-                GestureDetector(
+                if (referencia?.fornecedorNome != null ||
+                    (referencia?.idExterno ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      if (referencia?.fornecedorNome != null)
+                        referencia!.fornecedorNome!,
+                      if ((referencia?.idExterno ?? '').isNotEmpty)
+                        'Cód. ${referencia!.idExterno}',
+                    ].join(' · '),
+                    key: const Key('resumo_fornecimento'),
+                    style: textos.apoio.copyWith(color: cores.textoApoio),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (referencia?.status != null &&
+                    !referencia!.status!.semStatus) ...[
+                  const SizedBox(height: 6),
+                  EtiquetaStatusEntrada(status: referencia!.status),
+                  if (referencia?.quantidadeEsperada != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '${referencia!.quantidadeEsperada} peças esperadas',
+                        style: textos.apoio.copyWith(color: cores.textoApoio),
+                      ),
+                    ),
+                ],
+                // Área de toque de 44px (antes era só o texto).
+                InkWell(
+                  key: const Key('resumo_editar'),
                   onTap: onEditar,
-                  child: Text(
-                    'Editar',
-                    style: textos.apoio.copyWith(color: cores.acoProfundo),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Editar',
+                        style: textos.apoio.copyWith(color: cores.acoProfundo),
+                      ),
+                    ),
                   ),
                 ),
               ],

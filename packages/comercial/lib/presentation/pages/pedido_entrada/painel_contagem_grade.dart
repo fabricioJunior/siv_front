@@ -136,6 +136,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
       _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
     }
+    _ordenarTamanhos();
     nomesCor.addAll(_cores);
     nomesTamanho.addAll(_tamanhos);
   }
@@ -215,6 +216,16 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     return false;
   }
 
+  /// Mantém as colunas de tamanho em ordem (34, 36, 38… / P, M, G…): a grade e
+  /// o PRÓX. → seguem a ordem do mapa.
+  void _ordenarTamanhos() {
+    final ordenado = _tamanhos.entries.toList()
+      ..sort((a, b) => compararTamanhos(a.value, b.value));
+    _tamanhos
+      ..clear()
+      ..addEntries(ordenado);
+  }
+
   void _sincronizarSeletores() {
     setState(() {
       for (final e in _coresSeletor.entries) {
@@ -232,6 +243,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         (id, _) =>
             !_tamanhosSeletor.containsKey(id) && !_comValor(cor: null, tam: id),
       );
+      _ordenarTamanhos();
       nomesCor.addAll(_cores);
       nomesTamanho.addAll(_tamanhos);
     });
@@ -360,6 +372,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
           _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
         }
+        _ordenarTamanhos();
         nomesCor.addAll(_cores);
         nomesTamanho.addAll(_tamanhos);
       });
@@ -558,6 +571,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             ),
             child: Text(
               rotulo,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: textos.rotulo.copyWith(
                 color: sel ? cores.acoEscuro : cores.textoApoio,
                 fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
@@ -590,6 +605,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                 ),
                 child: Text(
                   'ESPERADAS · ${widget.esperadas.length}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: textos.rotulo.copyWith(
                     color: _modoEsperadas ? cores.acoEscuro : cores.textoApoio,
                     fontWeight: _modoEsperadas ? FontWeight.w700 : FontWeight.w400,
@@ -734,7 +751,60 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   }
 
   /// "Numérico | Letras": carrega a grade com todos os tamanhos do tipo.
+  static bool _nomeNumerico(String nome) =>
+      RegExp(r'^\d+([.,]\d+)?$').hasMatch(nome.trim());
+
+  /// Trocar o tipo tira da grade os tamanhos do outro tipo. Quantidade já
+  /// digitada neles só é descartada depois de confirmar; o que veio de uma
+  /// contagem já salva (`existentes`) nunca é descartado por aqui.
+  Future<bool> _confirmarTrocaDeTipo(bool numerico) async {
+    final salvos = {
+      for (final c in widget.existentes)
+        if (c.tamanhoId != null) c.tamanhoId!,
+    };
+    final comValor = [
+      for (final e in _tamanhos.entries)
+        if (_nomeNumerico(e.value) != numerico &&
+            !salvos.contains(e.key) &&
+            _comValor(cor: null, tam: e.key))
+          e.key,
+    ];
+    if (comValor.isEmpty) return true;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Trocar o tipo de tamanho?'),
+        content: Text(
+          'Os tamanhos ${numerico ? 'em letras' : 'numéricos'} que você já '
+          'preencheu (${comValor.map((id) => _tamanhos[id]).join(', ')}) saem '
+          'da grade e as quantidades digitadas neles são descartadas.',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('trocar_tipo_cancelar'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            key: const Key('trocar_tipo_confirmar'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('TROCAR'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return false;
+    for (final e in _celulas.entries) {
+      if (comValor.contains(int.parse(e.key.split('|')[1]))) e.value.clear();
+    }
+    return true;
+  }
+
   Future<void> _escolherTipoTamanho(bool numerico) async {
+    if (!await _confirmarTrocaDeTipo(numerico)) return;
+    // Colunas do outro tipo que sobraram (só as salvas) continuam; as demais
+    // saem em _sincronizarSeletores.
+    if (!mounted) return;
     setState(() {
       _tamanhosNumericos = numerico;
       _carregandoTamanhos = true;
@@ -769,6 +839,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             key: const Key('tipo_tamanho'),
             emptySelectionAllowed: true,
             showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(minimumSize: const Size(0, 48)),
             segments: const [
               ButtonSegment(value: true, label: Text('NUMÉRICO')),
               ButtonSegment(value: false, label: Text('LETRAS')),

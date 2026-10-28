@@ -54,6 +54,28 @@ class TamanhoOpcao {
   bool get numerico => RegExp(r'^\d+([.,]\d+)?$').hasMatch(nome.trim());
 }
 
+const _ordemLetras = [
+  'PP', 'P', 'M', 'G', 'GG', 'XG', 'G1', 'G2', 'G3', 'XGG', 'EG', 'U', 'UN',
+];
+
+/// Ordem das colunas de tamanho: numéricos pelo valor (34, 36, 38…), depois as
+/// letras na ordem usual (PP, P, M, G, GG…), depois o resto pelo nome.
+int compararTamanhos(String a, String b) {
+  (int, num, String) chave(String nome) {
+    final n = nome.trim();
+    final numero = num.tryParse(n.replaceAll(',', '.'));
+    if (numero != null) return (0, numero, n);
+    final i = _ordemLetras.indexOf(n.toUpperCase());
+    if (i >= 0) return (1, i, n);
+    return (2, 0, n.toLowerCase());
+  }
+
+  final ca = chave(a), cb = chave(b);
+  if (ca.$1 != cb.$1) return ca.$1.compareTo(cb.$1);
+  final porValor = ca.$2.compareTo(cb.$2);
+  return porValor != 0 ? porValor : ca.$3.compareTo(cb.$3);
+}
+
 String qtd(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
 String moeda(double v) => 'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
 

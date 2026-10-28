@@ -837,6 +837,7 @@ void _presentation() {
     () => CriarEntradaPorContagem(sl()),
   );
   sl.registerFactory<ObterPedidoEntrada>(() => ObterPedidoEntrada(sl()));
+  sl.registerFactory<ObterEsperadasEntrada>(() => ObterEsperadasEntrada(sl()));
   sl.registerFactory<VincularLinhaEntrada>(() => VincularLinhaEntrada(sl()));
   sl.registerFactory<PreCadastrarLinhaEntrada>(
     () => PreCadastrarLinhaEntrada(sl()),

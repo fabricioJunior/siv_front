@@ -38,6 +38,7 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
     required this.descricao,
     required this.tamanho,
     required this.cor,
+    this.origem = 'site',
   });
 
   @override
@@ -49,6 +50,10 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
 
   @override
   final String? tamanho;
+
+  @override
+  @JsonKey(includeToJson: false, defaultValue: 'site')
+  final String origem;
 }
 
 extension ToDto on ReferenciaMidia {
@@ -62,6 +67,7 @@ extension ToDto on ReferenciaMidia {
       descricao: descricao,
       tamanho: tamanho,
       cor: cor,
+      origem: origem,
     );
   }
 }

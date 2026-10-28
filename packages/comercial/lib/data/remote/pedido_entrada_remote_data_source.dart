@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:comercial/domain/data/remote/i_pedido_entrada_remote_data_source.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:core/remote_data_sourcers.dart';
 
 class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
@@ -57,6 +58,16 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   Future<EntradaResumo> obter(int pedidoId) async => _resumo(
         (await get(pathParameters: {'path': '/$pedidoId/entrada'})).body,
       );
+
+  @override
+  Future<List<ReferenciaEsperada>> obterEsperadas(int pedidoId) async {
+    final response = await get(
+      pathParameters: {'path': '/$pedidoId/entrada/esperadas'},
+    );
+    return (response.body as List)
+        .map((e) => ReferenciaEsperada.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 
   @override
   Future<EntradaResumo> vincularReferencia(

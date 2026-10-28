@@ -41,6 +41,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) {
     return referenciasRemoteDataSource.atualizarReferencia(
       id: id,
@@ -55,6 +56,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 
@@ -72,6 +74,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) {
     return referenciasRemoteDataSource.createReferencia(
       id: id,
@@ -86,6 +89,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 

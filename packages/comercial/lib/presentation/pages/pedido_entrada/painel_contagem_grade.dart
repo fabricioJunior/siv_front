@@ -1,5 +1,7 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
@@ -49,6 +51,18 @@ class PainelContagemGrade extends StatefulWidget {
   final void Function(bool livre, List<ItemContagem> itens) onSalvar;
   final VoidCallback onFechar;
 
+  /// Referências esperadas do fornecedor (aba ESPERADAS). Vazio = a aba não aparece.
+  final List<ReferenciaEsperada> esperadas;
+
+  /// Peças já contadas nesta entrada, por referência (esmaece e mostra contado/esperado).
+  final Map<int, double> contadoPorReferencia;
+
+  /// Abre já na aba ESPERADAS (só em contagem nova, com esperadas).
+  final bool esperadasInicial;
+
+  /// Contagens já feitas de uma referência (pré-carrega a grade ao escolher uma esperada).
+  final List<EntradaContagem> Function(int referenciaId)? existentesDaReferencia;
+
   const PainelContagemGrade({
     super.key,
     required this.titulo,
@@ -72,6 +86,10 @@ class PainelContagemGrade extends StatefulWidget {
     this.buscarParecidas,
     required this.onSalvar,
     required this.onFechar,
+    this.esperadas = const [],
+    this.contadoPorReferencia = const {},
+    this.esperadasInicial = false,
+    this.existentesDaReferencia,
   });
 
   @override
@@ -90,6 +108,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   final _debounce = Debouncer(milliseconds: 350);
 
   late bool _livre = widget.livreInicial;
+  late bool _modoEsperadas =
+      widget.esperadasInicial && widget.permiteTrocarAba && widget.esperadas.isNotEmpty;
+  ReferenciaEsperada? _esperadaEscolhida;
   late int? _referenciaId = widget.referenciaId ?? widget.linha?.referenciaId;
   late String? _referenciaNome = widget.referenciaNome;
   late int? _estampaId = widget.estampaIdInicial;
@@ -316,6 +337,33 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     });
   }
 
+  /// Escolheu uma esperada na lista: vira uma contagem COM referência, com a
+  /// grade já preenchida se a referência foi contada antes nesta entrada.
+  void _escolherEsperada(ReferenciaEsperada e) => setState(() {
+        _modoEsperadas = false;
+        _livre = false;
+        _referenciaId = e.id;
+        _referenciaNome = e.nome;
+        _esperadaEscolhida = e;
+        _parecidas = const [];
+        _cores.clear();
+        _tamanhos.clear();
+        _coresSeletor.clear();
+        _tamanhosSeletor.clear();
+        for (final c in _celulas.values) {
+          c.clear();
+        }
+        for (final c in widget.existentesDaReferencia?.call(e.id) ?? const <EntradaContagem>[]) {
+          if (c.corId == null || c.tamanhoId == null) continue;
+          _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
+          _tamanhos[c.tamanhoId!] =
+              c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
+          _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
+        }
+        nomesCor.addAll(_cores);
+        nomesTamanho.addAll(_tamanhos);
+      });
+
   void _contarNesta(ReferenciaParecida r) => setState(() {
         _livre = false;
         _referenciaId = r.id;
@@ -446,10 +494,19 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.all(16),
-              child: _skuUnico ? _campoUnico() : _corpo(cores, textos),
+              child: _modoEsperadas
+                  ? ListaEsperadas(
+                      esperadas: widget.esperadas,
+                      contadoPorReferencia: widget.contadoPorReferencia,
+                      onEscolher: _escolherEsperada,
+                    )
+                  : _skuUnico
+                      ? _campoUnico()
+                      : _corpo(cores, textos),
             ),
           ),
-          if (_focado != null) _barraTeclado(cores, textos),
+          if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
+          if (!_modoEsperadas)
           RodapeAcaoEntrada(
             resumo: Text(
               '${qtd(_totalPecas)} peças',
@@ -479,11 +536,14 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   Widget _abas(SivColors cores, SivTextStyles textos) {
     Widget aba(String rotulo, bool livre, Key key) {
-      final sel = _livre == livre;
+      final sel = !_modoEsperadas && _livre == livre;
       return Expanded(
         child: InkWell(
           key: key,
-          onTap: () => setState(() => _livre = livre),
+          onTap: () => setState(() {
+            _modoEsperadas = false;
+            _livre = livre;
+          }),
           child: Container(
             height: 48,
             alignment: Alignment.center,
@@ -508,8 +568,36 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       );
     }
 
+    final temEsperadas = widget.esperadas.isNotEmpty;
     return Row(
       children: [
+        if (temEsperadas)
+          Expanded(
+            child: InkWell(
+              key: const Key('aba_esperadas'),
+              onTap: () => setState(() => _modoEsperadas = true),
+              child: Container(
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: cores.superficie,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _modoEsperadas ? cores.acoEscuro : cores.hairline,
+                      width: _modoEsperadas ? 3 : 1,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  'ESPERADAS · ${widget.esperadas.length}',
+                  style: textos.rotulo.copyWith(
+                    color: _modoEsperadas ? cores.acoEscuro : cores.textoApoio,
+                    fontWeight: _modoEsperadas ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          ),
         aba('COM REFERÊNCIA', false, const Key('aba_com_referencia')),
         aba('SEM REFERÊNCIA', true, const Key('aba_sem_referencia')),
       ],
@@ -543,6 +631,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_livre) ..._camposLivre(cores, textos) else ..._campoReferencia(cores, textos),
+        if (!_livre && _esperadaEscolhida != null) ..._avisoEsperada(cores, textos),
         if (linhaNfe != null) ...[
           Text(
             'NF-e: ${qtd(linhaNfe.quantidadeNfe)} — digite o que foi '
@@ -604,6 +693,44 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         ],
       ],
     );
+  }
+
+  /// Cartão da esperada escolhida: quanto já foi contado e, se a referência
+  /// ainda não tem variações, o convite para informar as cores e tamanhos.
+  List<Widget> _avisoEsperada(SivColors cores, SivTextStyles textos) {
+    final e = _esperadaEscolhida!;
+    final esperado = e.quantidadeEsperada;
+    return [
+      if (esperado != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            '${qtd(_totalPecas)} de $esperado esperadas',
+            key: const Key('esperada_x_de_y'),
+            style: textos.apoio.copyWith(
+              color: _totalPecas >= esperado ? cores.conferidoTexto : cores.parcialTexto,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      if (e.nova && _cores.isEmpty)
+        Container(
+          key: const Key('esperada_sem_variacoes'),
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: cores.superficieRecuada,
+            border: Border.all(color: cores.hairline),
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          child: Text(
+            'Esta referência ainda não tem variações. Adicione as cores e os '
+            'tamanhos que chegaram.',
+            style: textos.apoio,
+          ),
+        ),
+    ];
   }
 
   /// "Numérico | Letras": carrega a grade com todos os tamanhos do tipo.

@@ -1,4 +1,5 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 
 abstract class IPedidoEntradaRemoteDataSource {
   Future<EntradaResumo> importarNfe({
@@ -14,6 +15,9 @@ abstract class IPedidoEntradaRemoteDataSource {
   });
 
   Future<EntradaResumo> obter(int pedidoId);
+
+  /// Referências esperadas do fornecedor da entrada (com foto).
+  Future<List<ReferenciaEsperada>> obterEsperadas(int pedidoId);
 
   Future<EntradaResumo> vincularReferencia(
     int pedidoId,

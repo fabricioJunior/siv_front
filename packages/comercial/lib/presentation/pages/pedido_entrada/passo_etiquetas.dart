@@ -26,9 +26,12 @@ class PassoEtiquetas extends StatefulWidget {
 
 class _PassoEtiquetasState extends State<PassoEtiquetas> {
   final _ajustes = <int, double>{};
+  // Reimpressão: lista a contagem inteira e não altera o registro de impressas.
+  bool _reimprimindo = false;
 
   EntradaResumo get _r => widget.resumo;
-  bool get _modoDiferenca => _r.etiquetas.impressasPorProduto.isNotEmpty;
+  bool get _jaImpressas => _r.etiquetas.impressasPorProduto.isNotEmpty;
+  bool get _modoDiferenca => _jaImpressas && !_reimprimindo;
 
   /// (produtoId, descricao, grade, quantidade padrão)
   List<(int, String, String, double)> get _linhas {
@@ -78,6 +81,10 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
       '/impressao_etiquetas',
       arguments: {'itens': itens},
     );
+    if (_reimprimindo) {
+      if (mounted) setState(() => _reimprimindo = false);
+      return;
+    }
     // Só registra se imprimiu de fato; sair da tela sem imprimir deixa o passo como estava.
     // Soma ao já impresso: o registro guarda a quantidade desta impressão.
     if (mounted && impresso == true) bloc.add(PedidoEntradaImprimiuEtiquetas(registro));
@@ -89,7 +96,8 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
     final textos = context.sivTextos;
     final bloqueado = TrilhaEntrada.etiquetasBloqueadas(_r);
     final linhas = _linhas;
-    final diff = TrilhaEntrada.diffEtiquetas(_r);
+    final diff =
+        _reimprimindo ? const DiffEtiquetas() : TrilhaEntrada.diffEtiquetas(_r);
     final emDia = _modoDiferenca && diff.vazio;
     final n = _total;
 
@@ -107,7 +115,9 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
                 )
               else ...[
                 Text(
-                  _modoDiferenca
+                  _reimprimindo
+                      ? 'Reimpressão: imprime a contagem inteira e não altera o que foi registrado como impresso.'
+                      : _modoDiferenca
                       ? 'Etiquetas já impressas. Ao salvar, o app mostra só a diferença: quantas imprimir a mais e quantas descartar. As leituras continuam valendo.'
                       : 'Uma por peça. Ajuste se alguma já veio etiquetada.',
                   style: textos.apoio,
@@ -134,8 +144,27 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
           ),
         ),
         RodapeAcaoEntrada(
-          resumo: bloqueado || emDia
+          resumo: bloqueado
               ? null
+              : _reimprimindo
+              ? TextButton(
+                  key: const Key('etiquetas_voltar'),
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 48)),
+                  onPressed: () => setState(() => _reimprimindo = false),
+                  child: const Text('Voltar'),
+                )
+              : emDia
+              ? TextButton(
+                  key: const Key('etiquetas_reimprimir'),
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 48)),
+                  onPressed: widget.salvando
+                      ? null
+                      : () => setState(() {
+                          _reimprimindo = true;
+                          _ajustes.clear();
+                        }),
+                  child: const Text('Reimprimir'),
+                )
               : TextButton(
                   key: const Key('etiquetas_pular'),
                   style: TextButton.styleFrom(minimumSize: const Size(44, 48)),
@@ -148,7 +177,11 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
                 ),
           acao: BotaoPrincipalEntrada(
             key: const Key('etiquetas_imprimir'),
-            rotulo: emDia ? 'CONFERIR' : 'IMPRIMIR ${qtd(n)} E CONFERIR',
+            rotulo: emDia
+                ? 'CONFERIR'
+                : _reimprimindo
+                ? 'REIMPRIMIR ${qtd(n)}'
+                : 'IMPRIMIR ${qtd(n)} E CONFERIR',
             onPressed: bloqueado || widget.salvando
                 ? null
                 : emDia

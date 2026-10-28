@@ -1,5 +1,8 @@
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
+import 'package:comercial/presentation/pages/contagens_em_andamento_page.dart'
+    show chaveFuncionarioDaContagem;
 import 'package:core/bloc.dart';
+import 'package:core/preferencia_local.dart';
 import 'package:core/injecoes.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:core/seletores.dart';
@@ -145,13 +148,20 @@ class _EntradaPorContagemPageState extends State<EntradaPorContagemPage> {
                     rotulo: 'INICIAR CONTAGEM',
                     icone: state.salvando ? null : Icons.fact_check_outlined,
                     onPressed: podeIniciar
-                        ? () => _bloc.add(
+                        ? () {
+                            // "Minhas" na lista de contagens usa o último funcionário escolhido aqui.
+                            PreferenciaLocal.gravarInt(
+                              chaveFuncionarioDaContagem,
+                              _funcionarioId!,
+                            );
+                            _bloc.add(
                               PedidoEntradaCriouPorContagem(
                                 pessoaId: _fornecedorId!,
                                 tabelaPrecoId: _tabelaDePrecoId!,
                                 funcionarioId: _funcionarioId!,
                               ),
-                            )
+                            );
+                          }
                         : null,
                   ),
                 ),

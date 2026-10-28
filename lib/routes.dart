@@ -757,6 +757,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/entrada_contagem': (context) {
     return _rotaProtegida(
       route: '/entrada_contagem',
+      child: const ContagensEmAndamentoPage(),
+    );
+  },
+  '/entrada_contagem/nova': (context) {
+    return _rotaProtegida(
+      route: '/entrada_contagem/nova',
       child: EntradaPorContagemPage(
         fornecedorSeletor: (data) => SeletorPessoa(
           titulo: 'Fornecedor',
@@ -1772,7 +1778,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_nfe': ['PEDFM001'],
-  '/entrada_contagem': ['PEDFM001'],
+  '/entrada_contagem': ['PEDFC002'],
+  '/entrada_contagem/nova': ['PEDFM001'],
   '/pedido_entrada': ['PEDFC002'],
   '/importar_pedidos_csv': ['IMPFP007'],
   // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.

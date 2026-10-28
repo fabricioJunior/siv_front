@@ -1,4 +1,5 @@
 import 'package:comercial/domain/data/remote/i_pedido_entrada_remote_data_source.dart';
+import 'package:comercial/domain/models/contagem_em_andamento.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/domain/use_cases/conferir_pedido.dart';
@@ -41,6 +42,25 @@ class ObterPedidoEntrada {
   ObterPedidoEntrada(this._remote);
 
   Future<EntradaResumo> call(int pedidoId) => _remote.obter(pedidoId);
+}
+
+class ObterContagensEmAndamento {
+  final IPedidoEntradaRemoteDataSource _remote;
+  ObterContagensEmAndamento(this._remote);
+
+  Future<ContagensEmAndamentoPagina> call({
+    String? busca,
+    int? funcionarioId,
+    bool minhas = false,
+    int pagina = 1,
+    int tamanho = 30,
+  }) => _remote.contagensEmAndamento(
+    busca: busca,
+    funcionarioId: funcionarioId,
+    minhas: minhas,
+    pagina: pagina,
+    tamanho: tamanho,
+  );
 }
 
 class ObterEsperadasEntrada {

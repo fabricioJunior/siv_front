@@ -19,6 +19,7 @@ class CriarReferenciaMidia {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) {
     return referenciaMidiasRepository.criarReferenciaMidia(
@@ -32,6 +33,7 @@ class CriarReferenciaMidia {
       descricao: descricao,
       cor: cor,
       tamanho: tamanho,
+      origem: origem,
       onSendProgress: onSendProgress,
     );
   }

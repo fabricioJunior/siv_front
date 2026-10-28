@@ -60,9 +60,10 @@ class _ReferenciasPageState extends State<ReferenciasPage> {
       );
       return;
     }
-    await Navigator.of(context).push<Referencia>(
-      MaterialPageRoute(builder: (_) => ReferenciaPage(idReferencia: id)),
-    );
+    // Pela rota: é ela que injeta o seletor de fornecedor.
+    await Navigator.of(
+      context,
+    ).pushNamed('/referencia', arguments: {'idReferencia': id});
     bloc.add(const ReferenciasListaRecarregou());
   }
 

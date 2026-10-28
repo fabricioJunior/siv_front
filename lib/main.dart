@@ -31,6 +31,7 @@ import 'package:siv_front/routes.dart';
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await SentryFlutter.init(
     (options) => options.dsn = _sentryDsn,
     appRunner: () async {
@@ -38,7 +39,7 @@ void main() async {
       // o binding e o runApp precisam estar na mesma zone, senão o Flutter
       // acusa "Zone mismatch" (SentryFlutter.init cria uma zone própria pro
       // appRunner). vende
-      WidgetsFlutterBinding.ensureInitialized();
+      //  WidgetsFlutterBinding.ensureInitialized();
       try {
         await _bootstrap();
         initPrintingConfigs();

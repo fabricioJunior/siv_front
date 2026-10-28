@@ -243,7 +243,8 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
   /// já com o nome e as cores/tamanhos contados; ao voltar com o id da
   /// referência criada, associa o grupo a ela.
   Future<void> _criarReferencia() async {
-    final id = await Navigator.of(context).pushNamed<int>(
+    // Sem type arg: o onGenerateRoute cria MaterialPageRoute<dynamic> e o cast quebra.
+    final id = await Navigator.of(context).pushNamed(
       '/referencia_cadastro',
       arguments: {
         'nome': widget.descricao,
@@ -251,7 +252,7 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
         'tamanhoIds': widget.itens.map((c) => c.tamanhoId).toSet().toList(),
       },
     );
-    if (id != null && mounted) _associar(id);
+    if (id is int && mounted) _associar(id);
   }
 
   @override

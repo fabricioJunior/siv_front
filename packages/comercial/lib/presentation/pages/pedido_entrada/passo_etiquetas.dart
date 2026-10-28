@@ -74,7 +74,7 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
       });
       registro[l.$1] = q;
     }
-    final impresso = await Navigator.of(context).pushNamed<bool>(
+    final impresso = await Navigator.of(context).pushNamed(
       '/impressao_etiquetas',
       arguments: {'itens': itens},
     );

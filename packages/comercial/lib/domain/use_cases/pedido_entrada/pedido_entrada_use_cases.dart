@@ -1,5 +1,6 @@
 import 'package:comercial/domain/data/remote/i_pedido_entrada_remote_data_source.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/domain/use_cases/conferir_pedido.dart';
 import 'package:comercial/domain/use_cases/faturar_pedido.dart';
 
@@ -40,6 +41,14 @@ class ObterPedidoEntrada {
   ObterPedidoEntrada(this._remote);
 
   Future<EntradaResumo> call(int pedidoId) => _remote.obter(pedidoId);
+}
+
+class ObterEsperadasEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  ObterEsperadasEntrada(this._remote);
+
+  Future<List<ReferenciaEsperada>> call(int pedidoId) =>
+      _remote.obterEsperadas(pedidoId);
 }
 
 class VincularLinhaEntrada {

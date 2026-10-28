@@ -44,6 +44,7 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) async {
     var pathParameters = {'referenciaId': referenciaId.toString()};
@@ -54,6 +55,7 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'description': descricao,
       'cor': cor,
       'tamanho': tamanho,
+      if (origem != 'site') 'origem': origem,
     };
     var response = await postFile(
       field: 'file',

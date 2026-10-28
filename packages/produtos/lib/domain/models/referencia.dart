@@ -1,6 +1,7 @@
 import 'package:core/equals.dart';
 
 import 'categoria.dart';
+import 'referencia_status_entrada.dart';
 import 'sub_categoria.dart';
 
 abstract class Referencia implements Equatable {
@@ -18,6 +19,12 @@ abstract class Referencia implements Equatable {
   String? get cuidados;
   String? get ncm;
   int? get pesoGramas;
+  int? get fornecedorId;
+  String? get fornecedorNome;
+  bool? get aguardandoReposicao;
+  DateTime? get previsaoChegada;
+  int? get quantidadeEsperada;
+  ReferenciaStatusEntrada? get status;
   Categoria? get categoria;
   SubCategoria? get subCategoria;
 
@@ -36,6 +43,12 @@ abstract class Referencia implements Equatable {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    int? fornecedorId,
+    String? fornecedorNome,
+    bool? aguardandoReposicao,
+    DateTime? previsaoChegada,
+    int? quantidadeEsperada,
+    ReferenciaStatusEntrada? status,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) = _ReferenciaImpl;
@@ -56,6 +69,12 @@ abstract class Referencia implements Equatable {
     cuidados,
     ncm,
     pesoGramas,
+    fornecedorId,
+    fornecedorNome,
+    aguardandoReposicao,
+    previsaoChegada,
+    quantidadeEsperada,
+    status,
     categoria,
     subCategoria,
   ];
@@ -94,6 +113,18 @@ class _ReferenciaImpl implements Referencia {
   @override
   final int? pesoGramas;
   @override
+  final int? fornecedorId;
+  @override
+  final String? fornecedorNome;
+  @override
+  final bool? aguardandoReposicao;
+  @override
+  final DateTime? previsaoChegada;
+  @override
+  final int? quantidadeEsperada;
+  @override
+  final ReferenciaStatusEntrada? status;
+  @override
   final Categoria? categoria;
   @override
   final SubCategoria? subCategoria;
@@ -113,6 +144,12 @@ class _ReferenciaImpl implements Referencia {
     this.cuidados,
     this.ncm,
     this.pesoGramas,
+    this.fornecedorId,
+    this.fornecedorNome,
+    this.aguardandoReposicao,
+    this.previsaoChegada,
+    this.quantidadeEsperada,
+    this.status,
     this.categoria,
     this.subCategoria,
   });
@@ -132,6 +169,12 @@ class _ReferenciaImpl implements Referencia {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    int? fornecedorId,
+    String? fornecedorNome,
+    bool? aguardandoReposicao,
+    DateTime? previsaoChegada,
+    int? quantidadeEsperada,
+    ReferenciaStatusEntrada? status,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) {
@@ -150,6 +193,12 @@ class _ReferenciaImpl implements Referencia {
       cuidados: cuidados ?? this.cuidados,
       ncm: ncm ?? this.ncm,
       pesoGramas: pesoGramas ?? this.pesoGramas,
+      fornecedorId: fornecedorId ?? this.fornecedorId,
+      fornecedorNome: fornecedorNome ?? this.fornecedorNome,
+      aguardandoReposicao: aguardandoReposicao ?? this.aguardandoReposicao,
+      previsaoChegada: previsaoChegada ?? this.previsaoChegada,
+      quantidadeEsperada: quantidadeEsperada ?? this.quantidadeEsperada,
+      status: status ?? this.status,
       categoria: categoria ?? this.categoria,
       subCategoria: subCategoria ?? this.subCategoria,
     );
@@ -171,6 +220,12 @@ class _ReferenciaImpl implements Referencia {
     cuidados,
     ncm,
     pesoGramas,
+    fornecedorId,
+    fornecedorNome,
+    aguardandoReposicao,
+    previsaoChegada,
+    quantidadeEsperada,
+    status,
     categoria,
     subCategoria,
   ];
@@ -195,6 +250,12 @@ extension ReferenciaCopyWith on Referencia {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    int? fornecedorId,
+    String? fornecedorNome,
+    bool? aguardandoReposicao,
+    DateTime? previsaoChegada,
+    int? quantidadeEsperada,
+    ReferenciaStatusEntrada? status,
     Categoria? categoria,
     SubCategoria? subCategoria,
   }) {
@@ -214,6 +275,12 @@ extension ReferenciaCopyWith on Referencia {
         cuidados: cuidados,
         ncm: ncm,
         pesoGramas: pesoGramas,
+        fornecedorId: fornecedorId,
+        fornecedorNome: fornecedorNome,
+        aguardandoReposicao: aguardandoReposicao,
+        previsaoChegada: previsaoChegada,
+        quantidadeEsperada: quantidadeEsperada,
+        status: status,
         categoria: categoria,
         subCategoria: subCategoria,
       );
@@ -234,6 +301,12 @@ extension ReferenciaCopyWith on Referencia {
       cuidados: cuidados ?? this.cuidados,
       ncm: ncm ?? this.ncm,
       pesoGramas: pesoGramas ?? this.pesoGramas,
+      fornecedorId: fornecedorId ?? this.fornecedorId,
+      fornecedorNome: fornecedorNome ?? this.fornecedorNome,
+      aguardandoReposicao: aguardandoReposicao ?? this.aguardandoReposicao,
+      previsaoChegada: previsaoChegada ?? this.previsaoChegada,
+      quantidadeEsperada: quantidadeEsperada ?? this.quantidadeEsperada,
+      status: status ?? this.status,
       categoria: categoria ?? this.categoria,
       subCategoria: subCategoria ?? this.subCategoria,
     );

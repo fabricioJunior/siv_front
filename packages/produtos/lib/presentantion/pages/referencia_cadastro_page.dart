@@ -1,6 +1,9 @@
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/imagens.dart';
 import 'package:core/permissoes/componente_controlado_wiget.dart';
+import 'package:core/seletores/i_seletor.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:produtos/models.dart';
@@ -19,28 +22,37 @@ class ReferenciaCadastroPage extends StatelessWidget {
   final List<int> corIdsIniciais;
   final List<int> tamanhoIdsIniciais;
 
+  /// Escolha do fornecedor (montado em `routes.dart`; este package não conhece
+  /// o de pessoas). Sem ele, o passo do nome não mostra o campo.
+  final SeletorWidget? fornecedorSeletor;
+
   const ReferenciaCadastroPage({
     super.key,
     this.nomeInicial,
     this.corIdsIniciais = const [],
     this.tamanhoIdsIniciais = const [],
+    this.fornecedorSeletor,
   });
 
+  /// Abre pela rota nomeada (`/referencia_cadastro`), que é onde o app monta o
+  /// seletor de fornecedor.
   static Future<int?> show({
     required BuildContext context,
     String? nomeInicial,
     List<int> corIdsIniciais = const [],
     List<int> tamanhoIdsIniciais = const [],
-  }) {
-    return Navigator.of(context).push<int>(
-      MaterialPageRoute(
-        builder: (_) => ReferenciaCadastroPage(
-          nomeInicial: nomeInicial,
-          corIdsIniciais: corIdsIniciais,
-          tamanhoIdsIniciais: tamanhoIdsIniciais,
-        ),
-      ),
+  }) async {
+    // Sem type arg: o onGenerateRoute do app cria MaterialPageRoute<dynamic> e
+    // pushNamed<int> falha no cast interno do Flutter. O valor é int? mesmo.
+    final id = await Navigator.of(context).pushNamed(
+      '/referencia_cadastro',
+      arguments: {
+        'nome': nomeInicial,
+        'corIds': corIdsIniciais,
+        'tamanhoIds': tamanhoIdsIniciais,
+      },
     );
+    return id as int?;
   }
 
   @override
@@ -75,6 +87,7 @@ class ReferenciaCadastroPage extends StatelessWidget {
                               state: state,
                               corIds: corIdsIniciais,
                               tamanhoIds: tamanhoIdsIniciais,
+                              fornecedorSeletor: fornecedorSeletor,
                             ),
                           ),
                           if (largo) ...[
@@ -298,10 +311,12 @@ class _Corpo extends StatelessWidget {
   final ReferenciaCadastroState state;
   final List<int> corIds;
   final List<int> tamanhoIds;
+  final SeletorWidget? fornecedorSeletor;
   const _Corpo({
     required this.state,
     this.corIds = const [],
     this.tamanhoIds = const [],
+    this.fornecedorSeletor,
   });
 
   @override
@@ -355,7 +370,10 @@ class _Corpo extends StatelessWidget {
           }
         },
       ),
-      ReferenciaCadastroStep.nome => _NomeStep(state: state),
+      ReferenciaCadastroStep.nome => _NomeStep(
+        state: state,
+        fornecedorSeletor: fornecedorSeletor,
+      ),
       ReferenciaCadastroStep.preco => _CampoStep(
         key: const ValueKey('preco'),
         titulo: 'Qual o preço de venda?',
@@ -376,6 +394,7 @@ class _Corpo extends StatelessWidget {
         onChangedSecundario: (v) => context.read<ReferenciaCadastroBloc>().add(
           ReferenciaCadastroCustoAlterado(custo: v),
         ),
+        extra: VariacoesEscolhaCadastro(state: state),
       ),
       ReferenciaCadastroStep.variacoes => AdicionarVariacoesPainel(
         key: ValueKey(state.referenciaId),
@@ -527,6 +546,7 @@ class _CampoStep extends StatefulWidget {
   final String? rotuloSecundario;
   final String inicialSecundario;
   final ValueChanged<String>? onChangedSecundario;
+  final Widget? extra;
 
   const _CampoStep({
     super.key,
@@ -541,6 +561,7 @@ class _CampoStep extends StatefulWidget {
     this.rotuloSecundario,
     this.inicialSecundario = '',
     this.onChangedSecundario,
+    this.extra,
   });
 
   @override
@@ -562,7 +583,7 @@ class _CampoStepState extends State<_CampoStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,6 +657,13 @@ class _CampoStepState extends State<_CampoStep> {
               ),
             ),
           ],
+          if (widget.extra != null) ...[
+            const SizedBox(height: 24),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: widget.extra!,
+            ),
+          ],
         ],
       ),
     );
@@ -647,7 +675,8 @@ class _CampoStepState extends State<_CampoStep> {
 /// escreve no bloc).
 class _NomeStep extends StatefulWidget {
   final ReferenciaCadastroState state;
-  const _NomeStep({required this.state});
+  final SeletorWidget? fornecedorSeletor;
+  const _NomeStep({required this.state, this.fornecedorSeletor});
 
   @override
   State<_NomeStep> createState() => _NomeStepState();
@@ -659,10 +688,20 @@ class _NomeStepState extends State<_NomeStep> {
   late final _descricao = TextEditingController(text: widget.state.descricao);
   late final _composicao = TextEditingController(text: widget.state.composicao);
   late final _cuidados = TextEditingController(text: widget.state.cuidados);
+  late final _codigoFornecedor = TextEditingController(
+    text: widget.state.codigoNoFornecedor,
+  );
 
   @override
   void dispose() {
-    for (final c in [_nome, _unidade, _descricao, _composicao, _cuidados]) {
+    for (final c in [
+      _nome,
+      _unidade,
+      _descricao,
+      _composicao,
+      _cuidados,
+      _codigoFornecedor,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -739,6 +778,38 @@ class _NomeStepState extends State<_NomeStep> {
               ),
               const SizedBox(height: 24),
               Text(
+                'Fornecimento (opcional)',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _codigoFornecedor,
+                decoration: const InputDecoration(
+                  labelText: 'CÓDIGO NO FORNECEDOR',
+                  hintText: 'Ex.: DL-2231',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (v) =>
+                    bloc.add(ReferenciaCadastroCodigoFornecedorAlterado(v)),
+              ),
+              if (widget.fornecedorSeletor != null) ...[
+                const SizedBox(height: 12),
+                widget.fornecedorSeletor!(
+                  SeletorData(
+                    itemsSelecionadosInicial: widget.state.fornecedor == null
+                        ? null
+                        : [widget.state.fornecedor!],
+                    onChanged: (itens) => bloc.add(
+                      ReferenciaCadastroFornecedorAlterado(
+                        itens.isEmpty ? null : itens.first,
+                      ),
+                    ),
+                    compacto: true,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Text(
                 'Informações opcionais',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
@@ -771,6 +842,131 @@ class _NomeStepState extends State<_NomeStep> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Passo do preço: escolher as variações agora ou só na chegada da peça. Em
+/// "Definir na chegada" a referência nasce sem produtos; foto e quantidade
+/// esperada ajudam o contador a reconhecê-la quando chegar.
+@visibleForTesting
+class VariacoesEscolhaCadastro extends StatelessWidget {
+  final ReferenciaCadastroState state;
+  const VariacoesEscolhaCadastro({super.key, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<ReferenciaCadastroBloc>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Variações', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        SegmentedButton<bool>(
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(minimumSize: const Size(0, 48)),
+          segments: const [
+            ButtonSegment(value: false, label: Text('Escolher agora')),
+            ButtonSegment(value: true, label: Text('Definir na chegada')),
+          ],
+          selected: {state.definirNaChegada},
+          onSelectionChanged: (v) => bloc.add(
+            ReferenciaCadastroDefinirNaChegadaAlterado(v.first),
+          ),
+        ),
+        if (state.definirNaChegada) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'A referência é criada sem cores e tamanhos. O contador escolhe a '
+            'grade quando a peça chegar.',
+            style: TextStyle(color: Colors.black54),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: state.quantidadeEsperada,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'QUANTIDADE ESPERADA (PEÇAS)',
+              helperText: 'Opcional. Informativo, não bloqueia a entrada.',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (v) =>
+                bloc.add(ReferenciaCadastroQuantidadeEsperadaAlterada(v)),
+          ),
+          const SizedBox(height: 16),
+          _FotoDoFornecedor(foto: state.fotoFornecedor),
+        ],
+      ],
+    );
+  }
+}
+
+class _FotoDoFornecedor extends StatelessWidget {
+  final Imagem? foto;
+  const _FotoDoFornecedor({required this.foto});
+
+  Future<void> _escolher(BuildContext context) async {
+    final bloc = context.read<ReferenciaCadastroBloc>();
+    final escolhidas = await showSelecionarImagemModal(context);
+    if (escolhidas == null || escolhidas.isEmpty) return;
+    bloc.add(ReferenciaCadastroFotoFornecedorAlterada(escolhidas.first));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<ReferenciaCadastroBloc>();
+    final bytes = foto?.bytes;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black26),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: bytes == null
+              ? const Icon(Icons.add_a_photo_outlined, color: Colors.black38)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.memory(bytes, fit: BoxFit.cover),
+                ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Foto do fornecedor (opcional)',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const Text(
+                'Ajuda o contador a reconhecer a peça quando ela chegar. '
+                'É de uso interno: não vai para o site.',
+                style: TextStyle(color: Colors.black54),
+              ),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => _escolher(context),
+                    child: Text(bytes == null ? 'Escolher foto' : 'Trocar'),
+                  ),
+                  if (bytes != null)
+                    TextButton(
+                      onPressed: () => bloc.add(
+                        const ReferenciaCadastroFotoFornecedorAlterada(null),
+                      ),
+                      child: const Text('Remover'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -864,7 +1060,9 @@ class _Rodape extends StatelessWidget {
                     )
                   : Text(
                       step == ReferenciaCadastroStep.preco
-                          ? 'Criar e escolher variações'
+                          ? (state.definirNaChegada
+                                ? 'CRIAR REFERÊNCIA'
+                                : 'Criar e escolher variações')
                           : 'Continuar',
                     ),
             ),

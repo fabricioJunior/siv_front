@@ -22,6 +22,13 @@ class ReferenciaCadastroState extends Equatable {
   final String descricao;
   final String composicao;
   final String cuidados;
+  // Referência esperada: fornecedor/código ficam no passo do nome; a escolha de
+  // variações, a quantidade esperada e a foto, no passo do preço.
+  final SelectData? fornecedor;
+  final String codigoNoFornecedor;
+  final bool definirNaChegada;
+  final String quantidadeEsperada;
+  final Imagem? fotoFornecedor;
   final int? referenciaId;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
@@ -41,6 +48,11 @@ class ReferenciaCadastroState extends Equatable {
     this.descricao = '',
     this.composicao = '',
     this.cuidados = '',
+    this.fornecedor,
+    this.codigoNoFornecedor = '',
+    this.definirNaChegada = false,
+    this.quantidadeEsperada = '',
+    this.fotoFornecedor,
     this.referenciaId,
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
@@ -74,6 +86,11 @@ class ReferenciaCadastroState extends Equatable {
     String? descricao,
     String? composicao,
     String? cuidados,
+    SelectData? Function()? fornecedor,
+    String? codigoNoFornecedor,
+    bool? definirNaChegada,
+    String? quantidadeEsperada,
+    Imagem? Function()? fotoFornecedor,
     int? referenciaId,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
@@ -93,6 +110,13 @@ class ReferenciaCadastroState extends Equatable {
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
+      fornecedor: fornecedor == null ? this.fornecedor : fornecedor(),
+      codigoNoFornecedor: codigoNoFornecedor ?? this.codigoNoFornecedor,
+      definirNaChegada: definirNaChegada ?? this.definirNaChegada,
+      quantidadeEsperada: quantidadeEsperada ?? this.quantidadeEsperada,
+      fotoFornecedor: fotoFornecedor == null
+          ? this.fotoFornecedor
+          : fotoFornecedor(),
       referenciaId: referenciaId ?? this.referenciaId,
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
@@ -116,6 +140,12 @@ class ReferenciaCadastroState extends Equatable {
     descricao,
     composicao,
     cuidados,
+    fornecedor?.id,
+    codigoNoFornecedor,
+    definirNaChegada,
+    quantidadeEsperada,
+    fotoFornecedor?.path,
+    fotoFornecedor?.bytes?.length,
     referenciaId,
     carregandoCategorias,
     carregandoSubCategorias,

@@ -27,6 +27,7 @@ class ReferenciaAtualizou extends ReferenciaEvent {
   final String? cuidados;
   final String? ncm;
   final int? pesoGramas;
+  final EsperaReferencia? espera;
 
   ReferenciaAtualizou({
     required this.id,
@@ -41,6 +42,7 @@ class ReferenciaAtualizou extends ReferenciaEvent {
     this.cuidados,
     this.ncm,
     this.pesoGramas,
+    this.espera,
   });
 
   @override
@@ -57,5 +59,6 @@ class ReferenciaAtualizou extends ReferenciaEvent {
     cuidados,
     ncm,
     pesoGramas,
+    espera,
   ];
 }

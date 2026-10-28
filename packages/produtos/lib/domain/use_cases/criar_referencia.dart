@@ -20,6 +20,7 @@ class CriarReferencia {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) async {
     return _referenciasRepository.criarReferencia(
       id: id,
@@ -34,6 +35,7 @@ class CriarReferencia {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 }

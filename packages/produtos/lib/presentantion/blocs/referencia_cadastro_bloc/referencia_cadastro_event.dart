@@ -77,6 +77,50 @@ class ReferenciaCadastroCustoAlterado extends ReferenciaCadastroEvent {
   List<Object?> get props => [custo];
 }
 
+class ReferenciaCadastroFornecedorAlterado extends ReferenciaCadastroEvent {
+  final SelectData? fornecedor;
+  const ReferenciaCadastroFornecedorAlterado(this.fornecedor);
+
+  @override
+  List<Object?> get props => [fornecedor?.id];
+}
+
+class ReferenciaCadastroCodigoFornecedorAlterado
+    extends ReferenciaCadastroEvent {
+  final String codigo;
+  const ReferenciaCadastroCodigoFornecedorAlterado(this.codigo);
+
+  @override
+  List<Object?> get props => [codigo];
+}
+
+/// "Definir na chegada": cria só a referência, sem nenhuma variação.
+class ReferenciaCadastroDefinirNaChegadaAlterado
+    extends ReferenciaCadastroEvent {
+  final bool definirNaChegada;
+  const ReferenciaCadastroDefinirNaChegadaAlterado(this.definirNaChegada);
+
+  @override
+  List<Object?> get props => [definirNaChegada];
+}
+
+class ReferenciaCadastroQuantidadeEsperadaAlterada
+    extends ReferenciaCadastroEvent {
+  final String quantidade;
+  const ReferenciaCadastroQuantidadeEsperadaAlterada(this.quantidade);
+
+  @override
+  List<Object?> get props => [quantidade];
+}
+
+class ReferenciaCadastroFotoFornecedorAlterada extends ReferenciaCadastroEvent {
+  final Imagem? foto;
+  const ReferenciaCadastroFotoFornecedorAlterada(this.foto);
+
+  @override
+  List<Object?> get props => [foto?.path, foto?.bytes?.length];
+}
+
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}
 
 class ReferenciaCadastroVoltar extends ReferenciaCadastroEvent {}

@@ -42,14 +42,17 @@ ContagemEmAndamento _c(
   List<ItemContagemEmAndamento> itens = const [],
   int? total,
   String? contador = 'Ana Paula',
-}) => ContagemEmAndamento(
-  pedidoId: id,
-  fornecedor: 'Duloren $id',
-  contador: contador,
-  criadoEm: DateTime(2026, 10, 28, 9, 2),
-  itens: itens,
-  totalItens: total ?? itens.length,
-);
+  String etapa = 'contando',
+}) =>
+    ContagemEmAndamento(
+      pedidoId: id,
+      fornecedor: 'Duloren $id',
+      contador: contador,
+      etapa: etapa,
+      criadoEm: DateTime(2026, 10, 28, 9, 2),
+      itens: itens,
+      totalItens: total ?? itens.length,
+    );
 
 const _ref = ItemContagemEmAndamento(nome: 'Sutiã Renda Liz');
 const _livre = ItemContagemEmAndamento(
@@ -87,15 +90,18 @@ void main() {
     final agora = DateTime(2026, 10, 28, 12);
     test('mobile: hoje, ontem e data curta', () {
       expect(
-        formatarCriadoEm(DateTime(2026, 10, 28, 9, 2), mobile: true, agora: agora),
+        formatarCriadoEm(DateTime(2026, 10, 28, 9, 2),
+            mobile: true, agora: agora),
         'hoje, 09:02',
       );
       expect(
-        formatarCriadoEm(DateTime(2026, 10, 27, 16, 40), mobile: true, agora: agora),
+        formatarCriadoEm(DateTime(2026, 10, 27, 16, 40),
+            mobile: true, agora: agora),
         'ontem, 16:40',
       );
       expect(
-        formatarCriadoEm(DateTime(2026, 10, 25, 14, 8), mobile: true, agora: agora),
+        formatarCriadoEm(DateTime(2026, 10, 25, 14, 8),
+            mobile: true, agora: agora),
         '25/10, 14:08',
       );
     });
@@ -113,7 +119,9 @@ void main() {
         (c) => ContagensEmAndamentoPagina(
           total: 31,
           totalDoFuncionario: 1,
-          itens: [for (var i = 0; i < (c.minhas ? 1 : 30); i++) _c(c.pagina * 100 + i)],
+          itens: [
+            for (var i = 0; i < (c.minhas ? 1 : 30); i++) _c(c.pagina * 100 + i)
+          ],
         ),
       );
       final cubit = _cubit(r, funcionarioId: 7);
@@ -122,7 +130,8 @@ void main() {
       expect(cubit.state.itens.length, 30);
       expect(cubit.state.temMais, isTrue);
       expect(r.chamadas.last.minhas, isFalse);
-      expect(r.chamadas.last.funcionarioId, 7); // o contador "Minhas" sempre vem
+      expect(
+          r.chamadas.last.funcionarioId, 7); // o contador "Minhas" sempre vem
 
       await cubit.maisItens();
       expect(r.chamadas.last.pagina, 2);
@@ -153,14 +162,17 @@ void main() {
   });
 
   group('página', () {
-    testWidgets('mobile: linha com fornecedor, itens, descrição em âmbar, +N e toque abre a contagem', (t) async {
+    testWidgets(
+        'mobile: linha com fornecedor, itens, descrição em âmbar, +N e toque abre a contagem',
+        (t) async {
       await _tela(t, const Size(360, 780));
       final r = _Remote(
         (_) => ContagensEmAndamentoPagina(
           total: 3,
           totalDoFuncionario: 1,
           itens: [
-            _c(4821, itens: const [_ref, _livre], total: 6),
+            _c(4821,
+                itens: const [_ref, _livre], total: 6, etapa: 'associando'),
             _c(4817, contador: null),
           ],
         ),
@@ -174,6 +186,11 @@ void main() {
       expect(find.text('#4821'), findsOneWidget);
       expect(find.textContaining('+4', findRichText: true), findsOneWidget);
       expect(find.text('Nenhum item contado'), findsOneWidget);
+      // etapa da trilha em cada linha
+      expect(
+          find.byKey(const Key('contagem_etapa_associando')), findsOneWidget);
+      expect(find.text('Associar'), findsOneWidget);
+      expect(find.byKey(const Key('contagem_etapa_contando')), findsOneWidget);
       expect(find.text('Todas · 3'), findsOneWidget);
       expect(find.text('Minhas · 1'), findsOneWidget);
       expect(find.byKey(const Key('contagens_nova')), findsOneWidget);
@@ -193,22 +210,27 @@ void main() {
         return true;
       });
       final cores = SivColors.padrao;
-      expect(spans.firstWhere((s) => s.text == 'Body rendado vinho').style?.color, cores.parcialTexto);
-      expect(spans.firstWhere((s) => s.text == 'Sutiã Renda Liz').style?.color, isNull);
+      expect(
+          spans.firstWhere((s) => s.text == 'Body rendado vinho').style?.color,
+          cores.parcialTexto);
+      expect(spans.firstWhere((s) => s.text == 'Sutiã Renda Liz').style?.color,
+          isNull);
 
       await t.tap(find.byKey(const Key('contagem_4821')));
       await t.pumpAndSettle();
       expect(rotas.last, '/pedido_entrada {pedidoId: 4821}');
     });
 
-    testWidgets('"Minhas" desabilitado sem funcionário e novo contagem navega', (t) async {
+    testWidgets('"Minhas" desabilitado sem funcionário e novo contagem navega',
+        (t) async {
       await _tela(t, const Size(360, 780));
       final r = _Remote((_) => const ContagensEmAndamentoPagina());
       final rotas = <String>[];
       await t.pumpWidget(_app(_cubit(r), rotas: rotas));
       await t.pumpAndSettle();
 
-      final minhas = t.widget<TextButton>(find.byKey(const Key('contagens_filtro_minhas')));
+      final minhas = t
+          .widget<TextButton>(find.byKey(const Key('contagens_filtro_minhas')));
       expect(minhas.onPressed, isNull);
       expect(find.byKey(const Key('contagens_vazio')), findsOneWidget);
       expect(find.text('Nenhuma contagem em andamento'), findsOneWidget);
@@ -241,12 +263,16 @@ void main() {
       expect(find.byKey(const Key('contagens_erro')), findsNothing);
     });
 
-    testWidgets('desktop: tabela com data completa e botão Nova contagem no cabeçalho', (t) async {
+    testWidgets(
+        'desktop: tabela com data completa e botão Nova contagem no cabeçalho',
+        (t) async {
       await _tela(t, const Size(1280, 800));
       final r = _Remote(
         (_) => ContagensEmAndamentoPagina(
           total: 1,
-          itens: [_c(4821, itens: const [_ref, _livre])],
+          itens: [
+            _c(4821, itens: const [_ref, _livre])
+          ],
         ),
       );
       await t.pumpWidget(_app(_cubit(r, funcionarioId: 7)));

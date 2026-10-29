@@ -405,11 +405,21 @@ class _LinhaMobile extends StatelessWidget {
                   const SizedBox(height: 2),
                   _itens(context, c, max: 3),
                   const SizedBox(height: 2),
-                  Text(
-                    c.contador == null ? quando : '$quando · ${c.contador}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textos.apoio.copyWith(color: cores.textoApoio),
+                  Row(
+                    children: [
+                      _EtapaSelo(c.etapa),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          c.contador == null
+                              ? quando
+                              : '$quando · ${c.contador}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textos.apoio.copyWith(color: cores.textoApoio),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -445,7 +455,8 @@ class _LinhaDesktop extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(width: 90, child: Text('#${c.pedidoId}', style: textos.codigo)),
+            SizedBox(
+                width: 90, child: Text('#${c.pedidoId}', style: textos.codigo)),
             Expanded(
               flex: 20,
               child: Text(
@@ -458,6 +469,13 @@ class _LinhaDesktop extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(flex: 34, child: _itens(context, c, max: 4)),
             const SizedBox(width: 16),
+            SizedBox(
+              width: 110,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _EtapaSelo(c.etapa),
+              ),
+            ),
             SizedBox(
               width: 130,
               child: Text(
@@ -476,6 +494,43 @@ class _LinhaDesktop extends StatelessWidget {
             ),
             Icon(Icons.chevron_right, color: cores.textoApoio),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+const _rotulosEtapa = {
+  'contando': 'Contando',
+  'associando': 'Associar',
+  'etiquetando': 'Etiquetas',
+  'conferindo': 'Conferir',
+};
+
+/// Etapa da trilha da contagem; "Associar" chama atenção (falta referência).
+class _EtapaSelo extends StatelessWidget {
+  final String etapa;
+
+  const _EtapaSelo(this.etapa);
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final atencao = etapa == 'associando';
+    return Container(
+      key: Key('contagem_etapa_$etapa'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: atencao ? cores.atencaoFundo : cores.superficieRecuada,
+        border:
+            Border.all(color: atencao ? cores.atencaoBorda : cores.hairline),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        _rotulosEtapa[etapa] ?? etapa,
+        style: context.sivTextos.apoio.copyWith(
+          color: atencao ? cores.parcialTexto : cores.acoEscuro,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

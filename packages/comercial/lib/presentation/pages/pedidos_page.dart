@@ -128,7 +128,7 @@ class _PedidosPageState extends State<PedidosPage> {
                     OutlinedButton.icon(
                       key: const Key('pedidos_entrada_contagem_button'),
                       onPressed: () async {
-                        await Navigator.pushNamed(context, '/entrada_contagem');
+                        await Navigator.pushNamed(context, '/entrada_contagem/nova');
                         if (mounted) _bloc.add(PedidosIniciou());
                       },
                       icon: const Icon(Icons.fact_check_outlined, size: 18),

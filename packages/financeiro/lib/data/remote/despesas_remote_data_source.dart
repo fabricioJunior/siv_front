@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:core/remote_data_sourcers.dart';
 import 'package:financeiro/data/remote/dtos/despesa_dto.dart';
 import 'package:financeiro/domain/data/remote/i_despesas_remote_data_source.dart';
@@ -31,13 +29,16 @@ class DespesasRemoteDataSource extends RemoteDataSourceBase
     // calendário já faz nesse mesmo caso.
     final response = await httpClient.patch(
       uri: uriBase.replace(path: '/v1/despesas/pagar-fatura'),
-      body: jsonEncode({
+      body: {
         'empresaId': empresaId,
         'origemPagamentoId': origemPagamentoId,
         'ano': ano,
         'mes': mes,
-      }),
+      },
     );
+    if (response.statusCode >= 400) {
+      throw Exception('pagar-fatura ${response.statusCode}: ${response.message ?? response.body}');
+    }
     final body = response.body as Map<String, dynamic>;
     return PagamentoDeFatura(
       atualizadas: (body['atualizadas'] as num).toInt(),

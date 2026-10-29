@@ -105,6 +105,8 @@ class ExtratoCaixaDto implements ExtratoCaixa {
         return TipoDocumentoExtratoCaixa.pix;
       case 'cartao':
         return TipoDocumentoExtratoCaixa.cartao;
+      case 'cartao_de_debito':
+        return TipoDocumentoExtratoCaixa.cartaoDeDebito;
       case 'cheque':
         return TipoDocumentoExtratoCaixa.cheque;
       case 'fatura':

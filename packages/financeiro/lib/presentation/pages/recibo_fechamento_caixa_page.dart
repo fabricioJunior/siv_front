@@ -411,6 +411,8 @@ String _labelTipoDocumento(TipoContagemDoCaixaItem tipo) {
       return 'Pix';
     case TipoContagemDoCaixaItem.cartao:
       return 'Cartão';
+    case TipoContagemDoCaixaItem.cartaoDeDebito:
+      return 'Cartão de débito';
     case TipoContagemDoCaixaItem.fatura:
       return 'Fatura';
     case TipoContagemDoCaixaItem.cheque:

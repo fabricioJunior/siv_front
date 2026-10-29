@@ -16,6 +16,7 @@ enum TipoContagemDoCaixaItem {
   dinheiro,
   pix,
   cartao,
+  cartaoDeDebito,
   fatura,
   cheque,
   troco,
@@ -23,4 +24,9 @@ enum TipoContagemDoCaixaItem {
   tedDoc,
   adiantamento,
   creditoDeDevolucao,
+}
+
+extension TipoContagemDoCaixaItemApi on TipoContagemDoCaixaItem {
+  /// Valor aceito pelo backend em `tipoDocumento` (o `name` do enum só serve para os tipos de uma palavra).
+  String get valorApi => this == TipoContagemDoCaixaItem.cartaoDeDebito ? 'Cartão de débito' : name;
 }

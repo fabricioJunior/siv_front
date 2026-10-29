@@ -938,6 +938,8 @@ String _rotuloTipoDocumento(TipoDocumentoExtratoCaixa tipo) {
       return 'Pix';
     case TipoDocumentoExtratoCaixa.cartao:
       return 'Cartao';
+    case TipoDocumentoExtratoCaixa.cartaoDeDebito:
+      return 'Cartao de debito';
     case TipoDocumentoExtratoCaixa.cheque:
       return 'Cheque';
     case TipoDocumentoExtratoCaixa.fatura:

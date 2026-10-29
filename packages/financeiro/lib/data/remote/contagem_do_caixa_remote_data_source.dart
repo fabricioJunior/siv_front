@@ -1,6 +1,7 @@
 import 'package:core/remote_data_sourcers.dart';
 import 'package:financeiro/data.dart';
 import 'package:financeiro/domain/models/contagem_do_caixa.dart';
+import 'package:financeiro/domain/models/contagem_do_caixa_item.dart';
 import 'package:financeiro/domain/models/faturamento_do_caixa.dart';
 
 class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
@@ -74,7 +75,7 @@ class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
             .map(
               (item) => {
                 'id': item.id,
-                'tipoDocumento': item.tipoDocumento.name,
+                'tipoDocumento': item.tipoDocumento.valorApi,
                 'valor': item.valor,
               },
             )
@@ -178,7 +179,7 @@ class ContagemDoCaixaRemoteDataSource extends RemoteDataSourceBase
             .map(
               (item) => {
                 'id': item.id,
-                'tipoDocumento': item.tipoDocumento.name,
+                'tipoDocumento': item.tipoDocumento.valorApi,
                 'valor': item.valor,
               },
             )

@@ -13,6 +13,8 @@ class FormasPagamentoFormWidget extends StatelessWidget {
   final List<PromocaoFormaPagamento> formasPagamento;
   final List<FormaDePagamento> formasDisponiveis;
   final TipoDesconto tipoDesconto;
+  // compre_leve: desconto e sempre 100%, override por forma e ignorado.
+  final bool ocultarValores;
   final ValueChanged<bool> onRestringirChanged;
   final ValueChanged<List<PromocaoFormaPagamento>> onFormasPagamentoChanged;
 
@@ -22,6 +24,7 @@ class FormasPagamentoFormWidget extends StatelessWidget {
     required this.formasPagamento,
     required this.formasDisponiveis,
     required this.tipoDesconto,
+    this.ocultarValores = false,
     required this.onRestringirChanged,
     required this.onFormasPagamentoChanged,
   });
@@ -70,6 +73,7 @@ class FormasPagamentoFormWidget extends StatelessWidget {
             onFormasPagamentoChanged(atualizado);
           },
         ),
+        if (!ocultarValores)
         ...formasPagamento.map((forma) {
           final descricao = _descricaoDaForma(forma.formaDePagamentoId);
           final valorAtual = forma.valorPara(tipoDesconto);

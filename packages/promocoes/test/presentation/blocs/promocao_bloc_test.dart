@@ -352,4 +352,77 @@ void main() {
       expect(bloc.state.excecaoReferenciaIds, const [99]);
     },
   );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'compre_leve sem brinde bloqueia salvar',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Compre leve',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoEscopo: TipoEscopo.compreLeve,
+          referenciaIds: const [1],
+          brindeReferenciaIds: const [],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    verify: (bloc) {
+      expect(bloc.state.step, PromocaoStep.validacaoInvalida);
+      expect(bloc.state.erro, contains('brinde'));
+    },
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'compre_leve com interseção bloqueia salvar',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Compre leve',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoEscopo: TipoEscopo.compreLeve,
+          referenciaIds: const [1, 2],
+          brindeReferenciaIds: const [2, 3],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    verify: (bloc) {
+      expect(bloc.state.step, PromocaoStep.validacaoInvalida);
+      expect(bloc.state.erro, contains('gatilho e brinde'));
+    },
+  );
+
+  blocTest<PromocaoBloc, PromocaoState>(
+    'compre_leve válido salva sem exigir desconto e força canal loja',
+    build: () => criarBloc(),
+    act: (bloc) async {
+      bloc.add(PromocaoIniciou());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(
+        PromocaoCampoAlterado(
+          nome: 'Compre leve',
+          dataInicio: DateTime(2026, 1, 1),
+          dataFim: DateTime(2026, 1, 31),
+          tipoEscopo: TipoEscopo.compreLeve,
+          referenciaIds: const [1],
+          brindeReferenciaIds: const [10],
+        ),
+      );
+      bloc.add(PromocaoSalvou());
+    },
+    verify: (bloc) {
+      expect(bloc.state.step, PromocaoStep.criado);
+      expect(bloc.state.brindeReferenciaIds, const [10]);
+      expect(bloc.state.canal, PromocaoCanal.loja);
+    },
+  );
 }

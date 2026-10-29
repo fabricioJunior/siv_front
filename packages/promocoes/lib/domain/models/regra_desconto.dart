@@ -37,7 +37,8 @@ enum TipoEscopo {
   categorias,
   comboKit,
   comboLevePague,
-  faixaQuantidade;
+  faixaQuantidade,
+  compreLeve;
 
   static TipoEscopo fromString(String? value) {
     switch (value) {
@@ -51,6 +52,8 @@ enum TipoEscopo {
         return TipoEscopo.comboLevePague;
       case 'faixa_quantidade':
         return TipoEscopo.faixaQuantidade;
+      case 'compre_leve':
+        return TipoEscopo.compreLeve;
       case 'geral':
       default:
         return TipoEscopo.geral;
@@ -69,6 +72,8 @@ enum TipoEscopo {
         return 'combo_leve_pague';
       case TipoEscopo.faixaQuantidade:
         return 'faixa_quantidade';
+      case TipoEscopo.compreLeve:
+        return 'compre_leve';
       case TipoEscopo.geral:
         return 'geral';
     }

@@ -96,13 +96,18 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         comboKit: event.comboKit,
         quantidadeLeva: event.quantidadeLeva,
         quantidadePaga: event.quantidadePaga,
+        brindeReferenciaIds: event.brindeReferenciaIds,
+        quantidadeGatilho: event.quantidadeGatilho,
+        quantidadeBrinde: event.quantidadeBrinde,
         faixas: event.faixas,
         limparEscopo: event.limparEscopo,
         limiteUnidadesVendidas: event.limiteUnidadesVendidas,
         limiteUsosPorCliente: event.limiteUsosPorCliente,
         periodoLimiteCliente: event.periodoLimiteCliente,
         somenteAniversariante: event.somenteAniversariante,
-        canal: event.canal,
+        canal: event.tipoEscopo == TipoEscopo.compreLeve
+            ? PromocaoCanal.loja
+            : event.canal,
         ativa: event.ativa,
         restringirFormasPagamento: event.restringirFormasPagamento,
         formasPagamento: event.formasPagamento,
@@ -141,7 +146,9 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         return;
       }
 
-      final erroDesconto = _validarTipoDesconto(state);
+      final erroDesconto = state.tipoEscopo == TipoEscopo.compreLeve
+          ? null
+          : _validarTipoDesconto(state);
       if (erroDesconto != null) {
         emit(
           state.copyWith(
@@ -210,13 +217,18 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         comboKit: state.comboKit,
         quantidadeLeva: state.quantidadeLeva,
         quantidadePaga: state.quantidadePaga,
+        brindeReferenciaIds: state.brindeReferenciaIds,
+        quantidadeGatilho: state.quantidadeGatilho,
+        quantidadeBrinde: state.quantidadeBrinde,
         faixas: state.faixas,
         limiteUnidadesVendidas: state.limiteUnidadesVendidas,
         unidadesVendidas: state.promocao?.unidadesVendidas ?? 0,
         limiteUsosPorCliente: state.limiteUsosPorCliente,
         periodoLimiteCliente: state.periodoLimiteCliente,
         somenteAniversariante: state.somenteAniversariante,
-        canal: state.canal,
+        canal: state.tipoEscopo == TipoEscopo.compreLeve
+            ? PromocaoCanal.loja
+            : state.canal,
         ativa: state.ativa,
         restringirFormasPagamento: state.restringirFormasPagamento,
         formasPagamento: state.formasPagamento,
@@ -294,6 +306,23 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         }
         if (state.quantidadePaga == null || state.quantidadePaga! <= 0) {
           return 'Informe a quantidade que o cliente paga.';
+        }
+        return null;
+      case TipoEscopo.compreLeve:
+        final gatilho = state.referenciaIds ?? const <int>[];
+        final brinde = state.brindeReferenciaIds ?? const <int>[];
+        if (gatilho.isEmpty) {
+          return 'Selecione ao menos uma referência de gatilho (compre).';
+        }
+        if (brinde.isEmpty) {
+          return 'Selecione ao menos uma referência de brinde (leve grátis).';
+        }
+        if (gatilho.toSet().intersection(brinde.toSet()).isNotEmpty) {
+          return 'Uma referência não pode ser gatilho e brinde ao mesmo tempo.';
+        }
+        if ((state.quantidadeGatilho ?? 1) < 1 ||
+            (state.quantidadeBrinde ?? 1) < 1) {
+          return 'As quantidades de gatilho e brinde devem ser no mínimo 1.';
         }
         return null;
       case TipoEscopo.faixaQuantidade:

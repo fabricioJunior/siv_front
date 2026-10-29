@@ -46,6 +46,12 @@ class PromocaoDto implements Promocao {
   @override
   final int? quantidadePaga;
   @override
+  final List<int>? brindeReferenciaIds;
+  @override
+  final int? quantidadeGatilho;
+  @override
+  final int? quantidadeBrinde;
+  @override
   final List<PromocaoFaixa>? faixas;
   @override
   final int? limiteUnidadesVendidas;
@@ -92,6 +98,9 @@ class PromocaoDto implements Promocao {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.brindeReferenciaIds,
+    this.quantidadeGatilho,
+    this.quantidadeBrinde,
     this.faixas,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
@@ -137,6 +146,11 @@ class PromocaoDto implements Promocao {
           .toList(),
       quantidadeLeva: (json['quantidadeLeva'] as num?)?.toInt(),
       quantidadePaga: (json['quantidadePaga'] as num?)?.toInt(),
+      brindeReferenciaIds: (json['brindeReferenciaIds'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
+      quantidadeGatilho: (json['quantidadeGatilho'] as num?)?.toInt(),
+      quantidadeBrinde: (json['quantidadeBrinde'] as num?)?.toInt(),
       faixas: (json['faixas'] as List<dynamic>?)
           ?.map((e) => PromocaoFaixa.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -184,6 +198,9 @@ class PromocaoDto implements Promocao {
       comboKit: promocao.comboKit,
       quantidadeLeva: promocao.quantidadeLeva,
       quantidadePaga: promocao.quantidadePaga,
+      brindeReferenciaIds: promocao.brindeReferenciaIds,
+      quantidadeGatilho: promocao.quantidadeGatilho,
+      quantidadeBrinde: promocao.quantidadeBrinde,
       faixas: promocao.faixas,
       limiteUnidadesVendidas: promocao.limiteUnidadesVendidas,
       unidadesVendidas: promocao.unidadesVendidas,
@@ -227,6 +244,10 @@ class PromocaoDto implements Promocao {
         'comboKit': comboKit!.map((item) => item.toJson()).toList(),
       if (quantidadeLeva != null) 'quantidadeLeva': quantidadeLeva,
       if (quantidadePaga != null) 'quantidadePaga': quantidadePaga,
+      if (brindeReferenciaIds != null)
+        'brindeReferenciaIds': brindeReferenciaIds,
+      if (quantidadeGatilho != null) 'quantidadeGatilho': quantidadeGatilho,
+      if (quantidadeBrinde != null) 'quantidadeBrinde': quantidadeBrinde,
       if (faixas != null)
         'faixas': faixas!.map((faixa) => faixa.toJson()).toList(),
       if (limiteUnidadesVendidas != null)
@@ -269,6 +290,9 @@ class PromocaoDto implements Promocao {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        brindeReferenciaIds,
+        quantidadeGatilho,
+        quantidadeBrinde,
         faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,

@@ -100,6 +100,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
 
   Widget _corpo(BuildContext context, PromocaoState state) {
     const gap = SizedBox(height: 16);
+    final compreLeve = state.tipoEscopo == TipoEscopo.compreLeve;
     final duasColunas =
         MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
     final inicio = CampoData(
@@ -127,6 +128,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
           ),
         ),
         gap,
+        if (!compreLeve) ...[
         RegraDescontoFormWidget(
           tipoDesconto: state.tipoDesconto,
           valorPercentual: state.valorPercentual,
@@ -152,6 +154,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
               _onCampoAlterado(context, precoFixo: valor),
         ),
         gap,
+        ],
         RotuloCampo(
           rotulo: 'Escopo',
           filho: SegmentoOpcoes<TipoEscopo>(
@@ -162,6 +165,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
               TipoEscopo.comboKit: 'Combo/Kit',
               TipoEscopo.comboLevePague: 'Leve e pague',
               TipoEscopo.faixaQuantidade: 'Faixas progressivas',
+              TipoEscopo.compreLeve: 'Compre e leve grátis',
             },
             selecionado: state.tipoEscopo,
             onChanged: (tipo) => context.read<PromocaoBloc>().add(
@@ -181,6 +185,15 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             quantidadeLevaInicial: state.quantidadeLeva,
             quantidadePagaInicial: state.quantidadePaga,
             faixasInicial: state.faixas ?? const [],
+            brindeReferenciaIdsIniciais: state.brindeReferenciaIds ?? const [],
+            quantidadeGatilhoInicial: state.quantidadeGatilho,
+            quantidadeBrindeInicial: state.quantidadeBrinde,
+            onBrindeReferenciaIdsChanged: (ids) =>
+                _onCampoAlterado(context, brindeReferenciaIds: ids),
+            onQuantidadeGatilhoChanged: (valor) =>
+                _onCampoAlterado(context, quantidadeGatilho: valor),
+            onQuantidadeBrindeChanged: (valor) =>
+                _onCampoAlterado(context, quantidadeBrinde: valor),
             onReferenciaIdsChanged: (ids) =>
                 _onCampoAlterado(context, referenciaIds: ids),
             onCategoriasChanged: (categorias) =>
@@ -214,7 +227,9 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
         ],
         gap,
         RotuloCampo(
-          rotulo: 'Limite de unidades vendidas (opcional)',
+          rotulo: compreLeve
+              ? 'Limite de unidades grátis (opcional)'
+              : 'Limite de unidades vendidas (opcional)',
           filho: TextFormField(
             controller: _limiteUnidadesVendidasController,
             keyboardType: TextInputType.number,
@@ -306,6 +321,7 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
                 formasPagamento: state.formasPagamento,
                 formasDisponiveis: state.formasDePagamentoDisponiveis,
                 tipoDesconto: state.tipoDesconto,
+                ocultarValores: compreLeve,
                 onRestringirChanged: (valor) => _onCampoAlterado(
                   context,
                   restringirFormasPagamento: valor,
@@ -324,10 +340,13 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
           ),
         ),
         gap,
-        CanaisChips(
-          canal: state.canal,
-          onChanged: (canal) => _onCampoAlterado(context, canal: canal),
-        ),
+        if (compreLeve)
+          const Text('Canal: somente loja (este escopo não vale no e-commerce).')
+        else
+          CanaisChips(
+            canal: state.canal,
+            onChanged: (canal) => _onCampoAlterado(context, canal: canal),
+          ),
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           title: const Text('Ativa'),
@@ -401,6 +420,9 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<int>? brindeReferenciaIds,
+    int? quantidadeGatilho,
+    int? quantidadeBrinde,
     List<PromocaoFaixa>? faixas,
     int? limiteUnidadesVendidas,
     int? limiteUsosPorCliente,
@@ -431,6 +453,9 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             comboKit: comboKit,
             quantidadeLeva: quantidadeLeva,
             quantidadePaga: quantidadePaga,
+            brindeReferenciaIds: brindeReferenciaIds,
+            quantidadeGatilho: quantidadeGatilho,
+            quantidadeBrinde: quantidadeBrinde,
             faixas: faixas,
             limiteUnidadesVendidas: limiteUnidadesVendidas,
             limiteUsosPorCliente: limiteUsosPorCliente,

@@ -5,7 +5,8 @@ class ItemContagemEmAndamento extends Equatable {
   final String nome;
   final bool semReferencia;
 
-  const ItemContagemEmAndamento({required this.nome, this.semReferencia = false});
+  const ItemContagemEmAndamento(
+      {required this.nome, this.semReferencia = false});
 
   factory ItemContagemEmAndamento.fromJson(Map<String, dynamic> json) =>
       ItemContagemEmAndamento(
@@ -24,6 +25,9 @@ class ContagemEmAndamento extends Equatable {
   final String? contador;
   final DateTime criadoEm;
 
+  /// Etapa da trilha: contando, associando, etiquetando ou conferindo.
+  final String etapa;
+
   /// Até 4 nomes, sem repetir: referências primeiro, depois descrições livres.
   final List<ItemContagemEmAndamento> itens;
   final int totalItens;
@@ -33,6 +37,7 @@ class ContagemEmAndamento extends Equatable {
     required this.fornecedor,
     required this.criadoEm,
     this.contador,
+    this.etapa = 'contando',
     this.itens = const [],
     this.totalItens = 0,
   });
@@ -44,9 +49,12 @@ class ContagemEmAndamento extends Equatable {
     return ContagemEmAndamento(
       pedidoId: (json['pedidoId'] as num).toInt(),
       fornecedor:
-          (json['fornecedor'] as Map<String, dynamic>?)?['nome'] as String? ?? '',
-      contador: (json['funcionario'] as Map<String, dynamic>?)?['nome'] as String?,
+          (json['fornecedor'] as Map<String, dynamic>?)?['nome'] as String? ??
+              '',
+      contador:
+          (json['funcionario'] as Map<String, dynamic>?)?['nome'] as String?,
       criadoEm: DateTime.parse(json['criadoEm'] as String).toLocal(),
+      etapa: json['etapa'] as String? ?? 'contando',
       itens: itens,
       totalItens: (json['totalItens'] as num?)?.toInt() ?? itens.length,
     );
@@ -54,7 +62,7 @@ class ContagemEmAndamento extends Equatable {
 
   @override
   List<Object?> get props =>
-      [pedidoId, fornecedor, contador, criadoEm, itens, totalItens];
+      [pedidoId, fornecedor, contador, criadoEm, etapa, itens, totalItens];
 }
 
 class ContagensEmAndamentoPagina extends Equatable {

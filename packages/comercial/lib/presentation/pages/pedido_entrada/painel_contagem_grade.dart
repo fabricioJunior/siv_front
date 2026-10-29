@@ -61,7 +61,8 @@ class PainelContagemGrade extends StatefulWidget {
   final bool esperadasInicial;
 
   /// Contagens já feitas de uma referência (pré-carrega a grade ao escolher uma esperada).
-  final List<EntradaContagem> Function(int referenciaId)? existentesDaReferencia;
+  final List<EntradaContagem> Function(int referenciaId)?
+      existentesDaReferencia;
 
   const PainelContagemGrade({
     super.key,
@@ -108,8 +109,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   final _debounce = Debouncer(milliseconds: 350);
 
   late bool _livre = widget.livreInicial;
-  late bool _modoEsperadas =
-      widget.esperadasInicial && widget.permiteTrocarAba && widget.esperadas.isNotEmpty;
+  late bool _modoEsperadas = widget.esperadasInicial &&
+      widget.permiteTrocarAba &&
+      widget.esperadas.isNotEmpty;
   ReferenciaEsperada? _esperadaEscolhida;
   late int? _referenciaId = widget.referenciaId ?? widget.linha?.referenciaId;
   late String? _referenciaNome = widget.referenciaNome;
@@ -252,7 +254,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   bool _comValor({int? cor, int? tam}) {
     for (final e in _celulas.entries) {
       final p = e.key.split('|');
-      final bate = (cor == null || p[0] == '$cor') && (tam == null || p[1] == '$tam');
+      final bate =
+          (cor == null || p[0] == '$cor') && (tam == null || p[1] == '$tam');
       if (bate && _ler(e.value) != null) return true;
     }
     return false;
@@ -320,8 +323,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     return t;
   }
 
-  bool get _podeSalvar =>
-      !_temViolacao && _montar().isNotEmpty;
+  bool get _podeSalvar => !_temViolacao && _montar().isNotEmpty;
 
   void _salvar() {
     final itens = _montar();
@@ -365,7 +367,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         for (final c in _celulas.values) {
           c.clear();
         }
-        for (final c in widget.existentesDaReferencia?.call(e.id) ?? const <EntradaContagem>[]) {
+        for (final c in widget.existentesDaReferencia?.call(e.id) ??
+            const <EntradaContagem>[]) {
           if (c.corId == null || c.tamanhoId == null) continue;
           _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
           _tamanhos[c.tamanhoId!] =
@@ -424,25 +427,30 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               minimumSize: const Size(0, 48),
               foregroundColor: cores.acoEscuro,
             ),
-            child: Text(rotulo, style: textos.rotulo.copyWith(
-              color: cores.acoEscuro,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            )),
+            child: Text(rotulo,
+                style: textos.rotulo.copyWith(
+                  color: cores.acoEscuro,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                )),
           ),
         );
-    return ExcludeFocus(
-      child: Container(
-        key: const Key('barra_teclado'),
-        color: cores.superficieRecuada,
-        child: Row(
-          children: [
-            botao('−1', () => _somar(-1), key: const Key('barra_menos')),
-            botao('+1', () => _somar(1), key: const Key('barra_mais')),
-            botao('LIMPAR', () => _celulaFocada?.clear(),
-                key: const Key('barra_limpar')),
-            botao('PRÓX. →', _proxima, key: const Key('barra_proxima')),
-          ],
+    // TextFieldTapRegion: tocar na barra não conta como "fora" do campo
+    // (senão o campo perde o foco, a barra some e o toque se perde).
+    return TextFieldTapRegion(
+      child: ExcludeFocus(
+        child: Container(
+          key: const Key('barra_teclado'),
+          color: cores.superficieRecuada,
+          child: Row(
+            children: [
+              botao('−1', () => _somar(-1), key: const Key('barra_menos')),
+              botao('+1', () => _somar(1), key: const Key('barra_mais')),
+              botao('LIMPAR', () => _celulaFocada?.clear(),
+                  key: const Key('barra_limpar')),
+              botao('PRÓX. →', _proxima, key: const Key('barra_proxima')),
+            ],
+          ),
         ),
       ),
     );
@@ -468,7 +476,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               children: [
                 IconButton(
                   key: const Key('painel_fechar'),
-                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
                   onPressed: widget.onFechar,
                   icon: const Icon(Icons.close),
                 ),
@@ -520,28 +529,28 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
           if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
           if (!_modoEsperadas)
-          RodapeAcaoEntrada(
-            resumo: Text(
-              '${qtd(_totalPecas)} peças',
-              key: const Key('painel_total'),
-              style: textos.secao,
+            RodapeAcaoEntrada(
+              resumo: Text(
+                '${qtd(_totalPecas)} peças',
+                key: const Key('painel_total'),
+                style: textos.secao,
+              ),
+              aviso: _temViolacao
+                  ? Text(
+                      mensagemContadoAbaixoDoLido,
+                      key: const Key('painel_aviso_lido'),
+                      style: textos.apoio.copyWith(color: cores.vinho),
+                    )
+                  : null,
+              acao: BotaoPrincipalEntrada(
+                rotulo: _livre
+                    ? 'Salvar sem referência'
+                    : widget.impressasPorProduto != null
+                        ? 'SALVAR · IMPRIMIR ${qtd(_aImprimir)}'
+                        : 'SALVAR',
+                onPressed: podeSalvar ? _salvar : null,
+              ),
             ),
-            aviso: _temViolacao
-                ? Text(
-                    mensagemContadoAbaixoDoLido,
-                    key: const Key('painel_aviso_lido'),
-                    style: textos.apoio.copyWith(color: cores.vinho),
-                  )
-                : null,
-            acao: BotaoPrincipalEntrada(
-              rotulo: _livre
-                  ? 'Salvar sem referência'
-                  : widget.impressasPorProduto != null
-                      ? 'SALVAR · IMPRIMIR ${qtd(_aImprimir)}'
-                      : 'SALVAR',
-              onPressed: podeSalvar ? _salvar : null,
-            ),
-          ),
         ],
       ),
     );
@@ -609,7 +618,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                   overflow: TextOverflow.ellipsis,
                   style: textos.rotulo.copyWith(
                     color: _modoEsperadas ? cores.acoEscuro : cores.textoApoio,
-                    fontWeight: _modoEsperadas ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight:
+                        _modoEsperadas ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -632,7 +642,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             controller: _simples,
             onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Quantidade encontrada'),
+            decoration:
+                const InputDecoration(labelText: 'Quantidade encontrada'),
           ),
         ],
       );
@@ -647,8 +658,12 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_livre) ..._camposLivre(cores, textos) else ..._campoReferencia(cores, textos),
-        if (!_livre && _esperadaEscolhida != null) ..._avisoEsperada(cores, textos),
+        if (_livre)
+          ..._camposLivre(cores, textos)
+        else
+          ..._campoReferencia(cores, textos),
+        if (!_livre && _esperadaEscolhida != null)
+          ..._avisoEsperada(cores, textos),
         if (linhaNfe != null) ...[
           Text(
             'NF-e: ${qtd(linhaNfe.quantidadeNfe)} — digite o que foi '
@@ -667,7 +682,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
         ),
         const SizedBox(height: 12),
-        if (!_livre && widget.linha == null && widget.estampaSeletor != null) ...[
+        if (!_livre &&
+            widget.linha == null &&
+            widget.estampaSeletor != null) ...[
           // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
           if (widget.estampaIdInicial != null)
             Text(
@@ -725,7 +742,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             '${qtd(_totalPecas)} de $esperado esperadas',
             key: const Key('esperada_x_de_y'),
             style: textos.apoio.copyWith(
-              color: _totalPecas >= esperado ? cores.conferidoTexto : cores.parcialTexto,
+              color: _totalPecas >= esperado
+                  ? cores.conferidoTexto
+                  : cores.parcialTexto,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -823,7 +842,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível carregar os tamanhos.')),
+          const SnackBar(
+              content: Text('Não foi possível carregar os tamanhos.')),
         );
       }
     } finally {
@@ -878,7 +898,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               if (!fixa)
                 IconButton(
                   tooltip: 'Trocar referência',
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
                   onPressed: () => setState(() {
                     _referenciaId = null;
                     _referenciaNome = null;
@@ -942,7 +963,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text('${r.nome} · REF ${r.id}', style: textos.corpo),
+                        child: Text('${r.nome} · REF ${r.id}',
+                            style: textos.corpo),
                       ),
                       TextButton(
                         key: Key('contar_nesta_${r.id}'),

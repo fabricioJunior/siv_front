@@ -50,8 +50,8 @@ class DespesasCalendarioRemoteDataSource extends RemoteDataSourceBase
     // Endpoint tem path próprio (`/despesas/{id}/ocorrencias`), diferente do
     // usado por `recuperarCalendario` -- bate direto no httpClient como o
     // upload de ícone de categoria de produto já faz nesse mesmo padrão.
-    await httpClient.post(
-      uri: uriBase.replace(path: '/despesas/$id/ocorrencias'),
+    final response = await httpClient.post(
+      uri: uriBase.replace(path: '/v1/despesas/$id/ocorrencias'),
       body: jsonEncode({
         'ano': ano,
         'mes': mes,
@@ -61,5 +61,8 @@ class DespesasCalendarioRemoteDataSource extends RemoteDataSourceBase
         if (status != null) 'status': status.value,
       }),
     );
+    if (response.statusCode >= 400) {
+      throw Exception('ocorrencias ${response.statusCode}: ${response.message ?? response.body}');
+    }
   }
 }

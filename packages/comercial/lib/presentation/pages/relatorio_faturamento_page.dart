@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/presentation/blocs/relatorio_faturamento_bloc/relatorio_faturamento_bloc.dart';
 import 'package:comercial/presentation/relatorios/pdf/relatorio_pdf_exporter.dart';
+import 'package:comercial/presentation/widgets/rolagem_horizontal_com_setas.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
@@ -333,20 +332,15 @@ class _GraficoCard extends StatelessWidget {
         child: Center(child: Text('Sem dados para o período.')),
       );
     } else {
-      conteudo = LayoutBuilder(
-        builder: (_, c) => SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: math.max(c.maxWidth, pontos.length * _larguraPontoGrafico),
-            child: _Linhas(
-              pontos: pontos,
-              anoAnterior: {
-                for (final p in anoAnterior?.pontos ?? const []) p.periodo: p.faturamento,
-              },
-              agruparPor: agruparPor,
-              mobile: mobile,
-            ),
-          ),
+      conteudo = RolagemHorizontalComSetas(
+        larguraConteudo: pontos.length * _larguraPontoGrafico,
+        child: _Linhas(
+          pontos: pontos,
+          anoAnterior: {
+            for (final p in anoAnterior?.pontos ?? const []) p.periodo: p.faturamento,
+          },
+          agruparPor: agruparPor,
+          mobile: mobile,
         ),
       );
     }

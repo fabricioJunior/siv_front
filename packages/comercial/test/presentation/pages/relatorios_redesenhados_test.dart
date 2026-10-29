@@ -91,6 +91,7 @@ class _Repo implements IRelatorioRepository {
   bool vazio = false;
   bool semResumo = false;
   bool anteriorIgual = true;
+  List<RelatorioFaturamentoComparativoPontoDto>? pontosComparativo;
   final periodosFat = <(String, String)>[];
   final chamadasMov = <Map<String, Object?>>[];
 
@@ -114,10 +115,12 @@ class _Repo implements IRelatorioRepository {
     required String dataFinal,
     required String agruparPor,
   }) async =>
-      const RelatorioFaturamentoComparativoDto(pontos: [
-        RelatorioFaturamentoComparativoPontoDto(
-            periodo: '2026-10-01', faturamento: 100, quantidadeVendas: 1),
-      ]);
+      RelatorioFaturamentoComparativoDto(
+          pontos: pontosComparativo ??
+              const [
+                RelatorioFaturamentoComparativoPontoDto(
+                    periodo: '2026-10-01', faturamento: 100, quantidadeVendas: 1),
+              ]);
 
   @override
   Future<RelatorioCurvaAbc> curvaAbc({
@@ -345,6 +348,43 @@ void main() {
           dataInicial: '2026-03-01', dataFinal: '2026-03-01'));
       await bloc.stream.firstWhere((s) => s.anteriorDados != null);
       expect(_repo.periodosFat.last, ('2026-02-28', '2026-02-28'));
+    });
+
+    test('gráfico por dia traz os dias sem venda com faturamento 0', () async {
+      await _registra();
+      _repo.pontosComparativo = const [
+        RelatorioFaturamentoComparativoPontoDto(periodo: '2026-10-01', faturamento: 100, quantidadeVendas: 1),
+        RelatorioFaturamentoComparativoPontoDto(periodo: '2026-10-04', faturamento: 50, quantidadeVendas: 2),
+      ];
+      final bloc = RelatorioFaturamentoBloc(
+          GetRelatorioFaturamento(_repo), GetRelatorioFaturamentoComparativo(_repo));
+      addTearDown(bloc.close);
+      bloc.add(RelatorioFaturamentoComparativoCarregar(
+          dataInicial: '2026-10-01', dataFinal: '2026-10-05', agruparPor: 'dia'));
+      final s = await bloc.stream.firstWhere(
+          (s) => s.comparativoStep == RelatorioFaturamentoComparativoStep.sucesso);
+      final pontos = s.comparativoDados!.pontos;
+      expect(pontos.map((p) => p.periodo),
+          ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05']);
+      expect(pontos.map((p) => p.faturamento), [100, 0, 0, 50, 0]);
+    });
+
+    test('gráfico por mês traz os meses sem venda com faturamento 0', () async {
+      await _registra();
+      _repo.pontosComparativo = const [
+        RelatorioFaturamentoComparativoPontoDto(periodo: '2026-08', faturamento: 10, quantidadeVendas: 1),
+        RelatorioFaturamentoComparativoPontoDto(periodo: '2026-10', faturamento: 30, quantidadeVendas: 3),
+      ];
+      final bloc = RelatorioFaturamentoBloc(
+          GetRelatorioFaturamento(_repo), GetRelatorioFaturamentoComparativo(_repo));
+      addTearDown(bloc.close);
+      bloc.add(RelatorioFaturamentoComparativoCarregar(
+          dataInicial: '2026-08-15', dataFinal: '2026-10-20', agruparPor: 'mes'));
+      final s = await bloc.stream.firstWhere(
+          (s) => s.comparativoStep == RelatorioFaturamentoComparativoStep.sucesso);
+      final pontos = s.comparativoDados!.pontos;
+      expect(pontos.map((p) => p.periodo), ['2026-08', '2026-09', '2026-10']);
+      expect(pontos.map((p) => p.faturamento), [10, 0, 30]);
     });
 
     for (final w in [800.0, 1280.0]) {

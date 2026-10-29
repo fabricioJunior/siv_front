@@ -88,12 +88,13 @@ class RelatorioFaturamentoBloc
         dataFinal: event.dataFinal,
         agruparPor: grupo,
       );
-      emit(state.copyWith(
-        comparativoStep: RelatorioFaturamentoComparativoStep.sucesso,
-        comparativoDados: semana ? _porSemana(dados.pontos) : dados,
-      ));
       final ini = DateTime.tryParse(event.dataInicial);
       final fim = DateTime.tryParse(event.dataFinal);
+      final pontos = _comZeros(dados.pontos, ini, fim, grupo);
+      emit(state.copyWith(
+        comparativoStep: RelatorioFaturamentoComparativoStep.sucesso,
+        comparativoDados: semana ? _porSemana(pontos) : _Comparativo(pontos),
+      ));
       if (ini == null || fim == null) return;
       try {
         final anoAnt = await _useCaseComparativo.call(
@@ -104,7 +105,7 @@ class RelatorioFaturamentoBloc
         );
         // Chaves deslocadas +1 ano para casar com a série atual.
         final deslocados = [
-          for (final p in anoAnt.pontos)
+          for (final p in _comZeros(anoAnt.pontos, _mesmoDiaAnoAnterior(ini), _mesmoDiaAnoAnterior(fim), grupo))
             _Ponto(_chaveMaisUmAno(p.periodo), p.faturamento,
                 p.quantidadeVendas),
         ];
@@ -130,6 +131,27 @@ DateTime _mesmoDiaAnoAnterior(DateTime d) => DateTime(d.year - 1, d.month, d.day
 String _chaveMaisUmAno(String k) {
   final ano = int.tryParse(k.substring(0, 4));
   return ano == null ? k : '${ano + 1}${k.substring(4)}';
+}
+
+/// O backend só devolve períodos com venda; completa os vazios com 0 para o gráfico não pular dias/meses.
+List<RelatorioFaturamentoComparativoPonto> _comZeros(
+  List<RelatorioFaturamentoComparativoPonto> pontos,
+  DateTime? ini,
+  DateTime? fim,
+  String grupo,
+) {
+  if (ini == null || fim == null || fim.isBefore(ini) || fim.difference(ini).inDays > 3660) return pontos;
+  final porPeriodo = {for (final p in pontos) p.periodo: p};
+  final mes = grupo == 'mes';
+  final completos = <RelatorioFaturamentoComparativoPonto>[];
+  var d = mes ? DateTime(ini.year, ini.month) : DateTime(ini.year, ini.month, ini.day);
+  final ultimo = mes ? DateTime(fim.year, fim.month) : DateTime(fim.year, fim.month, fim.day);
+  while (!d.isAfter(ultimo)) {
+    final chave = mes ? _iso(d).substring(0, 7) : _iso(d);
+    completos.add(porPeriodo[chave] ?? _Ponto(chave, 0, 0));
+    d = mes ? DateTime(d.year, d.month + 1) : DateTime(d.year, d.month, d.day + 1);
+  }
+  return completos;
 }
 
 class _Ponto implements RelatorioFaturamentoComparativoPonto {

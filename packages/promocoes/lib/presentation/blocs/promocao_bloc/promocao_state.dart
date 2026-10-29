@@ -21,6 +21,9 @@ class PromocaoState extends Equatable {
   final List<ItemComboKit>? comboKit;
   final int? quantidadeLeva;
   final int? quantidadePaga;
+  final List<int>? brindeReferenciaIds;
+  final int? quantidadeGatilho;
+  final int? quantidadeBrinde;
   final List<PromocaoFaixa>? faixas;
   final int? limiteUnidadesVendidas;
   final int? limiteUsosPorCliente;
@@ -56,6 +59,9 @@ class PromocaoState extends Equatable {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.brindeReferenciaIds,
+    this.quantidadeGatilho,
+    this.quantidadeBrinde,
     this.faixas,
     this.limiteUnidadesVendidas,
     this.limiteUsosPorCliente,
@@ -95,6 +101,9 @@ class PromocaoState extends Equatable {
         comboKit = origem.comboKit,
         quantidadeLeva = origem.quantidadeLeva,
         quantidadePaga = origem.quantidadePaga,
+        brindeReferenciaIds = origem.brindeReferenciaIds,
+        quantidadeGatilho = origem.quantidadeGatilho,
+        quantidadeBrinde = origem.quantidadeBrinde,
         faixas = origem.faixas,
         limiteUnidadesVendidas = origem.limiteUnidadesVendidas,
         limiteUsosPorCliente = origem.limiteUsosPorCliente,
@@ -128,6 +137,9 @@ class PromocaoState extends Equatable {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<int>? brindeReferenciaIds,
+    int? quantidadeGatilho,
+    int? quantidadeBrinde,
     List<PromocaoFaixa>? faixas,
     bool limparEscopo = false,
     int? limiteUnidadesVendidas,
@@ -166,6 +178,9 @@ class PromocaoState extends Equatable {
       comboKit: limparEscopo ? null : (comboKit ?? this.comboKit),
       quantidadeLeva: limparEscopo ? null : (quantidadeLeva ?? this.quantidadeLeva),
       quantidadePaga: limparEscopo ? null : (quantidadePaga ?? this.quantidadePaga),
+      brindeReferenciaIds: limparEscopo ? null : (brindeReferenciaIds ?? this.brindeReferenciaIds),
+      quantidadeGatilho: limparEscopo ? null : (quantidadeGatilho ?? this.quantidadeGatilho),
+      quantidadeBrinde: limparEscopo ? null : (quantidadeBrinde ?? this.quantidadeBrinde),
       faixas: limparEscopo ? null : (faixas ?? this.faixas),
       limiteUnidadesVendidas:
           limiteUnidadesVendidas ?? this.limiteUnidadesVendidas,
@@ -207,6 +222,9 @@ class PromocaoState extends Equatable {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        brindeReferenciaIds,
+        quantidadeGatilho,
+        quantidadeBrinde,
         faixas,
         limiteUnidadesVendidas,
         limiteUsosPorCliente,

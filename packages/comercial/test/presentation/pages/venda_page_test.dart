@@ -41,6 +41,9 @@ class _Produto with LeitorData {
   Map<String, dynamic> get dados => const {};
 }
 
+// Itens que o orçamento carregado devolve (vazio nos demais testes).
+List<ProdutoCompartilhado> _itensDoOrcamento = const [];
+
 class _Leitor implements ILeitorDataDatasource {
   @override
   Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) async =>
@@ -51,7 +54,7 @@ class _Leitor implements ILeitorDataDatasource {
     int produtoId, {
     int? tabelaDePrecoId,
   }) async =>
-      null;
+      produtoId == 7 ? _Produto('777') : null;
 }
 
 class _Busca implements ILeitorBuscaDataDatasource {
@@ -91,7 +94,7 @@ class _Orcamento implements CarregarOrcamento {
         funcionarioNome: 'Ana',
         tabelaPrecoId: 3,
         tabelaPrecoNome: 'Atacado',
-        itens: const [],
+        itens: _itensDoOrcamento,
       );
 }
 
@@ -268,7 +271,10 @@ void main() {
       ),
     );
   });
-  tearDown(() async => sl.reset());
+  tearDown(() async {
+    _itensDoOrcamento = const [];
+    await sl.reset();
+  });
 
   Future<void> abrir(WidgetTester t) async {
     t.view.physicalSize = const Size(1400, 900);
@@ -311,6 +317,23 @@ void main() {
     await t.sendKeyEvent(k);
     await t.pumpAndSettle();
   }
+
+  testWidgets('orçamento salvo reaberto traz os produtos para a leitura', (t) async {
+    _itensDoOrcamento = const [
+      ProdutoCompartilhado(
+        hash: 'i',
+        produtoId: 7,
+        hashLista: 'o',
+        quantidade: 2,
+        valorUnitario: 10,
+        nome: 'Produto 777',
+        corNome: 'Preto',
+        tamanhoNome: 'M',
+      ),
+    ];
+    await abrir(t);
+    expect(find.textContaining('Produto 777'), findsWidgets);
+  });
 
   testWidgets(
       'leitura → F9 → forma → F9 conclui sem modal, troco e romaneio ficam até Nova venda',

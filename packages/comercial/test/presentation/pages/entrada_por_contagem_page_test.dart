@@ -6,6 +6,7 @@ import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cas
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/entrada_por_contagem_page.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,17 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+class _Permissoes implements IPermissoesController {
+  final Set<String> ok;
+  _Permissoes(this.ok);
+  @override
+  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async =>
+      ok.contains(idComponente);
+  @override
+  bool temAcesso({String? idComponente, int? grupoId}) =>
+      ok.contains(idComponente);
+}
+
 void main() {
   late _Remoto remoto;
 
@@ -68,6 +80,8 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await sl.reset();
+    sl.registerSingleton<IPermissoesController>(
+        _Permissoes({'PRDFM003', 'PRDFM008'}));
     sl.registerFactory<PedidoEntradaBloc>(
       () => PedidoEntradaBloc(
         ImportarNfeEntrada(remoto),

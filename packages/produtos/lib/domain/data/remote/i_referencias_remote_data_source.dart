@@ -12,7 +12,7 @@ abstract class IReferenciasRemoteDataSource {
   Future<Referencia> createReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,

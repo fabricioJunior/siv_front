@@ -82,6 +82,7 @@ class TrilhaEntrada {
   /// 0..4 (4 = faturar; também quando já faturado).
   static int etapaAtual(EntradaResumo r, {bool etiquetasLocal = false}) {
     switch (r.etapa) {
+      case 'faturando':
       case 'faturado':
         return 4;
       case 'contando':
@@ -154,7 +155,8 @@ class TrilhaEntrada {
     final livres = _gruposLivres(r);
     final variacoes = _variacoes(r);
     final semDecisao = divergenciasSemDecisao(r);
-    final etiquetas = etiquetasConcluidas(r, local: etiquetasLocal);
+    final etiquetas =
+        etiquetasConcluidas(r, local: etiquetasLocal) || etapa == 4;
     final diff = diffEtiquetas(r);
     final contagemCorrigida =
         r.correcoes.where((c) => c.tipo == 'contagem').length;
@@ -167,7 +169,7 @@ class TrilhaEntrada {
       _temContagem(r),
       _temContagem(r) && r.contagensLivres.isEmpty,
       etiquetas,
-      todasConferidas || passo == 4 || faturado,
+      todasConferidas || passo == 4 || etapa == 4,
       faturado,
     ];
 
@@ -198,7 +200,11 @@ class TrilhaEntrada {
       semDecisao > 0 && passo == 4
           ? '$semDecisao itens a decidir'
           : '${_qtd(conf.totalLido)} de ${_qtd(conf.totalContado > 0 ? conf.totalContado : r.totalContado)} peças',
-      faturado ? 'faturado' : 'só peças conferidas',
+      faturado
+          ? 'faturado'
+          : r.etapa == 'faturando'
+              ? 'pronto para faturar'
+              : 'só peças conferidas',
     ];
 
     return [

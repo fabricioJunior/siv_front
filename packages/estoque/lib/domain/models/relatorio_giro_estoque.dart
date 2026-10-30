@@ -1,4 +1,14 @@
+import 'package:core/permissoes/componente_controlado_wiget.dart';
 import 'package:estoque/domain/models/parametros_giro.dart';
+
+/// Permissão de ver custo de compra; sem sessão/permissão registrada, oculta.
+bool permiteCustoGiro() {
+  try {
+    return PermissaoPorNome.acessoPermitido('PRDFL007');
+  } catch (_) {
+    return false;
+  }
+}
 
 enum ClassificacaoGiro {
   excepcional('excepcional', 'Excepcional'),
@@ -232,7 +242,12 @@ class GiroEstoqueMeta {
 class PaginaGiroEstoque {
   final List<GiroEstoqueLinha> items;
   final GiroEstoqueMeta meta;
-  const PaginaGiroEstoque({required this.items, required this.meta});
+  final bool custoVisivel;
+  const PaginaGiroEstoque({
+    required this.items,
+    required this.meta,
+    this.custoVisivel = true,
+  });
 }
 
 class GiroEstoqueTop {
@@ -266,6 +281,7 @@ class GiroEstoqueResumo {
   final List<GiroEstoqueTop> top;
   final Map<AbaGiro, int> totaisAbas;
   final ParametrosGiro parametros;
+  final bool custoVisivel;
 
   const GiroEstoqueResumo({
     this.analisados = 0,
@@ -281,6 +297,7 @@ class GiroEstoqueResumo {
     this.top = const [],
     this.totaisAbas = const {},
     this.parametros = const ParametrosGiro(),
+    this.custoVisivel = true,
   });
 }
 

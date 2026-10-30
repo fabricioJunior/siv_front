@@ -246,21 +246,25 @@ class GiroFinanceiro extends StatelessWidget {
         ]),
         const SizedBox(height: 14),
         _item(context, 'Valor vendido', 'vendidas × preço de venda', r.valorVendido),
-        _item(context, 'Valor em estoque', 'estoque × custo', r.valorEstoque),
-        _item(context, 'Potencial de faturamento', 'estoque × preço de venda', r.potencial),
-        _item(context, 'Imobilizado em lento + parado',
-            '${fmtPct(r.pctImobilizado, 0)} do valor em estoque', r.valorImobilizadoLentoParado,
-            cor: giroErro, ultimo: true),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 6,
-          child: Row(children: [
-            if (imob < 100)
-              Expanded(flex: (100 - imob).round(), child: Container(color: const Color(0xFF9DB4CA))),
-            if (imob.round() > 0)
-              Expanded(flex: imob.round(), child: Container(color: giroErro)),
-          ]),
-        ),
+        if (r.custoVisivel)
+          _item(context, 'Valor em estoque', 'estoque × custo', r.valorEstoque),
+        _item(context, 'Potencial de faturamento', 'estoque × preço de venda', r.potencial,
+            ultimo: !r.custoVisivel),
+        if (r.custoVisivel) ...[
+          _item(context, 'Imobilizado em lento + parado',
+              '${fmtPct(r.pctImobilizado, 0)} do valor em estoque', r.valorImobilizadoLentoParado,
+              cor: giroErro, ultimo: true),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 6,
+            child: Row(children: [
+              if (imob < 100)
+                Expanded(flex: (100 - imob).round(), child: Container(color: const Color(0xFF9DB4CA))),
+              if (imob.round() > 0)
+                Expanded(flex: imob.round(), child: Container(color: giroErro)),
+            ]),
+          ),
+        ],
       ]),
     );
   }

@@ -189,7 +189,13 @@ void _useCases() {
   );
   sl.registerFactory<ConferirPedido>(() => ConferirPedido(repository: sl()));
   sl.registerFactory<MarcarConferido>(() => MarcarConferido(repository: sl()));
-  sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
+  sl.registerFactory<FaturarPedido>(
+    () => FaturarPedido(
+      repository: sl(),
+      recuperarCaixaAberto: sl(),
+      sessao: sl(),
+    ),
+  );
   sl.registerFactory<CancelarPedido>(() => CancelarPedido(repository: sl()));
   sl.registerFactory<AdicionarPagamentoPedido>(
     () => AdicionarPagamentoPedido(repository: sl()),

@@ -43,18 +43,15 @@ class RelatorioFaturamentoBloc
         step: RelatorioFaturamentoStep.sucesso,
         dados: dados,
       ));
-      // Período anterior de mesmo tamanho, só para variação; falha é ignorada.
+      // Mesmo período do ano passado (igual ao gráfico), só para variação; falha é ignorada.
       final ini = DateTime.tryParse(event.dataInicial);
       final fim = DateTime.tryParse(event.dataFinal);
       if (ini == null || fim == null) return;
-      final dias = fim.difference(ini).inDays + 1;
-      final antFim = ini.subtract(const Duration(days: 1));
-      final antIni = antFim.subtract(Duration(days: dias - 1));
       try {
         final anterior = await _useCase.call(
           empresaIds: [empresaId],
-          dataInicial: _iso(antIni),
-          dataFinal: _iso(antFim),
+          dataInicial: _iso(_mesmoDiaAnoAnterior(ini)),
+          dataFinal: _iso(_mesmoDiaAnoAnterior(fim)),
         );
         emit(state.copyWith(anteriorDados: anterior));
       } catch (_) {}

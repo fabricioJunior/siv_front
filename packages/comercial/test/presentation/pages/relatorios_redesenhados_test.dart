@@ -322,7 +322,7 @@ const _vazioTxt = 'Nenhum resultado para o filtro selecionado.';
 
 void main() {
   group('R1 faturamento', () {
-    test('2ª chamada usa os 30 dias anteriores ao período', () async {
+    test('2ª chamada usa o mesmo período do ano anterior', () async {
       await _registra();
       final bloc = RelatorioFaturamentoBloc(
           GetRelatorioFaturamento(_repo), GetRelatorioFaturamentoComparativo(_repo));
@@ -332,11 +332,11 @@ void main() {
       await bloc.stream.firstWhere((s) => s.anteriorDados != null);
       expect(_repo.periodosFat, [
         ('2026-09-01', '2026-09-30'),
-        ('2026-08-02', '2026-08-31'),
+        ('2025-09-01', '2025-09-30'),
       ]);
     });
 
-    test('período de 1 dia compara com o dia anterior; falha da 2ª é ignorada', () async {
+    test('período de 1 dia compara com o mesmo dia do ano anterior', () async {
       await _registra();
       final bloc = RelatorioFaturamentoBloc(
           GetRelatorioFaturamento(_repo), GetRelatorioFaturamentoComparativo(_repo));
@@ -344,7 +344,7 @@ void main() {
       bloc.add(RelatorioFaturamentoCarregar(
           dataInicial: '2026-03-01', dataFinal: '2026-03-01'));
       await bloc.stream.firstWhere((s) => s.anteriorDados != null);
-      expect(_repo.periodosFat.last, ('2026-02-28', '2026-02-28'));
+      expect(_repo.periodosFat.last, ('2025-03-01', '2025-03-01'));
     });
 
     for (final w in [800.0, 1280.0]) {

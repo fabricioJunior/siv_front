@@ -46,7 +46,7 @@ String _fmtPeriodo(String periodo, String agruparPor) {
   return periodo;
 }
 
-/// Variação % (atual vs anterior). `null` = sem base de comparação.
+/// Variação % (atual vs mesmo período do ano anterior). `null` = sem base de comparação.
 double? _variacao(num atual, num anterior) =>
     anterior == 0 ? null : (atual - anterior) / anterior * 100;
 

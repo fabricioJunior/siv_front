@@ -40,7 +40,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
   Future<Referencia> createReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -56,7 +56,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
       body: {
         'id': id,
         'nome': nome,
-        'categoriaId': categoriaId,
+        if (categoriaId != null) 'categoriaId': categoriaId,
         if (subCategoriaId != null) 'subCategoriaId': subCategoriaId,
         if (idExterno != null) 'idExterno': idExterno,
         if (unidadeMedida != null) 'unidadeMedida': unidadeMedida,

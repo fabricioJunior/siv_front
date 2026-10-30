@@ -505,6 +505,8 @@ const _rotulosEtapa = {
   'associando': 'Associar',
   'etiquetando': 'Etiquetas',
   'conferindo': 'Conferir',
+  'faturando': 'Faturar',
+  'faturado': 'Faturado',
 };
 
 /// Etapa da trilha da contagem; "Associar" chama atenção (falta referência).

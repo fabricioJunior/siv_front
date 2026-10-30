@@ -11,10 +11,14 @@ class ReferenciaCadastroIniciou extends ReferenciaCadastroEvent {
   /// Nome sugerido (ex.: descrição contada). Quando informado, vale no lugar
   /// do nome gerado a partir da categoria/subcategoria.
   final String? nomeInicial;
-  ReferenciaCadastroIniciou({this.nomeInicial});
+
+  /// Fornecedor já escolhido (ex.: o do pedido de entrada); só vale se o
+  /// usuário ainda não escolheu outro.
+  final SelectData? fornecedorInicial;
+  ReferenciaCadastroIniciou({this.nomeInicial, this.fornecedorInicial});
 
   @override
-  List<Object?> get props => [nomeInicial];
+  List<Object?> get props => [nomeInicial, fornecedorInicial?.id];
 }
 
 class ReferenciaCadastroCategoriaSelecionada extends ReferenciaCadastroEvent {
@@ -32,6 +36,11 @@ class ReferenciaCadastroSubCategoriaSelecionada
 
   @override
   List<Object?> get props => [subCategoria];
+}
+
+/// Pula a etapa atual (categoria ou subcategoria), que é opcional.
+class ReferenciaCadastroPular extends ReferenciaCadastroEvent {
+  const ReferenciaCadastroPular();
 }
 
 class ReferenciaCadastroNomeAlterado extends ReferenciaCadastroEvent {

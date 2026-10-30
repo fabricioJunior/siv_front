@@ -8,6 +8,7 @@ import 'package:core/seletores/i_seletor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:produtos/data/remote/dtos/categoria_dto.dart';
+import 'package:produtos/data/remote/dtos/sub_categoria_dto.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart';
@@ -48,13 +49,15 @@ class _Categorias extends RecuperarCategorias {
 }
 
 class _SubCategorias extends RecuperarSubCategorias {
-  _SubCategorias() : super(subCategoriasRepository: _RepoSub());
+  _SubCategorias([this.subs = const []])
+    : super(subCategoriasRepository: _RepoSub());
+  final List<SubCategoria> subs;
   @override
   Future<List<SubCategoria>> call(
     int categoriaId, {
     String? nome,
     bool? inativa,
-  }) async => const [];
+  }) async => subs;
 }
 
 class _CriarReferencia extends CriarReferencia {
@@ -100,7 +103,7 @@ class _CriarReferenciaFake extends CriarReferencia {
   Future<Referencia> call({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -112,7 +115,7 @@ class _CriarReferenciaFake extends CriarReferencia {
     int? pesoGramas,
     EsperaReferencia? espera,
   }) async {
-    enviado = {'id': id, 'idExterno': idExterno, 'espera': espera};
+    enviado = {'categoriaId': categoriaId, 'id': id, 'idExterno': idExterno, 'espera': espera};
     return Referencia.create(id: id, nome: nome);
   }
 }
@@ -198,9 +201,10 @@ void main() {
     CriarReferencia? criar,
     CriarReferenciaMidia? midia,
     bool fake = false,
+    List<SubCategoria> subs = const [],
   }) => ReferenciaCadastroBloc(
     _Categorias(),
-    _SubCategorias(),
+    _SubCategorias(subs),
     criar ?? _CriarReferencia(),
     fake ? _ProximoIdFake() : _ProximoId(),
     _SalvarCusto(),
@@ -238,6 +242,74 @@ void main() {
     await bloc.stream.firstWhere((s) => s.step == ReferenciaCadastroStep.nome);
     return bloc;
   }
+
+  group('categoria e subcategoria opcionais', () {
+    Future<ReferenciaCadastroBloc> iniciado(ReferenciaCadastroBloc bloc) async {
+      bloc.add(ReferenciaCadastroIniciou());
+      await bloc.stream.firstWhere((s) => s.categorias.isNotEmpty);
+      return bloc;
+    }
+
+    test('pular subcategoria vai pro nome com o nome da categoria', () async {
+      final bloc = await iniciado(
+        build(subs: [SubCategoriaDto(id: 5, categoriaId: 1, inativa: false, nome: 'Alca')]),
+      );
+      bloc.add(
+        ReferenciaCadastroCategoriaSelecionada(
+          categoria: CategoriaDto(id: 1, inativa: false, nome: 'Body'),
+        ),
+      );
+      await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.subCategoria,
+      );
+      bloc.add(const ReferenciaCadastroPular());
+      final s = await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.nome,
+      );
+      expect(s.subCategoria, isNull);
+      expect(s.categoria?.id, 1);
+      expect(s.nome, 'Body');
+      await bloc.close();
+    });
+
+    test('pular categoria vai pro nome vazio e permite voltar', () async {
+      final bloc = await iniciado(build());
+      bloc.add(const ReferenciaCadastroPular());
+      final s = await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.nome,
+      );
+      expect(s.categoria, isNull);
+      expect(s.subCategoria, isNull);
+      expect(s.nome, '');
+      bloc.add(ReferenciaCadastroVoltar());
+      await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.categoria,
+      );
+      await bloc.close();
+    });
+
+    test('criar sem categoria envia categoriaId nulo', () async {
+      final criar = _CriarReferenciaFake();
+      final bloc = await iniciado(build(criar: criar, fake: true));
+      bloc.add(const ReferenciaCadastroPular());
+      await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.nome,
+      );
+      bloc.add(const ReferenciaCadastroNomeAlterado(nome: 'Livre'));
+      bloc.add(ReferenciaCadastroProximo());
+      await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.preco,
+      );
+      bloc.add(const ReferenciaCadastroPrecoAlterado(preco: '10,00'));
+      await bloc.stream.firstWhere((s) => s.preco == '10,00');
+      bloc.add(ReferenciaCadastroProximo());
+      await bloc.stream.firstWhere(
+        (s) => s.step == ReferenciaCadastroStep.variacoes,
+      );
+      expect(criar.enviado!['categoriaId'], isNull);
+      await bloc.close();
+    });
+  });
 
   test('sem nome inicial mantém a geração automática pela categoria', () async {
     final bloc = await ate(null);

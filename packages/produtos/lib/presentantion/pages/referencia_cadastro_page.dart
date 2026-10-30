@@ -19,6 +19,7 @@ class ReferenciaCadastroPage extends StatelessWidget {
   /// Pré-preenchimento opcional: nome e cores/tamanhos que já abrem
   /// selecionados no passo de variações.
   final String? nomeInicial;
+  final SelectData? fornecedorInicial;
   final List<int> corIdsIniciais;
   final List<int> tamanhoIdsIniciais;
 
@@ -29,6 +30,7 @@ class ReferenciaCadastroPage extends StatelessWidget {
   const ReferenciaCadastroPage({
     super.key,
     this.nomeInicial,
+    this.fornecedorInicial,
     this.corIdsIniciais = const [],
     this.tamanhoIdsIniciais = const [],
     this.fornecedorSeletor,
@@ -60,7 +62,12 @@ class ReferenciaCadastroPage extends StatelessWidget {
     return BlocProvider<ReferenciaCadastroBloc>(
       create: (_) =>
           sl<ReferenciaCadastroBloc>()
-            ..add(ReferenciaCadastroIniciou(nomeInicial: nomeInicial)),
+            ..add(
+              ReferenciaCadastroIniciou(
+                nomeInicial: nomeInicial,
+                fornecedorInicial: fornecedorInicial,
+              ),
+            ),
       child: BlocBuilder<ReferenciaCadastroBloc, ReferenciaCadastroState>(
         builder: (context, state) {
           final largo = MediaQuery.of(context).size.width >= 900;
@@ -336,6 +343,8 @@ class _Corpo extends StatelessWidget {
           ReferenciaCadastroCategoriaSelecionada(categoria: c),
         ),
         cadastrarLabel: 'Cadastrar categoria',
+        onPular: () =>
+            context.read<ReferenciaCadastroBloc>().add(const ReferenciaCadastroPular()),
         onCadastrar: () async {
           final bloc = context.read<ReferenciaCadastroBloc>();
           final salvou = await CategoriaModal.show(context: context);
@@ -354,18 +363,20 @@ class _Corpo extends StatelessWidget {
           ReferenciaCadastroSubCategoriaSelecionada(subCategoria: c),
         ),
         cadastrarLabel: 'Cadastrar subcategoria',
+        onPular: () =>
+            context.read<ReferenciaCadastroBloc>().add(const ReferenciaCadastroPular()),
         onCadastrar: () async {
           final bloc = context.read<ReferenciaCadastroBloc>();
           final categoria = state.categoria;
-          if (categoria?.id == null) return;
+          if (categoria == null || categoria.id == null) return;
           final salvou = await showDialog<bool>(
             context: context,
-            builder: (_) => SubCategoriaPage(categoriaId: categoria!.id!),
+            builder: (_) => SubCategoriaPage(categoriaId: categoria.id!),
           );
           // Recarrega as subcategorias da categoria atual.
           if (salvou == true) {
             bloc.add(
-              ReferenciaCadastroCategoriaSelecionada(categoria: categoria!),
+              ReferenciaCadastroCategoriaSelecionada(categoria: categoria),
             );
           }
         },
@@ -425,6 +436,7 @@ class _EscolhaStep<T> extends StatefulWidget {
   final ValueChanged<T> onPick;
   final String cadastrarLabel;
   final VoidCallback onCadastrar;
+  final VoidCallback onPular;
 
   const _EscolhaStep({
     required this.titulo,
@@ -436,6 +448,7 @@ class _EscolhaStep<T> extends StatefulWidget {
     required this.onPick,
     required this.cadastrarLabel,
     required this.onCadastrar,
+    required this.onPular,
   });
 
   @override
@@ -484,6 +497,7 @@ class _EscolhaStepState<T> extends State<_EscolhaStep<T>> {
                 icon: const Icon(Icons.add),
                 label: Text(widget.cadastrarLabel),
               ),
+              TextButton(onPressed: widget.onPular, child: const Text('Pular')),
             ],
           ),
           const SizedBox(height: 16),
@@ -754,7 +768,7 @@ class _NomeStepState extends State<_NomeStep> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Começamos com ${widget.state.subCategoria == null ? 'a categoria' : 'a subcategoria'}. Complete com modelo ou coleção.',
+                '${widget.state.subCategoria != null ? 'Começamos com a subcategoria. ' : widget.state.categoria != null ? 'Começamos com a categoria. ' : ''}Complete com modelo ou coleção.',
                 style: const TextStyle(color: Colors.black54),
               ),
               const SizedBox(height: 24),
@@ -771,11 +785,12 @@ class _NomeStepState extends State<_NomeStep> {
                 onSubmitted: (_) => bloc.add(ReferenciaCadastroProximo()),
               ),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => bloc.add(ReferenciaCadastroGerarNome()),
-                icon: const Icon(Icons.auto_awesome),
-                label: const Text('Sugerir nome'),
-              ),
+              if (widget.state.categoria != null)
+                OutlinedButton.icon(
+                  onPressed: () => bloc.add(ReferenciaCadastroGerarNome()),
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Sugerir nome'),
+                ),
               const SizedBox(height: 24),
               Text(
                 'Fornecimento (opcional)',
@@ -978,7 +993,7 @@ class _Concluido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<ReferenciaCadastroBloc>();
-    final onde = state.subCategoria?.nome ?? state.categoria?.nome ?? '';
+    final onde = state.subCategoria?.nome ?? state.categoria?.nome;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1000,14 +1015,18 @@ class _Concluido extends StatelessWidget {
                 onPressed: () => bloc.add(
                   const ReferenciaCadastroReiniciar(manterCategoria: true),
                 ),
-                child: Text('CADASTRAR OUTRA EM ${onde.toUpperCase()}'),
+                child: Text(
+                  onde == null
+                      ? 'CADASTRAR OUTRA'
+                      : 'CADASTRAR OUTRA EM ${onde.toUpperCase()}',
+                ),
               ),
               OutlinedButton(
                 onPressed: () => bloc.add(const ReferenciaCadastroReiniciar()),
                 child: const Text('Outra categoria'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(context).pop(state.referenciaId),
                 child: const Text('Fechar'),
               ),
             ],

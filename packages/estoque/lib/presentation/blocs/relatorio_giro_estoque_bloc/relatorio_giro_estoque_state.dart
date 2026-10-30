@@ -37,6 +37,9 @@ class RelatorioGiroEstoqueState {
     this.erroExportacao,
   });
 
+  bool get custoVisivel =>
+      pagina?.custoVisivel ?? resumo?.custoVisivel ?? permiteCustoGiro();
+
   RelatorioGiroEstoqueState copyWith({
     FiltroGiroEstoque? filtro,
     AbaGiro? aba,

@@ -103,7 +103,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    final corpo = MultiBlocProvider(
       providers: [
         BlocProvider<EmpresaBloc>.value(value: _bloc),
         BlocProvider<TerminaisBloc>.value(value: _terminaisBloc),
@@ -150,6 +150,15 @@ class _EmpresaPageState extends State<EmpresaPage> {
           }
           return _conteudo(context, state);
         },
+      ),
+    );
+    // Sem o AppShell (ex.: primeira empresa do licenciado, ainda sem sessão)
+    // não há Scaffold acima e a página ficava sobre fundo preto.
+    if (Scaffold.maybeOf(context) != null) return corpo;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Empresa')),
+      body: SafeArea(
+        child: Padding(padding: const EdgeInsets.all(16), child: corpo),
       ),
     );
   }
@@ -667,8 +676,7 @@ class _EmpresaPageState extends State<EmpresaPage> {
               'aceito.',
             ),
             value: empresa?.exigeClienteNaVenda ?? false,
-            onChanged: (v) =>
-                _bloc.add(EmpresaEditou(exigeClienteNaVenda: v)),
+            onChanged: (v) => _bloc.add(EmpresaEditou(exigeClienteNaVenda: v)),
           ),
         ],
       ),

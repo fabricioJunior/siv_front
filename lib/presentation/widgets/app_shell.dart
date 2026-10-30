@@ -16,6 +16,7 @@ import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
     show administracaoAcordeaoItens;
 import 'package:siv_front/presentation/pages/sync/sync_status_icone.dart'
     show SyncPontoMenu;
+import 'package:siv_front/presentation/widgets/botao_sincronizar_menu.dart';
 import 'package:siv_front/presentation/pages/relatorios_menu_page.dart'
     show relatoriosAcordeaoItens;
 
@@ -664,9 +665,15 @@ class _BarraTituloInfo extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 120) {
-            return _StatusCaixaCompacto(
-              appState: appState,
-              caixaAberto: caixaAberto,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusCaixaCompacto(
+                  appState: appState,
+                  caixaAberto: caixaAberto,
+                ),
+                const BotaoSincronizarMenu(compacto: true),
+              ],
             );
           }
 
@@ -694,6 +701,7 @@ class _BarraTituloInfo extends StatelessWidget {
                         'Selecionar terminal',
                     onTap: () => _trocarTerminal(context),
                   ),
+                const BotaoSincronizarMenu(),
                 _LinhaInfoMenu(
                   pontoStatus: caixaAberto
                       ? _corCaixaAberto

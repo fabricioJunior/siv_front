@@ -410,6 +410,8 @@ class _ItemContagemCard extends StatelessWidget {
         return 'Pix';
       case TipoContagemDoCaixaItem.cartao:
         return 'Cartão';
+      case TipoContagemDoCaixaItem.cartaoDeDebito:
+        return 'Cartão de débito';
       case TipoContagemDoCaixaItem.fatura:
         return 'Fatura';
       case TipoContagemDoCaixaItem.cheque:
@@ -435,6 +437,8 @@ class _ItemContagemCard extends StatelessWidget {
         return Icons.pix;
       case TipoContagemDoCaixaItem.cartao:
         return Icons.credit_card_outlined;
+      case TipoContagemDoCaixaItem.cartaoDeDebito:
+        return Icons.payment_outlined;
       case TipoContagemDoCaixaItem.fatura:
         return Icons.receipt_long_outlined;
       case TipoContagemDoCaixaItem.cheque:
@@ -460,6 +464,8 @@ class _ItemContagemCard extends StatelessWidget {
         return Colors.teal;
       case TipoContagemDoCaixaItem.cartao:
         return Colors.blue;
+      case TipoContagemDoCaixaItem.cartaoDeDebito:
+        return Colors.lightBlue;
       case TipoContagemDoCaixaItem.fatura:
         return Colors.indigo;
       case TipoContagemDoCaixaItem.cheque:

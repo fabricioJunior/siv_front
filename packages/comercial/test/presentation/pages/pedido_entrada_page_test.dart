@@ -6,6 +6,7 @@ import 'package:comercial/presentation/pages/pedido_entrada_page.dart';
 import 'package:comercial/domain/use_cases/conferir_pedido.dart';
 import 'package:comercial/domain/use_cases/faturar_pedido.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/sessao.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
@@ -196,10 +197,22 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+class _Permissoes implements IPermissoesController {
+  final Set<String> ok;
+  _Permissoes(this.ok);
+  @override
+  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async =>
+      ok.contains(idComponente);
+  @override
+  bool temAcesso({String? idComponente, int? grupoId}) =>
+      ok.contains(idComponente);
+}
+
 void main() {
   late _Remoto remoto;
   Object? argsCadastro;
   int? retornoCadastro;
+  var permissoes = {'PRDFM003', 'PRDFM008'};
 
   Future<void> abrir(WidgetTester tester, {Size tamanho = const Size(420, 1400)}) async {
     tester.view.physicalSize = tamanho;
@@ -207,6 +220,7 @@ void main() {
     addTearDown(tester.view.reset);
     await sl.reset();
     sl.registerSingleton<IAcessoGlobalSessao>(_Sessao());
+    sl.registerSingleton<IPermissoesController>(_Permissoes(permissoes));
     sl.registerFactory<PedidoEntradaBloc>(
       () => PedidoEntradaBloc(
         ImportarNfeEntrada(remoto),
@@ -272,6 +286,7 @@ void main() {
     remoto = _Remoto();
     argsCadastro = null;
     retornoCadastro = null;
+    permissoes = {'PRDFM003', 'PRDFM008'};
   });
   tearDown(() async => sl.reset());
 
@@ -705,6 +720,52 @@ void main() {
     expect(remoto.associados, [20, 21, 22]);
     expect(remoto.associadoRef, 99);
     expect(remoto.associadoCategoria, isNull);
+  });
+
+  testWidgets('Sem PRDFM003: criar referência nova desabilitado com aviso',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    permissoes = {'PRDFM008'};
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_referencia')), findsOneWidget);
+    await tester.tap(find.text('Criar referência nova'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const Key('entrada_criar_referencia_Vestido Luna')),
+        findsNothing);
+    expect(find.byKey(const Key('entrada_associar_Vestido Luna')),
+        findsOneWidget);
+  });
+
+  testWidgets('Com PRDFM003: sem aviso e criar referência disponível',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_referencia')), findsNothing);
+    await tester.tap(find.text('Criar referência nova'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('entrada_criar_referencia_Vestido Luna')),
+        findsOneWidget);
+  });
+
+  testWidgets('Sem PRDFM008: cadastrar variação desabilitado', (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    permissoes = {'PRDFM003'};
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_variacao')), findsNWidgets(2));
+    final b = tester.widget<FilledButton>(find.descendant(
+        of: find.byKey(const Key('cadastrar_variacao_77')),
+        matching: find.byType(FilledButton)));
+    expect(b.onPressed, isNull);
   });
 
   testWidgets('Criar referência nova: wizard cancelado não associa nada',

@@ -173,7 +173,7 @@ void main() {
           itens: [
             _c(4821,
                 itens: const [_ref, _livre], total: 6, etapa: 'associando'),
-            _c(4817, contador: null),
+            _c(4817, contador: null, etapa: 'faturando'),
           ],
         ),
       );
@@ -190,7 +190,8 @@ void main() {
       expect(
           find.byKey(const Key('contagem_etapa_associando')), findsOneWidget);
       expect(find.text('Associar'), findsOneWidget);
-      expect(find.byKey(const Key('contagem_etapa_contando')), findsOneWidget);
+      expect(find.text('Faturar'), findsOneWidget);
+      expect(find.byKey(const Key('contagem_etapa_faturando')), findsOneWidget);
       expect(find.text('Todas · 3'), findsOneWidget);
       expect(find.text('Minhas · 1'), findsOneWidget);
       expect(find.byKey(const Key('contagens_nova')), findsOneWidget);

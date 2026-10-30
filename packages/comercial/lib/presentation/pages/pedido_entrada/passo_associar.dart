@@ -3,6 +3,7 @@ import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,9 @@ class _PassoAssociarState extends State<PassoAssociar> {
     }
     return g;
   }
+
+  bool get _podeCadastrarVariacao =>
+      PermissaoPorNome.acessoPermitido('PRDFM008');
 
   void _cadastrar(List<ContagemLivre> itens) =>
       context.read<PedidoEntradaBloc>().add(
@@ -99,6 +103,7 @@ class _PassoAssociarState extends State<PassoAssociar> {
                     referenciaId: e.key,
                     itens: e.value,
                     salvando: widget.salvando,
+                    permitido: _podeCadastrarVariacao,
                     onCadastrar: () => _cadastrar(e.value),
                   ),
                 if (variacoes.length >= 2)
@@ -108,7 +113,7 @@ class _PassoAssociarState extends State<PassoAssociar> {
                       height: alturaBotaoPrincipal,
                       child: OutlinedButton(
                         key: const Key('cadastrar_todas_variacoes'),
-                        onPressed: widget.salvando
+                        onPressed: widget.salvando || !_podeCadastrarVariacao
                             ? null
                             : () => _cadastrar(
                                   [for (final v in variacoes.values) ...v],
@@ -157,6 +162,7 @@ class _GrupoVariacao extends StatelessWidget {
   final int referenciaId;
   final List<ContagemLivre> itens;
   final bool salvando;
+  final bool permitido;
   final VoidCallback onCadastrar;
 
   const _GrupoVariacao({
@@ -164,6 +170,7 @@ class _GrupoVariacao extends StatelessWidget {
     required this.referenciaId,
     required this.itens,
     required this.salvando,
+    required this.permitido,
     required this.onCadastrar,
   });
 
@@ -192,7 +199,11 @@ class _GrupoVariacao extends StatelessWidget {
               style: textos.corpo,
             ),
           const SizedBox(height: 4),
-          Text('Esta cor/tamanho ainda não existe para a referência.',
+          Text(
+              permitido
+                  ? 'Esta cor/tamanho ainda não existe para a referência.'
+                  : 'Sem permissão para cadastrar variação (cor/tamanho novo).',
+              key: permitido ? null : const Key('sem_permissao_variacao'),
               style: textos.apoio.copyWith(color: cores.parcialTexto)),
           const SizedBox(height: 12),
           BotaoPrincipalEntrada(
@@ -200,7 +211,7 @@ class _GrupoVariacao extends StatelessWidget {
             rotulo: itens.length > 1
                 ? 'CADASTRAR ${itens.length} VARIAÇÕES'
                 : 'CADASTRAR VARIAÇÃO',
-            onPressed: salvando ? null : onCadastrar,
+            onPressed: salvando || !permitido ? null : onCadastrar,
           ),
         ],
       ),
@@ -229,6 +240,7 @@ class _GrupoAssociar extends StatefulWidget {
 class _GrupoAssociarState extends State<_GrupoAssociar> {
   bool _criar = false;
   int? _referenciaId;
+  final bool _podeCriar = PermissaoPorNome.acessoPermitido('PRDFM003');
 
   void _associar([int? referenciaId]) {
     context.read<PedidoEntradaBloc>().add(
@@ -244,10 +256,13 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
   /// referência criada, associa o grupo a ela.
   Future<void> _criarReferencia() async {
     // Sem type arg: o onGenerateRoute cria MaterialPageRoute<dynamic> e o cast quebra.
+    final fornecedor = context.read<PedidoEntradaBloc>().state.resumo?.fornecedor;
     final id = await Navigator.of(context).pushNamed(
       '/referencia_cadastro',
       arguments: {
         'nome': widget.descricao,
+        'fornecedorId': fornecedor?.id,
+        'fornecedorNome': fornecedor?.nome,
         'corIds': widget.itens.map((c) => c.corId).toSet().toList(),
         'tamanhoIds': widget.itens.map((c) => c.tamanhoId).toSet().toList(),
       },
@@ -285,13 +300,24 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
             style: const ButtonStyle(
               minimumSize: WidgetStatePropertyAll(Size(0, 44)),
             ),
-            segments: const [
-              ButtonSegment(value: false, label: Text('Usar referência existente')),
-              ButtonSegment(value: true, label: Text('Criar referência nova')),
+            segments: [
+              const ButtonSegment(
+                  value: false, label: Text('Usar referência existente')),
+              ButtonSegment(
+                  value: true,
+                  enabled: _podeCriar,
+                  label: const Text('Criar referência nova')),
             ],
-            selected: {_criar},
+            selected: {_criar && _podeCriar},
             onSelectionChanged: (v) => setState(() => _criar = v.first),
           ),
+          if (!_podeCriar)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Sem permissão para cadastrar referência',
+                  key: const Key('sem_permissao_referencia'),
+                  style: textos.apoio),
+            ),
           const SizedBox(height: 12),
           if (!_criar)
             widget.seletores.referenciaContagemSeletor(

@@ -2,6 +2,7 @@ import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:core/bloc.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 
@@ -153,11 +154,17 @@ class CartaoLinhaEntrada extends StatelessWidget {
                 runSpacing: 4,
                 children: [
                   if (linha.status == StatusLinhaEntrada.naoCadastrado) ...[
-                    OutlinedButton(
-                      onPressed: salvando
-                          ? null
-                          : () => _preCadastrar(context, bloc),
-                      child: const Text('Pré-cadastrar'),
+                    Tooltip(
+                      message: PermissaoPorNome.acessoPermitido('PRDFM003')
+                          ? ''
+                          : 'Sem permissão para cadastrar referência',
+                      child: OutlinedButton(
+                        onPressed: salvando ||
+                                !PermissaoPorNome.acessoPermitido('PRDFM003')
+                            ? null
+                            : () => _preCadastrar(context, bloc),
+                        child: const Text('Pré-cadastrar'),
+                      ),
                     ),
                     OutlinedButton(
                       onPressed: salvando

@@ -1142,20 +1142,31 @@ Map<String, Widget Function(BuildContext)> routes = {
     return const ReferenciasPendentesPesoPage();
   },
   // Wizard de cadastro de referência; devolve (pop) o `int?` id criado.
-  // Mesmas regras de acesso de /referencias (sem componente próprio).
+  // Exige PRDFM003 (_componentesDaRota); /referencias segue sem proteção.
   '/referencia_cadastro': (context) {
     final a = args(context) as Map? ?? const {};
-    return ReferenciaCadastroPage(
-      nomeInicial: a['nome'] as String?,
-      corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
-      tamanhoIdsIniciais: ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
-      fornecedorSeletor: (data) => SeletorPessoa(
-        titulo: 'Fornecedor',
-        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-        retornarSomenteId: false,
-        onChanged: data.onChanged,
-        eFornecedor: true,
-        compacto: data.compacto,
+    return _rotaProtegida(
+      route: '/referencia_cadastro',
+      child: ReferenciaCadastroPage(
+        nomeInicial: a['nome'] as String?,
+        fornecedorInicial: a['fornecedorId'] is int
+            ? SelectData(
+                id: a['fornecedorId'] as int,
+                nome: '${a['fornecedorNome']}',
+                data: const {},
+              )
+            : null,
+        corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
+        tamanhoIdsIniciais:
+            ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
       ),
     );
   },
@@ -1726,6 +1737,7 @@ Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
 }
 
 const Map<String, List<String>> _componentesDaRota = {
+  '/referencia_cadastro': ['PRDFM003'],
   '/recibo_fechamento_caixa': ['FCXFP010'],
   '/historico_de_caixas': ['FCXFP008'],
   '/comercial': [
@@ -1811,7 +1823,7 @@ const Map<String, List<String>> _componentesDaRota = {
     'PRDFM006',
   ],
   '/etiquetas': ['PRDFM003'],
-  '/impressao_etiquetas': ['PRDFM003'],
+  '/impressao_etiquetas': ['PRDFM012'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
   '/controle_despesas': ['DESFM003'],

@@ -46,13 +46,16 @@ class ReferenciaCadastroBloc
     on<ReferenciaCadastroNomeAlterado>(
       (e, emit) => emit(state.copyWith(nome: e.nome)),
     );
-    on<ReferenciaCadastroGerarNome>(
-      (e, emit) => emit(
+    on<ReferenciaCadastroGerarNome>((e, emit) {
+      final categoria = state.categoria;
+      if (categoria == null) return;
+      emit(
         state.copyWith(
-          nome: gerarNomeDeReferencia(state.categoria!, state.subCategoria),
+          nome: gerarNomeDeReferencia(categoria, state.subCategoria),
         ),
-      ),
-    );
+      );
+    });
+    on<ReferenciaCadastroPular>(_onPular);
     on<ReferenciaCadastroFornecedorAlterado>(
       (e, emit) => emit(state.copyWith(fornecedor: () => e.fornecedor)),
     );
@@ -101,6 +104,9 @@ class ReferenciaCadastroBloc
     _nomeInicial = nomeInicial == null || nomeInicial.isEmpty
         ? null
         : nomeInicial;
+    if (event.fornecedorInicial != null && state.fornecedor == null) {
+      emit(state.copyWith(fornecedor: () => event.fornecedorInicial));
+    }
     try {
       emit(state.copyWith(carregandoCategorias: true));
       final categorias = await _recuperarCategorias.call();
@@ -156,6 +162,35 @@ class ReferenciaCadastroBloc
     }
   }
 
+  /// Categoria e subcategoria são opcionais: pular segue pro nome.
+  void _onPular(
+    ReferenciaCadastroPular event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) {
+    switch (state.step) {
+      case ReferenciaCadastroStep.categoria:
+        emit(
+          state.copyWith(
+            categoria: () => null,
+            subCategoria: () => null,
+            subCategorias: const [],
+            nome: _nomeInicial ?? '',
+            step: ReferenciaCadastroStep.nome,
+          ),
+        );
+      case ReferenciaCadastroStep.subCategoria:
+        emit(
+          state.copyWith(
+            subCategoria: () => null,
+            nome: _nomeInicial ?? state.categoria?.nome,
+            step: ReferenciaCadastroStep.nome,
+          ),
+        );
+      default:
+        return;
+    }
+  }
+
   FutureOr<void> _onSubCategoriaSelecionada(
     ReferenciaCadastroSubCategoriaSelecionada event,
     Emitter<ReferenciaCadastroState> emit,
@@ -199,9 +234,9 @@ class ReferenciaCadastroBloc
       if (id == null) {
         id = await _recuperarProximoId.call();
         final subCategoria = state.subCategoria;
-        final categoria = state.categoria!;
+        final categoria = state.categoria;
         await _criarReferencia.call(
-          categoriaId: categoria.id!,
+          categoriaId: categoria?.id,
           subCategoriaId: subCategoria?.id,
           id: id,
           nome: state.nome.trim(),
@@ -209,8 +244,8 @@ class ReferenciaCadastroBloc
           descricao: _opcional(state.descricao),
           composicao: _opcional(state.composicao),
           cuidados: _opcional(state.cuidados),
-          ncm: subCategoria?.ncm ?? categoria.ncm,
-          pesoGramas: subCategoria?.pesoGramas ?? categoria.pesoGramas,
+          ncm: subCategoria?.ncm ?? categoria?.ncm,
+          pesoGramas: subCategoria?.pesoGramas ?? categoria?.pesoGramas,
           idExterno: _opcional(state.codigoNoFornecedor),
           espera: _espera(),
         );
@@ -293,7 +328,9 @@ class ReferenciaCadastroBloc
         categoria: manter ? state.categoria : null,
         subCategorias: manter ? state.subCategorias : const [],
         subCategoria: manter ? state.subCategoria : null,
-        nome: manter ? (state.subCategoria?.nome ?? state.categoria!.nome) : '',
+        nome: manter
+            ? (state.subCategoria?.nome ?? state.categoria?.nome ?? '')
+            : '',
         step: manter
             ? ReferenciaCadastroStep.nome
             : ReferenciaCadastroStep.categoria,

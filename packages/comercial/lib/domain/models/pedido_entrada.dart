@@ -479,6 +479,9 @@ class EntradaCorrecao extends Equatable {
 class EntradaResumo extends Equatable {
   final int pedidoId;
   final String? origemEntrada;
+
+  /// Fornecedor do pedido (id, nome); o wizard de cadastro já abre com ele.
+  final ({int id, String nome})? fornecedor;
   final EntradaNfe? nfe;
   final List<EntradaLinha> linhas;
   final List<EntradaContagem> contagens;
@@ -498,6 +501,7 @@ class EntradaResumo extends Equatable {
   const EntradaResumo({
     required this.pedidoId,
     required this.origemEntrada,
+    this.fornecedor,
     required this.nfe,
     required this.linhas,
     required this.contagens,
@@ -518,6 +522,13 @@ class EntradaResumo extends Equatable {
     return EntradaResumo(
       pedidoId: _int(j['pedidoId']) ?? 0,
       origemEntrada: j['origemEntrada'] as String?,
+      fornecedor: switch (j['fornecedor']) {
+        {'id': final id, 'nome': final nome} when _int(id) != null => (
+          id: _int(id)!,
+          nome: '$nome',
+        ),
+        _ => null,
+      },
       nfe: j['nfe'] == null
           ? null
           : EntradaNfe.fromJson(j['nfe'] as Map<String, dynamic>),
@@ -565,6 +576,7 @@ class EntradaResumo extends Equatable {
   @override
   List<Object?> get props => [
         pedidoId,
+        fornecedor,
         linhas,
         contagens,
         contagensLivres,

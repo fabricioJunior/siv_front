@@ -535,6 +535,17 @@ class _VendaPageState extends State<VendaPage> {
                                 'Bipe ou informe o código do produto',
                             nomeTabelaDePreco:
                                 state.tabelaDePrecoSelecionada?.nome,
+                            produtosPreCarregados:
+                                state.orcamentoItensPreCarregados.isEmpty
+                                ? null
+                                : [
+                                    for (final item
+                                        in state.orcamentoItensPreCarregados)
+                                      ProdutosPreCarregado(
+                                        id: item.produtoId,
+                                        quantidade: item.quantidade,
+                                      ),
+                                  ],
                           ),
                         ),
                         const SizedBox(width: SivDimensoes.gapCards),

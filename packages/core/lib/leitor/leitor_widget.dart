@@ -131,7 +131,17 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _sincronizando = !sessao.dadosSincronizados;
     _sincronizacaoSubscription =
         sessao.sincronizandoDados.listen((sincronizando) {
-      if (mounted) setState(() => _sincronizando = sincronizando);
+      if (!mounted) return;
+      setState(() => _sincronizando = sincronizando);
+      // Durante a sincronização o leitor sai da árvore e o BlocConsumer que copia
+      // o estado do bloc para o controller deixa de ouvir: o que entrou nesse
+      // intervalo (ex.: pré-carga de orçamento) só chegaria ao total/botão da tela
+      // na próxima emissão.
+      if (!sincronizando) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _controller.syncState(_bloc.state);
+        });
+      }
     });
   }
 

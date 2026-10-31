@@ -333,6 +333,44 @@ void main() {
     ];
     await abrir(t);
     expect(find.textContaining('Produto 777'), findsWidgets);
+    expect(find.textContaining('20,00'), findsWidgets);
+    final botao = t.widget<FilledButton>(
+      find.ancestor(
+        of: find.text('Ir para pagamento · F9'),
+        matching: find.byType(FilledButton),
+      ),
+    );
+    expect(botao.onPressed, isNotNull);
+  });
+
+  testWidgets('orçamento reaberto já na leitura (mesma tabela) também soma total e libera pagamento',
+      (t) async {
+    await abrir(t);
+    _itensDoOrcamento = const [
+      ProdutoCompartilhado(
+        hash: 'i',
+        produtoId: 7,
+        hashLista: 'o2',
+        quantidade: 2,
+        valorUnitario: 10,
+        nome: 'Produto 777',
+        corNome: 'Preto',
+        tamanhoNome: 'M',
+      ),
+    ];
+    t
+        .element(find.text('Ir para pagamento · F9'))
+        .read<VendaBloc>()
+        .add(const VendaOrcamentoCarregarSolicitado(hash: 'o2'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('Produto 777'), findsWidgets);
+    final botao = t.widget<FilledButton>(
+      find.ancestor(
+        of: find.text('Ir para pagamento · F9'),
+        matching: find.byType(FilledButton),
+      ),
+    );
+    expect(botao.onPressed, isNotNull);
   });
 
   testWidgets(

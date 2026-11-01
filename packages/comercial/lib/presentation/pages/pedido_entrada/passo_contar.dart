@@ -209,10 +209,11 @@ class _PassoContarState extends State<PassoContar> {
     return g;
   }
 
-  Map<String, List<ContagemLivre>> get _gruposLivres {
-    final g = <String, List<ContagemLivre>>{};
+  /// (descrição, estampaId): a mesma descrição em estampas diferentes são contagens separadas.
+  Map<(String, int), List<ContagemLivre>> get _gruposLivres {
+    final g = <(String, int), List<ContagemLivre>>{};
     for (final c in _r.livresSemReferencia) {
-      g.putIfAbsent(c.descricao, () => []).add(c);
+      g.putIfAbsent((c.descricao, c.estampaId ?? 0), () => []).add(c);
     }
     return g;
   }
@@ -278,11 +279,18 @@ class _PassoContarState extends State<PassoContar> {
         ),
       );
 
+  String _tituloLivre(String descricao, List<ContagemLivre> itens) {
+    final estampa = itens.first.estampaNome;
+    return estampa == null ? descricao : '$descricao · $estampa';
+  }
+
   void _editarLivre(String descricao, List<ContagemLivre> itens) => _abrir(
         _Edicao(
-          titulo: descricao,
+          titulo: _tituloLivre(descricao, itens),
           livre: true,
           descricao: descricao,
+          estampaId: itens.first.estampaId,
+          estampaNome: itens.first.estampaNome,
           existentes: [
             for (final c in itens)
               EntradaContagem(
@@ -360,6 +368,7 @@ class _PassoContarState extends State<PassoContar> {
               descricao: descricao,
               corId: c.corId,
               tamanhoId: c.tamanhoId,
+              estampaId: c.estampaId,
               quantidade: 0,
             ),
         ]),
@@ -550,8 +559,8 @@ class _PassoContarState extends State<PassoContar> {
                   ),
                   for (final e in livres.entries)
                     _linhaGrupo(
-                      chave: Key('entrada_sem_ref_${e.key}'),
-                      titulo: e.key,
+                      chave: Key('entrada_sem_ref_${e.key.$1}'),
+                      titulo: _tituloLivre(e.key.$1, e.value),
                       resumo: e.value
                           .map((c) =>
                               '${_corNome(c.corId)} ${_tamNome(c.tamanhoId)}·${qtd(c.quantidade)}')
@@ -560,10 +569,10 @@ class _PassoContarState extends State<PassoContar> {
                           e.value.fold<double>(0, (s, c) => s + c.quantidade),
                       onTap: widget.salvando
                           ? null
-                          : () => _editarLivre(e.key, e.value),
+                          : () => _editarLivre(e.key.$1, e.value),
                       onExcluir: widget.salvando
                           ? null
-                          : () => _excluirLivre(e.key, e.value),
+                          : () => _excluirLivre(e.key.$1, e.value),
                     ),
                 ],
               ),

@@ -48,7 +48,7 @@ class AdicionarVariacoesBloc
         tamanhoIdsNaGrade: event.tamanhoIdsNaGrade,
         estampaIdsNaGrade: event.estampaIdsNaGrade,
         chavesNaGrade: event.chavesNaGrade,
-        estampasAtivo: event.estampaIdsNaGrade.isNotEmpty,
+        estampasAtivo: event.estampaIdsNaGrade.isNotEmpty || state.estampasAtivo,
         coresSelecionadas: event.coresSelecionadasIniciais,
         tamanhosSelecionados: event.tamanhosSelecionadosIniciais,
       ),

@@ -113,7 +113,7 @@ void main() {
               esperadas: const [_aurora, _bella],
               contadoPorReferencia: contado,
               esperadasInicial: inicial,
-              existentesDaReferencia: (id) => id == 1
+              existentesDaReferencia: (id, _) => id == 1
                   ? const [
                       EntradaContagem(
                         produtoId: 10,

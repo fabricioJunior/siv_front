@@ -275,6 +275,7 @@ class EntradaConferenciaItem extends Equatable {
   final int idReferencia;
   final String cor;
   final String tamanho;
+  final String estampa;
   final double contado;
   final double lido;
   final SituacaoConferencia situacao;
@@ -286,6 +287,7 @@ class EntradaConferenciaItem extends Equatable {
     required this.idReferencia,
     required this.cor,
     required this.tamanho,
+    this.estampa = '',
     required this.contado,
     required this.lido,
     required this.situacao,
@@ -301,6 +303,7 @@ class EntradaConferenciaItem extends Equatable {
       idReferencia: _int(j['idReferencia']) ?? 0,
       cor: j['cor'] as String? ?? '',
       tamanho: j['tamanho'] as String? ?? '',
+      estampa: j['estampa'] as String? ?? '',
       contado: contado,
       lido: lido,
       situacao: SituacaoConferencia.deValor(
@@ -311,7 +314,8 @@ class EntradaConferenciaItem extends Equatable {
     );
   }
 
-  String get grade => [cor, tamanho].where((e) => e.isNotEmpty).join(' · ');
+  String get grade =>
+      [cor, estampa, tamanho].where((e) => e.isNotEmpty).join(' · ');
 
   @override
   List<Object?> get props => [produtoId, contado, lido, situacao];
@@ -577,6 +581,18 @@ class EntradaResumo extends Equatable {
   /// Cor/tamanho novos de referência já cadastrada (a cadastrar).
   List<ContagemLivre> get variacoesNovas =>
       contagensLivres.where((c) => c.ehVariacaoNova).toList();
+
+  /// "Cor · Estampa · Tamanho" da contagem. O SKU liso vira "Liso" quando a mesma
+  /// referência também tem contagem estampada (senão as etiquetas ficam iguais).
+  String gradeDe(EntradaContagem c) {
+    final temEstampa = contagens
+        .any((o) => o.referenciaId == c.referenciaId && o.estampaId != null);
+    final estampa = c.estampaNome ?? (temEstampa ? 'Liso' : null);
+    return [c.corNome, estampa, c.tamanhoNome]
+        .whereType<String>()
+        .where((e) => e.isNotEmpty)
+        .join(' · ');
+  }
 
   List<EntradaContagem> contagensDaLinha(int linhaId) =>
       contagens.where((c) => c.linhaId == linhaId).toList();

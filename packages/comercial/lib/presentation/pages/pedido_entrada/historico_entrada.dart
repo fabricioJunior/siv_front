@@ -15,8 +15,7 @@ class HistoricoEntradaPage extends StatelessWidget {
     }
     for (final c in resumo.contagens) {
       if (c.produtoId == id) {
-        return '${c.referenciaNome ?? 'Produto $id'} · ${c.corNome ?? ''} ${c.tamanhoNome ?? ''}'
-            .trim();
+        return '${c.referenciaNome ?? 'Produto $id'} · ${resumo.gradeDe(c)}';
       }
     }
     return id == null ? 'Pedido' : 'Produto $id';

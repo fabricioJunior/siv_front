@@ -559,7 +559,7 @@ class _PassoContarState extends State<PassoContar> {
                   ),
                   for (final e in livres.entries)
                     _linhaGrupo(
-                      chave: Key('entrada_sem_ref_${e.key.$1}'),
+                      chave: Key('entrada_sem_ref_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
                       titulo: _tituloLivre(e.key.$1, e.value),
                       resumo: e.value
                           .map((c) =>

@@ -415,7 +415,8 @@ class ImpressaoEtiquetasBloc
       for (var i = 0; i < quantidade; i++) {
         requisicoes.add(
           _RequisicaoEtiqueta(
-            cor: cor,
+            // No ZPL a estampa vai junto da cor: "COR ESTAMPA" (liso: só a cor).
+            cor: estampa == null ? cor : '$cor $estampa',
             corExibicao: corExibicao,
             tamanho: tamanho,
             codigoBarras: codigoStorage.trim(),
@@ -812,7 +813,7 @@ double _rankTamanho(String nome) {
 
 class _RequisicaoEtiqueta {
   final String cor;
-  // Cor + estampa, só pra exibição na tela/pilha; o ZPL continua recebendo [cor].
+  // Cor + estampa separados por ' · ', só pra exibição na tela/pilha; o ZPL recebe [cor] ("COR ESTAMPA").
   final String corExibicao;
   final String tamanho;
   final String codigoBarras;

@@ -115,7 +115,19 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   ReferenciaEsperada? _esperadaEscolhida;
   late int? _referenciaId = widget.referenciaId ?? widget.linha?.referenciaId;
   late String? _referenciaNome = widget.referenciaNome;
-  late int? _estampaId = widget.estampaIdInicial;
+  // Estampas escolhidas para esta contagem (id -> nome). Cada uma ganha a sua grade,
+  // além da grade LISO (sem estampa).
+  final _estampas = <int, String>{};
+
+  /// Grades da contagem: 0 = liso. Editando uma contagem já estampada só ela
+  /// (outra estampa = outra contagem); senão o liso e as estampas escolhidas.
+  List<int> get _blocos => widget.estampaIdInicial != null
+      ? [widget.estampaIdInicial!]
+      : [0, ..._estampas.keys];
+
+  String _nomeBloco(int est) => est == 0
+      ? 'LISO (SEM ESTAMPA)'
+      : (_estampas[est] ?? widget.estampaNomeInicial ?? '#$est').toUpperCase();
   bool? _tamanhosNumericos;
   bool _carregandoTamanhos = false;
   String? _focado;
@@ -136,7 +148,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
       _tamanhos[c.tamanhoId!] =
           c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
-      _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
+      _celula(c.corId!, c.tamanhoId!, c.estampaId ?? 0).text = qtd(c.quantidade);
     }
     _ordenarTamanhos();
     nomesCor.addAll(_cores);
@@ -157,10 +169,12 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     super.dispose();
   }
 
-  String _chave(int cor, int tam) => '$cor|$tam';
+  // Liso mantém a chave 'cor|tam'; estampa acrescenta '|estampaId'.
+  String _chave(int cor, int tam, [int est = 0]) =>
+      est == 0 ? '$cor|$tam' : '$cor|$tam|$est';
 
-  TextEditingController _celula(int cor, int tam) =>
-      _celulas.putIfAbsent(_chave(cor, tam), () {
+  TextEditingController _celula(int cor, int tam, [int est = 0]) =>
+      _celulas.putIfAbsent(_chave(cor, tam, est), () {
         final c = TextEditingController();
         c.addListener(() {
           if (mounted) setState(() {});
@@ -168,8 +182,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         return c;
       });
 
-  FocusNode _foco(int cor, int tam) {
-    final k = _chave(cor, tam);
+  FocusNode _foco(int cor, int tam, [int est = 0]) {
+    final k = _chave(cor, tam, est);
     return _focos.putIfAbsent(k, () {
       final f = FocusNode();
       f.addListener(() {
@@ -189,18 +203,18 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     return t.isEmpty ? null : double.tryParse(t);
   }
 
-  double? _lidoDaCelula(int cor, int tam) {
+  double? _lidoDaCelula(int cor, int tam, [int est = 0]) {
     for (final e in widget.existentes) {
-      if (e.corId == cor && e.tamanhoId == tam) {
+      if (e.corId == cor && e.tamanhoId == tam && (e.estampaId ?? 0) == est) {
         return widget.lidoPorProduto[e.produtoId];
       }
     }
     return null;
   }
 
-  bool _abaixoDoLido(int cor, int tam) {
-    final lido = _lidoDaCelula(cor, tam);
-    final v = _ler(_celula(cor, tam));
+  bool _abaixoDoLido(int cor, int tam, [int est = 0]) {
+    final lido = _lidoDaCelula(cor, tam, est);
+    final v = _ler(_celula(cor, tam, est));
     return lido != null && v != null && v < lido;
   }
 
@@ -210,9 +224,11 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       final q = _ler(_simples);
       return lido != null && q != null && q < lido;
     }
-    for (final cor in _cores.keys) {
-      for (final tam in _tamanhos.keys) {
-        if (_abaixoDoLido(cor, tam)) return true;
+    for (final est in _blocos) {
+      for (final cor in _cores.keys) {
+        for (final tam in _tamanhos.keys) {
+          if (_abaixoDoLido(cor, tam, est)) return true;
+        }
       }
     }
     return false;
@@ -277,27 +293,30 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     final descricao = _descricao.text.trim();
     if (_livre ? descricao.isEmpty : _referenciaId == null) return const [];
     return [
-      for (final cor in _cores.keys)
-        for (final tam in _tamanhos.keys)
-          if (_ler(_celula(cor, tam)) != null)
-            ItemContagem(
-              linhaId: widget.linha?.id,
-              referenciaId: _livre ? null : _referenciaId,
-              estampaId: _estampaId,
-              descricao: _livre ? descricao : null,
-              corId: cor,
-              tamanhoId: tam,
-              quantidade: _ler(_celula(cor, tam))!,
-            ),
+      for (final est in _blocos)
+        for (final cor in _cores.keys)
+          for (final tam in _tamanhos.keys)
+            if (_ler(_celula(cor, tam, est)) != null)
+              ItemContagem(
+                linhaId: widget.linha?.id,
+                referenciaId: _livre ? null : _referenciaId,
+                estampaId: est == 0 ? null : est,
+                descricao: _livre ? descricao : null,
+                corId: cor,
+                tamanhoId: tam,
+                quantidade: _ler(_celula(cor, tam, est))!,
+              ),
     ];
   }
 
   double get _totalPecas {
     if (_skuUnico) return _ler(_simples) ?? 0;
     var t = 0.0;
-    for (final cor in _cores.keys) {
-      for (final tam in _tamanhos.keys) {
-        t += _ler(_celula(cor, tam)) ?? 0;
+    for (final est in _blocos) {
+      for (final cor in _cores.keys) {
+        for (final tam in _tamanhos.keys) {
+          t += _ler(_celula(cor, tam, est)) ?? 0;
+        }
       }
     }
     return t;
@@ -308,16 +327,21 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     final imp = widget.impressasPorProduto;
     if (imp == null) return 0;
     var t = 0.0;
-    for (final cor in _cores.keys) {
-      for (final tam in _tamanhos.keys) {
-        final v = _ler(_celula(cor, tam));
-        if (v == null) continue;
-        final produto = widget.existentes
-            .where((e) => e.corId == cor && e.tamanhoId == tam)
-            .map((e) => e.produtoId)
-            .firstOrNull;
-        final dif = v - (imp[produto] ?? 0);
-        if (dif > 0) t += dif;
+    for (final est in _blocos) {
+      for (final cor in _cores.keys) {
+        for (final tam in _tamanhos.keys) {
+          final v = _ler(_celula(cor, tam, est));
+          if (v == null) continue;
+          final produto = widget.existentes
+              .where((e) =>
+                  e.corId == cor &&
+                  e.tamanhoId == tam &&
+                  (e.estampaId ?? 0) == est)
+              .map((e) => e.produtoId)
+              .firstOrNull;
+          final dif = v - (imp[produto] ?? 0);
+          if (dif > 0) t += dif;
+        }
       }
     }
     return t;
@@ -363,8 +387,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         _recarregarGrade(e.id);
       });
 
-  /// Grade da referência escolhida na aba Esperadas: o que já foi contado dela
-  /// com a estampa atual (estampa diferente = outro SKU, outra contagem).
+  /// Grade da referência escolhida na aba Esperadas: o que já foi contado dela,
+  /// no liso e em cada estampa escolhida (estampa diferente = outro SKU).
   void _recarregarGrade(int referenciaId) {
     _cores.clear();
     _tamanhos.clear();
@@ -373,18 +397,25 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     for (final c in _celulas.values) {
       c.clear();
     }
+    for (final est in _blocos) {
+      _preencherExistentes(referenciaId, est);
+    }
+    _ordenarTamanhos();
+    nomesCor.addAll(_cores);
+    nomesTamanho.addAll(_tamanhos);
+  }
+
+  void _preencherExistentes(int referenciaId, int est) {
     for (final c in widget.existentesDaReferencia
-            ?.call(referenciaId, _estampaId) ??
+            ?.call(referenciaId, est == 0 ? null : est) ??
         const <EntradaContagem>[]) {
       if (c.corId == null || c.tamanhoId == null) continue;
       _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
       _tamanhos[c.tamanhoId!] =
           c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
-      _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
+      final celula = _celula(c.corId!, c.tamanhoId!, est);
+      if (celula.text.isEmpty) celula.text = qtd(c.quantidade);
     }
-    _ordenarTamanhos();
-    nomesCor.addAll(_cores);
-    nomesTamanho.addAll(_tamanhos);
   }
 
   void _contarNesta(ReferenciaParecida r) => setState(() {
@@ -413,8 +444,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   void _proxima() {
     final ordem = [
-      for (final cor in _cores.keys)
-        for (final tam in _tamanhos.keys) _chave(cor, tam),
+      for (final est in _blocos)
+        for (final cor in _cores.keys)
+          for (final tam in _tamanhos.keys) _chave(cor, tam, est),
     ];
     final i = ordem.indexOf(_focado ?? '');
     if (i < 0 || i + 1 >= ordem.length) {
@@ -422,7 +454,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       return;
     }
     final p = ordem[i + 1].split('|');
-    _foco(int.parse(p[0]), int.parse(p[1])).requestFocus();
+    _foco(int.parse(p[0]), int.parse(p[1]), p.length > 2 ? int.parse(p[2]) : 0)
+        .requestFocus();
   }
 
   Widget _barraTeclado(SivColors cores, SivTextStyles textos) {
@@ -702,10 +735,16 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               SeletorData(
                 compacto: true,
                 onChanged: (itens) => setState(() {
-                  _estampaId = itens.isEmpty ? null : itens.first.id;
+                  final antes = _estampas.keys.toSet();
+                  _estampas
+                    ..clear()
+                    ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
                   final ref = _referenciaId;
                   if (_esperadaEscolhida != null && ref != null) {
-                    _recarregarGrade(ref);
+                    for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
+                      _preencherExistentes(ref, est);
+                    }
+                    _ordenarTamanhos();
                   }
                 }),
               ),
@@ -726,7 +765,20 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             ),
           ),
         const SizedBox(height: 16),
-        if (_cores.isNotEmpty && _tamanhos.isNotEmpty) _grade(cores, textos),
+        if (_cores.isNotEmpty && _tamanhos.isNotEmpty)
+          for (final est in _blocos) ...[
+            if (_blocos.length > 1 || est != 0) ...[
+              _rotulo(_nomeBloco(est), cores, textos),
+            ],
+            _grade(cores, textos, est),
+            const SizedBox(height: 16),
+          ]
+        else if (_estampas.isNotEmpty)
+          Text(
+            'Escolha as cores e os tamanhos para preencher a grade de cada estampa e do liso.',
+            key: const Key('contagem_estampa_sem_grade'),
+            style: textos.apoio,
+          ),
         if (_livre) ...[
           const SizedBox(height: 12),
           Text(
@@ -997,7 +1049,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         const SizedBox(height: 8),
       ];
 
-  Widget _grade(SivColors cores, SivTextStyles textos) {
+  Widget _grade(SivColors cores, SivTextStyles textos, int est) {
     final cs = _cores.entries.toList();
     final ts = _tamanhos.entries.toList();
     return SingleChildScrollView(
@@ -1034,9 +1086,11 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                     child: SizedBox(
                       height: 52,
                       child: TextField(
-                        key: Key('contagem_${c.key}_${t.key}'),
-                        controller: _celula(c.key, t.key),
-                        focusNode: _foco(c.key, t.key),
+                        key: Key(est == 0
+                            ? 'contagem_${c.key}_${t.key}'
+                            : 'contagem_${c.key}_${t.key}_e$est'),
+                        controller: _celula(c.key, t.key, est),
+                        focusNode: _foco(c.key, t.key, est),
                         textAlign: TextAlign.center,
                         style: textos.secao,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -1046,14 +1100,14 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                           isDense: true,
                           hintText: '—',
                           filled: true,
-                          fillColor: _abaixoDoLido(c.key, t.key)
+                          fillColor: _abaixoDoLido(c.key, t.key, est)
                               ? cores.excedenteFundo
                               : cores.superficie,
                           border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.circular(SivDimensoes.raio),
                             borderSide: BorderSide(
-                              color: _abaixoDoLido(c.key, t.key)
+                              color: _abaixoDoLido(c.key, t.key, est)
                                   ? cores.vinho
                                   : cores.hairline,
                             ),

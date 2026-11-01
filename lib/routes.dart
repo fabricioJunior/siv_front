@@ -812,9 +812,9 @@ Map<String, Widget Function(BuildContext)> routes = {
           onChanged: data.onChanged,
         ),
         estampaSeletor: (data) => EstampaSeletor(
-          modo: EstampaSeletorModo.unica,
+          modo: EstampaSeletorModo.multipla,
           onChanged: data.onChanged,
-          titulo: 'Estampa (opcional)',
+          titulo: 'Estampas (opcional)',
         ),
         carregarTamanhos: () async =>
             (await sl<RecuperarTamanhos>().call(inativo: false))

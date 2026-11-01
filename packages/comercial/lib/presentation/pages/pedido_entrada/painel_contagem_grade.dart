@@ -283,7 +283,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             ItemContagem(
               linhaId: widget.linha?.id,
               referenciaId: _livre ? null : _referenciaId,
-              estampaId: _livre ? null : _estampaId,
+              estampaId: _estampaId,
               descricao: _livre ? descricao : null,
               corId: cor,
               tamanhoId: tam,
@@ -682,9 +682,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
         ),
         const SizedBox(height: 12),
-        if (!_livre &&
-            widget.linha == null &&
-            widget.estampaSeletor != null) ...[
+        if (widget.linha == null && widget.estampaSeletor != null) ...[
           // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
           if (widget.estampaIdInicial != null)
             Text(

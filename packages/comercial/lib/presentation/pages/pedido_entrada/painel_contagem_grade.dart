@@ -61,7 +61,7 @@ class PainelContagemGrade extends StatefulWidget {
   final bool esperadasInicial;
 
   /// Contagens já feitas de uma referência (pré-carrega a grade ao escolher uma esperada).
-  final List<EntradaContagem> Function(int referenciaId)?
+  final List<EntradaContagem> Function(int referenciaId, int? estampaId)?
       existentesDaReferencia;
 
   const PainelContagemGrade({
@@ -360,25 +360,32 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         _referenciaNome = e.nome;
         _esperadaEscolhida = e;
         _parecidas = const [];
-        _cores.clear();
-        _tamanhos.clear();
-        _coresSeletor.clear();
-        _tamanhosSeletor.clear();
-        for (final c in _celulas.values) {
-          c.clear();
-        }
-        for (final c in widget.existentesDaReferencia?.call(e.id) ??
-            const <EntradaContagem>[]) {
-          if (c.corId == null || c.tamanhoId == null) continue;
-          _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
-          _tamanhos[c.tamanhoId!] =
-              c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
-          _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
-        }
-        _ordenarTamanhos();
-        nomesCor.addAll(_cores);
-        nomesTamanho.addAll(_tamanhos);
+        _recarregarGrade(e.id);
       });
+
+  /// Grade da referência escolhida na aba Esperadas: o que já foi contado dela
+  /// com a estampa atual (estampa diferente = outro SKU, outra contagem).
+  void _recarregarGrade(int referenciaId) {
+    _cores.clear();
+    _tamanhos.clear();
+    _coresSeletor.clear();
+    _tamanhosSeletor.clear();
+    for (final c in _celulas.values) {
+      c.clear();
+    }
+    for (final c in widget.existentesDaReferencia
+            ?.call(referenciaId, _estampaId) ??
+        const <EntradaContagem>[]) {
+      if (c.corId == null || c.tamanhoId == null) continue;
+      _cores[c.corId!] = c.corNome ?? nomesCor[c.corId] ?? '${c.corId}';
+      _tamanhos[c.tamanhoId!] =
+          c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '${c.tamanhoId}';
+      _celula(c.corId!, c.tamanhoId!).text = qtd(c.quantidade);
+    }
+    _ordenarTamanhos();
+    nomesCor.addAll(_cores);
+    nomesTamanho.addAll(_tamanhos);
+  }
 
   void _contarNesta(ReferenciaParecida r) => setState(() {
         _livre = false;
@@ -694,9 +701,13 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             widget.estampaSeletor!(
               SeletorData(
                 compacto: true,
-                onChanged: (itens) => setState(
-                  () => _estampaId = itens.isEmpty ? null : itens.first.id,
-                ),
+                onChanged: (itens) => setState(() {
+                  _estampaId = itens.isEmpty ? null : itens.first.id;
+                  final ref = _referenciaId;
+                  if (_esperadaEscolhida != null && ref != null) {
+                    _recarregarGrade(ref);
+                  }
+                }),
               ),
             ),
           const SizedBox(height: 12),

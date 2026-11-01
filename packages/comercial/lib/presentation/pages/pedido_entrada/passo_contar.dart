@@ -96,9 +96,9 @@ class _PassoContarState extends State<PassoContar> {
   }
 
   /// Contagens de uma referência, já com as variações novas (para recontar).
-  List<EntradaContagem> _existentesDa(int refId) => [
-        ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == null),
-        for (final c in _r.variacoesNovas.where((c) => c.referenciaId == refId))
+  List<EntradaContagem> _existentesDa(int refId, [int? estampaId]) => [
+        ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == estampaId),
+        for (final c in _r.variacoesNovas.where((c) => estampaId == null && c.referenciaId == refId))
           EntradaContagem(
             produtoId: 0,
             linhaId: null,

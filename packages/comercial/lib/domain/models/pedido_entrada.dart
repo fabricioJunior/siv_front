@@ -180,6 +180,10 @@ class ContagemLivre extends Equatable {
   final int? referenciaId;
   final String? referenciaNome;
 
+  /// Estampa opcional da contagem (vale na associação à referência).
+  final int? estampaId;
+  final String? estampaNome;
+
   const ContagemLivre({
     required this.id,
     required this.descricao,
@@ -188,6 +192,8 @@ class ContagemLivre extends Equatable {
     required this.quantidade,
     this.referenciaId,
     this.referenciaNome,
+    this.estampaId,
+    this.estampaNome,
   });
 
   bool get ehVariacaoNova => referenciaId != null;
@@ -200,11 +206,13 @@ class ContagemLivre extends Equatable {
         quantidade: _num(j['quantidade']),
         referenciaId: _int(j['referenciaId']),
         referenciaNome: j['referenciaNome'] as String?,
+        estampaId: _int(j['estampaId']),
+        estampaNome: j['estampaNome'] as String?,
       );
 
   @override
   List<Object?> get props =>
-      [id, descricao, corId, tamanhoId, quantidade, referenciaId];
+      [id, descricao, corId, tamanhoId, quantidade, referenciaId, estampaId];
 }
 
 /// Situação de um item na conferência (lido × contado).

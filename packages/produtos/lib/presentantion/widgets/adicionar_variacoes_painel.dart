@@ -1277,6 +1277,26 @@ class _AdicionarVariacoesPainelState extends State<AdicionarVariacoesPainel> {
             ),
           ),
         ),
+        TextButton.icon(
+          onPressed: () async {
+            final salvou = await EstampaModal.show(context: context);
+            if (salvou == true) {
+              _bloc.add(
+                AdicionarVariacoesIniciou(
+                  referenciaId: widget.referenciaId,
+                  corIdsNaGrade: widget.corIdsNaGrade,
+                  tamanhoIdsNaGrade: widget.tamanhoIdsNaGrade,
+                  estampaIdsNaGrade: widget.estampaIdsNaGrade,
+                  chavesNaGrade: widget.chavesNaGrade,
+                  coresSelecionadasIniciais: state.coresSelecionadas,
+                  tamanhosSelecionadosIniciais: state.tamanhosSelecionados,
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.add, size: 16),
+          label: const Text('Criar estampa'),
+        ),
       ],
     );
   }

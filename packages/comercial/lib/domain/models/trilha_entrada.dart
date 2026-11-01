@@ -122,10 +122,7 @@ class TrilhaEntrada {
       final item = ItemDiffEtiqueta(
         produtoId: c.produtoId,
         descricao: c.referenciaNome ?? 'Produto ${c.produtoId}',
-        grade: [c.corNome, c.tamanhoNome]
-            .whereType<String>()
-            .where((e) => e.isNotEmpty)
-            .join(' · '),
+        grade: r.gradeDe(c),
         quantidade: dif.abs(),
       );
       (dif > 0 ? imprimir : descartar).add(item);

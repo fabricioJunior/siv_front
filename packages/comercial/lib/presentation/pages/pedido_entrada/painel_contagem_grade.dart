@@ -2,6 +2,7 @@ import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/tamanhos_tela_cheia.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
@@ -47,6 +48,11 @@ class PainelContagemGrade extends StatefulWidget {
   final SeletorWidget tamanhoSeletor;
   final SeletorWidget? estampaSeletor;
   final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
+
+  /// Mobile: com [fonteCores] e [carregarTamanhos], cor/estampa/tamanho viram
+  /// chips + botões que abrem o seletor em tela cheia (C4).
+  final FonteVariacao? fonteCores;
+  final FonteVariacao? fonteEstampas;
   final BuscaReferenciasParecidas? buscarParecidas;
   final void Function(bool livre, List<ItemContagem> itens) onSalvar;
   final VoidCallback onFechar;
@@ -84,6 +90,8 @@ class PainelContagemGrade extends StatefulWidget {
     required this.tamanhoSeletor,
     this.estampaSeletor,
     this.carregarTamanhos,
+    this.fonteCores,
+    this.fonteEstampas,
     this.buscarParecidas,
     required this.onSalvar,
     required this.onFechar,
@@ -711,16 +719,20 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
           const SizedBox(height: 12),
         ],
-        widget.corSeletor(
-          SeletorData(
-            onChanged: (itens) {
-              _coresSeletor
-                ..clear()
-                ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-              _sincronizarSeletores();
-            },
+        if (_telaCheia)
+          _variacao('COR', _cores, '+ cor', _escolherCores, _removerCor,
+              'cor', cores, textos)
+        else
+          widget.corSeletor(
+            SeletorData(
+              onChanged: (itens) {
+                _coresSeletor
+                  ..clear()
+                  ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+                _sincronizarSeletores();
+              },
+            ),
           ),
-        ),
         const SizedBox(height: 12),
         if (widget.linha == null && widget.estampaSeletor != null) ...[
           // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
@@ -730,28 +742,22 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               key: const Key('contagem_estampa_fixa'),
               style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
             )
+          else if (_telaCheia && widget.fonteEstampas != null)
+            _variacao('ESTAMPA', _estampas, '+ estampa', _escolherEstampa,
+                _removerEstampa, 'estampa', cores, textos)
           else
             widget.estampaSeletor!(
               SeletorData(
                 compacto: true,
-                onChanged: (itens) => setState(() {
-                  final antes = _estampas.keys.toSet();
-                  _estampas
-                    ..clear()
-                    ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-                  final ref = _referenciaId;
-                  if (_esperadaEscolhida != null && ref != null) {
-                    for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
-                      _preencherExistentes(ref, est);
-                    }
-                    _ordenarTamanhos();
-                  }
-                }),
+                onChanged: _estampasMudaram,
               ),
             ),
           const SizedBox(height: 12),
         ],
-        if (widget.carregarTamanhos != null)
+        if (_telaCheia)
+          _variacao('TAMANHO', _tamanhos, '+ tam.', _escolherTamanhos,
+              _removerTamanho, 'tam', cores, textos)
+        else if (widget.carregarTamanhos != null)
           _tipoTamanho(cores, textos)
         else
           widget.tamanhoSeletor(
@@ -788,6 +794,191 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         ],
       ],
     );
+  }
+
+  void _estampasMudaram(List<SelectData> itens) => setState(() {
+        final antes = _estampas.keys.toSet();
+        _estampas
+          ..clear()
+          ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+        final ref = _referenciaId;
+        if (_esperadaEscolhida != null && ref != null) {
+          for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
+            _preencherExistentes(ref, est);
+          }
+          _ordenarTamanhos();
+        }
+      });
+
+  // --- seletores em tela cheia (mobile, C4) ------------------------------
+
+  bool get _telaCheia =>
+      widget.fonteCores != null &&
+      widget.carregarTamanhos != null &&
+      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+  String? get _subtituloSeletor => _referenciaId == null
+      ? null
+      : '${_referenciaNome ?? widget.linha?.descricao ?? 'Referência'} · REF $_referenciaId';
+
+  SelectData _sd(int id, String nome) =>
+      SelectData(id: id, nome: nome, data: const {});
+
+  void _aviso(String t) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+
+  /// Linha "RÓTULO  [chip ×] ... [+ botão]"; tocar no chip remove.
+  Widget _variacao(
+    String rotulo,
+    Map<int, String> itens,
+    String botao,
+    VoidCallback abrir,
+    void Function(int id) remover,
+    String chave,
+    SivColors cores,
+    SivTextStyles textos,
+  ) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _rotulo(rotulo, cores, textos),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final e in itens.entries)
+                  InputChip(
+                    key: Key('chip_${chave}_${e.key}'),
+                    label: Text(e.value),
+                    onDeleted: () => remover(e.key),
+                  ),
+                OutlinedButton(
+                  key: Key('add_$chave'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(48, 44)),
+                  onPressed: abrir,
+                  child: Text(botao),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Future<void> _escolherCores() async {
+    final fonte = widget.fonteCores!;
+    final todas = await fonte.carregar();
+    if (!mounted) return;
+    final usadas = {
+      for (final c in widget.existentes) if (c.corId != null) c.corId!,
+      for (final c in widget.existentesDaReferencia?.call(_referenciaId ?? -1, null) ??
+          const <EntradaContagem>[])
+        if (c.corId != null) c.corId!,
+    };
+    final r = await SeletorTelaCheia.abrir<SelectData>(
+      context,
+      SeletorTelaCheia<SelectData>(
+        titulo: 'Cores',
+        subtitulo: _subtituloSeletor,
+        itens: todas,
+        itemLabel: (s) => s.nome,
+        itemKey: (s) => s.id,
+        selecionadosIniciais: [for (final e in _cores.entries) _sd(e.key, e.value)],
+        jaUsados: todas.where((c) => usadas.contains(c.id)).toList(),
+        nomeSingular: 'cor',
+        nomePlural: 'cores',
+        hintText: 'Buscar cor',
+        onCadastrar: fonte.cadastrar,
+      ),
+    );
+    if (r == null) return;
+    _coresSeletor
+      ..clear()
+      ..addEntries(r.map((i) => MapEntry(i.id, i.nome)));
+    _sincronizarSeletores();
+  }
+
+  void _removerCor(int id) {
+    if (_comValor(cor: id, tam: null)) {
+      return _aviso('Zere as quantidades desta cor antes de remover.');
+    }
+    _coresSeletor.remove(id);
+    _sincronizarSeletores();
+  }
+
+  Future<void> _escolherEstampa() async {
+    final fonte = widget.fonteEstampas!;
+    final todas = await fonte.carregar();
+    if (!mounted) return;
+    final r = await SeletorTelaCheia.abrir<SelectData>(
+      context,
+      SeletorTelaCheia<SelectData>(
+        titulo: 'Estampa',
+        subtitulo: _subtituloSeletor,
+        itens: todas.where((e) => !_estampas.containsKey(e.id)).toList(),
+        itemLabel: (s) => s.nome,
+        itemKey: (s) => s.id,
+        modo: SeletorGenericoModo.unica,
+        nomeSingular: 'estampa',
+        nomePlural: 'estampas',
+        hintText: 'Buscar estampa',
+        onCadastrar: fonte.cadastrar,
+      ),
+    );
+    if (r == null || r.isEmpty) return;
+    _estampasMudaram([
+      for (final e in _estampas.entries) _sd(e.key, e.value),
+      r.first,
+    ]);
+  }
+
+  void _removerEstampa(int id) {
+    final comValor = _celulas.entries.any((e) {
+      final p = e.key.split('|');
+      return p.length > 2 && p[2] == '$id' && _ler(e.value) != null;
+    });
+    if (comValor) {
+      return _aviso('Zere as quantidades desta estampa antes de remover.');
+    }
+    _estampasMudaram([
+      for (final e in _estampas.entries)
+        if (e.key != id) _sd(e.key, e.value),
+    ]);
+  }
+
+  Future<void> _escolherTamanhos() async {
+    final List<TamanhoOpcao> todos;
+    try {
+      todos = await widget.carregarTamanhos!();
+    } catch (_) {
+      if (mounted) _aviso('Não foi possível carregar os tamanhos.');
+      return;
+    }
+    if (!mounted) return;
+    final r = await TamanhosTelaCheia.abrir(
+      context,
+      TamanhosTelaCheia(
+        subtitulo: _subtituloSeletor,
+        opcoes: todos,
+        selecionados: _tamanhos.keys.toSet(),
+      ),
+    );
+    if (r == null) return;
+    _tamanhosSeletor
+      ..clear()
+      ..addEntries(
+        todos.where((t) => r.contains(t.id)).map((t) => MapEntry(t.id, t.nome)),
+      );
+    _sincronizarSeletores();
+  }
+
+  void _removerTamanho(int id) {
+    if (_comValor(cor: null, tam: id)) {
+      return _aviso('Zere as quantidades deste tamanho antes de remover.');
+    }
+    _tamanhosSeletor.remove(id);
+    _sincronizarSeletores();
   }
 
   /// Cartão da esperada escolhida: quanto já foi contado e, se a referência

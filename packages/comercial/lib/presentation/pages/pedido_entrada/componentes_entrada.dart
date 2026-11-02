@@ -15,6 +15,14 @@ class ReferenciaParecida {
   const ReferenciaParecida({required this.id, required this.nome});
 }
 
+/// Cores/estampas para o seletor em tela cheia (mobile); montado em
+/// `lib/routes.dart`. Sem [cadastrar], a linha "+ Cadastrar…" não aparece.
+class FonteVariacao {
+  final Future<List<SelectData>> Function() carregar;
+  final Future<SelectData?> Function(String nome)? cadastrar;
+  const FonteVariacao({required this.carregar, this.cadastrar});
+}
+
 /// Seletores montados em `lib/routes.dart` (o comercial não importa produtos).
 class SeletoresEntrada {
   final SeletorWidget categoriaSeletor;
@@ -33,6 +41,10 @@ class SeletoresEntrada {
   /// no lugar de selecionar tamanho por tamanho.
   final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
 
+  /// Mobile: cor/estampa em tela cheia (com [carregarTamanhos] para tamanhos).
+  final FonteVariacao? fonteCores;
+  final FonteVariacao? fonteEstampas;
+
   const SeletoresEntrada({
     required this.categoriaSeletor,
     required this.referenciaSeletor,
@@ -42,6 +54,8 @@ class SeletoresEntrada {
     this.buscarReferenciasParecidas,
     this.estampaSeletor,
     this.carregarTamanhos,
+    this.fonteCores,
+    this.fonteEstampas,
   });
 }
 

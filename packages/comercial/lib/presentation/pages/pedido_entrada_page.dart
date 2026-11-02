@@ -15,7 +15,11 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
 export 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart'
-    show BuscaReferenciasParecidas, ReferenciaParecida, TamanhoOpcao;
+    show
+        BuscaReferenciasParecidas,
+        FonteVariacao,
+        ReferenciaParecida,
+        TamanhoOpcao;
 
 /// Pedido de Entrada (NF-e / contagem) em 5 passos: Contar, Associar,
 /// Etiquetas, Conferir e Faturar. A entrada no estoque continua sendo a do
@@ -34,6 +38,8 @@ class PedidoEntradaPage extends StatefulWidget {
   final BuscaReferenciasParecidas? buscarReferenciasParecidas;
   final SeletorWidget? estampaSeletor;
   final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
+  final FonteVariacao? fonteCores;
+  final FonteVariacao? fonteEstampas;
 
   const PedidoEntradaPage({
     super.key,
@@ -46,6 +52,8 @@ class PedidoEntradaPage extends StatefulWidget {
     this.buscarReferenciasParecidas,
     this.estampaSeletor,
     this.carregarTamanhos,
+    this.fonteCores,
+    this.fonteEstampas,
   });
 
   @override
@@ -65,6 +73,8 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     buscarReferenciasParecidas: widget.buscarReferenciasParecidas,
     estampaSeletor: widget.estampaSeletor,
     carregarTamanhos: widget.carregarTamanhos,
+    fonteCores: widget.fonteCores,
+    fonteEstampas: widget.fonteEstampas,
   );
 
   /// Envia o lote de leituras pendentes (uma chamada). true = nada ficou

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../tema.dart';
 import 'generic_seletor.dart';
+import 'seletor_tela_cheia.dart';
 
 /// Campo "fechado" (ícone + valor selecionado + chevron) que abre a busca
 /// real -- o [SeletorGenerico] passado em [seletor] -- num
@@ -150,7 +151,46 @@ class _SeletorGenericoCompactoState<T>
     );
   }
 
+  /// Mobile: tela cheia, lista inline (o overlay do [SeletorGenerico] some
+  /// atrás do teclado). `itens` é relido a cada build (busca no servidor).
+  Future<void> _abrirTelaCheia(BuildContext context) async {
+    final resultado = await Navigator.of(context).push<List<T>>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => StatefulBuilder(
+          builder: (_, setModalState) {
+            _setModalState = setModalState;
+            final s = widget.seletor;
+            return SeletorTelaCheia<T>(
+              titulo: s.titulo,
+              itens: s.itens,
+              itemLabel: s.itemLabel,
+              itemKey: s.itemKey,
+              modo: s.modo,
+              selecionadosIniciais: _selecionados,
+              hintText: s.hintText,
+              onBuscaChanged: s.onBuscaChanged,
+              onCadastrar: s.onCadastrarPressed == null
+                  ? null
+                  : (_) async {
+                      s.onCadastrarPressed!();
+                      return null;
+                    },
+            );
+          },
+        ),
+      ),
+    );
+    _setModalState = null;
+    if (resultado == null || !mounted) return;
+    setState(() => _selecionados = resultado);
+    widget.seletor.onChanged?.call(resultado);
+  }
+
   Future<void> _abrirSeletor(BuildContext context) {
+    if (MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer) {
+      return _abrirTelaCheia(context);
+    }
     final cores = context.sivColors;
 
     return showModalBottomSheet<void>(

@@ -65,6 +65,7 @@ void main() {
     await t.pump();
     await _ate(t, 'NUMÉRICO');
     await t.enterText(find.byType(TextField).first, '3');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco a página encolhe (C3/C5)
     await t.pump();
 
     await _ate(t, 'LETRAS');
@@ -83,6 +84,7 @@ void main() {
     await t.pump();
     await _ate(t, 'NUMÉRICO');
     await t.enterText(find.byType(TextField).first, '3');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco a página encolhe (C3/C5)
     await t.pump();
 
     await _ate(t, 'LETRAS');

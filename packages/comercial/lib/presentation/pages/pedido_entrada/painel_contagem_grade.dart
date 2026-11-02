@@ -1,6 +1,7 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/grade_fixa.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/tamanhos_tela_cheia.dart';
 import 'package:core/presentation.dart';
@@ -139,6 +140,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   bool? _tamanhosNumericos;
   bool _carregandoTamanhos = false;
   String? _focado;
+  // null = padrão pela largura/nº de tamanhos (ver _modoPorCor).
+  bool? _porCor;
+  int? _corAtiva;
   List<ReferenciaParecida> _parecidas = const [];
   int _buscaSeq = 0;
 
@@ -197,13 +201,56 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       f.addListener(() {
         if (!mounted) return;
         if (f.hasFocus) {
-          setState(() => _focado = k);
+          setState(() {
+            _focado = k;
+            _corAtiva = int.parse(k.split('|')[0]);
+          });
         } else if (_focado == k) {
           setState(() => _focado = null);
         }
       });
       return f;
     });
+  }
+
+  /// (cor, tamanho, estampa) da célula em foco.
+  ({int cor, int tam, int est})? get _foco3 {
+    final k = _focado;
+    if (k == null) return null;
+    final p = k.split('|');
+    return (
+      cor: int.parse(p[0]),
+      tam: int.parse(p[1]),
+      est: p.length > 2 ? int.parse(p[2]) : 0,
+    );
+  }
+
+  bool get _mobile =>
+      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+  bool get _comGrade =>
+      !_skuUnico &&
+      !_modoEsperadas &&
+      _cores.isNotEmpty &&
+      _tamanhos.isNotEmpty;
+
+  /// Grade x Por cor: mobile com mais de 4 tamanhos abre em Por cor; o
+  /// desktop abre em Grade. A escolha do usuário vale sobre o padrão.
+  bool get _modoPorCor =>
+      _comGrade && (_porCor ?? (_mobile && _tamanhos.length > 4));
+
+  int get _corAtivaId => _cores.containsKey(_corAtiva)
+      ? _corAtiva!
+      : _cores.keys.first;
+
+  double _totalCor(int cor) {
+    var t = 0.0;
+    for (final est in _blocos) {
+      for (final tam in _tamanhos.keys) {
+        t += _ler(_celula(cor, tam, est)) ?? 0;
+      }
+    }
+    return t;
   }
 
   double? _ler(TextEditingController c) {
@@ -442,7 +489,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   void _somar(int delta) {
     final c = _celulaFocada;
-    if (c == null) return;
+    if (c != null) _ajustar(c, delta);
+  }
+
+  void _ajustar(TextEditingController c, int delta) {
     final atual = _ler(c);
     if (atual == null && delta < 0) return;
     final novo = ((atual ?? 0) + delta).clamp(0, 999999).toDouble();
@@ -462,8 +512,17 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       return;
     }
     final p = ordem[i + 1].split('|');
-    _foco(int.parse(p[0]), int.parse(p[1]), p.length > 2 ? int.parse(p[2]) : 0)
-        .requestFocus();
+    final no = _foco(
+        int.parse(p[0]), int.parse(p[1]), p.length > 2 ? int.parse(p[2]) : 0);
+    if (_modoPorCor && int.parse(p[0]) != _corAtivaId) {
+      // outra cor = outra lista: o campo só existe depois de trocar a cor ativa
+      setState(() => _corAtiva = int.parse(p[0]));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) no.requestFocus();
+      });
+    } else {
+      no.requestFocus();
+    }
   }
 
   Widget _barraTeclado(SivColors cores, SivTextStyles textos) {
@@ -512,6 +571,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     final textos = context.sivTextos;
     final tabs = widget.permiteTrocarAba;
     final podeSalvar = _podeSalvar;
+    final porCor = _modoPorCor;
     return Material(
       color: cores.papel,
       child: Column(
@@ -575,14 +635,18 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                       : _corpo(cores, textos),
             ),
           ),
+          if (_focado != null && !_modoEsperadas && !_skuUnico && !porCor)
+            _faixaEditando(cores, textos),
           if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
           if (!_modoEsperadas)
             RodapeAcaoEntrada(
-              resumo: Text(
-                '${qtd(_totalPecas)} peças',
-                key: const Key('painel_total'),
-                style: textos.secao,
-              ),
+              resumo: porCor
+                  ? _proximaCor(cores, textos)
+                  : Text(
+                      '${qtd(_totalPecas)} peças',
+                      key: const Key('painel_total'),
+                      style: textos.secao,
+                    ),
               aviso: _temViolacao
                   ? Text(
                       mensagemContadoAbaixoDoLido,
@@ -595,6 +659,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                     ? 'Salvar sem referência'
                     : widget.impressasPorProduto != null
                         ? 'SALVAR · IMPRIMIR ${qtd(_aImprimir)}'
+                        : porCor
+                        ? 'SALVAR · ${qtd(_totalPecas)} PEÇAS'
                         : 'SALVAR',
                 onPressed: podeSalvar ? _salvar : null,
               ),
@@ -719,6 +785,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
           const SizedBox(height: 12),
         ],
+        ...[
         if (_telaCheia)
           _variacao('COR', _cores, '+ cor', _escolherCores, _removerCor,
               'cor', cores, textos)
@@ -770,16 +837,25 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               },
             ),
           ),
+        ],
         const SizedBox(height: 16),
-        if (_cores.isNotEmpty && _tamanhos.isNotEmpty)
-          for (final est in _blocos) ...[
-            if (_blocos.length > 1 || est != 0) ...[
-              _rotulo(_nomeBloco(est), cores, textos),
-            ],
-            _grade(cores, textos, est),
-            const SizedBox(height: 16),
-          ]
-        else if (_estampas.isNotEmpty)
+        if (_cores.isNotEmpty && _tamanhos.isNotEmpty) ...[
+          _seletorModo(cores, textos),
+          if (_modoPorCor)
+            _porCorView(cores, textos)
+          else
+            for (final est in _blocos)
+              Column(
+                key: ValueKey('bloco_$est'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_blocos.length > 1 || est != 0)
+                    _rotulo(_nomeBloco(est), cores, textos),
+                  _grade(cores, textos, est),
+                  const SizedBox(height: 16),
+                ],
+              ),
+        ] else if (_estampas.isNotEmpty)
           Text(
             'Escolha as cores e os tamanhos para preencher a grade de cada estampa e do liso.',
             key: const Key('contagem_estampa_sem_grade'),
@@ -1240,75 +1316,416 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         const SizedBox(height: 8),
       ];
 
+  // --- grade fixa (C5) ---------------------------------------------------
+
+  Color _tinta(SivColors cores) =>
+      Color.alphaBlend(cores.aco.withValues(alpha: 0.16), cores.superficie);
+
   Widget _grade(SivColors cores, SivTextStyles textos, int est) {
     final cs = _cores.entries.toList();
     final ts = _tamanhos.entries.toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Table(
-        defaultColumnWidth: const FixedColumnWidth(72),
-        columnWidths: const {0: FixedColumnWidth(96)},
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          TableRow(
+    final f = _foco3;
+    final aqui = f != null && f.est == est;
+    final alturaMax = ((MediaQuery.sizeOf(context).height -
+                MediaQuery.viewInsetsOf(context).bottom) *
+            0.5)
+        .clamp(160.0, 520.0);
+    return GradeFixa(
+      cores: [for (final c in cs) c.value],
+      tamanhos: [for (final t in ts) t.value],
+      subtotais: [for (final c in cs) '${qtd(_totalCorBloco(c.key, est))} pç'],
+      linhaFoco: aqui ? cs.indexWhere((c) => c.key == f.cor) : null,
+      colunaFoco: aqui ? ts.indexWhere((t) => t.key == f.tam) : null,
+      alturaMax: alturaMax,
+      celula: (l, c) {
+        final cor = cs[l].key, tam = ts[c].key;
+        final focada = aqui && f.cor == cor && f.tam == tam;
+        final cruz = aqui && !focada && (f.cor == cor || f.tam == tam);
+        final abaixo = _abaixoDoLido(cor, tam, est);
+        OutlineInputBorder borda(Color cor, double w) => OutlineInputBorder(
+              borderRadius: BorderRadius.circular(3),
+              borderSide: BorderSide(color: cor, width: w),
+            );
+        final controller = _celula(cor, tam, est);
+        // No Android o TextField vence qualquer arrasto horizontal; o toque é
+        // do GestureDetector e o campo só recebe o foco, assim a grade rola
+        // começando por uma célula.
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            _foco(cor, tam, est).requestFocus();
+            controller.selection =
+                TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+          },
+          child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            boxShadow: focada
+                ? [
+                    BoxShadow(
+                      color: cores.aco.withValues(alpha: 0.28),
+                      spreadRadius: 3,
+                    ),
+                  ]
+                : null,
+          ),
+          child: IgnorePointer(child: TextField(
+            key: Key(est == 0 ? 'contagem_${cor}_$tam' : 'contagem_${cor}_${tam}_e$est'),
+            controller: controller,
+            focusNode: _foco(cor, tam, est),
+            textAlign: TextAlign.center,
+            style: textos.secao,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: '—',
+              filled: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              fillColor: abaixo
+                  ? cores.excedenteFundo
+                  : cruz
+                      ? _tinta(cores)
+                      : cores.superficie,
+              border: borda(abaixo ? cores.vinho : cores.hairline, 1),
+              enabledBorder: borda(abaixo ? cores.vinho : cores.hairline, 1),
+              focusedBorder: borda(cores.aco, 2),
+            ),
+          )),
+          ),
+        );
+      },
+    );
+  }
+
+  double _totalCorBloco(int cor, int est) {
+    var t = 0.0;
+    for (final tam in _tamanhos.keys) {
+      t += _ler(_celula(cor, tam, est)) ?? 0;
+    }
+    return t;
+  }
+
+  // --- faixa Editando + mapa 3x3 (C5) ------------------------------------
+
+  Widget _faixaEditando(SivColors cores, SivTextStyles textos) {
+    final f = _foco3;
+    final cs = _cores.entries.toList();
+    final ts = _tamanhos.entries.toList();
+    final r = f == null ? -1 : cs.indexWhere((e) => e.key == f.cor);
+    final c = f == null ? -1 : ts.indexWhere((e) => e.key == f.tam);
+    if (f == null || r < 0 || c < 0) return const SizedBox.shrink();
+    String nome(List<MapEntry<int, String>> l, int i) =>
+        i >= 0 && i < l.length ? l[i].value : '';
+    Widget vizinha(int dr, int dc) {
+      final rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= cs.length || cc < 0 || cc >= ts.length) {
+        return const SizedBox(width: 30, height: 24);
+      }
+      final centro = dr == 0 && dc == 0;
+      final v = _ler(_celula(cs[rr].key, ts[cc].key, f.est));
+      return GestureDetector(
+        key: Key('mapa_${dr + 1}_${dc + 1}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: centro
+            ? null
+            : () => _foco(cs[rr].key, ts[cc].key, f.est).requestFocus(),
+        child: Container(
+          width: 30,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: centro ? cores.aco : cores.superficie,
+            border: Border.all(color: centro ? cores.aco : cores.hairline),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Text(v == null ? '' : qtd(v),
+              style: textos.rotulo.copyWith(
+                  fontSize: 12, color: centro ? cores.superficie : null)),
+        ),
+      );
+    }
+
+    Widget fila(int dr) => Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Row(
             children: [
-              const SizedBox.shrink(),
-              for (final t in ts)
+              SizedBox(
+                width: 52,
+                child: Text(nome(cs, r + dr),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textos.apoio.copyWith(
+                        fontSize: 11,
+                        fontWeight:
+                            dr == 0 ? FontWeight.w700 : FontWeight.w400)),
+              ),
+              for (final dc in const [-1, 0, 1])
                 Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    t.value,
-                    textAlign: TextAlign.center,
-                    style: textos.secao,
+                    padding: const EdgeInsets.only(left: 2),
+                    child: vizinha(dr, dc)),
+            ],
+          ),
+        );
+
+    return TextFieldTapRegion(
+      child: ExcludeFocus(
+        child: Container(
+          key: const Key('faixa_editando'),
+          decoration: BoxDecoration(
+            color: cores.superficie,
+            border: Border(top: BorderSide(color: cores.hairline)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('EDITANDO',
+                        style: textos.rotulo
+                            .copyWith(fontSize: 10.5, color: cores.textoApoio)),
+                    Text('${cs[r].value} · ${ts[c].value}',
+                        key: const Key('editando_celula'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textos.secao
+                            .copyWith(fontSize: 22, color: cores.acoEscuro)),
+                    Text(
+                        'linha ${r + 1} de ${cs.length} · coluna ${c + 1} de ${ts.length}',
+                        key: const Key('editando_posicao'),
+                        style: textos.apoio.copyWith(fontSize: 11)),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(width: 52),
+                      for (final dc in const [-1, 0, 1])
+                        SizedBox(
+                          width: 32,
+                          child: Text(nome(ts, c + dc),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textos.secao.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: dc == 0
+                                      ? FontWeight.w700
+                                      : FontWeight.w400)),
+                        ),
+                    ],
+                  ),
+                  for (final dr in const [-1, 0, 1]) fila(dr),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Grade | Por cor (C5, 7d) --------------------------------------------
+
+  Widget _seletorModo(SivColors cores, SivTextStyles textos) {
+    final porCor = _modoPorCor;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SegmentedButton<bool>(
+        key: const Key('modo_grade_porcor'),
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(minimumSize: const Size(0, 36)),
+        segments: const [
+          ButtonSegment(value: false, label: Text('GRADE')),
+          ButtonSegment(value: true, label: Text('POR COR')),
+        ],
+        selected: {porCor},
+        onSelectionChanged: (s) => setState(() => _porCor = s.first),
+      ),
+    );
+  }
+
+  Widget _proximaCor(SivColors cores, SivTextStyles textos) {
+    final ids = _cores.keys.toList();
+    final i = ids.indexOf(_corAtivaId);
+    final ultima = i + 1 >= ids.length;
+    final proxima = ids[(i + 1) % ids.length];
+    return TextButton(
+      key: const Key('pc_proxima_cor'),
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        foregroundColor: cores.acoEscuro,
+      ),
+      onPressed: ids.length < 2 ? null : () => setState(() => _corAtiva = proxima),
+      child: Text(
+        ultima ? 'VOLTAR À PRIMEIRA COR' : 'PRÓXIMA COR · ${_cores[proxima]} →',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: textos.rotulo.copyWith(
+            color: cores.acoEscuro, fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _porCorView(SivColors cores, SivTextStyles textos) {
+    final ativa = _corAtivaId;
+    return Column(
+      key: const Key('por_cor'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final e in _cores.entries)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: InkWell(
+                    key: Key('pc_chip_${e.key}'),
+                    canRequestFocus: false,
+                    onTap: () => setState(() => _corAtiva = e.key),
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: e.key == ativa
+                            ? cores.acoEscuro
+                            : cores.superficie,
+                        border: Border.all(
+                            color: e.key == ativa
+                                ? cores.acoEscuro
+                                : cores.hairline),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(e.value,
+                              style: textos.corpo.copyWith(
+                                  color: e.key == ativa
+                                      ? cores.superficie
+                                      : null)),
+                          const SizedBox(width: 8),
+                          Text(qtd(_totalCor(e.key)),
+                              style: textos.secao.copyWith(
+                                  fontSize: 15,
+                                  color: e.key == ativa
+                                      ? cores.superficie
+                                      : cores.textoApoio)),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
           ),
-          for (final c in cs)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(c.value, style: textos.corpo),
-                ),
-                for (final t in ts)
-                  Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: SizedBox(
-                      height: 52,
-                      child: TextField(
-                        key: Key(est == 0
-                            ? 'contagem_${c.key}_${t.key}'
-                            : 'contagem_${c.key}_${t.key}_e$est'),
-                        controller: _celula(c.key, t.key, est),
-                        focusNode: _foco(c.key, t.key, est),
-                        textAlign: TextAlign.center,
-                        style: textos.secao,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          hintText: '—',
-                          filled: true,
-                          fillColor: _abaixoDoLido(c.key, t.key, est)
-                              ? cores.excedenteFundo
-                              : cores.superficie,
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(SivDimensoes.raio),
-                            borderSide: BorderSide(
-                              color: _abaixoDoLido(c.key, t.key, est)
-                                  ? cores.vinho
-                                  : cores.hairline,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(_cores[ativa]!,
+                  key: const Key('pc_titulo'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textos.secao
+                      .copyWith(fontSize: 24, color: cores.acoEscuro)),
             ),
+            Text('${qtd(_totalCor(ativa))} peças nesta cor',
+                key: const Key('pc_total_cor'), style: textos.apoio),
+          ],
+        ),
+        for (final est in _blocos) ...[
+          if (_blocos.length > 1 || est != 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _rotulo(_nomeBloco(est), cores, textos),
+            ),
+          for (final t in _tamanhos.entries)
+            _linhaTamanho(ativa, t.key, t.value, est, cores, textos),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _linhaTamanho(int cor, int tam, String nome, int est, SivColors cores,
+      SivTextStyles textos) {
+    final c = _celula(cor, tam, est);
+    final sufixo = est == 0 ? '${cor}_$tam' : '${cor}_${tam}_e$est';
+    final focada = _focado == _chave(cor, tam, est);
+    final abaixo = _abaixoDoLido(cor, tam, est);
+    Widget botao(String chave, String t, int delta) => InkWell(
+          key: Key(chave),
+          canRequestFocus: false,
+          onTap: () => _ajustar(c, delta),
+          child: Container(
+            width: 48,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: cores.superficie,
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(t, style: textos.secao.copyWith(fontSize: 22)),
+          ),
+        );
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: focada ? _tinta(cores) : null,
+        border: Border(bottom: BorderSide(color: cores.hairline)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            child: Text(nome,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textos.secao
+                    .copyWith(fontSize: 22, color: cores.acoEscuro)),
+          ),
+          const Spacer(),
+          botao('pc_menos_$sufixo', '−', -1),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 72,
+            height: 44,
+            child: TextField(
+              key: Key('pc_$sufixo'),
+              controller: c,
+              focusNode: _foco(cor, tam, est),
+              textAlign: TextAlign.center,
+              style: textos.secao.copyWith(fontSize: 22),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: '—',
+                filled: true,
+                fillColor: abaixo ? cores.excedenteFundo : cores.superficie,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide:
+                      BorderSide(color: abaixo ? cores.vinho : cores.hairline),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          botao('pc_mais_$sufixo', '+', 1),
         ],
       ),
     );

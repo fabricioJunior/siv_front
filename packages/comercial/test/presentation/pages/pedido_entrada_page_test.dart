@@ -745,6 +745,8 @@ void main() {
     expect(remoto.associados, [20, 21, 22]);
     expect(remoto.associadoRef, 99);
     expect(remoto.associadoCategoria, isNull);
+    expect(find.text('“Body rendado vinho” associado à REF 99.'), findsOneWidget);
+    expect(find.text('Abrir referência'), findsOneWidget);
   });
 
   testWidgets('Sem PRDFM003: criar referência nova desabilitado com aviso',
@@ -810,6 +812,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(argsCadastro, isNotNull);
     expect(remoto.associados, isNull);
+    expect(find.byKey(const Key('aviso_tentar_de_novo')), findsOneWidget);
+    expect(
+      find.textContaining('Referência não cadastrada. “Vestido Luna” continua'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('aviso_usar_existente')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('aviso_tentar_de_novo')), findsNothing);
   });
 
   Map<String, dynamic> conferindo() => {

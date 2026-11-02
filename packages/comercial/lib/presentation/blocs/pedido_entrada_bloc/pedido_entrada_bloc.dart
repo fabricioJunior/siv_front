@@ -141,7 +141,10 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
           categoriaId: e.categoriaId,
           nome: e.nome,
         ),
-        'Contagem associada à referência',
+        e.descricao != null && e.referenciaId != null
+            ? '“${e.descricao}” associado à REF ${e.referenciaId}.'
+            : 'Contagem associada à referência',
+        aoConcluir: (_) => e.descricao == null ? null : e.referenciaId,
         seguirEtapa: true,
       ),
     );

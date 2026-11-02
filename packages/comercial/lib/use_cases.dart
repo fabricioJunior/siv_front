@@ -131,3 +131,4 @@ export 'domain/use_cases/enviar_icone_lista_grupo.dart';
 export 'domain/use_cases/recuperar_vitrine_ecommerce.dart';
 export 'domain/use_cases/salvar_vitrine_ecommerce.dart';
 export 'domain/use_cases/get_relatorio_frequencia_clientes.dart';
+export 'domain/use_cases/variacoes_produto_use_cases.dart';

@@ -184,4 +184,49 @@ void main() {
     expect(find.byKey(const Key('sel_busca')), findsNothing);
     expect(find.byType(SeletorGenerico<String>), findsOneWidget);
   });
+
+  group('estado de carga', () {
+    Widget app({bool carregando = false, String? erro, VoidCallback? tentar,
+            List<String> itens = const []}) =>
+        MaterialApp(
+          theme: SivTheme.tema,
+          home: SeletorTelaCheia<String>(
+            titulo: 'Cores',
+            itens: itens,
+            itemLabel: (s) => s,
+            nomeSingular: 'cor',
+            nomePlural: 'cores',
+            onCadastrar: (n) async => n,
+            carregando: carregando,
+            erro: erro,
+            onTentarNovamente: tentar,
+          ),
+        );
+
+    testWidgets('carregando: busca e título aparecem, lista é spinner', (t) async {
+      await t.pumpWidget(app(carregando: true));
+      expect(find.byKey(const Key('sel_busca')), findsOneWidget);
+      expect(find.text('Cores'), findsOneWidget);
+      expect(find.byKey(const Key('sel_carregando')), findsOneWidget);
+      expect(find.byKey(const Key('sel_lista')), findsNothing);
+      await t.enterText(find.byKey(const Key('sel_busca')), 'x');
+      await t.pump();
+      expect(find.byKey(const Key('sel_cadastrar')), findsNothing);
+    });
+
+    testWidgets('carregando -> pronto troca o spinner pela lista', (t) async {
+      await t.pumpWidget(app(carregando: true));
+      await t.pumpWidget(app(itens: ['Azul']));
+      expect(find.byKey(const Key('sel_carregando')), findsNothing);
+      expect(find.byKey(const Key('sel_item_Azul')), findsOneWidget);
+    });
+
+    testWidgets('erro: mensagem e TENTAR DE NOVO chama o callback', (t) async {
+      var n = 0;
+      await t.pumpWidget(app(erro: 'Falhou', tentar: () => n++));
+      expect(find.text('Falhou'), findsOneWidget);
+      await t.tap(find.byKey(const Key('sel_tentar_novamente')));
+      expect(n, 1);
+    });
+  });
 }

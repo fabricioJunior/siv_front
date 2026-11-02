@@ -43,12 +43,7 @@ import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
 import 'package:produtos/use_cases.dart'
     show
-        CriarCor,
-        CriarEstampa,
-        RecuperarCores,
-        RecuperarEstampas,
-        RecuperarReferencias,
-        RecuperarTamanhos;
+        RecuperarReferencias;
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
@@ -822,36 +817,6 @@ Map<String, Widget Function(BuildContext)> routes = {
           modo: EstampaSeletorModo.multipla,
           onChanged: data.onChanged,
           titulo: 'Estampas (opcional)',
-        ),
-        carregarTamanhos: () async =>
-            (await sl<RecuperarTamanhos>().call(inativo: false))
-                .where((t) => t.id != null)
-                .map((t) => TamanhoOpcao(id: t.id!, nome: t.nome))
-                .toList(),
-        fonteCores: FonteVariacao(
-          carregar: () async => (await sl<RecuperarCores>().call(inativo: false))
-              .where((c) => c.id != null)
-              .map((c) => SelectData(id: c.id!, nome: c.nome, data: const {}))
-              .toList(),
-          cadastrar: (nome) async {
-            final c = await sl<CriarCor>().call(nome);
-            return c.id == null
-                ? null
-                : SelectData(id: c.id!, nome: c.nome, data: const {});
-          },
-        ),
-        fonteEstampas: FonteVariacao(
-          carregar: () async =>
-              (await sl<RecuperarEstampas>().call(inativo: false))
-                  .where((e) => e.id != null)
-                  .map((e) => SelectData(id: e.id!, nome: e.nome, data: const {}))
-                  .toList(),
-          cadastrar: (nome) async {
-            final e = await sl<CriarEstampa>().call(nome);
-            return e.id == null
-                ? null
-                : SelectData(id: e.id!, nome: e.nome, data: const {});
-          },
         ),
         buscarReferenciasParecidas: (nome) async =>
             (await sl<RecuperarReferencias>().call(nome: nome, inativo: false))

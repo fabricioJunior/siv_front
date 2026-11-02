@@ -3,7 +3,9 @@ import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/grade_fixa.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
-import 'package:comercial/presentation/pages/pedido_entrada/tamanhos_tela_cheia.dart';
+import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/variacao_tela_cheia.dart';
+import 'package:core/bloc.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
@@ -48,12 +50,6 @@ class PainelContagemGrade extends StatefulWidget {
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
   final SeletorWidget? estampaSeletor;
-  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
-
-  /// Mobile: com [fonteCores] e [carregarTamanhos], cor/estampa/tamanho viram
-  /// chips + botões que abrem o seletor em tela cheia (C4).
-  final FonteVariacao? fonteCores;
-  final FonteVariacao? fonteEstampas;
   final BuscaReferenciasParecidas? buscarParecidas;
   final void Function(bool livre, List<ItemContagem> itens) onSalvar;
   final VoidCallback onFechar;
@@ -90,9 +86,6 @@ class PainelContagemGrade extends StatefulWidget {
     required this.corSeletor,
     required this.tamanhoSeletor,
     this.estampaSeletor,
-    this.carregarTamanhos,
-    this.fonteCores,
-    this.fonteEstampas,
     this.buscarParecidas,
     required this.onSalvar,
     required this.onFechar,
@@ -849,7 +842,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               key: const Key('contagem_estampa_fixa'),
               style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
             )
-          else if (_telaCheia && widget.fonteEstampas != null)
+          else if (_telaCheia)
             _variacao('ESTAMPA', _estampas, '+ estampa', _escolherEstampa,
                 _removerEstampa, 'estampa', cores, textos)
           else
@@ -864,7 +857,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         if (_telaCheia)
           _variacao('TAMANHO', _tamanhos, '+ tam.', _escolherTamanhos,
               _removerTamanho, 'tam', cores, textos)
-        else if (widget.carregarTamanhos != null)
+        else if (_variacoes != null)
           _tipoTamanho(cores, textos)
         else
           widget.tamanhoSeletor(
@@ -928,9 +921,19 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   // --- seletores em tela cheia (mobile, C4) ------------------------------
 
+  // Bloc das variações (provido pela página); sem ele, fluxo legado/desktop.
+  late final VariacoesProdutoBloc? _variacoes = _lerVariacoes();
+
+  VariacoesProdutoBloc? _lerVariacoes() {
+    try {
+      return context.read<VariacoesProdutoBloc>();
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool get _telaCheia =>
-      widget.fonteCores != null &&
-      widget.carregarTamanhos != null &&
+      _variacoes != null &&
       MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
 
   String? get _subtituloSeletor => _referenciaId == null
@@ -983,29 +986,24 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       );
 
   Future<void> _escolherCores() async {
-    final fonte = widget.fonteCores!;
-    final todas = await fonte.carregar();
-    if (!mounted) return;
     final usadas = {
       for (final c in widget.existentes) if (c.corId != null) c.corId!,
       for (final c in widget.existentesDaReferencia?.call(_referenciaId ?? -1, null) ??
           const <EntradaContagem>[])
         if (c.corId != null) c.corId!,
     };
-    final r = await SeletorTelaCheia.abrir<SelectData>(
+    final r = await VariacaoTelaCheia.abrir(
       context,
-      SeletorTelaCheia<SelectData>(
+      _variacoes!,
+      VariacaoTelaCheia(
         titulo: 'Cores',
         subtitulo: _subtituloSeletor,
-        itens: todas,
-        itemLabel: (s) => s.nome,
-        itemKey: (s) => s.id,
-        selecionadosIniciais: [for (final e in _cores.entries) _sd(e.key, e.value)],
-        jaUsados: todas.where((c) => usadas.contains(c.id)).toList(),
-        nomeSingular: 'cor',
-        nomePlural: 'cores',
-        hintText: 'Buscar cor',
-        onCadastrar: fonte.cadastrar,
+        lista: (s) => s.cores,
+        cadastrar: VariacoesCorCadastrada.new,
+        singular: 'cor',
+        plural: 'cores',
+        selecionados: [for (final e in _cores.entries) _sd(e.key, e.value)],
+        usados: usadas,
       ),
     );
     if (r == null) return;
@@ -1024,22 +1022,18 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   }
 
   Future<void> _escolherEstampa() async {
-    final fonte = widget.fonteEstampas!;
-    final todas = await fonte.carregar();
-    if (!mounted) return;
-    final r = await SeletorTelaCheia.abrir<SelectData>(
+    final r = await VariacaoTelaCheia.abrir(
       context,
-      SeletorTelaCheia<SelectData>(
+      _variacoes!,
+      VariacaoTelaCheia(
         titulo: 'Estampa',
         subtitulo: _subtituloSeletor,
-        itens: todas.where((e) => !_estampas.containsKey(e.id)).toList(),
-        itemLabel: (s) => s.nome,
-        itemKey: (s) => s.id,
+        lista: (s) => s.estampas,
+        cadastrar: VariacoesEstampaCadastrada.new,
+        singular: 'estampa',
+        plural: 'estampas',
         modo: SeletorGenericoModo.unica,
-        nomeSingular: 'estampa',
-        nomePlural: 'estampas',
-        hintText: 'Buscar estampa',
-        onCadastrar: fonte.cadastrar,
+        ocultos: _estampas.keys.toSet(),
       ),
     );
     if (r == null || r.isEmpty) return;
@@ -1064,19 +1058,12 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   }
 
   Future<void> _escolherTamanhos() async {
-    final List<TamanhoOpcao> todos;
-    try {
-      todos = await widget.carregarTamanhos!();
-    } catch (_) {
-      if (mounted) _aviso('Não foi possível carregar os tamanhos.');
-      return;
-    }
-    if (!mounted) return;
-    final r = await TamanhosTelaCheia.abrir(
+    final bloc = _variacoes!;
+    final r = await TamanhosVariacaoTelaCheia.abrir(
       context,
-      TamanhosTelaCheia(
+      bloc,
+      TamanhosVariacaoTelaCheia(
         subtitulo: _subtituloSeletor,
-        opcoes: todos,
         selecionados: _tamanhos.keys.toSet(),
       ),
     );
@@ -1084,7 +1071,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     _tamanhosSeletor
       ..clear()
       ..addEntries(
-        todos.where((t) => r.contains(t.id)).map((t) => MapEntry(t.id, t.nome)),
+        bloc.state.tamanhos.itens
+            .where((t) => r.contains(t.id))
+            .map((t) => MapEntry(t.id, t.nome)),
       );
     _sincronizarSeletores();
   }
@@ -1197,8 +1186,21 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       _carregandoTamanhos = true;
     });
     try {
-      final todos = await widget.carregarTamanhos!();
+      final bloc = _variacoes!;
+      var pronto = bloc.state;
+      if (pronto.tamanhos.status != VariacaoStatus.sucesso) {
+        if (pronto.tamanhos.status == VariacaoStatus.falha) {
+          bloc.add(const VariacoesCarregadas());
+        }
+        pronto = await bloc.stream.firstWhere(
+          (s) => s.tamanhos.status != VariacaoStatus.carregando,
+        );
+      }
       if (!mounted) return;
+      if (pronto.tamanhos.status != VariacaoStatus.sucesso) {
+        throw StateError('tamanhos');
+      }
+      final todos = pronto.tamanhos.itens;
       _tamanhosSeletor
         ..clear()
         ..addEntries(
@@ -1596,7 +1598,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               _escolherTamanhos),
           if (widget.linha == null &&
               widget.estampaSeletor != null &&
-              (fixa || widget.fonteEstampas != null || _estampas.isNotEmpty)) ...[
+              (fixa || _variacoes != null || _estampas.isNotEmpty)) ...[
             Text('·', style: textos.apoio),
             if (fixa)
               Text('Estampa $estampa', style: textos.apoio)

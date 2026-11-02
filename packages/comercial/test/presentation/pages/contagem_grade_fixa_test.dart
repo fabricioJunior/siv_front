@@ -1,9 +1,10 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
-import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../support/variacoes_fakes.dart';
 
 /// Contagem de [nc] cores × [nt] tamanhos já salva, cada célula com 1 peça.
 List<EntradaContagem> _existentes(int nc, int nt) => [
@@ -21,13 +22,18 @@ List<EntradaContagem> _existentes(int nc, int nt) => [
           ),
     ];
 
+// Sem pré-carga: a grade fixa não depende das listas.
+final _bloc = criarVariacoesBloc(VariacoesGatewayFake());
+
 Widget _painel(
   int nc,
   int nt, {
   void Function(bool, List<ItemContagem>)? onSalvar,
   bool abas = false,
 }) =>
-    MaterialApp(
+    comVariacoes(
+      _bloc,
+      MaterialApp(
       theme: SivTheme.tema,
       home: Scaffold(
         body: PainelContagemGrade(
@@ -39,11 +45,10 @@ Widget _painel(
           existentes: _existentes(nc, nt),
           corSeletor: (d) => const SizedBox(),
           tamanhoSeletor: (d) => const SizedBox(),
-          fonteCores: FonteVariacao(carregar: () async => const []),
-          carregarTamanhos: () async => const [],
           onSalvar: onSalvar ?? (l, i) {},
           onFechar: () {},
         ),
+      ),
       ),
     );
 

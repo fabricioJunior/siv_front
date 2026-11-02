@@ -9,11 +9,19 @@ class TamanhosTelaCheia extends StatefulWidget {
   final List<TamanhoOpcao> opcoes;
   final Set<int> selecionados;
 
+  /// Opções ainda chegando (spinner) ou falha ([erro] + TENTAR DE NOVO).
+  final bool carregando;
+  final String? erro;
+  final VoidCallback? onTentarNovamente;
+
   const TamanhosTelaCheia({
     super.key,
     required this.opcoes,
     required this.selecionados,
     this.subtitulo,
+    this.carregando = false,
+    this.erro,
+    this.onTentarNovamente,
   });
 
   static Future<Set<int>?> abrir(
@@ -28,8 +36,6 @@ class TamanhosTelaCheia extends StatefulWidget {
 
 class _TamanhosTelaCheiaState extends State<TamanhosTelaCheia> {
   late final _sel = {...widget.selecionados};
-  late final _numericos = _ordenados(true);
-  late final _letras = _ordenados(false);
   bool _faixa = false;
   TamanhoOpcao? _inicio;
 
@@ -166,12 +172,33 @@ class _TamanhosTelaCheiaState extends State<TamanhosTelaCheia> {
                     label: Text(rotuloFaixa),
                   ),
                   const SizedBox(height: 18),
-                  _grupo('NUMÉRICOS', _numericos, cores, textos),
-                  _grupo('LETRAS', _letras, cores, textos),
-                  Text(
-                    'Só os tamanhos marcados viram colunas na grade.',
-                    style: textos.apoio,
-                  ),
+                  if (widget.carregando)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 48),
+                      child: Center(
+                        child:
+                            CircularProgressIndicator(key: Key('tam_carregando')),
+                      ),
+                    )
+                  else if (widget.erro != null)
+                    Column(
+                      children: [
+                        Text(widget.erro!, style: textos.corpo),
+                        TextButton(
+                          key: const Key('tam_tentar_novamente'),
+                          onPressed: widget.onTentarNovamente,
+                          child: const Text('TENTAR DE NOVO'),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    _grupo('NUMÉRICOS', _ordenados(true), cores, textos),
+                    _grupo('LETRAS', _ordenados(false), cores, textos),
+                    Text(
+                      'Só os tamanhos marcados viram colunas na grade.',
+                      style: textos.apoio,
+                    ),
+                  ],
                 ],
               ),
             ),

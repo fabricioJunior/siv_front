@@ -75,3 +75,4 @@ export 'domain/data/remote/i_ecommerce_vitrine_remote_data_source.dart';
 export 'domain/data/repositories/i_ecommerce_vitrine_repository.dart';
 export 'data/remote/ecommerce_vitrine_remote_data_source.dart';
 export 'data/repositories/ecommerce_vitrine_repository.dart';
+export 'domain/data/gateways/i_variacoes_produto_gateway.dart';

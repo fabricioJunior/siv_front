@@ -17,6 +17,8 @@ import 'package:estoque/estoque_injections.dart';
 import 'package:importacao/importacao_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
+import 'package:comercial/data.dart' show IVariacoesProdutoGateway;
+import 'package:siv_front/data/gateways/variacoes_produto_gateway.dart';
 import 'package:comunicados/comunicados_injections.dart';
 import 'package:promocoes/promocoes_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
@@ -63,6 +65,9 @@ Future<void> resolverDependenciasApp() async {
   resolverPagamentosInjections();
   resolverFinanceiroInjections();
   resolverComercialInjections();
+  sl.registerLazySingleton<IVariacoesProdutoGateway>(
+    () => VariacoesProdutoGateway(),
+  );
   resolverPromocoesInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();

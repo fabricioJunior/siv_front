@@ -34,6 +34,12 @@ class SeletorTelaCheia<T> extends StatefulWidget {
   /// Quando informado, `itens` já vem filtrado pelo servidor: não refiltra.
   final ValueChanged<String>? onBuscaChanged;
 
+  /// Itens ainda chegando: mostra spinner na área da lista (busca e cabeçalho
+  /// já aparecem). [erro] não nulo mostra a mensagem com TENTAR DE NOVO.
+  final bool carregando;
+  final String? erro;
+  final VoidCallback? onTentarNovamente;
+
   const SeletorTelaCheia({
     super.key,
     required this.titulo,
@@ -50,6 +56,9 @@ class SeletorTelaCheia<T> extends StatefulWidget {
     this.hintText = 'Buscar',
     this.onCadastrar,
     this.onBuscaChanged,
+    this.carregando = false,
+    this.erro,
+    this.onTentarNovamente,
   });
 
   static Future<List<T>?> abrir<T>(
@@ -125,6 +134,8 @@ class _SeletorTelaCheiaState<T> extends State<SeletorTelaCheia<T>> {
       ..sort((a, b) => normalizarBusca(widget.itemLabel(a))
           .compareTo(normalizarBusca(widget.itemLabel(b))));
     final podeCadastrar = widget.onCadastrar != null &&
+        !widget.carregando &&
+        widget.erro == null &&
         nBusca.isNotEmpty &&
         !todos.any((i) => normalizarBusca(widget.itemLabel(i)) == nBusca);
     final n = _selecionados.length;
@@ -245,6 +256,29 @@ class _SeletorTelaCheiaState<T> extends State<SeletorTelaCheia<T>> {
                   ),
                 ),
               ),
+            if (widget.carregando)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(key: Key('sel_carregando')),
+                ),
+              )
+            else if (widget.erro != null)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(widget.erro!, style: textos.corpo),
+                      TextButton(
+                        key: const Key('sel_tentar_novamente'),
+                        onPressed: widget.onTentarNovamente,
+                        child: const Text('TENTAR DE NOVO'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
             Expanded(
               child: ListView(
                 key: const Key('sel_lista'),

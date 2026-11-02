@@ -877,6 +877,23 @@ void _presentation() {
     () => RegistrarLeiturasEntrada(sl()),
   );
   sl.registerFactory<FaturarEntrada>(() => FaturarEntrada(sl(), sl()));
+  // Singletons: o cache de leitura vive no use case (e o Criar* o atualiza).
+  sl.registerLazySingleton<RecuperarCoresDeProdutos>(
+    () => RecuperarCoresDeProdutos(sl()),
+  );
+  sl.registerLazySingleton<RecuperarEstampasDeProdutos>(
+    () => RecuperarEstampasDeProdutos(sl()),
+  );
+  sl.registerLazySingleton<RecuperarTamanhosDeProdutos>(
+    () => RecuperarTamanhosDeProdutos(sl()),
+  );
+  sl.registerFactory<CriarCorDeProdutos>(() => CriarCorDeProdutos(sl(), sl()));
+  sl.registerFactory<CriarEstampaDeProdutos>(
+    () => CriarEstampaDeProdutos(sl(), sl()),
+  );
+  sl.registerFactory<VariacoesProdutoBloc>(
+    () => VariacoesProdutoBloc(sl(), sl(), sl(), sl(), sl()),
+  );
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
       sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //

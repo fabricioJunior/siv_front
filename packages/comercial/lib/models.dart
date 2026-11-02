@@ -32,3 +32,4 @@ export 'domain/models/importacao_pedido_transferencia.dart';
 export 'domain/models/pedido_entrada.dart';
 export 'domain/models/importacao_venda.dart';
 export 'domain/models/relatorio_frequencia_clientes.dart';
+export 'domain/models/variacao_opcao.dart';

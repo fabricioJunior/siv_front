@@ -1,4 +1,6 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/models.dart';
+import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/seletores.dart';
@@ -6,7 +8,27 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _painel({List<EntradaContagem> existentes = const []}) => MaterialApp(
+import '../../support/variacoes_fakes.dart';
+
+VariacoesProdutoBloc _bloc(List<TamanhoOpcao> tamanhos) =>
+    criarVariacoesBloc(VariacoesGatewayFake(tamanhosLista: tamanhos))
+      ..add(const VariacoesCarregadas());
+
+// Largura de desktop (>= 820): aqui o tipo de tamanho é NUMÉRICO | LETRAS.
+Future<void> _desktop(WidgetTester t) async {
+  t.view.physicalSize = const Size(1200, 900);
+  t.view.devicePixelRatio = 1;
+  addTearDown(t.view.reset);
+}
+
+Widget _painel({List<EntradaContagem> existentes = const []}) => comVariacoes(
+    _bloc(const [
+      TamanhoOpcao(id: 1, nome: '36'),
+      TamanhoOpcao(id: 2, nome: '38'),
+      TamanhoOpcao(id: 3, nome: 'P'),
+      TamanhoOpcao(id: 4, nome: 'M'),
+    ]),
+    MaterialApp(
       theme: SivTheme.tema,
       home: Scaffold(
         body: PainelContagemGrade(
@@ -22,17 +44,11 @@ Widget _painel({List<EntradaContagem> existentes = const []}) => MaterialApp(
             child: const Text('cor'),
           ),
           tamanhoSeletor: (d) => const SizedBox(),
-          carregarTamanhos: () async => const [
-            TamanhoOpcao(id: 1, nome: '36'),
-            TamanhoOpcao(id: 2, nome: '38'),
-            TamanhoOpcao(id: 3, nome: 'P'),
-            TamanhoOpcao(id: 4, nome: 'M'),
-          ],
           onSalvar: (l, i) {},
           onFechar: () {},
         ),
       ),
-    );
+    ));
 
 Future<void> _ate(WidgetTester t, String tipo) async {
   await t.tap(find.text(tipo));
@@ -46,6 +62,7 @@ void main() {
   });
 
   testWidgets('sem quantidade digitada, trocar para LETRAS tira os numéricos sem perguntar', (t) async {
+    await _desktop(t);
     await t.pumpWidget(_painel());
     await t.tap(find.byKey(const Key('add_cor')));
     await t.pump();
@@ -60,6 +77,7 @@ void main() {
   });
 
   testWidgets('com quantidade digitada, pergunta; CANCELAR mantém tudo como estava', (t) async {
+    await _desktop(t);
     await t.pumpWidget(_painel());
     await t.tap(find.byKey(const Key('add_cor')));
     await t.pump();
@@ -79,6 +97,7 @@ void main() {
   });
 
   testWidgets('com quantidade digitada, TROCAR descarta as colunas do outro tipo', (t) async {
+    await _desktop(t);
     await t.pumpWidget(_painel());
     await t.tap(find.byKey(const Key('add_cor')));
     await t.pump();
@@ -97,6 +116,7 @@ void main() {
   });
 
   testWidgets('tamanho de contagem já salva não é descartado pela troca de tipo', (t) async {
+    await _desktop(t);
     await t.pumpWidget(_painel(existentes: const [
       EntradaContagem(
         produtoId: 10,
@@ -124,7 +144,15 @@ void main() {
   });
 
   testWidgets('colunas de tamanho saem em ordem: 34 vem antes do 36 mesmo cadastrado depois', (t) async {
-    await t.pumpWidget(MaterialApp(
+    await _desktop(t);
+    await t.pumpWidget(comVariacoes(
+      _bloc(const [
+        TamanhoOpcao(id: 4, nome: '36'),
+        TamanhoOpcao(id: 5, nome: '38'),
+        TamanhoOpcao(id: 6, nome: '40'),
+        TamanhoOpcao(id: 11, nome: '34'),
+      ]),
+      MaterialApp(
       theme: SivTheme.tema,
       home: Scaffold(
         body: SingleChildScrollView(
@@ -144,17 +172,12 @@ void main() {
                 child: const Text('cor'),
               ),
               tamanhoSeletor: (d) => const SizedBox(),
-              carregarTamanhos: () async => const [
-                TamanhoOpcao(id: 4, nome: '36'),
-                TamanhoOpcao(id: 5, nome: '38'),
-                TamanhoOpcao(id: 6, nome: '40'),
-                TamanhoOpcao(id: 11, nome: '34'),
-              ],
               onSalvar: (l, i) {},
               onFechar: () {},
             ),
           ),
         ),
+      ),
       ),
     ));
     await t.tap(find.byKey(const Key('add_cor')));

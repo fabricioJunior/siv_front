@@ -175,15 +175,16 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
     lotes.add(Map.of(deltas));
     lotesIds.add(loteId);
     motivos.add(motivo);
+    final lido = deltas.values.fold<int>(0, (a, b) => a + b);
     return EntradaResumo.fromJson(_jsonContagem(
       comContagem: true,
       extra: {
         ...extra,
         'conferencia': {
           'totalContado': 4,
-          'totalLido': 4,
+          'totalLido': lido,
           'itens': [
-            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'contado': 4, 'lido': 4},
+            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'contado': 4, 'lido': lido},
           ],
         },
       },
@@ -852,7 +853,7 @@ void main() {
 
     await bipar(tester, 'A');
     await bipar(tester, 'A');
-    expect(find.text('2 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('2 na fila · salvas no aparelho'), findsOneWidget);
     expect(find.text('2 de 4 peças'), findsOneWidget);
     expect(remoto.lotes, isEmpty);
 
@@ -869,7 +870,12 @@ void main() {
       ..semNfe = true
       ..extra = conferindo();
     await abrir(tester);
-    await tester.tap(find.text('CONTINUAR · REVISAR'));
+    for (var i = 0; i < 4; i++) {
+      await bipar(tester, 'A');
+    }
+    await tester.tap(find.text('ENVIAR E REVISAR'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5)); // some o snackbar "Leituras enviadas"
     await tester.pumpAndSettle();
   }
 
@@ -879,7 +885,7 @@ void main() {
     await tester.tap(find.byKey(const Key('revisao_faturar')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('faturar_folha')), findsOneWidget);
-    expect(find.text('Faturar 0 peças?'), findsOneWidget);
+    expect(find.text('Faturar 4 peças?'), findsOneWidget);
     expect(find.text('Depois de faturar não dá para desfazer.'), findsOneWidget);
     expect(_Faturar.chamadas, 0);
 
@@ -978,7 +984,7 @@ void main() {
     await tester.tap(find.byKey(const Key('saida_continuar')));
     await tester.pumpAndSettle();
     expect(find.text('Passo 4 de 5 · Conferir'), findsOneWidget);
-    expect(find.text('1 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('1 na fila · salvas no aparelho'), findsOneWidget);
 
     await tentarSair();
     await tester.tap(find.byKey(const Key('saida_descartar')));

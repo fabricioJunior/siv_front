@@ -389,6 +389,12 @@ void main() {
 
   testWidgets('faixa âmbar aparece com a fila restaurada e DESCARTAR confirma',
       (t) async {
+    // fonte Ahem do teste alarga os botões do SivDialogo; só o overflow é ignorado
+    final antigo = FlutterError.onError;
+    FlutterError.onError = (d) {
+      if (!d.exceptionAsString().contains('overflowed')) antigo?.call(d);
+    };
+    addTearDown(() => FlutterError.onError = antigo);
     await montar(
       t,
       () => _Host(

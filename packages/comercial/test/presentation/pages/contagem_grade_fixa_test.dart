@@ -1,7 +1,6 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
-import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -198,6 +197,89 @@ void main() {
     expect(grade, contains((1, 1, 5.0)));
     expect(grade, contains((2, 3, 9.0)));
     expect(porCor, grade);
+  });
+
+  testWidgets(
+      'com foco: seletores resumidos, sem abas e rodapé, total no cabeçalho',
+      (t) async {
+    await _mobile(t, _painel(3, 8, abas: true));
+    await _naGrade(t);
+    expect(find.text('COM REFERÊNCIA'), findsOneWidget);
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsOneWidget);
+    expect(find.byKey(const Key('add_cor')), findsOneWidget);
+    expect(find.byKey(const Key('resumo_seletores')), findsNothing);
+    expect(find.byKey(const Key('painel_total_cabecalho')), findsNothing);
+
+    await t.tap(find.byKey(_c(1, 1)), warnIfMissed: false);
+    await t.pumpAndSettle();
+    expect(find.text('COM REFERÊNCIA'), findsNothing);
+    expect(find.text('SEM REFERÊNCIA'), findsNothing);
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsNothing);
+    expect(find.byKey(const Key('add_cor')), findsNothing);
+    expect(find.text('3 cores'), findsOneWidget);
+    expect(find.text('8 tamanhos'), findsOneWidget);
+    expect(
+      t.widget<Text>(find.byKey(const Key('painel_total_cabecalho'))).data,
+      '24 pç',
+    );
+    // faixa Editando logo acima da barra −1/+1
+    expect(
+      t.getBottomLeft(find.byKey(const Key('faixa_editando'))).dy,
+      closeTo(t.getTopLeft(find.byKey(const Key('barra_teclado'))).dy, 0.5),
+    );
+
+    _desfocar();
+    await t.pumpAndSettle();
+    expect(find.text('COM REFERÊNCIA'), findsOneWidget);
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsOneWidget);
+    expect(find.byKey(const Key('add_cor')), findsOneWidget);
+    expect(find.byKey(const Key('resumo_seletores')), findsNothing);
+  });
+
+  testWidgets(
+      'Por cor: foco no número esconde abas e rodapé, PRÓX. troca a cor',
+      (t) async {
+    await _mobile(t, _painel(3, 6, abas: true));
+    expect(find.text('PRÓXIMA COR · C2 →'), findsOneWidget);
+    expect(find.text('SALVAR · 18 PEÇAS'), findsOneWidget);
+
+    await t.ensureVisible(find.byKey(const Key('pc_1_6')));
+    await t.tap(find.byKey(const Key('pc_1_6')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsNothing);
+    expect(find.text('COM REFERÊNCIA'), findsNothing);
+    expect(find.byKey(const Key('faixa_editando')), findsNothing);
+    expect(find.byKey(const Key('painel_total_cabecalho')), findsOneWidget);
+
+    await t.tap(find.byKey(const Key('barra_proxima')));
+    await t.pumpAndSettle();
+    expect(t.widget<Text>(find.byKey(const Key('pc_titulo'))).data, 'C2');
+    expect(
+      t.widget<TextField>(find.byKey(const Key('pc_2_1'))).focusNode!.hasFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('PRÓX. → mantém a célula visível nos dois eixos', (t) async {
+    await _mobile(t, _painel(6, 10));
+    await _naGrade(t);
+    await t.tap(find.byKey(_c(1, 1)), warnIfMissed: false);
+    await t.pumpAndSettle();
+
+    for (var i = 1; i < 30; i++) {
+      await t.tap(find.byKey(const Key('barra_proxima')));
+      await t.pumpAndSettle();
+      final cel = t.getRect(find.byKey(_c(1 + i ~/ 10, 1 + i % 10)));
+      final cab = t.getBottomLeft(find.byKey(const Key('grade_cabecalho')));
+      final faixa = t.getTopLeft(find.byKey(const Key('faixa_editando')));
+      expect(cel.left, greaterThanOrEqualTo(108 - 0.5),
+          reason: 'célula $i (x)');
+      expect(cel.right, lessThanOrEqualTo(374 + 0.5), reason: 'célula $i (x)');
+      expect(cel.top, greaterThanOrEqualTo(cab.dy - 0.5),
+          reason: 'célula $i (y)');
+      expect(cel.bottom, lessThanOrEqualTo(faixa.dy + 0.5),
+          reason: 'célula $i (y)');
+    }
   });
 }
 

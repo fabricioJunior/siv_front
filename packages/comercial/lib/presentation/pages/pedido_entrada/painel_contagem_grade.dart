@@ -205,11 +205,27 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             _focado = k;
             _corAtiva = int.parse(k.split('|')[0]);
           });
+          _manterVisivel(f);
         } else if (_focado == k) {
           setState(() => _focado = null);
         }
       });
       return f;
+    });
+  }
+
+  // Célula sempre visível nos dois eixos (grade, coluna de cores e página).
+  void _manterVisivel(FocusNode f) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = f.context;
+      if (!mounted || !f.hasFocus || ctx == null || !ctx.mounted) return;
+      // centraliza: vale para ir e voltar nos dois eixos e não mexe mais no
+      // eixo que já está centrado (andar pela mesma linha). Sem animação: o
+      // campo também revela o cursor e brigaria com uma rolagem em curso.
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+      );
     });
   }
 
@@ -238,6 +254,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   /// desktop abre em Grade. A escolha do usuário vale sobre o padrão.
   bool get _modoPorCor =>
       _comGrade && (_porCor ?? (_mobile && _tamanhos.length > 4));
+
+  /// C3: célula em foco no celular -> seletores resumidos, sem abas nem rodapé.
+  bool get _focoMobile =>
+      _focado != null && _mobile && !_skuUnico && !_modoEsperadas;
 
   int get _corAtivaId => _cores.containsKey(_corAtiva)
       ? _corAtiva!
@@ -569,7 +589,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final tabs = widget.permiteTrocarAba;
+    final foco = _focoMobile;
+    final tabs = widget.permiteTrocarAba && !foco;
     final podeSalvar = _podeSalvar;
     final porCor = _modoPorCor;
     return Material(
@@ -605,6 +626,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                     ],
                   ),
                 ),
+                if (foco)
+                  Text('${qtd(_totalPecas)} pç',
+                      key: const Key('painel_total_cabecalho'),
+                      style: textos.secao),
               ],
             ),
           ),
@@ -620,7 +645,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               ),
             ),
           if (tabs) _abas(cores, textos),
+          // key: as abas somem com o foco; sem ela o corpo remonta e perde o foco
           Expanded(
+            key: const Key('painel_corpo'),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.all(16),
@@ -635,10 +662,21 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                       : _corpo(cores, textos),
             ),
           ),
+          if (foco && _temViolacao)
+            Container(
+              width: double.infinity,
+              color: cores.excedenteFundo,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Text(
+                mensagemContadoAbaixoDoLido,
+                key: const Key('painel_aviso_lido'),
+                style: textos.apoio.copyWith(color: cores.vinho),
+              ),
+            ),
           if (_focado != null && !_modoEsperadas && !_skuUnico && !porCor)
             _faixaEditando(cores, textos),
           if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
-          if (!_modoEsperadas)
+          if (!_modoEsperadas && !foco)
             RodapeAcaoEntrada(
               resumo: porCor
                   ? _proximaCor(cores, textos)
@@ -785,7 +823,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
           const SizedBox(height: 12),
         ],
-        ...[
+        if (_focoMobile && _telaCheia)
+          ..._resumoSeletores(cores, textos)
+        else ...[
         if (_telaCheia)
           _variacao('COR', _cores, '+ cor', _escolherCores, _removerCor,
               'cor', cores, textos)
@@ -1526,6 +1566,50 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         ),
       ),
     );
+  }
+
+  // --- resumo dos seletores com foco (C3) ---------------------------------
+
+  List<Widget> _resumoSeletores(SivColors cores, SivTextStyles textos) {
+    Widget link(String chave, String t, VoidCallback abrir) => TextButton(
+          key: Key(chave),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(0, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            foregroundColor: cores.acoEscuro,
+          ),
+          onPressed: abrir,
+          child: Text(t, style: textos.apoio.copyWith(color: cores.acoEscuro)),
+        );
+    final fixa = widget.estampaIdInicial != null;
+    final estampa = fixa
+        ? widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'
+        : _estampas.values.join(', ');
+    return [
+      Wrap(
+        key: const Key('resumo_seletores'),
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          link('resumo_cores', '${_cores.length} cores', _escolherCores),
+          Text('·', style: textos.apoio),
+          link('resumo_tamanhos', '${_tamanhos.length} tamanhos',
+              _escolherTamanhos),
+          if (widget.linha == null &&
+              widget.estampaSeletor != null &&
+              (fixa || widget.fonteEstampas != null || _estampas.isNotEmpty)) ...[
+            Text('·', style: textos.apoio),
+            if (fixa)
+              Text('Estampa $estampa', style: textos.apoio)
+            else
+              link(
+                'resumo_estampa',
+                _estampas.isEmpty ? 'sem estampa' : 'Estampa $estampa',
+                _escolherEstampa,
+              ),
+          ],
+        ],
+      ),
+    ];
   }
 
   // --- Grade | Por cor (C5, 7d) --------------------------------------------

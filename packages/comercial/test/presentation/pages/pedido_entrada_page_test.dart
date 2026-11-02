@@ -372,6 +372,7 @@ void main() {
     await tester.tap(find.byKey(const Key('escolher_tamanho')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '3');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('SALVAR'));
     await tester.pumpAndSettle();
@@ -415,6 +416,7 @@ void main() {
     await tester.tap(find.byKey(const Key('escolher_tamanho')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('Salvar sem referência'));
     await tester.pumpAndSettle();
@@ -426,7 +428,7 @@ void main() {
     expect(item.tamanhoId, 2);
   });
 
-  testWidgets('mobile: barra −1/+1 fica acima do teclado e o rodapé continua visível',
+  testWidgets('mobile: barra −1/+1 fica acima do teclado; rodapé some e o total vai ao cabeçalho',
       (tester) async {
     remoto.semNfe = true;
     await abrir(tester);
@@ -444,12 +446,11 @@ void main() {
     final barra = find.byKey(const Key('barra_teclado'));
     expect(barra, findsOneWidget);
     expect(tester.getBottomLeft(barra).dy, lessThanOrEqualTo(1400 - 400));
-    final rodape = find.byKey(const Key('rodape_acao_entrada'));
-    expect(rodape, findsOneWidget);
-    expect(tester.getBottomLeft(rodape).dy, lessThanOrEqualTo(1400 - 400));
-    // a barra vem acima do rodapé
-    expect(tester.getBottomLeft(barra).dy,
-        lessThanOrEqualTo(tester.getTopLeft(rodape).dy + 0.5));
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsNothing);
+    expect(find.byKey(const Key('painel_total_cabecalho')), findsOneWidget);
+    // a faixa Editando vem logo acima da barra
+    expect(tester.getBottomLeft(find.byKey(const Key('faixa_editando'))).dy,
+        lessThanOrEqualTo(tester.getTopLeft(barra).dy + 0.5));
 
     await tester.tap(find.byKey(const Key('barra_mais')));
     await tester.tap(find.byKey(const Key('barra_mais')));
@@ -462,10 +463,14 @@ void main() {
           .text,
       '1',
     );
-    expect(find.text('1 peças'), findsOneWidget);
+    Finder total(String t) => find.byWidgetPredicate((w) =>
+        w is Text &&
+        w.key == const Key('painel_total_cabecalho') &&
+        w.data == t);
+    expect(total('1 pç'), findsOneWidget);
     await tester.tap(find.byKey(const Key('barra_limpar')));
     await tester.pump();
-    expect(find.text('0 peças'), findsOneWidget);
+    expect(total('0 pç'), findsOneWidget);
   });
 
   testWidgets('mobile: entrada vazia mostra os dois caminhos de contagem', (
@@ -545,6 +550,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '1');
     await tester.pump();
     expect(find.byKey(const Key('painel_aviso_lido')), findsOneWidget);
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
+    await tester.pump();
     expect(
       tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'SALVAR')).onPressed,
       isNull,
@@ -552,6 +559,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '2');
     await tester.pump();
     expect(find.byKey(const Key('painel_aviso_lido')), findsNothing);
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
+    await tester.pump();
     expect(
       tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'SALVAR')).onPressed,
       isNotNull,
@@ -629,6 +638,7 @@ void main() {
     expect(find.byKey(const Key('painel_aviso_etiquetas')), findsOneWidget);
     expect(find.text('SALVAR · IMPRIMIR 0'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     expect(find.text('SALVAR · IMPRIMIR 2'), findsOneWidget);
     await tester.tap(find.text('SALVAR · IMPRIMIR 2'));
@@ -705,6 +715,7 @@ void main() {
     expect(find.byKey(const Key('contagem_5_6')), findsOneWidget);
     expect(find.byKey(const Key('contagem_5_7')), findsOneWidget);
     await tester.enterText(find.byKey(const Key('contagem_5_6')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('SALVAR'));
     await tester.pumpAndSettle();

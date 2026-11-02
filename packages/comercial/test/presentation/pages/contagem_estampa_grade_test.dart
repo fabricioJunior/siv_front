@@ -63,6 +63,7 @@ void main() {
     await t.enterText(find.byKey(const Key('contagem_1_1')), '2');
     await t.enterText(find.byKey(const Key('contagem_1_1_e7')), '3');
     await t.enterText(find.byKey(const Key('contagem_1_1_e8')), '4');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await t.pump();
 
     await t.tap(find.text('SALVAR'));

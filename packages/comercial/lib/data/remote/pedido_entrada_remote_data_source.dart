@@ -273,11 +273,15 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
-    Map<int, int> deltas,
-  ) async =>
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) async =>
       _resumo(
         (await put(
           body: {
+            if (loteId != null) 'loteId': loteId,
+            if (motivo != null) 'motivo': motivo,
             'itens': [
               for (final e in deltas.entries)
                 if (e.value != 0) {'produtoId': e.key, 'quantidade': e.value},

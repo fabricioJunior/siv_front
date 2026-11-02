@@ -208,3 +208,9 @@ class PedidoEntradaEnviouLeituras extends PedidoEntradaEvent {
 class PedidoEntradaDescartouLeituras extends PedidoEntradaEvent {
   const PedidoEntradaDescartouLeituras();
 }
+
+/// Zera as leituras da conferência: envia na hora, num lote `motivo: 'zerar'`,
+/// o delta que leva cada produto a 0. O leitor local só é limpo se aceito.
+class PedidoEntradaZerouLeituras extends PedidoEntradaEvent {
+  const PedidoEntradaZerouLeituras();
+}

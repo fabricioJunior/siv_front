@@ -221,6 +221,11 @@ class RegistrarLeiturasEntrada {
   final IPedidoEntradaRemoteDataSource _remote;
   RegistrarLeiturasEntrada(this._remote);
 
-  Future<EntradaResumo> call(int pedidoId, Map<int, int> deltas) =>
-      _remote.registrarLeituras(pedidoId, deltas);
+  Future<EntradaResumo> call(
+    int pedidoId,
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) =>
+      _remote.registrarLeituras(pedidoId, deltas, loteId: loteId, motivo: motivo);
 }

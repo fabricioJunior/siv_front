@@ -880,7 +880,7 @@ void _presentation() {
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
       sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //
-      sl(), sl(), sl(), sl(), sl(), sl(),
+      sl(), sl(), sl(), sl(), sl(), sl(), sl(),
     ),
   );
 

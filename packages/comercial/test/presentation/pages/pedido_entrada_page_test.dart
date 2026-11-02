@@ -11,6 +11,7 @@ import 'package:core/sessao.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/leituras_copia_fake.dart';
 
 Map<String, dynamic> _json({bool contado = false}) => {
       'pedidoId': 9,
@@ -121,6 +122,8 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? contagemEnviada;
   List<ItemContagem>? livreEnviada;
   final lotes = <Map<int, int>>[];
+  final lotesIds = <String?>[];
+  final motivos = <String?>[];
   List<int>? associados;
   int? associadoRef;
   int? associadoCategoria;
@@ -160,9 +163,13 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
-    Map<int, int> deltas,
-  ) async {
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) async {
     lotes.add(Map.of(deltas));
+    lotesIds.add(loteId);
+    motivos.add(motivo);
     return EntradaResumo.fromJson(_jsonContagem(
       comContagem: true,
       extra: {
@@ -239,6 +246,7 @@ void main() {
         FaturarEntrada(_Conferir(), _Faturar()),
         RegistrarLeiturasEntrada(remoto),
         _Sessao(),
+        LeiturasCopiaFake(),
       ),
     );
     Widget falso(String n) => Text('seletor $n');

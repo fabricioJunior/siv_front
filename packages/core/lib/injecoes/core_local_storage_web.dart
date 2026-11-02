@@ -4,6 +4,8 @@ import 'package:core/local_data_sourcers/database_configs/i_hive_database_instan
 import 'package:core/local_data_sourcers/database_configs/i_indexeddb_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/i_local_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/indexeddb_database_instance.dart';
+import 'package:core/leituras_entrada/i_leituras_entrada_local_data_source.dart';
+import 'package:core/leituras_entrada/leituras_entrada_indexeddb_data_source.dart';
 import 'package:core/paginacao/i_paginacao_data_source.dart';
 import 'package:core/paginacao/paginacao_indexeddb_data_source.dart';
 import 'package:core/produtos_compartilhados/local/i_lista_de_produtos_compartilhada_local_data_source.dart';
@@ -28,6 +30,12 @@ void registerCoreLocalStorage() {
 
   sl.registerLazySingleton<IListaDeProdutosCompartilhadaLocalDataSource>(
     () => ListaDeProdutosCompartilhadaIndexedDbDataSource(
+      getDb: () => sl<IIndexedDbDatabaseInstance>().getDatabase(),
+    ),
+  );
+
+  sl.registerLazySingleton<ILeiturasEntradaLocalDataSource>(
+    () => LeiturasEntradaIndexedDbDataSource(
       getDb: () => sl<IIndexedDbDatabaseInstance>().getDatabase(),
     ),
   );

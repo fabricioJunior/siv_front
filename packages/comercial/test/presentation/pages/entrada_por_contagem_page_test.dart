@@ -11,6 +11,7 @@ import 'package:core/seletores.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/leituras_copia_fake.dart';
 
 class _Sessao implements IAcessoGlobalSessao {
   @override
@@ -100,6 +101,7 @@ void main() {
         FaturarEntrada(_Conferir(), _Faturar()),
         RegistrarLeiturasEntrada(remoto),
         _Sessao(),
+        LeiturasCopiaFake(),
       ),
     );
     SeletorWidget escolhe(String nome, int id) => (data) => Wrap(

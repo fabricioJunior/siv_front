@@ -23,7 +23,20 @@ class PedidoEntradaState extends Equatable {
   /// Leituras da conferência ainda não enviadas: produtoId -> variação.
   final Map<int, int> leiturasPendentes;
 
+  /// Lote da fila atual (não muda entre tentativas de envio).
+  final String? loteId;
+
+  /// Quando a fila foi restaurada da cópia local ao abrir (faixa âmbar);
+  /// null = sem faixa.
+  final DateTime? restauradaEm;
+
+  /// O último envio da fila falhou.
+  final bool erroEnvio;
+
   const PedidoEntradaState({
+    this.loteId,
+    this.restauradaEm,
+    this.erroEnvio = false,
     this.carregando = false,
     this.salvando = false,
     this.resumo,
@@ -71,6 +84,10 @@ class PedidoEntradaState extends Equatable {
     bool? etiquetasLocal,
     bool? faturado,
     Map<int, int>? leiturasPendentes,
+    String? loteId,
+    DateTime? restauradaEm,
+    bool limparLote = false,
+    bool? erroEnvio,
   }) {
     return PedidoEntradaState(
       carregando: carregando ?? this.carregando,
@@ -83,6 +100,9 @@ class PedidoEntradaState extends Equatable {
       etiquetasLocal: etiquetasLocal ?? this.etiquetasLocal,
       faturado: faturado ?? this.faturado,
       leiturasPendentes: leiturasPendentes ?? this.leiturasPendentes,
+      loteId: limparLote ? null : (loteId ?? this.loteId),
+      restauradaEm: limparLote ? null : (restauradaEm ?? this.restauradaEm),
+      erroEnvio: erroEnvio ?? this.erroEnvio,
     );
   }
 
@@ -98,5 +118,8 @@ class PedidoEntradaState extends Equatable {
         etiquetasLocal,
         faturado,
         leiturasPendentes,
+        loteId,
+        restauradaEm,
+        erroEnvio,
       ];
 }

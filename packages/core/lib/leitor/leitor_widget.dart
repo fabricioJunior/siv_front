@@ -45,6 +45,10 @@ class LeitorWidget extends StatefulWidget {
   final void Function(ProdutoEsperado produto, int lido)? onCorrigirContagem;
   final ValueChanged<ProdutoEsperado>? onRemoverLeitura;
 
+  /// Modo conferência: o chip vira "Zerar leituras" e chama isto em vez de
+  /// limpar o leitor (quem chama zera no servidor e limpa depois).
+  final VoidCallback? onZerarLeituras;
+
   bool get modoConferencia => produtosEsperados != null;
 
   const LeitorWidget({
@@ -70,6 +74,7 @@ class LeitorWidget extends StatefulWidget {
     this.produtosEsperados,
     this.onCorrigirContagem,
     this.onRemoverLeitura,
+    this.onZerarLeituras,
   });
 
   @override
@@ -1735,10 +1740,14 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.refresh_outlined, size: 18),
-                        label: const Text('Limpar leitura'),
-                        onPressed: state.itens.isEmpty || widget.desativado
-                            ? null
-                            : () => _controller.limpar(),
+                        label: Text(widget.modoConferencia
+                            ? 'Zerar leituras'
+                            : 'Limpar leitura'),
+                        onPressed: widget.modoConferencia
+                            ? (widget.desativado ? null : widget.onZerarLeituras)
+                            : state.itens.isEmpty || widget.desativado
+                                ? null
+                                : () => _controller.limpar(),
                       ),
                       if (widget.buscaDataSource != null)
                         ActionChip(

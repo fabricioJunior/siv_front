@@ -11,6 +11,7 @@ import 'package:core/injecoes.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/leituras_copia_fake.dart';
 
 class _Sessao implements IAcessoGlobalSessao {
   @override
@@ -26,7 +27,8 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   final lotes = <Map<int, int>>[];
 
   @override
-  Future<EntradaResumo> registrarLeituras(int p, Map<int, int> d) async {
+  Future<EntradaResumo> registrarLeituras(int p, Map<int, int> d,
+      {String? loteId, String? motivo}) async {
     lotes.add(d);
     return _resumo();
   }
@@ -89,17 +91,30 @@ class _Host extends StatefulWidget {
   final List<bool> enviados;
   final _Remoto remoto;
   final List<int>? passos;
-  const _Host({required this.enviados, required this.remoto, this.passos});
+  final DateTime? restauradaEm;
+  final Map<int, int> inicial;
+  final Future<bool> Function()? onZerar;
+  const _Host({
+    required this.enviados,
+    required this.remoto,
+    this.passos,
+    this.restauradaEm,
+    this.inicial = const {},
+    this.onZerar,
+  });
 
   @override
   State<_Host> createState() => _HostState();
 }
 
 class _HostState extends State<_Host> {
-  final pend = <int, int>{};
+  late final pend = Map<int, int>.of(widget.inicial);
 
   @override
   Widget build(BuildContext context) => PassoConferir(
+        restauradaEm: widget.restauradaEm,
+        onZerar: widget.onZerar,
+        onDescartar: () => setState(pend.clear),
         resumo: _resumo(),
         pendentes: pend,
         onLeu: (id, d) => setState(() {
@@ -148,6 +163,7 @@ void main() {
       FaturarEntrada(_Conferir(), _Faturar()),
       RegistrarLeiturasEntrada(remoto),
       _Sessao(),
+      LeiturasCopiaFake(),
     );
     addTearDown(bloc.close);
     bloc.add(const PedidoEntradaCarregou(9));
@@ -180,7 +196,7 @@ void main() {
     expect(find.text('A CONFERIR · 2'), findsOneWidget);
     expect(find.text('2 de 7 peças'), findsOneWidget);
     expect(find.text('CONTINUAR · REVISAR'), findsOneWidget);
-    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    expect(find.text('✓ Tudo enviado'), findsOneWidget);
   });
 
   testWidgets('vários bipes atualizam a tela na hora, sem nenhuma chamada remota',
@@ -194,7 +210,7 @@ void main() {
     expect(find.text('7 de 7 peças'), findsOneWidget);
     expect(find.text('CONFERIDOS · 2'), findsOneWidget);
     expect(find.text('A CONFERIR · 0'), findsOneWidget);
-    expect(find.text('5 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('5 na fila · salvas no aparelho'), findsOneWidget);
     expect(find.text('ENVIAR E REVISAR'), findsOneWidget);
     expect(remoto.lotes, isEmpty);
     expect(enviados, isEmpty);
@@ -213,19 +229,19 @@ void main() {
     await t.tap(find.byType(FilterChip));
     await t.pump();
     await _bipar(t, 'B'); // lido 0: ignora
-    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    expect(find.text('✓ Tudo enviado'), findsOneWidget);
     await _bipar(t, 'A');
     await _bipar(t, 'A');
     await _bipar(t, 'A'); // 2 -> 0, o terceiro é ignorado
     expect(find.text('0 de 7 peças'), findsOneWidget);
-    expect(find.text('2 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('2 na fila · salvas no aparelho'), findsOneWidget);
     expect(remoto.lotes, isEmpty);
   });
 
   testWidgets('código fora da entrada não soma', (t) async {
     await montar(t, () => _Host(enviados: enviados, remoto: remoto));
     await _bipar(t, 'ZZZ');
-    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    expect(find.text('✓ Tudo enviado'), findsOneWidget);
     expect(find.text('Código ZZZ não pertence a esta entrada.'), findsOneWidget);
   });
 
@@ -266,7 +282,7 @@ void main() {
     await t.pump();
     expect(enviados, [false]);
     expect(passos, isEmpty);
-    expect(find.byKey(const Key('conferir_pendentes')), findsNothing);
+    expect(find.text('✓ Tudo enviado'), findsOneWidget);
   });
 
   testWidgets('Conferir: Corrigir abre a folha e corrige com origem conferencia',
@@ -369,5 +385,83 @@ void main() {
       )).onPressed,
       isNotNull,
     );
+  });
+
+  testWidgets('faixa âmbar aparece com a fila restaurada e DESCARTAR confirma',
+      (t) async {
+    await montar(
+      t,
+      () => _Host(
+        enviados: enviados,
+        remoto: remoto,
+        inicial: const {1: 2, 2: 1},
+        restauradaEm: DateTime.now(),
+      ),
+    );
+    expect(find.byKey(const Key('conferir_faixa_restaurada')), findsOneWidget);
+    expect(find.textContaining('3 leituras de hoje'), findsOneWidget);
+    expect(find.textContaining('não foram enviadas'), findsOneWidget);
+    await t.tap(find.byKey(const Key('faixa_descartar')));
+    await t.pumpAndSettle();
+    expect(find.text('DESCARTAR').last, findsOneWidget);
+    await t.tap(find.widgetWithText(ElevatedButton, 'DESCARTAR'));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('conferir_faixa_restaurada')), findsNothing);
+    expect(find.text('✓ Tudo enviado'), findsOneWidget);
+  });
+
+  testWidgets('ENVIAR da faixa envia o lote', (t) async {
+    await montar(
+      t,
+      () => _Host(
+        enviados: enviados,
+        remoto: remoto,
+        inicial: const {1: 2},
+        restauradaEm: DateTime.now(),
+      ),
+    );
+    await t.tap(find.byKey(const Key('faixa_enviar')));
+    await t.pump();
+    expect(enviados, [false]);
+  });
+
+  testWidgets('sem fila restaurada não há faixa', (t) async {
+    await montar(t, () => _Host(enviados: enviados, remoto: remoto));
+    expect(find.byKey(const Key('conferir_faixa_restaurada')), findsNothing);
+  });
+
+  testWidgets('chip vira Zerar leituras, confirma e só limpa depois do lote',
+      (t) async {
+    var chamadas = 0;
+    await montar(
+      t,
+      () => _Host(
+        enviados: enviados,
+        remoto: remoto,
+        onZerar: () async {
+          chamadas++;
+          return true;
+        },
+      ),
+    );
+    expect(find.text('Limpar leitura'), findsNothing);
+    await t.tap(find.text('Zerar leituras'));
+    await t.pumpAndSettle();
+    expect(find.text('Zerar as leituras desta conferência?'), findsOneWidget);
+    expect(
+      find.text(
+        '2 peças lidas voltam para 0. A contagem não muda. '
+        'Fica registrado no histórico.',
+      ),
+      findsOneWidget,
+    );
+    await t.tap(find.text('CANCELAR'));
+    await t.pumpAndSettle();
+    expect(chamadas, 0);
+    await t.tap(find.text('Zerar leituras'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('ZERAR'));
+    await t.pumpAndSettle();
+    expect(chamadas, 1);
   });
 }

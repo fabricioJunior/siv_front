@@ -79,6 +79,13 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     return fim.leiturasPendentes.isEmpty;
   }
 
+  /// Zera as leituras (envio na hora). true = lote aceito.
+  Future<bool> _zerarLeituras() async {
+    _bloc.add(const PedidoEntradaZerouLeituras());
+    final fim = await _bloc.stream.firstWhere((s) => !s.salvando);
+    return fim.erro == null;
+  }
+
   /// Sair do Conferir (trocar de passo ou voltar) com leituras pendentes:
   /// ENVIAR / DESCARTAR / CONTINUAR BIPANDO. true = pode sair.
   Future<bool> _confirmarSaida() async {
@@ -168,6 +175,11 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
           onLeu: (produtoId, delta) =>
               _bloc.add(PedidoEntradaLeu(produtoId, delta)),
           onEnviar: _enviarLeituras,
+          restauradaEm: state.restauradaEm,
+          erroEnvio: state.erroEnvio,
+          onDescartar: () =>
+              _bloc.add(const PedidoEntradaDescartouLeituras()),
+          onZerar: _zerarLeituras,
         );
       default:
         return PassoRevisarFaturar(

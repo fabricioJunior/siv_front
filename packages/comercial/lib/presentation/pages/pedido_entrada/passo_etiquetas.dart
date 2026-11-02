@@ -47,10 +47,7 @@ class _PassoEtiquetasState extends State<PassoEtiquetas> {
           (
             c.produtoId,
             c.referenciaNome ?? '',
-            [c.corNome, c.tamanhoNome]
-                .whereType<String>()
-                .where((e) => e.isNotEmpty)
-                .join(' · '),
+            _r.gradeDe(c),
             c.quantidade,
           ),
     ];

@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 SelectData _sd(int id, String n) => SelectData(id: id, nome: n, data: const {});
 
-Widget _painel({List<String> cadastrados = const []}) => MaterialApp(
+Widget _painel() => MaterialApp(
       theme: SivTheme.tema,
       home: Scaffold(
         body: PainelContagemGrade(

@@ -289,7 +289,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return Wrap(
+                // Chips crescem sem limite; limita altura e rola, ancorado no fim
+                // (campo de busca é o último filho e fica sempre visível).
+                return ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 132),
+                  child: SingleChildScrollView(
+                    reverse: true,
+                    child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -354,6 +360,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                       ),
                     ),
                   ],
+                    ),
+                  ),
                 );
               },
             ),

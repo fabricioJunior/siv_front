@@ -519,7 +519,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
       context: context,
       isScrollControlled: true,
       builder: (dialogContext) {
-        return Padding(
+        return SingleChildScrollView(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
             left: 16,

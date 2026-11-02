@@ -324,8 +324,8 @@ void main() {
       expect(TrilhaEntrada.podeFaturar(st.resumo!), isFalse);
 
       bloc.add(const PedidoEntradaFaturou());
-      st = await bloc.stream.firstWhere((s) => s.erro != null);
-      expect(st.erro, contains('Decida as divergências'));
+      st = await bloc.stream.firstWhere((s) => s.erroFaturar != null);
+      expect(st.erroFaturar, contains('Decida as divergências'));
       expect(st.faturado, isFalse);
     });
 

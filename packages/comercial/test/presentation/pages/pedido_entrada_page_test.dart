@@ -114,8 +114,13 @@ class _Conferir implements ConferirPedido {
 }
 
 class _Faturar implements FaturarPedido {
+  static int chamadas = 0;
+  static bool falha = false;
   @override
-  Future<void> call(int id, {required int caixaId}) async {}
+  Future<void> call(int id, {required int caixaId}) async {
+    chamadas++;
+    if (falha) throw Exception('Servidor recusou');
+  }
 }
 
 class _Remoto implements IPedidoEntradaRemoteDataSource {
@@ -220,6 +225,7 @@ void main() {
   Object? argsCadastro;
   int? retornoCadastro;
   var permissoes = {'PRDFM003', 'PRDFM008'};
+  final rotas = <String>[];
 
   Future<void> abrir(WidgetTester tester, {Size tamanho = const Size(420, 1400)}) async {
     tester.view.physicalSize = tamanho;
@@ -261,6 +267,14 @@ void main() {
       MaterialApp(
         // Faz as vezes do wizard de cadastro de referência (rota do app).
         onGenerateRoute: (settings) {
+          if (const ['/entrada_contagem', '/entrada_contagem/nova', '/pedido']
+              .contains(settings.name)) {
+            rotas.add('${settings.name} ${settings.arguments ?? ''}'.trim());
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => Text('rota ${settings.name}'),
+            );
+          }
           if (settings.name != '/referencia_cadastro') return null;
           argsCadastro = settings.arguments;
           return MaterialPageRoute<int>(
@@ -294,6 +308,9 @@ void main() {
     remoto = _Remoto();
     argsCadastro = null;
     retornoCadastro = null;
+    rotas.clear();
+    _Faturar.chamadas = 0;
+    _Faturar.falha = false;
     permissoes = {'PRDFM003', 'PRDFM008'};
   });
   tearDown(() async => sl.reset());
@@ -835,6 +852,100 @@ void main() {
       {5: 2},
     ]);
     expect(find.text('Passo 5 de 5 · Faturar'), findsOneWidget);
+  });
+
+  Future<void> irParaFaturar(WidgetTester tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = conferindo();
+    await abrir(tester);
+    await tester.tap(find.text('CONTINUAR · REVISAR'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('Faturar: só chama o faturamento ao confirmar na folha',
+      (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('faturar_folha')), findsOneWidget);
+    expect(find.text('Faturar 0 peças?'), findsOneWidget);
+    expect(find.text('Depois de faturar não dá para desfazer.'), findsOneWidget);
+    expect(_Faturar.chamadas, 0);
+
+    await tester.tap(find.byKey(const Key('faturar_voltar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 0);
+    expect(find.byKey(const Key('faturar_folha')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 1);
+    expect(find.byKey(const Key('faturar_folha')), findsNothing);
+  });
+
+  testWidgets('Faturado: conclusão com 3 ações e rotas certas', (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('✓ Entrada #9 faturada'), findsOneWidget);
+    expect(find.text('Faturada'), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_contagens')), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_pedido')), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_nova')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('conclusao_pedido')));
+    await tester.tap(find.byKey(const Key('conclusao_pedido')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/pedido {idPedido: 9}']);
+  });
+
+  testWidgets('Faturado: VOLTAR ÀS CONTAGENS abre a lista', (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('conclusao_contagens')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/entrada_contagem']);
+  });
+
+  testWidgets('Faturado: NOVA CONTAGEM abre a rota de nova contagem',
+      (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('conclusao_nova')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/entrada_contagem/nova']);
+  });
+
+  testWidgets('Faturar com erro: folha continua aberta com TENTAR DE NOVO',
+      (tester) async {
+    await irParaFaturar(tester);
+    _Faturar.falha = true;
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('faturar_folha')), findsOneWidget);
+    expect(find.byKey(const Key('faturar_erro')), findsOneWidget);
+    expect(find.text('TENTAR DE NOVO'), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+
+    _Faturar.falha = false;
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 2);
+    expect(find.text('✓ Entrada #9 faturada'), findsOneWidget);
   });
 
   testWidgets('Sair do Conferir com pendência pergunta: continuar, descartar, enviar',

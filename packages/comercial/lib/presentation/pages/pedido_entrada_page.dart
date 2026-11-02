@@ -244,7 +244,9 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                     Text('Entrada #${widget.pedidoId}'),
                     if (resumo != null)
                       Text(
-                        'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
+                        state.faturado || resumo.etapa == 'faturado'
+                            ? 'Faturada'
+                            : 'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
                         key: const Key('entrada_passo_x_de_5'),
                         style: textos.apoio,
                       ),

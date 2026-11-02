@@ -9,6 +9,9 @@ class PedidoEntradaState extends Equatable {
   final String? erro;
   final String? mensagem;
 
+  /// Falha ao faturar: aparece na folha de confirmação (não em SnackBar).
+  final String? erroFaturar;
+
   /// Última referência criada por pré-cadastro (a tela oferece abrir).
   final int? referenciaCriadaId;
 
@@ -42,6 +45,7 @@ class PedidoEntradaState extends Equatable {
     this.resumo,
     this.erro,
     this.mensagem,
+    this.erroFaturar,
     this.referenciaCriadaId,
     this.passo,
     this.etiquetasLocal = false,
@@ -78,6 +82,7 @@ class PedidoEntradaState extends Equatable {
     EntradaResumo? resumo,
     String? erro,
     String? mensagem,
+    String? erroFaturar,
     int? referenciaCriadaId,
     int? passo,
     bool limparPasso = false,
@@ -95,6 +100,7 @@ class PedidoEntradaState extends Equatable {
       resumo: resumo ?? this.resumo,
       erro: erro,
       mensagem: mensagem,
+      erroFaturar: erroFaturar,
       referenciaCriadaId: referenciaCriadaId,
       passo: limparPasso ? null : (passo ?? this.passo),
       etiquetasLocal: etiquetasLocal ?? this.etiquetasLocal,
@@ -113,6 +119,7 @@ class PedidoEntradaState extends Equatable {
         resumo,
         erro,
         mensagem,
+        erroFaturar,
         referenciaCriadaId,
         passo,
         etiquetasLocal,

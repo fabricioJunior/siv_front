@@ -210,7 +210,7 @@ class TrilhaEntrada {
           indice: i,
           titulo: titulosDosPassos[i],
           subtitulo: subtitulos[i],
-          status: i == passo
+          status: i == passo && !faturado
               ? StatusPasso.ativo
               : (i == 1 && (livres > 0 || variacoes > 0) && passo > 1) ||
                       (i == 3 && semDecisao > 0 && passo == 4)

@@ -343,12 +343,13 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   ) async {
     final resumo = state.resumo;
     if (resumo == null || !TrilhaEntrada.podeFaturar(resumo)) {
-      emit(state.copyWith(erro: 'Decida as divergências antes de faturar.'));
+      emit(state.copyWith(
+          erroFaturar: 'Decida as divergências antes de faturar.'));
       return;
     }
     final caixaId = _sessao.caixaIdDaSessao;
     if (caixaId == null) {
-      emit(state.copyWith(erro: 'Abra um caixa para faturar o pedido.'));
+      emit(state.copyWith(erroFaturar: 'Abra um caixa para faturar o pedido.'));
       return;
     }
     emit(state.copyWith(salvando: true));
@@ -366,7 +367,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
       emit(
         state.copyWith(
           salvando: false,
-          erro: mensagemDeErroApi(e, 'Falha ao faturar o pedido.'),
+          erroFaturar: mensagemDeErroApi(e, 'Falha ao faturar o pedido.'),
         ),
       );
       addError(e, s);

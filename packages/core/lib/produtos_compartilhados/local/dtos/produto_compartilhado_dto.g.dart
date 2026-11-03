@@ -23,48 +23,53 @@ const ProdutoCompartilhadoDtoSchema = CollectionSchema(
       name: r'corNome',
       type: IsarType.string,
     ),
-    r'hash': PropertySchema(
+    r'estampaNome': PropertySchema(
       id: 1,
+      name: r'estampaNome',
+      type: IsarType.string,
+    ),
+    r'hash': PropertySchema(
+      id: 2,
       name: r'hash',
       type: IsarType.string,
     ),
     r'hashCode': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'hashLista': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'hashLista',
       type: IsarType.string,
     ),
     r'nome': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'nome',
       type: IsarType.string,
     ),
     r'produtoId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'produtoId',
       type: IsarType.long,
     ),
     r'quantidade': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'quantidade',
       type: IsarType.long,
     ),
     r'stringify': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'stringify',
       type: IsarType.bool,
     ),
     r'tamanhoNome': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'tamanhoNome',
       type: IsarType.string,
     ),
     r'valorUnitario': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'valorUnitario',
       type: IsarType.double,
     )
@@ -104,6 +109,7 @@ int _produtoCompartilhadoDtoEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.corNome.length * 3;
+  bytesCount += 3 + object.estampaNome.length * 3;
   bytesCount += 3 + object.hash.length * 3;
   bytesCount += 3 + object.hashLista.length * 3;
   bytesCount += 3 + object.nome.length * 3;
@@ -118,15 +124,16 @@ void _produtoCompartilhadoDtoSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.corNome);
-  writer.writeString(offsets[1], object.hash);
-  writer.writeLong(offsets[2], object.hashCode);
-  writer.writeString(offsets[3], object.hashLista);
-  writer.writeString(offsets[4], object.nome);
-  writer.writeLong(offsets[5], object.produtoId);
-  writer.writeLong(offsets[6], object.quantidade);
-  writer.writeBool(offsets[7], object.stringify);
-  writer.writeString(offsets[8], object.tamanhoNome);
-  writer.writeDouble(offsets[9], object.valorUnitario);
+  writer.writeString(offsets[1], object.estampaNome);
+  writer.writeString(offsets[2], object.hash);
+  writer.writeLong(offsets[3], object.hashCode);
+  writer.writeString(offsets[4], object.hashLista);
+  writer.writeString(offsets[5], object.nome);
+  writer.writeLong(offsets[6], object.produtoId);
+  writer.writeLong(offsets[7], object.quantidade);
+  writer.writeBool(offsets[8], object.stringify);
+  writer.writeString(offsets[9], object.tamanhoNome);
+  writer.writeDouble(offsets[10], object.valorUnitario);
 }
 
 ProdutoCompartilhadoDto _produtoCompartilhadoDtoDeserialize(
@@ -137,13 +144,14 @@ ProdutoCompartilhadoDto _produtoCompartilhadoDtoDeserialize(
 ) {
   final object = ProdutoCompartilhadoDto(
     corNome: reader.readString(offsets[0]),
-    hash: reader.readString(offsets[1]),
-    hashLista: reader.readString(offsets[3]),
-    nome: reader.readString(offsets[4]),
-    produtoId: reader.readLong(offsets[5]),
-    quantidade: reader.readLong(offsets[6]),
-    tamanhoNome: reader.readString(offsets[8]),
-    valorUnitario: reader.readDouble(offsets[9]),
+    estampaNome: reader.readStringOrNull(offsets[1]) ?? '',
+    hash: reader.readString(offsets[2]),
+    hashLista: reader.readString(offsets[4]),
+    nome: reader.readString(offsets[5]),
+    produtoId: reader.readLong(offsets[6]),
+    quantidade: reader.readLong(offsets[7]),
+    tamanhoNome: reader.readString(offsets[9]),
+    valorUnitario: reader.readDouble(offsets[10]),
   );
   return object;
 }
@@ -158,22 +166,24 @@ P _produtoCompartilhadoDtoDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset) ?? '') as P;
     case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -512,6 +522,144 @@ extension ProdutoCompartilhadoDtoQueryFilter on QueryBuilder<
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'estampaNome',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+          QAfterFilterCondition>
+      estampaNomeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'estampaNome',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+          QAfterFilterCondition>
+      estampaNomeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'estampaNome',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'estampaNome',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto,
+      QAfterFilterCondition> estampaNomeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'estampaNome',
+        value: '',
       ));
     });
   }
@@ -1354,6 +1502,20 @@ extension ProdutoCompartilhadoDtoQuerySortBy
   }
 
   QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
+      sortByEstampaNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
+      sortByEstampaNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
       sortByHash() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hash', Sort.asc);
@@ -1511,6 +1673,20 @@ extension ProdutoCompartilhadoDtoQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
+      thenByEstampaNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
+      thenByEstampaNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QAfterSortBy>
       thenByHash() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hash', Sort.asc);
@@ -1647,6 +1823,13 @@ extension ProdutoCompartilhadoDtoQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QDistinct>
+      distinctByEstampaNome({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'estampaNome', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, ProdutoCompartilhadoDto, QDistinct>
       distinctByHash({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hash', caseSensitive: caseSensitive);
@@ -1723,6 +1906,13 @@ extension ProdutoCompartilhadoDtoQueryProperty on QueryBuilder<
       corNomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'corNome');
+    });
+  }
+
+  QueryBuilder<ProdutoCompartilhadoDto, String, QQueryOperations>
+      estampaNomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'estampaNome');
     });
   }
 

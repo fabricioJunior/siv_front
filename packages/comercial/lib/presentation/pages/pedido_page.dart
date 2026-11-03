@@ -1,3 +1,4 @@
+import 'package:comercial/presentation/widgets/rotulo_variacao.dart';
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
@@ -426,6 +427,7 @@ class _PedidoPageState extends State<PedidoPage> {
             nome: item.referenciaNome ?? '',
             corNome: item.corNome ?? '',
             tamanhoNome: item.tamanhoNome ?? '',
+            estampaNome: item.estampaNome ?? '',
           ),
         )
         .toList(growable: false);
@@ -1951,8 +1953,11 @@ class _PedidoPageState extends State<PedidoPage> {
     final solicitado = item.solicitado ?? 0;
     final atendido = item.atendido ?? 0;
     final subtotal = (unitario - desconto) * solicitado;
-    final corNome = item.corNome ?? '';
-    final tamanhoNome = item.tamanhoNome ?? '';
+    final variacao = rotuloVariacao(
+      cor: item.corNome,
+      estampa: item.estampaNome,
+      tamanho: item.tamanhoNome,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -1982,13 +1987,10 @@ class _PedidoPageState extends State<PedidoPage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (corNome.isNotEmpty || tamanhoNome.isNotEmpty) ...[
+                  if (variacao.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      [
-                        if (corNome.isNotEmpty) 'Cor: $corNome',
-                        if (tamanhoNome.isNotEmpty) 'Tamanho: $tamanhoNome',
-                      ].join('  •  '),
+                      variacao,
                       style: theme.textTheme.bodySmall,
                     ),
                   ],

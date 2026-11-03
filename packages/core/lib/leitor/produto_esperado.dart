@@ -11,6 +11,7 @@ class ProdutoEsperado {
   final int idReferencia;
   final String cor;
   final String tamanho;
+  final String estampa;
   final int esperado;
   final int lido;
 
@@ -21,6 +22,7 @@ class ProdutoEsperado {
     this.idReferencia = 0,
     this.cor = '',
     this.tamanho = '',
+    this.estampa = '',
     required this.esperado,
     this.lido = 0,
   });
@@ -32,5 +34,5 @@ class ProdutoEsperado {
     return SituacaoEsperado.excedente;
   }
 
-  String get grade => [cor, tamanho].where((e) => e.isNotEmpty).join(' · ');
+  String get grade => [cor, estampa, tamanho].where((e) => e.isNotEmpty).join(' · ');
 }

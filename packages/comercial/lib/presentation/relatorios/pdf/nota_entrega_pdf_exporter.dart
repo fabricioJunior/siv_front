@@ -51,6 +51,7 @@ class NotaEntregaPdfExporter {
                         : 'Produto #${item.produtoId ?? '-'}',
                 item.corNome,
                 item.tamanhoNome,
+                item.estampaNome,
               ),
               valor: item.valorTotalLiquido ?? item.valorTotalBruto,
             ),
@@ -119,6 +120,7 @@ class NotaEntregaPdfExporter {
                     : 'Produto #${item.produtoId ?? '-'}',
                 item.corNome,
                 item.tamanhoNome,
+                item.estampaNome,
               ),
               valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
                   (item.solicitado ?? 0),
@@ -175,6 +177,7 @@ class NotaEntregaPdfExporter {
                     : 'Produto #${item.produtoId ?? '-'}',
                 item.corNome,
                 item.tamanhoNome,
+                item.estampaNome,
               ),
               valor: ((item.valorUnitario ?? 0) - (item.valorUnitDesconto ?? 0)) *
                   (item.solicitado ?? 0),
@@ -194,8 +197,9 @@ class NotaEntregaPdfExporter {
   /// livre, entao nao precisa dos campos crus do endereco separados.
   /// Anexa cor/tamanho na descricao do item (ex: "CAMISA X - AZUL/M") -- sem isso a nota
   /// nao distingue variacoes da mesma referencia, informacao essencial pra conferencia/entrega.
-  static String _comVariacao(String descricao, String? cor, String? tamanho) {
-    final variacao = [cor, tamanho]
+  static String _comVariacao(String descricao, String? cor, String? tamanho,
+      [String? estampa]) {
+    final variacao = [cor, estampa, tamanho]
         .where((v) => v?.trim().isNotEmpty ?? false)
         .map((v) => v!.trim())
         .join('/');

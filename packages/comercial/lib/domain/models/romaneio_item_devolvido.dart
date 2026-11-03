@@ -7,6 +7,7 @@ abstract class RomaneioItemDevolvido implements Equatable {
   String? get referenciaDescricao;
   String? get corNome;
   String? get tamanhoNome;
+  String? get estampaNome;
   double? get quantidade;
   int? get romaneioId;
   int? get sequencia;
@@ -23,6 +24,7 @@ abstract class RomaneioItemDevolvido implements Equatable {
     String? referenciaDescricao,
     String? corNome,
     String? tamanhoNome,
+    String? estampaNome,
     double? quantidade,
     int? romaneioId,
     int? sequencia,
@@ -41,6 +43,7 @@ abstract class RomaneioItemDevolvido implements Equatable {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         quantidade,
         romaneioId,
         sequencia,
@@ -69,6 +72,8 @@ class _RomaneioItemDevolvidoImpl implements RomaneioItemDevolvido {
   @override
   final String? tamanhoNome;
   @override
+  final String? estampaNome;
+  @override
   final double? quantidade;
   @override
   final int? romaneioId;
@@ -92,6 +97,7 @@ class _RomaneioItemDevolvidoImpl implements RomaneioItemDevolvido {
     this.referenciaDescricao,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
     this.quantidade,
     this.romaneioId,
     this.sequencia,
@@ -110,6 +116,7 @@ class _RomaneioItemDevolvidoImpl implements RomaneioItemDevolvido {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         quantidade,
         romaneioId,
         sequencia,

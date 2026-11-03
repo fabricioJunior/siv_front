@@ -37,6 +37,9 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
   final String tamanhoNome;
 
   @override
+  final String? estampaNome;
+
+  @override
   final String? unidadeMedida;
 
   @override
@@ -60,6 +63,7 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
     required this.corNome,
     required this.tamanhoId,
     required this.tamanhoNome,
+    this.estampaNome,
     required this.unidadeMedida,
     required this.saldo,
     this.atualizadoEm,
@@ -84,6 +88,7 @@ class ProdutoDoEstoqueDto implements ProdutoDoEstoque {
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaNome,
     unidadeMedida,
     saldo,
     atualizadoEm,

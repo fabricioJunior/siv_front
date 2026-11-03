@@ -11,6 +11,7 @@ abstract class ProdutoDoEstoque implements Equatable {
   String get corNome;
   int get tamanhoId;
   String get tamanhoNome;
+  String? get estampaNome;
   String? get unidadeMedida;
   double get saldo;
   DateTime? get atualizadoEm;
@@ -27,6 +28,7 @@ abstract class ProdutoDoEstoque implements Equatable {
     required String corNome,
     required int tamanhoId,
     required String tamanhoNome,
+    String? estampaNome,
     required String? unidadeMedida,
     required double saldo,
     DateTime? atualizadoEm,
@@ -45,6 +47,7 @@ abstract class ProdutoDoEstoque implements Equatable {
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaNome,
     unidadeMedida,
     saldo,
     atualizadoEm,
@@ -87,6 +90,9 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
   final String tamanhoNome;
 
   @override
+  final String? estampaNome;
+
+  @override
   final String? unidadeMedida;
 
   @override
@@ -109,6 +115,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     required this.corNome,
     required this.tamanhoId,
     required this.tamanhoNome,
+    this.estampaNome,
     required this.unidadeMedida,
     required this.saldo,
     this.atualizadoEm,
@@ -126,6 +133,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     String? corNome,
     int? tamanhoId,
     String? tamanhoNome,
+    String? estampaNome,
     String? unidadeMedida,
     double? saldo,
     DateTime? atualizadoEm,
@@ -142,6 +150,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
       corNome: corNome ?? this.corNome,
       tamanhoId: tamanhoId ?? this.tamanhoId,
       tamanhoNome: tamanhoNome ?? this.tamanhoNome,
+      estampaNome: estampaNome ?? this.estampaNome,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       saldo: saldo ?? this.saldo,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
@@ -161,6 +170,7 @@ class _ProdutoDoEstoqueImpl implements ProdutoDoEstoque {
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaNome,
     unidadeMedida,
     saldo,
     atualizadoEm,
@@ -183,6 +193,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
     String? corNome,
     int? tamanhoId,
     String? tamanhoNome,
+    String? estampaNome,
     String? unidadeMedida,
     double? saldo,
     DateTime? atualizadoEm,
@@ -200,6 +211,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
         corNome: corNome,
         tamanhoId: tamanhoId,
         tamanhoNome: tamanhoNome,
+        estampaNome: estampaNome,
         unidadeMedida: unidadeMedida,
         saldo: saldo,
         atualizadoEm: atualizadoEm,
@@ -217,6 +229,7 @@ extension ProdutoDoEstoqueCopyWith on ProdutoDoEstoque {
       corNome: corNome ?? this.corNome,
       tamanhoId: tamanhoId ?? this.tamanhoId,
       tamanhoNome: tamanhoNome ?? this.tamanhoNome,
+      estampaNome: estampaNome ?? this.estampaNome,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       saldo: saldo ?? this.saldo,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,

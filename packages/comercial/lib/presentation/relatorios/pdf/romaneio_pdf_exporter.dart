@@ -37,6 +37,9 @@ String _fmtDataString(String? valor) {
   return data == null ? valor : _fmtData(data);
 }
 
+String? _corEstampa(String? cor, String? estampa) =>
+    (estampa ?? '').trim().isEmpty ? cor : '${cor ?? '-'} / ${estampa!.trim()}';
+
 String _naoVazio(String? v, [String fallback = '-']) =>
     (v?.trim().isNotEmpty ?? false) ? v!.trim() : fallback;
 
@@ -243,7 +246,7 @@ class RomaneioPdfExporter {
                   '${item.produtoId ?? '-'}',
                   _naoVazio(item.referenciaNome),
                   _naoVazio(item.referenciaDescricao),
-                  _naoVazio(item.corNome),
+                  _naoVazio(_corEstampa(item.corNome, item.estampaNome)),
                   _naoVazio(item.tamanhoNome),
                   _fmtQuantidade(item.quantidade),
                   _fmtMoeda(item.valorUnitario),
@@ -275,7 +278,7 @@ class RomaneioPdfExporter {
                   '${item.produtoId ?? '-'}',
                   _naoVazio(item.referenciaNome),
                   _naoVazio(item.referenciaDescricao),
-                  _naoVazio(item.corNome),
+                  _naoVazio(_corEstampa(item.corNome, item.estampaNome)),
                   _naoVazio(item.tamanhoNome),
                   _fmtQuantidade(item.quantidade),
                   item.valorUnitario == null ? '-' : _fmtMoeda(item.valorUnitario),

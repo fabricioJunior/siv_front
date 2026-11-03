@@ -341,16 +341,32 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     return '$hora:$minuto:$segundo';
   }
 
-  String _rotuloTamanhoCor({required String tamanho, required String cor}) {
+  String _rotuloTamanhoCor({
+    required String tamanho,
+    required String cor,
+    String estampa = '',
+  }) {
     final tamanhoNormalizado = tamanho.trim().isEmpty ? '-' : tamanho.trim();
     final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
-    return 'Cor: $corNormalizada  •  Tam: $tamanhoNormalizado';
+    final estampaRotulo =
+        estampa.trim().isEmpty ? '' : 'Estampa: ${estampa.trim()}  •  ';
+    return 'Cor: $corNormalizada  •  $estampaRotulo' 'Tam: $tamanhoNormalizado';
   }
 
-  String _rotuloTamanhoCorCompacto({required String tamanho, required String cor}) {
+  String _rotuloTamanhoCorCompacto({
+    required String tamanho,
+    required String cor,
+    String estampa = '',
+  }) {
     final tamanhoNormalizado = tamanho.trim().isEmpty ? '-' : tamanho.trim();
     final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
-    return '$corNormalizada · $tamanhoNormalizado';
+    final estampaRotulo = estampa.trim().isEmpty ? '' : '${estampa.trim()} · ';
+    return '$corNormalizada · $estampaRotulo$tamanhoNormalizado';
+  }
+
+  String _corDaGrade(LeitorItemContado item) {
+    final cor = _normalizarRotuloGrade(item.cor);
+    return item.estampa.trim().isEmpty ? cor : '$cor · ${item.estampa.trim()}';
   }
 
   String _normalizarRotuloGrade(String valor, {String fallback = '-'}) {
@@ -441,7 +457,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     return referenciasOrdenadas.map((referencia) {
       final itensReferencia = itensPorReferencia[referencia]!;
       final cores = itensReferencia
-          .map((item) => _normalizarRotuloGrade(item.cor))
+          .map(_corDaGrade)
           .toSet()
           .toList()
         ..sort();
@@ -455,7 +471,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       var quantidadeTotal = 0;
       var valorTotal = 0.0;
       for (final item in itensReferencia) {
-        final cor = _normalizarRotuloGrade(item.cor);
+        final cor = _corDaGrade(item);
         final tamanho = _normalizarRotuloGrade(item.tamanho);
         final linha = gradeQuantidade.putIfAbsent(cor, () => {});
         linha[tamanho] = (linha[tamanho] ?? 0) + item.quantidadeLida;
@@ -1220,7 +1236,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                   .copyWith(fontWeight: FontWeight.w700),
                             ),
                             Text(
-                              '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor)} · Cód: ${item.codigoDeBarras}',
+                              '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor, estampa: item.estampa)} · Cód: ${item.codigoDeBarras}',
                               style: textos.apoio
                                   .copyWith(color: cores.textoApoio),
                             ),
@@ -1411,7 +1427,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor)} · REF ${item.idReferencia}',
+                      '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor, estampa: item.estampa)} · REF ${item.idReferencia}',
                       style: textos.apoio.copyWith(color: cores.textoApoio),
                     ),
                   ],
@@ -1794,6 +1810,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             _rotuloTamanhoCor(
                               tamanho: state.ultimoProdutoLido!.tamanho,
                               cor: state.ultimoProdutoLido!.cor,
+                              estampa: state.ultimoProdutoLido!.estampa,
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
@@ -2169,6 +2186,8 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                                     final cor = produto.cor.trim();
                                     final subtitulo = [
                                       if (cor.isNotEmpty) 'Cor: $cor',
+                                      if (produto.estampa.trim().isNotEmpty)
+                                        'Estampa: ${produto.estampa.trim()}',
                                       if (tamanho.isNotEmpty) 'Tam: $tamanho',
                                       'Cód: ${produto.codigoDeBarras}',
                                       '${widget.rotuloQuantidadeDisponivel}: ${produto.quantidade}',
@@ -2243,6 +2262,8 @@ class _QuantidadeDialogState extends State<_QuantidadeDialog> {
     final cor = widget.produto.cor.trim();
     final rotulo = [
       if (cor.isNotEmpty) 'Cor: $cor',
+      if (widget.produto.estampa.trim().isNotEmpty)
+        'Estampa: ${widget.produto.estampa.trim()}',
       if (tamanho.isNotEmpty) 'Tam: $tamanho',
     ].join('  •  ');
 
@@ -2331,6 +2352,7 @@ class LeitorController extends ChangeNotifier {
             'idReferencia': item.idReferencia,
             'tamanho': item.tamanho,
             'cor': item.cor,
+            'estampa': item.estampa,
             'quantidadeLida': item.quantidadeLida,
             'estoqueDisponivel': item.estoqueDisponivel,
             'valorUnitario': item.valorUnitario,

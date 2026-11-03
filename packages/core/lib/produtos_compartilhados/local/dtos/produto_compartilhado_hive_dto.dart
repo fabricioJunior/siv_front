@@ -13,6 +13,7 @@ class ProdutoCompartilhadoHiveDto extends ProdutoCompartilhado
     required super.corNome,
     required super.tamanhoNome,
     required super.hash,
+    super.estampaNome,
   });
 
   @override
@@ -27,6 +28,7 @@ class ProdutoCompartilhadoHiveDto extends ProdutoCompartilhado
     'nome': nome,
     'corNome': corNome,
     'tamanhoNome': tamanhoNome,
+    'estampaNome': estampaNome,
     'hash': hash,
   };
 
@@ -39,6 +41,7 @@ class ProdutoCompartilhadoHiveDto extends ProdutoCompartilhado
       nome: props['nome'] as String,
       corNome: props['corNome'] as String,
       tamanhoNome: props['tamanhoNome'] as String,
+      estampaNome: props['estampaNome'] as String? ?? '',
       hash: props['hash'] as String,
     );
   }
@@ -52,6 +55,7 @@ class ProdutoCompartilhadoHiveDto extends ProdutoCompartilhado
       nome: nome,
       corNome: corNome,
       tamanhoNome: tamanhoNome,
+      estampaNome: estampaNome,
       hash: hash,
     );
   }
@@ -65,6 +69,7 @@ class ProdutoCompartilhadoHiveDto extends ProdutoCompartilhado
       nome: model.nome,
       corNome: model.corNome,
       tamanhoNome: model.tamanhoNome,
+      estampaNome: model.estampaNome,
       hash: model.hash,
     );
   }

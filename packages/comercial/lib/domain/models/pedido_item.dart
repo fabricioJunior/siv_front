@@ -12,6 +12,7 @@ abstract class PedidoItem implements Equatable {
   String? get referenciaNome;
   String? get corNome;
   String? get tamanhoNome;
+  String? get estampaNome;
 
   factory PedidoItem.create({
     int? pedidoId,
@@ -25,6 +26,7 @@ abstract class PedidoItem implements Equatable {
     String? referenciaNome,
     String? corNome,
     String? tamanhoNome,
+    String? estampaNome,
   }) = _PedidoItemImpl;
 
   @override
@@ -40,6 +42,7 @@ abstract class PedidoItem implements Equatable {
         referenciaNome,
         corNome,
         tamanhoNome,
+        estampaNome,
       ];
 
   @override
@@ -69,6 +72,8 @@ class _PedidoItemImpl implements PedidoItem {
   final String? corNome;
   @override
   final String? tamanhoNome;
+  @override
+  final String? estampaNome;
 
   const _PedidoItemImpl({
     this.pedidoId,
@@ -82,6 +87,7 @@ class _PedidoItemImpl implements PedidoItem {
     this.referenciaNome,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
   });
 
   @override
@@ -97,6 +103,7 @@ class _PedidoItemImpl implements PedidoItem {
         referenciaNome,
         corNome,
         tamanhoNome,
+        estampaNome,
       ];
 
   @override

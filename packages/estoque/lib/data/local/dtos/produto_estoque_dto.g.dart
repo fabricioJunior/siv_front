@@ -29,46 +29,51 @@ const ProdutoEstoqueDtoSchema = CollectionSchema(
       name: r'empresaId',
       type: IsarType.long,
     ),
-    r'hashCode': PropertySchema(id: 4, name: r'hashCode', type: IsarType.long),
+    r'estampaNome': PropertySchema(
+      id: 4,
+      name: r'estampaNome',
+      type: IsarType.string,
+    ),
+    r'hashCode': PropertySchema(id: 5, name: r'hashCode', type: IsarType.long),
     r'idDoProduto': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'idDoProduto',
       type: IsarType.long,
     ),
-    r'nome': PropertySchema(id: 6, name: r'nome', type: IsarType.string),
+    r'nome': PropertySchema(id: 7, name: r'nome', type: IsarType.string),
     r'nomePalavras': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'nomePalavras',
       type: IsarType.stringList,
     ),
     r'produtoIdExterno': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'produtoIdExterno',
       type: IsarType.string,
     ),
     r'referenciaId': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'referenciaId',
       type: IsarType.long,
     ),
     r'referenciaIdExterno': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'referenciaIdExterno',
       type: IsarType.string,
     ),
-    r'saldo': PropertySchema(id: 11, name: r'saldo', type: IsarType.double),
+    r'saldo': PropertySchema(id: 12, name: r'saldo', type: IsarType.double),
     r'tamanhoId': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'tamanhoId',
       type: IsarType.long,
     ),
     r'tamanhoNome': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'tamanhoNome',
       type: IsarType.string,
     ),
     r'unidadeMedida': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'unidadeMedida',
       type: IsarType.string,
     ),
@@ -110,6 +115,12 @@ int _produtoEstoqueDtoEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.corNome.length * 3;
+  {
+    final value = object.estampaNome;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.nome.length * 3;
   bytesCount += 3 + object.nomePalavras.length * 3;
   {
@@ -150,17 +161,18 @@ void _produtoEstoqueDtoSerialize(
   writer.writeLong(offsets[1], object.corId);
   writer.writeString(offsets[2], object.corNome);
   writer.writeLong(offsets[3], object.empresaId);
-  writer.writeLong(offsets[4], object.hashCode);
-  writer.writeLong(offsets[5], object.idDoProduto);
-  writer.writeString(offsets[6], object.nome);
-  writer.writeStringList(offsets[7], object.nomePalavras);
-  writer.writeString(offsets[8], object.produtoIdExterno);
-  writer.writeLong(offsets[9], object.referenciaId);
-  writer.writeString(offsets[10], object.referenciaIdExterno);
-  writer.writeDouble(offsets[11], object.saldo);
-  writer.writeLong(offsets[12], object.tamanhoId);
-  writer.writeString(offsets[13], object.tamanhoNome);
-  writer.writeString(offsets[14], object.unidadeMedida);
+  writer.writeString(offsets[4], object.estampaNome);
+  writer.writeLong(offsets[5], object.hashCode);
+  writer.writeLong(offsets[6], object.idDoProduto);
+  writer.writeString(offsets[7], object.nome);
+  writer.writeStringList(offsets[8], object.nomePalavras);
+  writer.writeString(offsets[9], object.produtoIdExterno);
+  writer.writeLong(offsets[10], object.referenciaId);
+  writer.writeString(offsets[11], object.referenciaIdExterno);
+  writer.writeDouble(offsets[12], object.saldo);
+  writer.writeLong(offsets[13], object.tamanhoId);
+  writer.writeString(offsets[14], object.tamanhoNome);
+  writer.writeString(offsets[15], object.unidadeMedida);
 }
 
 ProdutoEstoqueDto _produtoEstoqueDtoDeserialize(
@@ -174,16 +186,17 @@ ProdutoEstoqueDto _produtoEstoqueDtoDeserialize(
     corId: reader.readLong(offsets[1]),
     corNome: reader.readString(offsets[2]),
     empresaId: reader.readLong(offsets[3]),
-    idDoProduto: reader.readLong(offsets[5]),
-    nome: reader.readString(offsets[6]),
-    nomePalavras: reader.readStringList(offsets[7]) ?? [],
-    produtoIdExterno: reader.readStringOrNull(offsets[8]),
-    referenciaId: reader.readLong(offsets[9]),
-    referenciaIdExterno: reader.readStringOrNull(offsets[10]),
-    saldo: reader.readDouble(offsets[11]),
-    tamanhoId: reader.readLong(offsets[12]),
-    tamanhoNome: reader.readString(offsets[13]),
-    unidadeMedida: reader.readStringOrNull(offsets[14]),
+    estampaNome: reader.readStringOrNull(offsets[4]),
+    idDoProduto: reader.readLong(offsets[6]),
+    nome: reader.readString(offsets[7]),
+    nomePalavras: reader.readStringList(offsets[8]) ?? [],
+    produtoIdExterno: reader.readStringOrNull(offsets[9]),
+    referenciaId: reader.readLong(offsets[10]),
+    referenciaIdExterno: reader.readStringOrNull(offsets[11]),
+    saldo: reader.readDouble(offsets[12]),
+    tamanhoId: reader.readLong(offsets[13]),
+    tamanhoNome: reader.readString(offsets[14]),
+    unidadeMedida: reader.readStringOrNull(offsets[15]),
   );
   return object;
 }
@@ -204,26 +217,28 @@ P _produtoEstoqueDtoDeserializeProp<P>(
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 8:
-      return (reader.readStringOrNull(offset)) as P;
-    case 9:
-      return (reader.readLong(offset)) as P;
-    case 10:
-      return (reader.readStringOrNull(offset)) as P;
-    case 11:
-      return (reader.readDouble(offset)) as P;
-    case 12:
-      return (reader.readLong(offset)) as P;
-    case 13:
       return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
+      return (reader.readStringOrNull(offset)) as P;
+    case 12:
+      return (reader.readDouble(offset)) as P;
+    case 13:
+      return (reader.readLong(offset)) as P;
     case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -880,6 +895,165 @@ extension ProdutoEstoqueDtoQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'estampaNome'),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'estampaNome'),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'estampaNome',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'estampaNome',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'estampaNome',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'estampaNome', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterFilterCondition>
+  estampaNomeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'estampaNome', value: ''),
       );
     });
   }
@@ -2201,6 +2375,20 @@ extension ProdutoEstoqueDtoQuerySortBy
   }
 
   QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
+  sortByEstampaNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
+  sortByEstampaNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
   sortByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hashCode', Sort.asc);
@@ -2414,6 +2602,20 @@ extension ProdutoEstoqueDtoQuerySortThenBy
   }
 
   QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
+  thenByEstampaNome() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
+  thenByEstampaNomeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'estampaNome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QAfterSortBy>
   thenByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hashCode', Sort.asc);
@@ -2585,6 +2787,13 @@ extension ProdutoEstoqueDtoQueryWhereDistinct
   }
 
   QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QDistinct>
+  distinctByEstampaNome({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'estampaNome', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, ProdutoEstoqueDto, QDistinct>
   distinctByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hashCode');
@@ -2702,6 +2911,13 @@ extension ProdutoEstoqueDtoQueryProperty
   QueryBuilder<ProdutoEstoqueDto, int, QQueryOperations> empresaIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'empresaId');
+    });
+  }
+
+  QueryBuilder<ProdutoEstoqueDto, String?, QQueryOperations>
+  estampaNomeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'estampaNome');
     });
   }
 

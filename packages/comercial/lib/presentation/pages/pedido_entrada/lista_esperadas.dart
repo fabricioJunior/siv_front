@@ -158,6 +158,11 @@ class _ItemEsperada extends StatelessWidget {
                       style: textos.apoio.copyWith(color: cores.textoApoio),
                     ),
                     Text(esperada.resumoGrade, style: textos.apoio),
+                    if (esperada.estampas.isNotEmpty)
+                      Text(
+                        'Estampas: ${esperada.estampas.join(', ')}',
+                        style: textos.apoio,
+                      ),
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: 6,

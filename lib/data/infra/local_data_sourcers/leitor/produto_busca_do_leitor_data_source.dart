@@ -120,6 +120,9 @@ class ProdutoDoLeitorData implements LeitorData {
   String get cor => produto.corNome;
 
   @override
+  String get estampa => produto.estampaNome ?? '';
+
+  @override
   String get tamanho => produto.tamanhoNome;
 
   @override

@@ -1119,6 +1119,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
             nome: item.referenciaNome ?? '',
             corNome: item.corNome ?? '',
             tamanhoNome: item.tamanhoNome ?? '',
+            estampaNome: item.estampaNome ?? '',
           ),
         )
         .toList(growable: false);
@@ -1564,7 +1565,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Cor: ${item.corNome ?? '-'}  •  Tamanho: ${item.tamanhoNome ?? '-'}',
+                                'Cor: ${item.corNome ?? '-'}  •  ${(item.estampaNome ?? '').isNotEmpty ? 'Estampa: ${item.estampaNome}  •  ' : ''}Tamanho: ${item.tamanhoNome ?? '-'}',
                                 style: theme.textTheme.bodySmall,
                               ),
                               if (item.valorUnitario != null) ...[

@@ -23,6 +23,7 @@ export 'presentation/pages/relatorio_curva_abc_page.dart';
 export 'presentation/pages/relatorio_clientes_ativos_page.dart';
 export 'presentation/pages/relatorio_frequencia_clientes_page.dart';
 export 'presentation/pages/relatorio_movimentacoes_page.dart';
+export 'presentation/pages/relatorio_pedidos_contagem_page.dart';
 export 'presentation/pages/relatorio_compras_clientes_page.dart';
 export 'presentation/pages/relatorio_vendas_por_funcionario_page.dart';
 export 'presentation/pages/relatorio_pontos_fidelidade_page.dart';

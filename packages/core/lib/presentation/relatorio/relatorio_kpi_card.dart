@@ -20,6 +20,10 @@ class RelatorioKpiCard extends StatelessWidget {
   final RelatorioKpiTom tom;
   final bool valorVinho;
 
+  /// Texto de apoio ao lado do valor (ex.: "falta associar referência").
+  final String? nota;
+  final bool valorAtencao;
+
   const RelatorioKpiCard({
     super.key,
     required this.rotulo,
@@ -28,6 +32,8 @@ class RelatorioKpiCard extends StatelessWidget {
     this.destaque = false,
     this.tom = RelatorioKpiTom.aco,
     this.valorVinho = false,
+    this.nota,
+    this.valorAtencao = false,
   });
 
   @override
@@ -78,14 +84,37 @@ class RelatorioKpiCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                valor,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: textos.titulo.copyWith(
-                  fontSize: mobile ? 19 : 26,
-                  color: valorVinho ? cores.vinho : cores.tinta,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Flexible(
+                    child: Text(
+                      valor,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textos.titulo.copyWith(
+                        fontSize: mobile ? 19 : 26,
+                        color: valorAtencao
+                            ? cores.atencao
+                            : valorVinho
+                            ? cores.vinho
+                            : cores.tinta,
+                      ),
+                    ),
+                  ),
+                  if (nota != null && !mobile) ...[
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        nota!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textos.apoio.copyWith(color: cores.textoApoio),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               if (variacao != null)
                 Padding(

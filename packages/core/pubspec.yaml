@@ -47,7 +47,8 @@ dependencies:
   hive_ce_flutter: ^2.3.4
   idb_shim: ^2.9.9
   lucide_icons_flutter: ^3.0.0
-  mobile_scanner: ^7.4.0
+  leitor_camera:
+    path: ../leitor_camera
   socket_io_client: ^3.1.2
   archive: ^4.0.9 # gerar .xlsx (PlanilhaService); o pacote `excel` conflita com pdf/flutter_zpl_generator (xml)
   web: ^1.1.1 # download de arquivo no navegador (ArquivoService)

@@ -10,12 +10,12 @@ import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
 import 'package:core/leitor/produto_esperado.dart';
 import 'package:core/presentation/siv_cantos_blueprint.dart';
-import 'package:core/services/camera_scanner_service.dart';
 import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:leitor_camera/leitor_camera.dart';
 
 class LeitorWidget extends StatefulWidget {
   final bool controlarQuantidade;
@@ -429,8 +429,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Future<void> _escanearComCamera() async {
     if (widget.desativado) return;
 
-    final codigo =
-        await CameraScannerService().escanearCodigoDeBarras(context);
+    final codigo = await LeitorCamera.escanear(context);
     if (codigo == null || !mounted) {
       _solicitarFoco();
       return;

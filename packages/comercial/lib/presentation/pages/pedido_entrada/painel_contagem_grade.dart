@@ -1539,38 +1539,24 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                         style: textos.apoio.copyWith(fontSize: 11)),
                   ],
                 ),
-                for (final t in ts)
-                  Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: SizedBox(
-                      height: 52,
-                      child: TextField(
-                        key: Key(est == 0
-                            ? 'contagem_${c.key}_${t.key}'
-                            : 'contagem_${c.key}_${t.key}_e$est'),
-                        controller: _celula(c.key, t.key, est),
-                        focusNode: _foco(c.key, t.key, est),
-                        textAlign: TextAlign.center,
-                        style: textos.secao,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          hintText: '—',
-                          filled: true,
-                          fillColor: _abaixoDoLido(c.key, t.key, est)
-                              ? cores.excedenteFundo
-                              : cores.superficie,
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(SivDimensoes.raio),
-                            borderSide: BorderSide(
-                              color: _abaixoDoLido(c.key, t.key, est)
-                                  ? cores.vinho
-                                  : cores.hairline,
-                            ),
-                          ),
+              ),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(width: 52),
+                      for (final dc in const [-1, 0, 1])
+                        SizedBox(
+                          width: 32,
+                          child: Text(nome(ts, c + dc),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textos.secao.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: dc == 0
+                                      ? FontWeight.w700
+                                      : FontWeight.w400)),
                         ),
                     ],
                   ),

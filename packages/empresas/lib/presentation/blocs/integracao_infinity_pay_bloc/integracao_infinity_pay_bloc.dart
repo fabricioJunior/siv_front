@@ -109,19 +109,21 @@ class IntegracaoInfinityPayBloc
   }
 
   EmpresaParametro _paraEnviar(int empresaId, CampoInfinityPay c, String v) {
-    final base = _parametros.firstWhere(
-      (p) => p.chave == c.chave,
-      orElse: () => EmpresaParametro.create(
-        id: 0,
-        empresaId: empresaId,
-        chave: c.chave,
-        descricao: '',
-        tipo: ehParametroBooleanoPorChave(c.chave)
-            ? TipoEmpresaParametro.checkbox
-            : TipoEmpresaParametro.texto,
-        descontinuado: false,
-      ),
-    );
+    // Sem orElse: o tipo de execução da lista pode ser List<EmpresaParametroDto>
+    // (vem da API) e um orElse tipado como EmpresaParametro estoura TypeError.
+    final existente = _parametros.where((p) => p.chave == c.chave);
+    final base = existente.isNotEmpty
+        ? existente.first
+        : EmpresaParametro.create(
+            id: 0,
+            empresaId: empresaId,
+            chave: c.chave,
+            descricao: '',
+            tipo: ehParametroBooleanoPorChave(c.chave)
+                ? TipoEmpresaParametro.checkbox
+                : TipoEmpresaParametro.texto,
+            descontinuado: false,
+          );
     return base.ehCheckbox
         ? base.copyWith(valorBooleano: v == 'S')
         : base.copyWith(valorTexto: v);

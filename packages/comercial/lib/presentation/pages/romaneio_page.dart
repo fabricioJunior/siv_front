@@ -1564,7 +1564,7 @@ class _RomaneioPageState extends State<RomaneioPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Cor: ${item.corNome ?? '-'}  •  Tamanho: ${item.tamanhoNome ?? '-'}',
+                                'Cor: ${item.corNome ?? '-'}  •  ${(item.estampaNome ?? '').isNotEmpty ? 'Estampa: ${item.estampaNome}  •  ' : ''}Tamanho: ${item.tamanhoNome ?? '-'}',
                                 style: theme.textTheme.bodySmall,
                               ),
                               if (item.valorUnitario != null) ...[

@@ -1,3 +1,4 @@
+import 'package:comercial/presentation/widgets/rotulo_variacao.dart';
 import 'package:comercial/presentation/blocs/pedido_bloc/pedido_bloc.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -212,6 +213,7 @@ class _PedidoItensLeitorPageState extends State<PedidoItensLeitorPage> {
               : 'Produto #$produtoId',
           tamanho: item.tamanhoNome ?? '',
           cor: item.corNome ?? '',
+          estampa: item.estampaNome ?? '',
         );
       }
     }
@@ -223,11 +225,14 @@ class _PedidoItensLeitorPageState extends State<PedidoItensLeitorPage> {
     String nome, {
     required String tamanho,
     required String cor,
+    String estampa = '',
   }) {
-    final detalhes = [
-      if (cor.trim().isNotEmpty) 'Cor: ${cor.trim()}',
-      if (tamanho.trim().isNotEmpty) 'Tam: ${tamanho.trim()}',
-    ].join('  •  ');
+    final detalhes = rotuloVariacao(
+      cor: cor,
+      estampa: estampa,
+      tamanho: tamanho,
+      tamanhoRotulo: 'Tam',
+    );
 
     return detalhes.isEmpty ? nome : '$nome ($detalhes)';
   }

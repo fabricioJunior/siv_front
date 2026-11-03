@@ -1,5 +1,6 @@
 import 'package:core/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/presentantion/widgets/referencia_midias_widget.dart';
 import 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_formato.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_grade_estoque.dart';
@@ -76,6 +77,14 @@ class ConsultaDetalhe extends StatelessWidget {
               estampaIds: state.estampaIds.toSet(),
               produtoIdLido: state.produtoIdLido,
             ),
+          const SizedBox(height: 24),
+          ReferenciaMidiasWidget(
+            key: ValueKey('fotos-${grade.referenciaId}'),
+            referenciaId: grade.referenciaId,
+            permiteEditar: true,
+            grade: grade.produtos,
+            nomeReferencia: grade.nome,
+          ),
         ],
       ),
     );

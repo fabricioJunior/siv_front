@@ -175,6 +175,8 @@ class _CriarMidiaFake extends CriarReferenciaMidia {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String? estampa,
+    bool validarAssociacao = false,
     String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) async {

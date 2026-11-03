@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_grade_estoque.dart';
 
+import 'package:core/injecoes.dart';
+import 'package:core/arquivos.dart';
 import 'consulta_fakes.dart';
+import 'fotos_fakes.dart';
 
 Widget _app(ConsultarProdutoBloc bloc) => MaterialApp(
   initialRoute: '/',
@@ -32,6 +35,12 @@ Future<ConsultarProdutoBloc> _preparar(WidgetTester t, Size tamanho) async {
 }
 
 void main() {
+  setUp(() {
+    sl.registerFactory<ReferenciaMidiasBloc>(() => novoMidiasBloc(FakeMidiasRepo([])));
+    sl.registerLazySingleton<CompartilharService>(() => CompartilharService());
+  });
+  tearDown(() => sl.reset());
+
   testWidgets('desktop 1280: lista e detalhe lado a lado, sem navegação', (t) async {
     await _preparar(t, const Size(1280, 800));
     expect(find.text('Calça Jeans'), findsOneWidget);

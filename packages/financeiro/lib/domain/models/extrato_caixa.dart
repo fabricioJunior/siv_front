@@ -22,6 +22,7 @@ enum TipoDocumentoExtratoCaixa {
   dinheiro,
   pix,
   cartao,
+  cartaoDeDebito,
   cheque,
   fatura,
   troco,

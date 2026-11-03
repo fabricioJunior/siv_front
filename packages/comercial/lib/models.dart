@@ -15,6 +15,7 @@ export 'domain/models/documento_fiscal.dart';
 export 'domain/models/resumo_fiscal.dart';
 export 'domain/models/relatorios.dart';
 export 'domain/models/relatorio_movimentacoes.dart';
+export 'domain/models/relatorio_pedidos_contagem.dart';
 export 'domain/models/orcamento_local.dart';
 export 'domain/models/consignacao.dart';
 export 'domain/models/consignacao_item.dart';

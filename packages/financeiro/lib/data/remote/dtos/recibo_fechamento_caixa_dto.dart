@@ -257,7 +257,7 @@ class _ValorContadoReciboDto implements ValorContadoRecibo {
     final normalizado = _normalizarTexto(str);
     return TipoContagemDoCaixaItem.values.firstWhere(
       (e) => e.name == str || _normalizarTexto(e.name) == normalizado,
-      orElse: () => TipoContagemDoCaixaItem.dinheiro,
+      orElse: () => throw FormatException('Tipo de documento desconhecido: $str'),
     );
   }
 

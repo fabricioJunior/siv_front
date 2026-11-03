@@ -619,6 +619,28 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: const RelatorioMovimentacoesPage(),
     );
   },
+  '/relatorio_pedidos_contagem': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_pedidos_contagem',
+      child: RelatorioPedidosContagemPage(
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
+        tabelaPrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela do pedido',
+          compacto: data.compacto,
+        ),
+      ),
+    );
+  },
   '/relatorio_compras_clientes': (context) {
     return _rotaProtegida(
       route: '/relatorio_compras_clientes',
@@ -1780,6 +1802,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_frequencia_clientes': ['RELFC016'],
   '/relatorio_estoque': ['RELFC014'],
   '/relatorio_movimentacoes': ['RELFC015'],
+  '/relatorio_pedidos_contagem': ['RELFC017'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],
@@ -1845,6 +1868,7 @@ const Map<String, List<String>> _componentesDaRota = {
     'RELFC014',
     'RELFC015',
     'RELFC016',
+    'RELFC017',
     'ROMFP001',
     'FCXFP008',
   ],

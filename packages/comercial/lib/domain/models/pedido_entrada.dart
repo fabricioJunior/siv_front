@@ -311,8 +311,11 @@ class EntradaConferenciaItem extends Equatable {
       idReferencia: _int(j['idReferencia']) ?? 0,
       cor: j['cor'] as String? ?? '',
       tamanho: j['tamanho'] as String? ?? '',
-      estampa: j['estampaNome'] as String? ?? j['estampa'] as String? ?? '',
+      estampa: j['
+      
+      Nome'] as String? ?? j['estampa'] as String? ?? '',
       estampaId: _int(j['estampaId']),
+      estampa: j['estampa'] as String? ?? '',
       contado: contado,
       lido: lido,
       situacao: SituacaoConferencia.deValor(

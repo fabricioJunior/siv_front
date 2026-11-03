@@ -469,6 +469,10 @@ void _usesCases() {
     () => ExcluirReferenciaMidia(referenciaMidiasRepository: sl()),
   );
 
+  sl.registerFactory<ReordenarReferenciaMidias>(
+    () => ReordenarReferenciaMidias(referenciaMidiasRepository: sl()),
+  );
+
   sl.registerFactory<AtualizarReferenciaMidia>(
     () => AtualizarReferenciaMidia(referenciaMidiasRepository: sl()),
   );
@@ -596,7 +600,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ReferenciaMidiasBloc>(
-    () => ReferenciaMidiasBloc(sl(), sl(), sl(), sl(), sl()),
+    () => ReferenciaMidiasBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());

@@ -6,7 +6,13 @@ class AtualizarReferenciaMidia {
 
   AtualizarReferenciaMidia({required this.referenciaMidiasRepository});
 
-  Future<void> call(ReferenciaMidia referenciaMidia) {
-    return referenciaMidiasRepository.atualizarReferenciaMidia(referenciaMidia);
+  Future<void> call(
+    ReferenciaMidia referenciaMidia, {
+    bool validarAssociacao = false,
+  }) {
+    return referenciaMidiasRepository.atualizarReferenciaMidia(
+      referenciaMidia,
+      validarAssociacao: validarAssociacao,
+    );
   }
 }

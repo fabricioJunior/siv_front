@@ -1,6 +1,7 @@
 import 'package:core/imagens.dart';
 import 'package:flutter/material.dart';
 import 'package:produtos/models.dart';
+import 'package:produtos/presentantion/widgets/consulta/foto_associacao_form.dart';
 import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 
@@ -13,18 +14,28 @@ class ReferenciaMidiaMetadados {
 class ReferenciaMidiaMetadadosModal extends StatefulWidget {
   final List<Imagem> imagens;
 
-  const ReferenciaMidiaMetadadosModal({super.key, required this.imagens});
+  /// Quando informado (tela de consulta), cor/estampa/tamanho são obrigatórios e
+  /// as opções vêm só da grade da referência.
+  final OpcoesAssociacaoFoto? opcoes;
+
+  const ReferenciaMidiaMetadadosModal({
+    super.key,
+    required this.imagens,
+    this.opcoes,
+  });
 
   static Future<ReferenciaMidiaMetadados?> show(
     BuildContext context, {
     required List<Imagem> imagens,
+    OpcoesAssociacaoFoto? opcoes,
   }) {
     return showModalBottomSheet<ReferenciaMidiaMetadados?>(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReferenciaMidiaMetadadosModal(imagens: imagens),
+      builder: (_) =>
+          ReferenciaMidiaMetadadosModal(imagens: imagens, opcoes: opcoes),
     );
   }
 
@@ -37,11 +48,44 @@ class _ReferenciaMidiaMetadadosModalState
     extends State<ReferenciaMidiaMetadadosModal> {
   late final List<TextEditingController> _descricaoControllers;
   late final List<Imagem> _imagens;
+  bool _mostrarErros = false;
+
+  AssociacaoFoto _associacao(Imagem i) =>
+      AssociacaoFoto(cor: i.cor, estampa: i.estampa, tamanho: i.tamanho);
+
+  void _atualizarAssociacao(int index, AssociacaoFoto a) {
+    setState(() {
+      _imagens[index] = _imagens[index].copyWith(
+        cor: a.cor,
+        estampa: a.estampa,
+        tamanho: a.tamanho,
+      );
+    });
+  }
+
+  void _aplicarATodas() {
+    final a = _associacao(_imagens.first);
+    setState(() {
+      for (var i = 1; i < _imagens.length; i++) {
+        _imagens[i] = _imagens[i].copyWith(
+          cor: a.cor,
+          estampa: a.estampa,
+          tamanho: a.tamanho,
+        );
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _imagens = List<Imagem>.from(widget.imagens);
+    _imagens = [
+      for (final i in widget.imagens)
+        if (widget.opcoes == null)
+          i
+        else
+          _comAssociacao(i, widget.opcoes!.preencher(_associacao(i))),
+    ];
     _descricaoControllers = _imagens
         .map((imagem) => TextEditingController(text: imagem.descricao ?? ''))
         .toList();
@@ -75,7 +119,15 @@ class _ReferenciaMidiaMetadadosModalState
     });
   }
 
+  Imagem _comAssociacao(Imagem i, AssociacaoFoto a) =>
+      i.copyWith(cor: a.cor, estampa: a.estampa, tamanho: a.tamanho);
+
   void _confirmar() {
+    final opcoes = widget.opcoes;
+    if (opcoes != null && _imagens.any((i) => !opcoes.valida(_associacao(i)))) {
+      setState(() => _mostrarErros = true);
+      return;
+    }
     final imagensAtualizadas = <Imagem>[];
 
     for (var i = 0; i < _imagens.length; i++) {
@@ -144,6 +196,10 @@ class _ReferenciaMidiaMetadadosModalState
                           key: ValueKey(_imagens[index].path ?? index),
                           imagem: _imagens[index],
                           descricaoController: _descricaoControllers[index],
+                          opcoes: widget.opcoes,
+                          mostrarErros: _mostrarErros,
+                          onAssociacaoChanged: (a) =>
+                              _atualizarAssociacao(index, a),
                           onRemover: () => _removerImagem(index),
                           onCorChanged: (cor) =>
                               _atualizarCorImagem(index, cor),
@@ -153,6 +209,15 @@ class _ReferenciaMidiaMetadadosModalState
                       },
                     ),
             ),
+            if (widget.opcoes != null && _imagens.length > 1)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _aplicarATodas,
+                  icon: const Icon(Icons.copy_all_outlined),
+                  label: const Text('Aplicar a todas (da primeira foto)'),
+                ),
+              ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _imagens.isEmpty ? null : _confirmar,
@@ -171,6 +236,9 @@ class _ImagemPendenteCard extends StatelessWidget {
   final VoidCallback onRemover;
   final ValueChanged<String?> onCorChanged;
   final ValueChanged<String?> onTamanhoChanged;
+  final OpcoesAssociacaoFoto? opcoes;
+  final bool mostrarErros;
+  final ValueChanged<AssociacaoFoto> onAssociacaoChanged;
 
   const _ImagemPendenteCard({
     super.key,
@@ -179,6 +247,9 @@ class _ImagemPendenteCard extends StatelessWidget {
     required this.onRemover,
     required this.onCorChanged,
     required this.onTamanhoChanged,
+    required this.opcoes,
+    required this.mostrarErros,
+    required this.onAssociacaoChanged,
   });
 
   @override
@@ -233,6 +304,18 @@ class _ImagemPendenteCard extends StatelessWidget {
                     textCapitalization: TextCapitalization.sentences,
                   ),
                   const SizedBox(height: 12),
+                  if (opcoes != null)
+                    FotoAssociacaoForm(
+                      opcoes: opcoes!,
+                      valor: AssociacaoFoto(
+                        cor: imagem.cor,
+                        estampa: imagem.estampa,
+                        tamanho: imagem.tamanho,
+                      ),
+                      mostrarErros: mostrarErros,
+                      onChanged: onAssociacaoChanged,
+                    )
+                  else ...[
                   CorSeletor(
                     modo: CorSeletorModo.unica,
                     titulo: 'Cor (opcional)',
@@ -254,6 +337,7 @@ class _ImagemPendenteCard extends StatelessWidget {
                       onTamanhoChanged(tamanhos.firstOrNull?.nome);
                     },
                   ),
+                  ],
                 ],
               ),
             ),

@@ -15,12 +15,19 @@ abstract class IReferenciaMidiasRemoteDataSource {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String? estampa,
+    bool validarAssociacao = false,
     String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   });
   Future<ReferenciaMidia> atualizarReferenciaMidia(
-    ReferenciaMidia referenciaMidia,
-  );
+    ReferenciaMidia referenciaMidia, {
+    bool validarAssociacao = false,
+  });
+  Future<void> reordenarReferenciaMidias({
+    required int referenciaId,
+    required List<int> ids,
+  });
   Future<void> excluirReferenciaMidia({
     required int referenciaId,
     required int id,

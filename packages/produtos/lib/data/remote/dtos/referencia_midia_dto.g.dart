@@ -16,6 +16,7 @@ ReferenciaMidiaDto _$ReferenciaMidiaDtoFromJson(Map<String, dynamic> json) =>
       descricao: json['description'] as String?,
       tamanho: json['tamanho'] as String?,
       cor: json['cor'] as String?,
+      estampa: json['estampa'] as String?,
       origem: json['origem'] as String? ?? 'site',
     );
 
@@ -28,4 +29,5 @@ Map<String, dynamic> _$ReferenciaMidiaDtoToJson(ReferenciaMidiaDto instance) =>
       'description': instance.descricao,
       'cor': instance.cor,
       'tamanho': instance.tamanho,
+      'estampa': instance.estampa,
     };

@@ -14,8 +14,9 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
 
   @override
   Future<ReferenciaMidia> atualizarReferenciaMidia(
-    ReferenciaMidia referenciaMidia,
-  ) async {
+    ReferenciaMidia referenciaMidia, {
+    bool validarAssociacao = false,
+  }) async {
     var pathParameters = {
       'referenciaId': referenciaMidia.referenciaId.toString(),
       'id': referenciaMidia.id.toString(),
@@ -26,6 +27,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'description': referenciaMidia.descricao,
       'cor': referenciaMidia.cor,
       'tamanho': referenciaMidia.tamanho,
+      'estampa': referenciaMidia.estampa,
+      if (validarAssociacao) 'validarAssociacao': true,
     };
     var response = await put(pathParameters: pathParameters, body: body);
 
@@ -44,6 +47,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String? estampa,
+    bool validarAssociacao = false,
     String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) async {
@@ -55,6 +60,8 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
       'description': descricao,
       'cor': cor,
       'tamanho': tamanho,
+      if (estampa != null) 'estampa': estampa,
+      if (validarAssociacao) 'validarAssociacao': true,
       if (origem != 'site') 'origem': origem,
     };
     var response = await postFile(
@@ -68,6 +75,17 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
     );
 
     return ReferenciaMidiaDto.fromJson(response.body);
+  }
+
+  @override
+  Future<void> reordenarReferenciaMidias({
+    required int referenciaId,
+    required List<int> ids,
+  }) async {
+    await put(
+      pathParameters: {'referenciaId': '$referenciaId', 'id': 'ordem'},
+      body: {'ids': ids},
+    );
   }
 
   @override

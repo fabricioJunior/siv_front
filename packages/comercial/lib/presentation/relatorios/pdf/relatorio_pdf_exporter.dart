@@ -1,4 +1,5 @@
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/relatorio_pedidos_contagem.dart';
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/domain/models/resumo_fiscal.dart';
 import 'package:core/pdf.dart' show PdfPageFormat, PdfColor, PdfColors, PdfService;
@@ -535,6 +536,93 @@ class RelatorioPdfExporter {
     await PdfService.compartilhar(
       await doc.save(),
       'relatorio_fiscal_${dataInicial}_${dataFinal}.pdf',
+    );
+  }
+
+  static Future<void> exportarPedidosContagem(
+    List<PedidoContagemLinha> linhas,
+    ResumoPedidosContagem resumo,
+    String periodo,
+  ) async {
+    final doc = pw.Document();
+    String d(DateTime? v) =>
+        v == null ? '-' : _fmtData(v.toIso8601String().substring(0, 10));
+    String q(num v) =>
+        v == v.roundToDouble() ? '${v.toInt()}' : v.toStringAsFixed(2);
+    pw.Widget cel(String t, {bool negrito = false}) => pw.Padding(
+      padding: const pw.EdgeInsets.all(4),
+      child: pw.Text(
+        t,
+        style: pw.TextStyle(
+          fontSize: 8,
+          fontWeight: negrito ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
+    );
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4.landscape,
+        build: (ctx) => [
+          _cabecalho('Relatório — Pedidos por contagem', periodo, _indigo),
+          pw.SizedBox(height: 12),
+          _kpiRow([
+            ('Custo', _fmtMoeda(resumo.custo)),
+            ('Pedidos', '${resumo.pedidos}'),
+            ('Peças contadas', q(resumo.pecas)),
+            ('Peças sem custo', q(resumo.pecasSemCusto)),
+          ]),
+          pw.SizedBox(height: 12),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(1),
+              1: const pw.FlexColumnWidth(4),
+              2: const pw.FlexColumnWidth(2),
+              3: const pw.FlexColumnWidth(2),
+              4: const pw.FlexColumnWidth(2),
+              5: const pw.FlexColumnWidth(1),
+              6: const pw.FlexColumnWidth(2),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                children: [
+                  for (final h in [
+                    'Pedido',
+                    'Fornecedor · Responsável',
+                    'Aberto em',
+                    'Faturado em',
+                    'Status',
+                    'Peças',
+                    'Custo',
+                  ])
+                    cel(h, negrito: true),
+                ],
+              ),
+              for (final l in linhas)
+                pw.TableRow(
+                  children: [
+                    cel('#${l.pedidoId}'),
+                    cel(
+                      l.funcionario == null
+                          ? l.fornecedor
+                          : '${l.fornecedor} · ${l.funcionario}',
+                    ),
+                    cel(d(l.abertoEm)),
+                    cel(d(l.faturadoEm)),
+                    cel(l.etapa),
+                    cel(q(l.pecas)),
+                    cel(_fmtMoeda(l.custo)),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+    await PdfService.compartilhar(
+      await doc.save(),
+      'pedidos_por_contagem.pdf',
     );
   }
 }

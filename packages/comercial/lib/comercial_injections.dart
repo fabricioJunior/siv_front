@@ -44,6 +44,10 @@ void _remoteDataSources() {
     () => PedidoEntradaRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IRelatorioPedidosContagemRemoteDataSource>(
+    () => RelatorioPedidosContagemRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IPedidoItemRemoteDataSource>(
     () => PedidoItemRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -845,6 +849,25 @@ void _presentation() {
   sl.registerFactory<ObterPedidoEntrada>(() => ObterPedidoEntrada(sl()));
   sl.registerFactory<ObterContagensEmAndamento>(
     () => ObterContagensEmAndamento(sl()),
+  );
+  sl.registerFactory<ObterRelatorioPedidosContagem>(
+    () => ObterRelatorioPedidosContagem(sl()),
+  );
+  sl.registerFactory<ObterItensPedidoContagem>(
+    () => ObterItensPedidoContagem(sl()),
+  );
+  // Singleton: guarda as categorias já carregadas.
+  sl.registerLazySingleton<ListarCategoriasFiltroContagem>(
+    () => ListarCategoriasFiltroContagem(sl()),
+  );
+  sl.registerFactory<BuscarReferenciasFiltroContagem>(
+    () => BuscarReferenciasFiltroContagem(sl()),
+  );
+  sl.registerFactory<ListarProdutosFiltroContagem>(
+    () => ListarProdutosFiltroContagem(sl()),
+  );
+  sl.registerFactory<RelatorioPedidosContagemCubit>(
+    () => RelatorioPedidosContagemCubit(sl(), sl(), sl(), sl(), sl()),
   );
   sl.registerFactory<ObterEsperadasEntrada>(() => ObterEsperadasEntrada(sl()));
   sl.registerFactory<VincularLinhaEntrada>(() => VincularLinhaEntrada(sl()));

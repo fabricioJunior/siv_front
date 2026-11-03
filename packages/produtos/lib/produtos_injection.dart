@@ -31,7 +31,9 @@ import 'package:produtos/domain/data/remote/i_grade_da_referencia_remote_data_so
 import 'package:produtos/data/remote/importacao_produto_remote_data_source.dart';
 import 'package:produtos/data/repositorios/importacao_produto_repository.dart';
 import 'package:produtos/domain/data/remote/i_importacao_produto_remote_data_source.dart';
-import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
+import 'package:produtos/data/remote/consulta_referencias_remote_datasource.dart';
+import 'package:produtos/data/repositorios/consulta_referencias_repository.dart';
+import 'package:produtos/domain/data/remote/i_consulta_referencias_remote_data_source.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/estampas_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
@@ -140,6 +142,10 @@ void _data() {
     () => GradeDaReferenciaRemoteDatasource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IConsultaReferenciasRemoteDataSource>(
+    () => ConsultaReferenciasRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IImportacaoProdutoRemoteDataSource>(
     () => ImportacaoProdutoRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -148,6 +154,10 @@ void _data() {
 void _repositores() {
   sl.registerFactory<ITamanhosRepository>(
     () => TamanhosRepository(tamanhosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IConsultaReferenciasRepository>(
+    () => ConsultaReferenciasRepository(dataSource: sl()),
   );
 
   sl.registerFactory<IEstampasRepository>(
@@ -243,6 +253,10 @@ void _usesCases() {
 
   sl.registerFactory<AtualizarTamanho>(
     () => AtualizarTamanho(tamanhosRepository: sl()),
+  );
+
+  sl.registerFactory<ConsultarReferencias>(
+    () => ConsultarReferencias(repository: sl()),
   );
 
   // Estampas Use Cases
@@ -599,9 +613,10 @@ void _presentantion() {
     () => CodigosDeBarrasDaReferenciaBloc(sl(), sl()),
   );
 
-  sl.registerFactory<ConsultarProdutoBloc>(
+  // Singleton: provido acima das rotas de lista e detalhe; a lista o reinicia ao sair.
+  sl.registerLazySingleton<ConsultarProdutoBloc>(
     () => ConsultarProdutoBloc(
-      leitorDataDatasource: sl<ILeitorDataDatasource>(),
+      consultarReferencias: sl(),
       recuperarGradeDaReferencia: sl(),
     ),
   );

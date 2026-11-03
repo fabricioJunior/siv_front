@@ -1240,14 +1240,26 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consultar_produto': (context) {
     return _rotaProtegida(
       route: '/consultar_produto',
-      child: ConsultarProdutoPage(
-        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
-          modo: TabelasDePrecoSeletorModo.unica,
-          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-          onChanged: data.onChanged,
-          onlyView: data.onlyView,
-          titulo: 'Tabela de preço',
+      child: BlocProvider<ConsultarProdutoBloc>.value(
+        value: sl<ConsultarProdutoBloc>(),
+        child: ConsultarProdutoPage(
+          tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Tabela de preço',
+          ),
         ),
+      ),
+    );
+  },
+  rotaDetalheConsultarProduto: (context) {
+    return _rotaProtegida(
+      route: rotaDetalheConsultarProduto,
+      child: BlocProvider<ConsultarProdutoBloc>.value(
+        value: sl<ConsultarProdutoBloc>(),
+        child: const ConsultarProdutoDetalhePage(),
       ),
     );
   },
@@ -1823,6 +1835,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
   '/consultar_produto': ['PRDFL002'],
+  rotaDetalheConsultarProduto: ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
   '/criar_balanco': ['PRDFL001'],

@@ -20,3 +20,4 @@ export 'domain/models/produto_da_grade.dart';
 export 'domain/models/grade_da_referencia.dart';
 export 'domain/models/exclusao_produtos_em_lote_resultado.dart';
 export 'domain/models/importacao_produto.dart';
+export 'domain/models/consulta_referencias.dart';

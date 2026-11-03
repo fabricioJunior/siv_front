@@ -215,6 +215,7 @@ class EmpresaParametrosPage extends StatelessWidget {
       'Faturamento',
       'Integração Infinity Pay',
       'Integração OpenPix',
+      'E-commerce',
       'Observações Padrão',
       'Prazos',
       'Fidelidade',
@@ -247,6 +248,10 @@ class EmpresaParametrosPage extends StatelessWidget {
 
     if (chave.startsWith('INTEGRACAO_INFINITY_PAY_')) {
       return 'Integração Infinity Pay';
+    }
+
+    if (chave == 'RESERVA_ESTOQUE_TTL_MINUTOS') {
+      return 'E-commerce';
     }
 
     if (chave.startsWith('INTEGRACAO_OPEN_PIX_')) {

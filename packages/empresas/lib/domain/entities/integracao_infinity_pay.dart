@@ -6,7 +6,6 @@ enum CampoInfinityPay {
   handle('INTEGRACAO_INFINITY_PAY_API_HANDLE'),
   urlWebhook('INTEGRACAO_INFINITY_PAY_URL_WEBHOOK'),
   urlRedirect('INTEGRACAO_INFINITY_PAY_URL_REDIRECT'),
-  reservaMinutos('RESERVA_ESTOQUE_TTL_MINUTOS'),
   emailEstorno('EMAIL_FINANCEIRO_ESTORNO'),
   apiKey('INTEGRACAO_INFINITY_PAY_API_KEY'),
   parcelasSemJuros('INTEGRACAO_INFINITY_PAY_PARCELAS_SEM_JUROS'),
@@ -16,14 +15,11 @@ enum CampoInfinityPay {
   const CampoInfinityPay(this.chave);
 }
 
-const _reservaPadrao = 5;
-
 class IntegracaoInfinityPay extends Equatable {
   final bool habilitada;
   final String handle;
   final String urlWebhook;
   final String urlRedirect;
-  final int? reservaMinutos;
   final String emailEstorno;
 
   /// Mascarada quando vem do servidor (ex. `inchk_••••ab12`).
@@ -41,7 +37,6 @@ class IntegracaoInfinityPay extends Equatable {
     this.handle = '',
     this.urlWebhook = '',
     this.urlRedirect = '',
-    this.reservaMinutos = _reservaPadrao,
     this.emailEstorno = '',
     this.apiKey = '',
     this.parcelasSemJuros,
@@ -71,9 +66,6 @@ class IntegracaoInfinityPay extends Equatable {
       handle: texto(CampoInfinityPay.handle.chave),
       urlWebhook: texto(CampoInfinityPay.urlWebhook.chave),
       urlRedirect: texto(CampoInfinityPay.urlRedirect.chave),
-      reservaMinutos:
-          int.tryParse(texto(CampoInfinityPay.reservaMinutos.chave)) ??
-          _reservaPadrao,
       emailEstorno: texto(CampoInfinityPay.emailEstorno.chave),
       apiKey: texto(CampoInfinityPay.apiKey.chave),
       parcelasSemJuros: int.tryParse(
@@ -96,7 +88,6 @@ class IntegracaoInfinityPay extends Equatable {
     CampoInfinityPay.handle => handle,
     CampoInfinityPay.urlWebhook => urlWebhook,
     CampoInfinityPay.urlRedirect => urlRedirect,
-    CampoInfinityPay.reservaMinutos => '${reservaMinutos ?? ''}',
     CampoInfinityPay.emailEstorno => emailEstorno,
     CampoInfinityPay.apiKey => apiKey,
     CampoInfinityPay.parcelasSemJuros => '${parcelasSemJuros ?? ''}',
@@ -115,7 +106,6 @@ class IntegracaoInfinityPay extends Equatable {
       ),
       CampoInfinityPay.urlWebhook => _copia(urlWebhook: valor.trim()),
       CampoInfinityPay.urlRedirect => _copia(urlRedirect: valor.trim()),
-      CampoInfinityPay.reservaMinutos => _copia(reservaMinutos: () => n),
       CampoInfinityPay.emailEstorno => _copia(emailEstorno: valor.trim()),
       CampoInfinityPay.apiKey => _copia(apiKey: valor.trim()),
       CampoInfinityPay.parcelasSemJuros => _copia(parcelasSemJuros: () => n),
@@ -128,7 +118,6 @@ class IntegracaoInfinityPay extends Equatable {
     String? handle,
     String? urlWebhook,
     String? urlRedirect,
-    int? Function()? reservaMinutos,
     String? emailEstorno,
     String? apiKey,
     int? Function()? parcelasSemJuros,
@@ -138,9 +127,6 @@ class IntegracaoInfinityPay extends Equatable {
     handle: handle ?? this.handle,
     urlWebhook: urlWebhook ?? this.urlWebhook,
     urlRedirect: urlRedirect ?? this.urlRedirect,
-    reservaMinutos: reservaMinutos != null
-        ? reservaMinutos()
-        : this.reservaMinutos,
     emailEstorno: emailEstorno ?? this.emailEstorno,
     apiKey: apiKey ?? this.apiKey,
     parcelasSemJuros: parcelasSemJuros != null
@@ -160,7 +146,6 @@ class IntegracaoInfinityPay extends Equatable {
     handle,
     urlWebhook,
     urlRedirect,
-    reservaMinutos,
     emailEstorno,
     apiKey,
     parcelasSemJuros,

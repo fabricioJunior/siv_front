@@ -15,29 +15,22 @@ void main() {
       'INTEGRACAO_INFINITY_PAY_API_HANDLE': 'vale',
       'INTEGRACAO_INFINITY_PAY_PIX_HABILITADO': 'N',
       'INTEGRACAO_INFINITY_PAY_PARCELAS_SEM_JUROS': '3',
-      'RESERVA_ESTOQUE_TTL_MINUTOS': '30',
     });
     expect(c.habilitada, isTrue);
     expect(c.handle, 'vale');
     expect(c.pixHabilitado, isFalse);
     expect(c.parcelasSemJuros, 3);
-    expect(c.reservaMinutos, 30);
     expect(c.urlSiteEmpresa, 'https://loja.com.br');
     expect(c.mercadoPagoHabilitado, isTrue);
     expect(c.openPixHabilitado, isFalse);
   });
 
-  test('valor ausente: Pix padrão S, resto vazio, TTL 5', () {
+  test('valor ausente: Pix padrão S, resto vazio', () {
     final c = IntegracaoInfinityPay.fromParametros(const []);
     expect(c.habilitada, isFalse);
     expect(c.pixHabilitado, isTrue);
     expect(c.handle, '');
     expect(c.parcelasSemJuros, isNull);
-    expect(c.reservaMinutos, 5);
-  });
-
-  test('TTL inválido cai no padrão', () {
-    expect(_de({'RESERVA_ESTOQUE_TTL_MINUTOS': 'abc'}).reservaMinutos, 5);
   });
 
   test('toParametros é o inverso de fromParametros', () {
@@ -49,7 +42,6 @@ void main() {
     for (final campo in CampoInfinityPay.values) {
       expect(p[campo.chave], base[campo.chave], reason: campo.chave);
     }
-    expect(p['RESERVA_ESTOQUE_TTL_MINUTOS'], '5');
   });
 
   test('comValor normaliza handle', () {

@@ -68,15 +68,8 @@ void main() {
     expect(b.state.erros[CampoInfinityPay.urlWebhook], isNull);
   });
 
-  test('reserva e parcelas fora da faixa', () async {
+  test('parcelas fora da faixa', () async {
     final (b, _) = await _bloc();
-    await _alterar(b, CampoInfinityPay.reservaMinutos, '121');
-    expect(
-      b.state.erros[CampoInfinityPay.reservaMinutos],
-      'Entre 1 e 120 minutos.',
-    );
-    await _alterar(b, CampoInfinityPay.reservaMinutos, '');
-    expect(b.state.erros[CampoInfinityPay.reservaMinutos], isNotNull);
     await _alterar(b, CampoInfinityPay.parcelasSemJuros, '13');
     expect(b.state.erros[CampoInfinityPay.parcelasSemJuros], 'Entre 0 e 12.');
     await _alterar(b, CampoInfinityPay.parcelasSemJuros, '');
@@ -112,12 +105,12 @@ void main() {
     final (b, _) = await _bloc();
     expect(b.state.sujos, isEmpty);
     await _alterar(b, CampoInfinityPay.emailEstorno, 'a@b.com');
-    await _alterar(b, CampoInfinityPay.reservaMinutos, '9');
+    await _alterar(b, CampoInfinityPay.parcelasSemJuros, '9');
     expect(b.state.sujos, {
       CampoInfinityPay.emailEstorno,
-      CampoInfinityPay.reservaMinutos,
+      CampoInfinityPay.parcelasSemJuros,
     });
-    await _alterar(b, CampoInfinityPay.reservaMinutos, '5');
+    await _alterar(b, CampoInfinityPay.parcelasSemJuros, '');
     expect(b.state.sujos, {CampoInfinityPay.emailEstorno});
     b.add(IntegracaoInfinityPayDescartou());
     await Future<void>.delayed(Duration.zero);

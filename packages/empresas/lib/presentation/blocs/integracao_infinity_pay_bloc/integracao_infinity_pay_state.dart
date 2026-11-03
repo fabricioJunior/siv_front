@@ -65,10 +65,6 @@ class IntegracaoInfinityPayState extends Equatable {
         m[c] = 'Use um endereço completo começando com https://';
       }
     }
-    final r = e.reservaMinutos;
-    if (r == null || r < 1 || r > 120) {
-      m[CampoInfinityPay.reservaMinutos] = 'Entre 1 e 120 minutos.';
-    }
     if (e.emailEstorno.isNotEmpty && !_reEmail.hasMatch(e.emailEstorno)) {
       m[CampoInfinityPay.emailEstorno] = 'Informe um e-mail válido.';
     }

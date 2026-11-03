@@ -258,7 +258,6 @@ class _IntegracaoInfinityPayFormState extends State<IntegracaoInfinityPayForm> {
     CampoInfinityPay.handle,
     CampoInfinityPay.urlWebhook,
     CampoInfinityPay.urlRedirect,
-    CampoInfinityPay.reservaMinutos,
     CampoInfinityPay.emailEstorno,
     CampoInfinityPay.apiKey,
     CampoInfinityPay.parcelasSemJuros,
@@ -436,7 +435,6 @@ class _IntegracaoInfinityPayFormState extends State<IntegracaoInfinityPayForm> {
         );
 
         final webhook = e.urlWebhook;
-        final reserva = e.reservaMinutos ?? 0;
         final semChave = !s.apiKeyPresente;
         final chaveRemovida = e.apiKey.isEmpty && s.salvo.apiKey.isNotEmpty;
 
@@ -576,49 +574,6 @@ class _IntegracaoInfinityPayFormState extends State<IntegracaoInfinityPayForm> {
             SizedBox(height: espaco),
             secao('CHECKOUT DO E-COMMERCE'),
             const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                IconButton(
-                  key: const Key('reserva_menos'),
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
-                  ),
-                  icon: const Icon(Icons.remove),
-                  onPressed: reserva > 1
-                      ? () => _alterou(
-                          CampoInfinityPay.reservaMinutos,
-                          '${reserva - 1}',
-                        )
-                      : null,
-                ),
-                Expanded(
-                  child: campo(
-                    CampoInfinityPay.reservaMinutos,
-                    'Reserva de estoque (minutos)',
-                    numerico: true,
-                    ajuda:
-                        'Tempo que a peça fica separada enquanto o cliente paga.',
-                  ),
-                ),
-                IconButton(
-                  key: const Key('reserva_mais'),
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
-                  ),
-                  icon: const Icon(Icons.add),
-                  onPressed: reserva < 120
-                      ? () => _alterou(
-                          CampoInfinityPay.reservaMinutos,
-                          '${reserva + 1}',
-                        )
-                      : null,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             campo(
               CampoInfinityPay.emailEstorno,
               'E-mail do financeiro para estornos',

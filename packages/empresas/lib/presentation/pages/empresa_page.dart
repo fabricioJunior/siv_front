@@ -22,7 +22,8 @@ enum _SecaoEmpresa {
   configFiscal('Config. fiscal', Icons.receipt_long_outlined),
   configEntrega('Config. entrega', Icons.local_shipping_outlined),
   configFrete('Config. frete', Icons.route_outlined),
-  integracaoMeta('Integração Meta', Icons.campaign_outlined);
+  integracaoMeta('Integração Meta', Icons.campaign_outlined),
+  integracoesPagamento('Integrações de pagamento', Icons.payments_outlined);
 
   final String label;
   final IconData icone;
@@ -445,6 +446,14 @@ class _EmpresaPageState extends State<EmpresaPage> {
           titulo: 'Integração Meta',
           descricao: 'Catálogo, Pixel e API de Conversões da Meta.',
           rota: '/integracao_meta_empresa',
+          empresa: empresa,
+        );
+      case _SecaoEmpresa.integracoesPagamento:
+        return _cardAtalho(
+          context,
+          titulo: 'Integrações de pagamento',
+          descricao: 'InfinityPay, Mercado Pago e OpenPix.',
+          rota: '/integracoes_pagamento_empresa',
           empresa: empresa,
         );
     }

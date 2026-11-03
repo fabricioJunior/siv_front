@@ -1546,6 +1546,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: IntegracaoMetaPage(idEmpresa: args(context)['empresaId']),
     );
   },
+  '/integracoes_pagamento_empresa': (context) {
+    return _rotaProtegida(
+      route: '/integracoes_pagamento_empresa',
+      child: IntegracoesPagamentoPage(idEmpresa: args(context)['empresaId']),
+    );
+  },
   // Impressoras:
   '/etiqueta_preview_page': (context) {
     final argumentos = args(context);
@@ -1797,6 +1803,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/configuracao_entrega': ['ENTFM001'],
   '/configuracao_frete': ['ENTFM002'],
   '/integracao_meta_empresa': ['MCTFM006'],
+  '/integracoes_pagamento_empresa': ['ADMFM009'],
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],

@@ -1,4 +1,5 @@
 import 'package:comercial/presentation/blocs/pagamentos_realizados_bloc/pagamentos_realizados_bloc.dart';
+import 'package:comercial/presentation/pagamento/indicador_promocao.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
 import 'package:comercial/presentation/pagamento/pagamento_resumo.dart';
 import 'package:core/bloc.dart';
@@ -44,7 +45,7 @@ class PagamentoEtapa extends StatefulWidget {
           .map((e) => {'produtoId': e.key, 'valor': e.value})
           .toList(),
       'descontosPromocao': r.promocoes
-          ? state.promocaoEscolhidaPorItem.entries
+          ? state.promocaoAtivaPorItem.entries
               .where((e) => !e.value.ehCupom)
               .map((e) => {'produtoId': e.key, 'promocaoId': e.value.id})
               .toList()
@@ -345,7 +346,6 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
   Widget _recebimento(PagamentosRealizadosState state,
       {bool compacto = false}) {
     final textos = context.sivTextos;
-    final restricao = state.formasPagamentoPermitidasIds;
     final ativa = _ativa(state);
     final saldo = _c.recursos.creditoCliente &&
             state.pessoaId != null &&
@@ -383,20 +383,12 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
         ],
         _Faixa(state: state, contexto: _c, compacto: compacto),
         const SizedBox(height: 16),
-        if (restricao != null) ...[
-          SivAvisoAtencao(
-            restricao.isEmpty
-                ? 'As promoções aplicadas não têm forma de pagamento em comum.'
-                : 'Promoção aplicada restringe as formas de pagamento aceitas.',
-          ),
-          const SizedBox(height: 8),
-        ],
+        IndicadorPromocao(state: state),
         SivCard(
           child: widget.formaPagamentoGrade(
             FormaPagamentoGradeData(
               selecionada: ativa.formaDePagamento,
               tipoOperacao: _tipoOperacao,
-              idsPermitidos: restricao,
               saldoCliente: saldo,
               foco: _focoGrade,
               onEscolhida: (forma) => _escolherForma(state, forma),

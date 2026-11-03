@@ -18,7 +18,9 @@ import 'package:importacao/importacao_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
 
-import 'package:comercial/data.dart' show IVariacoesProdutoGateway;
+import 'package:comercial/data.dart'
+    show IFiltrosPedidosContagemGateway, IVariacoesProdutoGateway;
+import 'package:siv_front/data/gateways/filtros_pedidos_contagem_gateway.dart';
 import 'package:siv_front/data/gateways/variacoes_produto_gateway.dart';
 
 import 'package:comunicados/comunicados_injections.dart';
@@ -69,6 +71,7 @@ Future<void> resolverDependenciasApp() async {
   resolverComercialInjections();
   sl.registerLazySingleton<IVariacoesProdutoGateway>(
     () => VariacoesProdutoGateway(),
+  );
   sl.registerLazySingleton<IFiltrosPedidosContagemGateway>(
     () => FiltrosPedidosContagemGateway(),
   );

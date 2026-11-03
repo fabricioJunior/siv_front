@@ -5,6 +5,7 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:core/versao.dart';
 import 'package:estoque/presentation.dart' show estoqueAcordeaoItens;
 import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
@@ -723,6 +724,7 @@ class _BarraTituloInfo extends StatelessWidget {
                           ),
                         ),
                 ),
+                const _VersaoDoApp(),
               ],
             ),
           );
@@ -907,9 +909,12 @@ class _StatusCaixaCompacto extends StatelessWidget {
     final status = caixaAberto
         ? 'Caixa #${appState.caixaIdDaSessao} aberto'
         : 'Caixa fechado';
+    // Dispara a leitura da versão (cacheada); no rail ela só aparece no tooltip.
+    _VersaoApp.futuro;
+    final versao = _VersaoApp.atual ?? '';
 
     return Tooltip(
-      message: [empresa, ?terminal, status].join(' · '),
+      message: [empresa, ?terminal, status, if (versao.isNotEmpty) versao].join(' · '),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Center(
@@ -925,6 +930,54 @@ class _StatusCaixaCompacto extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Versão do app lida uma vez (package_info_plus, via AppVersaoService) e reaproveitada.
+class _VersaoApp {
+  static String? atual;
+  static final Future<String> futuro = _carregar();
+
+  static Future<String> _carregar() async {
+    try {
+      atual = await sl<AppVersaoService>().rotulo();
+    } catch (_) {
+      atual = '';
+    }
+    return atual!;
+  }
+}
+
+/// Versão do app, discreta, logo abaixo do status do caixa (menu expandido).
+class _VersaoDoApp extends StatelessWidget {
+  const _VersaoDoApp();
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return FutureBuilder<String>(
+      future: _VersaoApp.futuro,
+      builder: (context, snapshot) {
+        final versao = snapshot.data ?? '';
+        if (versao.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          key: const Key('app_shell_versao'),
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              versao,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.sivTextos.apoio.copyWith(
+                fontSize: 11,
+                color: cores.textoSobreEscuroTerciario,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

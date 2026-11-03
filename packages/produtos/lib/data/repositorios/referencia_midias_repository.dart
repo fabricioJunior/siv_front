@@ -10,10 +10,23 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
   ReferenciaMidiasRepository({required this.referenciaMidiasRemoteDataSource});
   @override
   Future<ReferenciaMidia> atualizarReferenciaMidia(
-    ReferenciaMidia referenciaMidia,
-  ) {
+    ReferenciaMidia referenciaMidia, {
+    bool validarAssociacao = false,
+  }) {
     return referenciaMidiasRemoteDataSource.atualizarReferenciaMidia(
       referenciaMidia,
+      validarAssociacao: validarAssociacao,
+    );
+  }
+
+  @override
+  Future<void> reordenarReferenciaMidias({
+    required int referenciaId,
+    required List<int> ids,
+  }) {
+    return referenciaMidiasRemoteDataSource.reordenarReferenciaMidias(
+      referenciaId: referenciaId,
+      ids: ids,
     );
   }
 
@@ -29,6 +42,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
     required String? descricao,
     required String? cor,
     required String? tamanho,
+    String? estampa,
+    bool validarAssociacao = false,
     String origem = 'site',
     void Function(int sent, int total)? onSendProgress,
   }) {
@@ -43,6 +58,8 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
       descricao: descricao,
       cor: cor,
       tamanho: tamanho,
+      estampa: estampa,
+      validarAssociacao: validarAssociacao,
       origem: origem,
       onSendProgress: onSendProgress,
     );

@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   isar_community_flutter_libs
   printing
   sentry_flutter
+  share_plus
   url_launcher_windows
 )
 

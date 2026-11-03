@@ -5,6 +5,7 @@ import 'package:core/bloc.dart';
 import 'package:core/imagens.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/modals/referencia_midia_metadados_modal.dart';
+import 'package:produtos/presentantion/widgets/consulta/consulta_fotos.dart';
 import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 import '../bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
@@ -33,14 +34,28 @@ class ReferenciaMidiasWidget extends StatelessWidget {
   final int referenciaId;
   final bool permiteEditar;
 
+  /// Quando informada (tela de consulta), usa a grade de fotos com cor/estampa/tamanho
+  /// obrigatórios, reordenação e compartilhamento. Sem ela, mantém o carrossel do cadastro.
+  final List<ProdutoDaGrade>? grade;
+  final String? nomeReferencia;
+
   const ReferenciaMidiasWidget({
     super.key,
     required this.referenciaId,
     this.permiteEditar = false,
+    this.grade,
+    this.nomeReferencia,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (grade != null) {
+      return ConsultaFotos(
+        referenciaId: referenciaId,
+        nomeReferencia: nomeReferencia ?? '',
+        produtos: grade!,
+      );
+    }
     return BlocProvider(
       create: (context) =>
           sl<ReferenciaMidiasBloc>()..add(ReferenciasIniciou(referenciaId)),

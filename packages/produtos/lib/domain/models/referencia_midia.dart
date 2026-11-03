@@ -7,6 +7,7 @@ abstract class ReferenciaMidia {
   String? get descricao;
   String? get tamanho;
   String? get cor;
+  String? get estampa;
 
   /// 'site' (vitrine/e-commerce) ou 'fornecedor' (uso interno: nunca pública nem capa).
   String get origem;
@@ -20,6 +21,7 @@ abstract class ReferenciaMidia {
     String? descricao,
     String? tamanho,
     String? cor,
+    String? estampa,
     String origem,
   }) = _ReferenciaMidiaImpl;
 }
@@ -43,6 +45,8 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
   @override
   final String? cor;
   @override
+  final String? estampa;
+  @override
   final String origem;
 
   _ReferenciaMidiaImpl({
@@ -54,6 +58,7 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
     this.descricao,
     this.tamanho,
     this.cor,
+    this.estampa,
     this.origem = 'site',
   });
 }

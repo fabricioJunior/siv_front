@@ -7,6 +7,7 @@ class Imagem {
   final String? descricao;
   final String? cor;
   final String? tamanho;
+  final String? estampa;
   final Uint8List? bytes;
 
   Imagem({
@@ -16,6 +17,7 @@ class Imagem {
     this.descricao,
     this.cor,
     this.tamanho,
+    this.estampa,
     this.bytes,
   });
 
@@ -26,6 +28,7 @@ class Imagem {
     String? descricao,
     String? cor,
     String? tamanho,
+    String? estampa,
     Uint8List? bytes,
   }) {
     return Imagem(
@@ -35,6 +38,7 @@ class Imagem {
       descricao: descricao ?? this.descricao,
       cor: cor ?? this.cor,
       tamanho: tamanho ?? this.tamanho,
+      estampa: estampa ?? this.estampa,
       bytes: bytes ?? this.bytes,
     );
   }

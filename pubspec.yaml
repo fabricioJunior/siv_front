@@ -117,5 +117,5 @@ msix_config:
 sentry:
   upload_debug_symbols: true
   upload_source_maps: true
-  project: flutter
+  project: siv_front
   org: vale-do-ceara

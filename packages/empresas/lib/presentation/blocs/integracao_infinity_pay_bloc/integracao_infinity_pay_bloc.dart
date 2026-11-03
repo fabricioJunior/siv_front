@@ -73,7 +73,11 @@ class IntegracaoInfinityPayBloc
       ),
     );
     try {
-      _parametros = await recuperarParametros.call(event.empresaId);
+      // A API devolve List<EmpresaParametroDto> em execução; copiar para
+      // List<EmpresaParametro> evita o erro de tipo no orElse de _paraEnviar.
+      _parametros = List<EmpresaParametro>.of(
+        await recuperarParametros.call(event.empresaId),
+      );
       final c = IntegracaoInfinityPay.fromParametros(_parametros);
       emit(
         state.copyWith(etapa: EtapaInfinityPay.pronto, salvo: c, editando: c),
@@ -159,7 +163,7 @@ class IntegracaoInfinityPayBloc
       }
     }
 
-    if (ultima != null) _parametros = ultima;
+    if (ultima != null) _parametros = List<EmpresaParametro>.of(ultima);
     final novoSalvo = ultima == null
         ? state.salvo
         : IntegracaoInfinityPay.fromParametros(ultima);

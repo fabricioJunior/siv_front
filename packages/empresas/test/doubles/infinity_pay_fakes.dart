@@ -1,3 +1,4 @@
+import 'package:empresas/data/remote_data_sourcers/dtos/empresa_parametro_dto.dart';
 import 'package:empresas/domain/entities/empresa_parametro.dart';
 import 'package:empresas/use_cases.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,15 @@ class FakeRecuperarParametros extends Fake
 
   @override
   Future<List<EmpresaParametro>> call(int empresaId) async => servidor.lista();
+}
+
+/// Como a API real: devolve uma List<EmpresaParametroDto> (tipo de execução),
+/// sem os parâmetros que ainda não foram criados para a empresa.
+class FakeRecuperarParametrosDto extends Fake
+    implements RecuperarParametrosEmpresa {
+  @override
+  Future<List<EmpresaParametro>> call(int empresaId) async =>
+      <EmpresaParametroDto>[];
 }
 
 class FakeAtualizarParametros extends Fake

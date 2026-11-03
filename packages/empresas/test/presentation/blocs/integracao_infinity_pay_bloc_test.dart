@@ -137,6 +137,25 @@ void main() {
     expect(b.state.sujos, isEmpty);
   });
 
+  test('salva parâmetro que ainda não existe (lista real de DTO da API)', () async {
+    final srv = ServidorParametros({});
+    final b = IntegracaoInfinityPayBloc(
+      FakeRecuperarParametrosDto(),
+      FakeAtualizarParametros(srv),
+      'https://api.loja.com',
+    );
+    b.add(IntegracaoInfinityPayIniciou(1));
+    await b.stream.firstWhere((s) => s.etapa == EtapaInfinityPay.pronto);
+    await _alterar(b, CampoInfinityPay.parcelasSemJuros, '3');
+    await _alterar(b, CampoInfinityPay.habilitada, 'S');
+    await _alterar(b, CampoInfinityPay.handle, 'vale');
+    b.add(IntegracaoInfinityPaySalvou());
+    await b.stream.firstWhere((s) => s.salvou);
+    expect(b.state.errosServidor, isEmpty);
+    expect(srv.valores['INTEGRACAO_INFINITY_PAY_PARCELAS_SEM_JUROS'], '3');
+    expect(srv.valores['INTEGRACAO_INFINITY_PAY_HABILITADA'], 'S');
+  });
+
   test('falha parcial: mantém sucessos e marca campos que falharam', () async {
     final (b, srv) = await _bloc(falham: {'EMAIL_FINANCEIRO_ESTORNO'});
     await _alterar(b, CampoInfinityPay.handle, 'vale');

@@ -43,7 +43,19 @@ class SeletoresEntrada {
 }
 
 const _ordemLetras = [
-  'PP', 'P', 'M', 'G', 'GG', 'XG', 'G1', 'G2', 'G3', 'XGG', 'EG', 'U', 'UN',
+  'PP',
+  'P',
+  'M',
+  'G',
+  'GG',
+  'XG',
+  'G1',
+  'G2',
+  'G3',
+  'XGG',
+  'EG',
+  'U',
+  'UN',
 ];
 
 /// Ordem das colunas de tamanho: numéricos pelo valor (34, 36, 38…), depois as
@@ -108,7 +120,10 @@ class BotaoPrincipalEntrada extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icone != null) ...[Icon(icone, size: 18), const SizedBox(width: 8)],
+                  if (icone != null) ...[
+                    Icon(icone, size: 18),
+                    const SizedBox(width: 8)
+                  ],
                   Flexible(
                     child: Text(
                       rotulo,

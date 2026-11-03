@@ -21,7 +21,13 @@ class PermissoesDoUsuarioRepository implements IPermissoesDoUsuarioRepository {
   @override
   Future<void> sincronizarPermissoes(int idUsuario) async {
     final permissoes = await _remoteDataSource.getPermissoes(idUsuario);
-    await _localDataSource.deleteAll();
+    // Upsert primeiro (chave = hash do componenteId) e so depois remove as obsoletas: o
+    // armazenamento nunca fica vazio entre as etapas. Resposta vazia nao apaga nada (quem
+    // decide se aceita vazio e' o chamador, com o estado em maos).
     await _localDataSource.putAll(permissoes);
+    if (permissoes.isNotEmpty) {
+      await _localDataSource
+          .removerExceto(permissoes.map((p) => p.componenteId).toSet());
+    }
   }
 }

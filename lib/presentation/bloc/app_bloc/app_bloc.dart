@@ -128,10 +128,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       if (event.token.idEmpresa != null) {
         _atualizarEtapaCarregamento(emit, 'Sincronizando permissões');
       }
-      var permissoes = await _sincronizarPermissoesDoUsuario(
-        idUsuario: usuarioDaSessao!.id,
-      );
-      var permissoesMap = _mapPermissoes(permissoes);
+      var permissoesMap = await _sincronizarPermissoes(usuarioDaSessao!.id);
       if (event.token.idEmpresa != null) {
         _atualizarEtapaCarregamento(emit, 'Carregando terminais disponíveis');
       }
@@ -301,13 +298,41 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
 
     try {
-      final permissoes = await _sincronizarPermissoesDoUsuario(
-        idUsuario: usuarioDaSessao.id,
+      emit(
+        state.copyWith(
+          permissoesDoUsuario: await _sincronizarPermissoes(usuarioDaSessao.id),
+        ),
       );
-      emit(state.copyWith(permissoesDoUsuario: _mapPermissoes(permissoes)));
     } catch (e, s) {
       addError(e, s);
     }
+  }
+
+  // Sincronizacoes de permissoes rodam uma por vez (login, troca de empresa e sync incremental
+  // podem disparar juntas) -- evita leitura intercalada com a gravacao.
+  Future<void> _filaPermissoes = Future.value();
+
+  Future<Map<String, PermissaoDoUsuario>> _sincronizarPermissoes(
+    int idUsuario,
+  ) {
+    final resultado = _filaPermissoes.then((_) async {
+      var permissoes = await _sincronizarPermissoesDoUsuario(
+        idUsuario: idUsuario,
+      );
+      final atuais = state.permissoesDoUsuario;
+      if (permissoes.isEmpty && atuais.isNotEmpty) {
+        permissoes = await _sincronizarPermissoesDoUsuario(
+          idUsuario: idUsuario,
+        );
+        if (permissoes.isEmpty) {
+          log('sync de permissoes vazia, mantendo ${atuais.length} atuais');
+          return atuais;
+        }
+      }
+      return _mapPermissoes(permissoes);
+    });
+    _filaPermissoes = resultado.then((_) {}, onError: (_) {});
+    return resultado;
   }
 
   Map<String, PermissaoDoUsuario> _mapPermissoes(
@@ -394,10 +419,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final licenciadoDaSessao =
           state.licenciadoDaSessao ?? await _recuperarLicenciadoDaSessao.call();
 
-      final permissoes = await _sincronizarPermissoesDoUsuario(
-        idUsuario: usuarioDaSessao!.id,
-      );
-      final permissoesMap = _mapPermissoes(permissoes);
+      final permissoesMap = await _sincronizarPermissoes(usuarioDaSessao!.id);
 
       final terminaisDaEmpresaDaSessao =
           await _carregarTerminaisDaEmpresaDaSessao(

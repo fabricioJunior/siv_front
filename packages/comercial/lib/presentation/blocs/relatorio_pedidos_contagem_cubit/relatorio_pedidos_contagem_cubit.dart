@@ -44,6 +44,9 @@ class RelatorioPedidosContagemState {
   final OpcaoFiltro? referencia;
   final OpcaoFiltro? produto;
 
+  /// Tabela só para simular o valor de venda; nada é gravado.
+  final String? tabelaPrecoNome;
+
   /// Muda a cada "Limpar filtros", para o seletor de fornecedor se refazer.
   final int limpezas;
   final ResumoPedidosContagem resumo;
@@ -62,6 +65,7 @@ class RelatorioPedidosContagemState {
     this.categoria,
     this.referencia,
     this.produto,
+    this.tabelaPrecoNome,
     this.limpezas = 0,
     this.resumo = const ResumoPedidosContagem(),
     this.linhas = const [],
@@ -77,6 +81,7 @@ class RelatorioPedidosContagemState {
   bool get temFiltro =>
       filtro.temFiltroItem ||
       filtro.pessoaId != null ||
+      filtro.tabelaPrecoId != null ||
       filtro.busca.isNotEmpty ||
       filtro.etapa != null;
 
@@ -89,6 +94,7 @@ class RelatorioPedidosContagemState {
     Object? categoria = _manter,
     Object? referencia = _manter,
     Object? produto = _manter,
+    Object? tabelaPrecoNome = _manter,
     int? limpezas,
     ResumoPedidosContagem? resumo,
     List<PedidoContagemLinha>? linhas,
@@ -112,6 +118,9 @@ class RelatorioPedidosContagemState {
         produto: identical(produto, _manter)
             ? this.produto
             : produto as OpcaoFiltro?,
+        tabelaPrecoNome: identical(tabelaPrecoNome, _manter)
+            ? this.tabelaPrecoNome
+            : tabelaPrecoNome as String?,
         limpezas: limpezas ?? this.limpezas,
         resumo: resumo ?? this.resumo,
         linhas: linhas ?? this.linhas,
@@ -231,6 +240,13 @@ class RelatorioPedidosContagemCubit
         state.copyWith(filtro: state.filtro.copyWith(pessoaId: pessoaId)),
       );
 
+  Future<void> alterarTabelaPreco(int? id, String? nome) => _carregar(
+        state.copyWith(
+          tabelaPrecoNome: id == null ? null : nome,
+          filtro: state.filtro.copyWith(tabelaPrecoId: id),
+        ),
+      );
+
   Future<void> buscar(String texto) {
     if (texto.trim() == state.filtro.busca) return Future.value();
     return _carregar(
@@ -247,7 +263,7 @@ class RelatorioPedidosContagemCubit
         ),
       );
 
-  /// [coluna]: data, pecas ou custo. Repetir a coluna inverte a ordem.
+  /// [coluna]: data, pecas, custo ou valor. Repetir a coluna inverte a ordem.
   Future<void> ordenar(String coluna) {
     final f = state.filtro;
     final inverte = f.ordenarPor == coluna;
@@ -266,12 +282,14 @@ class RelatorioPedidosContagemCubit
           categoria: null,
           referencia: null,
           produto: null,
+          tabelaPrecoNome: null,
           limpezas: state.limpezas + 1,
           filtro: state.filtro.copyWith(
             categoriaId: null,
             referenciaId: null,
             produtoId: null,
             pessoaId: null,
+            tabelaPrecoId: null,
             busca: '',
             etapa: null,
           ),
@@ -363,6 +381,7 @@ class RelatorioPedidosContagemCubit
         categoriaId: filtro.categoriaId,
         referenciaId: filtro.referenciaId,
         produtoId: filtro.produtoId,
+        tabelaPrecoId: filtro.tabelaPrecoId,
       );
       if (isClosed || filtro != state.filtro) return;
       emit(state.copyWith(itens: {...state.itens, pedidoId: itens}));

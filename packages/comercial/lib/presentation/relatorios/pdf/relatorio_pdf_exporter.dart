@@ -570,6 +570,7 @@ class RelatorioPdfExporter {
             ('Pedidos', '${resumo.pedidos}'),
             ('Peças contadas', q(resumo.pecas)),
             ('Peças sem custo', q(resumo.pecasSemCusto)),
+            ('Valor de venda', _fmtMoeda(resumo.valor)),
           ]),
           pw.SizedBox(height: 12),
           pw.Table(
@@ -582,6 +583,7 @@ class RelatorioPdfExporter {
               4: const pw.FlexColumnWidth(2),
               5: const pw.FlexColumnWidth(1),
               6: const pw.FlexColumnWidth(2),
+              7: const pw.FlexColumnWidth(2),
             },
             children: [
               pw.TableRow(
@@ -595,6 +597,7 @@ class RelatorioPdfExporter {
                     'Status',
                     'Peças',
                     'Custo',
+                    'Valor',
                   ])
                     cel(h, negrito: true),
                 ],
@@ -613,6 +616,7 @@ class RelatorioPdfExporter {
                     cel(l.etapa),
                     cel(q(l.pecas)),
                     cel(_fmtMoeda(l.custo)),
+                    cel(_fmtMoeda(l.valor)),
                   ],
                 ),
             ],

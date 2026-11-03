@@ -24,6 +24,7 @@ class FiltroPedidosContagem extends Equatable {
   final int? referenciaId;
   final int? produtoId;
   final int? pessoaId;
+  final int? tabelaPrecoId;
   final String busca;
   final String? etapa;
   final String ordenarPor;
@@ -37,6 +38,7 @@ class FiltroPedidosContagem extends Equatable {
     this.referenciaId,
     this.produtoId,
     this.pessoaId,
+    this.tabelaPrecoId,
     this.busca = '',
     this.etapa,
     this.ordenarPor = 'data',
@@ -55,6 +57,7 @@ class FiltroPedidosContagem extends Equatable {
     Object? referenciaId = _manter,
     Object? produtoId = _manter,
     Object? pessoaId = _manter,
+    Object? tabelaPrecoId = _manter,
     String? busca,
     Object? etapa = _manter,
     String? ordenarPor,
@@ -74,6 +77,9 @@ class FiltroPedidosContagem extends Equatable {
             identical(produtoId, _manter) ? this.produtoId : produtoId as int?,
         pessoaId:
             identical(pessoaId, _manter) ? this.pessoaId : pessoaId as int?,
+        tabelaPrecoId: identical(tabelaPrecoId, _manter)
+            ? this.tabelaPrecoId
+            : tabelaPrecoId as int?,
         busca: busca ?? this.busca,
         etapa: identical(etapa, _manter) ? this.etapa : etapa as String?,
         ordenarPor: ordenarPor ?? this.ordenarPor,
@@ -88,6 +94,7 @@ class FiltroPedidosContagem extends Equatable {
         if (referenciaId != null) 'referenciaId': '$referenciaId',
         if (produtoId != null) 'produtoId': '$produtoId',
         if (pessoaId != null) 'pessoaId': '$pessoaId',
+        if (tabelaPrecoId != null) 'tabelaPrecoId': '$tabelaPrecoId',
         if (busca.trim().isNotEmpty) 'busca': busca.trim(),
         if (etapa != null) 'etapa': etapa!,
         'ordenarPor': ordenarPor,
@@ -105,6 +112,7 @@ class FiltroPedidosContagem extends Equatable {
         referenciaId,
         produtoId,
         pessoaId,
+        tabelaPrecoId,
         busca,
         etapa,
         ordenarPor,
@@ -120,7 +128,8 @@ class EtapaResumo {
   final String etapa;
   final int pedidos;
   final double custo;
-  const EtapaResumo(this.etapa, this.pedidos, this.custo);
+  final double valor;
+  const EtapaResumo(this.etapa, this.pedidos, this.custo, [this.valor = 0]);
 }
 
 class ResumoPedidosContagem {
@@ -128,6 +137,8 @@ class ResumoPedidosContagem {
   final double pecas;
   final double custo;
   final double pecasSemCusto;
+  final double valor;
+  final double pecasSemValor;
 
   /// Vazio quando não há pedido em aberto no resultado.
   final List<EtapaResumo> porEtapa;
@@ -137,6 +148,8 @@ class ResumoPedidosContagem {
     this.pecas = 0,
     this.custo = 0,
     this.pecasSemCusto = 0,
+    this.valor = 0,
+    this.pecasSemValor = 0,
     this.porEtapa = const [],
   });
 
@@ -146,12 +159,15 @@ class ResumoPedidosContagem {
         pecas: _d(j['pecas']),
         custo: _d(j['custo']),
         pecasSemCusto: _d(j['pecasSemCusto']),
+        valor: _d(j['valor']),
+        pecasSemValor: _d(j['pecasSemValor']),
         porEtapa: [
           for (final e in (j['porEtapa'] as List?) ?? const [])
             EtapaResumo(
               (e as Map<String, dynamic>)['etapa'] as String,
               (e['pedidos'] as num?)?.toInt() ?? 0,
               _d(e['custo']),
+              _d(e['valor']),
             ),
         ],
       );
@@ -175,6 +191,11 @@ class PedidoContagemLinha {
   final double custo;
   final double pecasSemCusto;
   final double custoPedido;
+  final double valor;
+  final double valorPedido;
+  final double pecasSemValor;
+  final int? tabelaPrecoId;
+  final String? tabelaPrecoNome;
   final PrimeiroProdutoContagem? primeiroProduto;
   final int quantidadeReferencias;
 
@@ -189,6 +210,11 @@ class PedidoContagemLinha {
     this.custo = 0,
     this.pecasSemCusto = 0,
     this.custoPedido = 0,
+    this.valor = 0,
+    this.valorPedido = 0,
+    this.pecasSemValor = 0,
+    this.tabelaPrecoId,
+    this.tabelaPrecoNome,
     this.primeiroProduto,
     this.quantidadeReferencias = 0,
   });
@@ -210,6 +236,11 @@ class PedidoContagemLinha {
       custo: _d(j['custo']),
       pecasSemCusto: _d(j['pecasSemCusto']),
       custoPedido: _d(j['custoPedido']),
+      valor: _d(j['valor']),
+      valorPedido: _d(j['valorPedido']),
+      pecasSemValor: _d(j['pecasSemValor']),
+      tabelaPrecoId: (j['tabelaPrecoId'] as num?)?.toInt(),
+      tabelaPrecoNome: j['tabelaPrecoNome'] as String?,
       primeiroProduto: p == null
           ? null
           : PrimeiroProdutoContagem(
@@ -261,6 +292,8 @@ class ItemPedidoContagem {
   final double quantidade;
   final double? custoUnitario;
   final double? subtotal;
+  final double? valorUnitario;
+  final double? subtotalVenda;
   final bool semReferencia;
   final bool bateFiltro;
 
@@ -273,6 +306,8 @@ class ItemPedidoContagem {
     this.quantidade = 0,
     this.custoUnitario,
     this.subtotal,
+    this.valorUnitario,
+    this.subtotalVenda,
     this.semReferencia = false,
     this.bateFiltro = true,
   });
@@ -293,6 +328,8 @@ class ItemPedidoContagem {
         quantidade: _d(j['quantidade']),
         custoUnitario: (j['custoUnitario'] as num?)?.toDouble(),
         subtotal: (j['subtotal'] as num?)?.toDouble(),
+        valorUnitario: (j['valorUnitario'] as num?)?.toDouble(),
+        subtotalVenda: (j['subtotalVenda'] as num?)?.toDouble(),
         semReferencia: j['semReferencia'] as bool? ?? false,
         bateFiltro: j['bateFiltro'] as bool? ?? true,
       );

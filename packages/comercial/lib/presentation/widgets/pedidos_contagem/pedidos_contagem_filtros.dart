@@ -20,11 +20,13 @@ const _situacoes = {
 class FiltrosPedidosContagem extends StatefulWidget {
   final RelatorioPedidosContagemState state;
   final SeletorWidget fornecedorSeletor;
+  final SeletorWidget tabelaPrecoSeletor;
 
   const FiltrosPedidosContagem({
     super.key,
     required this.state,
     required this.fornecedorSeletor,
+    required this.tabelaPrecoSeletor,
   });
 
   @override
@@ -182,6 +184,21 @@ class _FiltrosPedidosContagemState extends State<FiltrosPedidosContagem> {
         ),
       ),
     );
+    final tabela = SizedBox(
+      width: 240,
+      child: KeyedSubtree(
+        key: ValueKey('tabela_${s.limpezas}'),
+        child: widget.tabelaPrecoSeletor(
+          SeletorData(
+            compacto: true,
+            onChanged: (l) => _cubit.alterarTabelaPreco(
+              l.isEmpty ? null : l.first.id,
+              l.isEmpty ? null : l.first.nome,
+            ),
+          ),
+        ),
+      ),
+    );
     final busca = SizedBox(
       width: 200,
       child: TextField(
@@ -225,6 +242,7 @@ class _FiltrosPedidosContagemState extends State<FiltrosPedidosContagem> {
             referencia,
             produto,
             fornecedor,
+            tabela,
             busca,
             if (limpar != null) limpar
           ]),
@@ -255,6 +273,7 @@ class _FiltrosPedidosContagemState extends State<FiltrosPedidosContagem> {
             referencia,
             produto,
             fornecedor,
+            tabela,
             busca,
             if (limpar != null) limpar
           ],
@@ -276,7 +295,7 @@ class _FiltrosPedidosContagemState extends State<FiltrosPedidosContagem> {
         'Período pela data de abertura. Inclui em aberto e faturados.',
     };
     return f.temFiltroItem
-        ? '$base Com filtro de categoria/referência/produto, peças e custo somam só os itens que batem.'
+        ? '$base Com filtro de categoria/referência/produto, peças, custo e valor somam só os itens que batem.'
         : base;
   }
 }

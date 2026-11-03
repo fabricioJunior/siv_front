@@ -629,6 +629,13 @@ Map<String, Widget Function(BuildContext)> routes = {
           eFornecedor: true,
           compacto: data.compacto,
         ),
+        tabelaPrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela do pedido',
+          compacto: data.compacto,
+        ),
       ),
     );
   },

@@ -7,11 +7,11 @@ import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
-const _flex = [1, 5, 2, 2, 4, 1, 2];
-const _numericas = {5, 6};
+const _flex = [1, 5, 2, 2, 4, 1, 2, 2];
+const _numericas = {5, 6, 7};
 const _larguraChevron = 30.0;
 
-/// Linha de 7 colunas (mesmos flex do cabeçalho, das linhas e do rodapé).
+/// Linha de 8 colunas (mesmos flex do cabeçalho, das linhas e do rodapé).
 Widget _grade(List<Widget> c, {Widget? fim}) => Row(
       children: [
         for (var i = 0; i < c.length; i++) ...[
@@ -158,6 +158,7 @@ class ListaPedidosContagem extends StatelessWidget {
                   cab('STATUS DA CONTAGEM'),
                   cab('PEÇAS', ordem: 'pecas'),
                   cab('CUSTO', ordem: 'custo'),
+                  cab('VALOR', ordem: 'valor'),
                 ]),
               ),
               ...linhas,
@@ -170,7 +171,7 @@ class ListaPedidosContagem extends StatelessWidget {
   }
 }
 
-/// Rodapé fixo (fora da rolagem): `TOTAL`, pedidos, peças e custo.
+/// Rodapé fixo (fora da rolagem): `TOTAL`, pedidos, peças, custo e valor.
 class RodapeTotalContagem extends StatelessWidget {
   final ResumoPedidosContagem resumo;
   const RodapeTotalContagem({super.key, required this.resumo});
@@ -209,6 +210,7 @@ class RodapeTotalContagem extends StatelessWidget {
           style: t.corpo.copyWith(fontWeight: FontWeight.w600),
         ),
         Text(frequenciaMoeda(resumo.custo), style: t.secao),
+        Text(frequenciaMoeda(resumo.valor), style: t.secao),
       ]),
     );
   }
@@ -342,6 +344,7 @@ class _LinhaPedido extends StatelessWidget {
                 ),
                 Text(pcQtd(l.pecas), style: t.corpo),
                 _Custo(linha: l, state: state),
+                _Valor(linha: l, state: state),
               ],
               fim: Icon(
                 aberto ? Icons.expand_less : Icons.expand_more,
@@ -390,6 +393,35 @@ class _Custo extends StatelessWidget {
         if (state.filtro.temFiltroItem)
           Text(
             'de ${frequenciaMoeda(l.custoPedido)} no pedido',
+            style: t.apoio.copyWith(fontSize: 11, color: c.textoApoio),
+          ),
+      ],
+    );
+  }
+}
+
+class _Valor extends StatelessWidget {
+  final PedidoContagemLinha linha;
+  final RelatorioPedidosContagemState state;
+  const _Valor({required this.linha, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sivColors;
+    final t = context.sivTextos;
+    final l = linha;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(frequenciaMoeda(l.valor), style: t.secao.copyWith(fontSize: 15)),
+        if (l.pecasSemValor > 0)
+          Text(
+            '+ ${pcQtd(l.pecasSemValor)} pç sem preço',
+            style: t.apoio.copyWith(fontSize: 11, color: c.atencao),
+          ),
+        if (state.filtro.temFiltroItem)
+          Text(
+            'de ${frequenciaMoeda(l.valorPedido)} no pedido',
             style: t.apoio.copyWith(fontSize: 11, color: c.textoApoio),
           ),
       ],
@@ -517,6 +549,26 @@ class _CartaoPedido extends StatelessWidget {
                       ),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Valor de venda ${frequenciaMoeda(l.valor)}'
+                      '${state.filtro.temFiltroItem ? ' (de ${frequenciaMoeda(l.valorPedido)} no pedido)' : ''}',
+                      style: t.apoio.copyWith(
+                        fontSize: 11.5,
+                        color: c.textoApoio,
+                      ),
+                    ),
+                  ),
+                  if (l.pecasSemValor > 0)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '+ ${pcQtd(l.pecasSemValor)} pç sem preço',
+                        style:
+                            t.apoio.copyWith(fontSize: 11.5, color: c.atencao),
+                      ),
+                    ),
                   if (l.pecasSemCusto > 0)
                     Align(
                       alignment: Alignment.centerRight,
@@ -619,6 +671,16 @@ class _Itens extends StatelessWidget {
                       flex: 2,
                       child: Align(
                           alignment: Alignment.centerRight, child: cel[4])),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      flex: 2,
+                      child: Align(
+                          alignment: Alignment.centerRight, child: cel[5])),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      flex: 2,
+                      child: Align(
+                          alignment: Alignment.centerRight, child: cel[6])),
                 ],
               ),
             ),
@@ -636,6 +698,8 @@ class _Itens extends StatelessWidget {
             cab('PEÇAS'),
             cab('CUSTO UN.'),
             cab('SUBTOTAL'),
+            cab('PREÇO UN.'),
+            cab('SUBTOTAL VENDA'),
           ]),
           for (final i in itens)
             linhaItem(
@@ -666,6 +730,18 @@ class _Itens extends StatelessWidget {
                 ),
                 Text(
                   i.subtotal == null ? '—' : frequenciaMoeda(i.subtotal!),
+                  style: t.corpo,
+                ),
+                Text(
+                  i.valorUnitario == null
+                      ? '—'
+                      : frequenciaMoeda(i.valorUnitario!),
+                  style: t.corpo.copyWith(color: c.textoApoio),
+                ),
+                Text(
+                  i.subtotalVenda == null
+                      ? '—'
+                      : frequenciaMoeda(i.subtotalVenda!),
                   style: t.corpo,
                 ),
               ],
@@ -751,6 +827,7 @@ class _ItemMobile extends StatelessWidget {
                     [
                       if (item.variacao.isNotEmpty) item.variacao,
                       '${pcQtd(item.quantidade)} × $un',
+                      'venda ${item.subtotalVenda == null ? '—' : frequenciaMoeda(item.subtotalVenda!)}',
                     ].join(' · '),
                     style: t.apoio.copyWith(color: c.textoApoio),
                   ),

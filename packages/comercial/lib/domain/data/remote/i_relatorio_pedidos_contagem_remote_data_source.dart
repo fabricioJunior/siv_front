@@ -12,5 +12,6 @@ abstract class IRelatorioPedidosContagemRemoteDataSource {
     int? categoriaId,
     int? referenciaId,
     int? produtoId,
+    int? tabelaPrecoId,
   });
 }

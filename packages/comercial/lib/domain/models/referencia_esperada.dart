@@ -1,5 +1,39 @@
 import 'package:core/equals.dart';
 
+/// Um SKU da referência esperada (liso e estampado da mesma cor/tamanho são
+/// linhas separadas, cada uma com o seu contado).
+class VariacaoEsperada extends Equatable {
+  final int produtoId;
+  final String cor;
+  final String tamanho;
+  final String? estampa;
+  final double? contado;
+
+  const VariacaoEsperada({
+    required this.produtoId,
+    required this.cor,
+    required this.tamanho,
+    this.estampa,
+    this.contado,
+  });
+
+  factory VariacaoEsperada.fromJson(Map<String, dynamic> j) => VariacaoEsperada(
+        produtoId: (j['produtoId'] as num?)?.toInt() ?? 0,
+        cor: j['cor'] as String? ?? '',
+        tamanho: j['tamanho'] as String? ?? '',
+        estampa: j['estampa'] as String?,
+        contado: (j['contado'] as num?)?.toDouble(),
+      );
+
+  /// "Cor · Estampa · Tamanho".
+  String get grade => [cor, estampa ?? '', tamanho]
+      .where((e) => e.isNotEmpty)
+      .join(' · ');
+
+  @override
+  List<Object?> get props => [produtoId, cor, tamanho, estampa, contado];
+}
+
 /// Referência cadastrada antes da mercadoria chegar (aguardando 1ª entrada ou
 /// reposição) do fornecedor da entrada. Só informa: nada aqui bloqueia a contagem.
 class ReferenciaEsperada extends Equatable {
@@ -14,6 +48,8 @@ class ReferenciaEsperada extends Equatable {
   final bool aguardandoReposicao;
   final String resumoGrade;
   final int? quantidadeEsperada;
+  final List<String> estampas;
+  final List<VariacaoEsperada> variacoes;
 
   const ReferenciaEsperada({
     required this.id,
@@ -25,6 +61,8 @@ class ReferenciaEsperada extends Equatable {
     this.aguardandoReposicao = false,
     this.resumoGrade = 'Sem variações',
     this.quantidadeEsperada,
+    this.estampas = const [],
+    this.variacoes = const [],
   });
 
   factory ReferenciaEsperada.fromJson(Map<String, dynamic> json) {
@@ -39,6 +77,10 @@ class ReferenciaEsperada extends Equatable {
       aguardandoReposicao: status.contains('aguardandoReposicao'),
       resumoGrade: json['resumoGrade'] as String? ?? 'Sem variações',
       quantidadeEsperada: (json['quantidadeEsperada'] as num?)?.toInt(),
+      estampas: ((json['estampas'] as List?) ?? const []).cast<String>(),
+      variacoes: ((json['variacoes'] as List?) ?? const [])
+          .map((v) => VariacaoEsperada.fromJson(v as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -53,6 +95,8 @@ class ReferenciaEsperada extends Equatable {
     aguardandoReposicao,
     resumoGrade,
     quantidadeEsperada,
+    estampas,
+    variacoes,
   ];
 }
 

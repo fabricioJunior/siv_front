@@ -54,6 +54,7 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaNome,
     unidadeMedida,
     saldo,
     atualizadoEm,
@@ -78,6 +79,9 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
   final String tamanhoNome;
 
   @override
+  final String? estampaNome;
+
+  @override
   final String? unidadeMedida;
 
   ProdutoEstoqueDto({
@@ -91,6 +95,7 @@ class ProdutoEstoqueDto implements ProdutoDoEstoque, IsarDto {
     required this.corNome,
     required this.tamanhoId,
     required this.tamanhoNome,
+    this.estampaNome,
     required this.unidadeMedida,
     required this.saldo,
     required this.idDoProduto,

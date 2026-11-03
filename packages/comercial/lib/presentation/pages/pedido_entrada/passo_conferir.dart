@@ -49,6 +49,8 @@ class _DadoLocal with LeitorData {
   @override
   String get cor => p.cor;
   @override
+  String get estampa => p.estampa;
+  @override
   double? get valor => null;
   @override
   int get id => p.id;
@@ -186,6 +188,11 @@ class _PassoConferirState extends State<PassoConferir> {
   List<ProdutoEsperado>? get _esperados {
     final itens = widget.resumo.conferencia.itens;
     if (itens.isEmpty) return null;
+    // Liso vira "Liso" quando a mesma referência também tem SKU estampado.
+    final refsComEstampa = {
+      for (final i in itens)
+        if (i.estampa.isNotEmpty) i.idReferencia,
+    };
     return [
       for (final i in itens)
         ProdutoEsperado(
@@ -195,6 +202,9 @@ class _PassoConferirState extends State<PassoConferir> {
           idReferencia: i.idReferencia,
           cor: i.cor,
           tamanho: i.tamanho,
+          estampa: i.estampa.isEmpty && refsComEstampa.contains(i.idReferencia)
+              ? 'Liso'
+              : i.estampa,
           esperado: i.contado.round(),
           lido: math.max(
             0,

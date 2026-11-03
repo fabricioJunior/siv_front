@@ -5,6 +5,7 @@ mixin LeitorData {
   int get idReferencia;
   String get tamanho;
   String get cor;
+  String get estampa => '';
   double? get valor;
   int get id;
 

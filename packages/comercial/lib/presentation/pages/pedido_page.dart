@@ -427,6 +427,7 @@ class _PedidoPageState extends State<PedidoPage> {
             nome: item.referenciaNome ?? '',
             corNome: item.corNome ?? '',
             tamanhoNome: item.tamanhoNome ?? '',
+            estampaNome: item.estampaNome ?? '',
           ),
         )
         .toList(growable: false);

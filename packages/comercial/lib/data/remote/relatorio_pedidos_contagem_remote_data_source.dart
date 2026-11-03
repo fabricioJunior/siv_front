@@ -32,6 +32,7 @@ class RelatorioPedidosContagemRemoteDataSource extends RemoteDataSourceBase
     int? categoriaId,
     int? referenciaId,
     int? produtoId,
+    int? tabelaPrecoId,
   }) async {
     final response = await get(
       pathParameters: {'path': '/$pedidoId/entrada/contagens/itens'},
@@ -39,6 +40,7 @@ class RelatorioPedidosContagemRemoteDataSource extends RemoteDataSourceBase
         if (categoriaId != null) 'categoriaId': '$categoriaId',
         if (referenciaId != null) 'referenciaId': '$referenciaId',
         if (produtoId != null) 'produtoId': '$produtoId',
+        if (tabelaPrecoId != null) 'tabelaPrecoId': '$tabelaPrecoId',
       },
     );
     return [

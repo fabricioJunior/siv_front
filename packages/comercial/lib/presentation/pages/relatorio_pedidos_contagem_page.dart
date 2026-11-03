@@ -16,10 +16,12 @@ import 'package:flutter/material.dart';
 
 class RelatorioPedidosContagemPage extends StatefulWidget {
   final SeletorWidget fornecedorSeletor;
+  final SeletorWidget tabelaPrecoSeletor;
 
   const RelatorioPedidosContagemPage({
     super.key,
     required this.fornecedorSeletor,
+    required this.tabelaPrecoSeletor,
   });
 
   @override
@@ -108,6 +110,7 @@ class _RelatorioPedidosContagemPageState
                     corpo: _Corpo(
                       state: s,
                       fornecedorSeletor: widget.fornecedorSeletor,
+                      tabelaPrecoSeletor: widget.tabelaPrecoSeletor,
                       onAbrir: _abrir,
                     ),
                   ),
@@ -153,11 +156,13 @@ class _Exportar extends StatelessWidget {
 class _Corpo extends StatelessWidget {
   final RelatorioPedidosContagemState state;
   final SeletorWidget fornecedorSeletor;
+  final SeletorWidget tabelaPrecoSeletor;
   final ValueChanged<int> onAbrir;
 
   const _Corpo({
     required this.state,
     required this.fornecedorSeletor,
+    required this.tabelaPrecoSeletor,
     required this.onAbrir,
   });
 
@@ -213,7 +218,11 @@ class _Corpo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FiltrosPedidosContagem(state: s, fornecedorSeletor: fornecedorSeletor),
+        FiltrosPedidosContagem(
+          state: s,
+          fornecedorSeletor: fornecedorSeletor,
+          tabelaPrecoSeletor: tabelaPrecoSeletor,
+        ),
         SizedBox(height: relatorioMobile(context) ? 8 : 14),
         conteudo,
       ],
@@ -258,6 +267,13 @@ class _Kpis extends StatelessWidget {
       SituacaoContagem.todos => 'Custo no período',
     };
 
+    final semPreco = r.pecasSemValor > 0;
+    final notaValor = [
+      if (semPreco) '${pcQtd(r.pecasSemValor)} pç sem preço',
+      if (state.tabelaPrecoNome != null)
+        'simulado com ${state.tabelaPrecoNome}',
+    ].join(' · ');
+
     if (relatorioMobile(context)) {
       final c = context.sivColors;
       final t = context.sivTextos;
@@ -295,6 +311,12 @@ class _Kpis extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
+                  'Valor de venda ${frequenciaMoeda(r.valor)}'
+                  '${notaValor.isEmpty ? '' : ' · $notaValor'}',
+                  style: apoio,
+                ),
+                const SizedBox(height: 2),
+                Text(
                   pcPeriodoTexto(state.filtro),
                   style: apoio.copyWith(fontSize: 11.5),
                 ),
@@ -328,6 +350,16 @@ class _Kpis extends StatelessWidget {
               rotulo: rotuloCusto,
               valor: frequenciaMoeda(r.custo),
               destaque: true,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: RelatorioKpiCard(
+              rotulo: 'Valor de venda',
+              valor: frequenciaMoeda(r.valor),
+              tom: semPreco ? RelatorioKpiTom.atencao : RelatorioKpiTom.aco,
+              valorAtencao: semPreco,
+              nota: notaValor.isEmpty ? null : notaValor,
             ),
           ),
           const SizedBox(width: 12),

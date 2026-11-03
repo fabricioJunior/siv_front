@@ -8,6 +8,7 @@ import 'package:comercial/presentation/blocs/relatorio_pedidos_contagem_cubit/re
 import 'package:comercial/presentation/pages/relatorio_pedidos_contagem_page.dart';
 import 'package:comercial/presentation/widgets/pedidos_contagem/pedidos_contagem_formato.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +20,7 @@ class _Remote implements IRelatorioPedidosContagemRemoteDataSource {
   List<PedidoContagemLinha> linhas = [];
   ResumoPedidosContagem resumo = const ResumoPedidosContagem();
   final filtros = <FiltroPedidosContagem>[];
+  final tabelasItens = <int?>[];
 
   @override
   Future<RelatorioPedidosContagem> relatorio(
@@ -41,8 +43,11 @@ class _Remote implements IRelatorioPedidosContagemRemoteDataSource {
     int? categoriaId,
     int? referenciaId,
     int? produtoId,
-  }) async =>
-      const [];
+    int? tabelaPrecoId,
+  }) async {
+    tabelasItens.add(tabelaPrecoId);
+    return const [];
+  }
 }
 
 class _Gateway implements IFiltrosPedidosContagemGateway {
@@ -66,6 +71,8 @@ PedidoContagemLinha _linha(
   int diasAberto = 5,
   double semCusto = 0,
   double custo = 100,
+  double valor = 300,
+  double semValor = 0,
 }) =>
     PedidoContagemLinha(
       pedidoId: id,
@@ -77,6 +84,9 @@ PedidoContagemLinha _linha(
       custo: custo,
       pecasSemCusto: semCusto,
       custoPedido: 999,
+      valor: valor,
+      valorPedido: 888,
+      pecasSemValor: semValor,
       quantidadeReferencias: 1,
     );
 
@@ -119,6 +129,13 @@ Future<_Remote> _abre(
       theme: SivTheme.tema,
       home: RelatorioPedidosContagemPage(
         fornecedorSeletor: (_) => const SizedBox(),
+        tabelaPrecoSeletor: (d) => TextButton(
+          key: const Key('tabela_fake'),
+          onPressed: () => d.onChanged?.call(
+            [SelectData(id: 7, nome: 'ATACADO', data: const {})],
+          ),
+          child: const Text('fake tabela'),
+        ),
       ),
     ),
   );
@@ -186,8 +203,46 @@ void main() {
         expect(find.textContaining('no pedido'), findsNothing);
         await _paginaCubit.alterarCategoria(const OpcaoFiltro(1, 'CALCA'));
         await t.pumpAndSettle();
-        expect(find.textContaining('no pedido'), findsNWidgets(2));
-        expect(find.textContaining('de R\$'), findsNWidgets(2));
+        expect(find.textContaining('R\$ 999,00 no pedido'), findsNWidgets(2));
+      });
+
+      testWidgets('KPI valor de venda; coluna valor e "de R\$ … no pedido"',
+          (t) async {
+        await _abre(t, largura, config: (r) {
+          r.resumo = const ResumoPedidosContagem(
+              pedidos: 2, pecas: 20, custo: 200, valor: 600);
+        });
+        if (mobile) {
+          expect(find.textContaining('Valor de venda R\$'), findsWidgets);
+        } else {
+          expect(find.text('VALOR DE VENDA'), findsOneWidget);
+          expect(find.text('VALOR'), findsOneWidget);
+        }
+        await _paginaCubit.alterarCategoria(const OpcaoFiltro(1, 'CALCA'));
+        await t.pumpAndSettle();
+        expect(find.textContaining('R\$ 888,00 no pedido'), findsNWidgets(2));
+      });
+
+      testWidgets('escolher tabela envia tabelaPrecoId, mostra nome; limpar zera',
+          (t) async {
+        final r = await _abre(t, largura);
+        // mobile: chips em ListView lazy, fora da tela não existem
+        if (mobile) {
+          await _paginaCubit.alterarTabelaPreco(7, 'ATACADO');
+        } else {
+          await t.tap(find.byKey(const Key('tabela_fake')));
+        }
+        await t.pumpAndSettle();
+        expect(r.filtros.last.tabelaPrecoId, 7);
+        expect(find.textContaining('simulado com ATACADO'), findsOneWidget);
+        if (mobile) {
+          await _paginaCubit.limparFiltros();
+        } else {
+          await t.tap(find.byKey(const Key('contagem_limpar')));
+        }
+        await t.pumpAndSettle();
+        expect(r.filtros.last.tabelaPrecoId, isNull);
+        expect(find.textContaining('simulado com'), findsNothing);
       });
     });
   }
@@ -223,6 +278,19 @@ void main() {
         _corDoTexto(t, find.text('+ 3 pç sem custo (falta associar)')),
         atencao,
       );
+    });
+  });
+
+  group('âmbar com peças sem preço', () {
+    testWidgets('KPI e linha usam a cor atencao do tema', (t) async {
+      await _abre(t, 1280, config: (r) {
+        r.linhas = [_linha(1, semValor: 4)];
+        r.resumo = const ResumoPedidosContagem(
+            pedidos: 1, pecas: 10, custo: 100, valor: 300, pecasSemValor: 4);
+      });
+      final atencao = SivTheme.tema.extension<SivColors>()!.atencao;
+      expect(find.text('4 pç sem preço'), findsOneWidget);
+      expect(_corDoTexto(t, find.text('+ 4 pç sem preço')), atencao);
     });
   });
 
@@ -263,6 +331,18 @@ void main() {
       expect(c.state.filtro.ordem, 'desc');
       await c.ordenar('pecas');
       expect((c.state.filtro.ordenarPor, c.state.filtro.ordem), ('pecas', 'desc'));
+    });
+
+    test('ordenar por valor e tabela de preço no filtro e nos itens', () async {
+      await c.ordenar('valor');
+      expect(r.filtros.last.toQuery()['ordenarPor'], 'valor');
+      await c.alterarTabelaPreco(7, 'ATACADO');
+      expect(r.filtros.last.toQuery()['tabelaPrecoId'], '7');
+      await c.carregarItens(1);
+      expect(r.tabelasItens.last, 7);
+      await c.alterarTabelaPreco(null, null);
+      expect(c.state.tabelaPrecoNome, isNull);
+      expect(r.filtros.last.toQuery().containsKey('tabelaPrecoId'), isFalse);
     });
 
     test('em aberto há > 30 dias alerta; faturado nunca', () {

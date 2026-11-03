@@ -23,12 +23,14 @@ class ObterItensPedidoContagem {
     int? categoriaId,
     int? referenciaId,
     int? produtoId,
+    int? tabelaPrecoId,
   }) =>
       _remote.itens(
         pedidoId,
         categoriaId: categoriaId,
         referenciaId: referenciaId,
         produtoId: produtoId,
+        tabelaPrecoId: tabelaPrecoId,
       );
 }
 

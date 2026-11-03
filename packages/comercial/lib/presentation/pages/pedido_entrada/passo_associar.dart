@@ -32,6 +32,10 @@ class PassoAssociar extends StatefulWidget {
 class _PassoAssociarState extends State<PassoAssociar> {
   int _totalVisto = 0;
 
+  /// descrição -> "REF 41433 · criada agora": só aparece quando o grupo já
+  /// saiu da lista (associação aceita pelo servidor).
+  final _associados = <String, String>{};
+
   Map<String, List<ContagemLivre>> get _grupos {
     final g = <String, List<ContagemLivre>>{};
     for (final c in widget.resumo.livresSemReferencia) {
@@ -92,6 +96,15 @@ class _PassoAssociarState extends State<PassoAssociar> {
                     style: textos.rotulo.copyWith(color: cores.textoApoio),
                   ),
                 ),
+              for (final e in _associados.entries)
+                if (!grupos.containsKey(e.key))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text('✓ ${e.key} → ${e.value}',
+                        key: Key('associado_${e.key}'),
+                        style: textos.apoio
+                            .copyWith(color: cores.conferidoTexto)),
+                  ),
               if (variacoes.isNotEmpty) ...[
                 Text('VARIAÇÕES NOVAS · cadastrar',
                     key: const Key('secao_variacoes_novas'),
@@ -134,6 +147,8 @@ class _PassoAssociarState extends State<PassoAssociar> {
                   itens: e.value,
                   salvando: widget.salvando,
                   seletores: widget.seletores,
+                  onAssociou: (ref, criada) => _associados[e.key] =
+                      'REF $ref · ${criada ? 'criada agora' : 'associada'}',
                 ),
             ],
           ),
@@ -224,6 +239,7 @@ class _GrupoAssociar extends StatefulWidget {
   final List<ContagemLivre> itens;
   final bool salvando;
   final SeletoresEntrada seletores;
+  final void Function(int referenciaId, bool criada) onAssociou;
 
   const _GrupoAssociar({
     super.key,
@@ -231,6 +247,7 @@ class _GrupoAssociar extends StatefulWidget {
     required this.itens,
     required this.salvando,
     required this.seletores,
+    required this.onAssociou,
   });
 
   @override
@@ -239,14 +256,19 @@ class _GrupoAssociar extends StatefulWidget {
 
 class _GrupoAssociarState extends State<_GrupoAssociar> {
   bool _criar = false;
+  bool _naoCadastrada = false;
   int? _referenciaId;
   final bool _podeCriar = PermissaoPorNome.acessoPermitido('PRDFM003');
 
-  void _associar([int? referenciaId]) {
+  void _associar([int? criadaId]) {
+    final ref = criadaId ?? _referenciaId;
+    if (ref != null) widget.onAssociou(ref, criadaId != null);
+    setState(() => _naoCadastrada = false);
     context.read<PedidoEntradaBloc>().add(
           PedidoEntradaAssociouContagemLivre(
             [for (final c in widget.itens) c.id],
-            referenciaId: referenciaId ?? _referenciaId,
+            referenciaId: ref,
+            descricao: widget.descricao,
           ),
         );
   }
@@ -267,8 +289,53 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
         'tamanhoIds': widget.itens.map((c) => c.tamanhoId).toSet().toList(),
       },
     );
-    if (id is int && mounted) _associar(id);
+    if (!mounted) return;
+    if (id is int) {
+      _associar(id);
+    } else {
+      setState(() => _naoCadastrada = true);
+    }
   }
+
+  Widget _avisoNaoCadastrada(SivTextStyles textos, SivColors cores) =>
+      Container(
+        key: Key('aviso_nao_cadastrada_${widget.descricao}'),
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: cores.parcialFundo,
+          border: Border.all(color: cores.parcialBorda),
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Referência não cadastrada. “${widget.descricao}” continua sem '
+              'referência e não foi associado.',
+              style: textos.apoio.copyWith(color: cores.parcialTexto),
+            ),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  key: const Key('aviso_tentar_de_novo'),
+                  onPressed: widget.salvando ? null : _criarReferencia,
+                  child: const Text('TENTAR DE NOVO'),
+                ),
+                TextButton(
+                  key: const Key('aviso_usar_existente'),
+                  onPressed: () => setState(() {
+                    _criar = false;
+                    _naoCadastrada = false;
+                  }),
+                  child: const Text('Usar referência existente'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -309,8 +376,12 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
                   label: const Text('Criar referência nova')),
             ],
             selected: {_criar && _podeCriar},
-            onSelectionChanged: (v) => setState(() => _criar = v.first),
+            onSelectionChanged: (v) => setState(() {
+              _criar = v.first;
+              _naoCadastrada = false;
+            }),
           ),
+          if (_naoCadastrada) _avisoNaoCadastrada(textos, cores),
           if (!_podeCriar)
             Padding(
               padding: const EdgeInsets.only(top: 4),

@@ -1,7 +1,11 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/grade_fixa.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
+import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/variacao_tela_cheia.dart';
+import 'package:core/bloc.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
@@ -46,7 +50,6 @@ class PainelContagemGrade extends StatefulWidget {
   final SeletorWidget corSeletor;
   final SeletorWidget tamanhoSeletor;
   final SeletorWidget? estampaSeletor;
-  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
   final BuscaReferenciasParecidas? buscarParecidas;
   final void Function(bool livre, List<ItemContagem> itens) onSalvar;
   final VoidCallback onFechar;
@@ -83,7 +86,6 @@ class PainelContagemGrade extends StatefulWidget {
     required this.corSeletor,
     required this.tamanhoSeletor,
     this.estampaSeletor,
-    this.carregarTamanhos,
     this.buscarParecidas,
     required this.onSalvar,
     required this.onFechar,
@@ -131,6 +133,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   bool? _tamanhosNumericos;
   bool _carregandoTamanhos = false;
   String? _focado;
+  // null = padrão pela largura/nº de tamanhos (ver _modoPorCor).
+  bool? _porCor;
+  int? _corAtiva;
   List<ReferenciaParecida> _parecidas = const [];
   int _buscaSeq = 0;
 
@@ -189,13 +194,76 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       f.addListener(() {
         if (!mounted) return;
         if (f.hasFocus) {
-          setState(() => _focado = k);
+          setState(() {
+            _focado = k;
+            _corAtiva = int.parse(k.split('|')[0]);
+          });
+          _manterVisivel(f);
         } else if (_focado == k) {
           setState(() => _focado = null);
         }
       });
       return f;
     });
+  }
+
+  // Célula sempre visível nos dois eixos (grade, coluna de cores e página).
+  void _manterVisivel(FocusNode f) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = f.context;
+      if (!mounted || !f.hasFocus || ctx == null || !ctx.mounted) return;
+      // centraliza: vale para ir e voltar nos dois eixos e não mexe mais no
+      // eixo que já está centrado (andar pela mesma linha). Sem animação: o
+      // campo também revela o cursor e brigaria com uma rolagem em curso.
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+      );
+    });
+  }
+
+  /// (cor, tamanho, estampa) da célula em foco.
+  ({int cor, int tam, int est})? get _foco3 {
+    final k = _focado;
+    if (k == null) return null;
+    final p = k.split('|');
+    return (
+      cor: int.parse(p[0]),
+      tam: int.parse(p[1]),
+      est: p.length > 2 ? int.parse(p[2]) : 0,
+    );
+  }
+
+  bool get _mobile =>
+      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+  bool get _comGrade =>
+      !_skuUnico &&
+      !_modoEsperadas &&
+      _cores.isNotEmpty &&
+      _tamanhos.isNotEmpty;
+
+  /// Grade x Por cor: mobile com mais de 4 tamanhos abre em Por cor; o
+  /// desktop abre em Grade. A escolha do usuário vale sobre o padrão.
+  bool get _modoPorCor =>
+      _comGrade && (_porCor ?? (_mobile && _tamanhos.length > 4));
+
+  /// C3: célula em foco no celular -> seletores resumidos, sem abas nem rodapé.
+  bool get _focoMobile =>
+      _focado != null && _mobile && !_skuUnico && !_modoEsperadas;
+
+  int get _corAtivaId => _cores.containsKey(_corAtiva)
+      ? _corAtiva!
+      : _cores.keys.first;
+
+  double _totalCor(int cor) {
+    var t = 0.0;
+    for (final est in _blocos) {
+      for (final tam in _tamanhos.keys) {
+        t += _ler(_celula(cor, tam, est)) ?? 0;
+      }
+    }
+    return t;
   }
 
   double? _ler(TextEditingController c) {
@@ -434,7 +502,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   void _somar(int delta) {
     final c = _celulaFocada;
-    if (c == null) return;
+    if (c != null) _ajustar(c, delta);
+  }
+
+  void _ajustar(TextEditingController c, int delta) {
     final atual = _ler(c);
     if (atual == null && delta < 0) return;
     final novo = ((atual ?? 0) + delta).clamp(0, 999999).toDouble();
@@ -454,8 +525,17 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       return;
     }
     final p = ordem[i + 1].split('|');
-    _foco(int.parse(p[0]), int.parse(p[1]), p.length > 2 ? int.parse(p[2]) : 0)
-        .requestFocus();
+    final no = _foco(
+        int.parse(p[0]), int.parse(p[1]), p.length > 2 ? int.parse(p[2]) : 0);
+    if (_modoPorCor && int.parse(p[0]) != _corAtivaId) {
+      // outra cor = outra lista: o campo só existe depois de trocar a cor ativa
+      setState(() => _corAtiva = int.parse(p[0]));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) no.requestFocus();
+      });
+    } else {
+      no.requestFocus();
+    }
   }
 
   Widget _barraTeclado(SivColors cores, SivTextStyles textos) {
@@ -502,8 +582,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
-    final tabs = widget.permiteTrocarAba;
+    final foco = _focoMobile;
+    final tabs = widget.permiteTrocarAba && !foco;
     final podeSalvar = _podeSalvar;
+    final porCor = _modoPorCor;
     return Material(
       color: cores.papel,
       child: Column(
@@ -537,6 +619,10 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                     ],
                   ),
                 ),
+                if (foco)
+                  Text('${qtd(_totalPecas)} pç',
+                      key: const Key('painel_total_cabecalho'),
+                      style: textos.secao),
               ],
             ),
           ),
@@ -552,7 +638,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               ),
             ),
           if (tabs) _abas(cores, textos),
+          // key: as abas somem com o foco; sem ela o corpo remonta e perde o foco
           Expanded(
+            key: const Key('painel_corpo'),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.all(16),
@@ -567,14 +655,29 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                       : _corpo(cores, textos),
             ),
           ),
-          if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
-          if (!_modoEsperadas)
-            RodapeAcaoEntrada(
-              resumo: Text(
-                '${qtd(_totalPecas)} peças',
-                key: const Key('painel_total'),
-                style: textos.secao,
+          if (foco && _temViolacao)
+            Container(
+              width: double.infinity,
+              color: cores.excedenteFundo,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Text(
+                mensagemContadoAbaixoDoLido,
+                key: const Key('painel_aviso_lido'),
+                style: textos.apoio.copyWith(color: cores.vinho),
               ),
+            ),
+          if (_focado != null && !_modoEsperadas && !_skuUnico && !porCor)
+            _faixaEditando(cores, textos),
+          if (_focado != null && !_modoEsperadas) _barraTeclado(cores, textos),
+          if (!_modoEsperadas && !foco)
+            RodapeAcaoEntrada(
+              resumo: porCor
+                  ? _proximaCor(cores, textos)
+                  : Text(
+                      '${qtd(_totalPecas)} peças',
+                      key: const Key('painel_total'),
+                      style: textos.secao,
+                    ),
               aviso: _temViolacao
                   ? Text(
                       mensagemContadoAbaixoDoLido,
@@ -587,6 +690,8 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                     ? 'Salvar sem referência'
                     : widget.impressasPorProduto != null
                         ? 'SALVAR · IMPRIMIR ${qtd(_aImprimir)}'
+                        : porCor
+                        ? 'SALVAR · ${qtd(_totalPecas)} PEÇAS'
                         : 'SALVAR',
                 onPressed: podeSalvar ? _salvar : null,
               ),
@@ -711,16 +816,23 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
           ),
           const SizedBox(height: 12),
         ],
-        widget.corSeletor(
-          SeletorData(
-            onChanged: (itens) {
-              _coresSeletor
-                ..clear()
-                ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-              _sincronizarSeletores();
-            },
+        if (_focoMobile && _telaCheia)
+          ..._resumoSeletores(cores, textos)
+        else ...[
+        if (_telaCheia)
+          _variacao('COR', _cores, '+ cor', _escolherCores, _removerCor,
+              'cor', cores, textos)
+        else
+          widget.corSeletor(
+            SeletorData(
+              onChanged: (itens) {
+                _coresSeletor
+                  ..clear()
+                  ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+                _sincronizarSeletores();
+              },
+            ),
           ),
-        ),
         const SizedBox(height: 12),
         if (widget.linha == null && widget.estampaSeletor != null) ...[
           // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
@@ -730,28 +842,22 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               key: const Key('contagem_estampa_fixa'),
               style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
             )
+          else if (_telaCheia)
+            _variacao('ESTAMPA', _estampas, '+ estampa', _escolherEstampa,
+                _removerEstampa, 'estampa', cores, textos)
           else
             widget.estampaSeletor!(
               SeletorData(
                 compacto: true,
-                onChanged: (itens) => setState(() {
-                  final antes = _estampas.keys.toSet();
-                  _estampas
-                    ..clear()
-                    ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-                  final ref = _referenciaId;
-                  if (_esperadaEscolhida != null && ref != null) {
-                    for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
-                      _preencherExistentes(ref, est);
-                    }
-                    _ordenarTamanhos();
-                  }
-                }),
+                onChanged: _estampasMudaram,
               ),
             ),
           const SizedBox(height: 12),
         ],
-        if (widget.carregarTamanhos != null)
+        if (_telaCheia)
+          _variacao('TAMANHO', _tamanhos, '+ tam.', _escolherTamanhos,
+              _removerTamanho, 'tam', cores, textos)
+        else if (_variacoes != null)
           _tipoTamanho(cores, textos)
         else
           widget.tamanhoSeletor(
@@ -764,16 +870,25 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               },
             ),
           ),
+        ],
         const SizedBox(height: 16),
-        if (_cores.isNotEmpty && _tamanhos.isNotEmpty)
-          for (final est in _blocos) ...[
-            if (_blocos.length > 1 || est != 0) ...[
-              _rotulo(_nomeBloco(est), cores, textos),
-            ],
-            _grade(cores, textos, est),
-            const SizedBox(height: 16),
-          ]
-        else if (_estampas.isNotEmpty)
+        if (_cores.isNotEmpty && _tamanhos.isNotEmpty) ...[
+          _seletorModo(cores, textos),
+          if (_modoPorCor)
+            _porCorView(cores, textos)
+          else
+            for (final est in _blocos)
+              Column(
+                key: ValueKey('bloco_$est'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_blocos.length > 1 || est != 0)
+                    _rotulo(_nomeBloco(est), cores, textos),
+                  _grade(cores, textos, est),
+                  const SizedBox(height: 16),
+                ],
+              ),
+        ] else if (_estampas.isNotEmpty)
           Text(
             'Escolha as cores e os tamanhos para preencher a grade de cada estampa e do liso.',
             key: const Key('contagem_estampa_sem_grade'),
@@ -788,6 +903,187 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         ],
       ],
     );
+  }
+
+  void _estampasMudaram(List<SelectData> itens) => setState(() {
+        final antes = _estampas.keys.toSet();
+        _estampas
+          ..clear()
+          ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+        final ref = _referenciaId;
+        if (_esperadaEscolhida != null && ref != null) {
+          for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
+            _preencherExistentes(ref, est);
+          }
+          _ordenarTamanhos();
+        }
+      });
+
+  // --- seletores em tela cheia (mobile, C4) ------------------------------
+
+  // Bloc das variações (provido pela página); sem ele, fluxo legado/desktop.
+  late final VariacoesProdutoBloc? _variacoes = _lerVariacoes();
+
+  VariacoesProdutoBloc? _lerVariacoes() {
+    try {
+      return context.read<VariacoesProdutoBloc>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get _telaCheia =>
+      _variacoes != null &&
+      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+
+  String? get _subtituloSeletor => _referenciaId == null
+      ? null
+      : '${_referenciaNome ?? widget.linha?.descricao ?? 'Referência'} · REF $_referenciaId';
+
+  SelectData _sd(int id, String nome) =>
+      SelectData(id: id, nome: nome, data: const {});
+
+  void _aviso(String t) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+
+  /// Linha "RÓTULO  [chip ×] ... [+ botão]"; tocar no chip remove.
+  Widget _variacao(
+    String rotulo,
+    Map<int, String> itens,
+    String botao,
+    VoidCallback abrir,
+    void Function(int id) remover,
+    String chave,
+    SivColors cores,
+    SivTextStyles textos,
+  ) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _rotulo(rotulo, cores, textos),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final e in itens.entries)
+                  InputChip(
+                    key: Key('chip_${chave}_${e.key}'),
+                    label: Text(e.value),
+                    onDeleted: () => remover(e.key),
+                  ),
+                OutlinedButton(
+                  key: Key('add_$chave'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(48, 44)),
+                  onPressed: abrir,
+                  child: Text(botao),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Future<void> _escolherCores() async {
+    final usadas = {
+      for (final c in widget.existentes) if (c.corId != null) c.corId!,
+      for (final c in widget.existentesDaReferencia?.call(_referenciaId ?? -1, null) ??
+          const <EntradaContagem>[])
+        if (c.corId != null) c.corId!,
+    };
+    final r = await VariacaoTelaCheia.abrir(
+      context,
+      _variacoes!,
+      VariacaoTelaCheia(
+        titulo: 'Cores',
+        subtitulo: _subtituloSeletor,
+        lista: (s) => s.cores,
+        cadastrar: VariacoesCorCadastrada.new,
+        singular: 'cor',
+        plural: 'cores',
+        selecionados: [for (final e in _cores.entries) _sd(e.key, e.value)],
+        usados: usadas,
+      ),
+    );
+    if (r == null) return;
+    _coresSeletor
+      ..clear()
+      ..addEntries(r.map((i) => MapEntry(i.id, i.nome)));
+    _sincronizarSeletores();
+  }
+
+  void _removerCor(int id) {
+    if (_comValor(cor: id, tam: null)) {
+      return _aviso('Zere as quantidades desta cor antes de remover.');
+    }
+    _coresSeletor.remove(id);
+    _sincronizarSeletores();
+  }
+
+  Future<void> _escolherEstampa() async {
+    final r = await VariacaoTelaCheia.abrir(
+      context,
+      _variacoes!,
+      VariacaoTelaCheia(
+        titulo: 'Estampa',
+        subtitulo: _subtituloSeletor,
+        lista: (s) => s.estampas,
+        cadastrar: VariacoesEstampaCadastrada.new,
+        singular: 'estampa',
+        plural: 'estampas',
+        modo: SeletorGenericoModo.unica,
+        ocultos: _estampas.keys.toSet(),
+      ),
+    );
+    if (r == null || r.isEmpty) return;
+    _estampasMudaram([
+      for (final e in _estampas.entries) _sd(e.key, e.value),
+      r.first,
+    ]);
+  }
+
+  void _removerEstampa(int id) {
+    final comValor = _celulas.entries.any((e) {
+      final p = e.key.split('|');
+      return p.length > 2 && p[2] == '$id' && _ler(e.value) != null;
+    });
+    if (comValor) {
+      return _aviso('Zere as quantidades desta estampa antes de remover.');
+    }
+    _estampasMudaram([
+      for (final e in _estampas.entries)
+        if (e.key != id) _sd(e.key, e.value),
+    ]);
+  }
+
+  Future<void> _escolherTamanhos() async {
+    final bloc = _variacoes!;
+    final r = await TamanhosVariacaoTelaCheia.abrir(
+      context,
+      bloc,
+      TamanhosVariacaoTelaCheia(
+        subtitulo: _subtituloSeletor,
+        selecionados: _tamanhos.keys.toSet(),
+      ),
+    );
+    if (r == null) return;
+    _tamanhosSeletor
+      ..clear()
+      ..addEntries(
+        bloc.state.tamanhos.itens
+            .where((t) => r.contains(t.id))
+            .map((t) => MapEntry(t.id, t.nome)),
+      );
+    _sincronizarSeletores();
+  }
+
+  void _removerTamanho(int id) {
+    if (_comValor(cor: null, tam: id)) {
+      return _aviso('Zere as quantidades deste tamanho antes de remover.');
+    }
+    _tamanhosSeletor.remove(id);
+    _sincronizarSeletores();
   }
 
   /// Cartão da esperada escolhida: quanto já foi contado e, se a referência
@@ -890,8 +1186,21 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       _carregandoTamanhos = true;
     });
     try {
-      final todos = await widget.carregarTamanhos!();
+      final bloc = _variacoes!;
+      var pronto = bloc.state;
+      if (pronto.tamanhos.status != VariacaoStatus.sucesso) {
+        if (pronto.tamanhos.status == VariacaoStatus.falha) {
+          bloc.add(const VariacoesCarregadas());
+        }
+        pronto = await bloc.stream.firstWhere(
+          (s) => s.tamanhos.status != VariacaoStatus.carregando,
+        );
+      }
       if (!mounted) return;
+      if (pronto.tamanhos.status != VariacaoStatus.sucesso) {
+        throw StateError('tamanhos');
+      }
+      final todos = pronto.tamanhos.itens;
       _tamanhosSeletor
         ..clear()
         ..addEntries(
@@ -1049,36 +1358,186 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         const SizedBox(height: 8),
       ];
 
+  // --- grade fixa (C5) ---------------------------------------------------
+
+  Color _tinta(SivColors cores) =>
+      Color.alphaBlend(cores.aco.withValues(alpha: 0.16), cores.superficie);
+
   Widget _grade(SivColors cores, SivTextStyles textos, int est) {
     final cs = _cores.entries.toList();
     final ts = _tamanhos.entries.toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Table(
-        defaultColumnWidth: const FixedColumnWidth(72),
-        columnWidths: const {0: FixedColumnWidth(96)},
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          TableRow(
+    final f = _foco3;
+    final aqui = f != null && f.est == est;
+    final alturaMax = ((MediaQuery.sizeOf(context).height -
+                MediaQuery.viewInsetsOf(context).bottom) *
+            0.5)
+        .clamp(160.0, 520.0);
+    return GradeFixa(
+      cores: [for (final c in cs) c.value],
+      tamanhos: [for (final t in ts) t.value],
+      subtotais: [for (final c in cs) '${qtd(_totalCorBloco(c.key, est))} pç'],
+      linhaFoco: aqui ? cs.indexWhere((c) => c.key == f.cor) : null,
+      colunaFoco: aqui ? ts.indexWhere((t) => t.key == f.tam) : null,
+      alturaMax: alturaMax,
+      celula: (l, c) {
+        final cor = cs[l].key, tam = ts[c].key;
+        final focada = aqui && f.cor == cor && f.tam == tam;
+        final cruz = aqui && !focada && (f.cor == cor || f.tam == tam);
+        final abaixo = _abaixoDoLido(cor, tam, est);
+        OutlineInputBorder borda(Color cor, double w) => OutlineInputBorder(
+              borderRadius: BorderRadius.circular(3),
+              borderSide: BorderSide(color: cor, width: w),
+            );
+        final controller = _celula(cor, tam, est);
+        // No Android o TextField vence qualquer arrasto horizontal; o toque é
+        // do GestureDetector e o campo só recebe o foco, assim a grade rola
+        // começando por uma célula.
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            _foco(cor, tam, est).requestFocus();
+            controller.selection =
+                TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+          },
+          child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            boxShadow: focada
+                ? [
+                    BoxShadow(
+                      color: cores.aco.withValues(alpha: 0.28),
+                      spreadRadius: 3,
+                    ),
+                  ]
+                : null,
+          ),
+          child: IgnorePointer(child: TextField(
+            key: Key(est == 0 ? 'contagem_${cor}_$tam' : 'contagem_${cor}_${tam}_e$est'),
+            controller: controller,
+            focusNode: _foco(cor, tam, est),
+            textAlign: TextAlign.center,
+            style: textos.secao,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: '—',
+              filled: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              fillColor: abaixo
+                  ? cores.excedenteFundo
+                  : cruz
+                      ? _tinta(cores)
+                      : cores.superficie,
+              border: borda(abaixo ? cores.vinho : cores.hairline, 1),
+              enabledBorder: borda(abaixo ? cores.vinho : cores.hairline, 1),
+              focusedBorder: borda(cores.aco, 2),
+            ),
+          )),
+          ),
+        );
+      },
+    );
+  }
+
+  double _totalCorBloco(int cor, int est) {
+    var t = 0.0;
+    for (final tam in _tamanhos.keys) {
+      t += _ler(_celula(cor, tam, est)) ?? 0;
+    }
+    return t;
+  }
+
+  // --- faixa Editando + mapa 3x3 (C5) ------------------------------------
+
+  Widget _faixaEditando(SivColors cores, SivTextStyles textos) {
+    final f = _foco3;
+    final cs = _cores.entries.toList();
+    final ts = _tamanhos.entries.toList();
+    final r = f == null ? -1 : cs.indexWhere((e) => e.key == f.cor);
+    final c = f == null ? -1 : ts.indexWhere((e) => e.key == f.tam);
+    if (f == null || r < 0 || c < 0) return const SizedBox.shrink();
+    String nome(List<MapEntry<int, String>> l, int i) =>
+        i >= 0 && i < l.length ? l[i].value : '';
+    Widget vizinha(int dr, int dc) {
+      final rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= cs.length || cc < 0 || cc >= ts.length) {
+        return const SizedBox(width: 30, height: 24);
+      }
+      final centro = dr == 0 && dc == 0;
+      final v = _ler(_celula(cs[rr].key, ts[cc].key, f.est));
+      return GestureDetector(
+        key: Key('mapa_${dr + 1}_${dc + 1}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: centro
+            ? null
+            : () => _foco(cs[rr].key, ts[cc].key, f.est).requestFocus(),
+        child: Container(
+          width: 30,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: centro ? cores.aco : cores.superficie,
+            border: Border.all(color: centro ? cores.aco : cores.hairline),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Text(v == null ? '' : qtd(v),
+              style: textos.rotulo.copyWith(
+                  fontSize: 12, color: centro ? cores.superficie : null)),
+        ),
+      );
+    }
+
+    Widget fila(int dr) => Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Row(
             children: [
-              const SizedBox.shrink(),
-              for (final t in ts)
+              SizedBox(
+                width: 52,
+                child: Text(nome(cs, r + dr),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textos.apoio.copyWith(
+                        fontSize: 11,
+                        fontWeight:
+                            dr == 0 ? FontWeight.w700 : FontWeight.w400)),
+              ),
+              for (final dc in const [-1, 0, 1])
                 Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    t.value,
-                    textAlign: TextAlign.center,
-                    style: textos.secao,
-                  ),
-                ),
+                    padding: const EdgeInsets.only(left: 2),
+                    child: vizinha(dr, dc)),
             ],
           ),
-          for (final c in cs)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(c.value, style: textos.corpo),
+        );
+
+    return TextFieldTapRegion(
+      child: ExcludeFocus(
+        child: Container(
+          key: const Key('faixa_editando'),
+          decoration: BoxDecoration(
+            color: cores.superficie,
+            border: Border(top: BorderSide(color: cores.hairline)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('EDITANDO',
+                        style: textos.rotulo
+                            .copyWith(fontSize: 10.5, color: cores.textoApoio)),
+                    Text('${cs[r].value} · ${ts[c].value}',
+                        key: const Key('editando_celula'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textos.secao
+                            .copyWith(fontSize: 22, color: cores.acoEscuro)),
+                    Text(
+                        'linha ${r + 1} de ${cs.length} · coluna ${c + 1} de ${ts.length}',
+                        key: const Key('editando_posicao'),
+                        style: textos.apoio.copyWith(fontSize: 11)),
+                  ],
                 ),
                 for (final t in ts)
                   Padding(
@@ -1113,11 +1572,260 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                             ),
                           ),
                         ),
+                    ],
+                  ),
+                  for (final dr in const [-1, 0, 1]) fila(dr),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- resumo dos seletores com foco (C3) ---------------------------------
+
+  List<Widget> _resumoSeletores(SivColors cores, SivTextStyles textos) {
+    Widget link(String chave, String t, VoidCallback abrir) => TextButton(
+          key: Key(chave),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(0, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            foregroundColor: cores.acoEscuro,
+          ),
+          onPressed: abrir,
+          child: Text(t, style: textos.apoio.copyWith(color: cores.acoEscuro)),
+        );
+    final fixa = widget.estampaIdInicial != null;
+    final estampa = fixa
+        ? widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'
+        : _estampas.values.join(', ');
+    return [
+      Wrap(
+        key: const Key('resumo_seletores'),
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          link('resumo_cores', '${_cores.length} cores', _escolherCores),
+          Text('·', style: textos.apoio),
+          link('resumo_tamanhos', '${_tamanhos.length} tamanhos',
+              _escolherTamanhos),
+          if (widget.linha == null &&
+              widget.estampaSeletor != null &&
+              (fixa || _variacoes != null || _estampas.isNotEmpty)) ...[
+            Text('·', style: textos.apoio),
+            if (fixa)
+              Text('Estampa $estampa', style: textos.apoio)
+            else
+              link(
+                'resumo_estampa',
+                _estampas.isEmpty ? 'sem estampa' : 'Estampa $estampa',
+                _escolherEstampa,
+              ),
+          ],
+        ],
+      ),
+    ];
+  }
+
+  // --- Grade | Por cor (C5, 7d) --------------------------------------------
+
+  Widget _seletorModo(SivColors cores, SivTextStyles textos) {
+    final porCor = _modoPorCor;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SegmentedButton<bool>(
+        key: const Key('modo_grade_porcor'),
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(minimumSize: const Size(0, 36)),
+        segments: const [
+          ButtonSegment(value: false, label: Text('GRADE')),
+          ButtonSegment(value: true, label: Text('POR COR')),
+        ],
+        selected: {porCor},
+        onSelectionChanged: (s) => setState(() => _porCor = s.first),
+      ),
+    );
+  }
+
+  Widget _proximaCor(SivColors cores, SivTextStyles textos) {
+    final ids = _cores.keys.toList();
+    final i = ids.indexOf(_corAtivaId);
+    final ultima = i + 1 >= ids.length;
+    final proxima = ids[(i + 1) % ids.length];
+    return TextButton(
+      key: const Key('pc_proxima_cor'),
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        foregroundColor: cores.acoEscuro,
+      ),
+      onPressed: ids.length < 2 ? null : () => setState(() => _corAtiva = proxima),
+      child: Text(
+        ultima ? 'VOLTAR À PRIMEIRA COR' : 'PRÓXIMA COR · ${_cores[proxima]} →',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: textos.rotulo.copyWith(
+            color: cores.acoEscuro, fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _porCorView(SivColors cores, SivTextStyles textos) {
+    final ativa = _corAtivaId;
+    return Column(
+      key: const Key('por_cor'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final e in _cores.entries)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: InkWell(
+                    key: Key('pc_chip_${e.key}'),
+                    canRequestFocus: false,
+                    onTap: () => setState(() => _corAtiva = e.key),
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: e.key == ativa
+                            ? cores.acoEscuro
+                            : cores.superficie,
+                        border: Border.all(
+                            color: e.key == ativa
+                                ? cores.acoEscuro
+                                : cores.hairline),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(e.value,
+                              style: textos.corpo.copyWith(
+                                  color: e.key == ativa
+                                      ? cores.superficie
+                                      : null)),
+                          const SizedBox(width: 8),
+                          Text(qtd(_totalCor(e.key)),
+                              style: textos.secao.copyWith(
+                                  fontSize: 15,
+                                  color: e.key == ativa
+                                      ? cores.superficie
+                                      : cores.textoApoio)),
+                        ],
                       ),
                     ),
                   ),
-              ],
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(_cores[ativa]!,
+                  key: const Key('pc_titulo'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textos.secao
+                      .copyWith(fontSize: 24, color: cores.acoEscuro)),
             ),
+            Text('${qtd(_totalCor(ativa))} peças nesta cor',
+                key: const Key('pc_total_cor'), style: textos.apoio),
+          ],
+        ),
+        for (final est in _blocos) ...[
+          if (_blocos.length > 1 || est != 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _rotulo(_nomeBloco(est), cores, textos),
+            ),
+          for (final t in _tamanhos.entries)
+            _linhaTamanho(ativa, t.key, t.value, est, cores, textos),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _linhaTamanho(int cor, int tam, String nome, int est, SivColors cores,
+      SivTextStyles textos) {
+    final c = _celula(cor, tam, est);
+    final sufixo = est == 0 ? '${cor}_$tam' : '${cor}_${tam}_e$est';
+    final focada = _focado == _chave(cor, tam, est);
+    final abaixo = _abaixoDoLido(cor, tam, est);
+    Widget botao(String chave, String t, int delta) => InkWell(
+          key: Key(chave),
+          canRequestFocus: false,
+          onTap: () => _ajustar(c, delta),
+          child: Container(
+            width: 48,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: cores.superficie,
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(t, style: textos.secao.copyWith(fontSize: 22)),
+          ),
+        );
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: focada ? _tinta(cores) : null,
+        border: Border(bottom: BorderSide(color: cores.hairline)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            child: Text(nome,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textos.secao
+                    .copyWith(fontSize: 22, color: cores.acoEscuro)),
+          ),
+          const Spacer(),
+          botao('pc_menos_$sufixo', '−', -1),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 72,
+            height: 44,
+            child: TextField(
+              key: Key('pc_$sufixo'),
+              controller: c,
+              focusNode: _foco(cor, tam, est),
+              textAlign: TextAlign.center,
+              style: textos.secao.copyWith(fontSize: 22),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: '—',
+                filled: true,
+                fillColor: abaixo ? cores.excedenteFundo : cores.superficie,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide:
+                      BorderSide(color: abaixo ? cores.vinho : cores.hairline),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          botao('pc_mais_$sufixo', '+', 1),
         ],
       ),
     );

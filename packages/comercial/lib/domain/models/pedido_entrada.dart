@@ -70,6 +70,8 @@ class EntradaLinha extends Equatable {
   final double? diferenca;
   final bool divergente;
   final bool divergenciaResolvida;
+  final int? estampaId;
+  final String? estampaNome;
 
   const EntradaLinha({
     required this.id,
@@ -88,6 +90,8 @@ class EntradaLinha extends Equatable {
     required this.diferenca,
     required this.divergente,
     required this.divergenciaResolvida,
+    this.estampaId,
+    this.estampaNome,
   });
 
   factory EntradaLinha.fromJson(Map<String, dynamic> j) => EntradaLinha(
@@ -109,6 +113,8 @@ class EntradaLinha extends Equatable {
         diferenca: j['diferenca'] == null ? null : _num(j['diferenca']),
         divergente: j['divergente'] == true,
         divergenciaResolvida: j['divergenciaResolvidaEm'] != null,
+        estampaId: _int(j['estampaId']),
+        estampaNome: j['estampaNome'] as String?,
       );
 
   @override
@@ -276,6 +282,7 @@ class EntradaConferenciaItem extends Equatable {
   final String cor;
   final String tamanho;
   final String estampa;
+  final int? estampaId;
   final double contado;
   final double lido;
   final SituacaoConferencia situacao;
@@ -288,6 +295,7 @@ class EntradaConferenciaItem extends Equatable {
     required this.cor,
     required this.tamanho,
     this.estampa = '',
+    this.estampaId,
     required this.contado,
     required this.lido,
     required this.situacao,
@@ -303,6 +311,10 @@ class EntradaConferenciaItem extends Equatable {
       idReferencia: _int(j['idReferencia']) ?? 0,
       cor: j['cor'] as String? ?? '',
       tamanho: j['tamanho'] as String? ?? '',
+      estampa: j['
+      
+      Nome'] as String? ?? j['estampa'] as String? ?? '',
+      estampaId: _int(j['estampaId']),
       estampa: j['estampa'] as String? ?? '',
       contado: contado,
       lido: lido,
@@ -381,6 +393,7 @@ class EntradaDivergencia extends Equatable {
   final int produtoId;
   final String descricao;
   final String grade;
+  final String? estampaNome;
   final double contado;
   final double lido;
   final TipoDivergencia tipo;
@@ -391,6 +404,7 @@ class EntradaDivergencia extends Equatable {
     required this.produtoId,
     required this.descricao,
     required this.grade,
+    this.estampaNome,
     required this.contado,
     required this.lido,
     required this.tipo,
@@ -403,6 +417,7 @@ class EntradaDivergencia extends Equatable {
         produtoId: _int(j['produtoId']) ?? 0,
         descricao: j['descricao'] as String? ?? '',
         grade: j['grade'] as String? ?? '',
+        estampaNome: j['estampaNome'] as String?,
         contado: _num(j['contado']),
         lido: _num(j['lido']),
         tipo: TipoDivergencia.deValor(j['tipo'] as String?),

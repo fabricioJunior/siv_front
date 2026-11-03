@@ -91,6 +91,15 @@ abstrair a origem dos dados;
 decidir entre datasource local e remoto quando necessário;
 não conter lógica de interface.
 Datasources
+Gateway (dependência entre packages)
+Um UseCase pode depender de um Gateway: interface (porta) declarada no próprio package consumidor, com modelos do próprio package (nunca models do package de origem).
+A implementação do Gateway fica no composition root (lib/, único lugar que enxerga os dois packages), chama os use cases do package de origem e é registrada no GetIt.
+Package consumidor nunca importa package sibling.
+Tela nunca chama UseCase: Tela → BLoC → UseCase → Gateway.
+Modal, bottom sheet e tela cheia que precisam de dados consomem o estado de um BLoC (BlocProvider/BlocBuilder); não carregam dados por conta própria nem recebem funções (Future Function) soltas.
+Widgets compartilhados entre packages continuam via SeletorWidget no construtor (montado em lib/routes.dart).
+Cache de leitura (listas de cadastro) vive no UseCase ou no Gateway, nunca na tela.
+
 Datasources devem apenas:
 acessar APIs;
 acessar banco local;

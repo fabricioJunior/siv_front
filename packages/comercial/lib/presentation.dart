@@ -99,3 +99,4 @@ export 'presentation/pages/grupos_aba.dart';
 export 'presentation/pages/lista_grupo_page.dart';
 export 'presentation/blocs/ecommerce_vitrine_bloc/ecommerce_vitrine_bloc.dart';
 export 'presentation/pages/vitrine_aba.dart';
+export 'presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';

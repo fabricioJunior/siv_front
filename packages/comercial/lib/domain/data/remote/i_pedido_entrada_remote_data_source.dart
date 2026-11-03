@@ -97,5 +97,10 @@ abstract class IPedidoEntradaRemoteDataSource {
 
   /// Conferência em lote: [deltas] (produtoId -> variação do lido; negativo
   /// remove). Uma chamada, uma transação no servidor.
-  Future<EntradaResumo> registrarLeituras(int pedidoId, Map<int, int> deltas);
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  });
 }

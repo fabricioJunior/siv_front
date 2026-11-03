@@ -24,6 +24,7 @@ class ProdutoCompartilhadoDto extends ProdutoCompartilhado
         nome: nome,
         corNome: corNome,
         tamanhoNome: tamanhoNome,
+        estampaNome: estampaNome,
         hash: hash);
   }
 
@@ -36,6 +37,7 @@ class ProdutoCompartilhadoDto extends ProdutoCompartilhado
       nome: model.nome,
       corNome: model.corNome,
       tamanhoNome: model.tamanhoNome,
+      estampaNome: model.estampaNome,
       hash: model.hash,
     );
   }
@@ -48,6 +50,7 @@ class ProdutoCompartilhadoDto extends ProdutoCompartilhado
     required super.corNome,
     required super.tamanhoNome,
     required super.hash,
+    super.estampaNome,
     required this.hashLista,
   }) : super(hashLista: hashLista);
 }

@@ -240,6 +240,7 @@ class _VendaPageState extends State<VendaPage> {
             'nome': item.descricao,
             'corNome': item.cor,
             'tamanhoNome': item.tamanho,
+            'estampaNome': item.estampa,
           },
         )
         .toList(growable: false);
@@ -275,6 +276,7 @@ class _VendaPageState extends State<VendaPage> {
                 nome: item.descricao,
                 corNome: item.cor,
                 tamanhoNome: item.tamanho,
+                estampaNome: item.estampa,
               ),
             )
             .toList(),
@@ -1037,6 +1039,7 @@ class _VendaPageState extends State<VendaPage> {
             'nome': item.descricao,
             'corNome': item.cor,
             'tamanhoNome': item.tamanho,
+            'estampaNome': item.estampa,
           },
         )
         .toList(growable: false);
@@ -1054,6 +1057,7 @@ class _VendaPageState extends State<VendaPage> {
             'nome': item.descricao,
             'corNome': item.cor,
             'tamanhoNome': item.tamanho,
+            'estampaNome': item.estampa,
           },
         )
         .toList(growable: false);

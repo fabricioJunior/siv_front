@@ -184,7 +184,6 @@ class _PassoContarState extends State<PassoContar> {
       corSeletor: s.corSeletor,
       tamanhoSeletor: s.tamanhoSeletor,
       estampaSeletor: s.estampaSeletor,
-      carregarTamanhos: s.carregarTamanhos,
       buscarParecidas: s.buscarReferenciasParecidas,
       onSalvar: onSalvar,
       onFechar: onFechar,

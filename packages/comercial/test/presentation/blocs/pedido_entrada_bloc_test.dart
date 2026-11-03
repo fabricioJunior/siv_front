@@ -5,8 +5,10 @@ import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cas
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/domain/use_cases/conferir_pedido.dart';
 import 'package:comercial/domain/use_cases/faturar_pedido.dart';
+import 'package:core/leituras_entrada.dart';
 import 'package:core/sessao.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/leituras_copia_fake.dart';
 
 Map<String, dynamic> _json({bool livre = true}) => {
       'pedidoId': 9,
@@ -44,6 +46,8 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   Map<String, dynamic>? resposta; // sobrescreve o resumo devolvido
   final chamadas = <String>[];
   final lotes = <Map<int, int>>[];
+  final lotesIds = <String?>[];
+  final motivos = <String?>[];
   List<ItemContagem>? itens;
   List<int>? ids;
   int? referenciaId;
@@ -81,9 +85,13 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
-    Map<int, int> deltas,
-  ) async {
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) async {
     lotes.add(Map.of(deltas));
+    lotesIds.add(loteId);
+    motivos.add(motivo);
     if (erro != null) throw erro!;
     return EntradaResumo.fromJson(resposta ?? _json());
   }
@@ -146,9 +154,11 @@ class _FaturarFalso implements FaturarPedido {
 void main() {
   late _Remoto remoto;
   late PedidoEntradaBloc bloc;
+  late LeiturasCopiaFake copia;
 
   setUp(() {
     remoto = _Remoto();
+    copia = LeiturasCopiaFake();
     bloc = PedidoEntradaBloc(
       ImportarNfeEntrada(remoto),
       CriarEntradaPorContagem(remoto),
@@ -166,6 +176,7 @@ void main() {
       FaturarEntrada(_ConferirFalso(), _FaturarFalso()),
       RegistrarLeiturasEntrada(remoto),
       _Sessao(),
+      copia,
     );
     bloc.add(const PedidoEntradaCarregou(9));
   });
@@ -313,8 +324,8 @@ void main() {
       expect(TrilhaEntrada.podeFaturar(st.resumo!), isFalse);
 
       bloc.add(const PedidoEntradaFaturou());
-      st = await bloc.stream.firstWhere((s) => s.erro != null);
-      expect(st.erro, contains('Decida as divergências'));
+      st = await bloc.stream.firstWhere((s) => s.erroFaturar != null);
+      expect(st.erroFaturar, contains('Decida as divergências'));
       expect(st.faturado, isFalse);
     });
 
@@ -435,6 +446,113 @@ void main() {
       bloc.add(const PedidoEntradaDescartouLeituras());
       await bloc.stream.firstWhere((s) => s.leiturasPendentes.isEmpty);
       expect(remoto.lotes, isEmpty);
+    });
+
+    test('bipar grava a cópia local com loteId e operador', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes[5] == 2);
+      final c = copia.copias[9]!;
+      expect(c.deltas, {5: 2});
+      expect(c.loteId, bloc.state.loteId);
+      expect(c.loteId, isNotEmpty);
+    });
+
+    test('voltar a zero apaga a cópia', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      bloc.add(const PedidoEntradaLeu(5, -1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isEmpty);
+      await Future<void>.delayed(Duration.zero);
+      expect(copia.copias, isEmpty);
+    });
+
+    test('recarregar restaura a fila e descarta produto que saiu', () async {
+      copia.copias[9] = LeiturasEntradaPendentes(
+        pedidoId: 9,
+        loteId: 'L1',
+        atualizadoEm: DateTime(2026, 11, 2, 9, 41),
+        deltas: {5: 3, 99: 4},
+      );
+      await carregar();
+      final st = await bloc.stream
+          .firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      expect(st.leiturasPendentes, {5: 3});
+      expect(st.loteId, 'L1');
+      expect(st.restauradaEm, DateTime(2026, 11, 2, 9, 41));
+    });
+
+    test('envio com sucesso manda loteId e apaga a cópia', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      final lote = bloc.state.loteId;
+      bloc.add(const PedidoEntradaEnviouLeituras());
+      await bloc.stream
+          .firstWhere((s) => !s.salvando && s.leiturasPendentes.isEmpty);
+      expect(remoto.lotesIds, [lote]);
+      expect(remoto.motivos, [null]);
+      expect(copia.copias, isEmpty);
+      expect(bloc.state.loteId, isNull);
+    });
+
+    test('erro mantém a cópia e o MESMO loteId', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      final lote = bloc.state.loteId;
+      remoto.erro = Exception('falhou');
+      bloc.add(const PedidoEntradaEnviouLeituras());
+      final st = await bloc.stream.firstWhere((s) => s.erro != null);
+      expect(st.erroEnvio, isTrue);
+      expect(copia.copias[9]!.loteId, lote);
+      remoto.erro = null;
+      bloc.add(const PedidoEntradaEnviouLeituras());
+      await bloc.stream
+          .firstWhere((s) => !s.salvando && s.leiturasPendentes.isEmpty);
+      expect(remoto.lotesIds, [lote, lote]);
+      expect(copia.copias, isEmpty);
+    });
+
+    test('descartar apaga a cópia', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      bloc.add(const PedidoEntradaDescartouLeituras());
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isEmpty);
+      await Future<void>.delayed(Duration.zero);
+      expect(copia.copias, isEmpty);
+      expect(bloc.state.loteId, isNull);
+    });
+
+    test('zerar envia -lidoServidor com motivo zerar e limpa no sucesso',
+        () async {
+      await carregar(); // produto 5 lido 2, produto 6 lido 0
+      bloc.add(const PedidoEntradaLeu(5, 3)); // pendente absorvido
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      bloc.add(const PedidoEntradaZerouLeituras());
+      await bloc.stream
+          .firstWhere((s) => !s.salvando && s.leiturasPendentes.isEmpty);
+      expect(remoto.lotes, [
+        {5: -2},
+      ]);
+      expect(remoto.motivos, ['zerar']);
+      expect(remoto.lotesIds.single, isNotEmpty);
+      expect(copia.copias, isEmpty);
+      expect(bloc.state.erro, isNull);
+    });
+
+    test('zerar com erro mantém a fila anterior e a cópia', () async {
+      await carregar();
+      bloc.add(const PedidoEntradaLeu(5, 1));
+      await bloc.stream.firstWhere((s) => s.leiturasPendentes.isNotEmpty);
+      remoto.erro = Exception('falhou');
+      bloc.add(const PedidoEntradaZerouLeituras());
+      final st = await bloc.stream.firstWhere((s) => s.erro != null);
+      expect(st.leiturasPendentes, {5: 1});
+      expect(copia.copias[9]!.deltas, {5: 1});
+      expect(remoto.motivos, ['zerar']);
     });
   });
 }

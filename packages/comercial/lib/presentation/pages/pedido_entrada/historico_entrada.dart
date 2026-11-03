@@ -67,12 +67,17 @@ class HistoricoEntradaPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_produto(c.produtoId),
+                  Text(
+                      c.tipo == 'leituras_zeradas'
+                          ? 'Leituras zeradas'
+                          : _produto(c.produtoId),
                       style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
                   Text(
-                    c.tipo == 'contagem'
-                        ? 'contado ${c.de == null ? '-' : qtd(c.de!)} → ${c.para == null ? '-' : qtd(c.para!)}'
-                        : 'decisão: ${c.acao ?? ''}',
+                    c.tipo == 'leituras_zeradas'
+                        ? '${c.de == null ? '-' : qtd(c.de!)} peças → 0'
+                        : c.tipo == 'contagem'
+                            ? 'contado ${c.de == null ? '-' : qtd(c.de!)} → ${c.para == null ? '-' : qtd(c.para!)}'
+                            : 'decisão: ${c.acao ?? ''}',
                     style: textos.corpo,
                   ),
                   Text(

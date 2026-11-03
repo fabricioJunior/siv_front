@@ -775,6 +775,9 @@ class VendaBloc extends Bloc<VendaEvent, VendaState> {
           tamanhoNome: item['tamanhoNome']?.toString() ??
               item['tamanho']?.toString() ??
               '',
+          estampaNome: item['estampaNome']?.toString() ??
+              item['estampa']?.toString() ??
+              '',
         ),
       );
     }

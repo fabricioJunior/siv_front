@@ -14,6 +14,8 @@ class RomaneioItemDevolvidoDto implements RomaneioItemDevolvido {
   @override
   final String? tamanhoNome;
   @override
+  final String? estampaNome;
+  @override
   final double? quantidade;
   @override
   final int? romaneioId;
@@ -37,6 +39,7 @@ class RomaneioItemDevolvidoDto implements RomaneioItemDevolvido {
     this.referenciaDescricao,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
     this.quantidade,
     this.romaneioId,
     this.sequencia,
@@ -55,6 +58,7 @@ class RomaneioItemDevolvidoDto implements RomaneioItemDevolvido {
       referenciaDescricao: json['referenciaDescricao']?.toString(),
       corNome: json['corNome']?.toString(),
       tamanhoNome: json['tamanhoNome']?.toString(),
+      estampaNome: json['estampaNome']?.toString(),
       quantidade: _toDouble(json['quantidade']),
       romaneioId: _toInt(json['romaneioId']),
       sequencia: _toInt(json['sequencia']),
@@ -74,6 +78,7 @@ class RomaneioItemDevolvidoDto implements RomaneioItemDevolvido {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         quantidade,
         romaneioId,
         sequencia,

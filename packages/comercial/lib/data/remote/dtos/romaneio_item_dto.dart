@@ -16,6 +16,8 @@ class RomaneioItemDto implements RomaneioItem {
   @override
   final String? tamanhoNome;
   @override
+  final String? estampaNome;
+  @override
   final double? valorUnitario;
   @override
   final double? valorUnitDesconto;
@@ -34,6 +36,7 @@ class RomaneioItemDto implements RomaneioItem {
     this.referenciaDescricao,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
     this.valorUnitario,
     this.valorUnitDesconto,
     this.valorTotalBruto,
@@ -50,6 +53,7 @@ class RomaneioItemDto implements RomaneioItem {
       referenciaDescricao: json['referenciaDescricao']?.toString(),
       corNome: json['corNome']?.toString(),
       tamanhoNome: json['tamanhoNome']?.toString(),
+      estampaNome: json['estampaNome']?.toString(),
       valorUnitario: _toDouble(json['valorUnitario']),
       valorUnitDesconto: _toDouble(json['valorUnitDesconto']),
       valorTotalBruto: _toDouble(json['valorTotalBruto']),
@@ -67,6 +71,7 @@ class RomaneioItemDto implements RomaneioItem {
       referenciaDescricao: item.referenciaDescricao,
       corNome: item.corNome,
       tamanhoNome: item.tamanhoNome,
+      estampaNome: item.estampaNome,
       valorUnitario: item.valorUnitario,
       valorUnitDesconto: item.valorUnitDesconto,
       valorTotalBruto: item.valorTotalBruto,
@@ -91,6 +96,7 @@ class RomaneioItemDto implements RomaneioItem {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         valorUnitario,
         valorUnitDesconto,
         valorTotalBruto,

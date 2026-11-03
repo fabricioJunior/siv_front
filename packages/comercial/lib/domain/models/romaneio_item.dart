@@ -8,6 +8,7 @@ abstract class RomaneioItem implements Equatable {
   String? get referenciaDescricao;
   String? get corNome;
   String? get tamanhoNome;
+  String? get estampaNome;
   double? get valorUnitario;
   double? get valorUnitDesconto;
   double? get valorTotalBruto;
@@ -22,6 +23,7 @@ abstract class RomaneioItem implements Equatable {
     String? referenciaDescricao,
     String? corNome,
     String? tamanhoNome,
+    String? estampaNome,
     double? valorUnitario,
     double? valorUnitDesconto,
     double? valorTotalBruto,
@@ -38,6 +40,7 @@ abstract class RomaneioItem implements Equatable {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         valorUnitario,
         valorUnitDesconto,
         valorTotalBruto,
@@ -65,6 +68,8 @@ class _RomaneioItemImpl implements RomaneioItem {
   @override
   final String? tamanhoNome;
   @override
+  final String? estampaNome;
+  @override
   final double? valorUnitario;
   @override
   final double? valorUnitDesconto;
@@ -83,6 +88,7 @@ class _RomaneioItemImpl implements RomaneioItem {
     this.referenciaDescricao,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
     this.valorUnitario,
     this.valorUnitDesconto,
     this.valorTotalBruto,
@@ -99,6 +105,7 @@ class _RomaneioItemImpl implements RomaneioItem {
         referenciaDescricao,
         corNome,
         tamanhoNome,
+        estampaNome,
         valorUnitario,
         valorUnitDesconto,
         valorTotalBruto,

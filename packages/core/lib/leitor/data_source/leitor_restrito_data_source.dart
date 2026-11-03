@@ -73,6 +73,9 @@ class _LeitorDataComSaldo implements LeitorData {
   String get cor => origem.cor;
 
   @override
+  String get estampa => origem.estampa;
+
+  @override
   double? get valor => origem.valor;
 
   @override

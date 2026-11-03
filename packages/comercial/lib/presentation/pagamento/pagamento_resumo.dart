@@ -577,6 +577,7 @@ class _ItemResumoState extends State<_ItemResumo> {
     final temDesconto = manual > 0 || descontoPromo > 0;
     final variacao = [
       if (produto.corNome.isNotEmpty) produto.corNome,
+      if (produto.estampaNome.isNotEmpty) produto.estampaNome,
       if (produto.tamanhoNome.isNotEmpty) produto.tamanhoNome,
     ].join(' · ');
     final opcoes = (state.opcoesElegiveisPorItem[id] ?? const <OpcaoElegivel>[])

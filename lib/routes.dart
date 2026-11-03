@@ -41,7 +41,9 @@ import 'package:promocoes/presentation.dart' show PromocaoSeletor;
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
-import 'package:produtos/use_cases.dart' show RecuperarReferencias, RecuperarTamanhos;
+import 'package:produtos/use_cases.dart'
+    show
+        RecuperarReferencias;
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
@@ -838,11 +840,6 @@ Map<String, Widget Function(BuildContext)> routes = {
           onChanged: data.onChanged,
           titulo: 'Estampas (opcional)',
         ),
-        carregarTamanhos: () async =>
-            (await sl<RecuperarTamanhos>().call(inativo: false))
-                .where((t) => t.id != null)
-                .map((t) => TamanhoOpcao(id: t.id!, nome: t.nome))
-                .toList(),
         buscarReferenciasParecidas: (nome) async =>
             (await sl<RecuperarReferencias>().call(nome: nome, inativo: false))
                 .where((r) => r.id != null)

@@ -3,6 +3,8 @@ import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
+export 'package:comercial/domain/models/variacao_opcao.dart' show TamanhoOpcao;
+
 /// Busca de referências parecidas pelo nome (montada em `lib/routes.dart`; o
 /// comercial não importa o pacote produtos).
 typedef BuscaReferenciasParecidas = Future<List<ReferenciaParecida>> Function(
@@ -29,10 +31,6 @@ class SeletoresEntrada {
   /// Estampa opcional da contagem (nulo = sem o campo).
   final SeletorWidget? estampaSeletor;
 
-  /// Todos os tamanhos ativos; com isso o painel oferece "Numérico | Letras"
-  /// no lugar de selecionar tamanho por tamanho.
-  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
-
   const SeletoresEntrada({
     required this.categoriaSeletor,
     required this.referenciaSeletor,
@@ -41,21 +39,23 @@ class SeletoresEntrada {
     required this.tamanhoSeletor,
     this.buscarReferenciasParecidas,
     this.estampaSeletor,
-    this.carregarTamanhos,
   });
 }
 
-class TamanhoOpcao {
-  final int id;
-  final String nome;
-  const TamanhoOpcao({required this.id, required this.nome});
-
-  /// Numérico = nome só com número (36, 38, 40,5); o resto é letras (P, M, GG).
-  bool get numerico => RegExp(r'^\d+([.,]\d+)?$').hasMatch(nome.trim());
-}
-
 const _ordemLetras = [
-  'PP', 'P', 'M', 'G', 'GG', 'XG', 'G1', 'G2', 'G3', 'XGG', 'EG', 'U', 'UN',
+  'PP',
+  'P',
+  'M',
+  'G',
+  'GG',
+  'XG',
+  'G1',
+  'G2',
+  'G3',
+  'XGG',
+  'EG',
+  'U',
+  'UN',
 ];
 
 /// Ordem das colunas de tamanho: numéricos pelo valor (34, 36, 38…), depois as
@@ -120,7 +120,10 @@ class BotaoPrincipalEntrada extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icone != null) ...[Icon(icone, size: 18), const SizedBox(width: 8)],
+                  if (icone != null) ...[
+                    Icon(icone, size: 18),
+                    const SizedBox(width: 8)
+                  ],
                   Flexible(
                     child: Text(
                       rotulo,

@@ -233,7 +233,7 @@ class _CorpoState extends State<_Corpo> {
               Text('Nenhuma foto cadastrada.', style: theme.textTheme.bodyMedium)
             else
               SizedBox(
-                height: desktop ? 250 : 310,
+                height: desktop ? 310 : 330,
                 child: ReorderableListView.builder(
                   scrollDirection: Axis.horizontal,
                   buildDefaultDragHandles: false,
@@ -415,11 +415,13 @@ class _FotoTileState extends State<FotoTile> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
+                    visualDensity: VisualDensity.compact,
                     tooltip: 'Mover para a esquerda',
                     icon: const Icon(Icons.chevron_left),
                     onPressed: widget.podeEsquerda ? () => widget.onMover(-1) : null,
                   ),
                   IconButton(
+                    visualDensity: VisualDensity.compact,
                     tooltip: 'Mover para a direita',
                     icon: const Icon(Icons.chevron_right),
                     onPressed: widget.podeDireita ? () => widget.onMover(1) : null,
@@ -428,14 +430,24 @@ class _FotoTileState extends State<FotoTile> {
               ),
             Text(a.resumo, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
             if (aviso != null)
-              Text(aviso, style: theme.textTheme.bodySmall?.copyWith(color: cs.error)),
+              Text(
+                aviso,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(color: cs.error),
+              ),
             if (!widget.desktop)
               TextButton(
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
                 onPressed: widget.onEditar,
                 child: Text(aviso != null ? 'Completar' : 'Editar'),
               )
             else if (aviso != null)
-              TextButton(onPressed: widget.onEditar, child: const Text('Completar')),
+              TextButton(
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                onPressed: widget.onEditar,
+                child: const Text('Completar'),
+              ),
           ],
         ),
       ),

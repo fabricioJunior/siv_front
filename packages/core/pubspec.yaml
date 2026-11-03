@@ -31,6 +31,7 @@ dependencies:
   cep_sdk: ^0.0.1
   image_picker: ^1.2.1
   file_picker: ^8.1.6
+  share_plus: ^10.1.4
   flutter_image_compress: ^2.4.0
   image: ^4.5.4
   http_parser: ^4.1.2

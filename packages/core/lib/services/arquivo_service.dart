@@ -47,6 +47,28 @@ class ArquivoService {
     return path;
   }
 
+  /// Salva vários arquivos. Web: um download por arquivo. Desktop: pergunta a pasta uma só
+  /// vez. Mobile: um `saveFile` por arquivo. Retorna quantos foram salvos.
+  Future<int> salvarVarios(Map<String, Uint8List> arquivos) async {
+    if (kIsWeb) {
+      arquivos.forEach((nome, bytes) => baixarNoNavegador(bytes, nome));
+      return arquivos.length;
+    }
+    if (Platform.isAndroid || Platform.isIOS) {
+      var n = 0;
+      for (final e in arquivos.entries) {
+        if (await salvarBytes(bytes: e.value, nomeSugerido: e.key) != null) n++;
+      }
+      return n;
+    }
+    final pasta = await FilePicker.platform.getDirectoryPath();
+    if (pasta == null) return 0;
+    for (final e in arquivos.entries) {
+      await File('$pasta${Platform.pathSeparator}${e.key}').writeAsBytes(e.value);
+    }
+    return arquivos.length;
+  }
+
   /// Abre o seletor nativo e devolve os bytes do arquivo escolhido -- ao
   /// contrário de [selecionarArquivo] (que só devolve o path), funciona
   /// também no Flutter Web, onde não existe `dart:io` File local.

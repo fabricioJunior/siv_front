@@ -18,7 +18,25 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build windows --release --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+      # A Microsoft Store recusa versão repetida E versão menor que a já publicada. A versão vem do nº da
+      # execução deste workflow (github.run_number), que só cresce -- enquanto o arquivo
+      # build-windows.yml NÃO for renomeado/recriado (o contador recomeçaria em 1) e a fórmula não mudar.
+      # PISO = maior nº de execução já gerado (65, versão 1.1.65.0). Se a execução cair abaixo dele,
+      # o build para ANTES de gerar um pacote que a Store recusaria ou que seria "menor que a atual".
+      - name: Garante que a versão do pacote é maior que a já publicada
+        shell: bash
+        run: |
+          PISO=65
+          RUN=${{ github.run_number }}
+          echo "Versão deste build: 1.1.$RUN.0 (piso: 1.1.$PISO.0)"
+          if [ "$RUN" -le "$PISO" ]; then
+            echo "ERRO: nº da execução ($RUN) <= piso ($PISO). O workflow foi recriado/renomeado? A versão ficaria menor ou igual à já publicada na Store."
+            exit 1
+          fi
+
+      # --build-name/--build-number: o executável (e o package_info_plus, que mostra a versão na barra do app)
+      # passa a ter a MESMA versão do pacote da Store (1.1.<run>.0), em vez do 1.0.0+1 do pubspec.
+      - run: flutter build windows --release --build-name=1.1.${{ github.run_number }} --build-number=0 --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
         env:
           CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 

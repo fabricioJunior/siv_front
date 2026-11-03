@@ -30,10 +30,17 @@ import 'package:siv_front/routes.dart';
 // via `--dart-define=SENTRY_DSN=<dsn>` quando o projeto Sentry existir.
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+// Mesmo valor usado no upload dos source maps (ver vercel-build.sh). Vazio = deixa o SDK
+// derivar o release sozinho (dev local).
+const _sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SentryFlutter.init(
-    (options) => options.dsn = _sentryDsn,
+    (options) {
+      options.dsn = _sentryDsn;
+      if (_sentryRelease.isNotEmpty) options.release = _sentryRelease;
+    },
     appRunner: () async {
       // Precisa rodar DENTRO do appRunner, não antes do SentryFlutter.init --
       // o binding e o runApp precisam estar na mesma zone, senão o Flutter

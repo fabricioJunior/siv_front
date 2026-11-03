@@ -115,7 +115,7 @@ class PagamentoResumo extends StatelessWidget {
         _Linha(
           // Pedido grava o desconto padrão; a forma de pagamento pode mudá-lo no faturamento.
           contexto.origem == PagamentoOrigem.pedido &&
-                  state.promocaoEscolhidaPorItem.values.any(
+                  state.promocaoAtivaPorItem.values.any(
                     (o) => o.overridesPorFormaPagamento?.isNotEmpty ?? false,
                   )
               ? 'Promoções (estimado)'
@@ -555,7 +555,7 @@ class _ItemResumoState extends State<_ItemResumo> {
 
     final bruto = produto.quantidade * produto.valorUnitario;
     final manual = state.descontosItensAplicado[id] ?? 0;
-    final promocao = state.promocaoEscolhidaPorItem[id];
+    final promocao = state.promocaoAtivaPorItem[id];
     final cupons = state.cuponsEscolhidosPorItem[id] ?? const <OpcaoElegivel>[];
     // Prévia só recalcula por forma quando há 1 forma escolhida (o cálculo
     // final é do backend, ver formaDePagamentoUnicaId no state).

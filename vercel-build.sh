@@ -9,7 +9,8 @@ flutter pub get
 # qualquer falha derruba o build. Em preview/outros ambientes so avisa, para PRs e o projeto
 # de teste nao quebrarem se a variavel nao estiver configurada la.
 ESTRITO=""
-[ "$VERCEL_ENV" = "production" ] && ESTRITO=1
+# Branch develop (projeto de teste) nunca e estrita, mesmo se o projeto a tratar como Production.
+[ "$VERCEL_ENV" = "production" ] && [ "$VERCEL_GIT_COMMIT_REF" != "develop" ] && ESTRITO=1
 sentry_falha() {
   echo "ERRO SENTRY: $1"
   if [ -n "$ESTRITO" ]; then

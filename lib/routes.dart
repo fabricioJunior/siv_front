@@ -557,12 +557,14 @@ Map<String, Widget Function(BuildContext)> routes = {
   },
   '/ecommerce_referencias': (context) {
     final routeArgs = args(context);
+    final ecommerceId = routeArgs['ecommerceId'];
     return _rotaProtegida(
       route: '/ecommerce_referencias',
-      child: EcommerceReferenciasPage(
-        ecommerceId: routeArgs['ecommerceId'] as int,
-        tituloCanal: routeArgs['titulo'] as String?,
-      ),
+      // Sem canal (menu, recarregar a página, URL direta) não há o que listar: cai na vitrine,
+      // onde o canal é escolhido.
+      child: ecommerceId is int
+          ? EcommerceReferenciasPage(ecommerceId: ecommerceId, tituloCanal: routeArgs['titulo'] as String?)
+          : const ListasPersonalizadasPage(abaInicial: ListasAba.vitrine),
     );
   },
   '/ecommerce_pedidos': (context) {

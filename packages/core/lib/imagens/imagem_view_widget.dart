@@ -16,6 +16,10 @@ class ImagemViewWidget extends StatelessWidget {
   final Widget? placeholder;
   final Widget? errorWidget;
 
+  /// Largura em px (já com a densidade) em que a imagem é decodificada. Sem isso uma foto de
+  /// 3024x4032 ocupa ~48 MB de memória mesmo num quadradinho de 56 px (derruba a aba no celular).
+  final int? cacheWidth;
+
   const ImagemViewWidget({
     super.key,
     required this.url,
@@ -24,6 +28,7 @@ class ImagemViewWidget extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.placeholder,
     this.errorWidget,
+    this.cacheWidth,
   });
 
   static ImageProvider provider(String url, {String? cacheKey}) {
@@ -69,8 +74,9 @@ class ImagemViewWidget extends StatelessWidget {
     }
     // Sem `fit`, a imagem aparece no tamanho original e cortada pela caixa: foto grande com fundo
     // branco vira só o canto branco. Também mostra placeholder enquanto baixa e ícone se falhar.
+    final base = _ImageLocalProvider(url, cacheKey);
     return Image(
-      image: _ImageLocalProvider(url, cacheKey),
+      image: cacheWidth == null ? base : ResizeImage(base, width: cacheWidth),
       fit: fit,
       frameBuilder: (context, child, frame, sync) => sync || frame != null
           ? child

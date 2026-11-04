@@ -43,7 +43,7 @@ class ConsultaDetalhe extends StatelessWidget {
                   width: 96,
                   height: 96,
                   child: imagemUrl != null
-                      ? Image.network(imagemUrl, fit: BoxFit.cover, errorBuilder: (_, _, _) => const _SemFoto())
+                      ? Image.network(imagemUrl, fit: BoxFit.cover, cacheWidth: 288, errorBuilder: (_, _, _) => const _SemFoto())
                       : const _SemFoto(),
                 ),
               ),

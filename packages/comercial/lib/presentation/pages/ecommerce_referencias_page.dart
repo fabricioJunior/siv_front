@@ -640,6 +640,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                 ? Image.network(
                     referencia.imagemUrl!,
                     fit: BoxFit.cover,
+                    cacheWidth: 102, // miniatura de 34 px: sem isso decodifica a foto inteira (~48 MB)
                     errorBuilder: (_, __, ___) => _placeholderImagem(context),
                   )
                 : _placeholderImagem(context),

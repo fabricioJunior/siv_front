@@ -336,6 +336,7 @@ class _FotoTileState extends State<FotoTile> {
                       url: widget.midia.url,
                       onlyFromCache: false,
                       cacheKey: widget.midia.id.toString(),
+                      cacheWidth: 480,
                       placeholder: const Center(child: CircularProgressIndicator()),
                     ),
                   ),

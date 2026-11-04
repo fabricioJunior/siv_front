@@ -62,7 +62,14 @@ class _ConsultarProdutoPageState extends State<ConsultarProdutoPage> {
     final desktop = _desktop(context);
     final lista = Column(
       children: [
-        _Topo(busca: _busca, tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor, desktop: desktop),
+        // No celular o topo (busca + tabela + filtros) é limitado a 40% da altura e rola por dentro,
+        // para sobrar espaço aos cards.
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: desktop ? double.infinity : MediaQuery.sizeOf(context).height * 0.4),
+          child: SingleChildScrollView(
+            child: _Topo(busca: _busca, tabelaDePrecoSeletor: widget.tabelaDePrecoSeletor, desktop: desktop),
+          ),
+        ),
         const Divider(height: 1),
         Expanded(
           child: ConsultaLista(

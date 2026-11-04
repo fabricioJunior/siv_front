@@ -2,14 +2,13 @@ import 'package:core/bloc.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:leitor_camera/leitor_camera.dart';
-import 'package:produtos/presentantion/blocs/consultar_produto_bloc/consultar_produto_bloc.dart';
+import 'package:produtos/models.dart';
+import 'package:produtos/presentation.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_detalhe.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_formato.dart';
 import 'package:produtos/presentantion/widgets/consulta/consulta_lista.dart';
+import 'package:produtos/presentantion/widgets/consulta/filtro_variacao_consulta.dart';
 import 'package:produtos/presentantion/widgets/consulta/ler_codigo_dialog.dart';
-import 'package:produtos/presentantion/widgets/cor_seletor.dart';
-import 'package:produtos/presentantion/widgets/estampa_seletor.dart';
-import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 
 const rotaDetalheConsultarProduto = '/consultar_produto/detalhe';
 
@@ -165,29 +164,82 @@ class _Topo extends StatelessWidget {
               onChanged: (itens) => bloc.add(ConsultarProdutoTabelaDePrecoAlterada(itens)),
             ),
           ),
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: Text(nFiltros == 0 ? 'Filtros' : 'Filtros ($nFiltros)'),
-            children: [
-              CorSeletor(
-                modo: CorSeletorModo.multipla,
-                titulo: 'Cor',
-                coresSelecionadasIniciais: state.cores,
-                onCorChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(cores: v)),
-              ),
-              TamanhoSeletor(
-                modo: TamanhoSeletorModo.multipla,
-                titulo: 'Tamanho',
-                tamanhosSelecionadosIniciais: state.tamanhos,
-                onTamanhosChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(tamanhos: v)),
-              ),
-              EstampaSeletor(
-                modo: EstampaSeletorModo.multipla,
-                estampasSelecionadasIniciais: state.estampas,
-                onEstampasChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(estampas: v)),
-              ),
-            ],
-          ),
+          if (desktop)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(nFiltros == 0 ? 'Filtros' : 'Filtros ($nFiltros)'),
+              children: [
+                CorSeletor(
+                  modo: CorSeletorModo.multipla,
+                  titulo: 'Cor',
+                  coresSelecionadasIniciais: state.cores,
+                  onCorChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(cores: v)),
+                ),
+                TamanhoSeletor(
+                  modo: TamanhoSeletorModo.multipla,
+                  titulo: 'Tamanho',
+                  tamanhosSelecionadosIniciais: state.tamanhos,
+                  onTamanhosChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(tamanhos: v)),
+                ),
+                EstampaSeletor(
+                  modo: EstampaSeletorModo.multipla,
+                  estampasSelecionadasIniciais: state.estampas,
+                  onEstampasChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(estampas: v)),
+                ),
+              ],
+            )
+          else ...[
+            const SizedBox(height: 8),
+            FiltroVariacaoConsulta<Cor, CoresBloc, CoresState>(
+              chave: 'cor',
+              rotulo: 'COR',
+              botao: '+ cor',
+              titulo: 'Cores',
+              singular: 'cor',
+              plural: 'cores',
+              selecionados: state.cores,
+              onChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(cores: v)),
+              id: (c) => c.id ?? 0,
+              nome: (c) => c.nome,
+              carregar: (b) => b.add(CoresIniciou()),
+              itens: (s) => s.cores.where((c) => !(c.inativo ?? false)).toList(),
+              carregando: (s) => s is CoresCarregarEmProgresso,
+              falhou: (s) => s is CoresCarregarFalha,
+            ),
+            FiltroVariacaoConsulta<Estampa, EstampasBloc, EstampasState>(
+              chave: 'estampa',
+              rotulo: 'ESTAMPA',
+              botao: '+ estampa',
+              titulo: 'Estampas',
+              singular: 'estampa',
+              plural: 'estampas',
+              selecionados: state.estampas,
+              onChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(estampas: v)),
+              id: (e) => e.id ?? 0,
+              nome: (e) => e.nome,
+              carregar: (b) => b.add(EstampasIniciou(inativo: false)),
+              itens: (s) => s.estampas.where((e) => !e.inativo).toList(),
+              carregando: (s) => s is EstampasCarregarEmProgresso,
+              falhou: (s) => s is EstampasCarregarFalha,
+            ),
+            FiltroVariacaoConsulta<Tamanho, TamanhosBloc, TamanhosState>(
+              chave: 'tam',
+              rotulo: 'TAMANHO',
+              botao: '+ tam.',
+              titulo: 'Tamanhos',
+              singular: 'tamanho',
+              plural: 'tamanhos',
+              feminino: false,
+              selecionados: state.tamanhos,
+              onChanged: (v) => bloc.add(ConsultarProdutoFiltrosAlterados(tamanhos: v)),
+              id: (t) => t.id ?? 0,
+              nome: (t) => t.nome,
+              carregar: (b) => b.add(TamanhosIniciou(inativo: false)),
+              itens: (s) => s.tamanhos.where((t) => !t.inativo).toList(),
+              carregando: (s) => s is TamanhosCarregarEmProgresso,
+              falhou: (s) => s is TamanhosCarregarFalha,
+            ),
+          ],
         ],
       ),
     );

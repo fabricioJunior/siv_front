@@ -1,3 +1,4 @@
+import '../../models/resultado_renovacao_token.dart';
 import '../../models/token.dart';
 
 abstract class ITokenRepository {
@@ -9,10 +10,9 @@ abstract class ITokenRepository {
 
   Future<Token?> recuperarToken();
 
-  // Tenta renovar a sessao usando o refresh token salvo localmente -- se conseguir, ja salva o
-  // token novo (rotacionado) e retorna. Retorna null se nao tiver refresh token salvo ou se ele
-  // estiver invalido/expirado (sessao > 30 dias sem uso), quem chama decide o fallback.
-  Future<Token?> renovarToken();
+  // Renova a sessao com o refresh token salvo (single-flight: chamadas concorrentes dividem a
+  // mesma renovacao). Se renovou, ja salva o token novo (rotacionado).
+  Future<ResultadoRenovacaoToken> renovarToken();
 
   Future<void> putToken(Token token, {bool notificarTokenPut = true});
 

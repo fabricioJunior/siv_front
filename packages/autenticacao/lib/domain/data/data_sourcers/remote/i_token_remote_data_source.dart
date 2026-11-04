@@ -1,3 +1,4 @@
+import '../../../models/resultado_renovacao_token.dart';
 import '../../../models/token.dart';
 
 abstract class ITokenRemoteDataSource {
@@ -7,8 +8,8 @@ abstract class ITokenRemoteDataSource {
     required int? empresaId,
   });
 
-  // Retorna null se o refresh token estiver invalido/expirado -- quem chama decide o fallback.
-  Future<Token?> renovarToken({
+  // RenovacaoRejeitada: servidor recusou (400/401/403); RenovacaoIndisponivel: qualquer outra falha.
+  Future<ResultadoRenovacaoToken> renovarToken({
     required String refreshToken,
     required int? idEmpresa,
   });

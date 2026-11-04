@@ -1,4 +1,5 @@
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart';
+import 'package:autenticacao/domain/models/resultado_renovacao_token.dart';
 import 'package:autenticacao/domain/models/token.dart';
 import 'package:core/remote_data_sourcers.dart';
 
@@ -32,7 +33,7 @@ class TokenRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
-  Future<Token?> renovarToken({
+  Future<ResultadoRenovacaoToken> renovarToken({
     required String refreshToken,
     required int? idEmpresa,
   }) async {
@@ -41,10 +42,13 @@ class TokenRemoteDatasource extends RemoteDataSourceBase
         body: {'refreshToken': refreshToken},
         pathParameters: {'acao': 'refresh'},
       );
-      return tokenAPartirDaResponse(response, idEmpresa);
+      return TokenRenovado(tokenAPartirDaResponse(response, idEmpresa));
+    } on HttpException catch (e) {
+      return const [400, 401, 403].contains(e.statusCode)
+          ? const RenovacaoRejeitada()
+          : const RenovacaoIndisponivel();
     } catch (_) {
-      // Refresh token invalido/expirado -- quem chama decide o fallback (deslogar).
-      return null;
+      return const RenovacaoIndisponivel();
     }
   }
 

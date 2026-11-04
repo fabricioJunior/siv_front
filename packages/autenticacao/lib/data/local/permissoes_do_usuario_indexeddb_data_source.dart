@@ -24,6 +24,10 @@ class PermissoesDoUsuarioIndexedDbDataSource extends IndexedDbLocalDataSourceBas
   }
 
   @override
+  Future<void> removerExceto(Set<String> componenteIds) =>
+      deleteWhere((p) => !componenteIds.contains(p.componenteId));
+
+  @override
   PermissaoDoUsuarioHiveDto toDto(PermissaoDoUsuario entity) {
     return PermissaoDoUsuarioHiveDto(
       id: entity.id,

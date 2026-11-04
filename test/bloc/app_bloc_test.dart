@@ -114,6 +114,24 @@ class FakeRecuperarCaixaAberto implements RecuperarCaixaAberto {
   }
 }
 
+class FakePermissao extends PermissaoDoUsuario {
+  FakePermissao(this.componenteId);
+  @override
+  final String componenteId;
+  @override
+  int get id => 1;
+  @override
+  int get empresaId => 1;
+  @override
+  int get grupoId => 1;
+  @override
+  String get grupoNome => 'g';
+  @override
+  String get componenteNome => 'n';
+  @override
+  int get descontinuado => 0;
+}
+
 late AppBloc appBloc;
 
 var usuario = fakeUsuario();
@@ -237,7 +255,100 @@ void main() {
       const AppState(statusAutenticacao: StatusAutenticacao.naoAutenticao),
     ],
   );
+
+  group('permissoes da sessao', () {
+    final perm = FakePermissao('A');
+
+    Future<AppBloc> iniciar(List<PermissaoDoUsuario> locais) async {
+      _setupOnTokenCriado(null);
+      _setupEstaAutenticado(true);
+      when(recuperarPermissoesDoUsuarioLocal.call())
+          .thenAnswer((_) async => locais);
+      final bloc = _novoBloc();
+      bloc.add(AppIniciou());
+      await bloc.stream
+          .firstWhere((s) => s.statusAutenticacao == StatusAutenticacao.autenticado);
+      return bloc;
+    }
+
+    test('resposta vazia com permissoes atuais mantem o estado (ix)', () async {
+      final bloc = await iniciar([perm]);
+      when(sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id))
+          .thenAnswer((_) async => <PermissaoDoUsuario>[]);
+      clearInteractions(sincronizarPermissoesDoUsuario);
+
+      bloc.add(AppSincronizacaoDeDadosConcluida());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.permissoesDoUsuario.keys, ['A']);
+      // tentou de novo antes de desistir
+      verify(sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id))
+          .called(2);
+      await bloc.close();
+    });
+
+    test('resposta vazia com estado vazio e aceita (x)', () async {
+      final bloc = await iniciar([]);
+      when(sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id))
+          .thenAnswer((_) async => <PermissaoDoUsuario>[]);
+      clearInteractions(sincronizarPermissoesDoUsuario);
+
+      bloc.add(AppSincronizacaoDeDadosConcluida());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(bloc.state.permissoesDoUsuario, isEmpty);
+      verify(sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id))
+          .called(1);
+      await bloc.close();
+    });
+
+    test('syncs concorrentes rodam em fila e nunca esvaziam o estado (viii)',
+        () async {
+      final bloc = await iniciar([perm]);
+      var emVoo = 0;
+      var maxEmVoo = 0;
+      when(sincronizarPermissoesDoUsuario.call(idUsuario: usuario.id))
+          .thenAnswer((_) async {
+        maxEmVoo = ++emVoo > maxEmVoo ? emVoo : maxEmVoo;
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        emVoo--;
+        return [perm];
+      });
+      final estados = <AppState>[];
+      final sub = bloc.stream.listen(estados.add);
+
+      bloc.add(AppSincronizacaoDeDadosConcluida());
+      bloc.add(AppSincronizacaoDeDadosConcluida());
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+
+      expect(maxEmVoo, 1);
+      expect(estados.every((s) => s.permissoesDoUsuario.isNotEmpty), isTrue);
+      await sub.cancel();
+      await bloc.close();
+    });
+  });
 }
+
+AppBloc _novoBloc() => AppBloc(
+      estaAutenticado,
+      onAutenticado,
+      deslogar,
+      recuperarUsuarioDaSessao,
+      onDesautenticado,
+      recuperarLicenciadoDaSessao,
+      recuperarEmpresaDaSessao,
+      criarTokenDeAutenticacao,
+      recuperarCredenciaisDeAutenticacao,
+      recuperarTerminalDaSessao,
+      recuperarTerminaisDoUsuarioPorEmpresa,
+      salvarTerminalDaSessao,
+      limparTerminalDaSessao,
+      sincronizarPermissoesDoUsuario,
+      recuperarPermissoesDoUsuarioLocal,
+      recuperarCaixaAberto,
+      syncDataBloc,
+      apiBaseUrlConfig,
+    );
 
 void _setupOnTokenCriado(Token? token) {
   if (token == null) {

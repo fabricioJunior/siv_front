@@ -46,4 +46,18 @@ void main() {
     await tester.pump();
     expect(tester.widget<Image>(find.byType(Image)).fit, BoxFit.cover);
   });
+
+  testWidgets('cacheWidth decodifica a imagem reduzida (ResizeImage)', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SizedBox(
+          width: 56,
+          height: 56,
+          child: ImagemViewWidget(url: 'http://x/y.png', cacheKey: '2', cacheWidth: 168),
+        ),
+      ),
+    );
+    final provider = tester.widget<Image>(find.byType(Image)).image as ResizeImage;
+    expect(provider.width, 168);
+  });
 }

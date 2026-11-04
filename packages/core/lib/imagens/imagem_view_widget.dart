@@ -67,7 +67,16 @@ class ImagemViewWidget extends StatelessWidget {
         },
       );
     }
-    return Image(image: _ImageLocalProvider(url, cacheKey));
+    // Sem `fit`, a imagem aparece no tamanho original e cortada pela caixa: foto grande com fundo
+    // branco vira só o canto branco. Também mostra placeholder enquanto baixa e ícone se falhar.
+    return Image(
+      image: _ImageLocalProvider(url, cacheKey),
+      fit: fit,
+      frameBuilder: (context, child, frame, sync) => sync || frame != null
+          ? child
+          : (placeholder ?? const Center(child: CircularProgressIndicator())),
+      errorBuilder: (context, erro, stack) => errorWidget ?? const Icon(Icons.broken_image_outlined),
+    );
   }
 
   Future<File?> getImageFileFromCache(String cacheKey) async {

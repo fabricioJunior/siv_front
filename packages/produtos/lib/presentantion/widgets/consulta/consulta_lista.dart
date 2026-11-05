@@ -103,6 +103,7 @@ class _ItemConsulta extends StatelessWidget {
               ? Image.network(
                   item.capaUrl!,
                   fit: BoxFit.cover,
+                  cacheWidth: 168,
                   errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported_outlined),
                 )
               : const Icon(Icons.image_not_supported_outlined),

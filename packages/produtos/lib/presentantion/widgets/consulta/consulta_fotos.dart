@@ -332,6 +332,7 @@ class _FotoTileState extends State<FotoTile> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: ImagemViewWidget(
+                      cacheWidth: 400,
                       url: widget.midia.url,
                       onlyFromCache: false,
                       cacheKey: widget.midia.id.toString(),

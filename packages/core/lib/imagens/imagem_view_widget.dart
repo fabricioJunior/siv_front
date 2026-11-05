@@ -68,7 +68,7 @@ class ImagemViewWidget extends StatelessWidget {
             return errorWidget ?? const Icon(Icons.error);
           }
 
-          return Image.file(file, fit: fit);
+          return Image.file(file, fit: fit, cacheWidth: cacheWidth);
         },
       );
     }

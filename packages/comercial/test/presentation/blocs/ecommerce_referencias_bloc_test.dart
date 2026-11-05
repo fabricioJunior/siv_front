@@ -51,6 +51,8 @@ class _Atualizar extends _Outros implements AtualizarReferenciaEcommerce {}
 
 class _Publicar extends _Outros implements PublicarReferenciasEmLoteEcommerce {}
 
+class _RecuperarEcommerce extends _Outros implements RecuperarEcommerce {}
+
 void main() {
   test('adicionar em lote guarda a mensagem do servidor de cada falha (ex.: duplicada)', () async {
     final bloc = EcommerceReferenciasBloc(
@@ -58,6 +60,7 @@ void main() {
       _Adicionar(),
       _Atualizar(),
       _Publicar(),
+      _RecuperarEcommerce(),
     );
     addTearDown(bloc.close);
 

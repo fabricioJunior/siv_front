@@ -815,7 +815,7 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceReferenciasBloc>(
-    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl()),
+    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(

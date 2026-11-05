@@ -13,6 +13,10 @@ class ImagemViewWidget extends StatelessWidget {
   final String cacheKey;
   final bool onlyFromCache;
   final BoxFit fit;
+
+  /// Largura (px) em que a imagem é decodificada. Sem isso, a foto original
+  /// inteira vai pra memória mesmo numa miniatura.
+  final int? cacheWidth;
   final Widget? placeholder;
   final Widget? errorWidget;
 
@@ -22,6 +26,7 @@ class ImagemViewWidget extends StatelessWidget {
     required this.cacheKey,
     this.onlyFromCache = false,
     this.fit = BoxFit.cover,
+    this.cacheWidth,
     this.placeholder,
     this.errorWidget,
   });
@@ -67,7 +72,12 @@ class ImagemViewWidget extends StatelessWidget {
         },
       );
     }
-    return Image(image: _ImageLocalProvider(url, cacheKey));
+    final provider = _ImageLocalProvider(url, cacheKey);
+    return Image(
+      image: cacheWidth == null
+          ? provider
+          : ResizeImage(provider, width: cacheWidth),
+    );
   }
 
   Future<File?> getImageFileFromCache(String cacheKey) async {

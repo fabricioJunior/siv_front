@@ -2,8 +2,8 @@ import 'package:comercial/models.dart';
 import 'package:comercial/presentation/blocs/ecommerce_referencias_bloc/ecommerce_referencias_bloc.dart';
 import 'package:comercial/presentation/pages/ecommerce_referencia_detalhe_page.dart';
 import 'package:comercial/presentation/widgets/ecommerce_formatadores.dart';
-import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
+import 'package:core/imagens/imagem_view_widget.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
@@ -36,18 +36,14 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   final _debouncer = Debouncer(milliseconds: 350);
   final _scrollController = ScrollController();
 
-  List<int> _categoriaIds = [];
-  _FiltroSituacao _filtroSituacao = _FiltroSituacao.todos;
-  String? _tituloCanal;
-
   final Set<int> _idsSelecionados = {};
   bool get _modoSelecao => _idsSelecionados.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _tituloCanal = widget.tituloCanal;
     _bloc = sl<EcommerceReferenciasBloc>()
+      ..tituloCanal.value = widget.tituloCanal
       ..add(EcommerceReferenciasIniciou(ecommerceId: widget.ecommerceId));
     _scrollController.addListener(() {
       final state = _bloc.state;
@@ -60,22 +56,14 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     // Não chama _atualizarAcoes aqui -- ela lê _telaDesktop (MediaQuery),
     // proibido durante initState (context ainda não montado). O primeiro
     // build do BlocBuilder já chama _atualizarAcoes(state) sozinho.
-    if (_tituloCanal == null) _buscarTituloCanal();
-  }
-
-  Future<void> _buscarTituloCanal() async {
-    try {
-      final ecommerce = await sl<RecuperarEcommerce>().call(widget.ecommerceId);
-      if (!mounted) return;
-      setState(() => _tituloCanal = ecommerce.titulo);
-    } catch (_) {
-      // Sem título, a migalha cai pra "E-commerces / Produtos no site".
+    if (widget.tituloCanal == null) {
+      _bloc.add(EcommerceReferenciasTituloCanalSolicitou(widget.ecommerceId));
     }
   }
 
-  String get _titulo => _tituloCanal == null
+  String _titulo(String? tituloCanal) => tituloCanal == null
       ? 'E-commerces / Produtos no site'
-      : 'E-commerces / $_tituloCanal / Produtos no site';
+      : 'E-commerces / $tituloCanal / Produtos no site';
 
   @override
   void dispose() {
@@ -90,25 +78,38 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     _debouncer.run(() => _recarregar(busca: valor.trim()));
   }
 
-  ({bool? rascunho, bool? publicavel}) get _filtroRequest =>
-      switch (_filtroSituacao) {
-        _FiltroSituacao.todos => (rascunho: null, publicavel: null),
-        _FiltroSituacao.publicados => (rascunho: false, publicavel: null),
-        _FiltroSituacao.rascunho => (rascunho: true, publicavel: null),
-        _FiltroSituacao.naoPublicaveis => (rascunho: null, publicavel: false),
+  // Filtros vivem no state do bloc; a tela só traduz de/para o segmento.
+  static _FiltroSituacao _situacaoDe(EcommerceReferenciasState state) =>
+      switch ((state.rascunhoFiltro, state.publicavelFiltro)) {
+        (false, _) => _FiltroSituacao.publicados,
+        (true, _) => _FiltroSituacao.rascunho,
+        (_, false) => _FiltroSituacao.naoPublicaveis,
+        _ => _FiltroSituacao.todos,
       };
 
-  void _recarregar({String? busca}) {
-    final filtro = _filtroRequest;
+  void _recarregar({
+    String? busca,
+    List<int>? categoriaIds,
+    _FiltroSituacao? situacao,
+  }) {
+    final atual = _bloc.state;
+    final texto = (busca ?? _buscaController.text).trim();
+    final categorias = categoriaIds ?? atual.categoriaIds;
     _bloc.add(
       EcommerceReferenciasIniciou(
         ecommerceId: widget.ecommerceId,
-        busca: (busca ?? _buscaController.text.trim()).isEmpty
-            ? null
-            : (busca ?? _buscaController.text.trim()),
-        categoriaIds: _categoriaIds.isEmpty ? null : _categoriaIds,
-        rascunhoFiltro: filtro.rascunho,
-        publicavelFiltro: filtro.publicavel,
+        busca: texto.isEmpty ? null : texto,
+        categoriaIds:
+            categorias == null || categorias.isEmpty ? null : categorias,
+        rascunhoFiltro: switch (situacao ?? _situacaoDe(atual)) {
+          _FiltroSituacao.publicados => false,
+          _FiltroSituacao.rascunho => true,
+          _ => null,
+        },
+        publicavelFiltro:
+            (situacao ?? _situacaoDe(atual)) == _FiltroSituacao.naoPublicaveis
+                ? false
+                : null,
       ),
     );
   }
@@ -166,7 +167,11 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                   horizontal: SivDimensoes.paginaHorizontal,
                   vertical: SivDimensoes.paginaVertical,
                 ).copyWith(bottom: 0),
-                child: SivTituloPagina(titulo: _titulo),
+                child: ValueListenableBuilder<String?>(
+                  valueListenable: _bloc.tituloCanal,
+                  builder: (_, titulo, __) =>
+                      SivTituloPagina(titulo: _titulo(titulo)),
+                ),
               ),
               Expanded(child: _buildConteudo(context, state, cores, textos)),
             ],
@@ -197,98 +202,112 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
     }
 
     // Scaffold próprio (não só Padding+Column) -- o body do Scaffold
-            // sempre recebe altura limitada calculada internamente, não
-            // depende do ancestral garantir isso. Sem ele, o Expanded/
-            // SingleChildScrollView abaixo podia herdar altura ilimitada
-            // dependendo de onde a página é montada, causando RenderFlex
-            // overflow gigante (visto em produção). bottomNavigationBar
-            // cobre a barra de seleção/rodapé fixo sem gymnastics de Column.
-            return Scaffold(
-              backgroundColor: cores.superficie,
-              floatingActionButton: _telaDesktop || _modoSelecao
-                  ? null
-                  : FloatingActionButton(
-                      onPressed: () => _adicionarReferencias(context),
-                      tooltip: 'Adicionar referências',
-                      child: const Icon(Icons.add),
-                    ),
-              body: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SivDimensoes.paginaHorizontal,
-                  vertical: SivDimensoes.paginaVertical,
+    // sempre recebe altura limitada calculada internamente, não
+    // depende do ancestral garantir isso. Sem ele, o Expanded/
+    // SingleChildScrollView abaixo podia herdar altura ilimitada
+    // dependendo de onde a página é montada, causando RenderFlex
+    // overflow gigante (visto em produção). bottomNavigationBar
+    // cobre a barra de seleção/rodapé fixo sem gymnastics de Column.
+    return Scaffold(
+      backgroundColor: cores.superficie,
+      floatingActionButton: _telaDesktop || _modoSelecao
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _adicionarReferencias(context),
+              tooltip: 'Adicionar referências',
+              child: const Icon(Icons.add),
+            ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: SivDimensoes.paginaHorizontal,
+          vertical: SivDimensoes.paginaVertical,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_telaDesktop)
+              Padding(
+                padding: const EdgeInsets.only(bottom: SivDimensoes.gapCards),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _acoesDaBarra(context, state),
                 ),
+              ),
+            _buildFiltros(context, state),
+            const SizedBox(height: SivDimensoes.gapCards),
+            if (state.processandoLote)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_telaDesktop)
+                    LinearProgressIndicator(color: cores.aco),
+                    if (state.loteTotal != null)
                       Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: SivDimensoes.gapCards),
-                        child: Wrap(
-                          alignment: WrapAlignment.end,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _acoesDaBarra(context, state),
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Processando ${state.loteAtual} de ${state.loteTotal}...',
+                          style: textos.apoio,
                         ),
                       ),
-                    _buildFiltros(context, state),
-                    const SizedBox(height: SivDimensoes.gapCards),
-                    if (state.processandoLote)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            LinearProgressIndicator(color: cores.aco),
-                            if (state.loteTotal != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Processando ${state.loteAtual} de ${state.loteTotal}...',
-                                  style: textos.apoio,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    Expanded(
-                      child: state.referencias.isEmpty
-                          ? Center(
-                              child: Text(
-                                (state.busca ?? '').isEmpty
-                                    ? 'Nenhuma referência vinculada a este e-commerce.'
-                                    : 'Nenhuma referência encontrada pra "${state.busca}".',
-                                style: textos.corpo,
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              controller: _scrollController,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildTabela(context, state),
-                                  if (_telaDesktop)
-                                    _buildRodapeTabelaDesktop(context, state)
-                                  else ...[
-                                    const SizedBox(height: 8),
-                                    _buildRodapeTabela(context, state),
-                                  ],
-                                ],
-                              ),
-                            ),
-                    ),
                   ],
                 ),
               ),
-              bottomNavigationBar: _modoSelecao
-                  ? _buildBarraSelecao(context, state)
-                  : (!_telaDesktop
-                      // Fora do modo seleção -- no desktop "Publicar aptas"
-                      // já vive na faixa de ações no topo; no mobile essas
-                      // ações ficam pouco descobríveis, daí o rodapé
-                      // complementar.
-                      ? _buildRodapeFixo(context, state)
-                      : null),
+            Expanded(
+              child: state.referencias.isEmpty
+                  ? Center(
+                      child: Text(
+                        (state.busca ?? '').isEmpty
+                            ? 'Nenhuma referência vinculada a este e-commerce.'
+                            : 'Nenhuma referência encontrada pra "${state.busca}".',
+                        style: textos.corpo,
+                      ),
+                    )
+                  : _telaDesktop
+                      ? SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildTabela(context, state),
+                              _buildRodapeTabelaDesktop(context, state),
+                            ],
+                          ),
+                        )
+                      // Cartões lazy: só os visíveis (e suas imagens) ficam
+                      // montados, em vez de todas as páginas carregadas.
+                      : CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            SliverList.builder(
+                              itemCount: state.referencias.length,
+                              itemBuilder: (context, i) =>
+                                  _buildCartaoReferencia(
+                                      context, state.referencias[i]),
+                            ),
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: _buildRodapeTabela(context, state),
+                              ),
+                            ),
+                          ],
+                        ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _modoSelecao
+          ? _buildBarraSelecao(context, state)
+          : (!_telaDesktop
+              // Fora do modo seleção -- no desktop "Publicar aptas"
+              // já vive na faixa de ações no topo; no mobile essas
+              // ações ficam pouco descobríveis, daí o rodapé
+              // complementar.
+              ? _buildRodapeFixo(context, state)
+              : null),
     );
   }
 
@@ -353,12 +372,12 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             ),
             const SizedBox(width: 8),
             OutlinedButton.icon(
-              onPressed: () => _abrirFiltroCategoria(context),
+              onPressed: () => _abrirFiltroCategoria(context, state),
               icon: const Icon(Icons.filter_alt_outlined, size: 15),
               label: Text(
-                _categoriaIds.isEmpty
+                (state.categoriaIds ?? const []).isEmpty
                     ? 'Categorias'
-                    : 'Categorias · ${_categoriaIds.length}',
+                    : 'Categorias · ${state.categoriaIds!.length}',
                 style: const TextStyle(fontSize: 12.5),
               ),
               style: OutlinedButton.styleFrom(
@@ -423,12 +442,9 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
                 context,
                 rotulo: segmentos[i].$2,
                 contagem: segmentos[i].$3,
-                selecionado: _filtroSituacao == segmentos[i].$1,
+                selecionado: _situacaoDe(state) == segmentos[i].$1,
                 comBordaEsquerda: i > 0,
-                onTap: () {
-                  setState(() => _filtroSituacao = segmentos[i].$1);
-                  _recarregar();
-                },
+                onTap: () => _recarregar(situacao: segmentos[i].$1),
               ),
             ),
         ],
@@ -475,7 +491,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   }
 
   Widget _buildTabela(BuildContext context, EcommerceReferenciasState state) {
-    if (!_telaDesktop) return _buildListaCartoes(context, state);
     return SivTabela(
       colunas: const [
         SivTabelaColuna(titulo: '', flex: 1),
@@ -521,17 +536,6 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
           _buildSituacao(context, referencia),
         ];
       },
-    );
-  }
-
-  Widget _buildListaCartoes(
-      BuildContext context, EcommerceReferenciasState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final referencia in state.referencias)
-          _buildCartaoReferencia(context, referencia),
-      ],
     );
   }
 
@@ -637,11 +641,10 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         child: naoPublicavel
             ? _iconeMotivo(context, referencia.motivosBloqueio)
             : referencia.imagemUrl != null
-                ? Image.network(
-                    referencia.imagemUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _placeholderImagem(context),
-                  )
+                ? ImagemViewWidget(
+                    url: referencia.imagemUrl ?? '',
+                    cacheWidth: 96,
+                    cacheKey: referencia.id?.toString() ?? '00')
                 : _placeholderImagem(context),
       ),
     );
@@ -900,7 +903,8 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
             // #BDD8F2 hardcoded -- sem token exato pra esse azul claro sobre
             // aço escuro (textoSobreEscuroApoio/ceu é #94BCE3, mais escuro
             // que o pedido no mock).
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFBDD8F2)),
+            style:
+                TextButton.styleFrom(foregroundColor: const Color(0xFFBDD8F2)),
             child: const Text('Limpar seleção'),
           ),
           const SizedBox(width: 8),
@@ -966,7 +970,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
         builder: (_) => EcommerceReferenciaDetalhePage(
           ecommerceId: widget.ecommerceId,
           referencia: referencia,
-          tituloCanal: _tituloCanal,
+          tituloCanal: _bloc.tituloCanal.value,
         ),
       ),
     );
@@ -976,13 +980,17 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
   bool get _telaDesktop =>
       MediaQuery.sizeOf(context).width >= SivDimensoes.breakpointMenuDrawer;
 
-  Future<void> _abrirFiltroCategoria(BuildContext context) async {
-    var selecionadas = List<int>.from(_categoriaIds);
+  Future<void> _abrirFiltroCategoria(
+    BuildContext context,
+    EcommerceReferenciasState state,
+  ) async {
+    final iniciais = state.categoriaIds ?? const <int>[];
+    var selecionadas = List<int>.from(iniciais);
 
     final conteudo = CategoriaSeletor(
       modo: CategoriaSeletorModo.multipla,
       titulo: 'Filtrar por categoria',
-      idCategoriasSelecionadasIniciais: _categoriaIds,
+      idCategoriasSelecionadasIniciais: iniciais,
       onCategoriaChanged: (categorias) {
         selecionadas = categorias
             .map((categoria) => categoria.id)
@@ -991,10 +999,7 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       },
     );
 
-    void aplicar() {
-      setState(() => _categoriaIds = selecionadas);
-      _recarregar();
-    }
+    void aplicar() => _recarregar(categoriaIds: selecionadas);
 
     if (_telaDesktop) {
       await SivDialogo.mostrar(

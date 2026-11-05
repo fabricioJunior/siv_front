@@ -946,7 +946,7 @@ class _FotoDoFornecedor extends StatelessWidget {
               ? const Icon(Icons.add_a_photo_outlined, color: Colors.black38)
               : ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: Image.memory(bytes, fit: BoxFit.cover),
+                  child: Image.memory(bytes, fit: BoxFit.cover, cacheWidth: 200),
                 ),
         ),
         const SizedBox(width: 12),

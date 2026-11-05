@@ -249,6 +249,7 @@ class _FotoEsperada extends StatelessWidget {
         width: lado,
         height: lado,
         fit: BoxFit.cover,
+        cacheWidth: (lado * 3).round(),
         errorBuilder: (c, e, s) => vazio,
       ),
     );

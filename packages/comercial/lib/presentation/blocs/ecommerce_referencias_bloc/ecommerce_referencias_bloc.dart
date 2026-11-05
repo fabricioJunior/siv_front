@@ -5,6 +5,7 @@ import 'package:comercial/use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:flutter/foundation.dart';
 
 part 'ecommerce_referencias_event.dart';
 part 'ecommerce_referencias_state.dart';
@@ -17,20 +18,46 @@ class EcommerceReferenciasBloc
   final AdicionarReferenciaEcommerce _adicionarReferenciaEcommerce;
   final AtualizarReferenciaEcommerce _atualizarReferenciaEcommerce;
   final PublicarReferenciasEmLoteEcommerce _publicarReferenciasEmLoteEcommerce;
+  final RecuperarEcommerce _recuperarEcommerce;
+
+  /// Título do canal pra migalha da tela. Fora do state porque os 26 emits
+  /// dele não carregam o título; vira campo do state quando o state ganhar
+  /// copyWith.
+  final tituloCanal = ValueNotifier<String?>(null);
 
   EcommerceReferenciasBloc(
     this._recuperarReferenciasEcommerce,
     this._adicionarReferenciaEcommerce,
     this._atualizarReferenciaEcommerce,
     this._publicarReferenciasEmLoteEcommerce,
+    this._recuperarEcommerce,
   ) : super(const EcommerceReferenciasInitial()) {
     on<EcommerceReferenciasIniciou>(_onIniciou);
+    on<EcommerceReferenciasTituloCanalSolicitou>(_onTituloCanal);
     on<EcommerceReferenciasCarregarMaisSolicitou>(_onCarregarMais);
     on<EcommerceReferenciaAdicionou>(_onAdicionou);
     on<EcommerceReferenciaPublicarSolicitou>(_onPublicar);
     on<EcommerceReferenciasDespublicarTodasSolicitou>(_onDespublicarTodas);
     on<EcommerceReferenciasPublicarEmLoteSolicitou>(_onPublicarEmLote);
     on<EcommerceReferenciasAdicionarEmLoteSolicitou>(_onAdicionarEmLote);
+  }
+
+  Future<void> _onTituloCanal(
+    EcommerceReferenciasTituloCanalSolicitou event,
+    Emitter<EcommerceReferenciasState> emit,
+  ) async {
+    try {
+      tituloCanal.value =
+          (await _recuperarEcommerce.call(event.ecommerceId)).titulo;
+    } catch (_) {
+      // Sem título, a migalha cai pra "E-commerces / Produtos no site".
+    }
+  }
+
+  @override
+  Future<void> close() {
+    tituloCanal.dispose();
+    return super.close();
   }
 
   FutureOr<void> _onIniciou(
@@ -245,6 +272,7 @@ class EcommerceReferenciasBloc
           busca: state.busca,
           categoriaIds: state.categoriaIds,
           rascunhoFiltro: state.rascunhoFiltro,
+          publicavelFiltro: state.publicavelFiltro,
           total: pagina.total,
           totalPublicados: pagina.totalPublicados,
           totalRascunho: pagina.totalRascunho,
@@ -313,6 +341,7 @@ class EcommerceReferenciasBloc
           busca: state.busca,
           categoriaIds: state.categoriaIds,
           rascunhoFiltro: state.rascunhoFiltro,
+          publicavelFiltro: state.publicavelFiltro,
           total: pagina.total,
           totalPublicados: pagina.totalPublicados,
           totalRascunho: pagina.totalRascunho,
@@ -390,6 +419,7 @@ class EcommerceReferenciasBloc
           busca: state.busca,
           categoriaIds: state.categoriaIds,
           rascunhoFiltro: state.rascunhoFiltro,
+          publicavelFiltro: state.publicavelFiltro,
           total: pagina.total,
           totalPublicados: pagina.totalPublicados,
           totalRascunho: pagina.totalRascunho,

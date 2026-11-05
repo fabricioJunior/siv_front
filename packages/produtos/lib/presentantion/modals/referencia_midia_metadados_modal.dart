@@ -275,6 +275,7 @@ class _ImagemPendenteCard extends StatelessWidget {
                     ? Image.memory(
                         imagem.bytes!,
                         fit: BoxFit.cover,
+                        cacheWidth: 216,
                         errorBuilder: (_, __, ___) => const Icon(Icons.image),
                       )
                     : const Icon(Icons.image),

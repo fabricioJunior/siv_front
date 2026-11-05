@@ -150,6 +150,8 @@ class EcommerceReferenciasAdicionarLoteConcluiu extends EcommerceReferenciasStat
   @override
   final bool? rascunhoFiltro;
   @override
+  final bool? publicavelFiltro;
+  @override
   final int? total;
   @override
   final int? totalPublicados;
@@ -167,6 +169,7 @@ class EcommerceReferenciasAdicionarLoteConcluiu extends EcommerceReferenciasStat
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.publicavelFiltro,
     this.total,
     this.totalPublicados,
     this.totalRascunho,
@@ -191,6 +194,8 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
   @override
   final bool? rascunhoFiltro;
   @override
+  final bool? publicavelFiltro;
+  @override
   final int? total;
   @override
   final int? totalPublicados;
@@ -208,6 +213,7 @@ class EcommerceReferenciasLoteConcluiu extends EcommerceReferenciasState {
     this.busca,
     this.categoriaIds,
     this.rascunhoFiltro,
+    this.publicavelFiltro,
     this.total,
     this.totalPublicados,
     this.totalRascunho,

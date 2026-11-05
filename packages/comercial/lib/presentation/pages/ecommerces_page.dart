@@ -320,6 +320,7 @@ class _CardCanal extends StatelessWidget {
                                 ? Image.network(
                                     ecommerce.icone!,
                                     fit: BoxFit.cover,
+                                    cacheWidth: 120,
                                     errorBuilder: (_, __, ___) =>
                                         _iniciais(cores, textos),
                                   )

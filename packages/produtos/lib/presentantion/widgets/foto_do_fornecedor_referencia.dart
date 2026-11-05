@@ -139,6 +139,7 @@ class _FotoDoFornecedorReferenciaState
                         width: 72,
                         height: 72,
                         fit: BoxFit.cover,
+                        cacheWidth: 216,
                         errorBuilder: (_, _, _) => const SizedBox(
                           width: 72,
                           height: 72,

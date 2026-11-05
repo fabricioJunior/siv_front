@@ -457,6 +457,7 @@ class _MidiaUploadCard extends StatelessWidget {
                             ? Image.memory(
                                 upload.imagem.bytes!,
                                 fit: BoxFit.cover,
+                                cacheWidth: 400,
                                 gaplessPlayback: true,
                               )
                             : Container(
@@ -807,6 +808,7 @@ class _MidiaCarouselCard extends StatelessWidget {
                           height: 180,
                           color: Colors.black12,
                           child: ImagemViewWidget(
+                            cacheWidth: 800,
                             url: midia.url,
                             onlyFromCache: false,
                             cacheKey: midia.id.toString(),
@@ -946,6 +948,7 @@ class _MidiaCarouselCard extends StatelessWidget {
                   height: 170,
                   color: Colors.black12,
                   child: ImagemViewWidget(
+                    cacheWidth: 800,
                     url: midia.url,
                     key: ValueKey('midia_${midia.id}_${midia.url}'),
                     onlyFromCache: false,

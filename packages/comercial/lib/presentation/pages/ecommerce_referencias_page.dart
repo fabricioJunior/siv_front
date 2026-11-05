@@ -836,12 +836,16 @@ class _EcommerceReferenciasPageState extends State<EcommerceReferenciasPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            total == null
-                ? 'Mostrando ${state.referencias.length}'
-                : 'Mostrando ${state.referencias.length} de $total',
-            style: textos.apoio,
+          Flexible(
+            child: Text(
+              total == null
+                  ? 'Mostrando ${state.referencias.length}'
+                  : 'Mostrando ${state.referencias.length} de $total',
+              style: textos.apoio,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+          const SizedBox(width: 12),
           FilledButton(
             onPressed: aptasIds.isEmpty || state.processandoLote
                 ? null

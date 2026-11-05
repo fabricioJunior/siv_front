@@ -167,7 +167,7 @@ class _ListaGrupoPageState extends State<ListaGrupoPage> {
                                       padding: const EdgeInsets.only(right: 12),
                                       child: CircleAvatar(
                                         backgroundImage:
-                                            NetworkImage(state.grupo!.icone!),
+                                            ResizeImage(NetworkImage(state.grupo!.icone!), width: 120),
                                       ),
                                     ),
                                   Expanded(

@@ -31,6 +31,7 @@ class SivMiniatura extends StatelessWidget {
       width: largura,
       height: altura,
       fit: BoxFit.cover,
+      cacheWidth: (largura * 3).round(),
       errorBuilder: (_, __, ___) => vazia,
     );
   }

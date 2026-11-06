@@ -455,11 +455,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return referenciasOrdenadas.map((referencia) {
       final itensReferencia = itensPorReferencia[referencia]!;
-      final cores = itensReferencia
-          .map(_corDaGrade)
-          .toSet()
-          .toList()
-        ..sort();
+      final cores = itensReferencia.map(_corDaGrade).toSet().toList()..sort();
       final tamanhos = itensReferencia
           .map((item) => _normalizarRotuloGrade(item.tamanho))
           .toSet()
@@ -787,7 +783,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
-    final referencias = state.itens.map((item) => item.idReferencia).toSet().length;
+    final referencias =
+        state.itens.map((item) => item.idReferencia).toSet().length;
     final pecas = state.quantidadeTotalLida;
 
     final partesDireita = <String>[];
@@ -834,7 +831,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       textAlign: align,
       style: textos.rotulo.copyWith(color: cores.textoApoio),
     );
-    return largura == null ? Expanded(child: texto0) : SizedBox(width: largura, child: texto0);
+    return largura == null
+        ? Expanded(child: texto0)
+        : SizedBox(width: largura, child: texto0);
   }
 
   Widget _listaDesktop(BuildContext context, LeitorState state) {
@@ -924,8 +923,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ),
                             Text(
                               registro.codigoDeBarras,
-                              style:
-                                  textos.apoio.copyWith(color: cores.textoApoio),
+                              style: textos.apoio
+                                  .copyWith(color: cores.textoApoio),
                             ),
                           ],
                         ),
@@ -936,6 +935,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                           _rotuloTamanhoCorCompacto(
                             tamanho: registro.tamanho,
                             cor: registro.cor,
+                            estampa: registro.estampa ?? '',
                           ),
                           style: textos.apoio,
                         ),
@@ -963,8 +963,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         child: Text(
                           total != null ? _formatarMoeda(total) : '—',
                           textAlign: TextAlign.right,
-                          style:
-                              textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                          style: textos.corpo
+                              .copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ],
@@ -1114,8 +1114,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ),
                     Text(
                       _formatarMoeda(referencia.valorTotal),
-                      style:
-                          textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -1297,7 +1296,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     if (state.historico.isEmpty) {
       return Center(
-        child: Text('Nenhuma movimentação registrada ainda.', style: textos.corpo),
+        child:
+            Text('Nenhuma movimentação registrada ainda.', style: textos.corpo),
       );
     }
 
@@ -1305,12 +1305,14 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return ListView.separated(
       itemCount: registros.length,
-      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: cores.hairline),
       itemBuilder: (context, index) {
         final registro = registros[index];
         final item = _itemPorCodigo(state, registro.codigoDeBarras);
         final valorUnitario = item?.valorUnitario;
-        final total = valorUnitario != null ? valorUnitario * registro.quantidade : null;
+        final total =
+            valorUnitario != null ? valorUnitario * registro.quantidade : null;
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1321,7 +1323,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                 width: 48,
                 child: Text(
                   _formatarHora(registro.dataHora),
-                  style: textos.codigo.copyWith(fontSize: 11, color: cores.textoApoio),
+                  style: textos.codigo
+                      .copyWith(fontSize: 11, color: cores.textoApoio),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1362,7 +1365,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Widget _gradeMobile(BuildContext context, LeitorState state) {
     if (state.itens.isEmpty) {
       return Center(
-        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+        child:
+            Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
       );
     }
 
@@ -1370,7 +1374,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     int? referenciaRecente;
     if (state.historico.isNotEmpty) {
       referenciaRecente =
-          _itemPorCodigo(state, state.historico.last.codigoDeBarras)?.idReferencia;
+          _itemPorCodigo(state, state.historico.last.codigoDeBarras)
+              ?.idReferencia;
     }
 
     return ListView.separated(
@@ -1387,7 +1392,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Widget _quantidadesMobile(BuildContext context, LeitorState state) {
     if (state.itens.isEmpty) {
       return Center(
-        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+        child:
+            Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
       );
     }
 
@@ -1398,7 +1404,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return ListView.separated(
       itemCount: itensOrdenados.length,
-      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: cores.hairline),
       itemBuilder: (context, index) {
         final item = itensOrdenados[index];
         return Padding(
@@ -1410,7 +1417,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                 child: Text(
                   '×${item.quantidadeLida}',
                   textAlign: TextAlign.center,
-                  style: textos.secao.copyWith(fontSize: 20, color: cores.acoAtivo),
+                  style: textos.secao
+                      .copyWith(fontSize: 20, color: cores.acoAtivo),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1603,7 +1611,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(p.descricao,
-                        style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                        style:
+                            textos.corpo.copyWith(fontWeight: FontWeight.w600)),
                     Text(
                       p.situacao == SituacaoEsperado.parcial
                           ? '${p.grade} · faltam ${p.esperado - p.lido}'
@@ -1648,8 +1657,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ),
                     child: Text(
                       rotulo,
-                      style: textos.rotulo
-                          .copyWith(color: texto, fontSize: 9.5, letterSpacing: 0.8),
+                      style: textos.rotulo.copyWith(
+                          color: texto, fontSize: 9.5, letterSpacing: 0.8),
                     ),
                   ),
                 ],
@@ -1759,7 +1768,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ? 'Zerar leituras'
                             : 'Limpar leitura'),
                         onPressed: widget.modoConferencia
-                            ? (widget.desativado ? null : widget.onZerarLeituras)
+                            ? (widget.desativado
+                                ? null
+                                : widget.onZerarLeituras)
                             : state.itens.isEmpty || widget.desativado
                                 ? null
                                 : () => _controller.limpar(),
@@ -1833,22 +1844,22 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     child: widget.modoConferencia
                         ? _listaConferencia(context, state)
                         : !ehMobile
-                        ? switch (_visualizacao) {
-                            _LeitorVisualizacao.historico =>
-                              _listaDesktop(context, state),
-                            _LeitorVisualizacao.grade =>
-                              _gradeDesktop(context, state),
-                            _LeitorVisualizacao.porProduto =>
-                              _quantidadesDesktop(context, state),
-                          }
-                        : switch (_visualizacao) {
-                            _LeitorVisualizacao.porProduto =>
-                              _quantidadesMobile(context, state),
-                            _LeitorVisualizacao.historico =>
-                              _listaMobile(context, state),
-                            _LeitorVisualizacao.grade =>
-                              _gradeMobile(context, state),
-                          },
+                            ? switch (_visualizacao) {
+                                _LeitorVisualizacao.historico =>
+                                  _listaDesktop(context, state),
+                                _LeitorVisualizacao.grade =>
+                                  _gradeDesktop(context, state),
+                                _LeitorVisualizacao.porProduto =>
+                                  _quantidadesDesktop(context, state),
+                              }
+                            : switch (_visualizacao) {
+                                _LeitorVisualizacao.porProduto =>
+                                  _quantidadesMobile(context, state),
+                                _LeitorVisualizacao.historico =>
+                                  _listaMobile(context, state),
+                                _LeitorVisualizacao.grade =>
+                                  _gradeMobile(context, state),
+                              },
                   ),
                 ],
               ),

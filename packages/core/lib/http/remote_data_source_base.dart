@@ -200,9 +200,10 @@ abstract class RemoteDataSourceBase {
           errorMessage =
               'Erro interno do servidor (Internal Server Error). Tente novamente mais tarde.';
           break;
+        case 502:
         case 503:
-          errorMessage =
-              'Serviço indisponível (Service Unavailable). O servidor está temporariamente fora do ar.';
+        case 504:
+          errorMessage = mensagemServidorLento;
           break;
         default:
           errorMessage = 'Erro inesperado: Código ${response.statusCode}.';
@@ -285,12 +286,23 @@ class HttpException implements Exception {
   String toString() => 'HttpException: $message (Status code: $statusCode)';
 }
 
+/// 502/503/504: o servidor (ou o proxy) não respondeu a tempo, mas a operação
+/// pode ter sido gravada. Repetir às cegas duplica romaneio/baixa de estoque.
+const mensagemServidorLento =
+    'O servidor demorou para responder e sua operação pode já ter sido '
+    'registrada. Não tente de novo agora: confira na lista (ex.: Romaneios) '
+    'se ela aparece. Se não aparecer, aguarde 1 minuto e tente novamente.';
+
+bool statusDeServidorLento(int? statusCode) =>
+    statusCode == 502 || statusCode == 503 || statusCode == 504;
+
 /// Retorna a mensagem vinda da API (`HttpException.apiMessage`) quando
 /// disponível, ou [fallback] caso contrário. Útil nos blocs para exibir ao
 /// usuário o motivo real do erro reportado pelo backend, sem perder a
 /// mensagem fixa de fallback já existente em cada fluxo.
 String mensagemDeErroApi(Object error, String fallback) {
   if (error is HttpException) {
+    if (statusDeServidorLento(error.statusCode)) return mensagemServidorLento;
     final apiMessage = error.apiMessage;
     if (apiMessage != null && apiMessage.trim().isNotEmpty) {
       return apiMessage;

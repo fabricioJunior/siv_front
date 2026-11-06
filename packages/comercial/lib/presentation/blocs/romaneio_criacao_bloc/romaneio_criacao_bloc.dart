@@ -9,6 +9,7 @@ import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
 import 'package:financeiro/models.dart';
 import 'package:financeiro/use_cases.dart';
+import 'package:uuid/uuid.dart';
 
 part 'romaneio_criacao_event.dart';
 part 'romaneio_criacao_state.dart';
@@ -185,6 +186,9 @@ class RomaneioCriacaoBloc
           resgatePontos: event.resgatePontos,
           enviarNotaPorEmail: event.enviarNotaPorEmail,
           emailNota: event.emailNota,
+          // Mesma lista = mesma venda: após 502/504 o servidor pode ter concluído a venda, e reenviar
+          // a mesma chave devolve o romaneio já criado em vez de duplicar (estoque, caixa, nota).
+          idempotencyKey: const Uuid().v5(Namespace.url.value, event.hashLista),
         );
 
         final romaneioId = romaneioRecebido.id;

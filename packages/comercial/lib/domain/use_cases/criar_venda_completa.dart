@@ -27,6 +27,7 @@ class CriarVendaCompleta {
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   }) {
     return _repository.criarVendaCompleta(
       caixaId: caixaId,
@@ -45,6 +46,7 @@ class CriarVendaCompleta {
       resgatePontos: resgatePontos,
       enviarNotaPorEmail: enviarNotaPorEmail,
       emailNota: emailNota,
+      idempotencyKey: idempotencyKey,
     );
   }
 }

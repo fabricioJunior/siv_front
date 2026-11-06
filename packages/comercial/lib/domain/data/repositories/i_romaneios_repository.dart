@@ -62,5 +62,6 @@ abstract class IRomaneiosRepository {
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   });
 }

@@ -39,6 +39,7 @@ abstract class ICriarVendaCompletaRemoteDataSource {
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   });
 }
 

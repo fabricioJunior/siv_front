@@ -101,6 +101,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   }) async {
     final response = await post(
       pathParameters: {'caixaId': caixaId},
@@ -135,6 +136,7 @@ class CriarVendaCompletaRemoteDataSource extends RemoteDataSourceBase
         if (enviarNotaPorEmail) 'enviarNotaPorEmail': enviarNotaPorEmail,
         if (enviarNotaPorEmail && emailNota.trim().isNotEmpty)
           'emailNota': emailNota.trim(),
+        if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
       },
     );
     return RomaneioDto.fromJson(response.body as Map<String, dynamic>);

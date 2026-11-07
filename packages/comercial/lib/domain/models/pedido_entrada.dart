@@ -277,6 +277,7 @@ class EntradaEtiquetas extends Equatable {
 class EntradaConferenciaItem extends Equatable {
   final int produtoId;
   final String codigoDeBarras;
+  final List<String> codigosDeBarras;
   final String descricao;
   final int idReferencia;
   final String cor;
@@ -290,6 +291,7 @@ class EntradaConferenciaItem extends Equatable {
   const EntradaConferenciaItem({
     required this.produtoId,
     required this.codigoDeBarras,
+    this.codigosDeBarras = const [],
     required this.descricao,
     required this.idReferencia,
     required this.cor,
@@ -307,6 +309,9 @@ class EntradaConferenciaItem extends Equatable {
     return EntradaConferenciaItem(
       produtoId: _int(j['produtoId']) ?? 0,
       codigoDeBarras: '${j['codigoDeBarras'] ?? ''}',
+      codigosDeBarras: [
+        for (final c in (j['codigosDeBarras'] as List? ?? const [])) '$c',
+      ],
       descricao: j['descricao'] as String? ?? '',
       idReferencia: _int(j['idReferencia']) ?? 0,
       cor: j['cor'] as String? ?? '',

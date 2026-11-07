@@ -7,6 +7,9 @@ enum SituacaoEsperado { pendente, parcial, conferido, excedente }
 class ProdutoEsperado {
   final int id;
   final String codigoDeBarras;
+
+  /// Todos os códigos do produto (o primeiro é [codigoDeBarras]).
+  final List<String> codigosDeBarras;
   final String descricao;
   final int idReferencia;
   final String cor;
@@ -18,6 +21,7 @@ class ProdutoEsperado {
   const ProdutoEsperado({
     required this.id,
     required this.codigoDeBarras,
+    this.codigosDeBarras = const [],
     required this.descricao,
     this.idReferencia = 0,
     this.cor = '',
@@ -26,6 +30,9 @@ class ProdutoEsperado {
     required this.esperado,
     this.lido = 0,
   });
+
+  bool temCodigo(String? c) =>
+      c != null && (c == codigoDeBarras || codigosDeBarras.contains(c));
 
   SituacaoEsperado get situacao {
     if (lido <= 0) return SituacaoEsperado.pendente;

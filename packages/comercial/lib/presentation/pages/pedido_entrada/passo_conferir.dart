@@ -198,6 +198,7 @@ class _PassoConferirState extends State<PassoConferir> {
         ProdutoEsperado(
           id: i.produtoId,
           codigoDeBarras: i.codigoDeBarras,
+          codigosDeBarras: i.codigosDeBarras,
           descricao: i.descricao,
           idReferencia: i.idReferencia,
           cor: i.cor,

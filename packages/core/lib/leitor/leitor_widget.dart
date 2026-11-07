@@ -287,7 +287,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
   ProdutoEsperado? _esperadoPorCodigo(String codigo) {
     for (final p in widget.produtosEsperados ?? const <ProdutoEsperado>[]) {
-      if (p.codigoDeBarras == codigo) return p;
+      if (p.temCodigo(codigo)) return p;
     }
     return null;
   }
@@ -1599,7 +1599,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
             color: fundo,
             borderRadius: BorderRadius.circular(SivDimensoes.raio),
             border: Border(
-              left: p.codigoDeBarras == ultimo
+              left: p.temCodigo(ultimo)
                   ? BorderSide(color: cores.aco, width: 3)
                   : BorderSide(color: cores.hairline),
             ),

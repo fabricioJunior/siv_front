@@ -21,6 +21,7 @@ export 'domain/models/consignacao.dart';
 export 'domain/models/consignacao_item.dart';
 export 'domain/models/ecommerce.dart';
 export 'domain/models/ecommerce_banner.dart';
+export 'domain/models/ecommerce_chave_mcp.dart';
 export 'domain/models/ecommerce_lote_resultado.dart';
 export 'domain/models/ecommerce_referencia.dart';
 export 'domain/models/ecommerce_referencia_produto.dart';

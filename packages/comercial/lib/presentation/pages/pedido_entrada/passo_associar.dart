@@ -210,7 +210,7 @@ class _GrupoVariacao extends StatelessWidget {
           const SizedBox(height: 4),
           for (final c in itens)
             Text(
-              '${nomesCor[c.corId] ?? '#${c.corId}'} · ${nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'} · ${qtd(c.quantidade)}',
+              '${c.corNome ?? nomesCor[c.corId] ?? '#${c.corId}'} · ${c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'} · ${qtd(c.quantidade)}',
               style: textos.corpo,
             ),
           const SizedBox(height: 4),
@@ -344,7 +344,7 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
     final pecas = widget.itens.fold<double>(0, (s, c) => s + c.quantidade);
     final resumo = widget.itens
         .map((c) =>
-            '${nomesCor[c.corId] ?? '#${c.corId}'} ${nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'}·${qtd(c.quantidade)}')
+            '${c.corNome ?? nomesCor[c.corId] ?? '#${c.corId}'} ${c.tamanhoNome ?? nomesTamanho[c.tamanhoId] ?? '#${c.tamanhoId}'}·${qtd(c.quantidade)}')
         .join(' · ');
 
     return Container(

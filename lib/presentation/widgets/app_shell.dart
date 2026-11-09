@@ -11,6 +11,7 @@ import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:importacao/models.dart' show ImportacaoEtapa;
+import 'package:notificacoes/notificacoes.dart';
 import 'package:siv_front/presentation/acesso_importacao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
@@ -673,6 +674,11 @@ class _BarraTituloInfo extends StatelessWidget {
                   appState: appState,
                   caixaAberto: caixaAberto,
                 ),
+                SinoNotificacoes(
+                  bloc: sl<NotificacoesBloc>(),
+                  navigatorKey: navigatorKey,
+                  compacto: true,
+                ),
                 const BotaoSincronizarMenu(compacto: true),
               ],
             );
@@ -702,6 +708,10 @@ class _BarraTituloInfo extends StatelessWidget {
                         'Selecionar terminal',
                     onTap: () => _trocarTerminal(context),
                   ),
+                SinoNotificacoes(
+                  bloc: sl<NotificacoesBloc>(),
+                  navigatorKey: navigatorKey,
+                ),
                 const BotaoSincronizarMenu(),
                 _LinhaInfoMenu(
                   pontoStatus: caixaAberto

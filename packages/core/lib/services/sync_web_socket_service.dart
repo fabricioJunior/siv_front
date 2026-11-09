@@ -54,6 +54,22 @@ class ImportacaoProgressoEvent {
   }
 }
 
+/// Notificação nova do servidor (evento `notificacao:nova`). [json] é o
+/// payload bruto (`id, tipo, titulo, corpo, payload, criadoEm, lidaEm`).
+class NotificacaoEvent {
+  final int id;
+  final String titulo;
+  final String corpo;
+  final Map<String, dynamic> json;
+
+  const NotificacaoEvent({
+    required this.id,
+    required this.titulo,
+    required this.corpo,
+    required this.json,
+  });
+}
+
 /// Wrapper fino sobre `socket_io_client` -- evita dependência direta de
 /// package de terceiro fora do core (ver convenção do projeto).
 ///
@@ -69,9 +85,13 @@ class SyncWebSocketService {
   final _importacoesController =
       StreamController<ImportacaoProgressoEvent>.broadcast();
 
+  final _notificacoesController =
+      StreamController<NotificacaoEvent>.broadcast();
+
   Stream<SyncMudancaEvent> get mudancas => _mudancasController.stream;
   Stream<ImportacaoProgressoEvent> get importacoes =>
       _importacoesController.stream;
+  Stream<NotificacaoEvent> get notificacoes => _notificacoesController.stream;
   Stream<bool> get conectado => _conectadoController.stream;
 
   /// Conecta (ou reusa a conexão já aberta com o mesmo [token]). Chamar de
@@ -99,6 +119,7 @@ class SyncWebSocketService {
       ..onDisconnect((_) => _conectadoController.add(false))
       ..on('sync:mudanca', _onMudanca)
       ..on('importacao:progresso', _onImportacao)
+      ..on('notificacao:nova', _onNotificacao)
       ..connect();
   }
 
@@ -115,6 +136,18 @@ class SyncWebSocketService {
   void _onImportacao(dynamic data) {
     if (data is! Map) return;
     _importacoesController.add(ImportacaoProgressoEvent.fromJson(data));
+  }
+
+  void _onNotificacao(dynamic data) {
+    if (data is! Map || data['id'] is! num) return;
+    _notificacoesController.add(
+      NotificacaoEvent(
+        id: (data['id'] as num).toInt(),
+        titulo: data['titulo'] as String? ?? '',
+        corpo: data['corpo'] as String? ?? '',
+        json: Map<String, dynamic>.from(data),
+      ),
+    );
   }
 
   void disconnect() {

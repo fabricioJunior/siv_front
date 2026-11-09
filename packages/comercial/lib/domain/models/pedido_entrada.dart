@@ -180,6 +180,8 @@ class ContagemLivre extends Equatable {
   final int corId;
   final int tamanhoId;
   final double quantidade;
+  final String? corNome;
+  final String? tamanhoNome;
 
   /// Preenchidos quando é uma variação nova (cor/tamanho sem SKU) de uma
   /// referência já cadastrada; null = produto sem referência.
@@ -196,6 +198,8 @@ class ContagemLivre extends Equatable {
     required this.corId,
     required this.tamanhoId,
     required this.quantidade,
+    this.corNome,
+    this.tamanhoNome,
     this.referenciaId,
     this.referenciaNome,
     this.estampaId,
@@ -210,6 +214,8 @@ class ContagemLivre extends Equatable {
         corId: _int(j['corId']) ?? 0,
         tamanhoId: _int(j['tamanhoId']) ?? 0,
         quantidade: _num(j['quantidade']),
+        corNome: j['corNome'] as String?,
+        tamanhoNome: j['tamanhoNome'] as String?,
         referenciaId: _int(j['referenciaId']),
         referenciaNome: j['referenciaNome'] as String?,
         estampaId: _int(j['estampaId']),

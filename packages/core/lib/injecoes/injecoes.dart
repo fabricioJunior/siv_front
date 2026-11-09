@@ -60,6 +60,7 @@ void coreInjections() {
   sl.registerLazySingleton<LinkService>(() => LinkService());
 
   sl.registerLazySingleton<SyncWebSocketService>(() => SyncWebSocketService());
+  sl.registerLazySingleton<NotificacaoService>(() => NotificacaoService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 

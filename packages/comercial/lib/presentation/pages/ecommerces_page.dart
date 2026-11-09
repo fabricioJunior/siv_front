@@ -199,6 +199,16 @@ class _EcommercesPageState extends State<EcommercesPage> {
                           'titulo': ecommerce.titulo
                         },
                       ),
+              onAgenteIa: ecommerce.id == null ||
+                      !PermissaoPorNome.acessoPermitido('MCPFM001')
+                  ? null
+                  : () => Navigator.of(context).pushNamed(
+                        '/ecommerce_agente_ia',
+                        arguments: {
+                          'ecommerceId': ecommerce.id,
+                          'titulo': ecommerce.titulo
+                        },
+                      ),
             ),
           ),
       ],
@@ -267,6 +277,7 @@ class _CardCanal extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onRestaurar;
   final VoidCallback? onVerProdutos;
+  final VoidCallback? onAgenteIa;
 
   const _CardCanal({
     required this.ecommerce,
@@ -274,6 +285,7 @@ class _CardCanal extends StatelessWidget {
     required this.onTap,
     required this.onRestaurar,
     this.onVerProdutos,
+    this.onAgenteIa,
   });
 
   @override
@@ -283,6 +295,14 @@ class _CardCanal extends StatelessWidget {
     // Sem token de "acento de canto" no tema; aproxima com aco em opacidade
     // reduzida (mesma cor já usada pra bordas de destaque no design system).
     final corCanto = cores.aco.withValues(alpha: 0.4);
+    Widget botao(String rotulo, VoidCallback onPressed) => OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            textStyle: textos.apoio.copyWith(fontSize: 13.5, letterSpacing: 0.6),
+          ),
+          child: Text(rotulo, textAlign: TextAlign.center),
+        );
 
     return Opacity(
       opacity: ecommerce.apagado ? 0.55 : 1,
@@ -382,19 +402,14 @@ class _CardCanal extends StatelessWidget {
                     ),
                     if (onVerProdutos != null) ...[
                       const SizedBox(height: 11),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: onVerProdutos,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            textStyle: textos.apoio.copyWith(
-                              fontSize: 13.5,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                          child: const Text('VER PRODUTOS NO SITE'),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(child: botao('VER PRODUTOS NO SITE', onVerProdutos!)),
+                          if (onAgenteIa != null) ...[
+                            const SizedBox(width: 8),
+                            Expanded(child: botao('AGENTE DE IA', onAgenteIa!)),
+                          ],
+                        ],
                       ),
                     ],
                   ],

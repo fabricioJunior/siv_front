@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/blocs/ecommerce_chaves_mcp_bloc/ecommerce_chaves_mcp_bloc.dart' show EcommerceChavesMcpBloc;
 import 'package:comercial/use_cases.dart'
     show BuscarResumoCreditoDevolucao, GetComprasDoCliente;
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
@@ -562,6 +563,19 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: EcommerceReferenciasPage(
         ecommerceId: routeArgs['ecommerceId'] as int,
         tituloCanal: routeArgs['titulo'] as String?,
+      ),
+    );
+  },
+  '/ecommerce_agente_ia': (context) {
+    final routeArgs = args(context);
+    return _rotaProtegida(
+      route: '/ecommerce_agente_ia',
+      child: EcommerceAgenteIaPage(
+        ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
+        urlMcp: '${sl<ApiBaseUrlConfig>().urlBase}/v1/mcp/vendas',
+        temPermissao: PermissaoPorNome.acessoPermitido('MCPFM001'),
+        criarBloc: () => sl<EcommerceChavesMcpBloc>(),
       ),
     );
   },
@@ -1807,6 +1821,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_agente_ia': ['MCPFM001'],
   '/ecommerce_vitrine': ['ECOFM001'],
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],

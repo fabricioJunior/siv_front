@@ -39,6 +39,7 @@ export 'presentation/pages/consignacao_extrato_page.dart';
 export 'presentation/pages/ecommerces_page.dart';
 export 'presentation/pages/ecommerce_configuracao_page.dart';
 export 'presentation/pages/ecommerce_referencias_page.dart';
+export 'presentation/pages/ecommerce_agente_ia_page.dart';
 export 'presentation/pages/ecommerce_referencia_detalhe_page.dart';
 export 'presentation/pages/lista_personalizada_page.dart';
 export 'presentation/pages/listas_personalizadas_page.dart';

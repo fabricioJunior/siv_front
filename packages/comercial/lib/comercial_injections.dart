@@ -88,6 +88,9 @@ void _remoteDataSources() {
   sl.registerFactory<IEcommerceBannersRemoteDataSource>(
     () => EcommerceBannersRemoteDataSource(informacoesParaRequest: sl()),
   );
+  sl.registerFactory<IEcommerceChavesMcpRemoteDataSource>(
+    () => EcommerceChavesMcpRemoteDataSource(informacoesParaRequest: sl()),
+  );
   sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
     () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -160,6 +163,9 @@ void _repositories() {
   );
   sl.registerFactory<IEcommerceBannersRepository>(
     () => EcommerceBannersRepository(remoteDataSource: sl()),
+  );
+  sl.registerFactory<IEcommerceChavesMcpRepository>(
+    () => EcommerceChavesMcpRepository(remoteDataSource: sl()),
   );
   sl.registerFactory<IListaPersonalizadaRepository>(
     () => ListaPersonalizadaRepository(remoteDataSource: sl()),
@@ -502,6 +508,13 @@ void _useCases() {
   sl.registerFactory<ExcluirBannerEcommerce>(
     () => ExcluirBannerEcommerce(repository: sl()),
   );
+  sl.registerFactory<RecuperarChavesMcp>(
+    () => RecuperarChavesMcp(repository: sl()),
+  );
+  sl.registerFactory<CriarChaveMcp>(() => CriarChaveMcp(repository: sl()));
+  sl.registerFactory<RevogarChaveMcp>(
+    () => RevogarChaveMcp(repository: sl()),
+  );
 
   sl.registerFactory<CriarListaPersonalizada>(
     () => CriarListaPersonalizada(repository: sl()),
@@ -824,6 +837,9 @@ void _presentation() {
 
   sl.registerFactory<EcommerceBannersBloc>(
     () => EcommerceBannersBloc(sl(), sl(), sl(), sl()),
+  );
+  sl.registerFactory<EcommerceChavesMcpBloc>(
+    () => EcommerceChavesMcpBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<ListaPersonalizadaBloc>(

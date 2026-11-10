@@ -1311,6 +1311,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/etiquetas_promocao': (context) {
+    return _rotaProtegida(
+      route: '/etiquetas_promocao',
+      child: EtiquetasPromocaoPage(
+        tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preco',
+        ),
+      ),
+    );
+  },
 
   //Preços:
   '/tabelas_de_preco': (context) {
@@ -1879,6 +1893,8 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM012'],
+  // ponytail: reutiliza o componente da impressao de etiquetas ate existir um proprio.
+  '/etiquetas_promocao': ['PRDFM012'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
   '/controle_despesas': ['DESFM003'],

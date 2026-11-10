@@ -47,6 +47,12 @@ void _remoteDataSources() {
     ),
   );
 
+  sl.registerFactory<IDespesasDoCaixaRemoteDataSource>(
+    () => DespesasDoCaixaRemoteDataSource(
+      informacoesParaRequest: sl(),
+    ),
+  );
+
   sl.registerFactory<IContagemDoCaixaRemoteDataSource>(
     () => ContagemDoCaixaRemoteDataSource(
       informacoesParaRequest: sl(),
@@ -124,6 +130,12 @@ void _repositories() {
 
   sl.registerFactory<ISangriasRepository>(
     () => SangriasRepository(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  sl.registerFactory<IDespesasDoCaixaRepository>(
+    () => DespesasDoCaixaRepository(
       remoteDataSource: sl(),
     ),
   );
@@ -230,6 +242,22 @@ void _useCases() {
 
   sl.registerFactory<CancelarSangria>(
     () => CancelarSangria(repository: sl()),
+  );
+
+  sl.registerFactory<CriarDespesaDoCaixa>(
+    () => CriarDespesaDoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarDespesasDoCaixa>(
+    () => RecuperarDespesasDoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<RecuperarCategoriasDespesaDoCaixa>(
+    () => RecuperarCategoriasDespesaDoCaixa(repository: sl()),
+  );
+
+  sl.registerFactory<CancelarDespesaDoCaixa>(
+    () => CancelarDespesaDoCaixa(repository: sl()),
   );
 
   sl.registerFactory<RecuperarContagemDoCaixa>(
@@ -373,6 +401,20 @@ void _presentation() {
 
   sl.registerFactory<SangriaBloc>(
     () => SangriaBloc(
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<DespesasDoCaixaBloc>(
+    () => DespesasDoCaixaBloc(
+      sl(),
+      sl(),
+    ),
+  );
+
+  sl.registerFactory<DespesaDoCaixaBloc>(
+    () => DespesaDoCaixaBloc(
+      sl(),
       sl(),
     ),
   );

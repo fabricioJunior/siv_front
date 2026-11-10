@@ -30,6 +30,8 @@ const Map<String, List<String>> componentesPorFluxo = {
     'FCXFL001',
     'FCXFM004',
     'FCXFP007',
+    'FCXFM005',
+    'FCXFP011',
     'FCXFM002',
   ],
   'Consignações': [
@@ -282,6 +284,8 @@ const List<ItemPreviewMenu> itensPreviewMenu = [
       'FCXFL001',
       'FCXFM004',
       'FCXFP007',
+      'FCXFM005',
+      'FCXFP011',
       'FCXFM002',
     ],
   ),

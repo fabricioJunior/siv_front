@@ -23,6 +23,7 @@ abstract class ReciboFechamentoCaixa implements Equatable {
 
   List<ValorContadoRecibo> get valoresContados;
   List<MovimentacaoRecibo> get sangrias;
+  List<MovimentacaoRecibo> get despesas;
   List<MovimentacaoRecibo> get suprimentos;
 
   @override
@@ -45,6 +46,7 @@ abstract class ReciboFechamentoCaixa implements Equatable {
         faturamentoMes,
         valoresContados,
         sangrias,
+        despesas,
         suprimentos,
       ];
 

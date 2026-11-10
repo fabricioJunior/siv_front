@@ -238,6 +238,32 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/despesas_do_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/despesas_do_caixa',
+        child: DespesasDoCaixaPage(caixaId: caixaId),
+      ),
+    );
+  },
+  '/despesa_do_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/despesa_do_caixa',
+        child: DespesaDoCaixaPage(caixaId: caixaId),
+      ),
+    );
+  },
   '/contagem_do_caixa': (context) {
     final caixaIdArg = args(context)['caixaId'];
     final caixaId = caixaIdArg is int
@@ -1789,6 +1815,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/impressao_etiquetas': ['PRDFM003'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
+  '/despesas_do_caixa': ['FCXFM005'],
+  '/despesa_do_caixa': ['FCXFM005'],
   '/controle_despesas': ['DESFM003'],
   '/categoria_despesa': ['DESFM001'],
   '/origem_pagamento_despesa': ['DESFM002'],

@@ -9,6 +9,9 @@ class PedidoEntradaState extends Equatable {
   final String? erro;
   final String? mensagem;
 
+  /// Falha ao faturar: aparece na folha de confirmação (não em SnackBar).
+  final String? erroFaturar;
+
   /// Última referência criada por pré-cadastro (a tela oferece abrir).
   final int? referenciaCriadaId;
 
@@ -23,12 +26,26 @@ class PedidoEntradaState extends Equatable {
   /// Leituras da conferência ainda não enviadas: produtoId -> variação.
   final Map<int, int> leiturasPendentes;
 
+  /// Lote da fila atual (não muda entre tentativas de envio).
+  final String? loteId;
+
+  /// Quando a fila foi restaurada da cópia local ao abrir (faixa âmbar);
+  /// null = sem faixa.
+  final DateTime? restauradaEm;
+
+  /// O último envio da fila falhou.
+  final bool erroEnvio;
+
   const PedidoEntradaState({
+    this.loteId,
+    this.restauradaEm,
+    this.erroEnvio = false,
     this.carregando = false,
     this.salvando = false,
     this.resumo,
     this.erro,
     this.mensagem,
+    this.erroFaturar,
     this.referenciaCriadaId,
     this.passo,
     this.etiquetasLocal = false,
@@ -65,12 +82,17 @@ class PedidoEntradaState extends Equatable {
     EntradaResumo? resumo,
     String? erro,
     String? mensagem,
+    String? erroFaturar,
     int? referenciaCriadaId,
     int? passo,
     bool limparPasso = false,
     bool? etiquetasLocal,
     bool? faturado,
     Map<int, int>? leiturasPendentes,
+    String? loteId,
+    DateTime? restauradaEm,
+    bool limparLote = false,
+    bool? erroEnvio,
   }) {
     return PedidoEntradaState(
       carregando: carregando ?? this.carregando,
@@ -78,11 +100,15 @@ class PedidoEntradaState extends Equatable {
       resumo: resumo ?? this.resumo,
       erro: erro,
       mensagem: mensagem,
+      erroFaturar: erroFaturar,
       referenciaCriadaId: referenciaCriadaId,
       passo: limparPasso ? null : (passo ?? this.passo),
       etiquetasLocal: etiquetasLocal ?? this.etiquetasLocal,
       faturado: faturado ?? this.faturado,
       leiturasPendentes: leiturasPendentes ?? this.leiturasPendentes,
+      loteId: limparLote ? null : (loteId ?? this.loteId),
+      restauradaEm: limparLote ? null : (restauradaEm ?? this.restauradaEm),
+      erroEnvio: erroEnvio ?? this.erroEnvio,
     );
   }
 
@@ -93,10 +119,14 @@ class PedidoEntradaState extends Equatable {
         resumo,
         erro,
         mensagem,
+        erroFaturar,
         referenciaCriadaId,
         passo,
         etiquetasLocal,
         faturado,
         leiturasPendentes,
+        loteId,
+        restauradaEm,
+        erroEnvio,
       ];
 }

@@ -12,6 +12,7 @@ import 'package:core/produtos_compartilhados.dart';
 import 'package:core/produtos_compartilhados/repositories/lista_de_produtos_compartilhada_repository.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/arquivos.dart';
+import 'package:core/versao.dart';
 import 'package:core/cep.dart';
 import 'package:core/links.dart';
 import 'package:core/sync.dart';
@@ -52,11 +53,14 @@ void coreInjections() {
   sl.registerLazySingleton<CepService>(() => CepService());
 
   sl.registerLazySingleton<ArquivoService>(() => ArquivoService());
+  sl.registerLazySingleton<CompartilharService>(() => CompartilharService());
+  sl.registerLazySingleton<AppVersaoService>(() => AppVersaoService());
   sl.registerLazySingleton<PlanilhaService>(() => PlanilhaService());
 
   sl.registerLazySingleton<LinkService>(() => LinkService());
 
   sl.registerLazySingleton<SyncWebSocketService>(() => SyncWebSocketService());
+  sl.registerLazySingleton<NotificacaoService>(() => NotificacaoService());
 
   sl.registerFactory<ICacheImagemService>(() => CacheImagemService());
 

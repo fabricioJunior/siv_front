@@ -5,6 +5,7 @@ import 'package:produtos/domain/use_cases/atualizar_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/criar_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/excluir_referencia_midia.dart';
 import 'package:produtos/domain/use_cases/recuperar_referencia_midias.dart';
+import 'package:produtos/domain/use_cases/reordenar_referencia_midias.dart';
 import 'package:produtos/models.dart';
 part 'referencia_midias_event.dart';
 part 'referencia_midias_state.dart';
@@ -15,6 +16,7 @@ class ReferenciaMidiasBloc
   final CriarReferenciaMidia _criarReferenciaMidia;
   final ExcluirReferenciaMidia _excluirReferenciaMidia;
   final AtualizarReferenciaMidia _atualizarReferenciaMidia;
+  final ReordenarReferenciaMidias _reordenarReferenciaMidias;
 
   final ICacheImagemService _cacheImagemService;
 
@@ -23,12 +25,14 @@ class ReferenciaMidiasBloc
     this._criarReferenciaMidia,
     this._excluirReferenciaMidia,
     this._atualizarReferenciaMidia,
+    this._reordenarReferenciaMidias,
     this._cacheImagemService,
   ) : super(ReferenciaMidiasInicial()) {
     on<ReferenciasIniciou>(_onReferenciasIniciou);
     on<ReferenciasMidiaAdicinou>(_onReferenciaMidiaAdicinou);
     on<ReferenciaMidiasRemoveu>(_onReferenciaMidiasRemoveu);
     on<ReferenciaMidiasAtualizou>(_onReferenciaMidiasAtualizou);
+    on<ReferenciaMidiasReordenou>(_onReordenou);
   }
 
   List<ReferenciaMidia> _midiasAtuais() =>
@@ -130,9 +134,13 @@ class ReferenciaMidiasBloc
       var ultimoPercentualEmitido = -1;
 
       try {
+        final bytes = event.validarAssociacao
+            ? await comprimirImagem(imagem.bytes!)
+            : imagem.bytes!;
+        final comprimida = !identical(bytes, imagem.bytes);
         final midiaCriada = await _criarReferenciaMidia.call(
-          bytes: imagem.bytes!,
-          fileName: _nomeDoArquivo(imagem),
+          bytes: bytes,
+          fileName: comprimida ? _nomeJpg() : _nomeDoArquivo(imagem),
           referenciaId: event.referenciaId,
           ePrincipal: midiasAtuais.isEmpty && entry.key == 0,
           ePublica: true,
@@ -141,6 +149,8 @@ class ReferenciaMidiasBloc
           descricao: imagem.descricao,
           cor: imagem.cor ?? event.cor,
           tamanho: imagem.tamanho ?? event.tamanho,
+          estampa: imagem.estampa,
+          validarAssociacao: event.validarAssociacao,
           onSendProgress: (sent, total) {
             if (emit.isDone) return;
             final progresso = total <= 0
@@ -195,7 +205,7 @@ class ReferenciaMidiasBloc
           );
         }
       } catch (e, s) {
-        final mensagem = e.toString().replaceFirst('Exception: ', '').trim();
+        final mensagem = _mensagem(e);
         uploadsPendentes = uploadsPendentes
             .where((item) => item.id != upload.id)
             .toList(growable: false);
@@ -203,7 +213,7 @@ class ReferenciaMidiasBloc
         if (!emit.isDone) {
           emit(
             ReferenciaMidiasErro(
-              mensagem.isEmpty ? 'Erro ao adicionar mídia' : mensagem,
+              mensagem,
               midias: midiasAtuais,
               uploadsPendentes: uploadsPendentes,
               carregando: uploadsPendentes.isNotEmpty,
@@ -268,6 +278,43 @@ class ReferenciaMidiasBloc
     }
   }
 
+  Future<void> _onReordenou(
+    ReferenciaMidiasReordenou event,
+    Emitter<ReferenciaMidiasState> emit,
+  ) async {
+    final porId = {for (final m in state.midias) m.id: m};
+    final reordenadas = [
+      for (final id in event.ids) ?porId[id],
+      ...state.midias.where((m) => !event.ids.contains(m.id)),
+    ];
+    emit(ReferenciaMidiasCarregado(reordenadas, uploadsPendentes: state.uploadsPendentes));
+    try {
+      await _reordenarReferenciaMidias.call(
+        referenciaId: event.referenciaId,
+        ids: event.ids,
+      );
+      final midias = await _recuperarMidias.call(event.referenciaId);
+      final capa = midias.where((m) => m.ePrincipal).firstOrNull;
+      if (capa != null) {
+        await _cacheImagemService.updateImageInCache(
+          event.referenciaId.toString(),
+          capa.url,
+        );
+      }
+      emit(ReferenciaMidiasCarregado(midias, uploadsPendentes: state.uploadsPendentes));
+    } catch (e, s) {
+      final anteriores = await _recuperarMidias.call(event.referenciaId).catchError(
+        (_) => <ReferenciaMidia>[],
+      );
+      emit(ReferenciaMidiasErro(
+        _mensagem(e, 'Erro ao reordenar mídias'),
+        midias: anteriores.isEmpty ? state.midias : anteriores,
+        uploadsPendentes: state.uploadsPendentes,
+      ));
+      addError(e, s);
+    }
+  }
+
   Future<void> _onReferenciaMidiasAtualizou(
     ReferenciaMidiasAtualizou event,
     Emitter<ReferenciaMidiasState> emit,
@@ -289,7 +336,9 @@ class ReferenciaMidiasBloc
           descricao: event.midia.descricao,
           tamanho: event.midia.tamanho,
           cor: event.midia.cor,
+          estampa: event.midia.estampa,
         ),
+        validarAssociacao: event.validarAssociacao,
       );
       if (event.ePrincipal) {
         await _cacheImagemService.updateImageInCache(
@@ -308,7 +357,9 @@ class ReferenciaMidiasBloc
     } catch (e, s) {
       emit(
         ReferenciaMidiasErro(
-          'Erro ao atualizar mídia',
+          event.validarAssociacao
+              ? _mensagem(e, 'Erro ao atualizar mídia')
+              : 'Erro ao atualizar mídia',
           midias: state.midias,
           uploadsPendentes: state.uploadsPendentes,
         ),
@@ -317,6 +368,13 @@ class ReferenciaMidiasBloc
     }
   }
 }
+
+String _mensagem(Object e, [String padrao = 'Erro ao adicionar mídia']) {
+  final m = e.toString().replaceFirst('Exception: ', '').trim();
+  return m.isEmpty ? padrao : m;
+}
+
+String _nomeJpg() => 'imagem_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
 String _nomeDoArquivo(Imagem imagem) {
   final path = imagem.path;

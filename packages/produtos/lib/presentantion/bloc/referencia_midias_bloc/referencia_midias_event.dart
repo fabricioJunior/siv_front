@@ -12,11 +12,15 @@ class ReferenciasMidiaAdicinou extends ReferenciaMidiasEvent {
   final String? cor;
   final String? tamanho;
   final List<Imagem> midias;
+
+  /// Tela de consulta: comprime a <=1MB e exige cor/estampa/tamanho no servidor.
+  final bool validarAssociacao;
   ReferenciasMidiaAdicinou(
     this.referenciaId,
     this.midias, {
     this.cor,
     this.tamanho,
+    this.validarAssociacao = false,
   });
 }
 
@@ -31,11 +35,21 @@ class ReferenciaMidiasAtualizou extends ReferenciaMidiasEvent {
   final ReferenciaMidia midia;
   final bool ePrincipal;
   final bool ePublica;
+  final bool validarAssociacao;
 
   ReferenciaMidiasAtualizou({
     required this.referenciaId,
     required this.midia,
     required this.ePrincipal,
     required this.ePublica,
+    this.validarAssociacao = false,
   });
+}
+
+class ReferenciaMidiasReordenou extends ReferenciaMidiasEvent {
+  final int referenciaId;
+
+  /// Ids na ordem final; a primeira vira capa.
+  final List<int> ids;
+  ReferenciaMidiasReordenou(this.referenciaId, this.ids);
 }

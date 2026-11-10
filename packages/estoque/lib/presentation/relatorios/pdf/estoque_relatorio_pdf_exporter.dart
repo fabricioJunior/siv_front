@@ -337,8 +337,9 @@ class EstoqueRelatorioPdfExporter {
     required List<GiroEstoqueLinha> linhas,
     required AbaGiro aba,
     required FiltroGiroEstoque filtro,
+    bool custoVisivel = true,
   }) async {
-    final colunas = colunasExportacaoGiro(aba);
+    final colunas = colunasExportacaoGiro(aba, custoVisivel: custoVisivel);
     final cab = cabecalhoExportacaoGiro(aba, filtro);
     final doc = pw.Document();
     doc.addPage(

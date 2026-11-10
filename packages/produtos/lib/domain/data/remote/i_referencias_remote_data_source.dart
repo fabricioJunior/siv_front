@@ -5,10 +5,14 @@ abstract class IReferenciasRemoteDataSource {
 
   Future<int> fetchProximoId();
 
+  Future<double?> fetchCusto({required int id});
+
+  Future<void> updateCusto({required int id, double? custo});
+
   Future<Referencia> createReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -18,6 +22,7 @@ abstract class IReferenciasRemoteDataSource {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   });
 
   Future<Referencia> atualizarReferencia({
@@ -33,6 +38,7 @@ abstract class IReferenciasRemoteDataSource {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   });
 
   Future<List<Referencia>> fetchReferencias({String? nome, bool? inativo});

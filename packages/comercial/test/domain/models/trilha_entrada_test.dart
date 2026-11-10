@@ -118,6 +118,15 @@ void main() {
     expect(t.take(4).every((p) => p.status == StatusPasso.concluido), isTrue);
   });
 
+  test('faturando: abre em Faturar, anteriores concluídos', () {
+    final r = _r(_base(livres: false, extra: {'etapa': 'faturando'}));
+    expect(TrilhaEntrada.etapaAtual(r), 4);
+    final t = TrilhaEntrada.trilha(r, passo: TrilhaEntrada.etapaAtual(r));
+    expect(t[4].status, StatusPasso.ativo);
+    expect(t[4].subtitulo, 'pronto para faturar');
+    expect(t.take(4).every((p) => p.status == StatusPasso.concluido), isTrue);
+  });
+
   test('variações novas: Associar ativo com subtítulo próprio', () {
     final r = _r(_base(extra: {
       'contagensLivres': [

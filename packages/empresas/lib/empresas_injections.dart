@@ -37,6 +37,7 @@ import 'package:empresas/presentation/blocs/empresa_parametros_bloc/empresa_para
 import 'package:empresas/presentation/blocs/empresa_nota_fiscal_email_bloc/empresa_nota_fiscal_email_bloc.dart';
 import 'package:empresas/presentation/blocs/empresa_bloc/empresa_bloc.dart';
 import 'package:empresas/presentation/blocs/empresas_bloc/empresas_bloc.dart';
+import 'package:empresas/presentation/blocs/integracao_infinity_pay_bloc/integracao_infinity_pay_bloc.dart';
 import 'package:empresas/presentation/blocs/integracao_meta_bloc/integracao_meta_bloc.dart';
 import 'package:empresas/presentation/blocs/terminal_bloc/terminal_bloc.dart';
 import 'package:empresas/presentation/blocs/terminais_bloc/terminais_bloc.dart';
@@ -222,6 +223,10 @@ void _presentantion() {
 
   sl.registerFactory<IntegracaoMetaBloc>(
     () => IntegracaoMetaBloc(sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<IntegracaoInfinityPayBloc>(
+    () => IntegracaoInfinityPayBloc(sl(), sl(), sl<ApiBaseUrlConfig>().urlBase),
   );
 
   sl.registerFactory<TerminaisBloc>(() => TerminaisBloc(sl(), sl()));

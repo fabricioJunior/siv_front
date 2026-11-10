@@ -400,6 +400,7 @@ class _EcommerceConfiguracaoFormularioState
             : Image.network(
                 url,
                 fit: BoxFit.cover,
+                cacheWidth: 168,
                 errorBuilder: (_, __, ___) =>
                     Icon(Icons.broken_image_outlined, color: cores.textoApoio),
               ),
@@ -802,6 +803,7 @@ class _CardBanner extends StatelessWidget {
                     : Image.network(
                         banner.url,
                         fit: BoxFit.cover,
+                        cacheWidth: 480,
                         errorBuilder: (_, __, ___) => Container(
                           color: cores.superficieRecuada,
                           child: Icon(Icons.image_not_supported_outlined, color: cores.textoApoio),

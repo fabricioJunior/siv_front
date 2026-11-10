@@ -243,6 +243,9 @@ class StubReceberRomaneioNoCaixa implements ReceberRomaneioNoCaixa {
   }
 }
 
+// Chaves de idempotência recebidas por StubCriarVendaCompleta (uma por chamada).
+final chavesDeVenda = <String?>[];
+
 class StubCriarVendaCompleta implements CriarVendaCompleta {
   final Future<Romaneio> Function() onCall;
 
@@ -266,7 +269,9 @@ class StubCriarVendaCompleta implements CriarVendaCompleta {
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   }) {
+    chavesDeVenda.add(idempotencyKey);
     return onCall();
   }
 }
@@ -623,6 +628,7 @@ void main() {
       recebidos.clear();
       observacoes.clear();
       falhasRestantes = 1;
+      chavesDeVenda.clear();
     });
 
     blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
@@ -690,6 +696,33 @@ void main() {
         expect(bloc.state.listaCompartilhada?.idLista, isNull);
         expect(bloc.state.motivoPendencia, isNull);
         expect(recebidos, isEmpty);
+      },
+    );
+
+    blocTest<RomaneioCriacaoBloc, RomaneioCriacaoState>(
+      'refazer a mesma venda após falha reenvia a mesma chave de idempotência',
+      build: () => criarBloc(
+        lista: ListaDeProdutosCompartilhada(
+          hash: hashLista,
+          origem: OrigemCompartilhadaTipo.venda,
+          criadaEm: agora,
+          atualizadaEm: agora,
+          pessoaId: 5,
+          funcionarioId: 10,
+          tabelaPrecoId: 20,
+        ),
+        vendaCompleta: () async => throw Exception('502'),
+      ),
+      act: (bloc) async {
+        bloc.add(solicitacao);
+        await bloc.stream.firstWhere((s) => s.step == RomaneioCriacaoStep.falha);
+        bloc.add(solicitacao);
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        expect(chavesDeVenda, hasLength(2));
+        expect(chavesDeVenda.first, isNotNull);
+        expect(chavesDeVenda.first, chavesDeVenda.last);
       },
     );
   });

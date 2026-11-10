@@ -5,10 +5,14 @@ abstract class IReferenciasRepository {
 
   Future<int> obterProximoId();
 
+  Future<double?> obterCusto({required int id});
+
+  Future<void> salvarCusto({required int id, double? custo});
+
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -18,6 +22,7 @@ abstract class IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   });
 
   Future<Referencia> atualizarReferencia({
@@ -33,6 +38,7 @@ abstract class IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   });
 
   Future<List<Referencia>> obterReferencias({String? nome, bool? inativo});

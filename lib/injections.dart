@@ -1,3 +1,5 @@
+import 'package:autenticacao/uses_cases.dart' show OnDesautenticado;
+import 'package:core/sync.dart';
 import 'package:autenticacao/autenticao_injecoes.dart' as auth;
 import 'package:autenticacao/data.dart';
 import 'package:autenticacao/data/remote/auth_http_interceptor.dart';
@@ -17,7 +19,15 @@ import 'package:estoque/estoque_injections.dart';
 import 'package:importacao/importacao_injections.dart';
 import 'package:financeiro/financeiro_injections.dart';
 import 'package:comercial/comercial_injections.dart';
+
+import 'package:comercial/data.dart'
+    show IFiltrosPedidosContagemGateway, IVariacoesProdutoGateway;
+import 'package:siv_front/data/gateways/filtros_pedidos_contagem_gateway.dart';
+import 'package:siv_front/data/gateways/variacoes_produto_gateway.dart';
+
 import 'package:comunicados/comunicados_injections.dart';
+import 'package:notificacoes/notificacoes.dart';
+import 'package:notificacoes/notificacoes_injections.dart';
 import 'package:promocoes/promocoes_injections.dart';
 import 'package:firebase/firebase_injecoes.dart' as firebase;
 
@@ -63,12 +73,19 @@ Future<void> resolverDependenciasApp() async {
   resolverPagamentosInjections();
   resolverFinanceiroInjections();
   resolverComercialInjections();
+  sl.registerLazySingleton<IVariacoesProdutoGateway>(
+    () => VariacoesProdutoGateway(),
+  );
+  sl.registerLazySingleton<IFiltrosPedidosContagemGateway>(
+    () => FiltrosPedidosContagemGateway(),
+  );
   resolverPromocoesInjections();
   resolverPrecosInjection();
   resolverEstoqueInjection();
   resolverImportacaoInjection();
   resolverEntregasInjections();
   resolverComunicadosInjection();
+  resolverNotificacoesInjection();
   _presentation();
   sl.registerSingleton<IPermissoesController>(Permissoes(appBloc: sl()));
 }
@@ -145,6 +162,22 @@ void _presentation() {
   sl.registerFactory<IndicadoresHomeBloc>(
     () => IndicadoresHomeBloc(sl(), sl()),
   );
+
+  sl.registerLazySingleton<NotificacoesBloc>(() {
+    final ws = sl<SyncWebSocketService>();
+    final notificacao = sl<NotificacaoService>();
+    notificacao.inicializar();
+    return NotificacoesBloc(
+      sl(),
+      sl(),
+      sl(),
+      sl(),
+      notificacao.exibir,
+      novas: ws.notificacoes,
+      conectado: ws.conectado,
+      desautenticado: sl<OnDesautenticado>().call(),
+    );
+  });
 
   sl.registerLazySingleton<SyncDataBloc>(
     () => SyncDataBloc(

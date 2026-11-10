@@ -49,6 +49,7 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     corNome,
     tamanhoId,
     tamanhoNome,
+    estampaNome,
     unidadeMedida,
     saldo,
     atualizadoEm,
@@ -73,6 +74,9 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
   final String tamanhoNome;
 
   @override
+  final String? estampaNome;
+
+  @override
   final String? unidadeMedida;
 
   ProdutoEstoqueHiveDto({
@@ -86,6 +90,7 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     required this.corNome,
     required this.tamanhoId,
     required this.tamanhoNome,
+    this.estampaNome,
     required this.unidadeMedida,
     required this.saldo,
     required this.idDoProduto,
@@ -109,6 +114,7 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
     'saldo': saldo,
     'tamanhoId': tamanhoId,
     'tamanhoNome': tamanhoNome,
+    'estampaNome': estampaNome,
     'unidadeMedida': unidadeMedida,
     // IndexedDB (web) exige valor "structured-clone safe" -- `DateTime` vira
     // ISO-8601 (Hive aceitava o objeto binário direto).
@@ -133,6 +139,8 @@ class ProdutoEstoqueHiveDto implements ProdutoDoEstoque, HiveDto, StorageEntity 
       saldo: props['saldo'] as double,
       tamanhoId: props['tamanhoId'] as int,
       tamanhoNome: props['tamanhoNome'] as String,
+      // Registros anteriores à estampa não têm a chave (null até o re-sync).
+      estampaNome: props['estampaNome'] as String?,
       unidadeMedida: props['unidadeMedida'] as String?,
       atualizadoEm: (props['atualizadoEm'] as String?) == null
           ? null

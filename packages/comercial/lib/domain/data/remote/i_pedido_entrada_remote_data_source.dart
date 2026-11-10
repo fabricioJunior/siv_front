@@ -1,4 +1,6 @@
+import 'package:comercial/domain/models/contagem_em_andamento.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 
 abstract class IPedidoEntradaRemoteDataSource {
   Future<EntradaResumo> importarNfe({
@@ -13,7 +15,19 @@ abstract class IPedidoEntradaRemoteDataSource {
     String? observacao,
   });
 
+  /// Contagens abertas (não faturadas/encerradas/canceladas), mais recentes primeiro.
+  Future<ContagensEmAndamentoPagina> contagensEmAndamento({
+    String? busca,
+    int? funcionarioId,
+    bool minhas = false,
+    int pagina = 1,
+    int tamanho = 30,
+  });
+
   Future<EntradaResumo> obter(int pedidoId);
+
+  /// Referências esperadas do fornecedor da entrada (com foto).
+  Future<List<ReferenciaEsperada>> obterEsperadas(int pedidoId);
 
   Future<EntradaResumo> vincularReferencia(
     int pedidoId,
@@ -83,5 +97,10 @@ abstract class IPedidoEntradaRemoteDataSource {
 
   /// Conferência em lote: [deltas] (produtoId -> variação do lido; negativo
   /// remove). Uma chamada, uma transação no servidor.
-  Future<EntradaResumo> registrarLeituras(int pedidoId, Map<int, int> deltas);
+  Future<EntradaResumo> registrarLeituras(
+    int pedidoId,
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  });
 }

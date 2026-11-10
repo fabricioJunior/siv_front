@@ -15,10 +15,11 @@ part 'relatorio_giro_estoque_event.dart';
 part 'relatorio_giro_estoque_state.dart';
 
 /// Ordem padrão de cada aba (trocar de aba restaura).
-(String, String) ordenacaoPadraoGiro(AbaGiro aba) => switch (aba) {
+(String, String) ordenacaoPadraoGiro(AbaGiro aba, {bool custoVisivel = true}) =>
+    switch (aba) {
       AbaGiro.ranking => ('score', 'desc'),
       AbaGiro.reposicao => ('diasParaEsgotar', 'asc'),
-      AbaGiro.parado => ('valorParado', 'desc'),
+      AbaGiro.parado => (custoVisivel ? 'valorParado' : 'estoque', 'desc'),
     };
 
 const _ascPrimeiro = {'nome', 'dataEntrada', 'diasParaEsgotar', 'classificacao'};
@@ -113,7 +114,7 @@ class RelatorioGiroEstoqueBloc
     final nova = ativa.length == 1 && ativa.contains(e.classificacao)
         ? <ClassificacaoGiro>{}
         : {e.classificacao};
-    final (ord, dir) = ordenacaoPadraoGiro(AbaGiro.ranking);
+    final (ord, dir) = ordenacaoPadraoGiro(AbaGiro.ranking, custoVisivel: state.custoVisivel);
     // O resumo ignora a classificação: só a lista recarrega.
     return _soLista(
       emit,
@@ -131,7 +132,7 @@ class RelatorioGiroEstoqueBloc
     GiroAbaAlterada e,
     Emitter<RelatorioGiroEstoqueState> emit,
   ) {
-    final (ord, dir) = ordenacaoPadraoGiro(e.aba);
+    final (ord, dir) = ordenacaoPadraoGiro(e.aba, custoVisivel: state.custoVisivel);
     return _soLista(
       emit,
       state.copyWith(aba: e.aba, ordenarPor: ord, ordem: dir, page: 1),
@@ -142,6 +143,9 @@ class RelatorioGiroEstoqueBloc
     GiroOrdenacaoAlterada e,
     Emitter<RelatorioGiroEstoqueState> emit,
   ) {
+    if (e.coluna == 'valorParado' && !state.custoVisivel) {
+      return Future.value();
+    }
     final mesma = e.coluna == state.ordenarPor;
     final ordem = mesma
         ? (state.ordem == 'asc' ? 'desc' : 'asc')
@@ -269,10 +273,10 @@ class RelatorioGiroEstoqueBloc
       switch (e.formato) {
         case FormatoExportacaoGiro.csv:
           await EstoqueRelatorioCsvExporter.exportarGiro(
-              linhas: linhas, aba: s.aba, filtro: s.filtro);
+              linhas: linhas, aba: s.aba, filtro: s.filtro, custoVisivel: s.custoVisivel);
         case FormatoExportacaoGiro.pdf:
           await EstoqueRelatorioPdfExporter.exportarGiro(
-              linhas: linhas, aba: s.aba, filtro: s.filtro);
+              linhas: linhas, aba: s.aba, filtro: s.filtro, custoVisivel: s.custoVisivel);
       }
       emit(state.copyWith(exportando: false));
     } catch (err, st) {

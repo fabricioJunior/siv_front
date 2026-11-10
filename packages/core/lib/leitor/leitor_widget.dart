@@ -10,12 +10,12 @@ import 'package:core/leitor/leitor_busca_bloc/leitor_busca_bloc.dart';
 import 'package:core/leitor/leitor_data.dart';
 import 'package:core/leitor/produto_esperado.dart';
 import 'package:core/presentation/siv_cantos_blueprint.dart';
-import 'package:core/services/camera_scanner_service.dart';
 import 'package:core/sessao.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:leitor_camera/leitor_camera.dart';
 
 class LeitorWidget extends StatefulWidget {
   final bool controlarQuantidade;
@@ -45,6 +45,10 @@ class LeitorWidget extends StatefulWidget {
   final void Function(ProdutoEsperado produto, int lido)? onCorrigirContagem;
   final ValueChanged<ProdutoEsperado>? onRemoverLeitura;
 
+  /// Modo conferência: o chip vira "Zerar leituras" e chama isto em vez de
+  /// limpar o leitor (quem chama zera no servidor e limpa depois).
+  final VoidCallback? onZerarLeituras;
+
   bool get modoConferencia => produtosEsperados != null;
 
   const LeitorWidget({
@@ -70,6 +74,7 @@ class LeitorWidget extends StatefulWidget {
     this.produtosEsperados,
     this.onCorrigirContagem,
     this.onRemoverLeitura,
+    this.onZerarLeituras,
   });
 
   @override
@@ -131,7 +136,17 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     _sincronizando = !sessao.dadosSincronizados;
     _sincronizacaoSubscription =
         sessao.sincronizandoDados.listen((sincronizando) {
-      if (mounted) setState(() => _sincronizando = sincronizando);
+      if (!mounted) return;
+      setState(() => _sincronizando = sincronizando);
+      // Durante a sincronização o leitor sai da árvore e o BlocConsumer que copia
+      // o estado do bloc para o controller deixa de ouvir: o que entrou nesse
+      // intervalo (ex.: pré-carga de orçamento) só chegaria ao total/botão da tela
+      // na próxima emissão.
+      if (!sincronizando) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _controller.syncState(_bloc.state);
+        });
+      }
     });
   }
 
@@ -272,7 +287,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
   ProdutoEsperado? _esperadoPorCodigo(String codigo) {
     for (final p in widget.produtosEsperados ?? const <ProdutoEsperado>[]) {
-      if (p.codigoDeBarras == codigo) return p;
+      if (p.temCodigo(codigo)) return p;
     }
     return null;
   }
@@ -326,16 +341,32 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     return '$hora:$minuto:$segundo';
   }
 
-  String _rotuloTamanhoCor({required String tamanho, required String cor}) {
+  String _rotuloTamanhoCor({
+    required String tamanho,
+    required String cor,
+    String estampa = '',
+  }) {
     final tamanhoNormalizado = tamanho.trim().isEmpty ? '-' : tamanho.trim();
     final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
-    return 'Cor: $corNormalizada  •  Tam: $tamanhoNormalizado';
+    final estampaRotulo =
+        estampa.trim().isEmpty ? '' : 'Estampa: ${estampa.trim()}  •  ';
+    return 'Cor: $corNormalizada  •  $estampaRotulo' 'Tam: $tamanhoNormalizado';
   }
 
-  String _rotuloTamanhoCorCompacto({required String tamanho, required String cor}) {
+  String _rotuloTamanhoCorCompacto({
+    required String tamanho,
+    required String cor,
+    String estampa = '',
+  }) {
     final tamanhoNormalizado = tamanho.trim().isEmpty ? '-' : tamanho.trim();
     final corNormalizada = cor.trim().isEmpty ? '-' : cor.trim();
-    return '$corNormalizada · $tamanhoNormalizado';
+    final estampaRotulo = estampa.trim().isEmpty ? '' : '${estampa.trim()} · ';
+    return '$corNormalizada · $estampaRotulo$tamanhoNormalizado';
+  }
+
+  String _corDaGrade(LeitorItemContado item) {
+    final cor = _normalizarRotuloGrade(item.cor);
+    return item.estampa.trim().isEmpty ? cor : '$cor · ${item.estampa.trim()}';
   }
 
   String _normalizarRotuloGrade(String valor, {String fallback = '-'}) {
@@ -398,8 +429,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Future<void> _escanearComCamera() async {
     if (widget.desativado) return;
 
-    final codigo =
-        await CameraScannerService().escanearCodigoDeBarras(context);
+    final codigo = await LeitorCamera.escanear(context);
     if (codigo == null || !mounted) {
       _solicitarFoco();
       return;
@@ -425,11 +455,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return referenciasOrdenadas.map((referencia) {
       final itensReferencia = itensPorReferencia[referencia]!;
-      final cores = itensReferencia
-          .map((item) => _normalizarRotuloGrade(item.cor))
-          .toSet()
-          .toList()
-        ..sort();
+      final cores = itensReferencia.map(_corDaGrade).toSet().toList()..sort();
       final tamanhos = itensReferencia
           .map((item) => _normalizarRotuloGrade(item.tamanho))
           .toSet()
@@ -440,7 +466,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       var quantidadeTotal = 0;
       var valorTotal = 0.0;
       for (final item in itensReferencia) {
-        final cor = _normalizarRotuloGrade(item.cor);
+        final cor = _corDaGrade(item);
         final tamanho = _normalizarRotuloGrade(item.tamanho);
         final linha = gradeQuantidade.putIfAbsent(cor, () => {});
         linha[tamanho] = (linha[tamanho] ?? 0) + item.quantidadeLida;
@@ -757,7 +783,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     final cores = context.sivColors;
     final textos = context.sivTextos;
 
-    final referencias = state.itens.map((item) => item.idReferencia).toSet().length;
+    final referencias =
+        state.itens.map((item) => item.idReferencia).toSet().length;
     final pecas = state.quantidadeTotalLida;
 
     final partesDireita = <String>[];
@@ -804,7 +831,9 @@ class _LeitorWidgetState extends State<LeitorWidget> {
       textAlign: align,
       style: textos.rotulo.copyWith(color: cores.textoApoio),
     );
-    return largura == null ? Expanded(child: texto0) : SizedBox(width: largura, child: texto0);
+    return largura == null
+        ? Expanded(child: texto0)
+        : SizedBox(width: largura, child: texto0);
   }
 
   Widget _listaDesktop(BuildContext context, LeitorState state) {
@@ -894,8 +923,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             ),
                             Text(
                               registro.codigoDeBarras,
-                              style:
-                                  textos.apoio.copyWith(color: cores.textoApoio),
+                              style: textos.apoio
+                                  .copyWith(color: cores.textoApoio),
                             ),
                           ],
                         ),
@@ -906,6 +935,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                           _rotuloTamanhoCorCompacto(
                             tamanho: registro.tamanho,
                             cor: registro.cor,
+                            estampa: registro.estampa ?? '',
                           ),
                           style: textos.apoio,
                         ),
@@ -933,8 +963,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                         child: Text(
                           total != null ? _formatarMoeda(total) : '—',
                           textAlign: TextAlign.right,
-                          style:
-                              textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                          style: textos.corpo
+                              .copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ],
@@ -1084,8 +1114,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ),
                     Text(
                       _formatarMoeda(referencia.valorTotal),
-                      style:
-                          textos.corpo.copyWith(fontWeight: FontWeight.w700),
+                      style: textos.corpo.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -1205,7 +1234,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                                   .copyWith(fontWeight: FontWeight.w700),
                             ),
                             Text(
-                              '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor)} · Cód: ${item.codigoDeBarras}',
+                              '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor, estampa: item.estampa)} · Cód: ${item.codigoDeBarras}',
                               style: textos.apoio
                                   .copyWith(color: cores.textoApoio),
                             ),
@@ -1267,7 +1296,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     if (state.historico.isEmpty) {
       return Center(
-        child: Text('Nenhuma movimentação registrada ainda.', style: textos.corpo),
+        child:
+            Text('Nenhuma movimentação registrada ainda.', style: textos.corpo),
       );
     }
 
@@ -1275,12 +1305,14 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return ListView.separated(
       itemCount: registros.length,
-      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: cores.hairline),
       itemBuilder: (context, index) {
         final registro = registros[index];
         final item = _itemPorCodigo(state, registro.codigoDeBarras);
         final valorUnitario = item?.valorUnitario;
-        final total = valorUnitario != null ? valorUnitario * registro.quantidade : null;
+        final total =
+            valorUnitario != null ? valorUnitario * registro.quantidade : null;
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1291,7 +1323,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                 width: 48,
                 child: Text(
                   _formatarHora(registro.dataHora),
-                  style: textos.codigo.copyWith(fontSize: 11, color: cores.textoApoio),
+                  style: textos.codigo
+                      .copyWith(fontSize: 11, color: cores.textoApoio),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1332,7 +1365,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Widget _gradeMobile(BuildContext context, LeitorState state) {
     if (state.itens.isEmpty) {
       return Center(
-        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+        child:
+            Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
       );
     }
 
@@ -1340,7 +1374,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
     int? referenciaRecente;
     if (state.historico.isNotEmpty) {
       referenciaRecente =
-          _itemPorCodigo(state, state.historico.last.codigoDeBarras)?.idReferencia;
+          _itemPorCodigo(state, state.historico.last.codigoDeBarras)
+              ?.idReferencia;
     }
 
     return ListView.separated(
@@ -1357,7 +1392,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
   Widget _quantidadesMobile(BuildContext context, LeitorState state) {
     if (state.itens.isEmpty) {
       return Center(
-        child: Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
+        child:
+            Text('Nenhum produto lido ainda.', style: context.sivTextos.corpo),
       );
     }
 
@@ -1368,7 +1404,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
 
     return ListView.separated(
       itemCount: itensOrdenados.length,
-      separatorBuilder: (context, index) => Divider(height: 1, color: cores.hairline),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: cores.hairline),
       itemBuilder: (context, index) {
         final item = itensOrdenados[index];
         return Padding(
@@ -1380,7 +1417,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                 child: Text(
                   '×${item.quantidadeLida}',
                   textAlign: TextAlign.center,
-                  style: textos.secao.copyWith(fontSize: 20, color: cores.acoAtivo),
+                  style: textos.secao
+                      .copyWith(fontSize: 20, color: cores.acoAtivo),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1396,7 +1434,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor)} · REF ${item.idReferencia}',
+                      '${_rotuloTamanhoCorCompacto(tamanho: item.tamanho, cor: item.cor, estampa: item.estampa)} · REF ${item.idReferencia}',
                       style: textos.apoio.copyWith(color: cores.textoApoio),
                     ),
                   ],
@@ -1561,7 +1599,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
             color: fundo,
             borderRadius: BorderRadius.circular(SivDimensoes.raio),
             border: Border(
-              left: p.codigoDeBarras == ultimo
+              left: p.temCodigo(ultimo)
                   ? BorderSide(color: cores.aco, width: 3)
                   : BorderSide(color: cores.hairline),
             ),
@@ -1573,7 +1611,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(p.descricao,
-                        style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                        style:
+                            textos.corpo.copyWith(fontWeight: FontWeight.w600)),
                     Text(
                       p.situacao == SituacaoEsperado.parcial
                           ? '${p.grade} · faltam ${p.esperado - p.lido}'
@@ -1618,8 +1657,8 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     ),
                     child: Text(
                       rotulo,
-                      style: textos.rotulo
-                          .copyWith(color: texto, fontSize: 9.5, letterSpacing: 0.8),
+                      style: textos.rotulo.copyWith(
+                          color: texto, fontSize: 9.5, letterSpacing: 0.8),
                     ),
                   ),
                 ],
@@ -1725,10 +1764,16 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.refresh_outlined, size: 18),
-                        label: const Text('Limpar leitura'),
-                        onPressed: state.itens.isEmpty || widget.desativado
-                            ? null
-                            : () => _controller.limpar(),
+                        label: Text(widget.modoConferencia
+                            ? 'Zerar leituras'
+                            : 'Limpar leitura'),
+                        onPressed: widget.modoConferencia
+                            ? (widget.desativado
+                                ? null
+                                : widget.onZerarLeituras)
+                            : state.itens.isEmpty || widget.desativado
+                                ? null
+                                : () => _controller.limpar(),
                       ),
                       if (widget.buscaDataSource != null)
                         ActionChip(
@@ -1775,6 +1820,7 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                             _rotuloTamanhoCor(
                               tamanho: state.ultimoProdutoLido!.tamanho,
                               cor: state.ultimoProdutoLido!.cor,
+                              estampa: state.ultimoProdutoLido!.estampa,
                             ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
@@ -1798,22 +1844,22 @@ class _LeitorWidgetState extends State<LeitorWidget> {
                     child: widget.modoConferencia
                         ? _listaConferencia(context, state)
                         : !ehMobile
-                        ? switch (_visualizacao) {
-                            _LeitorVisualizacao.historico =>
-                              _listaDesktop(context, state),
-                            _LeitorVisualizacao.grade =>
-                              _gradeDesktop(context, state),
-                            _LeitorVisualizacao.porProduto =>
-                              _quantidadesDesktop(context, state),
-                          }
-                        : switch (_visualizacao) {
-                            _LeitorVisualizacao.porProduto =>
-                              _quantidadesMobile(context, state),
-                            _LeitorVisualizacao.historico =>
-                              _listaMobile(context, state),
-                            _LeitorVisualizacao.grade =>
-                              _gradeMobile(context, state),
-                          },
+                            ? switch (_visualizacao) {
+                                _LeitorVisualizacao.historico =>
+                                  _listaDesktop(context, state),
+                                _LeitorVisualizacao.grade =>
+                                  _gradeDesktop(context, state),
+                                _LeitorVisualizacao.porProduto =>
+                                  _quantidadesDesktop(context, state),
+                              }
+                            : switch (_visualizacao) {
+                                _LeitorVisualizacao.porProduto =>
+                                  _quantidadesMobile(context, state),
+                                _LeitorVisualizacao.historico =>
+                                  _listaMobile(context, state),
+                                _LeitorVisualizacao.grade =>
+                                  _gradeMobile(context, state),
+                              },
                   ),
                 ],
               ),
@@ -2150,6 +2196,8 @@ class _BuscaProdutoDialogState extends State<_BuscaProdutoDialog> {
                                     final cor = produto.cor.trim();
                                     final subtitulo = [
                                       if (cor.isNotEmpty) 'Cor: $cor',
+                                      if (produto.estampa.trim().isNotEmpty)
+                                        'Estampa: ${produto.estampa.trim()}',
                                       if (tamanho.isNotEmpty) 'Tam: $tamanho',
                                       'Cód: ${produto.codigoDeBarras}',
                                       '${widget.rotuloQuantidadeDisponivel}: ${produto.quantidade}',
@@ -2224,6 +2272,8 @@ class _QuantidadeDialogState extends State<_QuantidadeDialog> {
     final cor = widget.produto.cor.trim();
     final rotulo = [
       if (cor.isNotEmpty) 'Cor: $cor',
+      if (widget.produto.estampa.trim().isNotEmpty)
+        'Estampa: ${widget.produto.estampa.trim()}',
       if (tamanho.isNotEmpty) 'Tam: $tamanho',
     ].join('  •  ');
 
@@ -2312,6 +2362,7 @@ class LeitorController extends ChangeNotifier {
             'idReferencia': item.idReferencia,
             'tamanho': item.tamanho,
             'cor': item.cor,
+            'estampa': item.estampa,
             'quantidadeLida': item.quantidadeLida,
             'estoqueDisponivel': item.estoqueDisponivel,
             'valorUnitario': item.valorUnitario,

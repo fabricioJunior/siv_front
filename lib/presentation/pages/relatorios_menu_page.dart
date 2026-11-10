@@ -105,6 +105,12 @@ const relatoriosAcordeaoItens = <SivMenuAcordeaoFilho>[
     grupo: 'ESTOQUE E PRODUTOS',
   ),
   SivMenuAcordeaoFilho(
+    label: 'Pedidos por contagem',
+    rota: '/relatorio_pedidos_contagem',
+    componente: 'RELFC017',
+    grupo: 'ESTOQUE E PRODUTOS',
+  ),
+  SivMenuAcordeaoFilho(
     label: 'Histórico de Caixas',
     rota: '/historico_de_caixas',
     componente: 'FCXFP008',
@@ -253,6 +259,14 @@ const _todosOsRelatorios = <_ItemData>[
     grupo: GrupoRelatorio.estoque,
     componente: 'RELFC015',
     route: '/relatorio_movimentacoes',
+  ),
+  _ItemData(
+    icon: Icons.fact_check_outlined,
+    titulo: 'Pedidos por contagem',
+    subtitulo: 'Em aberto e faturados, com status da contagem e custo.',
+    grupo: GrupoRelatorio.estoque,
+    componente: 'RELFC017',
+    route: '/relatorio_pedidos_contagem',
   ),
   _ItemData(
     icon: Icons.history,

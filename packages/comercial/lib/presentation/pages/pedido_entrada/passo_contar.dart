@@ -1,9 +1,12 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
+import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cases.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/cartao_linha_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
@@ -57,7 +60,56 @@ class PassoContar extends StatefulWidget {
 class _PassoContarState extends State<PassoContar> {
   _Edicao? _edicao; // desktop: painel inline
 
+  /// Referências esperadas do fornecedor (cadastradas antes de a peça chegar).
+  /// Só ajudam o contador: se não carregarem, a contagem segue sem a aba.
+  List<ReferenciaEsperada> _esperadas = const [];
+
   EntradaResumo get _r => widget.resumo;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarEsperadas();
+  }
+
+  Future<void> _carregarEsperadas() async {
+    if (_r.nfe != null) return; // NF-e conta pelos cartões de linha
+    try {
+      final lista = await sl<ObterEsperadasEntrada>().call(_r.pedidoId);
+      if (mounted) setState(() => _esperadas = lista);
+    } catch (_) {
+      // sem esperadas a contagem funciona igual
+    }
+  }
+
+  /// Peças já contadas por referência (contagem normal + variações novas).
+  Map<int, double> get _contadoPorReferencia {
+    final m = <int, double>{};
+    for (final c in _r.contagens) {
+      if (c.linhaId != null || c.referenciaId == null) continue;
+      m[c.referenciaId!] = (m[c.referenciaId!] ?? 0) + c.quantidade;
+    }
+    for (final c in _r.variacoesNovas) {
+      m[c.referenciaId!] = (m[c.referenciaId!] ?? 0) + c.quantidade;
+    }
+    return m;
+  }
+
+  /// Contagens de uma referência, já com as variações novas (para recontar).
+  List<EntradaContagem> _existentesDa(int refId, [int? estampaId]) => [
+        ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == estampaId),
+        for (final c in _r.variacoesNovas.where((c) => estampaId == null && c.referenciaId == refId))
+          EntradaContagem(
+            produtoId: 0,
+            linhaId: null,
+            quantidade: c.quantidade,
+            referenciaId: refId,
+            corId: c.corId,
+            corNome: _corNome(c.corId),
+            tamanhoId: c.tamanhoId,
+            tamanhoNome: _tamNome(c.tamanhoId),
+          ),
+      ];
 
   Map<int, double> get _lidos => {
         for (final i in _r.conferencia.itens) i.produtoId: i.lido,
@@ -132,12 +184,17 @@ class _PassoContarState extends State<PassoContar> {
       corSeletor: s.corSeletor,
       tamanhoSeletor: s.tamanhoSeletor,
       estampaSeletor: s.estampaSeletor,
-      carregarTamanhos: s.carregarTamanhos,
       buscarParecidas: s.buscarReferenciasParecidas,
       onSalvar: onSalvar,
       onFechar: onFechar,
+      esperadas: _esperadas,
+      contadoPorReferencia: _contadoPorReferencia,
+      esperadasInicial: e.novo && !e.livre,
+      existentesDaReferencia: _existentesDa,
     );
   }
+
+  Set<int> get _idsEsperadas => {for (final e in _esperadas) e.id};
 
   // --- agrupamentos ---------------------------------------------------------
 
@@ -151,10 +208,11 @@ class _PassoContarState extends State<PassoContar> {
     return g;
   }
 
-  Map<String, List<ContagemLivre>> get _gruposLivres {
-    final g = <String, List<ContagemLivre>>{};
+  /// (descrição, estampaId): a mesma descrição em estampas diferentes são contagens separadas.
+  Map<(String, int), List<ContagemLivre>> get _gruposLivres {
+    final g = <(String, int), List<ContagemLivre>>{};
     for (final c in _r.livresSemReferencia) {
-      g.putIfAbsent(c.descricao, () => []).add(c);
+      g.putIfAbsent((c.descricao, c.estampaId ?? 0), () => []).add(c);
     }
     return g;
   }
@@ -220,11 +278,18 @@ class _PassoContarState extends State<PassoContar> {
         ),
       );
 
+  String _tituloLivre(String descricao, List<ContagemLivre> itens) {
+    final estampa = itens.first.estampaNome;
+    return estampa == null ? descricao : '$descricao · $estampa';
+  }
+
   void _editarLivre(String descricao, List<ContagemLivre> itens) => _abrir(
         _Edicao(
-          titulo: descricao,
+          titulo: _tituloLivre(descricao, itens),
           livre: true,
           descricao: descricao,
+          estampaId: itens.first.estampaId,
+          estampaNome: itens.first.estampaNome,
           existentes: [
             for (final c in itens)
               EntradaContagem(
@@ -302,6 +367,7 @@ class _PassoContarState extends State<PassoContar> {
               descricao: descricao,
               corId: c.corId,
               tamanhoId: c.tamanhoId,
+              estampaId: c.estampaId,
               quantidade: 0,
             ),
         ]),
@@ -435,6 +501,7 @@ class _PassoContarState extends State<PassoContar> {
               onTap: widget.salvando ? null : () => _editarRef(e.key.$1, e.value),
               onExcluir:
                   widget.salvando ? null : () => _excluirRef(e.value),
+              esperada: _idsEsperadas.contains(e.key.$1),
             ),
           if (variacoesNovas.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -468,6 +535,7 @@ class _PassoContarState extends State<PassoContar> {
                       onExcluir: widget.salvando
                           ? null
                           : () => _excluirVariacao(e.key, e.value),
+                      esperada: _idsEsperadas.contains(e.key),
                     ),
                 ],
               ),
@@ -490,8 +558,8 @@ class _PassoContarState extends State<PassoContar> {
                   ),
                   for (final e in livres.entries)
                     _linhaGrupo(
-                      chave: Key('entrada_sem_ref_${e.key}'),
-                      titulo: e.key,
+                      chave: Key('entrada_sem_ref_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
+                      titulo: _tituloLivre(e.key.$1, e.value),
                       resumo: e.value
                           .map((c) =>
                               '${_corNome(c.corId)} ${_tamNome(c.tamanhoId)}·${qtd(c.quantidade)}')
@@ -500,15 +568,16 @@ class _PassoContarState extends State<PassoContar> {
                           e.value.fold<double>(0, (s, c) => s + c.quantidade),
                       onTap: widget.salvando
                           ? null
-                          : () => _editarLivre(e.key, e.value),
+                          : () => _editarLivre(e.key.$1, e.value),
                       onExcluir: widget.salvando
                           ? null
-                          : () => _excluirLivre(e.key, e.value),
+                          : () => _excluirLivre(e.key.$1, e.value),
                     ),
                 ],
               ),
             ),
           ],
+          ..._naoContadas(context),
         ],
       ],
     );
@@ -540,6 +609,44 @@ class _PassoContarState extends State<PassoContar> {
     );
   }
 
+  /// "Esperadas ainda não contadas": só informa, não bloqueia o faturamento.
+  List<Widget> _naoContadas(BuildContext context) {
+    final contado = _contadoPorReferencia;
+    final faltam = _esperadas.where((e) => (contado[e.id] ?? 0) <= 0).toList();
+    if (faltam.isEmpty) return const [];
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    return [
+      const SizedBox(height: 16),
+      Container(
+        key: const Key('esperadas_nao_contadas'),
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cores.superficieRecuada,
+          border: Border.all(color: cores.hairline),
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ESPERADAS AINDA NÃO CONTADAS · ${faltam.length}',
+              style: textos.rotulo.copyWith(color: cores.textoApoio),
+            ),
+            const SizedBox(height: 6),
+            for (final e in faltam) Text(e.nome, style: textos.corpo),
+            const SizedBox(height: 6),
+            Text(
+              'Não bloqueiam o faturamento. Continuam aguardando para a próxima entrada.',
+              style: textos.apoio.copyWith(color: cores.textoApoio),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
   /// Entrada ainda sem nenhuma contagem: explica e oferece os dois caminhos.
   Widget _estadoVazio(BuildContext context) {
     final cores = context.sivColors;
@@ -568,7 +675,9 @@ class _PassoContarState extends State<PassoContar> {
           const SizedBox(height: 24),
           BotaoPrincipalEntrada(
             key: const Key('entrada_vazio_contar_ref'),
-            rotulo: 'CONTAR COM REFERÊNCIA',
+            rotulo: _esperadas.isEmpty
+                ? 'CONTAR COM REFERÊNCIA'
+                : 'ESCOLHER NAS ESPERADAS · ${_esperadas.length}',
             icone: Icons.add,
             onPressed: widget.salvando
                 ? null
@@ -605,6 +714,7 @@ class _PassoContarState extends State<PassoContar> {
     required double total,
     required VoidCallback? onTap,
     VoidCallback? onExcluir,
+    bool esperada = false,
   }) {
     final textos = context.sivTextos;
     final cores = context.sivColors;
@@ -623,8 +733,31 @@ class _PassoContarState extends State<PassoContar> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(titulo,
-                      style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(titulo,
+                            style: textos.corpo
+                                .copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                      if (esperada) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          key: Key('etiqueta_esperada_$titulo'),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF3F7),
+                            border: Border.all(color: const Color(0xFFC9D7E4)),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text('ESPERADA',
+                              style: textos.apoio.copyWith(
+                                  fontSize: 10, fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ],
+                  ),
                   Text(resumo,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

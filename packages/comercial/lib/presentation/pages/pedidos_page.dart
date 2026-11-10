@@ -128,7 +128,7 @@ class _PedidosPageState extends State<PedidosPage> {
                     OutlinedButton.icon(
                       key: const Key('pedidos_entrada_contagem_button'),
                       onPressed: () async {
-                        await Navigator.pushNamed(context, '/entrada_contagem');
+                        await Navigator.pushNamed(context, '/entrada_contagem/nova');
                         if (mounted) _bloc.add(PedidosIniciou());
                       },
                       icon: const Icon(Icons.fact_check_outlined, size: 18),
@@ -827,7 +827,7 @@ class _PainelPedido extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      '${item.referenciaNome ?? 'Item'} · ${item.corNome ?? '-'}/${item.tamanhoNome ?? '-'} · ${item.solicitado?.toStringAsFixed(0) ?? '-'}un',
+                      '${item.referenciaNome ?? 'Item'} · ${[item.corNome ?? '-', if ((item.estampaNome ?? '').isNotEmpty) item.estampaNome!, item.tamanhoNome ?? '-'].join('/')} · ${item.solicitado?.toStringAsFixed(0) ?? '-'}un',
                       style: textos.apoio,
                     ),
                   ),

@@ -25,10 +25,22 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
   }
 
   @override
+  Future<double?> fetchCusto({required int id}) async {
+    final response = await get(pathParameters: {'id': '$id/custo'});
+    final body = response.body as Map<String, dynamic>;
+    return (body['custo'] as num?)?.toDouble();
+  }
+
+  @override
+  Future<void> updateCusto({required int id, double? custo}) async {
+    await put(pathParameters: {'id': '$id/custo'}, body: {'custo': custo});
+  }
+
+  @override
   Future<Referencia> createReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -38,12 +50,13 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) async {
     final response = await post(
       body: {
         'id': id,
         'nome': nome,
-        'categoriaId': categoriaId,
+        if (categoriaId != null) 'categoriaId': categoriaId,
         if (subCategoriaId != null) 'subCategoriaId': subCategoriaId,
         if (idExterno != null) 'idExterno': idExterno,
         if (unidadeMedida != null) 'unidadeMedida': unidadeMedida,
@@ -53,6 +66,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
         if (cuidados != null) 'cuidados': cuidados,
         if (ncm != null) 'ncm': ncm,
         if (pesoGramas != null) 'pesoGramas': pesoGramas,
+        ...?espera?.toJson(),
       },
     );
 
@@ -73,6 +87,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) async {
     final response = await put(
       pathParameters: {'id': id.toString()},
@@ -89,6 +104,7 @@ class ReferenciasRemoteDatasource extends RemoteDataSourceBase
         if (cuidados != null) 'cuidados': cuidados,
         if (ncm != null) 'ncm': ncm,
         if (pesoGramas != null) 'pesoGramas': pesoGramas,
+        ...?espera?.toJson(),
       },
     );
 

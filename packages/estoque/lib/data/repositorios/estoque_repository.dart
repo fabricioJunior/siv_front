@@ -2,6 +2,12 @@ import 'package:core/paginacao.dart';
 import 'package:estoque/domain/data/datasourcers/i_produtos_estoque_local_datasource.dart';
 import 'package:estoque/estoque.dart';
 
+/// Sobe quando o cadastro local (`ProdutoDoEstoque`) ganha coluna que o sync
+/// incremental (filtra por `atualizadoEm`) não repopula sozinho.
+/// v2: estampaNome.
+const versaoCadastroLocalEstoque = 2;
+const _chaveVersaoCadastroLocal = 'estoque_cadastro_versao';
+
 class EstoqueRepository implements IEstoqueRepository {
   final IEstoqueSaldoRemoteDataSource estoqueSaldoRemoteDataSource;
   final IProdutoEstoqueLocalDataSource produtosEstoqueLocalDataSource;
@@ -31,6 +37,7 @@ class EstoqueRepository implements IEstoqueRepository {
 
   @override
   Stream<Paginacao> syncEstoque() async* {
+    await _invalidarCadastroSeDesatualizado();
     var paginacaoAnterior = await paginacaoDataSource.buscarPaginacao('estoque_sync');
 
     final bool syncAnteriorConcluida = paginacaoAnterior?.ended == true;
@@ -101,5 +108,31 @@ class EstoqueRepository implements IEstoqueRepository {
       await paginacaoDataSource.salvarPaginacao(pagicao);
       paginaAtual++;
     }
+  }
+
+  /// Cadastro gravado por versão antiga: apaga os produtos e zera o cursor
+  /// 'estoque_sync' (força sync completo). O marcador é gravado por último:
+  /// se cair no meio, a próxima sync repete a limpeza.
+  Future<void> _invalidarCadastroSeDesatualizado() async {
+    final marcador = await paginacaoDataSource.buscarPaginacao(_chaveVersaoCadastroLocal);
+    if (marcador?.paginaAtual == versaoCadastroLocalEstoque) return;
+    await produtosEstoqueLocalDataSource.excluirTodosProdutos();
+    await paginacaoDataSource.salvarPaginacao(Paginacao(
+      key: 'estoque_sync',
+      paginaAtual: 0,
+      totalPaginas: 0,
+      itensPorPagina: 0,
+      totalItens: 0,
+      dataAtualizacao: null,
+    ));
+    await paginacaoDataSource.salvarPaginacao(Paginacao(
+      key: _chaveVersaoCadastroLocal,
+      paginaAtual: versaoCadastroLocalEstoque,
+      totalPaginas: 0,
+      itensPorPagina: 0,
+      totalItens: 0,
+      dataAtualizacao: DateTime.now().toUtc(),
+      ended: true,
+    ));
   }
 }

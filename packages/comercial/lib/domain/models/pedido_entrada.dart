@@ -70,6 +70,8 @@ class EntradaLinha extends Equatable {
   final double? diferenca;
   final bool divergente;
   final bool divergenciaResolvida;
+  final int? estampaId;
+  final String? estampaNome;
 
   const EntradaLinha({
     required this.id,
@@ -88,6 +90,8 @@ class EntradaLinha extends Equatable {
     required this.diferenca,
     required this.divergente,
     required this.divergenciaResolvida,
+    this.estampaId,
+    this.estampaNome,
   });
 
   factory EntradaLinha.fromJson(Map<String, dynamic> j) => EntradaLinha(
@@ -109,6 +113,8 @@ class EntradaLinha extends Equatable {
         diferenca: j['diferenca'] == null ? null : _num(j['diferenca']),
         divergente: j['divergente'] == true,
         divergenciaResolvida: j['divergenciaResolvidaEm'] != null,
+        estampaId: _int(j['estampaId']),
+        estampaNome: j['estampaNome'] as String?,
       );
 
   @override
@@ -180,6 +186,10 @@ class ContagemLivre extends Equatable {
   final int? referenciaId;
   final String? referenciaNome;
 
+  /// Estampa opcional da contagem (vale na associação à referência).
+  final int? estampaId;
+  final String? estampaNome;
+
   const ContagemLivre({
     required this.id,
     required this.descricao,
@@ -188,6 +198,8 @@ class ContagemLivre extends Equatable {
     required this.quantidade,
     this.referenciaId,
     this.referenciaNome,
+    this.estampaId,
+    this.estampaNome,
   });
 
   bool get ehVariacaoNova => referenciaId != null;
@@ -200,11 +212,13 @@ class ContagemLivre extends Equatable {
         quantidade: _num(j['quantidade']),
         referenciaId: _int(j['referenciaId']),
         referenciaNome: j['referenciaNome'] as String?,
+        estampaId: _int(j['estampaId']),
+        estampaNome: j['estampaNome'] as String?,
       );
 
   @override
   List<Object?> get props =>
-      [id, descricao, corId, tamanhoId, quantidade, referenciaId];
+      [id, descricao, corId, tamanhoId, quantidade, referenciaId, estampaId];
 }
 
 /// Situação de um item na conferência (lido × contado).
@@ -263,10 +277,13 @@ class EntradaEtiquetas extends Equatable {
 class EntradaConferenciaItem extends Equatable {
   final int produtoId;
   final String codigoDeBarras;
+  final List<String> codigosDeBarras;
   final String descricao;
   final int idReferencia;
   final String cor;
   final String tamanho;
+  final String estampa;
+  final int? estampaId;
   final double contado;
   final double lido;
   final SituacaoConferencia situacao;
@@ -274,10 +291,13 @@ class EntradaConferenciaItem extends Equatable {
   const EntradaConferenciaItem({
     required this.produtoId,
     required this.codigoDeBarras,
+    this.codigosDeBarras = const [],
     required this.descricao,
     required this.idReferencia,
     required this.cor,
     required this.tamanho,
+    this.estampa = '',
+    this.estampaId,
     required this.contado,
     required this.lido,
     required this.situacao,
@@ -289,10 +309,15 @@ class EntradaConferenciaItem extends Equatable {
     return EntradaConferenciaItem(
       produtoId: _int(j['produtoId']) ?? 0,
       codigoDeBarras: '${j['codigoDeBarras'] ?? ''}',
+      codigosDeBarras: [
+        for (final c in (j['codigosDeBarras'] as List? ?? const [])) '$c',
+      ],
       descricao: j['descricao'] as String? ?? '',
       idReferencia: _int(j['idReferencia']) ?? 0,
       cor: j['cor'] as String? ?? '',
       tamanho: j['tamanho'] as String? ?? '',
+      estampa: j['estampaNome'] as String? ?? j['estampa'] as String? ?? '',
+      estampaId: _int(j['estampaId']),
       contado: contado,
       lido: lido,
       situacao: SituacaoConferencia.deValor(
@@ -303,7 +328,8 @@ class EntradaConferenciaItem extends Equatable {
     );
   }
 
-  String get grade => [cor, tamanho].where((e) => e.isNotEmpty).join(' · ');
+  String get grade =>
+      [cor, estampa, tamanho].where((e) => e.isNotEmpty).join(' · ');
 
   @override
   List<Object?> get props => [produtoId, contado, lido, situacao];
@@ -369,6 +395,7 @@ class EntradaDivergencia extends Equatable {
   final int produtoId;
   final String descricao;
   final String grade;
+  final String? estampaNome;
   final double contado;
   final double lido;
   final TipoDivergencia tipo;
@@ -379,6 +406,7 @@ class EntradaDivergencia extends Equatable {
     required this.produtoId,
     required this.descricao,
     required this.grade,
+    this.estampaNome,
     required this.contado,
     required this.lido,
     required this.tipo,
@@ -391,6 +419,7 @@ class EntradaDivergencia extends Equatable {
         produtoId: _int(j['produtoId']) ?? 0,
         descricao: j['descricao'] as String? ?? '',
         grade: j['grade'] as String? ?? '',
+        estampaNome: j['estampaNome'] as String?,
         contado: _num(j['contado']),
         lido: _num(j['lido']),
         tipo: TipoDivergencia.deValor(j['tipo'] as String?),
@@ -479,6 +508,9 @@ class EntradaCorrecao extends Equatable {
 class EntradaResumo extends Equatable {
   final int pedidoId;
   final String? origemEntrada;
+
+  /// Fornecedor do pedido (id, nome); o wizard de cadastro já abre com ele.
+  final ({int id, String nome})? fornecedor;
   final EntradaNfe? nfe;
   final List<EntradaLinha> linhas;
   final List<EntradaContagem> contagens;
@@ -498,6 +530,7 @@ class EntradaResumo extends Equatable {
   const EntradaResumo({
     required this.pedidoId,
     required this.origemEntrada,
+    this.fornecedor,
     required this.nfe,
     required this.linhas,
     required this.contagens,
@@ -518,6 +551,13 @@ class EntradaResumo extends Equatable {
     return EntradaResumo(
       pedidoId: _int(j['pedidoId']) ?? 0,
       origemEntrada: j['origemEntrada'] as String?,
+      fornecedor: switch (j['fornecedor']) {
+        {'id': final id, 'nome': final nome} when _int(id) != null => (
+          id: _int(id)!,
+          nome: '$nome',
+        ),
+        _ => null,
+      },
       nfe: j['nfe'] == null
           ? null
           : EntradaNfe.fromJson(j['nfe'] as Map<String, dynamic>),
@@ -559,12 +599,25 @@ class EntradaResumo extends Equatable {
   List<ContagemLivre> get variacoesNovas =>
       contagensLivres.where((c) => c.ehVariacaoNova).toList();
 
+  /// "Cor · Estampa · Tamanho" da contagem. O SKU liso vira "Liso" quando a mesma
+  /// referência também tem contagem estampada (senão as etiquetas ficam iguais).
+  String gradeDe(EntradaContagem c) {
+    final temEstampa = contagens
+        .any((o) => o.referenciaId == c.referenciaId && o.estampaId != null);
+    final estampa = c.estampaNome ?? (temEstampa ? 'Liso' : null);
+    return [c.corNome, estampa, c.tamanhoNome]
+        .whereType<String>()
+        .where((e) => e.isNotEmpty)
+        .join(' · ');
+  }
+
   List<EntradaContagem> contagensDaLinha(int linhaId) =>
       contagens.where((c) => c.linhaId == linhaId).toList();
 
   @override
   List<Object?> get props => [
         pedidoId,
+        fornecedor,
         linhas,
         contagens,
         contagensLivres,

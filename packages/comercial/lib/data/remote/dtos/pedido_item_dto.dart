@@ -23,6 +23,8 @@ class PedidoItemDto implements PedidoItem {
   final String? corNome;
   @override
   final String? tamanhoNome;
+  @override
+  final String? estampaNome;
 
   const PedidoItemDto({
     this.pedidoId,
@@ -36,6 +38,7 @@ class PedidoItemDto implements PedidoItem {
     this.referenciaNome,
     this.corNome,
     this.tamanhoNome,
+    this.estampaNome,
   });
 
   factory PedidoItemDto.fromJson(Map<String, dynamic> json) {
@@ -51,6 +54,7 @@ class PedidoItemDto implements PedidoItem {
       referenciaNome: json['referenciaNome']?.toString(),
       corNome: json['corNome']?.toString(),
       tamanhoNome: json['tamanhoNome']?.toString(),
+      estampaNome: json['estampaNome']?.toString(),
     );
   }
 
@@ -67,6 +71,7 @@ class PedidoItemDto implements PedidoItem {
         referenciaNome,
         corNome,
         tamanhoNome,
+        estampaNome,
       ];
 
   @override

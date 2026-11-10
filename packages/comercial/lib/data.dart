@@ -53,6 +53,10 @@ export 'domain/data/remote/i_ecommerce_banners_remote_data_source.dart';
 export 'domain/data/repositories/i_ecommerce_banners_repository.dart';
 export 'data/remote/ecommerce_banners_remote_data_source.dart';
 export 'data/repositories/ecommerce_banners_repository.dart';
+export 'domain/data/remote/i_ecommerce_chaves_mcp_remote_data_source.dart';
+export 'domain/data/repositories/i_ecommerce_chaves_mcp_repository.dart';
+export 'data/remote/ecommerce_chaves_mcp_remote_data_source.dart';
+export 'data/repositories/ecommerce_chaves_mcp_repository.dart';
 
 export 'domain/data/remote/i_lista_personalizada_remote_data_source.dart';
 export 'domain/data/repositories/i_lista_personalizada_repository.dart';
@@ -75,3 +79,7 @@ export 'domain/data/remote/i_ecommerce_vitrine_remote_data_source.dart';
 export 'domain/data/repositories/i_ecommerce_vitrine_repository.dart';
 export 'data/remote/ecommerce_vitrine_remote_data_source.dart';
 export 'data/repositories/ecommerce_vitrine_repository.dart';
+export 'domain/data/gateways/i_variacoes_produto_gateway.dart';
+export 'domain/data/gateways/i_filtros_pedidos_contagem_gateway.dart';
+export 'domain/data/remote/i_relatorio_pedidos_contagem_remote_data_source.dart';
+export 'data/remote/relatorio_pedidos_contagem_remote_data_source.dart';

@@ -289,7 +289,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return Wrap(
+                // Chips crescem sem limite; limita altura e rola, ancorado no fim
+                // (campo de busca é o último filho e fica sempre visível).
+                return ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 132),
+                  child: SingleChildScrollView(
+                    reverse: true,
+                    child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -354,6 +360,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
                       ),
                     ),
                   ],
+                    ),
+                  ),
                 );
               },
             ),
@@ -524,7 +532,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   }
 
   List<T> _filtrarSugestoes(List<T> itens) {
-    final busca = _normalizarBusca(_buscaController.text.trim());
+    final busca = normalizarBusca(_buscaController.text.trim());
     if (busca.isEmpty) {
       return [];
     }
@@ -547,7 +555,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     }
 
     final filtradas = itens.where((item) {
-      final label = _normalizarBusca(widget.itemLabel(item));
+      final label = normalizarBusca(widget.itemLabel(item));
       final selecionado = _isSelecionado(item);
 
       if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
@@ -558,8 +566,8 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     }).toList();
 
     filtradas.sort((a, b) {
-      final aLabel = _normalizarBusca(widget.itemLabel(a));
-      final bLabel = _normalizarBusca(widget.itemLabel(b));
+      final aLabel = normalizarBusca(widget.itemLabel(a));
+      final bLabel = normalizarBusca(widget.itemLabel(b));
 
       final aStarts = aLabel.startsWith(busca);
       final bStarts = bLabel.startsWith(busca);
@@ -584,13 +592,13 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
       return sugestoes.first;
     }
 
-    final busca = _normalizarBusca(_buscaController.text.trim());
+    final busca = normalizarBusca(_buscaController.text.trim());
     if (busca.isEmpty) {
       return null;
     }
 
     final exata = itens.where((item) {
-      final label = _normalizarBusca(widget.itemLabel(item));
+      final label = normalizarBusca(widget.itemLabel(item));
       final selecionado = _isSelecionado(item);
 
       if (widget.modo == SeletorGenericoModo.multipla && selecionado) {
@@ -601,24 +609,6 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     });
 
     return exata.isNotEmpty ? exata.first : null;
-  }
-
-  // Acentos não deveriam importar na busca ("cartao" == "cartão"). Troca
-  // caracteres acentuados comuns do pt-BR pelo equivalente sem acento antes
-  // de comparar -- evitando trazer uma dependência só pra isso.
-  static const _comAcento =
-      'àáâãäåèéêëìíîïòóôõöùúûüçñÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÇÑ';
-  static const _semAcento =
-      'aaaaaaeeeeiiiiooooouuuucnAAAAAAEEEEIIIIOOOOOUUUUCN';
-
-  String _normalizarBusca(String texto) {
-    final buffer = StringBuffer();
-    for (final codeUnit in texto.toLowerCase().runes) {
-      final char = String.fromCharCode(codeUnit);
-      final indice = _comAcento.indexOf(char);
-      buffer.write(indice >= 0 ? _semAcento[indice] : char);
-    }
-    return buffer.toString();
   }
 
   void _atualizarDimensoesCampo() {
@@ -809,4 +799,22 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     _sugestoesOverlayEntry?.remove();
     _sugestoesOverlayEntry = null;
   }
+}
+
+// Acentos não deveriam importar na busca ("cartao" == "cartão"). Troca
+// caracteres acentuados comuns do pt-BR pelo equivalente sem acento antes
+// de comparar -- evitando trazer uma dependência só pra isso.
+const _comAcento =
+    'àáâãäåèéêëìíîïòóôõöùúûüçñÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÇÑ';
+const _semAcento =
+    'aaaaaaeeeeiiiiooooouuuucnAAAAAAEEEEIIIIOOOOOUUUUCN';
+
+String normalizarBusca(String texto) {
+  final buffer = StringBuffer();
+  for (final codeUnit in texto.toLowerCase().runes) {
+    final char = String.fromCharCode(codeUnit);
+    final indice = _comAcento.indexOf(char);
+    buffer.write(indice >= 0 ? _semAcento[indice] : char);
+  }
+  return buffer.toString();
 }

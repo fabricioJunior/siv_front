@@ -5,6 +5,7 @@ import 'package:core/bloc.dart';
 import 'package:core/imagens.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/modals/referencia_midia_metadados_modal.dart';
+import 'package:produtos/presentantion/widgets/consulta/consulta_fotos.dart';
 import 'package:produtos/presentantion/widgets/cor_seletor.dart';
 import 'package:produtos/presentantion/widgets/tamanho_seletor.dart';
 import '../bloc/referencia_midias_bloc/referencia_midias_bloc.dart';
@@ -33,14 +34,28 @@ class ReferenciaMidiasWidget extends StatelessWidget {
   final int referenciaId;
   final bool permiteEditar;
 
+  /// Quando informada (tela de consulta), usa a grade de fotos com cor/estampa/tamanho
+  /// obrigatórios, reordenação e compartilhamento. Sem ela, mantém o carrossel do cadastro.
+  final List<ProdutoDaGrade>? grade;
+  final String? nomeReferencia;
+
   const ReferenciaMidiasWidget({
     super.key,
     required this.referenciaId,
     this.permiteEditar = false,
+    this.grade,
+    this.nomeReferencia,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (grade != null) {
+      return ConsultaFotos(
+        referenciaId: referenciaId,
+        nomeReferencia: nomeReferencia ?? '',
+        produtos: grade!,
+      );
+    }
     return BlocProvider(
       create: (context) =>
           sl<ReferenciaMidiasBloc>()..add(ReferenciasIniciou(referenciaId)),
@@ -442,6 +457,7 @@ class _MidiaUploadCard extends StatelessWidget {
                             ? Image.memory(
                                 upload.imagem.bytes!,
                                 fit: BoxFit.cover,
+                                cacheWidth: 400,
                                 gaplessPlayback: true,
                               )
                             : Container(
@@ -792,6 +808,7 @@ class _MidiaCarouselCard extends StatelessWidget {
                           height: 180,
                           color: Colors.black12,
                           child: ImagemViewWidget(
+                            cacheWidth: 800,
                             url: midia.url,
                             onlyFromCache: false,
                             cacheKey: midia.id.toString(),
@@ -931,6 +948,7 @@ class _MidiaCarouselCard extends StatelessWidget {
                   height: 170,
                   color: Colors.black12,
                   child: ImagemViewWidget(
+                    cacheWidth: 800,
                     url: midia.url,
                     key: ValueKey('midia_${midia.id}_${midia.url}'),
                     onlyFromCache: false,

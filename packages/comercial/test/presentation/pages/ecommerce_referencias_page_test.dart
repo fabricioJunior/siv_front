@@ -51,6 +51,7 @@ void main() {
         AdicionarReferenciaEcommerce(repository: repo),
         AtualizarReferenciaEcommerce(repository: repo),
         PublicarReferenciasEmLoteEcommerce(repository: repo),
+        RecuperarEcommerce(repository: repo),
       ),
     );
 

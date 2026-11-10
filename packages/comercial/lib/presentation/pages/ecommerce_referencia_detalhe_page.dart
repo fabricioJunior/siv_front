@@ -255,6 +255,7 @@ class _EcommerceReferenciaDetalhePageState
                   ? Image.network(
                       referencia.imagemUrl!,
                       fit: BoxFit.cover,
+                      cacheWidth: 216,
                       errorBuilder: (_, __, ___) => _placeholderImagem(context),
                     )
                   : _placeholderImagem(context),

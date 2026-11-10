@@ -10,6 +10,7 @@ class ProdutoCompartilhado extends Equatable {
   final String nome;
   final String corNome;
   final String tamanhoNome;
+  final String estampaNome;
 
   const ProdutoCompartilhado({
     required this.produtoId,
@@ -20,6 +21,7 @@ class ProdutoCompartilhado extends Equatable {
     required this.corNome,
     required this.tamanhoNome,
     required this.hash,
+    this.estampaNome = '',
   });
 
   ProdutoCompartilhado copyWith({
@@ -30,6 +32,7 @@ class ProdutoCompartilhado extends Equatable {
     String? nome,
     String? corNome,
     String? tamanhoNome,
+    String? estampaNome,
   }) {
     return ProdutoCompartilhado(
       hash: hash,
@@ -40,6 +43,7 @@ class ProdutoCompartilhado extends Equatable {
       nome: nome ?? this.nome,
       corNome: corNome ?? this.corNome,
       tamanhoNome: tamanhoNome ?? this.tamanhoNome,
+      estampaNome: estampaNome ?? this.estampaNome,
     );
   }
 
@@ -50,6 +54,7 @@ class ProdutoCompartilhado extends Equatable {
     required String nome,
     required String corNome,
     required String tamanhoNome,
+    String estampaNome = '',
     String? hashLista,
   }) {
     return ProdutoCompartilhado(
@@ -61,6 +66,7 @@ class ProdutoCompartilhado extends Equatable {
       nome: nome,
       corNome: corNome,
       tamanhoNome: tamanhoNome,
+      estampaNome: estampaNome,
     );
   }
 
@@ -73,5 +79,6 @@ class ProdutoCompartilhado extends Equatable {
         nome,
         corNome,
         tamanhoNome,
+        estampaNome,
       ];
 }

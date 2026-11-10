@@ -20,6 +20,9 @@ class _LeitorDataFake implements LeitorData {
   String get tamanho => 'UN';
   @override
   String get cor => 'AZUL';
+
+  @override
+  String get estampa => '';
   @override
   double? get valor => null;
   @override

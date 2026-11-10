@@ -18,6 +18,7 @@ ProdutoDoEstoqueDto _$ProdutoDoEstoqueDtoFromJson(Map<String, dynamic> json) =>
       corNome: json['corNome'] as String,
       tamanhoId: (json['tamanhoId'] as num).toInt(),
       tamanhoNome: json['tamanhoNome'] as String,
+      estampaNome: json['estampaNome'] as String?,
       unidadeMedida: json['unidadeMedida'] as String?,
       saldo: (json['saldo'] as num).toDouble(),
       atualizadoEm: json['atualizadoEm'] == null
@@ -39,6 +40,7 @@ Map<String, dynamic> _$ProdutoDoEstoqueDtoToJson(
   'corNome': instance.corNome,
   'tamanhoId': instance.tamanhoId,
   'tamanhoNome': instance.tamanhoNome,
+  'estampaNome': instance.estampaNome,
   'unidadeMedida': instance.unidadeMedida,
   'saldo': instance.saldo,
   'atualizadoEm': instance.atualizadoEm?.toIso8601String(),

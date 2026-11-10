@@ -47,6 +47,7 @@ PaginaGiroEstoque paginaGiroFromJson(Map<String, dynamic> j) {
   final m = j['meta'] as Map<String, dynamic>? ?? const {};
   return PaginaGiroEstoque(
     items: _linhas(j['items']),
+    custoVisivel: j['custoVisivel'] as bool? ?? permiteCustoGiro(),
     meta: GiroEstoqueMeta(
       totalItems: _i(m['totalItems']) ?? 0,
       totalPages: _i(m['totalPages']) ?? 1,
@@ -89,6 +90,7 @@ GiroEstoqueResumo giroResumoFromJson(Map<String, dynamic> j) {
     },
     parametros:
         ParametrosGiro.fromJson(j['parametros'] as Map<String, dynamic>?),
+    custoVisivel: j['custoVisivel'] as bool? ?? permiteCustoGiro(),
   );
 }
 

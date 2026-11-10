@@ -30,15 +30,23 @@ import 'package:siv_front/routes.dart';
 // via `--dart-define=SENTRY_DSN=<dsn>` quando o projeto Sentry existir.
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+// Mesmo valor usado no upload dos source maps (ver vercel-build.sh). Vazio = deixa o SDK
+// derivar o release sozinho (dev local).
+const _sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
+
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await SentryFlutter.init(
-    (options) => options.dsn = _sentryDsn,
+    (options) {
+      options.dsn = _sentryDsn;
+      if (_sentryRelease.isNotEmpty) options.release = _sentryRelease;
+    },
     appRunner: () async {
       // Precisa rodar DENTRO do appRunner, não antes do SentryFlutter.init --
       // o binding e o runApp precisam estar na mesma zone, senão o Flutter
       // acusa "Zone mismatch" (SentryFlutter.init cria uma zone própria pro
       // appRunner). vende
-      WidgetsFlutterBinding.ensureInitialized();
+      //  WidgetsFlutterBinding.ensureInitialized();
       try {
         await _bootstrap();
         initPrintingConfigs();
@@ -459,25 +467,30 @@ class NavigationObserver extends RouteObserver<ModalRoute<void>> {
   /// Nome da rota visível no topo da pilha -- usado pela [AppShell] pra
   /// destacar o item ativo no menu lateral sem precisar reconstruir a
   /// árvore de widgets a cada navegação.
+  ///
+  /// Só páginas ([PageRoute]) entram aqui. Diálogos e bottom sheets são
+  /// rotas sem nome: se atualizassem [rotaAtual] para `null`, a [AppShell]
+  /// tiraria a casca (Scaffold/Material) enquanto o diálogo está aberto e as
+  /// telas por baixo quebrariam com "No Material widget found".
   final ValueNotifier<String?> rotaAtual = ValueNotifier(null);
 
   @override
   void didPush(Route route, Route? previousRoute) {
     super.didPush(route, previousRoute);
-    rotaAtual.value = route.settings.name;
+    if (route is PageRoute) rotaAtual.value = route.settings.name;
   }
 
   @override
   void didPop(Route route, Route? previousRoute) {
     super.didPop(route, previousRoute);
-    rotaAtual.value = previousRoute?.settings.name;
+    if (route is PageRoute) rotaAtual.value = previousRoute?.settings.name;
     log('Popped route: ${route.settings.name}', name: 'Navigation');
   }
 
   @override
   void didReplace({Route? newRoute, Route? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-    rotaAtual.value = newRoute?.settings.name;
+    if (newRoute is PageRoute) rotaAtual.value = newRoute.settings.name;
     log(
       'Replaced route: ${oldRoute?.settings.name} with ${newRoute?.settings.name}',
       name: 'Navigation',

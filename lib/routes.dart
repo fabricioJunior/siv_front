@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/blocs/ecommerce_chaves_mcp_bloc/ecommerce_chaves_mcp_bloc.dart' show EcommerceChavesMcpBloc;
 import 'package:comercial/use_cases.dart'
     show BuscarResumoCreditoDevolucao, GetComprasDoCliente;
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
@@ -41,7 +42,9 @@ import 'package:promocoes/presentation.dart' show PromocaoSeletor;
 import 'package:produtos/data/remote/dtos/cor_dto.dart';
 import 'package:produtos/data/remote/dtos/tamanho_dto.dart';
 import 'package:produtos/presentation.dart';
-import 'package:produtos/use_cases.dart' show RecuperarReferencias, RecuperarTamanhos;
+import 'package:produtos/use_cases.dart'
+    show
+        RecuperarReferencias;
 import 'package:sistema/pages.dart';
 import 'package:siv_front/presentation/pages/selecionar_terminal_page.dart';
 import 'package:siv_front/presentation/pages/home_page.dart';
@@ -589,6 +592,19 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/ecommerce_agente_ia': (context) {
+    final routeArgs = args(context);
+    return _rotaProtegida(
+      route: '/ecommerce_agente_ia',
+      child: EcommerceAgenteIaPage(
+        ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
+        urlMcp: '${sl<ApiBaseUrlConfig>().urlBase}/v1/mcp/vendas',
+        temPermissao: PermissaoPorNome.acessoPermitido('MCPFM001'),
+        criarBloc: () => sl<EcommerceChavesMcpBloc>(),
+      ),
+    );
+  },
   '/ecommerce_pedidos': (context) {
     return _rotaProtegida(
       route: '/ecommerce_pedidos',
@@ -641,6 +657,28 @@ Map<String, Widget Function(BuildContext)> routes = {
     return _rotaProtegida(
       route: '/relatorio_movimentacoes',
       child: const RelatorioMovimentacoesPage(),
+    );
+  },
+  '/relatorio_pedidos_contagem': (context) {
+    return _rotaProtegida(
+      route: '/relatorio_pedidos_contagem',
+      child: RelatorioPedidosContagemPage(
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
+        tabelaPrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          titulo: 'Tabela do pedido',
+          compacto: data.compacto,
+        ),
+      ),
     );
   },
   '/relatorio_compras_clientes': (context) {
@@ -783,6 +821,12 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/entrada_contagem': (context) {
     return _rotaProtegida(
       route: '/entrada_contagem',
+      child: const ContagensEmAndamentoPage(),
+    );
+  },
+  '/entrada_contagem/nova': (context) {
+    return _rotaProtegida(
+      route: '/entrada_contagem/nova',
       child: EntradaPorContagemPage(
         fornecedorSeletor: (data) => SeletorPessoa(
           titulo: 'Fornecedor',
@@ -832,15 +876,10 @@ Map<String, Widget Function(BuildContext)> routes = {
           onChanged: data.onChanged,
         ),
         estampaSeletor: (data) => EstampaSeletor(
-          modo: EstampaSeletorModo.unica,
+          modo: EstampaSeletorModo.multipla,
           onChanged: data.onChanged,
-          titulo: 'Estampa (opcional)',
+          titulo: 'Estampas (opcional)',
         ),
-        carregarTamanhos: () async =>
-            (await sl<RecuperarTamanhos>().call(inativo: false))
-                .where((t) => t.id != null)
-                .map((t) => TamanhoOpcao(id: t.id!, nome: t.nome))
-                .toList(),
         buscarReferenciasParecidas: (nome) async =>
             (await sl<RecuperarReferencias>().call(nome: nome, inativo: false))
                 .where((r) => r.id != null)
@@ -1162,17 +1201,46 @@ Map<String, Widget Function(BuildContext)> routes = {
     return const ReferenciasPendentesPesoPage();
   },
   // Wizard de cadastro de referência; devolve (pop) o `int?` id criado.
-  // Mesmas regras de acesso de /referencias (sem componente próprio).
+  // Exige PRDFM003 (_componentesDaRota); /referencias segue sem proteção.
   '/referencia_cadastro': (context) {
     final a = args(context) as Map? ?? const {};
-    return ReferenciaCadastroPage(
-      nomeInicial: a['nome'] as String?,
-      corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
-      tamanhoIdsIniciais: ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+    return _rotaProtegida(
+      route: '/referencia_cadastro',
+      child: ReferenciaCadastroPage(
+        nomeInicial: a['nome'] as String?,
+        fornecedorInicial: a['fornecedorId'] is int
+            ? SelectData(
+                id: a['fornecedorId'] as int,
+                nome: '${a['fornecedorNome']}',
+                data: const {},
+              )
+            : null,
+        corIdsIniciais: ((a['corIds'] as List?) ?? const []).cast<int>(),
+        tamanhoIdsIniciais:
+            ((a['tamanhoIds'] as List?) ?? const []).cast<int>(),
+        fornecedorSeletor: (data) => SeletorPessoa(
+          titulo: 'Fornecedor',
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          retornarSomenteId: false,
+          onChanged: data.onChanged,
+          eFornecedor: true,
+          compacto: data.compacto,
+        ),
+      ),
     );
   },
   '/referencia': (context) {
-    return ReferenciaPage(idReferencia: args(context)['idReferencia']);
+    return ReferenciaPage(
+      idReferencia: args(context)['idReferencia'],
+      fornecedorSeletor: (data) => SeletorPessoa(
+        titulo: 'Fornecedor',
+        itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+        retornarSomenteId: false,
+        onChanged: data.onChanged,
+        eFornecedor: true,
+        compacto: data.compacto,
+      ),
+    );
   },
   '/codigos_de_barras_da_referencia': (context) {
     return CodigosDeBarrasDaReferenciaPage(
@@ -1212,14 +1280,26 @@ Map<String, Widget Function(BuildContext)> routes = {
   '/consultar_produto': (context) {
     return _rotaProtegida(
       route: '/consultar_produto',
-      child: ConsultarProdutoPage(
-        tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
-          modo: TabelasDePrecoSeletorModo.unica,
-          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
-          onChanged: data.onChanged,
-          onlyView: data.onlyView,
-          titulo: 'Tabela de preço',
+      child: BlocProvider<ConsultarProdutoBloc>.value(
+        value: sl<ConsultarProdutoBloc>(),
+        child: ConsultarProdutoPage(
+          tabelaDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+            modo: TabelasDePrecoSeletorModo.unica,
+            itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+            onChanged: data.onChanged,
+            onlyView: data.onlyView,
+            titulo: 'Tabela de preço',
+          ),
         ),
+      ),
+    );
+  },
+  rotaDetalheConsultarProduto: (context) {
+    return _rotaProtegida(
+      route: rotaDetalheConsultarProduto,
+      child: BlocProvider<ConsultarProdutoBloc>.value(
+        value: sl<ConsultarProdutoBloc>(),
+        child: const ConsultarProdutoDetalhePage(),
       ),
     );
   },
@@ -1247,6 +1327,20 @@ Map<String, Widget Function(BuildContext)> routes = {
               quantidade: (i['quantidade'] as num).round(),
             ),
         ],
+        tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preco',
+        ),
+      ),
+    );
+  },
+  '/etiquetas_promocao': (context) {
+    return _rotaProtegida(
+      route: '/etiquetas_promocao',
+      child: EtiquetasPromocaoPage(
         tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
           modo: TabelasDePrecoSeletorModo.unica,
           itemsSelecionadosInicial: data.itemsSelecionadosInicial,
@@ -1506,6 +1600,12 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: IntegracaoMetaPage(idEmpresa: args(context)['empresaId']),
     );
   },
+  '/integracoes_pagamento_empresa': (context) {
+    return _rotaProtegida(
+      route: '/integracoes_pagamento_empresa',
+      child: IntegracoesPagamentoPage(idEmpresa: args(context)['empresaId']),
+    );
+  },
   // Impressoras:
   '/etiqueta_preview_page': (context) {
     final argumentos = args(context);
@@ -1728,6 +1828,7 @@ Widget _rotaProtegidaPorCaixaAberto({required Widget child}) {
 }
 
 const Map<String, List<String>> _componentesDaRota = {
+  '/referencia_cadastro': ['PRDFM003'],
   '/recibo_fechamento_caixa': ['FCXFP010'],
   '/historico_de_caixas': ['FCXFP008'],
   '/comercial': [
@@ -1756,9 +1857,11 @@ const Map<String, List<String>> _componentesDaRota = {
   '/configuracao_entrega': ['ENTFM001'],
   '/configuracao_frete': ['ENTFM002'],
   '/integracao_meta_empresa': ['MCTFM006'],
+  '/integracoes_pagamento_empresa': ['ADMFM009'],
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_agente_ia': ['MCPFM001'],
   '/ecommerce_vitrine': ['ECOFM001'],
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],
@@ -1773,6 +1876,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/relatorio_frequencia_clientes': ['RELFC016'],
   '/relatorio_estoque': ['RELFC014'],
   '/relatorio_movimentacoes': ['RELFC015'],
+  '/relatorio_pedidos_contagem': ['RELFC017'],
   '/relatorio_vendas_por_funcionario': ['RELFC004'],
   '/relatorio_pontos_fidelidade': ['RELFC006'],
   '/relatorio_compras_clientes': ['RELFC007'],
@@ -1780,7 +1884,8 @@ const Map<String, List<String>> _componentesDaRota = {
   '/cliente_compras': ['RELFC010'],
   '/pedidos': ['PEDFC001', 'PEDFM001'],
   '/importar_nfe': ['PEDFM001'],
-  '/entrada_contagem': ['PEDFM001'],
+  '/entrada_contagem': ['PEDFC002'],
+  '/entrada_contagem/nova': ['PEDFM001'],
   '/pedido_entrada': ['PEDFC002'],
   '/importar_pedidos_csv': ['IMPFP007'],
   // Qualquer uma das 6 etapas (ver ImportacaoEtapa.permissao); cada etapa confere a sua.
@@ -1792,6 +1897,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/gerencia_estoque': ['ROMFP001', 'PRDFL001'],
   '/estoque': ['PRDFL001'],
   '/consultar_produto': ['PRDFL002'],
+  rotaDetalheConsultarProduto: ['PRDFL002'],
   '/historico_estoque': ['PRDFL001'],
   '/balancos': ['PRDFL001'],
   '/criar_balanco': ['PRDFL001'],
@@ -1812,7 +1918,9 @@ const Map<String, List<String>> _componentesDaRota = {
     'PRDFM006',
   ],
   '/etiquetas': ['PRDFM003'],
-  '/impressao_etiquetas': ['PRDFM003'],
+  '/impressao_etiquetas': ['PRDFM012'],
+  // ponytail: reutiliza o componente da impressao de etiquetas ate existir um proprio.
+  '/etiquetas_promocao': ['PRDFM012'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
   '/despesas_do_caixa': ['FCXFM005'],
@@ -1839,6 +1947,7 @@ const Map<String, List<String>> _componentesDaRota = {
     'RELFC014',
     'RELFC015',
     'RELFC016',
+    'RELFC017',
     'ROMFP001',
     'FCXFP008',
   ],

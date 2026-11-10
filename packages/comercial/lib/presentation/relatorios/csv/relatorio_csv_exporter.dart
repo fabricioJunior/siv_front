@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:comercial/domain/models/documento_fiscal.dart';
+import 'package:comercial/domain/models/relatorio_pedidos_contagem.dart';
 import 'package:comercial/domain/models/relatorios.dart';
 import 'package:comercial/domain/models/resumo_fiscal.dart';
 import 'package:core/arquivos.dart';
@@ -140,5 +141,52 @@ class RelatorioCsvExporter {
         ]),
     ];
     return _salvarCsv(linhas, 'relatorio_fiscal.csv');
+  }
+
+  static Future<String?> exportarPedidosContagem(
+    List<PedidoContagemLinha> linhas,
+  ) {
+    String n(num v) => v.toStringAsFixed(2).replaceAll('.', ',');
+    String d(DateTime? v) => v == null
+        ? ''
+        : _fmtData(v.toIso8601String().substring(0, 10));
+    final todas = [
+      _linha([
+        'Pedido',
+        'Fornecedor',
+        'Responsável',
+        'Aberto em',
+        'Faturado em',
+        'Status',
+        'Peças',
+        'Custo',
+        'Peças sem custo',
+        'Custo do pedido',
+        'Valor de venda',
+        'Peças sem valor',
+        'Valor do pedido',
+        'Primeiro produto',
+        'Referências',
+      ]),
+      for (final l in linhas)
+        _linha([
+          '${l.pedidoId}',
+          l.fornecedor,
+          l.funcionario ?? '',
+          d(l.abertoEm),
+          d(l.faturadoEm),
+          l.etapa,
+          n(l.pecas),
+          n(l.custo),
+          n(l.pecasSemCusto),
+          n(l.custoPedido),
+          n(l.valor),
+          n(l.pecasSemValor),
+          n(l.valorPedido),
+          l.primeiroProduto?.referenciaNome ?? '',
+          '${l.quantidadeReferencias}',
+        ]),
+    ];
+    return _salvarCsv(todas, 'pedidos_por_contagem.csv');
   }
 }

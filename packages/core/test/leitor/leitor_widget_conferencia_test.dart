@@ -66,6 +66,7 @@ void main() {
     ValueChanged<String>? onErro,
     void Function(ProdutoEsperado, int)? onCorrigir,
     ValueChanged<ProdutoEsperado>? onRemover,
+    VoidCallback? onZerar,
   }) async {
     t.view.physicalSize = const Size(420, 1400);
     t.view.devicePixelRatio = 1;
@@ -83,6 +84,7 @@ void main() {
               onErro: onErro,
               onCorrigirContagem: onCorrigir,
               onRemoverLeitura: onRemover,
+              onZerarLeituras: onZerar,
             ),
           ),
         ),
@@ -204,5 +206,21 @@ void main() {
     await bipar(t, 'QUALQUER');
     expect(find.text('Removendo por leitura (toque para desativar)'),
         findsOneWidget);
+  });
+
+  testWidgets('conferência: chip vira Zerar leituras e chama o callback',
+      (t) async {
+    var zerou = 0;
+    await abrir(t, esperados: _esperados, onZerar: () => zerou++);
+    expect(find.text('Limpar leitura'), findsNothing);
+    await t.tap(find.text('Zerar leituras'));
+    await t.pump();
+    expect(zerou, 1);
+  });
+
+  testWidgets('fora da conferência o chip continua Limpar leitura', (t) async {
+    await abrir(t);
+    expect(find.text('Zerar leituras'), findsNothing);
+    expect(find.text('Limpar leitura'), findsOneWidget);
   });
 }

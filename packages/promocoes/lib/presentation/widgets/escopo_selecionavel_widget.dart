@@ -17,6 +17,9 @@ class EscopoSelecionavelWidget extends StatefulWidget {
   final int? quantidadeLevaInicial;
   final int? quantidadePagaInicial;
   final List<PromocaoFaixa> faixasInicial;
+  final List<int> brindeReferenciaIdsIniciais;
+  final int? quantidadeGatilhoInicial;
+  final int? quantidadeBrindeInicial;
   final ValueChanged<List<int>> onReferenciaIdsChanged;
   final ValueChanged<List<PromocaoCategoria>>? onCategoriasChanged;
   final ValueChanged<List<int>>? onExcecaoReferenciaIdsChanged;
@@ -24,6 +27,9 @@ class EscopoSelecionavelWidget extends StatefulWidget {
   final ValueChanged<int?> onQuantidadeLevaChanged;
   final ValueChanged<int?> onQuantidadePagaChanged;
   final ValueChanged<List<PromocaoFaixa>> onFaixasChanged;
+  final ValueChanged<List<int>>? onBrindeReferenciaIdsChanged;
+  final ValueChanged<int?>? onQuantidadeGatilhoChanged;
+  final ValueChanged<int?>? onQuantidadeBrindeChanged;
 
   const EscopoSelecionavelWidget({
     super.key,
@@ -35,6 +41,9 @@ class EscopoSelecionavelWidget extends StatefulWidget {
     this.quantidadeLevaInicial,
     this.quantidadePagaInicial,
     this.faixasInicial = const [],
+    this.brindeReferenciaIdsIniciais = const [],
+    this.quantidadeGatilhoInicial,
+    this.quantidadeBrindeInicial,
     required this.onReferenciaIdsChanged,
     this.onCategoriasChanged,
     this.onExcecaoReferenciaIdsChanged,
@@ -42,6 +51,9 @@ class EscopoSelecionavelWidget extends StatefulWidget {
     required this.onQuantidadeLevaChanged,
     required this.onQuantidadePagaChanged,
     required this.onFaixasChanged,
+    this.onBrindeReferenciaIdsChanged,
+    this.onQuantidadeGatilhoChanged,
+    this.onQuantidadeBrindeChanged,
   });
 
   @override
@@ -100,32 +112,9 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
       case TipoEscopo.geral:
         return const SizedBox.shrink();
       case TipoEscopo.referencias:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => _adicionarPorCategoria(context),
-                icon: const Icon(Icons.category_outlined, size: 18),
-                label: const Text('Adicionar por categoria'),
-              ),
-            ),
-            ReferenciaSeletor(
-              key: ValueKey('referencia-seletor-$_referenciaSeletorVersao'),
-              modo: ReferenciaSeletorModo.multipla,
-              idReferenciasSelecionadasIniciais: _referenciaIds,
-              titulo: 'Referências elegíveis',
-              onReferenciaChanged: (referencias) {
-                _referenciaIds = referencias
-                    .where((referencia) => referencia.id != null)
-                    .map((referencia) => referencia.id!)
-                    .toList();
-                widget.onReferenciaIdsChanged(_referenciaIds);
-              },
-            ),
-          ],
-        );
+        return _buildReferencias('Referências elegíveis');
+      case TipoEscopo.compreLeve:
+        return _buildCompreLeve(context);
       case TipoEscopo.categorias:
         return _buildCategorias(context);
       case TipoEscopo.comboLevePague:
@@ -135,6 +124,81 @@ class _EscopoSelecionavelWidgetState extends State<EscopoSelecionavelWidget> {
       case TipoEscopo.faixaQuantidade:
         return _buildFaixaQuantidade(context);
     }
+  }
+
+  Widget _buildReferencias(String titulo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => _adicionarPorCategoria(context),
+            icon: const Icon(Icons.category_outlined, size: 18),
+            label: const Text('Adicionar por categoria'),
+          ),
+        ),
+        ReferenciaSeletor(
+          key: ValueKey('referencia-seletor-$_referenciaSeletorVersao'),
+          modo: ReferenciaSeletorModo.multipla,
+          idReferenciasSelecionadasIniciais: _referenciaIds,
+          titulo: titulo,
+          onReferenciaChanged: (referencias) {
+            _referenciaIds = referencias
+                .where((referencia) => referencia.id != null)
+                .map((referencia) => referencia.id!)
+                .toList();
+            widget.onReferenciaIdsChanged(_referenciaIds);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompreLeve(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildReferencias('Compre (gatilho)'),
+        const SizedBox(height: SivDimensoes.gapCards),
+        ReferenciaSeletor(
+          modo: ReferenciaSeletorModo.multipla,
+          idReferenciasSelecionadasIniciais: widget.brindeReferenciaIdsIniciais,
+          titulo: 'Leve grátis (brinde)',
+          onReferenciaChanged: (referencias) =>
+              widget.onBrindeReferenciaIdsChanged?.call(
+            referencias
+                .where((referencia) => referencia.id != null)
+                .map((referencia) => referencia.id!)
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                initialValue: widget.quantidadeGatilhoInicial?.toString() ?? '1',
+                decoration: const InputDecoration(labelText: 'Qtd. mínima do gatilho'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) =>
+                    widget.onQuantidadeGatilhoChanged?.call(int.tryParse(value)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                initialValue: widget.quantidadeBrindeInicial?.toString() ?? '1',
+                decoration: const InputDecoration(labelText: 'Qtd. de brindes'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) =>
+                    widget.onQuantidadeBrindeChanged?.call(int.tryParse(value)),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Future<void> _adicionarPorCategoria(BuildContext context) async {

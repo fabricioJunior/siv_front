@@ -93,8 +93,9 @@ class EstoqueRelatorioCsvExporter {
     required List<GiroEstoqueLinha> linhas,
     required AbaGiro aba,
     required FiltroGiroEstoque filtro,
+    bool custoVisivel = true,
   }) {
-    final colunas = colunasExportacaoGiro(aba);
+    final colunas = colunasExportacaoGiro(aba, custoVisivel: custoVisivel);
     return _salvarCsv([
       for (final c in cabecalhoExportacaoGiro(aba, filtro)) _linha([c]),
       '',

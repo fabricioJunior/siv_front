@@ -1,4 +1,5 @@
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
+import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/historico_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/passo_associar.dart';
@@ -15,7 +16,10 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
 export 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart'
-    show BuscaReferenciasParecidas, ReferenciaParecida, TamanhoOpcao;
+    show
+        BuscaReferenciasParecidas,
+        ReferenciaParecida,
+        TamanhoOpcao;
 
 /// Pedido de Entrada (NF-e / contagem) em 5 passos: Contar, Associar,
 /// Etiquetas, Conferir e Faturar. A entrada no estoque continua sendo a do
@@ -33,7 +37,6 @@ class PedidoEntradaPage extends StatefulWidget {
   /// Sugestões "referências parecidas" na contagem sem referência.
   final BuscaReferenciasParecidas? buscarReferenciasParecidas;
   final SeletorWidget? estampaSeletor;
-  final Future<List<TamanhoOpcao>> Function()? carregarTamanhos;
 
   const PedidoEntradaPage({
     super.key,
@@ -45,7 +48,6 @@ class PedidoEntradaPage extends StatefulWidget {
     required this.tamanhoSeletor,
     this.buscarReferenciasParecidas,
     this.estampaSeletor,
-    this.carregarTamanhos,
   });
 
   @override
@@ -56,6 +58,13 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
   late final PedidoEntradaBloc _bloc = sl<PedidoEntradaBloc>()
     ..add(PedidoEntradaCarregou(widget.pedidoId));
 
+  // Pré-carga de cores/estampas/tamanhos; sem o bloc registrado, o painel cai
+  // no fluxo legado (seletores inline).
+  late final VariacoesProdutoBloc? _variacoes =
+      sl.isRegistered<VariacoesProdutoBloc>()
+          ? (sl<VariacoesProdutoBloc>()..add(const VariacoesCarregadas()))
+          : null;
+
   late final _seletores = SeletoresEntrada(
     categoriaSeletor: widget.categoriaSeletor,
     referenciaSeletor: widget.referenciaSeletor,
@@ -64,7 +73,6 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     tamanhoSeletor: widget.tamanhoSeletor,
     buscarReferenciasParecidas: widget.buscarReferenciasParecidas,
     estampaSeletor: widget.estampaSeletor,
-    carregarTamanhos: widget.carregarTamanhos,
   );
 
   /// Envia o lote de leituras pendentes (uma chamada). true = nada ficou
@@ -77,6 +85,13 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     _bloc.add(PedidoEntradaEnviouLeituras(irParaRevisar: irParaRevisar));
     final fim = await _bloc.stream.firstWhere((s) => !s.salvando);
     return fim.leiturasPendentes.isEmpty;
+  }
+
+  /// Zera as leituras (envio na hora). true = lote aceito.
+  Future<bool> _zerarLeituras() async {
+    _bloc.add(const PedidoEntradaZerouLeituras());
+    final fim = await _bloc.stream.firstWhere((s) => !s.salvando);
+    return fim.erro == null;
   }
 
   /// Sair do Conferir (trocar de passo ou voltar) com leituras pendentes:
@@ -130,6 +145,7 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
   @override
   void dispose() {
     _bloc.close();
+    _variacoes?.close();
     super.dispose();
   }
 
@@ -168,6 +184,11 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
           onLeu: (produtoId, delta) =>
               _bloc.add(PedidoEntradaLeu(produtoId, delta)),
           onEnviar: _enviarLeituras,
+          restauradaEm: state.restauradaEm,
+          erroEnvio: state.erroEnvio,
+          onDescartar: () =>
+              _bloc.add(const PedidoEntradaDescartouLeituras()),
+          onZerar: _zerarLeituras,
         );
       default:
         return PassoRevisarFaturar(
@@ -180,7 +201,7 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PedidoEntradaBloc>.value(
+    final pagina = BlocProvider<PedidoEntradaBloc>.value(
       value: _bloc,
       child: BlocConsumer<PedidoEntradaBloc, PedidoEntradaState>(
         listenWhen: (a, b) =>
@@ -232,7 +253,9 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                     Text('Entrada #${widget.pedidoId}'),
                     if (resumo != null)
                       Text(
-                        'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
+                        state.faturado || resumo.etapa == 'faturado'
+                            ? 'Faturada'
+                            : 'Passo ${visivel + 1} de 5 · ${passos[visivel].titulo}',
                         key: const Key('entrada_passo_x_de_5'),
                         style: textos.apoio,
                       ),
@@ -299,5 +322,12 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
         },
       ),
     );
+    final variacoes = _variacoes;
+    return variacoes == null
+        ? pagina
+        : BlocProvider<VariacoesProdutoBloc>.value(
+            value: variacoes,
+            child: pagina,
+          );
   }
 }

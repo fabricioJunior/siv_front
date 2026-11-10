@@ -308,6 +308,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           cor: itemAtualizado.cor,
           quantidade: quantidadeAdicionada,
           quantidadeAposOperacao: itemAtualizado.quantidadeLida,
+          estampa: itemAtualizado.estampa,
         ),
       );
 
@@ -376,6 +377,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           cor: item.cor,
           quantidade: quantidadeRemovida,
           quantidadeAposOperacao: novaQuantidade,
+          estampa: item.estampa,
         ),
       );
 
@@ -418,6 +420,7 @@ class LeitorBloc extends Bloc<LeitorEvent, LeitorState> {
           cor: itemRemovido.cor,
           quantidade: itemRemovido.quantidadeLida,
           quantidadeAposOperacao: 0,
+          estampa: itemRemovido.estampa,
         ),
       );
     }

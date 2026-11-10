@@ -6,6 +6,12 @@ import 'sub_categoria_dto.dart';
 
 part 'referencia_dto.g.dart';
 
+// A API guarda só a data (coluna DATE): manda AAAA-MM-DD, sem hora.
+String? _soData(DateTime? data) => data?.toIso8601String().substring(0, 10);
+
+ReferenciaStatusEntrada? _statusDeJson(Map<String, dynamic>? json) =>
+    json == null ? null : ReferenciaStatusEntrada.fromJson(json);
+
 @JsonSerializable(explicitToJson: true)
 class ReferenciaDto implements Referencia {
   @override
@@ -51,6 +57,28 @@ class ReferenciaDto implements Referencia {
   final int? pesoGramas;
 
   @override
+  final int? fornecedorId;
+
+  @override
+  @JsonKey(includeToJson: false)
+  final String? fornecedorNome;
+
+  @override
+  final bool? aguardandoReposicao;
+
+  @override
+  @JsonKey(toJson: _soData)
+  final DateTime? previsaoChegada;
+
+  @override
+  final int? quantidadeEsperada;
+
+  /// Calculado pela API: nunca volta no PUT.
+  @override
+  @JsonKey(includeToJson: false, fromJson: _statusDeJson)
+  final ReferenciaStatusEntrada? status;
+
+  @override
   @JsonKey(includeToJson: false)
   final CategoriaDto? categoria;
 
@@ -73,6 +101,12 @@ class ReferenciaDto implements Referencia {
     this.cuidados,
     this.ncm,
     this.pesoGramas,
+    this.fornecedorId,
+    this.fornecedorNome,
+    this.aguardandoReposicao,
+    this.previsaoChegada,
+    this.quantidadeEsperada,
+    this.status,
     this.categoria,
     this.subCategoria,
   });
@@ -98,6 +132,12 @@ class ReferenciaDto implements Referencia {
     cuidados,
     ncm,
     pesoGramas,
+    fornecedorId,
+    fornecedorNome,
+    aguardandoReposicao,
+    previsaoChegada,
+    quantidadeEsperada,
+    status,
     categoria,
     subCategoria,
   ];

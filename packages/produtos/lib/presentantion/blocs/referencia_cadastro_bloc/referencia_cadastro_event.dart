@@ -11,10 +11,14 @@ class ReferenciaCadastroIniciou extends ReferenciaCadastroEvent {
   /// Nome sugerido (ex.: descrição contada). Quando informado, vale no lugar
   /// do nome gerado a partir da categoria/subcategoria.
   final String? nomeInicial;
-  ReferenciaCadastroIniciou({this.nomeInicial});
+
+  /// Fornecedor já escolhido (ex.: o do pedido de entrada); só vale se o
+  /// usuário ainda não escolheu outro.
+  final SelectData? fornecedorInicial;
+  ReferenciaCadastroIniciou({this.nomeInicial, this.fornecedorInicial});
 
   @override
-  List<Object?> get props => [nomeInicial];
+  List<Object?> get props => [nomeInicial, fornecedorInicial?.id];
 }
 
 class ReferenciaCadastroCategoriaSelecionada extends ReferenciaCadastroEvent {
@@ -32,6 +36,11 @@ class ReferenciaCadastroSubCategoriaSelecionada
 
   @override
   List<Object?> get props => [subCategoria];
+}
+
+/// Pula a etapa atual (categoria ou subcategoria), que é opcional.
+class ReferenciaCadastroPular extends ReferenciaCadastroEvent {
+  const ReferenciaCadastroPular();
 }
 
 class ReferenciaCadastroNomeAlterado extends ReferenciaCadastroEvent {
@@ -67,6 +76,58 @@ class ReferenciaCadastroPrecoAlterado extends ReferenciaCadastroEvent {
 
   @override
   List<Object?> get props => [preco];
+}
+
+class ReferenciaCadastroCustoAlterado extends ReferenciaCadastroEvent {
+  final String custo;
+  const ReferenciaCadastroCustoAlterado({required this.custo});
+
+  @override
+  List<Object?> get props => [custo];
+}
+
+class ReferenciaCadastroFornecedorAlterado extends ReferenciaCadastroEvent {
+  final SelectData? fornecedor;
+  const ReferenciaCadastroFornecedorAlterado(this.fornecedor);
+
+  @override
+  List<Object?> get props => [fornecedor?.id];
+}
+
+class ReferenciaCadastroCodigoFornecedorAlterado
+    extends ReferenciaCadastroEvent {
+  final String codigo;
+  const ReferenciaCadastroCodigoFornecedorAlterado(this.codigo);
+
+  @override
+  List<Object?> get props => [codigo];
+}
+
+/// "Definir na chegada": cria só a referência, sem nenhuma variação.
+class ReferenciaCadastroDefinirNaChegadaAlterado
+    extends ReferenciaCadastroEvent {
+  final bool definirNaChegada;
+  const ReferenciaCadastroDefinirNaChegadaAlterado(this.definirNaChegada);
+
+  @override
+  List<Object?> get props => [definirNaChegada];
+}
+
+class ReferenciaCadastroQuantidadeEsperadaAlterada
+    extends ReferenciaCadastroEvent {
+  final String quantidade;
+  const ReferenciaCadastroQuantidadeEsperadaAlterada(this.quantidade);
+
+  @override
+  List<Object?> get props => [quantidade];
+}
+
+class ReferenciaCadastroFotoFornecedorAlterada extends ReferenciaCadastroEvent {
+  final Imagem? foto;
+  const ReferenciaCadastroFotoFornecedorAlterada(this.foto);
+
+  @override
+  List<Object?> get props => [foto?.path, foto?.bytes?.length];
 }
 
 class ReferenciaCadastroProximo extends ReferenciaCadastroEvent {}

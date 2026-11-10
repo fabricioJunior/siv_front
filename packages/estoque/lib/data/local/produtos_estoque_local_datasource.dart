@@ -57,6 +57,7 @@ class ProdutosEstoqueLocalDatasource
       saldo: entity.saldo,
       tamanhoId: entity.tamanhoId,
       tamanhoNome: entity.tamanhoNome,
+      estampaNome: entity.estampaNome,
       unidadeMedida: entity.unidadeMedida,
       atualizadoEm: entity.atualizadoEm,
     );

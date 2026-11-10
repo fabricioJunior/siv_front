@@ -279,7 +279,7 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   ) async {
     final response = await put(
       pathParameters: {'id': '$id/confirmar-retirada'},
-      body: {'codigo': codigo},
+      body: {if (codigo.isNotEmpty) 'codigo': codigo},
     );
     final json = response.body as Map<String, dynamic>;
     final pedido = PedidoDto.fromJson(json['pedido'] as Map<String, dynamic>);
@@ -296,6 +296,14 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
       pathParameters: {'id': 'confirmar-retirada-lote'},
       body: {'pedidoIds': pedidoIds},
     );
+    return (response.body as List<dynamic>)
+        .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<List<Pedido>> listarRetiradaPendentes(int id) async {
+    final response = await get(pathParameters: {'id': '$id/retirada-pendentes'});
     return (response.body as List<dynamic>)
         .map((json) => PedidoDto.fromJson(json as Map<String, dynamic>))
         .toList();

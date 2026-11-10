@@ -2,6 +2,7 @@ export 'domain/models/contagem_pedidos_por_situacao.dart';
 export 'domain/models/pedido.dart';
 export 'domain/models/pedido_item.dart';
 export 'domain/models/pedido_pagamento.dart';
+export 'domain/models/trilha_pedido.dart';
 export 'domain/models/pedido_evento.dart';
 export 'domain/models/pagamentos_realizados_resumo.dart';
 export 'domain/models/opcoes_resgate_pontos.dart';

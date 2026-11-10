@@ -34,6 +34,8 @@ abstract class Pedido implements Equatable {
   String? get empresaCnpj;
   DateTime? get retiradoEm;
   DateTime? get conferidoEm;
+  bool get exigeCodigoRetirada;
+  bool get pagamentoNaEntrega;
 
   factory Pedido.create({
     int? id,
@@ -69,6 +71,8 @@ abstract class Pedido implements Equatable {
     String? empresaCnpj,
     DateTime? retiradoEm,
     DateTime? conferidoEm,
+    bool exigeCodigoRetirada,
+    bool pagamentoNaEntrega,
   }) = _PedidoImpl;
 
   @override
@@ -106,6 +110,8 @@ abstract class Pedido implements Equatable {
         empresaCnpj,
         retiradoEm,
         conferidoEm,
+        exigeCodigoRetirada,
+        pagamentoNaEntrega,
       ];
 
   @override
@@ -179,6 +185,10 @@ class _PedidoImpl implements Pedido {
   final DateTime? retiradoEm;
   @override
   final DateTime? conferidoEm;
+  @override
+  final bool exigeCodigoRetirada;
+  @override
+  final bool pagamentoNaEntrega;
 
   const _PedidoImpl({
     this.id,
@@ -214,6 +224,8 @@ class _PedidoImpl implements Pedido {
     this.empresaCnpj,
     this.retiradoEm,
     this.conferidoEm,
+    this.exigeCodigoRetirada = true,
+    this.pagamentoNaEntrega = false,
   });
 
   @override
@@ -251,6 +263,8 @@ class _PedidoImpl implements Pedido {
         empresaCnpj,
         retiradoEm,
         conferidoEm,
+        exigeCodigoRetirada,
+        pagamentoNaEntrega,
       ];
 
   @override

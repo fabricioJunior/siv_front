@@ -320,6 +320,8 @@ enum PedidoStep {
   emailReenviado,
   linkCompartilhamentoObtido,
   embalado,
+  pagamentoNaEntregaSalvo,
+  acertoFechado,
   validacaoInvalida,
   falha,
 }

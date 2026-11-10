@@ -571,8 +571,16 @@ class _PedidosPageState extends State<PedidosPage> {
       itens: state.itensDoPedidoSelecionado,
       carregandoItens: state.carregandoItensDoPedidoSelecionado,
       onAbrirPedido: () async {
-        await Navigator.pushNamed(context, '/pedido',
-            arguments: {'idPedido': pedido.id});
+        // Pedido de entrada tem tela própria (contagem em 5 passos).
+        final entrada =
+            pedido.tipo == 'compra' || pedido.tipo == 'transferencia_entrada';
+        await Navigator.pushNamed(
+          context,
+          entrada ? '/pedido_entrada' : '/pedido',
+          arguments: entrada
+              ? {'pedidoId': pedido.id}
+              : {'idPedido': pedido.id},
+        );
         if (mounted) _bloc.add(PedidosIniciou());
       },
       onCancelar: () => _cancelarPedido(context, pedido),

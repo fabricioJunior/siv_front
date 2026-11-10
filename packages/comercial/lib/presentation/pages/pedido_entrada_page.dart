@@ -249,11 +249,6 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                                 HistoricoEntradaPage(resumo: resumo),
                           ),
                         );
-                      } else if (v == 'pedido') {
-                        Navigator.of(context).pushNamed(
-                          '/pedido',
-                          arguments: {'idPedido': widget.pedidoId},
-                        );
                       } else if (v == 'atualizar') {
                         _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
                       }
@@ -263,8 +258,6 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                         value: 'historico',
                         child: Text('Histórico do pedido'),
                       ),
-                      PopupMenuItem(
-                          value: 'pedido', child: Text('Abrir pedido')),
                       PopupMenuItem(
                           value: 'atualizar', child: Text('Atualizar')),
                     ],

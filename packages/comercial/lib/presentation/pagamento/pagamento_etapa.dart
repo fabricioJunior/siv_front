@@ -21,12 +21,16 @@ class PagamentoEtapa extends StatefulWidget {
   final void Function(Map<String, dynamic> resultado) onConfirmado;
   final VoidCallback onVoltar;
 
+  /// Abre o desconto geral já na entrada (F4 da tela de origem).
+  final bool abrirDesconto;
+
   const PagamentoEtapa({
     super.key,
     required this.contexto,
     required this.formaPagamentoGrade,
     required this.onConfirmado,
     required this.onVoltar,
+    this.abrirDesconto = false,
   });
 
   /// Mesmo formato de saída do antigo widget de pagamentos (removido); recurso
@@ -79,7 +83,7 @@ class PagamentoEtapa extends StatefulWidget {
 class _PagamentoEtapaState extends State<PagamentoEtapa> {
   static const _larguraDesktop = 900.0;
 
-  final _descontoGeral = ValueNotifier(false);
+  late final _descontoGeral = ValueNotifier(widget.abrirDesconto);
   final _focoValor = FocusNode();
   final _foco = FocusNode();
   final _focoGrade = FocusNode();
@@ -207,7 +211,12 @@ class _PagamentoEtapaState extends State<PagamentoEtapa> {
         UsoFormasPagamento.registrar(
           state.linhas.map((l) => l.formaDePagamento?.id).whereType<int>(),
         );
-        widget.onConfirmado(PagamentoEtapa.resultado(state, _c.recursos));
+        widget.onConfirmado({
+          ...PagamentoEtapa.resultado(state, _c.recursos),
+          // Segmentado "No ato da entrega / Online" (só no contexto escolher).
+          'pagamentoNaEntrega':
+              _c.tipoOperacao == PagamentoTipoOperacao.escolher && !_online,
+        });
       },
       builder: (context, state) {
         final Widget corpo;

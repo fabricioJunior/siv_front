@@ -1,6 +1,16 @@
+import 'dart:async';
+
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation.dart';
 import 'package:comercial/presentation/pagamento/pagamento_contexto.dart';
+import 'package:comercial/presentation/pages/pedido/barra_acao_pedido.dart';
+import 'package:comercial/presentation/pages/pedido/etapa_acerto.dart';
+import 'package:comercial/presentation/pages/pedido/etapa_conferir.dart';
+import 'package:comercial/presentation/pages/pedido/etapa_confirmacao.dart';
+import 'package:comercial/presentation/pages/pedido/etapa_retirada.dart';
+import 'package:comercial/presentation/pages/pedido/lateral_pedido.dart';
+import 'package:comercial/presentation/pages/pedido/mais_acoes_pedido.dart';
+import 'package:comercial/presentation/pages/pedido/trilha_pedido_widget.dart';
 import 'package:comercial/presentation/pagamento/pagamento_etapa.dart';
 import 'package:comercial/presentation/relatorios/pdf/nota_entrega_pdf_exporter.dart';
 import 'package:comercial/presentation/widgets/impressao_documento_helper.dart';
@@ -63,6 +73,19 @@ class _PedidoPageState extends State<PedidoPage> {
   String? _pagamentoAssinatura;
   bool _confirmandoPagamento = false;
   bool _reenviandoEmailEmbalado = false;
+  bool _redirecionou = false;
+  String _codigoRetirada = '';
+  final Set<int> _retirarJunto = {};
+  final Set<int> _acertoMarcados = {};
+  bool _abrirDescontoNoPagamento = false;
+  int? _pendentesParaId;
+  Timer? _polling;
+  IdEtapaPedido? _etapaAtual;
+
+  // Mesmo ritmo do enriquecimento da cobrança online no backend.
+  static const _intervaloPolling = Duration(seconds: 15);
+  final _focoPagina = FocusNode(debugLabel: 'pedido_pagina');
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -71,7 +94,9 @@ class _PedidoPageState extends State<PedidoPage> {
 
   @override
   void dispose() {
+    _polling?.cancel();
     _pagamentoBloc?.close();
+    _focoPagina.dispose();
     _pessoaIdController.dispose();
     _funcionarioIdController.dispose();
     _tabelaPrecoIdController.dispose();
@@ -111,44 +136,6 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (!mounted) return;
     context.read<PedidoBloc>().add(PedidoCancelou(motivo));
-  }
-
-  Future<void> _confirmarRetiradaPedido(BuildContext context) async {
-    final codigoController = TextEditingController();
-    final codigo = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Confirmar retirada'),
-          content: TextField(
-            controller: codigoController,
-            autofocus: true,
-            maxLength: 4,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
-              labelText: 'Código de retirada',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Fechar'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, codigoController.text.trim()),
-              child: const Text('Confirmar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (codigo == null || codigo.isEmpty) return;
-
-    if (!mounted) return;
-    context.read<PedidoBloc>().add(PedidoRetiradaConfirmou(codigo));
   }
 
   Future<void> _reenviarEmailEmbalado(
@@ -270,80 +257,6 @@ class _PedidoPageState extends State<PedidoPage> {
 
     if (confirmou != true || selecionado == null || !mounted) return;
     bloc.add(PedidoAssumiu(selecionado!.id));
-  }
-
-  Future<void> _abrirOutrosPedidosPendentes(
-    BuildContext context,
-    List<Pedido> outrosPedidosPendentes,
-  ) async {
-    final bloc = context.read<PedidoBloc>();
-    final selecionados = {
-      for (final pedido in outrosPedidosPendentes)
-        if (pedido.id != null) pedido.id!,
-    };
-
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Outros pedidos pendentes de retirada'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'O cliente tem outros pedidos aguardando retirada. '
-                      'Selecione os que também podem ser liberados agora.',
-                    ),
-                    const SizedBox(height: 8),
-                    ...outrosPedidosPendentes.map((pedido) {
-                      final id = pedido.id;
-                      if (id == null) return const SizedBox.shrink();
-                      final valor = pedido.valorTotal;
-                      return CheckboxListTile(
-                        value: selecionados.contains(id),
-                        onChanged: (marcado) {
-                          setDialogState(() {
-                            if (marcado ?? false) {
-                              selecionados.add(id);
-                            } else {
-                              selecionados.remove(id);
-                            }
-                          });
-                        },
-                        title: Text('Pedido #$id'),
-                        subtitle: valor != null
-                            ? Text('Valor: R\$ ${valor.toStringAsFixed(2)}')
-                            : null,
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Fechar'),
-                ),
-                FilledButton(
-                  onPressed: selecionados.isEmpty
-                      ? null
-                      : () => Navigator.pop(context, true),
-                  child: const Text('Confirmar retirada dos selecionados'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (confirmar != true || selecionados.isEmpty) return;
-
-    bloc.add(PedidoRetiradaLoteConfirmou(selecionados.toList()));
   }
 
   Future<void> _selecionarEnderecoEntrega(BuildContext context) async {
@@ -486,8 +399,13 @@ class _PedidoPageState extends State<PedidoPage> {
       _pagamentoContexto = null;
       _pagamentoBloc = null;
       _pagamentoAssinatura = null;
+      _abrirDescontoNoPagamento = false;
     });
+    _focarPagina();
   }
+
+  void _focarPagina() => WidgetsBinding.instance
+      .addPostFrameCallback((_) => mounted ? _focoPagina.requestFocus() : null);
 
   // Ordem: desconto do pedido, promoções/cupom, CPF/e-mail da nota e, por fim, os pagamentos.
   // Cada passo espera o anterior (o id do pagamento é max(id)+1 no backend, ver comentário abaixo).
@@ -581,6 +499,17 @@ class _PedidoPageState extends State<PedidoPage> {
             cupom: cupons.isEmpty ? null : cupons.first,
           ),
           {PedidoStep.descontosPromocionaisAplicados},
+        );
+        if (r.step == PedidoStep.falha) return reabrir(r.erro);
+      }
+
+      final naEntrega = resultado['pagamentoNaEntrega'];
+      if (state.modalidadeEntrega == 'entrega' &&
+          naEntrega is bool &&
+          naEntrega != (state.pedido?.pagamentoNaEntrega ?? false)) {
+        final r = await passo(
+          PedidoPagamentoNaEntregaAlterado(naEntrega),
+          {PedidoStep.pagamentoNaEntregaSalvo},
         );
         if (r.step == PedidoStep.falha) return reabrir(r.erro);
       }
@@ -1058,13 +987,6 @@ class _PedidoPageState extends State<PedidoPage> {
             return;
           }
 
-          if (state.step == PedidoStep.itemConferido) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Item conferido.')),
-            );
-            return;
-          }
-
           if (state.step == PedidoStep.dadosSalvos) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Dados do pedido atualizados.')),
@@ -1131,20 +1053,10 @@ class _PedidoPageState extends State<PedidoPage> {
           }
 
           if (state.step == PedidoStep.retiradaConfirmada) {
-            if (state.outrosPedidosPendentes.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Retirada confirmada.')),
-              );
-            } else {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  _abrirOutrosPedidosPendentes(
-                    context,
-                    state.outrosPedidosPendentes,
-                  );
-                }
-              });
-            }
+            _retirarJunto.clear();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Retirada confirmada.')),
+            );
             return;
           }
 
@@ -1172,6 +1084,10 @@ class _PedidoPageState extends State<PedidoPage> {
               state.step == PedidoStep.falha) {
             // Durante a confirmação da etapa, _confirmarPagamento mostra o erro (junto do botão).
             if (_confirmandoPagamento) return;
+            // Conferência: peça fora do pedido (ou leitura recusada) = erro sonoro, nada soma.
+            if (_etapaAtual == IdEtapaPedido.conferir) {
+              SystemSound.play(SystemSoundType.alert);
+            }
             if (_criandoPagamento) {
               setState(() => _criandoPagamento = false);
             }
@@ -1182,7 +1098,17 @@ class _PedidoPageState extends State<PedidoPage> {
             );
           }
         },
-        child: BlocBuilder<PedidoBloc, PedidoState>(
+        child: BlocListener<PedidoBloc, PedidoState>(
+          // Último pagamento confirmado (e entrega concluída, quando houver): fatura sozinho.
+          // Se falhar, o F9 "Faturar" continua na etapa com o erro.
+          listenWhen: (a, b) =>
+              a.pedido != null &&
+              !_deveFaturarSozinho(a) &&
+              _deveFaturarSozinho(b) &&
+              b.step != PedidoStep.processando,
+          listener: (context, state) =>
+              context.read<PedidoBloc>().add(PedidoFaturou()),
+          child: BlocBuilder<PedidoBloc, PedidoState>(
           builder: (context, state) {
             final carregando = state.step == PedidoStep.carregando ||
                 state.step == PedidoStep.salvando ||
@@ -1193,56 +1119,9 @@ class _PedidoPageState extends State<PedidoPage> {
             }
 
             final contextoPagamento = _pagamentoContexto;
-            final scaffold = Scaffold(
-              appBar: AppBar(
-                title: Text(widget.idPedido == null
-                    ? 'Novo pedido'
-                    : 'Pedido #${widget.idPedido}'),
-                actions: [
-                  if (widget.idPedido != null && !carregando)
-                    IconButton(
-                      icon: const Icon(Icons.share),
-                      tooltip: 'Compartilhar link do pedido',
-                      onPressed: () => context
-                          .read<PedidoBloc>()
-                          .add(PedidoLinkCompartilhamentoSolicitou()),
-                    ),
-                  if (carregando)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    )
-                  else if (widget.idPedido == null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: TextButton(
-                        onPressed: () {
-                          if (_formKey.currentState?.validate() ?? false) {
-                            context.read<PedidoBloc>().add(PedidoSalvou());
-                          }
-                        },
-                        child: const Text('Criar pedido'),
-                      ),
-                    ),
-                ],
-              ),
-              body: state.step == PedidoStep.carregando
-                  ? const Center(child: CircularProgressIndicator.adaptive())
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Form(
-                        key: _formKey,
-                        child:
-                            _buildFormularioPedido(context, state, carregando),
-                      ),
-                    ),
-            );
+            final scaffold = widget.idPedido == null
+                ? _buildScaffoldNovoPedido(context, state, carregando)
+                : _buildShell(context, state, carregando);
             return Stack(
               children: [
                 scaffold,
@@ -1253,13 +1132,18 @@ class _PedidoPageState extends State<PedidoPage> {
                       child: PagamentoEtapa(
                         contexto: contextoPagamento,
                         formaPagamentoGrade: widget.formaPagamentoGrade,
+                        abrirDesconto: _abrirDescontoNoPagamento,
                         onConfirmado: (resultado) => _confirmarPagamento(
                           context.read<PedidoBloc>(),
                           resultado,
                         ),
                         onVoltar: () {
                           if (!_confirmandoPagamento) {
-                            setState(() => _pagamentoContexto = null);
+                            setState(() {
+                              _pagamentoContexto = null;
+                              _abrirDescontoNoPagamento = false;
+                            });
+                            _focarPagina();
                           }
                         },
                       ),
@@ -1290,6 +1174,719 @@ class _PedidoPageState extends State<PedidoPage> {
             );
           },
         ),
+        ),
+      ),
+    );
+  }
+
+  // ---- Shell (pedido existente): barra superior, trilha, corpo + lateral, barra de ação ----
+
+  Widget _buildScaffoldNovoPedido(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Novo pedido'),
+        actions: [
+          if (carregando)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    context.read<PedidoBloc>().add(PedidoSalvou());
+                  }
+                },
+                child: const Text('Criar pedido'),
+              ),
+            ),
+        ],
+      ),
+      body: state.step == PedidoStep.carregando
+          ? const Center(child: CircularProgressIndicator.adaptive())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: _buildFormularioPedido(context, state, carregando),
+              ),
+            ),
+    );
+  }
+
+  // Itens, desconto, endereço e taxa só editam sem pagamento confirmado nem cobrança online.
+  bool _travado(PedidoState s) =>
+      s.pagamentos.any((p) => p.confirmadoEm != null || p.tipo == 'controlado');
+
+  bool _editavel(PedidoState s) =>
+      s.pedido?.situacao == 'em_andamento' && !_travado(s);
+
+  bool _deveFaturarSozinho(PedidoState s) {
+    final p = s.pedido;
+    return p != null &&
+        (p.tipo == 'venda' || p.tipo == 'taxa_entrega') &&
+        p.origem != 'ecommerce' &&
+        !p.pagamentoNaEntrega &&
+        p.situacao == 'em_andamento' &&
+        s.pagamentos.isNotEmpty &&
+        s.pagamentos.every((x) => x.confirmadoEm != null) &&
+        s.podeFechar;
+  }
+
+  ({bool habilitada, String? motivo}) _estadoF9(
+    TrilhaPedido trilha,
+    PedidoState state,
+    bool carregando,
+  ) {
+    final acao = trilha.acaoPrincipal;
+    String? motivo = trilha.motivoDesabilitada;
+    if (acao == AcaoPedido.faturar && !state.podeFechar) {
+      motivo ??= state.motivoNaoPodeFechar;
+    }
+    if (acao == AcaoPedido.confirmarRetirada &&
+        trilha.exigeCodigoRetirada &&
+        _codigoRetirada.length < 4) {
+      motivo ??= 'Digite o código de 4 dígitos.';
+    }
+    if (acao == AcaoPedido.concluirConferencia) {
+      final falta = pecasFaltando(state.itens);
+      motivo = state.itens.isEmpty
+          ? 'Pedido sem itens.'
+          : (falta > 0 ? 'Faltam ${falta.toStringAsFixed(0)} peça(s).' : null);
+    }
+    if (acao == AcaoPedido.fecharAcerto) {
+      final falta = EtapaAcerto.faltaDe(state.pagamentos, _acertoMarcados);
+      motivo = state.pagamentos.isEmpty
+          ? 'Nenhuma forma prevista.'
+          : (falta > 0.005 ? 'Faltam ${brl(falta)} a receber.' : null);
+    }
+    return (habilitada: !carregando && acao != null && motivo == null, motivo: motivo);
+  }
+
+  void _executarAcaoPrincipal(
+    BuildContext context,
+    TrilhaPedido trilha,
+    PedidoState state,
+  ) {
+    final bloc = context.read<PedidoBloc>();
+    switch (trilha.acaoPrincipal) {
+      case null:
+        return;
+      case AcaoPedido.assumirPedido:
+        _assumirPedido(context);
+      case AcaoPedido.concluirConferencia:
+        bloc.add(trilha.conferenciaRetroativa
+            ? PedidoMarcouConferido()
+            : PedidoConferiu());
+      case AcaoPedido.irParaPagamento:
+      case AcaoPedido.lancarPagamento:
+        _abrirPagamento(context);
+      case AcaoPedido.faturar:
+        bloc.add(PedidoFaturou());
+      case AcaoPedido.marcarEmbalado:
+        bloc.add(PedidoEmbalou());
+      case AcaoPedido.confirmarRetirada:
+        bloc.add(PedidoRetirouJunto(
+          codigo: trilha.exigeCodigoRetirada ? _codigoRetirada : '',
+          pedidoIds: _retirarJunto.toList(),
+        ));
+      case AcaoPedido.chamarEntregador:
+        bloc.add(PedidoEntregadorChamou());
+      case AcaoPedido.confirmarEntrega:
+        bloc.add(PedidoEntregaConfirmou());
+      case AcaoPedido.fecharAcerto:
+        bloc.add(PedidoAcertoFechou({
+          for (final p in state.pagamentos)
+            if (p.confirmadoEm == null && _acertoMarcados.contains(p.id))
+              p.id!: p.valorEsperado ?? 0,
+        }));
+    }
+  }
+
+  List<ItemMaisAcao> _itensMaisAcoes(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    final p = state.pedido;
+    final retirada = state.modalidadeEntrega == 'retirada';
+    final reenviar = retirada &&
+        p?.retiradoEm == null &&
+        (p?.exigeCodigoRetirada ?? true) &&
+        ((p?.origem == 'ecommerce' && p?.conferidoEm != null) ||
+            p?.situacaoEntrega == 'embalado');
+    return [
+      ItemMaisAcao(
+        letra: 'I',
+        rotulo: 'Imprimir nota de conferência',
+        icone: Icons.fact_check_outlined,
+        onTap: () => _imprimirNotaConferenciaDoPedido(context, state),
+      ),
+      if (state.modalidadeEntrega == 'entrega')
+        ItemMaisAcao(
+          letra: 'N',
+          rotulo: 'Imprimir nota de entrega',
+          icone: Icons.local_shipping_outlined,
+          onTap: () => _imprimirNotaEntregaDoPedido(context, state),
+        ),
+      if (reenviar && !_reenviandoEmailEmbalado)
+        ItemMaisAcao(
+          letra: 'E',
+          rotulo: 'Reenviar código ao cliente',
+          icone: Icons.mail_outline,
+          onTap: () => _reenviarEmailEmbalado(context, state.id!),
+        ),
+      ItemMaisAcao(
+        letra: 'L',
+        rotulo: 'Copiar link do pedido',
+        icone: Icons.share,
+        onTap: () => context
+            .read<PedidoBloc>()
+            .add(PedidoLinkCompartilhamentoSolicitou()),
+      ),
+      if (p?.romaneioId != null)
+        ItemMaisAcao(
+          letra: 'R',
+          rotulo: 'Ver romaneio',
+          icone: Icons.receipt_long_outlined,
+          onTap: () => Navigator.of(context).pushNamed(
+            '/romaneio',
+            arguments: {'idRomaneio': p!.romaneioId, 'permitirEdicao': false},
+          ),
+        ),
+      ItemMaisAcao(
+        letra: 'O',
+        rotulo: 'Observação',
+        icone: Icons.edit_note_outlined,
+        onTap: () => _abrirEditarObservacao(context, state),
+      ),
+      if (retirada && p?.situacao == 'encerrado')
+        ItemMaisAcao(
+          letra: 'C',
+          rotulo: 'Converter em entrega',
+          icone: Icons.change_circle_outlined,
+          onTap: () => _abrirConverterEmEntrega(context),
+        ),
+      ItemMaisAcao(
+        letra: 'H',
+        rotulo: 'Histórico',
+        icone: Icons.history,
+        onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+      ),
+      if (p?.situacao != 'cancelado')
+        ItemMaisAcao(
+          rotulo: 'Cancelar pedido',
+          icone: Icons.cancel_outlined,
+          alerta: true,
+          onTap: () => _cancelarPedido(context),
+        ),
+    ];
+  }
+
+  String? _linkCobrancaPendente(PedidoState state) {
+    for (final pg in state.pagamentos) {
+      if (pg.confirmadoEm != null || pg.tipo != 'controlado') continue;
+      final c = pg.cobranca;
+      final link = c?.urlPagamentoAvulsoSiteEmpresa ??
+          c?.urlDePagamento ??
+          c?.chavePixCopiaECola;
+      if (link != null) return link;
+    }
+    return null;
+  }
+
+  // Efeitos de tela derivados da etapa atual (fora do build: sem setState).
+  void _agendarEfeitos(BuildContext context, PedidoState state, TrilhaPedido trilha) {
+    final bloc = context.read<PedidoBloc>();
+    final etapa = trilha.atual?.id;
+    _etapaAtual = etapa;
+    final aguardandoOnline = etapa == IdEtapaPedido.confirmacao &&
+        state.pagamentos
+            .any((p) => p.confirmadoEm == null && p.tipo == 'controlado');
+    if (aguardandoOnline && _polling == null) {
+      _polling = Timer.periodic(_intervaloPolling, (_) {
+        if (mounted) bloc.add(PedidoRecarregou());
+      });
+    } else if (!aguardandoOnline && _polling != null) {
+      _polling!.cancel();
+      _polling = null;
+    }
+    if (etapa == IdEtapaPedido.retirada && _pendentesParaId != state.id) {
+      _pendentesParaId = state.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) bloc.add(PedidoRetiradaPendentesCarregou());
+      });
+    }
+  }
+
+  void _confirmarPagamentoNaLinha(BuildContext context, PedidoPagamento p) {
+    if (p.id == null) return;
+    context.read<PedidoBloc>().add(PedidoPagamentoConfirmou(
+          pagamentoId: p.id!,
+          valorConfirmado: p.valorEsperado ?? 0,
+        ));
+  }
+
+  void _copiarLink(BuildContext context, String link) {
+    Clipboard.setData(ClipboardData(text: link));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Link da cobrança copiado.')),
+    );
+  }
+
+  Widget _buildShell(BuildContext context, PedidoState state, bool carregando) {
+    final pedido = state.pedido;
+    if (pedido == null) {
+      return Scaffold(
+        body: Center(
+          child: state.step == PedidoStep.carregando
+              ? const CircularProgressIndicator.adaptive()
+              : Text(state.erro ?? 'Pedido não encontrado.'),
+        ),
+      );
+    }
+
+    final trilha = derivarTrilhaPedido(
+      pedido,
+      state.pagamentos,
+      state.itens,
+      total: state.valorTotalGeral,
+    );
+    _agendarEfeitos(context, state, trilha);
+    if (trilha.abreEntrada) {
+      if (!_redirecionou) {
+        _redirecionou = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed(
+            '/pedido_entrada',
+            arguments: {'pedidoId': state.id},
+          );
+        });
+      }
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
+
+    final mobile = MediaQuery.sizeOf(context).width < 900;
+    final f9 = _estadoF9(trilha, state, carregando);
+    final etapa = trilha.atual?.id;
+    final editavel = _editavel(state);
+
+    void principal() {
+      if (f9.habilitada) _executarAcaoPrincipal(context, trilha, state);
+    }
+
+    void mais() {
+      if (!carregando && !trilha.somenteLeitura) {
+        abrirMaisAcoes(context, _itensMaisAcoes(context, state, carregando));
+      }
+    }
+
+    return Actions(
+      actions: {
+        AcaoPrincipalIntent: CallbackAction<AcaoPrincipalIntent>(
+          onInvoke: (_) => principal(),
+        ),
+        MaisAcoesIntent: CallbackAction<MaisAcoesIntent>(
+          onInvoke: (_) => mais(),
+        ),
+        VoltarPedidoIntent: CallbackAction<VoltarPedidoIntent>(
+          onInvoke: (_) => Navigator.of(context).maybePop(),
+        ),
+        AdicionarProdutoIntent: CallbackAction<AdicionarProdutoIntent>(
+          onInvoke: (_) => etapa == IdEtapaPedido.itens && editavel && !carregando
+              ? _abrirGerenciarProdutos(context)
+              : null,
+        ),
+        DescontoIntent: CallbackAction<DescontoIntent>(
+          onInvoke: (_) {
+            if ((etapa == IdEtapaPedido.itens || etapa == IdEtapaPedido.pagamento) &&
+                editavel &&
+                !carregando) {
+              _abrirDescontoNoPagamento = true;
+              _abrirPagamento(context);
+            }
+            return null;
+          },
+        ),
+        AbrirPagamentoIntent: CallbackAction<AbrirPagamentoIntent>(
+          onInvoke: (_) => (etapa == IdEtapaPedido.itens ||
+                      etapa == IdEtapaPedido.pagamento ||
+                      etapa == IdEtapaPedido.acerto) &&
+                  !carregando
+              ? _abrirPagamento(context)
+              : null,
+        ),
+        ImprimirDocumentoIntent: CallbackAction<ImprimirDocumentoIntent>(
+          onInvoke: (_) => state.modalidadeEntrega == 'entrega' &&
+                  (etapa == IdEtapaPedido.chamarEntregador ||
+                      etapa == IdEtapaPedido.acerto)
+              ? _imprimirNotaEntregaDoPedido(context, state)
+              : _imprimirNotaConferenciaDoPedido(context, state),
+        ),
+        CopiarLinkCobrancaIntent: CallbackAction<CopiarLinkCobrancaIntent>(
+          onInvoke: (_) {
+            final link = _linkCobrancaPendente(state);
+            if (link == null) return null;
+            Clipboard.setData(ClipboardData(text: link));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Link da cobrança copiado.')),
+            );
+            return null;
+          },
+        ),
+      },
+      child: Shortcuts(
+        shortcuts: atalhosPedido,
+        child: Focus(
+          focusNode: _focoPagina,
+          autofocus: true,
+          child: Scaffold(
+            key: _scaffoldKey,
+            endDrawer: Drawer(
+              width: 360,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildTimelineCard(context, state),
+                ),
+              ),
+            ),
+            body: Column(
+              children: [
+                _buildBarraSuperior(context, state, carregando),
+                TrilhaPedidoWidget(trilha: trilha),
+                Expanded(
+                  child: _buildCorpoELateral(
+                    context,
+                    state,
+                    trilha,
+                    carregando,
+                    editavel,
+                    mobile,
+                  ),
+                ),
+                BarraAcaoPedido(
+                  acao: trilha.acaoPrincipal,
+                  habilitada: f9.habilitada,
+                  motivo: f9.motivo,
+                  onPrincipal: principal,
+                  onMais: mais,
+                  mobile: mobile,
+                  mostrarMais: !trilha.somenteLeitura,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarraSuperior(
+    BuildContext context,
+    PedidoState state,
+    bool carregando,
+  ) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final estilo = textos.rotulo.copyWith(color: cores.textoSobreEscuroTitulo);
+
+    Widget tag(String t) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            border: Border.all(color: cores.textoSobreEscuroTerciario),
+            borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          ),
+          child: Text(t.toUpperCase(), style: estilo.copyWith(fontSize: 11)),
+        );
+
+    return Container(
+      color: cores.acoEscuro,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              TextButton.icon(
+                key: const Key('pedido_voltar'),
+                onPressed: () => Navigator.of(context).maybePop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: cores.textoSobreEscuroTitulo,
+                ),
+                icon: const Icon(Icons.arrow_back, size: 18),
+                label: const Text('Esc'),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Pedido #${state.id ?? widget.idPedido}',
+                style: textos.secao.copyWith(color: cores.textoSobreEscuroTitulo),
+              ),
+              const SizedBox(width: 12),
+              tag(_labelTipo(state.pedido?.tipo ?? 'venda')),
+              const SizedBox(width: 6),
+              tag(state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  (state.pedido?.pessoaNome ?? '').toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: textos.apoio.copyWith(color: cores.textoSobreEscuroApoio),
+                ),
+              ),
+              if (carregando)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCorpoELateral(
+    BuildContext context,
+    PedidoState state,
+    TrilhaPedido trilha,
+    bool carregando,
+    bool editavel,
+    bool mobile,
+  ) {
+    final corpo = _buildCorpoEtapa(context, state, trilha, carregando, editavel);
+    final lateral = LateralPedido(
+      state: state,
+      pagamentoLabel: _labelSituacaoPagamento(state.pedido?.situacaoPagamento),
+      travado: _travado(state),
+      secoes: [
+        _buildDadosVinculadosCard(context, state, carregando),
+        if (editavel && !trilha.somenteLeitura)
+          _buildEntregaCard(context, state, carregando)
+        else
+          _buildEntregaLeitura(context, state),
+        _buildObservacaoCard(context, state, carregando || trilha.somenteLeitura),
+      ],
+    );
+
+    if (mobile) {
+      return ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          corpo,
+          const SizedBox(height: 12),
+          ExpansionTile(
+            title: const Text('Detalhes do pedido'),
+            childrenPadding: const EdgeInsets.only(bottom: 12),
+            children: [lateral],
+          ),
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: corpo,
+          ),
+        ),
+        SizedBox(
+          width: 330,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+            child: lateral,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEntregaLeitura(BuildContext context, PedidoState state) {
+    final textos = context.sivTextos;
+    final entrega = state.modalidadeEntrega == 'entrega';
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('ENTREGA', style: textos.rotulo),
+          const SizedBox(height: 6),
+          Text(entrega ? 'Entrega' : 'Retirada', style: textos.corpo),
+          if (entrega) ...[
+            Text(
+              _enderecoEntregaResumo ??
+                  state.enderecoEntregaResumo ??
+                  'Endereço não informado.',
+              style: textos.apoio,
+            ),
+            Text('Taxa: ${_valorTaxaEntregaFormatado(state)}', style: textos.apoio),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Corpo por etapa: placeholders que reaproveitam os cards existentes (FP2/FP3 trocam).
+  Widget _buildCorpoEtapa(
+    BuildContext context,
+    PedidoState state,
+    TrilhaPedido trilha,
+    bool carregando,
+    bool editavel,
+  ) {
+    final textos = context.sivTextos;
+    final atual = trilha.atual;
+    final etapa = atual?.id;
+    final p = state.pedido!;
+
+    String? aviso;
+    if (trilha.cancelado) {
+      aviso = 'Pedido cancelado${(p.motivoCancelamento ?? '').isEmpty ? '' : ': ${p.motivoCancelamento}'}';
+    } else if (trilha.concluida) {
+      aviso = 'Pedido concluído.';
+    } else if (etapa == IdEtapaPedido.assumir) {
+      aviso = 'Assuma o pedido para continuar. Até lá a tela é só leitura.';
+    }
+
+    final mostrarPagamentos = state.pagamentos.isNotEmpty ||
+        etapa == IdEtapaPedido.pagamento;
+    final bloc = context.read<PedidoBloc>();
+
+    final Widget? especifica = switch (etapa) {
+      IdEtapaPedido.conferir => EtapaConferir(
+          itens: state.itens,
+          onLeitura: (c) => bloc.add(
+            PedidoItemConferiuPorCodigo(codigoBarras: c, quantidade: 1),
+          ),
+          onContar: (i) => bloc.add(PedidoItemConferiu(
+            produtoId: i.produtoId!,
+            sequencia: i.sequencia ?? 1,
+            quantidade: 1,
+          )),
+        ),
+      IdEtapaPedido.confirmacao => EtapaConfirmacao(
+          pagamentos: state.pagamentos,
+          formas: state.formasDePagamentoPorId,
+          total: state.valorTotalGeral,
+          carregando: carregando,
+          onConfirmar: (pg) => _confirmarPagamentoNaLinha(context, pg),
+          onTrocarForma: (pg) => _removerPagamento(context, pg),
+          onCopiarLink: (l) => _copiarLink(context, l),
+        ),
+      IdEtapaPedido.acerto => EtapaAcerto(
+          pagamentos: state.pagamentos,
+          formas: state.formasDePagamentoPorId,
+          marcados: _acertoMarcados,
+          carregando: carregando,
+          onAlternar: (pg) => setState(() {
+            if (!_acertoMarcados.remove(pg.id)) _acertoMarcados.add(pg.id!);
+          }),
+          onAlterarFormas: () => _abrirPagamento(context),
+        ),
+      IdEtapaPedido.retirada => EtapaRetirada(
+          exigeCodigo: trilha.exigeCodigoRetirada,
+          pendentes: state.outrosPedidosPendentes,
+          marcados: _retirarJunto,
+          erro: state.step == PedidoStep.falha ? state.erro : null,
+          carregando: carregando,
+          onCodigo: (c) => setState(() => _codigoRetirada = c),
+          onCompleto: (c) {
+            _codigoRetirada = c;
+            bloc.add(PedidoRetirouJunto(
+              codigo: c,
+              pedidoIds: _retirarJunto.toList(),
+            ));
+          },
+          onAlternarJunto: (id) => setState(() {
+            if (!_retirarJunto.remove(id)) _retirarJunto.add(id);
+          }),
+        ),
+      IdEtapaPedido.chamarEntregador => _buildChamarEntregador(context, state),
+      _ => null,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (atual != null)
+          SivCard(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(atual.titulo.toUpperCase(), style: textos.rotulo),
+                      if (aviso != null) Text(aviso, style: textos.apoio),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (aviso != null)
+          SivCard(child: Text(aviso, style: textos.corpo)),
+        if (especifica != null) ...[const SizedBox(height: 12), especifica],
+        const SizedBox(height: 12),
+        _buildItensCard(
+          context,
+          state,
+          carregando,
+          editavel: editavel && etapa != IdEtapaPedido.assumir,
+        ),
+        if (mostrarPagamentos &&
+            etapa != IdEtapaPedido.confirmacao &&
+            etapa != IdEtapaPedido.acerto) ...[
+          const SizedBox(height: 12),
+          _buildPagamentosCard(
+            context,
+            state,
+            permitirAdicionar: etapa == IdEtapaPedido.pagamento,
+          ),
+        ],
+      ],
+    );
+  }
+
+  // Troco que o entregador deve levar (T5) + nota de entrega (Ctrl+P).
+  Widget _buildChamarEntregador(BuildContext context, PedidoState state) {
+    final textos = context.sivTextos;
+    final trocos = [
+      for (final pg in state.pagamentos)
+        if (pg.confirmadoEm == null && pg.valorParaTroco != null)
+          'Troco para ${brl(pg.valorParaTroco!)} → leve '
+              '${brl(pg.valorParaTroco! - (pg.valorEsperado ?? 0))}',
+    ];
+    return SivCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final t in trocos) Text(t, style: textos.corpo),
+          if (trocos.isNotEmpty) const SizedBox(height: 8),
+          OutlinedButton(
+            key: const Key('imprimir_nota_entrega'),
+            onPressed: () => _imprimirNotaEntregaDoPedido(context, state),
+            child: const Text('Imprimir nota de entrega · Ctrl+P'),
+          ),
+        ],
       ),
     );
   }
@@ -1303,35 +1900,12 @@ class _PedidoPageState extends State<PedidoPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildCabecalhoPedidoCard(context, state),
-        if (state.id != null) ...[
-          const SizedBox(height: 16),
-          _TrilhaDeEtapas(situacaoAtual: state.pedido?.situacao),
-          const SizedBox(height: 16),
-          _buildInformacoesPedidoCard(context, state),
-          const SizedBox(height: 16),
-          _buildStatusCard(context, state),
-        ],
         const SizedBox(height: 16),
         _buildDadosVinculadosCard(context, state, carregando),
         const SizedBox(height: 16),
         _buildEntregaCard(context, state, carregando),
         const SizedBox(height: 16),
         _buildObservacaoCard(context, state, carregando),
-        if (state.id != null) ...[
-          const SizedBox(height: 16),
-          _buildItensCard(context, state, carregando),
-          const SizedBox(height: 16),
-          _buildPagamentosCard(context, state),
-          const SizedBox(height: 16),
-          _buildAcoesDoPedidoCard(context, state, carregando),
-          if (state.pedido?.situacao == 'encerrado' &&
-              state.modalidadeEntrega == 'retirada') ...[
-            const SizedBox(height: 16),
-            _buildConverterEntregaCard(context, carregando),
-          ],
-          const SizedBox(height: 16),
-          _buildTimelineCard(context, state),
-        ],
       ],
     );
   }
@@ -1409,131 +1983,8 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
-  Widget _buildInformacoesPedidoCard(BuildContext context, PedidoState state) {
-    final cores = context.sivColors;
-    final textos = context.sivTextos;
-    final situacaoPagamento = state.pedido?.situacaoPagamento;
-    final pendente = situacaoPagamento == 'pendente';
-
-    Widget linha(String rotulo, String valor, {Color? corValor}) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(rotulo, style: textos.apoio),
-            Text(
-              valor,
-              style: textos.corpo.copyWith(
-                fontSize: 13.5,
-                color: corValor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SivCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          linha('Itens', '${state.itens.length}'),
-          linha(
-            'Entrega',
-            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada',
-          ),
-          linha(
-            'Pagamento',
-            _labelSituacaoPagamento(situacaoPagamento),
-            corValor: pendente ? cores.atencao : null,
-          ),
-          // TODO: Nota fiscal -- Pedido (domain/models/pedido.dart) não expõe
-          // número/status de nota fiscal, sem esse dado no state não dá pra exibir aqui.
-        ],
-      ),
-    );
-  }
-
   String _formatarMoeda(double valor) =>
       'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
-
-  Widget _buildStatusCard(BuildContext context, PedidoState state) {
-    final situacaoPagamento = state.pedido?.situacaoPagamento;
-    final cores = context.sivColors;
-    final textos = context.sivTextos;
-
-    return SivCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _linhaInfo(context, 'Itens', '${state.itens.length}'),
-          _linhaInfo(
-            context,
-            'Entrega',
-            state.modalidadeEntrega == 'entrega' ? 'Entrega' : 'Retirada em loja',
-          ),
-          _linhaInfo(
-            context,
-            'Pagamento',
-            _labelSituacaoPagamento(situacaoPagamento),
-            valorCor: situacaoPagamento == 'pago' ? null : cores.atencao,
-          ),
-          _linhaInfo(
-            context,
-            'Nota fiscal',
-            state.fiscal == true ? 'Emitida' : '-',
-          ),
-          if (!state.podeFechar && state.pedido?.situacao != 'encerrado') ...[
-            const SizedBox(height: 8),
-            Text(state.motivoNaoPodeFechar, style: textos.apoio),
-          ],
-          const SizedBox(height: 4),
-          if (state.pedido != null &&
-              state.pedido!.situacao?.toLowerCase() != 'cancelado')
-            SivTrilhaDeProgresso(passos: _passosTrilhaPedido(state.pedido!)),
-        ],
-      ),
-    );
-  }
-
-  Widget _linhaInfo(
-    BuildContext context,
-    String rotulo,
-    String valor, {
-    Color? valorCor,
-  }) {
-    final textos = context.sivTextos;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(rotulo, style: textos.apoio),
-          Text(
-            valor,
-            style: textos.corpo.copyWith(fontSize: 13.5, color: valorCor),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<(String, bool)> _passosTrilhaPedido(Pedido pedido) {
-    final situacao = pedido.situacao?.toLowerCase();
-    final conferido = pedido.conferidoEm != null ||
-        situacao == 'faturado' ||
-        situacao == 'encerrado';
-    final faturado = situacao == 'faturado' || situacao == 'encerrado';
-    final encerrado = situacao == 'encerrado';
-    return [
-      ('Aberto', true),
-      ('Conferido', conferido),
-      ('Faturado', faturado),
-      ('Encerrado', encerrado),
-    ];
-  }
 
   String _labelSituacaoPagamento(String? situacao) {
     switch (situacao) {
@@ -1868,9 +2319,10 @@ class _PedidoPageState extends State<PedidoPage> {
   Widget _buildItensCard(
     BuildContext context,
     PedidoState state,
-    bool carregando,
-  ) {
-    final podeEditarItens = state.pedido?.situacao == 'em_andamento';
+    bool carregando, {
+    bool editavel = true,
+  }) {
+    final podeEditarItens = editavel && state.pedido?.situacao == 'em_andamento';
 
     return Card(
       child: Padding(
@@ -2060,20 +2512,11 @@ class _PedidoPageState extends State<PedidoPage> {
     );
   }
 
-  Future<void> _abrirConferenciaPorLeitura(BuildContext context) async {
-    final bloc = context.read<PedidoBloc>();
-
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => BlocProvider.value(
-          value: bloc,
-          child: const PedidoConferenciaPage(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPagamentosCard(BuildContext context, PedidoState state) {
+  Widget _buildPagamentosCard(
+    BuildContext context,
+    PedidoState state, {
+    bool permitirAdicionar = true,
+  }) {
     final valorRestante = _valorRestantePagamento(state);
 
     return Card(
@@ -2091,10 +2534,11 @@ class _PedidoPageState extends State<PedidoPage> {
                     Icons.payments_outlined,
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: _criandoPagamento
-                      ? null
-                      : () => _abrirPagamento(context),
+                if (permitirAdicionar)
+                  TextButton.icon(
+                    onPressed: _criandoPagamento
+                        ? null
+                        : () => _abrirPagamento(context),
                   icon: const Icon(Icons.add),
                   label: const Text('Adicionar'),
                 ),
@@ -2259,250 +2703,6 @@ class _PedidoPageState extends State<PedidoPage> {
                 ),
               ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAcoesDoPedidoCard(
-    BuildContext context,
-    PedidoState state,
-    bool carregando,
-  ) {
-    final podeFechar = state.podeFechar;
-    // Pedido de origem "atendente_humano" (único canal existente hoje) dispensa a etapa de
-    // conferência -- backend já libera faturar sem exigir situacao="conferido" pra essa origem.
-    final exigeConferencia = state.pedido?.origem != 'atendente_humano';
-    final origemEcommerce = state.pedido?.origem == 'ecommerce';
-    final semVendedor = origemEcommerce && state.pedido?.funcionarioId == null;
-    final podeConferirOuFaturar = !semVendedor;
-    final podeConferirPorLeitura = origemEcommerce &&
-        state.pedido?.funcionarioId != null &&
-        state.pedido?.situacao == 'em_andamento';
-    // Faturamento automatico de e-commerce (pagamento confirmado) pula direto de em_andamento pra
-    // encerrado, sem passar por Conferir -- pedido pode ter fechado sem ninguem checar os itens
-    // fisicamente. Botao separado pra registrar essa conferencia depois, sem reabrir situacao.
-    final precisaConferenciaRetroativa = state.pedido?.conferidoEm == null &&
-        state.pedido?.situacao != 'em_andamento' &&
-        state.pedido?.situacao != 'cancelado';
-    final podeReenviarEmailEmbalado = origemEcommerce &&
-        state.modalidadeEntrega == 'retirada' &&
-        state.pedido?.conferidoEm != null;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTituloSecao(
-              context,
-              'Ações do pedido',
-              Icons.bolt_outlined,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (state.tipo == 'compra' && state.id != null)
-                  OutlinedButton.icon(
-                    key: const Key('pedido_abrir_contagem_button'),
-                    onPressed: carregando
-                        ? null
-                        : () => Navigator.of(context).pushNamed(
-                              '/pedido_entrada',
-                              arguments: {'pedidoId': state.id},
-                            ),
-                    icon: const Icon(Icons.fact_check_outlined),
-                    label: const Text('Abrir contagem'),
-                  ),
-                if (semVendedor)
-                  FilledButton.icon(
-                    onPressed:
-                        carregando ? null : () => _assumirPedido(context),
-                    icon: const Icon(Icons.assignment_ind_outlined),
-                    label: const Text('Assumir pedido'),
-                  ),
-                if (podeConferirPorLeitura)
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => _abrirConferenciaPorLeitura(context),
-                    icon: const Icon(Icons.qr_code_scanner_outlined),
-                    label: const Text('Conferir por leitura'),
-                  ),
-                if (exigeConferencia)
-                  FilledButton.icon(
-                    onPressed: carregando || !podeConferirOuFaturar
-                        ? null
-                        : () {
-                            context.read<PedidoBloc>().add(
-                                  PedidoConferiu(),
-                                );
-                          },
-                    icon: const Icon(Icons.fact_check),
-                    label: const Text('Conferir'),
-                  ),
-                if (precisaConferenciaRetroativa)
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () {
-                            context.read<PedidoBloc>().add(
-                                  PedidoMarcouConferido(),
-                                );
-                          },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.deepOrange,
-                      side: const BorderSide(color: Colors.deepOrange),
-                    ),
-                    icon: const Icon(Icons.fact_check_outlined),
-                    label: const Text('Marcar como conferido'),
-                  ),
-                Tooltip(
-                  message: podeFechar ? '' : state.motivoNaoPodeFechar,
-                  child: FilledButton.icon(
-                    onPressed:
-                        carregando || !podeFechar || !podeConferirOuFaturar
-                            ? null
-                            : () {
-                                context.read<PedidoBloc>().add(
-                                      PedidoFaturou(),
-                                    );
-                              },
-                    icon: const Icon(Icons.point_of_sale),
-                    label: const Text('Faturar'),
-                  ),
-                ),
-                if (state.modalidadeEntrega == 'entrega')
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => _imprimirNotaEntregaDoPedido(context, state),
-                    icon: const Icon(Icons.local_shipping_outlined),
-                    label: const Text('Imprimir nota de entrega'),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: carregando
-                      ? null
-                      : () => _imprimirNotaConferenciaDoPedido(context, state),
-                  icon: const Icon(Icons.fact_check_outlined),
-                  label: const Text('Imprimir nota de conferência'),
-                ),
-                if (state.pedido?.romaneioId != null)
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => Navigator.of(context).pushNamed(
-                              '/romaneio',
-                              arguments: {
-                                'idRomaneio': state.pedido!.romaneioId,
-                                'permitirEdicao': false,
-                              },
-                            ),
-                    icon: const Icon(Icons.receipt_long_outlined),
-                    label: const Text('Ver romaneio'),
-                  ),
-                if (state.modalidadeEntrega == 'entrega' &&
-                    state.pedido?.situacaoEntrega == 'aguardando_chamada')
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () =>
-                            context.read<PedidoBloc>().add(PedidoEmbalou()),
-                    icon: const Icon(Icons.inventory_2_outlined),
-                    label: const Text('Marcar embalado'),
-                  ),
-                if (state.modalidadeEntrega == 'entrega' &&
-                    state.pedido?.situacaoEntrega == 'embalado')
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => context
-                            .read<PedidoBloc>()
-                            .add(PedidoEntregadorChamou()),
-                    icon: const Icon(Icons.delivery_dining),
-                    label: const Text('Chamar entregador'),
-                  ),
-                if (state.modalidadeEntrega == 'entrega' &&
-                    state.pedido?.situacaoEntrega == 'chamado')
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => context
-                            .read<PedidoBloc>()
-                            .add(PedidoEntregaConfirmou()),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Confirmar entrega'),
-                  ),
-                if (state.modalidadeEntrega == 'retirada' &&
-                    state.pedido?.situacao == 'encerrado' &&
-                    state.pedido?.retiradoEm == null)
-                  OutlinedButton.icon(
-                    onPressed: carregando
-                        ? null
-                        : () => _confirmarRetiradaPedido(context),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Confirmar retirada'),
-                  ),
-                if (podeReenviarEmailEmbalado)
-                  OutlinedButton.icon(
-                    onPressed: carregando || _reenviandoEmailEmbalado
-                        ? null
-                        : () => _reenviarEmailEmbalado(context, state.id!),
-                    icon: _reenviandoEmailEmbalado
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.mail_outline),
-                    label: const Text('Reenviar e-mail (pronto pra retirada)'),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: carregando ? null : () => _cancelarPedido(context),
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancelar'),
-                ),
-              ],
-            ),
-            if (state.pedido?.situacao != null) ...[
-              const SizedBox(height: 8),
-              Text('Situação atual: ${state.pedido?.situacao}'),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConverterEntregaCard(BuildContext context, bool carregando) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTituloSecao(
-              context,
-              'Converter em entrega',
-              Icons.change_circle_outlined,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pedido encerrado como retirada. Se o cliente pedir entrega '
-              'depois, gere um pedido complemento com a taxa de entrega.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed:
-                  carregando ? null : () => _abrirConverterEmEntrega(context),
-              icon: const Icon(Icons.local_shipping_outlined),
-              label: const Text('Converter em entrega'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -2831,50 +3031,5 @@ class _PedidoPageState extends State<PedidoPage> {
             valorTaxaEntrega: valorTaxaEntrega,
           ),
         );
-  }
-}
-
-const _etapasPedido = ['em_andamento', 'conferido', 'faturado', 'encerrado'];
-const _labelsEtapasPedido = ['Em andamento', 'Conferido', 'Faturado', 'Encerrado'];
-
-class _TrilhaDeEtapas extends StatelessWidget {
-  final String? situacaoAtual;
-
-  const _TrilhaDeEtapas({required this.situacaoAtual});
-
-  @override
-  Widget build(BuildContext context) {
-    final cores = context.sivColors;
-    final textos = context.sivTextos;
-    final indiceAtual = _etapasPedido.indexOf(situacaoAtual ?? '');
-
-    return Row(
-      children: List.generate(_etapasPedido.length, (indice) {
-        final atingida = indiceAtual >= 0 && indice <= indiceAtual;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: indice == 0 ? 0 : 4,
-              right: indice == _etapasPedido.length - 1 ? 0 : 4,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  height: 3,
-                  color: atingida ? cores.aco : cores.hairline,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _labelsEtapasPedido[indice].toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: textos.rotulo.copyWith(fontSize: 11, letterSpacing: 1.1),
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
-    );
   }
 }

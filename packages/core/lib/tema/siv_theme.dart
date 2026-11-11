@@ -430,6 +430,18 @@ class SivTheme {
         labelLarge: textos.rotulo,
       ),
       dividerColor: cores.hairline,
+      // Barra de scroll: o padrão do Material some sobre o `papel`; usa o aço do tema.
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (estados) => estados.contains(WidgetState.hovered) ||
+                  estados.contains(WidgetState.dragged)
+              ? cores.acoEscuro
+              : cores.acoProfundo,
+        ),
+        trackColor: WidgetStatePropertyAll(cores.hairline),
+        thickness: const WidgetStatePropertyAll(10),
+        radius: const Radius.circular(SivDimensoes.raio),
+      ),
       cardTheme: CardThemeData(
         color: cores.superficie,
         elevation: 0,

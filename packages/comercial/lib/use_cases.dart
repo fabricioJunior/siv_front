@@ -40,6 +40,7 @@ export 'domain/use_cases/confirmar_entrega_pedido.dart';
 export 'domain/use_cases/embalar_pedido.dart';
 export 'domain/use_cases/confirmar_retirada_pedido.dart';
 export 'domain/use_cases/confirmar_retirada_lote_pedido.dart';
+export 'domain/use_cases/listar_retirada_pendentes_pedido.dart';
 export 'domain/use_cases/criar_taxa_entrega_pedido.dart';
 export 'domain/use_cases/listar_eventos_pedido.dart';
 export 'domain/use_cases/listar_itens_pedido.dart';

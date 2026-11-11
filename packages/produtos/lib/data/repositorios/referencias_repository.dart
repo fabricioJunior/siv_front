@@ -18,6 +18,16 @@ class ReferenciasRepository implements IReferenciasRepository {
   }
 
   @override
+  Future<double?> obterCusto({required int id}) {
+    return referenciasRemoteDataSource.fetchCusto(id: id);
+  }
+
+  @override
+  Future<void> salvarCusto({required int id, double? custo}) {
+    return referenciasRemoteDataSource.updateCusto(id: id, custo: custo);
+  }
+
+  @override
   Future<Referencia> atualizarReferencia({
     required int id,
     required String nome,
@@ -31,6 +41,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) {
     return referenciasRemoteDataSource.atualizarReferencia(
       id: id,
@@ -45,6 +56,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 
@@ -52,7 +64,7 @@ class ReferenciasRepository implements IReferenciasRepository {
   Future<Referencia> criarReferencia({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -62,6 +74,7 @@ class ReferenciasRepository implements IReferenciasRepository {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) {
     return referenciasRemoteDataSource.createReferencia(
       id: id,
@@ -76,6 +89,7 @@ class ReferenciasRepository implements IReferenciasRepository {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 

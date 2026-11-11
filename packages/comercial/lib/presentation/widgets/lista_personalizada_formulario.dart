@@ -173,7 +173,7 @@ class _ListaPersonalizadaFormularioState
               if (iconeAtual != null && widget.iconeNovoNome == null)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: CircleAvatar(backgroundImage: NetworkImage(iconeAtual)),
+                  child: CircleAvatar(backgroundImage: ResizeImage(NetworkImage(iconeAtual), width: 120)),
                 ),
               Expanded(
                 child: OutlinedButton.icon(

@@ -28,13 +28,16 @@ class IndexedDbStoreSpec {
 // (busca de texto sem full-scan). Registros gravados antes da v2 não têm
 // esse campo -- ficam fora da busca indexada até o próximo sync regravar o
 // produto, best-effort (ver `ProdutoEstoqueHiveDto.fromStorage`).
-const indexedDbSchemaVersion = 2;
+// v3: store `core_LeiturasEntradaHiveDto` (cópia local das leituras da
+// conferência de entrada). Store novo só é criado com bump de versão.
+const indexedDbSchemaVersion = 3;
 
 const indexedDbStores = <IndexedDbStoreSpec>[
   // core
   IndexedDbStoreSpec(storeName: 'core_ProdutoCompartilhadoHiveDto'),
   IndexedDbStoreSpec(storeName: 'core_ListaDeProdutosCompartilhadaHiveDto'),
   IndexedDbStoreSpec(storeName: 'core_PaginacaoHiveDto'),
+  IndexedDbStoreSpec(storeName: 'core_LeiturasEntradaHiveDto'),
   // precos
   IndexedDbStoreSpec(storeName: 'precos_TabelaDePrecoHiveDto'),
   IndexedDbStoreSpec(

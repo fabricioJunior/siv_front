@@ -3,6 +3,7 @@ import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
+import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,10 @@ class PassoAssociar extends StatefulWidget {
 class _PassoAssociarState extends State<PassoAssociar> {
   int _totalVisto = 0;
 
+  /// descrição -> "REF 41433 · criada agora": só aparece quando o grupo já
+  /// saiu da lista (associação aceita pelo servidor).
+  final _associados = <String, String>{};
+
   Map<String, List<ContagemLivre>> get _grupos {
     final g = <String, List<ContagemLivre>>{};
     for (final c in widget.resumo.livresSemReferencia) {
@@ -47,6 +52,9 @@ class _PassoAssociarState extends State<PassoAssociar> {
     }
     return g;
   }
+
+  bool get _podeCadastrarVariacao =>
+      PermissaoPorNome.acessoPermitido('PRDFM008');
 
   void _cadastrar(List<ContagemLivre> itens) =>
       context.read<PedidoEntradaBloc>().add(
@@ -88,6 +96,15 @@ class _PassoAssociarState extends State<PassoAssociar> {
                     style: textos.rotulo.copyWith(color: cores.textoApoio),
                   ),
                 ),
+              for (final e in _associados.entries)
+                if (!grupos.containsKey(e.key))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text('✓ ${e.key} → ${e.value}',
+                        key: Key('associado_${e.key}'),
+                        style: textos.apoio
+                            .copyWith(color: cores.conferidoTexto)),
+                  ),
               if (variacoes.isNotEmpty) ...[
                 Text('VARIAÇÕES NOVAS · cadastrar',
                     key: const Key('secao_variacoes_novas'),
@@ -99,6 +116,7 @@ class _PassoAssociarState extends State<PassoAssociar> {
                     referenciaId: e.key,
                     itens: e.value,
                     salvando: widget.salvando,
+                    permitido: _podeCadastrarVariacao,
                     onCadastrar: () => _cadastrar(e.value),
                   ),
                 if (variacoes.length >= 2)
@@ -108,7 +126,7 @@ class _PassoAssociarState extends State<PassoAssociar> {
                       height: alturaBotaoPrincipal,
                       child: OutlinedButton(
                         key: const Key('cadastrar_todas_variacoes'),
-                        onPressed: widget.salvando
+                        onPressed: widget.salvando || !_podeCadastrarVariacao
                             ? null
                             : () => _cadastrar(
                                   [for (final v in variacoes.values) ...v],
@@ -129,6 +147,8 @@ class _PassoAssociarState extends State<PassoAssociar> {
                   itens: e.value,
                   salvando: widget.salvando,
                   seletores: widget.seletores,
+                  onAssociou: (ref, criada) => _associados[e.key] =
+                      'REF $ref · ${criada ? 'criada agora' : 'associada'}',
                 ),
             ],
           ),
@@ -157,6 +177,7 @@ class _GrupoVariacao extends StatelessWidget {
   final int referenciaId;
   final List<ContagemLivre> itens;
   final bool salvando;
+  final bool permitido;
   final VoidCallback onCadastrar;
 
   const _GrupoVariacao({
@@ -164,6 +185,7 @@ class _GrupoVariacao extends StatelessWidget {
     required this.referenciaId,
     required this.itens,
     required this.salvando,
+    required this.permitido,
     required this.onCadastrar,
   });
 
@@ -192,7 +214,11 @@ class _GrupoVariacao extends StatelessWidget {
               style: textos.corpo,
             ),
           const SizedBox(height: 4),
-          Text('Esta cor/tamanho ainda não existe para a referência.',
+          Text(
+              permitido
+                  ? 'Esta cor/tamanho ainda não existe para a referência.'
+                  : 'Sem permissão para cadastrar variação (cor/tamanho novo).',
+              key: permitido ? null : const Key('sem_permissao_variacao'),
               style: textos.apoio.copyWith(color: cores.parcialTexto)),
           const SizedBox(height: 12),
           BotaoPrincipalEntrada(
@@ -200,7 +226,7 @@ class _GrupoVariacao extends StatelessWidget {
             rotulo: itens.length > 1
                 ? 'CADASTRAR ${itens.length} VARIAÇÕES'
                 : 'CADASTRAR VARIAÇÃO',
-            onPressed: salvando ? null : onCadastrar,
+            onPressed: salvando || !permitido ? null : onCadastrar,
           ),
         ],
       ),
@@ -213,6 +239,7 @@ class _GrupoAssociar extends StatefulWidget {
   final List<ContagemLivre> itens;
   final bool salvando;
   final SeletoresEntrada seletores;
+  final void Function(int referenciaId, bool criada) onAssociou;
 
   const _GrupoAssociar({
     super.key,
@@ -220,6 +247,7 @@ class _GrupoAssociar extends StatefulWidget {
     required this.itens,
     required this.salvando,
     required this.seletores,
+    required this.onAssociou,
   });
 
   @override
@@ -228,13 +256,19 @@ class _GrupoAssociar extends StatefulWidget {
 
 class _GrupoAssociarState extends State<_GrupoAssociar> {
   bool _criar = false;
+  bool _naoCadastrada = false;
   int? _referenciaId;
+  final bool _podeCriar = PermissaoPorNome.acessoPermitido('PRDFM003');
 
-  void _associar([int? referenciaId]) {
+  void _associar([int? criadaId]) {
+    final ref = criadaId ?? _referenciaId;
+    if (ref != null) widget.onAssociou(ref, criadaId != null);
+    setState(() => _naoCadastrada = false);
     context.read<PedidoEntradaBloc>().add(
           PedidoEntradaAssociouContagemLivre(
             [for (final c in widget.itens) c.id],
-            referenciaId: referenciaId ?? _referenciaId,
+            referenciaId: ref,
+            descricao: widget.descricao,
           ),
         );
   }
@@ -243,16 +277,65 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
   /// já com o nome e as cores/tamanhos contados; ao voltar com o id da
   /// referência criada, associa o grupo a ela.
   Future<void> _criarReferencia() async {
-    final id = await Navigator.of(context).pushNamed<int>(
+    // Sem type arg: o onGenerateRoute cria MaterialPageRoute<dynamic> e o cast quebra.
+    final fornecedor = context.read<PedidoEntradaBloc>().state.resumo?.fornecedor;
+    final id = await Navigator.of(context).pushNamed(
       '/referencia_cadastro',
       arguments: {
         'nome': widget.descricao,
+        'fornecedorId': fornecedor?.id,
+        'fornecedorNome': fornecedor?.nome,
         'corIds': widget.itens.map((c) => c.corId).toSet().toList(),
         'tamanhoIds': widget.itens.map((c) => c.tamanhoId).toSet().toList(),
       },
     );
-    if (id != null && mounted) _associar(id);
+    if (!mounted) return;
+    if (id is int) {
+      _associar(id);
+    } else {
+      setState(() => _naoCadastrada = true);
+    }
   }
+
+  Widget _avisoNaoCadastrada(SivTextStyles textos, SivColors cores) =>
+      Container(
+        key: Key('aviso_nao_cadastrada_${widget.descricao}'),
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: cores.parcialFundo,
+          border: Border.all(color: cores.parcialBorda),
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Referência não cadastrada. “${widget.descricao}” continua sem '
+              'referência e não foi associado.',
+              style: textos.apoio.copyWith(color: cores.parcialTexto),
+            ),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  key: const Key('aviso_tentar_de_novo'),
+                  onPressed: widget.salvando ? null : _criarReferencia,
+                  child: const Text('TENTAR DE NOVO'),
+                ),
+                TextButton(
+                  key: const Key('aviso_usar_existente'),
+                  onPressed: () => setState(() {
+                    _criar = false;
+                    _naoCadastrada = false;
+                  }),
+                  child: const Text('Usar referência existente'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -284,13 +367,28 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
             style: const ButtonStyle(
               minimumSize: WidgetStatePropertyAll(Size(0, 44)),
             ),
-            segments: const [
-              ButtonSegment(value: false, label: Text('Usar referência existente')),
-              ButtonSegment(value: true, label: Text('Criar referência nova')),
+            segments: [
+              const ButtonSegment(
+                  value: false, label: Text('Usar referência existente')),
+              ButtonSegment(
+                  value: true,
+                  enabled: _podeCriar,
+                  label: const Text('Criar referência nova')),
             ],
-            selected: {_criar},
-            onSelectionChanged: (v) => setState(() => _criar = v.first),
+            selected: {_criar && _podeCriar},
+            onSelectionChanged: (v) => setState(() {
+              _criar = v.first;
+              _naoCadastrada = false;
+            }),
           ),
+          if (_naoCadastrada) _avisoNaoCadastrada(textos, cores),
+          if (!_podeCriar)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Sem permissão para cadastrar referência',
+                  key: const Key('sem_permissao_referencia'),
+                  style: textos.apoio),
+            ),
           const SizedBox(height: 12),
           if (!_criar)
             widget.seletores.referenciaContagemSeletor(

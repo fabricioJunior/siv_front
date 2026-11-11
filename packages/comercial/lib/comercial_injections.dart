@@ -44,6 +44,10 @@ void _remoteDataSources() {
     () => PedidoEntradaRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IRelatorioPedidosContagemRemoteDataSource>(
+    () => RelatorioPedidosContagemRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IPedidoItemRemoteDataSource>(
     () => PedidoItemRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -83,6 +87,9 @@ void _remoteDataSources() {
   );
   sl.registerFactory<IEcommerceBannersRemoteDataSource>(
     () => EcommerceBannersRemoteDataSource(informacoesParaRequest: sl()),
+  );
+  sl.registerFactory<IEcommerceChavesMcpRemoteDataSource>(
+    () => EcommerceChavesMcpRemoteDataSource(informacoesParaRequest: sl()),
   );
   sl.registerFactory<IListaPersonalizadaRemoteDataSource>(
     () => ListaPersonalizadaRemoteDataSource(informacoesParaRequest: sl()),
@@ -157,6 +164,9 @@ void _repositories() {
   sl.registerFactory<IEcommerceBannersRepository>(
     () => EcommerceBannersRepository(remoteDataSource: sl()),
   );
+  sl.registerFactory<IEcommerceChavesMcpRepository>(
+    () => EcommerceChavesMcpRepository(remoteDataSource: sl()),
+  );
   sl.registerFactory<IListaPersonalizadaRepository>(
     () => ListaPersonalizadaRepository(remoteDataSource: sl()),
   );
@@ -189,7 +199,13 @@ void _useCases() {
   );
   sl.registerFactory<ConferirPedido>(() => ConferirPedido(repository: sl()));
   sl.registerFactory<MarcarConferido>(() => MarcarConferido(repository: sl()));
-  sl.registerFactory<FaturarPedido>(() => FaturarPedido(repository: sl()));
+  sl.registerFactory<FaturarPedido>(
+    () => FaturarPedido(
+      repository: sl(),
+      recuperarCaixaAberto: sl(),
+      sessao: sl(),
+    ),
+  );
   sl.registerFactory<CancelarPedido>(() => CancelarPedido(repository: sl()));
   sl.registerFactory<AdicionarPagamentoPedido>(
     () => AdicionarPagamentoPedido(repository: sl()),
@@ -494,6 +510,13 @@ void _useCases() {
   );
   sl.registerFactory<ExcluirBannerEcommerce>(
     () => ExcluirBannerEcommerce(repository: sl()),
+  );
+  sl.registerFactory<RecuperarChavesMcp>(
+    () => RecuperarChavesMcp(repository: sl()),
+  );
+  sl.registerFactory<CriarChaveMcp>(() => CriarChaveMcp(repository: sl()));
+  sl.registerFactory<RevogarChaveMcp>(
+    () => RevogarChaveMcp(repository: sl()),
   );
 
   sl.registerFactory<CriarListaPersonalizada>(
@@ -809,7 +832,7 @@ void _presentation() {
   );
 
   sl.registerFactory<EcommerceReferenciasBloc>(
-    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl()),
+    () => EcommerceReferenciasBloc(sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<EcommerceReferenciaDetalheBloc>(
@@ -818,6 +841,9 @@ void _presentation() {
 
   sl.registerFactory<EcommerceBannersBloc>(
     () => EcommerceBannersBloc(sl(), sl(), sl(), sl()),
+  );
+  sl.registerFactory<EcommerceChavesMcpBloc>(
+    () => EcommerceChavesMcpBloc(sl(), sl(), sl()),
   );
 
   sl.registerFactory<ListaPersonalizadaBloc>(
@@ -841,6 +867,29 @@ void _presentation() {
     () => CriarEntradaPorContagem(sl()),
   );
   sl.registerFactory<ObterPedidoEntrada>(() => ObterPedidoEntrada(sl()));
+  sl.registerFactory<ObterContagensEmAndamento>(
+    () => ObterContagensEmAndamento(sl()),
+  );
+  sl.registerFactory<ObterRelatorioPedidosContagem>(
+    () => ObterRelatorioPedidosContagem(sl()),
+  );
+  sl.registerFactory<ObterItensPedidoContagem>(
+    () => ObterItensPedidoContagem(sl()),
+  );
+  // Singleton: guarda as categorias já carregadas.
+  sl.registerLazySingleton<ListarCategoriasFiltroContagem>(
+    () => ListarCategoriasFiltroContagem(sl()),
+  );
+  sl.registerFactory<BuscarReferenciasFiltroContagem>(
+    () => BuscarReferenciasFiltroContagem(sl()),
+  );
+  sl.registerFactory<ListarProdutosFiltroContagem>(
+    () => ListarProdutosFiltroContagem(sl()),
+  );
+  sl.registerFactory<RelatorioPedidosContagemCubit>(
+    () => RelatorioPedidosContagemCubit(sl(), sl(), sl(), sl(), sl()),
+  );
+  sl.registerFactory<ObterEsperadasEntrada>(() => ObterEsperadasEntrada(sl()));
   sl.registerFactory<VincularLinhaEntrada>(() => VincularLinhaEntrada(sl()));
   sl.registerFactory<PreCadastrarLinhaEntrada>(
     () => PreCadastrarLinhaEntrada(sl()),
@@ -871,10 +920,27 @@ void _presentation() {
     () => RegistrarLeiturasEntrada(sl()),
   );
   sl.registerFactory<FaturarEntrada>(() => FaturarEntrada(sl(), sl()));
+  // Singletons: o cache de leitura vive no use case (e o Criar* o atualiza).
+  sl.registerLazySingleton<RecuperarCoresDeProdutos>(
+    () => RecuperarCoresDeProdutos(sl()),
+  );
+  sl.registerLazySingleton<RecuperarEstampasDeProdutos>(
+    () => RecuperarEstampasDeProdutos(sl()),
+  );
+  sl.registerLazySingleton<RecuperarTamanhosDeProdutos>(
+    () => RecuperarTamanhosDeProdutos(sl()),
+  );
+  sl.registerFactory<CriarCorDeProdutos>(() => CriarCorDeProdutos(sl(), sl()));
+  sl.registerFactory<CriarEstampaDeProdutos>(
+    () => CriarEstampaDeProdutos(sl(), sl()),
+  );
+  sl.registerFactory<VariacoesProdutoBloc>(
+    () => VariacoesProdutoBloc(sl(), sl(), sl(), sl(), sl()),
+  );
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
       sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //
-      sl(), sl(), sl(), sl(), sl(), sl(),
+      sl(), sl(), sl(), sl(), sl(), sl(), sl(),
     ),
   );
 

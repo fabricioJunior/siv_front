@@ -55,7 +55,7 @@ class SyncModuloState extends Equatable {
   String get nomeModulo {
     switch (modulo) {
       case SyncModulo.codigos:
-        return 'Codigos';
+        return 'Códigos';
       case SyncModulo.estoque:
         return 'Estoque';
       case SyncModulo.tabelasDePreco:

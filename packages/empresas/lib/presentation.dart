@@ -12,3 +12,4 @@ export 'presentation/pages/empresa_nota_fiscal_email_page.dart';
 export 'presentation/pages/integracao_meta_page.dart';
 export 'presentation/widgets/empresa_credito_devolucao_card.dart';
 export 'presentation/widgets/empresa_descontos_fidelidade_card.dart';
+export 'presentation/pages/integracoes_pagamento_page.dart';

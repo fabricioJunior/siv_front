@@ -84,7 +84,9 @@ class GiroTabela extends StatelessWidget {
   List<_Col> get _colunas => switch (aba) {
         AbaGiro.ranking => _colRanking,
         AbaGiro.reposicao => _colReposicao,
-        AbaGiro.parado => _colParado,
+        AbaGiro.parado => pagina.custoVisivel
+            ? _colParado
+            : _colParado.where((c) => c.chave != 'valorParado').toList(),
       };
 
   @override
@@ -131,7 +133,7 @@ class GiroTabela extends StatelessWidget {
             onTap: () => onExpandir(l.referenciaId),
           ),
         AbaGiro.reposicao => _LinhaReposicao(l),
-        AbaGiro.parado => _LinhaParado(l),
+        AbaGiro.parado => _LinhaParado(l, pagina.custoVisivel),
       };
 }
 
@@ -477,7 +479,8 @@ class _LinhaReposicao extends StatelessWidget {
 
 class _LinhaParado extends StatelessWidget {
   final GiroEstoqueLinha l;
-  const _LinhaParado(this.l);
+  final bool custoVisivel;
+  const _LinhaParado(this.l, this.custoVisivel);
 
   @override
   Widget build(BuildContext context) => Container(
@@ -494,14 +497,15 @@ class _LinhaParado extends StatelessWidget {
           (70, _num(context, '${l.estoque}')),
           (130, _pctBarra(context, l, casas: 1)),
           (112, Align(alignment: Alignment.centerLeft, child: GiroTag(l.classificacao))),
-          (
-            130,
-            Text(
-              fmtMoeda(l.valorParado),
-              textAlign: TextAlign.right,
-              style: giroNumero(context, 17, cor: giroErro),
+          if (custoVisivel)
+            (
+              130,
+              Text(
+                fmtMoeda(l.valorParado),
+                textAlign: TextAlign.right,
+                style: giroNumero(context, 17, cor: giroErro),
+              ),
             ),
-          ),
         ]),
       );
 }

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/imagens.dart';
 import 'package:core/remote_data_sourcers.dart';
+import 'package:core/seletores/i_seletor.dart';
 import 'package:produtos/domain/gerar_nome_de_referencia.dart';
 import 'package:produtos/models.dart';
 import 'package:produtos/presentantion/blocs/precos_da_referencia_bloc/precos_da_referencia_bloc.dart'
@@ -21,8 +23,10 @@ class ReferenciaCadastroBloc
   final RecuperarSubCategorias _recuperarSubCategorias;
   final CriarReferencia _criarReferencia;
   final RecuperarProximoIdReferencia _recuperarProximoId;
+  final SalvarCustoReferencia _salvarCusto;
   final ListarPrecosDaReferenciaPorTabela _listarPrecos;
   final SalvarPrecoDaReferencia _salvarPreco;
+  final CriarReferenciaMidia _criarMidia;
 
   String? _nomeInicial;
 
@@ -31,8 +35,10 @@ class ReferenciaCadastroBloc
     this._recuperarSubCategorias,
     this._criarReferencia,
     this._recuperarProximoId,
+    this._salvarCusto,
     this._listarPrecos,
     this._salvarPreco,
+    this._criarMidia,
   ) : super(const ReferenciaCadastroState()) {
     on<ReferenciaCadastroIniciou>(_onIniciou);
     on<ReferenciaCadastroCategoriaSelecionada>(_onCategoriaSelecionada);
@@ -40,12 +46,30 @@ class ReferenciaCadastroBloc
     on<ReferenciaCadastroNomeAlterado>(
       (e, emit) => emit(state.copyWith(nome: e.nome)),
     );
-    on<ReferenciaCadastroGerarNome>(
-      (e, emit) => emit(
+    on<ReferenciaCadastroGerarNome>((e, emit) {
+      final categoria = state.categoria;
+      if (categoria == null) return;
+      emit(
         state.copyWith(
-          nome: gerarNomeDeReferencia(state.categoria!, state.subCategoria),
+          nome: gerarNomeDeReferencia(categoria, state.subCategoria),
         ),
-      ),
+      );
+    });
+    on<ReferenciaCadastroPular>(_onPular);
+    on<ReferenciaCadastroFornecedorAlterado>(
+      (e, emit) => emit(state.copyWith(fornecedor: () => e.fornecedor)),
+    );
+    on<ReferenciaCadastroCodigoFornecedorAlterado>(
+      (e, emit) => emit(state.copyWith(codigoNoFornecedor: e.codigo)),
+    );
+    on<ReferenciaCadastroDefinirNaChegadaAlterado>(
+      (e, emit) => emit(state.copyWith(definirNaChegada: e.definirNaChegada)),
+    );
+    on<ReferenciaCadastroQuantidadeEsperadaAlterada>(
+      (e, emit) => emit(state.copyWith(quantidadeEsperada: e.quantidade)),
+    );
+    on<ReferenciaCadastroFotoFornecedorAlterada>(
+      (e, emit) => emit(state.copyWith(fotoFornecedor: () => e.foto)),
     );
     on<ReferenciaCadastroOpcionaisAlterados>(
       (e, emit) => emit(
@@ -59,6 +83,9 @@ class ReferenciaCadastroBloc
     );
     on<ReferenciaCadastroPrecoAlterado>(
       (e, emit) => emit(state.copyWith(preco: e.preco)),
+    );
+    on<ReferenciaCadastroCustoAlterado>(
+      (e, emit) => emit(state.copyWith(custo: e.custo)),
     );
     on<ReferenciaCadastroProximo>(_onProximo);
     on<ReferenciaCadastroVoltar>(_onVoltar);
@@ -74,7 +101,12 @@ class ReferenciaCadastroBloc
     Emitter<ReferenciaCadastroState> emit,
   ) async {
     final nomeInicial = event.nomeInicial?.trim();
-    _nomeInicial = nomeInicial == null || nomeInicial.isEmpty ? null : nomeInicial;
+    _nomeInicial = nomeInicial == null || nomeInicial.isEmpty
+        ? null
+        : nomeInicial;
+    if (event.fornecedorInicial != null && state.fornecedor == null) {
+      emit(state.copyWith(fornecedor: () => event.fornecedorInicial));
+    }
     try {
       emit(state.copyWith(carregandoCategorias: true));
       final categorias = await _recuperarCategorias.call();
@@ -130,6 +162,35 @@ class ReferenciaCadastroBloc
     }
   }
 
+  /// Categoria e subcategoria são opcionais: pular segue pro nome.
+  void _onPular(
+    ReferenciaCadastroPular event,
+    Emitter<ReferenciaCadastroState> emit,
+  ) {
+    switch (state.step) {
+      case ReferenciaCadastroStep.categoria:
+        emit(
+          state.copyWith(
+            categoria: () => null,
+            subCategoria: () => null,
+            subCategorias: const [],
+            nome: _nomeInicial ?? '',
+            step: ReferenciaCadastroStep.nome,
+          ),
+        );
+      case ReferenciaCadastroStep.subCategoria:
+        emit(
+          state.copyWith(
+            subCategoria: () => null,
+            nome: _nomeInicial ?? state.categoria?.nome,
+            step: ReferenciaCadastroStep.nome,
+          ),
+        );
+      default:
+        return;
+    }
+  }
+
   FutureOr<void> _onSubCategoriaSelecionada(
     ReferenciaCadastroSubCategoriaSelecionada event,
     Emitter<ReferenciaCadastroState> emit,
@@ -173,9 +234,9 @@ class ReferenciaCadastroBloc
       if (id == null) {
         id = await _recuperarProximoId.call();
         final subCategoria = state.subCategoria;
-        final categoria = state.categoria!;
+        final categoria = state.categoria;
         await _criarReferencia.call(
-          categoriaId: categoria.id!,
+          categoriaId: categoria?.id,
           subCategoriaId: subCategoria?.id,
           id: id,
           nome: state.nome.trim(),
@@ -183,8 +244,10 @@ class ReferenciaCadastroBloc
           descricao: _opcional(state.descricao),
           composicao: _opcional(state.composicao),
           cuidados: _opcional(state.cuidados),
-          ncm: subCategoria?.ncm ?? categoria.ncm,
-          pesoGramas: subCategoria?.pesoGramas ?? categoria.pesoGramas,
+          ncm: subCategoria?.ncm ?? categoria?.ncm,
+          pesoGramas: subCategoria?.pesoGramas ?? categoria?.pesoGramas,
+          idExterno: _opcional(state.codigoNoFornecedor),
+          espera: _espera(),
         );
         emit(state.copyWith(referenciaId: id));
       }
@@ -196,8 +259,29 @@ class ReferenciaCadastroBloc
         valor: valor,
         precoJaExiste: padrao.temPreco,
       );
+      String? aviso;
+      final custo = parseValor(state.custo);
+      if (custo != null) {
+        try {
+          await _salvarCusto.call(id: id, custo: custo);
+        } catch (e, s) {
+          aviso =
+              'Referência criada, mas o custo não foi salvo. Informe-o na tela da referência.';
+          addError(e, s);
+        }
+      }
+      if (state.definirNaChegada) {
+        aviso = await _enviarFotoDoFornecedor(id) ?? aviso;
+      }
       emit(
-        state.copyWith(salvando: false, step: ReferenciaCadastroStep.variacoes),
+        state.copyWith(
+          salvando: false,
+          // "Definir na chegada": a referência fica sem variações.
+          step: state.definirNaChegada
+              ? ReferenciaCadastroStep.concluido
+              : ReferenciaCadastroStep.variacoes,
+          mensagem: aviso,
+        ),
       );
     } catch (e, s) {
       emit(
@@ -244,12 +328,56 @@ class ReferenciaCadastroBloc
         categoria: manter ? state.categoria : null,
         subCategorias: manter ? state.subCategorias : const [],
         subCategoria: manter ? state.subCategoria : null,
-        nome: manter ? (state.subCategoria?.nome ?? state.categoria!.nome) : '',
+        nome: manter
+            ? (state.subCategoria?.nome ?? state.categoria?.nome ?? '')
+            : '',
         step: manter
             ? ReferenciaCadastroStep.nome
             : ReferenciaCadastroStep.categoria,
       ),
     );
+  }
+
+  /// Fornecedor e quantidade esperada só vão quando há o que enviar.
+  EsperaReferencia? _espera() {
+    final quantidade = state.definirNaChegada
+        ? int.tryParse(state.quantidadeEsperada.trim())
+        : null;
+    final fornecedorId = state.fornecedor?.id;
+    if (fornecedorId == null && quantidade == null) return null;
+    return EsperaReferencia(
+      fornecedorId: fornecedorId,
+      quantidadeEsperada: quantidade != null && quantidade > 0
+          ? quantidade
+          : null,
+    );
+  }
+
+  /// A foto do fornecedor é de uso interno (origem 'fornecedor'): nunca vai
+  /// para o site. Falhar aqui não desfaz a criação; devolve o aviso.
+  Future<String?> _enviarFotoDoFornecedor(int referenciaId) async {
+    final foto = state.fotoFornecedor;
+    final bytes = foto?.bytes;
+    if (foto == null || bytes == null) return null;
+    try {
+      await _criarMidia.call(
+        bytes: bytes,
+        fileName: foto.path?.split('/').last ?? 'foto-fornecedor.jpg',
+        referenciaId: referenciaId,
+        ePrincipal: false,
+        ePublica: false,
+        tipo: TipoReferenciaMidia.imagem,
+        field: foto.field ?? 'file',
+        descricao: 'Foto do fornecedor',
+        cor: null,
+        tamanho: null,
+        origem: 'fornecedor',
+      );
+      return null;
+    } catch (e, s) {
+      addError(e, s);
+      return 'Referência criada, mas a foto do fornecedor não foi enviada. Adicione-a na tela da referência.';
+    }
   }
 
   String? _opcional(String v) => v.trim().isEmpty ? null : v.trim();

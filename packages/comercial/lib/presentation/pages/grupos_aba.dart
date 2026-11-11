@@ -93,7 +93,7 @@ class _GruposAbaState extends State<GruposAba> {
                           ? const CircleAvatar(
                               child: Icon(Icons.folder_outlined))
                           : CircleAvatar(
-                              backgroundImage: NetworkImage(g.icone!)),
+                              backgroundImage: ResizeImage(NetworkImage(g.icone!), width: 120)),
                       title: Text(g.nome),
                       subtitle: g.descricao?.isNotEmpty == true
                           ? Text(g.descricao!,

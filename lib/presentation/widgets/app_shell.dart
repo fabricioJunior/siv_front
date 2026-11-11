@@ -5,15 +5,20 @@ import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
+import 'package:core/versao.dart';
 import 'package:estoque/presentation.dart' show estoqueAcordeaoItens;
 import 'package:financeiro/presentation.dart' show despesasAcordeaoItens;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:importacao/models.dart' show ImportacaoEtapa;
+import 'package:notificacoes/notificacoes.dart';
 import 'package:siv_front/presentation/acesso_importacao.dart';
 import 'package:siv_front/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:siv_front/presentation/pages/administracao_menu_page.dart'
     show administracaoAcordeaoItens;
+import 'package:siv_front/presentation/pages/sync/sync_status_icone.dart'
+    show SyncPontoMenu;
+import 'package:siv_front/presentation/widgets/botao_sincronizar_menu.dart';
 import 'package:siv_front/presentation/pages/relatorios_menu_page.dart'
     show relatoriosAcordeaoItens;
 
@@ -122,6 +127,7 @@ class _ItemDeNavegacao {
   final String? rota;
   final List<String> componentesNecessarios;
   final List<_ItemFilhoNav> filhos;
+  final Widget? trailing;
 
   const _ItemDeNavegacao({
     required this.label,
@@ -129,6 +135,7 @@ class _ItemDeNavegacao {
     this.rota,
     this.componentesNecessarios = const [],
     this.filhos = const [],
+    this.trailing,
   });
 
   /// Chave estável de seleção/expansão -- a própria rota quando existe,
@@ -211,6 +218,12 @@ final _itensProdutosFilhos = <_ItemFilhoNav>[
     label: 'Imprimir etiquetas',
     rota: '/impressao_etiquetas',
     componentesNecessarios: ['PRDFM003'],
+    grupo: 'ETIQUETAS',
+  ),
+  const _ItemFilhoNav(
+    label: 'Etiqueta de promoção',
+    rota: '/etiquetas_promocao',
+    componentesNecessarios: ['PRDFM012'],
     grupo: 'ETIQUETAS',
   ),
   const _ItemFilhoNav(
@@ -352,6 +365,7 @@ final _itensSistema = <_ItemDeNavegacao>[
     label: 'Sincronização',
     icone: Icons.sync,
     rota: '/sincronizacao',
+    trailing: SyncPontoMenu(),
   ),
 ];
 
@@ -512,6 +526,7 @@ class _AppShellCascaState extends State<_AppShellCasca> {
       label: item.label,
       icone: item.icone,
       selecionado: item.rota == widget.rotaAtual,
+      trailing: item.trailing,
       onTap: item.rota == widget.rotaAtual
           ? null
           : () => widget.navigatorKey.currentState?.pushNamed(item.rota!),
@@ -658,9 +673,20 @@ class _BarraTituloInfo extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 120) {
-            return _StatusCaixaCompacto(
-              appState: appState,
-              caixaAberto: caixaAberto,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusCaixaCompacto(
+                  appState: appState,
+                  caixaAberto: caixaAberto,
+                ),
+                SinoNotificacoes(
+                  bloc: sl<NotificacoesBloc>(),
+                  navigatorKey: navigatorKey,
+                  compacto: true,
+                ),
+                const BotaoSincronizarMenu(compacto: true),
+              ],
             );
           }
 
@@ -688,6 +714,11 @@ class _BarraTituloInfo extends StatelessWidget {
                         'Selecionar terminal',
                     onTap: () => _trocarTerminal(context),
                   ),
+                SinoNotificacoes(
+                  bloc: sl<NotificacoesBloc>(),
+                  navigatorKey: navigatorKey,
+                ),
+                const BotaoSincronizarMenu(),
                 _LinhaInfoMenu(
                   pontoStatus: caixaAberto
                       ? _corCaixaAberto
@@ -709,6 +740,7 @@ class _BarraTituloInfo extends StatelessWidget {
                           ),
                         ),
                 ),
+                const _VersaoDoApp(),
               ],
             ),
           );
@@ -893,9 +925,12 @@ class _StatusCaixaCompacto extends StatelessWidget {
     final status = caixaAberto
         ? 'Caixa #${appState.caixaIdDaSessao} aberto'
         : 'Caixa fechado';
+    // Dispara a leitura da versão (cacheada); no rail ela só aparece no tooltip.
+    _VersaoApp.futuro;
+    final versao = _VersaoApp.atual ?? '';
 
     return Tooltip(
-      message: [empresa, ?terminal, status].join(' · '),
+      message: [empresa, ?terminal, status, if (versao.isNotEmpty) versao].join(' · '),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Center(
@@ -911,6 +946,54 @@ class _StatusCaixaCompacto extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Versão do app lida uma vez (package_info_plus, via AppVersaoService) e reaproveitada.
+class _VersaoApp {
+  static String? atual;
+  static final Future<String> futuro = _carregar();
+
+  static Future<String> _carregar() async {
+    try {
+      atual = await sl<AppVersaoService>().rotulo();
+    } catch (_) {
+      atual = '';
+    }
+    return atual!;
+  }
+}
+
+/// Versão do app, discreta, logo abaixo do status do caixa (menu expandido).
+class _VersaoDoApp extends StatelessWidget {
+  const _VersaoDoApp();
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    return FutureBuilder<String>(
+      future: _VersaoApp.futuro,
+      builder: (context, snapshot) {
+        final versao = snapshot.data ?? '';
+        if (versao.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          key: const Key('app_shell_versao'),
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              versao,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.sivTextos.apoio.copyWith(
+                fontSize: 11,
+                color: cores.textoSobreEscuroTerciario,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

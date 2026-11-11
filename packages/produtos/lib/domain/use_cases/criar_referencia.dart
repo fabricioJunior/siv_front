@@ -10,7 +10,7 @@ class CriarReferencia {
   Future<Referencia> call({
     required int id,
     required String nome,
-    required int categoriaId,
+    int? categoriaId,
     int? subCategoriaId,
     String? idExterno,
     String? unidadeMedida,
@@ -20,6 +20,7 @@ class CriarReferencia {
     String? cuidados,
     String? ncm,
     int? pesoGramas,
+    EsperaReferencia? espera,
   }) async {
     return _referenciasRepository.criarReferencia(
       id: id,
@@ -34,6 +35,7 @@ class CriarReferencia {
       cuidados: cuidados,
       ncm: ncm,
       pesoGramas: pesoGramas,
+      espera: espera,
     );
   }
 }

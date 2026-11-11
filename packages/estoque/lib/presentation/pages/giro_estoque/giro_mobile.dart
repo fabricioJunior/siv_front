@@ -137,6 +137,7 @@ class GiroCardsMobile extends StatelessWidget {
           child: _Card(
             linha: l,
             aba: aba,
+            custoVisivel: pagina.custoVisivel,
             expansivel: aba == AbaGiro.ranking &&
                 !visaoVariacao &&
                 l.temVariacoes &&
@@ -167,6 +168,7 @@ class GiroCardsMobile extends StatelessWidget {
 class _Card extends StatelessWidget {
   final GiroEstoqueLinha linha;
   final AbaGiro aba;
+  final bool custoVisivel;
   final bool expansivel;
   final bool aberta;
   final bool carregando;
@@ -175,6 +177,7 @@ class _Card extends StatelessWidget {
   const _Card({
     required this.linha,
     required this.aba,
+    required this.custoVisivel,
     required this.expansivel,
     required this.aberta,
     required this.carregando,
@@ -217,7 +220,7 @@ class _Card extends StatelessWidget {
         return (
           'Entrada ${fmtDia(l.dataEntrada)} · ${diasT(l.diasEmEstoque)}',
           '${l.vendido}/${l.inicial ?? '—'} vendidas',
-          l.valorParado == null ? null : '${fmtMoeda(l.valorParado)} parados em estoque',
+          !custoVisivel || l.valorParado == null ? null : '${fmtMoeda(l.valorParado)} parados em estoque',
           giroErro,
         );
     }

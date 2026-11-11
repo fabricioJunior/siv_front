@@ -13,6 +13,10 @@ class ImagemViewWidget extends StatelessWidget {
   final String cacheKey;
   final bool onlyFromCache;
   final BoxFit fit;
+
+  /// Largura (px) em que a imagem é decodificada. Sem isso, a foto original
+  /// inteira vai pra memória mesmo numa miniatura.
+  final int? cacheWidth;
   final Widget? placeholder;
   final Widget? errorWidget;
 
@@ -22,6 +26,7 @@ class ImagemViewWidget extends StatelessWidget {
     required this.cacheKey,
     this.onlyFromCache = false,
     this.fit = BoxFit.cover,
+    this.cacheWidth,
     this.placeholder,
     this.errorWidget,
   });
@@ -63,11 +68,24 @@ class ImagemViewWidget extends StatelessWidget {
             return errorWidget ?? const Icon(Icons.error);
           }
 
-          return Image.file(file, fit: fit);
+          return Image.file(file, fit: fit, cacheWidth: cacheWidth);
         },
       );
     }
-    return Image(image: _ImageLocalProvider(url, cacheKey));
+    // Sem `fit`, a imagem aparece no tamanho original e cortada pela caixa: foto grande com fundo
+    // branco vira só o canto branco. Também mostra placeholder enquanto baixa e ícone se falhar.
+    final provider = _ImageLocalProvider(url, cacheKey);
+    return Image(
+      image: cacheWidth == null
+          ? provider
+          : ResizeImage(provider, width: cacheWidth),
+      fit: fit,
+      frameBuilder: (context, child, frame, sync) => sync || frame != null
+          ? child
+          : (placeholder ?? const Center(child: CircularProgressIndicator())),
+      errorBuilder: (context, erro, stack) =>
+          errorWidget ?? const Icon(Icons.broken_image_outlined),
+    );
   }
 
   Future<File?> getImageFileFromCache(String cacheKey) async {

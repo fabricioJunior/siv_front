@@ -15,17 +15,18 @@ class LeitorHistoricoRegistro extends Equatable {
   final String cor;
   final int quantidade;
   final int quantidadeAposOperacao;
+  final String? estampa;
 
-  const LeitorHistoricoRegistro({
-    required this.dataHora,
-    required this.tipo,
-    required this.codigoDeBarras,
-    required this.descricao,
-    required this.tamanho,
-    required this.cor,
-    required this.quantidade,
-    required this.quantidadeAposOperacao,
-  });
+  const LeitorHistoricoRegistro(
+      {required this.dataHora,
+      required this.tipo,
+      required this.codigoDeBarras,
+      required this.descricao,
+      required this.tamanho,
+      required this.cor,
+      required this.quantidade,
+      required this.quantidadeAposOperacao,
+      required this.estampa});
 
   @override
   List<Object?> get props => [
@@ -46,6 +47,7 @@ class LeitorItemContado extends Equatable {
   final int idReferencia;
   final String tamanho;
   final String cor;
+  final String estampa;
   final int quantidadeLida;
   final int estoqueDisponivel;
   final double? valorUnitario;
@@ -58,6 +60,7 @@ class LeitorItemContado extends Equatable {
     required this.idReferencia,
     required this.tamanho,
     required this.cor,
+    this.estampa = '',
     required this.quantidadeLida,
     required this.estoqueDisponivel,
     this.valorUnitario,
@@ -72,6 +75,7 @@ class LeitorItemContado extends Equatable {
       idReferencia: data.idReferencia,
       tamanho: data.tamanho,
       cor: data.cor,
+      estampa: data.estampa,
       quantidadeLida: 0,
       estoqueDisponivel: data.quantidade,
       valorUnitario: data.valor,
@@ -86,6 +90,7 @@ class LeitorItemContado extends Equatable {
     int? idReferencia,
     String? tamanho,
     String? cor,
+    String? estampa,
     int? quantidadeLida,
     int? estoqueDisponivel,
     double? valorUnitario,
@@ -97,6 +102,7 @@ class LeitorItemContado extends Equatable {
       idReferencia: idReferencia ?? this.idReferencia,
       tamanho: tamanho ?? this.tamanho,
       cor: cor ?? this.cor,
+      estampa: estampa ?? this.estampa,
       quantidadeLida: quantidadeLida ?? this.quantidadeLida,
       estoqueDisponivel: estoqueDisponivel ?? this.estoqueDisponivel,
       valorUnitario: valorUnitario ?? this.valorUnitario,
@@ -114,6 +120,7 @@ class LeitorItemContado extends Equatable {
         idReferencia,
         tamanho,
         cor,
+        estampa,
         quantidadeLida,
         estoqueDisponivel,
         valorUnitario,

@@ -72,8 +72,9 @@ String _loteT(GiroEstoqueLinha l) =>
 
 /// Colunas (cabeçalho, valor) do arquivo exportado para cada aba.
 List<(String, String Function(GiroEstoqueLinha))> colunasExportacaoGiro(
-  AbaGiro aba,
-) =>
+  AbaGiro aba, {
+  bool custoVisivel = true,
+}) =>
     switch (aba) {
       AbaGiro.ranking => [
           ('#', (l) => l.rank?.toString() ?? '—'),
@@ -112,7 +113,7 @@ List<(String, String Function(GiroEstoqueLinha))> colunasExportacaoGiro(
           ('Estoque', (l) => '${l.estoque}'),
           ('% vendido', (l) => fmtPct(l.pctVendido)),
           ('Giro', (l) => l.classificacao.label),
-          ('Valor parado', (l) => fmtMoeda(l.valorParado)),
+          if (custoVisivel) ('Valor parado', (l) => fmtMoeda(l.valorParado)),
         ],
     };
 

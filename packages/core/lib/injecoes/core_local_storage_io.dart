@@ -4,6 +4,9 @@ import 'package:core/local_data_sourcers/database_configs/i_isar_database_instan
 import 'package:core/local_data_sourcers/database_configs/i_local_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/hive_database_instance.dart';
 import 'package:core/local_data_sourcers/database_configs/isar_database_instance.dart';
+import 'package:core/leituras_entrada/i_leituras_entrada_local_data_source.dart';
+import 'package:core/leituras_entrada/leituras_entrada_dto.dart';
+import 'package:core/leituras_entrada/leituras_entrada_local_data_source.dart';
 import 'package:core/paginacao/i_paginacao_data_source.dart';
 import 'package:core/paginacao/paginacao_data_source.dart';
 import 'package:core/paginacao/paginacao_isar_dto.dart';
@@ -31,6 +34,10 @@ void registerCoreLocalStorage() {
     () => ListaDeProdutosCompartilhadaLocalDataSource(getIsar: _getIsar),
   );
 
+  sl.registerLazySingleton<ILeiturasEntradaLocalDataSource>(
+    () => LeiturasEntradaLocalDataSource(getIsar: _getIsar),
+  );
+
   sl.registerLazySingleton<IProdutosCompartilhadosLocalDataSource>(
     () => ProdutosCompartilhadosLocalDataSource(getIsar: _getIsar),
   );
@@ -45,6 +52,7 @@ Future<Isar> _getIsar({bool? isSyncData = false}) async {
     PaginacaoIsarDtoSchema,
     ProdutoCompartilhadoDtoSchema,
     ListaDeProdutosCompartilhadaDtoSchema,
+    LeiturasEntradaDtoSchema,
   ];
 
   return sl<IIsarDatabaseInstance>().getIsar(

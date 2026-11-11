@@ -145,8 +145,11 @@ class _EtapaConferirState extends State<EtapaConferir> {
                                 lista[i].referenciaNome?.trim().isNotEmpty == true
                                     ? lista[i].referenciaNome!
                                     : 'Produto #${lista[i].produtoId ?? '-'}',
-                                if ((lista[i].corNome ?? '').isNotEmpty) lista[i].corNome!,
-                                if ((lista[i].tamanhoNome ?? '').isNotEmpty) lista[i].tamanhoNome!,
+                                ...[
+                                  if ((lista[i].corNome ?? '').isNotEmpty) lista[i].corNome!,
+                                  if ((lista[i].estampaNome ?? '').isNotEmpty) lista[i].estampaNome!,
+                                  if ((lista[i].tamanhoNome ?? '').isNotEmpty) lista[i].tamanhoNome!,
+                                ],
                               ].join(' · '),
                               style: textos.corpo,
                             ),

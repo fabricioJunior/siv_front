@@ -21,6 +21,7 @@ import 'package:produtos/data/repositorios/referencias_pendentes_peso_repository
 import 'package:produtos/domain/data/remote/i_referencias_pendentes_peso_remote_data_source.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
+import 'package:produtos/data/remote/promocoes_etiquetas_gateway.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/data/remote/codigos_de_barras_da_referencia_remote_data_source.dart';
 import 'package:produtos/data/repositorios/codigos_de_barras_da_referencia_repository.dart';
@@ -31,7 +32,9 @@ import 'package:produtos/domain/data/remote/i_grade_da_referencia_remote_data_so
 import 'package:produtos/data/remote/importacao_produto_remote_data_source.dart';
 import 'package:produtos/data/repositorios/importacao_produto_repository.dart';
 import 'package:produtos/domain/data/remote/i_importacao_produto_remote_data_source.dart';
-import 'package:core/leitor/data_source/i_leitor_data_datasource.dart';
+import 'package:produtos/data/remote/consulta_referencias_remote_datasource.dart';
+import 'package:produtos/data/repositorios/consulta_referencias_repository.dart';
+import 'package:produtos/domain/data/remote/i_consulta_referencias_remote_data_source.dart';
 import 'package:produtos/data/repositorios/tamanhos_repository.dart';
 import 'package:produtos/data/repositorios/estampas_repository.dart';
 import 'package:produtos/data/repositorios/cores_repository.dart';
@@ -140,6 +143,10 @@ void _data() {
     () => GradeDaReferenciaRemoteDatasource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IConsultaReferenciasRemoteDataSource>(
+    () => ConsultaReferenciasRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IImportacaoProdutoRemoteDataSource>(
     () => ImportacaoProdutoRemoteDataSource(informacoesParaRequest: sl()),
   );
@@ -148,6 +155,10 @@ void _data() {
 void _repositores() {
   sl.registerFactory<ITamanhosRepository>(
     () => TamanhosRepository(tamanhosRemoteDataSource: sl()),
+  );
+
+  sl.registerFactory<IConsultaReferenciasRepository>(
+    () => ConsultaReferenciasRepository(dataSource: sl()),
   );
 
   sl.registerFactory<IEstampasRepository>(
@@ -243,6 +254,10 @@ void _usesCases() {
 
   sl.registerFactory<AtualizarTamanho>(
     () => AtualizarTamanho(tamanhosRepository: sl()),
+  );
+
+  sl.registerFactory<ConsultarReferencias>(
+    () => ConsultarReferencias(repository: sl()),
   );
 
   // Estampas Use Cases
@@ -356,6 +371,14 @@ void _usesCases() {
     () => CriarReferencia(referenciasRepository: sl()),
   );
 
+  sl.registerFactory<RecuperarCustoReferencia>(
+    () => RecuperarCustoReferencia(referenciasRepository: sl()),
+  );
+
+  sl.registerFactory<SalvarCustoReferencia>(
+    () => SalvarCustoReferencia(referenciasRepository: sl()),
+  );
+
   sl.registerFactory<RecuperarProximoIdReferencia>(
     () => RecuperarProximoIdReferencia(referenciasRepository: sl()),
   );
@@ -445,6 +468,10 @@ void _usesCases() {
 
   sl.registerFactory<ExcluirReferenciaMidia>(
     () => ExcluirReferenciaMidia(referenciaMidiasRepository: sl()),
+  );
+
+  sl.registerFactory<ReordenarReferenciaMidias>(
+    () => ReordenarReferenciaMidias(referenciaMidiasRepository: sl()),
   );
 
   sl.registerFactory<AtualizarReferenciaMidia>(
@@ -561,12 +588,25 @@ void _presentantion() {
     () => ImpressaoEtiquetasBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
+  sl.registerFactory<IPromocoesEtiquetasGateway>(
+    () => PromocoesEtiquetasGateway(informacoesParaRequest: sl()),
+  );
+  sl.registerFactory<RecuperarPromocoesParaEtiqueta>(
+    () => RecuperarPromocoesParaEtiqueta(sl()),
+  );
+  sl.registerFactory<RecuperarItensDaPromocaoParaEtiqueta>(
+    () => RecuperarItensDaPromocaoParaEtiqueta(sl()),
+  );
+  sl.registerFactory<EtiquetasPromocaoBloc>(
+    () => EtiquetasPromocaoBloc(sl(), sl(), sl(), sl(), sl()),
+  );
+
   sl.registerFactory<ProdutoBloc>(
     () => ProdutoBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ReferenciaCadastroBloc>(
-    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+    () => ReferenciaCadastroBloc(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<CategoriaSubCategoriaSelecaoBloc>(
@@ -574,7 +614,7 @@ void _presentantion() {
   );
 
   sl.registerFactory<ReferenciaMidiasBloc>(
-    () => ReferenciaMidiasBloc(sl(), sl(), sl(), sl(), sl()),
+    () => ReferenciaMidiasBloc(sl(), sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<TextoLongoEdicaoBloc>(() => TextoLongoEdicaoBloc());
@@ -591,9 +631,10 @@ void _presentantion() {
     () => CodigosDeBarrasDaReferenciaBloc(sl(), sl()),
   );
 
-  sl.registerFactory<ConsultarProdutoBloc>(
+  // Singleton: provido acima das rotas de lista e detalhe; a lista o reinicia ao sair.
+  sl.registerLazySingleton<ConsultarProdutoBloc>(
     () => ConsultarProdutoBloc(
-      leitorDataDatasource: sl<ILeitorDataDatasource>(),
+      consultarReferencias: sl(),
       recuperarGradeDaReferencia: sl(),
     ),
   );
@@ -602,4 +643,3 @@ void _presentantion() {
     () => ImportarProdutosCsvBloc(sl(), sl(), sl()),
   );
 }
-

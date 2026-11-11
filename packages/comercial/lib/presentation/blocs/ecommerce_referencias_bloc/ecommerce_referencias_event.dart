@@ -27,6 +27,16 @@ class EcommerceReferenciasIniciou extends EcommerceReferenciasEvent {
       [ecommerceId, busca, categoriaIds, rascunhoFiltro, publicavelFiltro];
 }
 
+class EcommerceReferenciasTituloCanalSolicitou
+    extends EcommerceReferenciasEvent {
+  final int ecommerceId;
+
+  const EcommerceReferenciasTituloCanalSolicitou(this.ecommerceId);
+
+  @override
+  List<Object?> get props => [ecommerceId];
+}
+
 class EcommerceReferenciasCarregarMaisSolicitou
     extends EcommerceReferenciasEvent {
   const EcommerceReferenciasCarregarMaisSolicitou();

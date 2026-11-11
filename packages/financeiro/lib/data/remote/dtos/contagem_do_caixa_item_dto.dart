@@ -38,7 +38,7 @@ class ContagemDoCaixaItemDto implements ContagemDoCaixaItem {
       (e) =>
           e.name == str ||
           _normalizarTexto(e.name) == strNormalizado,
-      orElse: () => TipoContagemDoCaixaItem.dinheiro,
+      orElse: () => throw FormatException('Tipo de documento desconhecido: $str'),
     );
   }
 

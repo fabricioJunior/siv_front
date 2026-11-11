@@ -17,10 +17,18 @@ class ReferenciaCadastroState extends Equatable {
   final SubCategoria? subCategoria;
   final String nome;
   final String preco;
+  final String custo;
   final String unidadeMedida;
   final String descricao;
   final String composicao;
   final String cuidados;
+  // Referência esperada: fornecedor/código ficam no passo do nome; a escolha de
+  // variações, a quantidade esperada e a foto, no passo do preço.
+  final SelectData? fornecedor;
+  final String codigoNoFornecedor;
+  final bool definirNaChegada;
+  final String quantidadeEsperada;
+  final Imagem? fotoFornecedor;
   final int? referenciaId;
   final bool carregandoCategorias;
   final bool carregandoSubCategorias;
@@ -35,10 +43,16 @@ class ReferenciaCadastroState extends Equatable {
     this.subCategoria,
     this.nome = '',
     this.preco = '',
+    this.custo = '',
     this.unidadeMedida = '',
     this.descricao = '',
     this.composicao = '',
     this.cuidados = '',
+    this.fornecedor,
+    this.codigoNoFornecedor = '',
+    this.definirNaChegada = false,
+    this.quantidadeEsperada = '',
+    this.fotoFornecedor,
     this.referenciaId,
     this.carregandoCategorias = false,
     this.carregandoSubCategorias = false,
@@ -67,10 +81,16 @@ class ReferenciaCadastroState extends Equatable {
     SubCategoria? Function()? subCategoria,
     String? nome,
     String? preco,
+    String? custo,
     String? unidadeMedida,
     String? descricao,
     String? composicao,
     String? cuidados,
+    SelectData? Function()? fornecedor,
+    String? codigoNoFornecedor,
+    bool? definirNaChegada,
+    String? quantidadeEsperada,
+    Imagem? Function()? fotoFornecedor,
     int? referenciaId,
     bool? carregandoCategorias,
     bool? carregandoSubCategorias,
@@ -85,10 +105,18 @@ class ReferenciaCadastroState extends Equatable {
       subCategoria: subCategoria == null ? this.subCategoria : subCategoria(),
       nome: nome ?? this.nome,
       preco: preco ?? this.preco,
+      custo: custo ?? this.custo,
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
       cuidados: cuidados ?? this.cuidados,
+      fornecedor: fornecedor == null ? this.fornecedor : fornecedor(),
+      codigoNoFornecedor: codigoNoFornecedor ?? this.codigoNoFornecedor,
+      definirNaChegada: definirNaChegada ?? this.definirNaChegada,
+      quantidadeEsperada: quantidadeEsperada ?? this.quantidadeEsperada,
+      fotoFornecedor: fotoFornecedor == null
+          ? this.fotoFornecedor
+          : fotoFornecedor(),
       referenciaId: referenciaId ?? this.referenciaId,
       carregandoCategorias: carregandoCategorias ?? this.carregandoCategorias,
       carregandoSubCategorias:
@@ -107,10 +135,17 @@ class ReferenciaCadastroState extends Equatable {
     subCategoria,
     nome,
     preco,
+    custo,
     unidadeMedida,
     descricao,
     composicao,
     cuidados,
+    fornecedor?.id,
+    codigoNoFornecedor,
+    definirNaChegada,
+    quantidadeEsperada,
+    fotoFornecedor?.path,
+    fotoFornecedor?.bytes?.length,
     referenciaId,
     carregandoCategorias,
     carregandoSubCategorias,

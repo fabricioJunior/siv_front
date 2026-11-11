@@ -209,7 +209,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                     Padding(
                       padding: const EdgeInsets.only(right: 12),
                       child: CircleAvatar(
-                        backgroundImage: NetworkImage(lista.icone!),
+                        backgroundImage: ResizeImage(NetworkImage(lista.icone!), width: 120),
                       ),
                     ),
                   Expanded(
@@ -318,7 +318,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                         leading: item.imagemUrl == null
                             ? const CircleAvatar(child: Icon(Icons.image_outlined))
                             : CircleAvatar(
-                                backgroundImage: NetworkImage(item.imagemUrl!),
+                                backgroundImage: ResizeImage(NetworkImage(item.imagemUrl!), width: 120),
                               ),
                         title: Text(item.nome),
                         subtitle: Text('R\$ ${item.valor.toStringAsFixed(2)}'),
@@ -387,7 +387,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
                                                 child: Icon(Icons.image_outlined))
                                             : CircleAvatar(
                                                 backgroundImage:
-                                                    NetworkImage(i.imagemUrl!)),
+                                                    ResizeImage(NetworkImage(i.imagemUrl!), width: 120)),
                                         title: Text(i.nome),
                                         subtitle: i.preco == null
                                             ? null
@@ -519,7 +519,7 @@ class _ListaPersonalizadaPageState extends State<ListaPersonalizadaPage> {
       context: context,
       isScrollControlled: true,
       builder: (dialogContext) {
-        return Padding(
+        return SingleChildScrollView(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
             left: 16,

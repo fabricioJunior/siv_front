@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:comercial/domain/data/remote/i_pedido_entrada_remote_data_source.dart';
+import 'package:comercial/domain/models/contagem_em_andamento.dart';
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:core/remote_data_sourcers.dart';
 
 class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
@@ -57,6 +59,39 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   Future<EntradaResumo> obter(int pedidoId) async => _resumo(
         (await get(pathParameters: {'path': '/$pedidoId/entrada'})).body,
       );
+
+  @override
+  Future<ContagensEmAndamentoPagina> contagensEmAndamento({
+    String? busca,
+    int? funcionarioId,
+    bool minhas = false,
+    int pagina = 1,
+    int tamanho = 30,
+  }) async {
+    final response = await get(
+      pathParameters: {'path': '/entrada/contagens'},
+      queryParameters: {
+        if (busca != null && busca.trim().isNotEmpty) 'busca': busca.trim(),
+        if (funcionarioId != null) 'funcionarioId': funcionarioId.toString(),
+        if (minhas) 'minhas': 'true',
+        'pagina': pagina.toString(),
+        'tamanho': tamanho.toString(),
+      },
+    );
+    return ContagensEmAndamentoPagina.fromJson(
+      response.body as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<List<ReferenciaEsperada>> obterEsperadas(int pedidoId) async {
+    final response = await get(
+      pathParameters: {'path': '/$pedidoId/entrada/esperadas'},
+    );
+    return (response.body as List)
+        .map((e) => ReferenciaEsperada.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 
   @override
   Future<EntradaResumo> vincularReferencia(
@@ -238,11 +273,15 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
   @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
-    Map<int, int> deltas,
-  ) async =>
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) async =>
       _resumo(
         (await put(
           body: {
+            if (loteId != null) 'loteId': loteId,
+            if (motivo != null) 'motivo': motivo,
             'itens': [
               for (final e in deltas.entries)
                 if (e.value != 0) {'produtoId': e.key, 'quantidade': e.value},

@@ -33,6 +33,7 @@ const _novos = {
   'RELFC014': 'Estoque',
   'RELFC015': 'Movimentações do sistema',
   'RELFC016': 'Frequência de clientes',
+  'RELFC017': 'Pedidos por contagem',
 };
 
 Future<void> _abre(WidgetTester t, double largura, Set<String> permitidos) async {
@@ -50,7 +51,7 @@ Future<void> _abre(WidgetTester t, double largura, Set<String> permitidos) async
 
 void main() {
   for (final largura in [800.0, 1280.0]) {
-    testWidgets('sem RELFC014/15/16 os itens somem ($largura)', (t) async {
+    testWidgets('sem RELFC014/15/16/17 os itens somem ($largura)', (t) async {
       await _abre(t, largura, {'RELFC001'});
       for (final n in _novos.values) {
         expect(find.text(n), findsNothing, reason: n);
@@ -76,10 +77,11 @@ void main() {
     });
   }
 
-  test('acordeão do menu lateral tem os 3 componentes novos', () {
+  test('acordeão do menu lateral tem os 4 componentes novos', () {
     final cs = {for (final f in relatoriosAcordeaoItens) f.componente: f.rota};
     expect(cs['RELFC014'], '/relatorio_estoque');
     expect(cs['RELFC015'], '/relatorio_movimentacoes');
     expect(cs['RELFC016'], '/relatorio_frequencia_clientes');
+    expect(cs['RELFC017'], '/relatorio_pedidos_contagem');
   });
 }

@@ -128,7 +128,33 @@ class PagamentosRealizadosState extends Equatable {
         .fold<double>(0, (soma, p) => soma + p.quantidade * p.valorUnitario);
   }
   // Produtos com promocao (exclusiva com desconto manual; cupom soma com ambos).
-  Set<int> get produtoIdsComPromocao => promocaoEscolhidaPorItem.keys.toSet();
+  Set<int> get produtoIdsComPromocao => promocaoAtivaPorItem.keys.toSet();
+
+  // Promoção restrita por forma de pagamento fica SUSPENSA quando alguma linha
+  // usa forma fora da lista permitida (backend rejeita a linha fora da lista).
+  // Sem forma escolhida ainda = prévia ativa. A escolha original permanece em
+  // promocaoEscolhidaPorItem para reativar ao voltar a forma permitida.
+  bool promocaoSuspensa(OpcaoElegivel opcao) {
+    final permitidas = opcao.formasPagamentoPermitidasIds;
+    if (permitidas == null) return false;
+    return linhas.any(
+      (l) =>
+          l.formaDePagamento != null &&
+          !permitidas.contains(l.formaDePagamento!.id),
+    );
+  }
+
+  // Promoções que valem (e são enviadas) com as formas atuais.
+  Map<int, OpcaoElegivel> get promocaoAtivaPorItem => {
+        for (final e in promocaoEscolhidaPorItem.entries)
+          if (!promocaoSuspensa(e.value)) e.key: e.value,
+      };
+
+  // Promoções escolhidas não-cupom distintas (por id), para o indicador.
+  List<OpcaoElegivel> get promocoesDistintas => {
+        for (final o in promocaoEscolhidaPorItem.values)
+          if (!o.ehCupom) o.id: o,
+      }.values.toList(growable: false);
   double get valorDescontoItensTotal =>
       descontosItensAplicado.values.fold(0, (a, b) => a + b);
   // Forma de pagamento escolhida, só quando há exatamente 1 linha com forma
@@ -149,7 +175,7 @@ class PagamentosRealizadosState extends Equatable {
   // Recalcula pela forma de pagamento escolhida quando a promoção tiver
   // override pra ela (ver OpcaoElegivel.valorDescontoParaForma).
   double get valorDescontoPromocaoTotal {
-    if (promocaoEscolhidaPorItem.isEmpty && cuponsEscolhidosPorItem.isEmpty) {
+    if (promocaoAtivaPorItem.isEmpty && cuponsEscolhidosPorItem.isEmpty) {
       return 0;
     }
     final valorUnitarioPorProduto = {
@@ -162,7 +188,7 @@ class PagamentosRealizadosState extends Equatable {
       final produto = valorUnitarioPorProduto[entrada.key];
       if (produto == null) return soma;
       // Cupom soma com promocao e desconto manual do item, ate o teto do preco.
-      final promocao = promocaoEscolhidaPorItem[entrada.key];
+      final promocao = promocaoAtivaPorItem[entrada.key];
       final jaDescontado = (promocao?.valorDescontoParaForma(
                 formaId,
                 valorUnitario: produto.valorUnitario,
@@ -180,7 +206,7 @@ class PagamentosRealizadosState extends Equatable {
               produto.quantidade;
     });
     return cupons +
-        promocaoEscolhidaPorItem.entries.fold<double>(0, (soma, entrada) {
+        promocaoAtivaPorItem.entries.fold<double>(0, (soma, entrada) {
       final produto = valorUnitarioPorProduto[entrada.key];
       if (produto == null) return soma;
       final desconto = entrada.value.valorDescontoParaForma(
@@ -266,14 +292,14 @@ class PagamentosRealizadosState extends Equatable {
   bool get possuiOutroDesconto =>
       valorDescontoAplicado > 0 ||
       valorDescontoItensTotal > 0 ||
-      promocaoEscolhidaPorItem.isNotEmpty ||
+      promocaoAtivaPorItem.isNotEmpty ||
       possuiCupomAplicado;
 
   // Backend rejeita resgate quando todos os itens ja tem promocao/cupom.
   bool get todosItensComPromocao {
     final produtos = resumo?.produtosCompartilhados ?? const [];
     return produtos.isNotEmpty &&
-        produtos.every((p) => promocaoEscolhidaPorItem.containsKey(p.produtoId));
+        produtos.every((p) => promocaoAtivaPorItem.containsKey(p.produtoId));
   }
 
   // Maior quantidade de pontos livres cujo desconto nao excede o valor da venda.
@@ -341,19 +367,6 @@ class PagamentosRealizadosState extends Equatable {
   bool get possuiCupomAplicado => cuponsAplicados.isNotEmpty;
   static const maxCupons = 5;
   bool get podeAdicionarCupom => cuponsAplicados.length < maxCupons;
-  // Interseção das formas de pagamento permitidas pelas promoções escolhidas
-  // com restrição (null = nenhuma promoção escolhida restringe forma de
-  // pagamento). Interseção vazia é estado válido (nenhuma forma serve).
-  Set<int>? get formasPagamentoPermitidasIds {
-    final restricoes = promocaoEscolhidaPorItem.values
-        .map((opcao) => opcao.formasPagamentoPermitidasIds)
-        .whereType<List<int>>()
-        .map((ids) => ids.toSet())
-        .toList(growable: false);
-    if (restricoes.isEmpty) return null;
-    return restricoes.reduce((a, b) => a.intersection(b));
-  }
-
   bool get podeAdicionarLinha => step == PagamentosRealizadosStep.editando;
   bool get podeFinalizar =>
       step == PagamentosRealizadosStep.editando && linhas.isNotEmpty;

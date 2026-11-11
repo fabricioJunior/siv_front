@@ -173,15 +173,19 @@ class PedidoEntradaAssociouContagemLivre extends PedidoEntradaEvent {
   final int? referenciaId;
   final int? categoriaId;
   final String? nome;
+
+  /// Descrição do grupo: quando informada, a mensagem cita o grupo e a REF.
+  final String? descricao;
   const PedidoEntradaAssociouContagemLivre(
     this.ids, {
     this.referenciaId,
     this.categoriaId,
     this.nome,
+    this.descricao,
   });
 
   @override
-  List<Object?> get props => [ids, referenciaId, categoriaId, nome];
+  List<Object?> get props => [ids, referenciaId, categoriaId, nome, descricao];
 }
 
 /// Bipe LOCAL (sem rede): soma [delta] (+1 bipe, -1 remover) às leituras
@@ -207,4 +211,10 @@ class PedidoEntradaEnviouLeituras extends PedidoEntradaEvent {
 
 class PedidoEntradaDescartouLeituras extends PedidoEntradaEvent {
   const PedidoEntradaDescartouLeituras();
+}
+
+/// Zera as leituras da conferência: envia na hora, num lote `motivo: 'zerar'`,
+/// o delta que leva cada produto a 0. O leitor local só é limpo se aceito.
+class PedidoEntradaZerouLeituras extends PedidoEntradaEvent {
+  const PedidoEntradaZerouLeituras();
 }

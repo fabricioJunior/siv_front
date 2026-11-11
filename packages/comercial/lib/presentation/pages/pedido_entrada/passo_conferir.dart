@@ -5,6 +5,7 @@ import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:core/bloc.dart';
 import 'package:core/leitor.dart';
+import 'package:core/presentation.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 
@@ -48,6 +49,8 @@ class _DadoLocal with LeitorData {
   @override
   String get cor => p.cor;
   @override
+  String get estampa => p.estampa;
+  @override
   double? get valor => null;
   @override
   int get id => p.id;
@@ -74,6 +77,16 @@ class PassoConferir extends StatefulWidget {
   final Future<bool> Function({bool irParaRevisar}) onEnviar;
   final ValueChanged<int> onIrParaPasso;
 
+  /// Quando a fila foi restaurada da cópia local ao abrir (faixa âmbar).
+  final DateTime? restauradaEm;
+  final bool erroEnvio;
+
+  /// Apaga a fila e a cópia local (já confirmado pelo usuário).
+  final VoidCallback? onDescartar;
+
+  /// Zera as leituras no servidor; true se o lote foi aceito.
+  final Future<bool> Function()? onZerar;
+
   const PassoConferir({
     super.key,
     required this.resumo,
@@ -83,6 +96,10 @@ class PassoConferir extends StatefulWidget {
     required this.onIrParaPasso,
     this.salvando = false,
     this.buscaDataSource,
+    this.restauradaEm,
+    this.erroEnvio = false,
+    this.onDescartar,
+    this.onZerar,
   });
 
   @override
@@ -91,19 +108,104 @@ class PassoConferir extends StatefulWidget {
 
 class _PassoConferirState extends State<PassoConferir> {
   final _fonte = _FonteLocal();
+  final _leitorController = LeitorController();
+
+  @override
+  void dispose() {
+    _leitorController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _zerar(int pecas) async {
+    var ok = false;
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Zerar as leituras desta conferência?',
+      corpo: Text(
+        '$pecas peças lidas voltam para 0. A contagem não muda. '
+        'Fica registrado no histórico.',
+      ),
+      textoSaida: 'CANCELAR',
+      textoAcao: 'ZERAR',
+      onConfirmar: (_) => ok = true,
+    );
+    if (!ok || !mounted) return;
+    // o leitor local só é limpo depois do lote aceito
+    if (await widget.onZerar!()) _leitorController.limpar();
+  }
+
+  Future<void> _descartar() async {
+    var ok = false;
+    await SivDialogo.mostrar(
+      context,
+      titulo: 'Descartar as leituras não enviadas?',
+      corpo: const Text('Elas serão apagadas deste aparelho.'),
+      textoSaida: 'CANCELAR',
+      textoAcao: 'DESCARTAR',
+      onConfirmar: (_) => ok = true,
+    );
+    if (ok) widget.onDescartar?.call();
+  }
+
+  Widget _faixaRestaurada(int n, DateTime em) {
+    final cores = context.sivColors;
+    final l = em.toLocal();
+    String p(int v) => v.toString().padLeft(2, '0');
+    final agora = DateTime.now();
+    final hoje =
+        l.year == agora.year && l.month == agora.month && l.day == agora.day;
+    final quando = '${hoje ? 'de hoje' : 'de ${p(l.day)}/${p(l.month)}'}, '
+        '${p(l.hour)}:${p(l.minute)}';
+    return Container(
+      key: const Key('conferir_faixa_restaurada'),
+      width: double.infinity,
+      color: cores.parcialFundo,
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '$n leituras $quando, não foram enviadas.',
+              style: context.sivTextos.apoio
+                  .copyWith(color: cores.parcialTexto),
+            ),
+          ),
+          TextButton(
+            key: const Key('faixa_enviar'),
+            onPressed: widget.salvando ? null : () => widget.onEnviar(),
+            child: const Text('ENVIAR'),
+          ),
+          TextButton(
+            key: const Key('faixa_descartar'),
+            onPressed: widget.salvando ? null : _descartar,
+            child: const Text('DESCARTAR'),
+          ),
+        ],
+      ),
+    );
+  }
 
   List<ProdutoEsperado>? get _esperados {
     final itens = widget.resumo.conferencia.itens;
     if (itens.isEmpty) return null;
+    // Liso vira "Liso" quando a mesma referência também tem SKU estampado.
+    final refsComEstampa = {
+      for (final i in itens)
+        if (i.estampa.isNotEmpty) i.idReferencia,
+    };
     return [
       for (final i in itens)
         ProdutoEsperado(
           id: i.produtoId,
           codigoDeBarras: i.codigoDeBarras,
+          codigosDeBarras: i.codigosDeBarras,
           descricao: i.descricao,
           idReferencia: i.idReferencia,
           cor: i.cor,
           tamanho: i.tamanho,
+          estampa: i.estampa.isEmpty && refsComEstampa.contains(i.idReferencia)
+              ? 'Liso'
+              : i.estampa,
           esperado: i.contado.round(),
           lido: math.max(
             0,
@@ -150,13 +252,18 @@ class _PassoConferirState extends State<PassoConferir> {
     final nPend = widget.pendentes.values.fold<int>(0, (s, d) => s + d.abs());
     final temPend = nPend > 0;
 
+    final lidoTotal = esperados?.fold<int>(0, (s, p) => s + p.lido) ?? 0;
+
     return Column(
       children: [
+        if (widget.restauradaEm != null && temPend)
+          _faixaRestaurada(nPend, widget.restauradaEm!),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(12),
             child: LeitorWidget(
               dataSource: _fonte,
+              controller: _leitorController,
               buscaDataSource: widget.buscaDataSource,
               autofocus: !mobile,
               alturaLista: mobile ? 420 : 480,
@@ -168,17 +275,24 @@ class _PassoConferirState extends State<PassoConferir> {
                 if (p.lido > 0) widget.onLeu(p.id, -1);
               },
               onCorrigirContagem: _corrigir,
+              onZerarLeituras: widget.onZerar == null || lidoTotal == 0
+                  ? null
+                  : () => _zerar(lidoTotal),
             ),
           ),
         ),
         RodapeAcaoEntrada(
-          aviso: temPend
-              ? Text(
-                  '$nPend leitura(s) ainda não enviada(s)',
-                  key: const Key('conferir_pendentes'),
-                  style: textos.apoio.copyWith(color: cores.parcialTexto),
-                )
-              : null,
+          aviso: Text(
+            !temPend
+                ? '✓ Tudo enviado'
+                : widget.erroEnvio
+                    ? 'Erro ao enviar · tentar de novo'
+                    : '$nPend na fila · salvas no aparelho',
+            key: const Key('conferir_pendentes'),
+            style: textos.apoio.copyWith(
+              color: !temPend ? cores.aco : cores.parcialTexto,
+            ),
+          ),
           resumo: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

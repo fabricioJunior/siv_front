@@ -1,3 +1,4 @@
+import 'package:comercial/presentation/widgets/rotulo_variacao.dart';
 import 'package:comercial/models.dart';
 import 'package:comercial/presentation/blocs/pedido_bloc/pedido_bloc.dart';
 import 'package:core/bloc.dart';
@@ -95,11 +96,11 @@ class _PedidoConferenciaPageState extends State<PedidoConferenciaPage> {
             : 'Produto #${item.produtoId ?? '-'}',
       ),
       subtitle: Text(
-        [
-          if ((item.corNome ?? '').isNotEmpty) 'Cor: ${item.corNome}',
-          if ((item.tamanhoNome ?? '').isNotEmpty)
-            'Tamanho: ${item.tamanhoNome}',
-        ].join('  •  '),
+        rotuloVariacao(
+          cor: item.corNome,
+          estampa: item.estampaNome,
+          tamanho: item.tamanhoNome,
+        ),
       ),
       trailing: Text('${atendido.toStringAsFixed(0)}/${solicitado.toStringAsFixed(0)}'),
     );

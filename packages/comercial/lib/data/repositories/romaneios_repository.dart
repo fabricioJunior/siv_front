@@ -158,6 +158,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
     Map<String, dynamic>? resgatePontos,
     bool enviarNotaPorEmail = false,
     String emailNota = '',
+    String? idempotencyKey,
   }) {
     return criarVendaCompletaRemoteDataSource.criarVendaCompleta(
       caixaId: caixaId,
@@ -176,6 +177,7 @@ class RomaneiosRepository implements IRomaneiosRepository {
       resgatePontos: resgatePontos,
       enviarNotaPorEmail: enviarNotaPorEmail,
       emailNota: emailNota,
+      idempotencyKey: idempotencyKey,
     );
   }
 }

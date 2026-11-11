@@ -80,6 +80,9 @@ abstract class Promocao implements Equatable {
   List<ItemComboKit>? get comboKit;
   int? get quantidadeLeva;
   int? get quantidadePaga;
+  List<int>? get brindeReferenciaIds;
+  int? get quantidadeGatilho;
+  int? get quantidadeBrinde;
   List<PromocaoFaixa>? get faixas;
   int? get limiteUnidadesVendidas;
   int get unidadesVendidas;
@@ -115,6 +118,9 @@ abstract class Promocao implements Equatable {
     List<ItemComboKit>? comboKit,
     int? quantidadeLeva,
     int? quantidadePaga,
+    List<int>? brindeReferenciaIds,
+    int? quantidadeGatilho,
+    int? quantidadeBrinde,
     List<PromocaoFaixa>? faixas,
     int? limiteUnidadesVendidas,
     int unidadesVendidas,
@@ -152,6 +158,9 @@ abstract class Promocao implements Equatable {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        brindeReferenciaIds,
+        quantidadeGatilho,
+        quantidadeBrinde,
         faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,
@@ -214,6 +223,12 @@ class _PromocaoImpl implements Promocao {
   @override
   final int? quantidadePaga;
   @override
+  final List<int>? brindeReferenciaIds;
+  @override
+  final int? quantidadeGatilho;
+  @override
+  final int? quantidadeBrinde;
+  @override
   final List<PromocaoFaixa>? faixas;
   @override
   final int? limiteUnidadesVendidas;
@@ -260,6 +275,9 @@ class _PromocaoImpl implements Promocao {
     this.comboKit,
     this.quantidadeLeva,
     this.quantidadePaga,
+    this.brindeReferenciaIds,
+    this.quantidadeGatilho,
+    this.quantidadeBrinde,
     this.faixas,
     this.limiteUnidadesVendidas,
     this.unidadesVendidas = 0,
@@ -297,6 +315,9 @@ class _PromocaoImpl implements Promocao {
         comboKit,
         quantidadeLeva,
         quantidadePaga,
+        brindeReferenciaIds,
+        quantidadeGatilho,
+        quantidadeBrinde,
         faixas,
         limiteUnidadesVendidas,
         unidadesVendidas,

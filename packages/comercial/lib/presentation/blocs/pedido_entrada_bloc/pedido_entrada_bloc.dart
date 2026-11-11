@@ -5,6 +5,7 @@ import 'package:comercial/domain/models/trilha_entrada.dart';
 import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cases.dart';
 import 'package:core/bloc.dart';
 import 'package:core/equals.dart';
+import 'package:core/leituras_entrada.dart';
 import 'package:core/remote_data_sourcers.dart';
 import 'package:core/sessao.dart';
 
@@ -30,6 +31,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   final FaturarEntrada _faturar;
   final RegistrarLeiturasEntrada _registrarLeituras;
   final IAcessoGlobalSessao _sessao;
+  final ILeiturasEntradaLocalDataSource _copiaLocal;
 
   int? _pedidoId;
 
@@ -50,6 +52,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     this._faturar,
     this._registrarLeituras,
     this._sessao,
+    this._copiaLocal,
   ) : super(const PedidoEntradaState()) {
     on<PedidoEntradaCarregou>(_onCarregou);
     on<PedidoEntradaImportouNfe>(_onImportou);
@@ -119,9 +122,8 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     on<PedidoEntradaFaturou>(_onFaturou);
     on<PedidoEntradaLeu>(_onLeu);
     on<PedidoEntradaEnviouLeituras>(_onEnviouLeituras);
-    on<PedidoEntradaDescartouLeituras>(
-      (e, emit) => emit(state.copyWith(leiturasPendentes: const {})),
-    );
+    on<PedidoEntradaDescartouLeituras>(_onDescartou);
+    on<PedidoEntradaZerouLeituras>(_onZerou);
     on<PedidoEntradaRegistrouContagemLivre>(
       (e, emit) => _salvar(
         emit,
@@ -139,7 +141,10 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
           categoriaId: e.categoriaId,
           nome: e.nome,
         ),
-        'Contagem associada à referência',
+        e.descricao != null && e.referenciaId != null
+            ? '“${e.descricao}” associado à REF ${e.referenciaId}.'
+            : 'Contagem associada à referência',
+        aoConcluir: (_) => e.descricao == null ? null : e.referenciaId,
         seguirEtapa: true,
       ),
     );
@@ -152,12 +157,9 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     _pedidoId = event.pedidoId;
     emit(state.copyWith(carregando: true));
     try {
-      emit(
-        state.copyWith(
-          carregando: false,
-          resumo: await _obter(event.pedidoId),
-        ),
-      );
+      final resumo = await _obter(event.pedidoId);
+      emit(state.copyWith(carregando: false, resumo: resumo));
+      await _restaurarCopia(resumo, emit);
     } catch (e, s) {
       emit(
         state.copyWith(
@@ -344,12 +346,13 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   ) async {
     final resumo = state.resumo;
     if (resumo == null || !TrilhaEntrada.podeFaturar(resumo)) {
-      emit(state.copyWith(erro: 'Decida as divergências antes de faturar.'));
+      emit(state.copyWith(
+          erroFaturar: 'Decida as divergências antes de faturar.'));
       return;
     }
     final caixaId = _sessao.caixaIdDaSessao;
     if (caixaId == null) {
-      emit(state.copyWith(erro: 'Abra um caixa para faturar o pedido.'));
+      emit(state.copyWith(erroFaturar: 'Abra um caixa para faturar o pedido.'));
       return;
     }
     emit(state.copyWith(salvando: true));
@@ -367,14 +370,15 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
       emit(
         state.copyWith(
           salvando: false,
-          erro: mensagemDeErroApi(e, 'Falha ao faturar o pedido.'),
+          erroFaturar: mensagemDeErroApi(e, 'Falha ao faturar o pedido.'),
         ),
       );
       addError(e, s);
     }
   }
 
-  /// Bipe local: só atualiza o mapa. O lido nunca fica abaixo de zero.
+  /// Bipe local: só atualiza o mapa (e a cópia local, sem esperar). O lido
+  /// nunca fica abaixo de zero.
   void _onLeu(PedidoEntradaLeu e, Emitter<PedidoEntradaState> emit) {
     final lido = state.resumo?.conferencia.itens
         .where((i) => i.produtoId == e.produtoId)
@@ -390,7 +394,86 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     } else {
       mapa[e.produtoId] = novo;
     }
-    emit(state.copyWith(leiturasPendentes: mapa));
+    if (mapa.isEmpty) {
+      emit(state.copyWith(leiturasPendentes: mapa, limparLote: true));
+      _apagarCopia();
+      return;
+    }
+    final loteId = state.loteId ?? novoLoteIdLeituras();
+    emit(state.copyWith(leiturasPendentes: mapa, loteId: loteId));
+    _gravarCopia(loteId, mapa);
+  }
+
+  // Cópia local é rede de segurança: falha dela nunca atrapalha o bipe.
+  void _gravarCopia(String loteId, Map<int, int> mapa) {
+    final pedidoId = _pedidoId;
+    if (pedidoId == null) return;
+    unawaited(
+      _copiaLocal
+          .salvar(
+            LeiturasEntradaPendentes(
+              pedidoId: pedidoId,
+              loteId: loteId,
+              atualizadoEm: DateTime.now(),
+              operador: _sessao.usuarioIdDaSessao?.toString(),
+              deltas: Map.of(mapa),
+            ),
+          )
+          .catchError((_) {}),
+    );
+  }
+
+  Future<void> _apagarCopia() async {
+    final pedidoId = _pedidoId;
+    if (pedidoId == null) return;
+    try {
+      await _copiaLocal.apagar(pedidoId);
+    } catch (_) {}
+  }
+
+  Future<void> _restaurarCopia(
+    EntradaResumo resumo,
+    Emitter<PedidoEntradaState> emit,
+  ) async {
+    try {
+      final copia = await _copiaLocal.recuperar(resumo.pedidoId);
+      if (copia == null) return;
+      final lidos = {
+        for (final i in resumo.conferencia.itens) i.produtoId: i.lido.round(),
+      };
+      final deltas = <int, int>{
+        for (final e in copia.deltas.entries)
+          if (e.value != 0 &&
+              lidos.containsKey(e.key) &&
+              lidos[e.key]! + e.value >= 0)
+            e.key: e.value,
+      };
+      if (deltas.isEmpty) {
+        await _apagarCopia();
+        return;
+      }
+      emit(
+        state.copyWith(
+          leiturasPendentes: deltas,
+          loteId: copia.loteId,
+          restauradaEm: copia.atualizadoEm,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _onDescartou(
+    PedidoEntradaDescartouLeituras e,
+    Emitter<PedidoEntradaState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        leiturasPendentes: const {},
+        limparLote: true,
+        erroEnvio: false,
+      ),
+    );
+    await _apagarCopia();
   }
 
   Future<void> _onEnviouLeituras(
@@ -403,23 +486,95 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
       return;
     }
     emit(state.copyWith(salvando: true, passo: state.passoVisivel));
+    final loteId = state.loteId ?? novoLoteIdLeituras();
     try {
-      final resumo = await _registrarLeituras(_pedidoId!, pendentes);
+      final resumo =
+          await _registrarLeituras(_pedidoId!, pendentes, loteId: loteId);
+      await _apagarCopia();
       emit(
         state.copyWith(
           salvando: false,
           resumo: resumo,
           leiturasPendentes: const {},
+          limparLote: true,
+          erroEnvio: false,
           passo: e.irParaRevisar ? 4 : state.passoVisivel,
           mensagem: 'Leituras enviadas',
         ),
       );
     } catch (err, s) {
-      // mantém as leituras pendentes: nada se perde
+      // mantém as leituras pendentes e a cópia (mesmo loteId): nada se perde
       emit(
         state.copyWith(
           salvando: false,
+          loteId: loteId,
+          erroEnvio: true,
           erro: mensagemDeErroApi(err, 'Falha ao enviar as leituras.'),
+        ),
+      );
+      addError(err, s);
+    }
+  }
+
+  /// Zerar: a fila vira o delta que leva o lido do servidor a 0 (as leituras
+  /// pendentes são absorvidas) e é enviada na hora com `motivo: 'zerar'`.
+  Future<void> _onZerou(
+    PedidoEntradaZerouLeituras e,
+    Emitter<PedidoEntradaState> emit,
+  ) async {
+    final itens = state.resumo?.conferencia.itens ?? const [];
+    final deltas = <int, int>{
+      for (final i in itens)
+        if (i.lido.round() > 0) i.produtoId: -i.lido.round(),
+    };
+    final anteriores = state.leiturasPendentes;
+    final loteAnterior = state.loteId;
+    final tinhaTrabalho = deltas.isNotEmpty || anteriores.isNotEmpty;
+    if (!tinhaTrabalho) return;
+    final loteId = novoLoteIdLeituras();
+    emit(
+      state.copyWith(
+        salvando: true,
+        passo: state.passoVisivel,
+        leiturasPendentes: deltas,
+        loteId: loteId,
+      ),
+    );
+    if (deltas.isNotEmpty) _gravarCopia(loteId, deltas);
+    try {
+      final resumo = deltas.isEmpty
+          ? state.resumo!
+          : await _registrarLeituras(
+              _pedidoId!,
+              deltas,
+              loteId: loteId,
+              motivo: 'zerar',
+            );
+      await _apagarCopia();
+      emit(
+        state.copyWith(
+          salvando: false,
+          resumo: resumo,
+          leiturasPendentes: const {},
+          limparLote: true,
+          erroEnvio: false,
+          mensagem: 'Leituras zeradas',
+        ),
+      );
+    } catch (err, s) {
+      // nada é limpo: volta a fila anterior (e a cópia) como estava
+      if (anteriores.isEmpty) {
+        await _apagarCopia();
+      } else {
+        _gravarCopia(loteAnterior ?? novoLoteIdLeituras(), anteriores);
+      }
+      emit(
+        state.copyWith(
+          salvando: false,
+          leiturasPendentes: anteriores,
+          loteId: loteAnterior,
+          limparLote: loteAnterior == null,
+          erro: mensagemDeErroApi(err, 'Falha ao zerar as leituras.'),
         ),
       );
       addError(err, s);

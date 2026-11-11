@@ -6,10 +6,12 @@ import 'package:comercial/presentation/pages/pedido_entrada_page.dart';
 import 'package:comercial/domain/use_cases/conferir_pedido.dart';
 import 'package:comercial/domain/use_cases/faturar_pedido.dart';
 import 'package:core/injecoes.dart';
+import 'package:core/permissoes/i_permissoes_controller.dart';
 import 'package:core/sessao.dart';
 import 'package:core/seletores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/leituras_copia_fake.dart';
 
 Map<String, dynamic> _json({bool contado = false}) => {
       'pedidoId': 9,
@@ -112,14 +114,21 @@ class _Conferir implements ConferirPedido {
 }
 
 class _Faturar implements FaturarPedido {
+  static int chamadas = 0;
+  static bool falha = false;
   @override
-  Future<void> call(int id, {required int caixaId}) async {}
+  Future<void> call(int id, {required int caixaId}) async {
+    chamadas++;
+    if (falha) throw Exception('Servidor recusou');
+  }
 }
 
 class _Remoto implements IPedidoEntradaRemoteDataSource {
   List<ItemContagem>? contagemEnviada;
   List<ItemContagem>? livreEnviada;
   final lotes = <Map<int, int>>[];
+  final lotesIds = <String?>[];
+  final motivos = <String?>[];
   List<int>? associados;
   int? associadoRef;
   int? associadoCategoria;
@@ -159,18 +168,23 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
-    Map<int, int> deltas,
-  ) async {
+    Map<int, int> deltas, {
+    String? loteId,
+    String? motivo,
+  }) async {
     lotes.add(Map.of(deltas));
+    lotesIds.add(loteId);
+    motivos.add(motivo);
+    final lido = deltas.values.fold<int>(0, (a, b) => a + b);
     return EntradaResumo.fromJson(_jsonContagem(
       comContagem: true,
       extra: {
         ...extra,
         'conferencia': {
           'totalContado': 4,
-          'totalLido': 4,
+          'totalLido': lido,
           'itens': [
-            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'contado': 4, 'lido': 4},
+            {'produtoId': 5, 'codigoDeBarras': 'A', 'descricao': 'Calcinha', 'contado': 4, 'lido': lido},
           ],
         },
       },
@@ -196,10 +210,23 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+class _Permissoes implements IPermissoesController {
+  final Set<String> ok;
+  _Permissoes(this.ok);
+  @override
+  Future<bool> acessoPermitido({String? idComponente, int? grupoId}) async =>
+      ok.contains(idComponente);
+  @override
+  bool temAcesso({String? idComponente, int? grupoId}) =>
+      ok.contains(idComponente);
+}
+
 void main() {
   late _Remoto remoto;
   Object? argsCadastro;
   int? retornoCadastro;
+  var permissoes = {'PRDFM003', 'PRDFM008'};
+  final rotas = <String>[];
 
   Future<void> abrir(WidgetTester tester, {Size tamanho = const Size(420, 1400)}) async {
     tester.view.physicalSize = tamanho;
@@ -207,6 +234,7 @@ void main() {
     addTearDown(tester.view.reset);
     await sl.reset();
     sl.registerSingleton<IAcessoGlobalSessao>(_Sessao());
+    sl.registerSingleton<IPermissoesController>(_Permissoes(permissoes));
     sl.registerFactory<PedidoEntradaBloc>(
       () => PedidoEntradaBloc(
         ImportarNfeEntrada(remoto),
@@ -225,6 +253,7 @@ void main() {
         FaturarEntrada(_Conferir(), _Faturar()),
         RegistrarLeiturasEntrada(remoto),
         _Sessao(),
+        LeiturasCopiaFake(),
       ),
     );
     Widget falso(String n) => Text('seletor $n');
@@ -239,6 +268,14 @@ void main() {
       MaterialApp(
         // Faz as vezes do wizard de cadastro de referência (rota do app).
         onGenerateRoute: (settings) {
+          if (const ['/entrada_contagem', '/entrada_contagem/nova', '/pedido']
+              .contains(settings.name)) {
+            rotas.add('${settings.name} ${settings.arguments ?? ''}'.trim());
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => Text('rota ${settings.name}'),
+            );
+          }
           if (settings.name != '/referencia_cadastro') return null;
           argsCadastro = settings.arguments;
           return MaterialPageRoute<int>(
@@ -272,6 +309,10 @@ void main() {
     remoto = _Remoto();
     argsCadastro = null;
     retornoCadastro = null;
+    rotas.clear();
+    _Faturar.chamadas = 0;
+    _Faturar.falha = false;
+    permissoes = {'PRDFM003', 'PRDFM008'};
   });
   tearDown(() async => sl.reset());
 
@@ -331,6 +372,7 @@ void main() {
     await tester.tap(find.byKey(const Key('escolher_tamanho')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '3');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('SALVAR'));
     await tester.pumpAndSettle();
@@ -374,6 +416,7 @@ void main() {
     await tester.tap(find.byKey(const Key('escolher_tamanho')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('Salvar sem referência'));
     await tester.pumpAndSettle();
@@ -385,7 +428,7 @@ void main() {
     expect(item.tamanhoId, 2);
   });
 
-  testWidgets('mobile: barra −1/+1 fica acima do teclado e o rodapé continua visível',
+  testWidgets('mobile: barra −1/+1 fica acima do teclado; rodapé some e o total vai ao cabeçalho',
       (tester) async {
     remoto.semNfe = true;
     await abrir(tester);
@@ -403,12 +446,11 @@ void main() {
     final barra = find.byKey(const Key('barra_teclado'));
     expect(barra, findsOneWidget);
     expect(tester.getBottomLeft(barra).dy, lessThanOrEqualTo(1400 - 400));
-    final rodape = find.byKey(const Key('rodape_acao_entrada'));
-    expect(rodape, findsOneWidget);
-    expect(tester.getBottomLeft(rodape).dy, lessThanOrEqualTo(1400 - 400));
-    // a barra vem acima do rodapé
-    expect(tester.getBottomLeft(barra).dy,
-        lessThanOrEqualTo(tester.getTopLeft(rodape).dy + 0.5));
+    expect(find.byKey(const Key('rodape_acao_entrada')), findsNothing);
+    expect(find.byKey(const Key('painel_total_cabecalho')), findsOneWidget);
+    // a faixa Editando vem logo acima da barra
+    expect(tester.getBottomLeft(find.byKey(const Key('faixa_editando'))).dy,
+        lessThanOrEqualTo(tester.getTopLeft(barra).dy + 0.5));
 
     await tester.tap(find.byKey(const Key('barra_mais')));
     await tester.tap(find.byKey(const Key('barra_mais')));
@@ -421,10 +463,14 @@ void main() {
           .text,
       '1',
     );
-    expect(find.text('1 peças'), findsOneWidget);
+    Finder total(String t) => find.byWidgetPredicate((w) =>
+        w is Text &&
+        w.key == const Key('painel_total_cabecalho') &&
+        w.data == t);
+    expect(total('1 pç'), findsOneWidget);
     await tester.tap(find.byKey(const Key('barra_limpar')));
     await tester.pump();
-    expect(find.text('0 peças'), findsOneWidget);
+    expect(total('0 pç'), findsOneWidget);
   });
 
   testWidgets('mobile: entrada vazia mostra os dois caminhos de contagem', (
@@ -504,6 +550,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '1');
     await tester.pump();
     expect(find.byKey(const Key('painel_aviso_lido')), findsOneWidget);
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
+    await tester.pump();
     expect(
       tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'SALVAR')).onPressed,
       isNull,
@@ -511,6 +559,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '2');
     await tester.pump();
     expect(find.byKey(const Key('painel_aviso_lido')), findsNothing);
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
+    await tester.pump();
     expect(
       tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'SALVAR')).onPressed,
       isNotNull,
@@ -588,6 +638,7 @@ void main() {
     expect(find.byKey(const Key('painel_aviso_etiquetas')), findsOneWidget);
     expect(find.text('SALVAR · IMPRIMIR 0'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('contagem_1_2')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     expect(find.text('SALVAR · IMPRIMIR 2'), findsOneWidget);
     await tester.tap(find.text('SALVAR · IMPRIMIR 2'));
@@ -664,6 +715,7 @@ void main() {
     expect(find.byKey(const Key('contagem_5_6')), findsOneWidget);
     expect(find.byKey(const Key('contagem_5_7')), findsOneWidget);
     await tester.enterText(find.byKey(const Key('contagem_5_6')), '5');
+    FocusManager.instance.primaryFocus?.unfocus(); // com foco o rodapé some (C3)
     await tester.pump();
     await tester.tap(find.text('SALVAR'));
     await tester.pumpAndSettle();
@@ -705,6 +757,54 @@ void main() {
     expect(remoto.associados, [20, 21, 22]);
     expect(remoto.associadoRef, 99);
     expect(remoto.associadoCategoria, isNull);
+    expect(find.text('“Body rendado vinho” associado à REF 99.'), findsOneWidget);
+    expect(find.text('Abrir referência'), findsOneWidget);
+  });
+
+  testWidgets('Sem PRDFM003: criar referência nova desabilitado com aviso',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    permissoes = {'PRDFM008'};
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_referencia')), findsOneWidget);
+    await tester.tap(find.text('Criar referência nova'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const Key('entrada_criar_referencia_Vestido Luna')),
+        findsNothing);
+    expect(find.byKey(const Key('entrada_associar_Vestido Luna')),
+        findsOneWidget);
+  });
+
+  testWidgets('Com PRDFM003: sem aviso e criar referência disponível',
+      (tester) async {
+    remoto
+      ..semNfe = true
+      ..comLivre = true;
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_referencia')), findsNothing);
+    await tester.tap(find.text('Criar referência nova'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('entrada_criar_referencia_Vestido Luna')),
+        findsOneWidget);
+  });
+
+  testWidgets('Sem PRDFM008: cadastrar variação desabilitado', (tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = variacoes();
+    permissoes = {'PRDFM003'};
+    await abrir(tester);
+
+    expect(find.byKey(const Key('sem_permissao_variacao')), findsNWidgets(2));
+    final b = tester.widget<FilledButton>(find.descendant(
+        of: find.byKey(const Key('cadastrar_variacao_77')),
+        matching: find.byType(FilledButton)));
+    expect(b.onPressed, isNull);
   });
 
   testWidgets('Criar referência nova: wizard cancelado não associa nada',
@@ -724,6 +824,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(argsCadastro, isNotNull);
     expect(remoto.associados, isNull);
+    expect(find.byKey(const Key('aviso_tentar_de_novo')), findsOneWidget);
+    expect(
+      find.textContaining('Referência não cadastrada. “Vestido Luna” continua'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('aviso_usar_existente')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('aviso_tentar_de_novo')), findsNothing);
   });
 
   Map<String, dynamic> conferindo() => {
@@ -756,7 +864,7 @@ void main() {
 
     await bipar(tester, 'A');
     await bipar(tester, 'A');
-    expect(find.text('2 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('2 na fila · salvas no aparelho'), findsOneWidget);
     expect(find.text('2 de 4 peças'), findsOneWidget);
     expect(remoto.lotes, isEmpty);
 
@@ -766,6 +874,105 @@ void main() {
       {5: 2},
     ]);
     expect(find.text('Passo 5 de 5 · Faturar'), findsOneWidget);
+  });
+
+  Future<void> irParaFaturar(WidgetTester tester) async {
+    remoto
+      ..semNfe = true
+      ..extra = conferindo();
+    await abrir(tester);
+    for (var i = 0; i < 4; i++) {
+      await bipar(tester, 'A');
+    }
+    await tester.tap(find.text('ENVIAR E REVISAR'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5)); // some o snackbar "Leituras enviadas"
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('Faturar: só chama o faturamento ao confirmar na folha',
+      (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('faturar_folha')), findsOneWidget);
+    expect(find.text('Faturar 4 peças?'), findsOneWidget);
+    expect(find.text('Depois de faturar não dá para desfazer.'), findsOneWidget);
+    expect(_Faturar.chamadas, 0);
+
+    await tester.tap(find.byKey(const Key('faturar_voltar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 0);
+    expect(find.byKey(const Key('faturar_folha')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 1);
+    expect(find.byKey(const Key('faturar_folha')), findsNothing);
+  });
+
+  testWidgets('Faturado: conclusão com 3 ações e rotas certas', (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('✓ Entrada #9 faturada'), findsOneWidget);
+    expect(find.text('Faturada'), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_contagens')), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_pedido')), findsOneWidget);
+    expect(find.byKey(const Key('conclusao_nova')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('conclusao_pedido')));
+    await tester.tap(find.byKey(const Key('conclusao_pedido')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/pedido {idPedido: 9}']);
+  });
+
+  testWidgets('Faturado: VOLTAR ÀS CONTAGENS abre a lista', (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('conclusao_contagens')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/entrada_contagem']);
+  });
+
+  testWidgets('Faturado: NOVA CONTAGEM abre a rota de nova contagem',
+      (tester) async {
+    await irParaFaturar(tester);
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('conclusao_nova')));
+    await tester.pumpAndSettle();
+    expect(rotas, ['/entrada_contagem/nova']);
+  });
+
+  testWidgets('Faturar com erro: folha continua aberta com TENTAR DE NOVO',
+      (tester) async {
+    await irParaFaturar(tester);
+    _Faturar.falha = true;
+    await tester.tap(find.byKey(const Key('revisao_faturar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('faturar_folha')), findsOneWidget);
+    expect(find.byKey(const Key('faturar_erro')), findsOneWidget);
+    expect(find.text('TENTAR DE NOVO'), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+
+    _Faturar.falha = false;
+    await tester.tap(find.byKey(const Key('faturar_confirmar')));
+    await tester.pumpAndSettle();
+    expect(_Faturar.chamadas, 2);
+    expect(find.text('✓ Entrada #9 faturada'), findsOneWidget);
   });
 
   testWidgets('Sair do Conferir com pendência pergunta: continuar, descartar, enviar',
@@ -788,7 +995,7 @@ void main() {
     await tester.tap(find.byKey(const Key('saida_continuar')));
     await tester.pumpAndSettle();
     expect(find.text('Passo 4 de 5 · Conferir'), findsOneWidget);
-    expect(find.text('1 leitura(s) ainda não enviada(s)'), findsOneWidget);
+    expect(find.text('1 na fila · salvas no aparelho'), findsOneWidget);
 
     await tentarSair();
     await tester.tap(find.byKey(const Key('saida_descartar')));

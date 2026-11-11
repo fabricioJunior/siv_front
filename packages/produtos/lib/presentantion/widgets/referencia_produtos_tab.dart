@@ -99,6 +99,11 @@ class _ReferenciaProdutosTabState extends State<ReferenciaProdutosTab> {
         final cores = context.sivColors;
         final textos = context.sivTextos;
         final criando = state.step == ProdutosDaReferenciaStep.criandoProdutos;
+
+        // Referência esperada ("Definir na chegada"): ainda sem nenhuma variação.
+        if (!criando && state.mapaProduto.isEmpty && state.cores.isEmpty) {
+          return _buildSemVariacoes(context, cores, textos, state);
+        }
         final linhas = state.linhas;
         final totalFaltantes = state.todosOsFaltantes.length;
 
@@ -182,12 +187,56 @@ class _ReferenciaProdutosTabState extends State<ReferenciaProdutosTab> {
             ],
           ),
         ),
-        OutlinedButton.icon(
-          onPressed: () => _abrirAdicionarVariacoes(context, state),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Adicionar variações'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pushNamed(
+                '/codigos_de_barras_da_referencia',
+                arguments: {'referenciaId': widget.referenciaId},
+              ),
+              icon: const Icon(Icons.qr_code_2, size: 18),
+              label: const Text('Códigos de barras'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _abrirAdicionarVariacoes(context, state),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Adicionar variações'),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSemVariacoes(
+    BuildContext context,
+    SivColors cores,
+    SivTextStyles textos,
+    ProdutosDaReferenciaState state,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.grid_view_outlined, size: 40, color: cores.textoApoio),
+          const SizedBox(height: 12),
+          Text('SEM VARIAÇÕES', style: textos.secao.copyWith(color: cores.acoAtivo)),
+          const SizedBox(height: 4),
+          Text(
+            'As cores e os tamanhos podem ser definidos quando a peça chegar.',
+            textAlign: TextAlign.center,
+            style: textos.apoio.copyWith(color: cores.textoApoio),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => _abrirAdicionarVariacoes(context, state),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('ADICIONAR VARIAÇÕES'),
+          ),
+        ],
+      ),
     );
   }
 

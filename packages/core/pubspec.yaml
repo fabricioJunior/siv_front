@@ -31,6 +31,8 @@ dependencies:
   cep_sdk: ^0.0.1
   image_picker: ^1.2.1
   file_picker: ^8.1.6
+  share_plus: ^10.1.4
+  package_info_plus: ^9.0.1
   flutter_image_compress: ^2.4.0
   image: ^4.5.4
   http_parser: ^4.1.2
@@ -47,10 +49,12 @@ dependencies:
   hive_ce_flutter: ^2.3.4
   idb_shim: ^2.9.9
   lucide_icons_flutter: ^3.0.0
-  mobile_scanner: ^7.4.0
+  leitor_camera:
+    path: ../leitor_camera
   socket_io_client: ^3.1.2
   archive: ^4.0.9 # gerar .xlsx (PlanilhaService); o pacote `excel` conflita com pdf/flutter_zpl_generator (xml)
   web: ^1.1.1 # download de arquivo no navegador (ArquivoService)
+  flutter_local_notifications: ^23.0.0 # notificação do sistema (NotificacaoService)
 
 dev_dependencies:
   flutter_test:

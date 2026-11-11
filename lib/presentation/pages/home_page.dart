@@ -289,18 +289,20 @@ class _HomePageState extends State<HomePage> {
         return LayoutBuilder(
           builder: (context, constraints) {
             final colunas = constraints.maxWidth >= 700 ? 4 : 2;
-            return GridView.count(
-              crossAxisCount: colunas,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: SivDimensoes.gapCards,
-              crossAxisSpacing: SivDimensoes.gapCards,
-              childAspectRatio: 1.9,
+            // Wrap: altura segue o conteúdo (aspect ratio fixo estourava no mobile).
+            const gap = SivDimensoes.gapCards;
+            final largura = (constraints.maxWidth - gap * (colunas - 1)) / colunas;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
               children: [
-                _indicadorCard(context, titulo: 'Vendido hoje', valor: vendidoHoje),
-                _indicadorCard(context, titulo: 'Ticket médio', valor: ticketMedio),
-                _indicadorCard(context, titulo: 'Pedidos abertos', valor: pedidosAbertos),
-                _indicadorSincronizacao(context),
+                for (final card in [
+                  _indicadorCard(context, titulo: 'Vendido hoje', valor: vendidoHoje),
+                  _indicadorCard(context, titulo: 'Ticket médio', valor: ticketMedio),
+                  _indicadorCard(context, titulo: 'Pedidos abertos', valor: pedidosAbertos),
+                  _indicadorSincronizacao(context),
+                ])
+                  SizedBox(width: largura, child: card),
               ],
             );
           },

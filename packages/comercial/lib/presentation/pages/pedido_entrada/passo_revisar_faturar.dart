@@ -26,12 +26,35 @@ class PassoRevisarFaturar extends StatefulWidget {
 
 class _PassoRevisarFaturarState extends State<PassoRevisarFaturar> {
   int? _explicando;
+  DateTime? _faturadoEm;
   final _obs = TextEditingController();
 
   @override
   void dispose() {
     _obs.dispose();
     super.dispose();
+  }
+
+  Future<void> _confirmarFaturar(int entra) async {
+    final bloc = context.read<PedidoEntradaBloc>();
+    final r = widget.resumo;
+    final ok = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: false,
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: _FolhaFaturar(
+          contado: r.revisao.contado > 0 ? r.revisao.contado : r.totalContado,
+          conferido: r.conferencia.totalLido,
+          entra: entra,
+          mantidas: r.divergencias
+              .where((d) => d.decisao == AcaoDivergencia.manter)
+              .length,
+        ),
+      ),
+    );
+    if (ok == true && mounted) setState(() => _faturadoEm = DateTime.now());
   }
 
   void _decidir(EntradaDivergencia d, AcaoDivergencia a, {String? obs}) {
@@ -73,16 +96,15 @@ class _PassoRevisarFaturarState extends State<PassoRevisarFaturar> {
         ? r.revisao.entraNoEstoque
         : r.conferencia.totalLido;
 
+    if (widget.faturado) return _conclusao(r, entra, textos, cores);
+
     return Column(
       children: [
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (widget.faturado)
-                Text('Pedido faturado.',
-                    key: const Key('revisao_faturado'), style: textos.secao)
-              else if (r.divergencias.isNotEmpty)
+              if (r.divergencias.isNotEmpty)
                 Text(
                   '${restantes == 0 ? 'NENHUM' : restantes} ITENS PARA DECIDIR ANTES DE FATURAR',
                   key: const Key('revisao_titulo'),
@@ -123,11 +145,68 @@ class _PassoRevisarFaturarState extends State<PassoRevisarFaturar> {
             key: const Key('revisao_faturar'),
             rotulo: 'FATURAR ${qtd(entra)} PEÇAS',
             onPressed: pode && !widget.salvando
-                ? () => context
-                    .read<PedidoEntradaBloc>()
-                    .add(const PedidoEntradaFaturou())
+                ? () => _confirmarFaturar(entra.round())
                 : null,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _conclusao(
+      EntradaResumo r, double entra, SivTextStyles textos, SivColors cores) {
+    final fornecedor = r.fornecedor?.nome ?? r.nfe?.emitenteNome;
+    final em = _faturadoEm;
+    final detalhe = [
+      '${qtd(entra)} peças entraram no estoque',
+      if (fornecedor != null && fornecedor.isNotEmpty) fornecedor,
+      if (em != null)
+        'hoje, ${em.hour.toString().padLeft(2, '0')}:${em.minute.toString().padLeft(2, '0')}',
+    ].join(' · ');
+    final refs = r.contagens.map((c) => c.referenciaId ?? c.produtoId).toSet().length;
+    final skus = r.conferencia.itens.length;
+    final decididas = r.divergencias.where((d) => d.decidida).length;
+    final nav = Navigator.of(context);
+    Widget acao(String chave, String rotulo, VoidCallback f) => Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: SizedBox(
+            height: alturaBotaoPrincipal,
+            child: OutlinedButton(
+              key: Key(chave),
+              onPressed: f,
+              child: Text(rotulo),
+            ),
+          ),
+        );
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text('✓ Entrada #${r.pedidoId} faturada',
+            key: const Key('revisao_faturado'), style: textos.secao),
+        const SizedBox(height: 4),
+        Text(detalhe, key: const Key('conclusao_detalhe'), style: textos.corpo),
+        const SizedBox(height: 4),
+        Text(
+          '$refs referências · $skus SKUs · $decididas divergências decididas',
+          key: const Key('conclusao_resumo'),
+          style: textos.apoio,
+        ),
+        const SizedBox(height: 16),
+        BotaoPrincipalEntrada(
+          key: const Key('conclusao_contagens'),
+          rotulo: 'VOLTAR ÀS CONTAGENS',
+          onPressed: () => nav.pushNamedAndRemoveUntil(
+              '/entrada_contagem', (rota) => rota.isFirst),
+        ),
+        acao(
+          'conclusao_pedido',
+          'ABRIR PEDIDO',
+          () => nav.pushNamed('/pedido', arguments: {'idPedido': r.pedidoId}),
+        ),
+        acao(
+          'conclusao_nova',
+          'NOVA CONTAGEM',
+          () => nav.pushReplacementNamed('/entrada_contagem/nova'),
         ),
       ],
     );
@@ -228,6 +307,106 @@ class _PassoRevisarFaturarState extends State<PassoRevisarFaturar> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Folha de confirmação: só dispara o faturamento ao confirmar; em erro fica
+/// aberta com a mensagem do servidor e TENTAR DE NOVO.
+class _FolhaFaturar extends StatelessWidget {
+  final double contado;
+  final double conferido;
+  final int entra;
+  final int mantidas;
+
+  const _FolhaFaturar({
+    required this.contado,
+    required this.conferido,
+    required this.entra,
+    required this.mantidas,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    Widget linha(String t, String v, {bool forte = false}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(t, style: forte ? textos.secao : textos.corpo),
+              ),
+              Text(v, style: forte ? textos.secao : textos.corpo),
+            ],
+          ),
+        );
+    return BlocConsumer<PedidoEntradaBloc, PedidoEntradaState>(
+      listenWhen: (a, b) => !a.faturado && b.faturado,
+      listener: (context, _) => Navigator.of(context).pop(true),
+      builder: (context, state) => PopScope(
+        canPop: !state.salvando,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              key: const Key('faturar_folha'),
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Faturar $entra peças?', style: textos.secao),
+                const SizedBox(height: 12),
+                linha('Contado', qtd(contado)),
+                linha('Conferido', qtd(conferido)),
+                linha('Entra no estoque', '$entra peças', forte: true),
+                if (mantidas > 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    mantidas == 1
+                        ? '1 divergência mantida com explicação.'
+                        : '$mantidas divergências mantidas com explicação.',
+                    style: textos.apoio.copyWith(color: cores.parcialTexto),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Text('Depois de faturar não dá para desfazer.',
+                    style: textos.apoio),
+                if (state.erroFaturar != null) ...[
+                  const SizedBox(height: 8),
+                  Text(state.erroFaturar!,
+                      key: const Key('faturar_erro'),
+                      style: textos.apoio.copyWith(color: cores.parcialTexto)),
+                ],
+                const SizedBox(height: 16),
+                BotaoPrincipalEntrada(
+                  key: const Key('faturar_confirmar'),
+                  rotulo: state.erroFaturar != null
+                      ? 'TENTAR DE NOVO'
+                      : 'FATURAR $entra PEÇAS',
+                  onPressed: state.salvando
+                      ? null
+                      : () => context
+                          .read<PedidoEntradaBloc>()
+                          .add(const PedidoEntradaFaturou()),
+                ),
+                if (state.salvando)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: LinearProgressIndicator(minHeight: 2),
+                  ),
+                TextButton(
+                  key: const Key('faturar_voltar'),
+                  onPressed: state.salvando
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                  child: const Text('VOLTAR'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

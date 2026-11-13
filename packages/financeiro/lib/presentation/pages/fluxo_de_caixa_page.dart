@@ -141,7 +141,7 @@ class _FluxoDeCaixaPageState extends State<FluxoDeCaixaPage> {
 
   Future<void> _irParaLancarDespesa(BuildContext context, int caixaId) async {
     await Navigator.of(context).pushNamed(
-      '/lancar_despesa',
+      '/despesas_do_caixa',
       arguments: {'caixaId': caixaId},
     );
     if (!context.mounted) return;
@@ -966,7 +966,7 @@ String _rotuloHistorico(TipoHistoricoExtratoCaixa tipo) {
     case TipoHistoricoExtratoCaixa.sangria:
       return 'Sangria';
     case TipoHistoricoExtratoCaixa.lancamentoDeDespesa:
-      return 'Lançamento de despesa';
+      return 'Despesa';
     case TipoHistoricoExtratoCaixa.venda:
       return 'Venda';
     case TipoHistoricoExtratoCaixa.devolucao:

@@ -230,7 +230,7 @@ class _Cabecalho extends StatelessWidget {
         controller: busca,
         onChanged: onBusca,
         decoration: const InputDecoration(
-          hintText: 'Fornecedor, referência, contador ou nº',
+          hintText: 'Fornecedor, referência, estampa, contador ou nº',
           prefixIcon: Icon(Icons.search),
           isDense: true,
         ),

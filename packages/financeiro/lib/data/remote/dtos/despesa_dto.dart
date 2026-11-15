@@ -29,7 +29,8 @@ class DespesaDto extends Despesa {
       categoriaId: (json['categoriaId'] as num?)?.toInt() ?? 0,
       origemPagamentoId: (json['origemPagamentoId'] as num?)?.toInt() ?? 0,
       formaPagamentoId: (json['formaPagamentoId'] as num?)?.toInt(),
-      caixaId: (json['caixaId'] as num?)?.toInt(),
+      // bigint no MySQL: o driver devolve string ("230"), não num.
+      caixaId: int.tryParse(json['caixaId']?.toString() ?? ''),
       dataPagamento: json['dataPagamento'] == null
           ? null
           : DateTime.tryParse(json['dataPagamento'].toString()),

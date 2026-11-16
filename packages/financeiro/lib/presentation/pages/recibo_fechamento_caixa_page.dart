@@ -124,6 +124,12 @@ class _ReciboFechamentoCaixaPageState extends State<ReciboFechamentoCaixaPage> {
                 ),
                 const SizedBox(height: 12),
                 _CardMovimentacao(
+                  titulo: 'Despesas',
+                  vazioLabel: 'Nenhuma despesa registrada neste caixa.',
+                  itens: recibo.despesas,
+                ),
+                const SizedBox(height: 12),
+                _CardMovimentacao(
                   titulo: 'Suprimentos',
                   vazioLabel: 'Nenhum suprimento registrado neste caixa.',
                   itens: recibo.suprimentos,

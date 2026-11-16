@@ -58,6 +58,9 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
   final List<MovimentacaoRecibo> sangrias;
 
   @override
+  final List<MovimentacaoRecibo> despesas;
+
+  @override
   final List<MovimentacaoRecibo> suprimentos;
 
   const ReciboFechamentoCaixaDto({
@@ -79,6 +82,7 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
     required this.faturamentoMes,
     required this.valoresContados,
     required this.sangrias,
+    required this.despesas,
     required this.suprimentos,
   });
 
@@ -128,6 +132,14 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
                 _MovimentacaoReciboDto.fromJson(item as Map<String, dynamic>),
           )
           .toList(),
+      despesas: ((json['despesas'] as List?) ?? const [])
+          .map(
+            (item) => _MovimentacaoReciboDto.fromJson({
+              ...item as Map<String, dynamic>,
+              'origem': item['categoriaNome'],
+            }),
+          )
+          .toList(),
       suprimentos: ((json['suprimentos'] as List?) ?? const [])
           .map(
             (item) =>
@@ -163,6 +175,7 @@ class ReciboFechamentoCaixaDto implements ReciboFechamentoCaixa {
         faturamentoMes,
         valoresContados,
         sangrias,
+        despesas,
         suprimentos,
       ];
 

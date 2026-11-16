@@ -255,6 +255,8 @@ class ReciboFechamentoCaixaPdfExporter {
           ),
           _tituloSecao('Sangrias'),
           _tabelaMovimentacao(recibo.sangrias, 'Nenhuma sangria'),
+          _tituloSecao('Despesas'),
+          _tabelaMovimentacao(recibo.despesas, 'Nenhuma despesa'),
           _tituloSecao('Suprimentos'),
           _tabelaMovimentacao(recibo.suprimentos, 'Nenhum suprimento'),
           pw.SizedBox(height: 30),

@@ -46,6 +46,8 @@ class ReferenciaDto implements Referencia {
 
   @override
   final String? composicao;
+  @override
+  final String? material;
 
   @override
   final String? cuidados;
@@ -98,6 +100,7 @@ class ReferenciaDto implements Referencia {
     this.marcaId,
     this.descricao,
     this.composicao,
+    this.material,
     this.cuidados,
     this.ncm,
     this.pesoGramas,
@@ -129,6 +132,7 @@ class ReferenciaDto implements Referencia {
     marcaId,
     descricao,
     composicao,
+    material,
     cuidados,
     ncm,
     pesoGramas,

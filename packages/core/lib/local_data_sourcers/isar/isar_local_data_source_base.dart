@@ -74,7 +74,7 @@ abstract class IsarLocalDataSourceBase<Dto extends IsarDto, E>
   Future<void> deleteAll() async {
     log('iniciou');
     var isarInstace = await getIsar();
-    isarInstace.writeTxn(() async {
+    await isarInstace.writeTxn(() async {
       return isarInstace.collection<Dto>().clear();
     });
     log('finalizou');

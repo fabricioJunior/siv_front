@@ -3,12 +3,16 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'dart:async' as _i4;
 
 import 'package:autenticacao/domain/data/data_sourcers/remote/i_token_remote_data_source.dart'
     as _i3;
+import 'package:autenticacao/domain/models/resultado_renovacao_token.dart'
+    as _i5;
 import 'package:autenticacao/domain/models/token.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -75,7 +79,7 @@ class MockITokenRemoteDataSource extends _i1.Mock
       ) as _i4.Future<_i2.Token>);
 
   @override
-  _i4.Future<_i2.Token?> renovarToken({
+  _i4.Future<_i5.ResultadoRenovacaoToken> renovarToken({
     required String? refreshToken,
     required int? idEmpresa,
   }) =>
@@ -88,6 +92,17 @@ class MockITokenRemoteDataSource extends _i1.Mock
             #idEmpresa: idEmpresa,
           },
         ),
-        returnValue: _i4.Future<_i2.Token?>.value(),
-      ) as _i4.Future<_i2.Token?>);
+        returnValue: _i4.Future<_i5.ResultadoRenovacaoToken>.value(
+            _i6.dummyValue<_i5.ResultadoRenovacaoToken>(
+          this,
+          Invocation.method(
+            #renovarToken,
+            [],
+            {
+              #refreshToken: refreshToken,
+              #idEmpresa: idEmpresa,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultadoRenovacaoToken>);
 }

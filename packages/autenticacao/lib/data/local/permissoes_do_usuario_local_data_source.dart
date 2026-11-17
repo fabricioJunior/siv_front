@@ -21,6 +21,10 @@ class PermissoesDoUsuarioLocalDataSource
   }
 
   @override
+  Future<void> removerExceto(Set<String> componenteIds) =>
+      deleteWhere((p) => !componenteIds.contains(p.componenteId));
+
+  @override
   PermissaoDoUsuarioDto toDto(PermissaoDoUsuario entity) {
     return PermissaoDoUsuarioDto(
       id: entity.id,

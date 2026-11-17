@@ -256,6 +256,10 @@ class _PassoContarState extends State<PassoContar> {
         nomesTamanho[c.tamanhoId!] = c.tamanhoNome ?? '${c.tamanhoId}';
       }
     }
+    for (final c in _r.contagensLivres) {
+      if (c.corNome != null) nomesCor[c.corId] = c.corNome!;
+      if (c.tamanhoNome != null) nomesTamanho[c.tamanhoId] = c.tamanhoNome!;
+    }
   }
 
   String _corNome(int id) => nomesCor[id] ?? '#$id';

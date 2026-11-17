@@ -1,51 +1,89 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:cpf_cnpj_validator/cnpj_validator.dart';
 import 'package:cpf_cnpj_validator/cpf_validator.dart';
-import 'package:date_format_field/date_format_field.dart';
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-abstract class InputFormarts {
-  Widget dataFormatInput() => DateFormatField(
-      type: DateFormatType.type1,
-      onComplete: (date) {
-        print(date.toString);
-      });
-}
-
-// ignore: must_be_immutable
-class DateInput extends StatelessWidget {
-  dynamic Function(DateTime?) onComplete;
+/// Campo de data dd/MM/aaaa: só aceita dígitos (máscara) e só chama [onComplete] com data
+/// válida (ou null enquanto incompleta/inexistente). Não lança com texto colado ou digitado errado.
+class DateInput extends StatefulWidget {
+  final dynamic Function(DateTime?) onComplete;
   final DateTime? dataInicial;
   final bool? bloqueado;
-  final TextEditingController controller;
   final String? labelText;
   final TextEditingController? externalController;
-  // ignore: use_key_in_widget_constructors
-  DateInput(
-      {required this.onComplete,
-      this.dataInicial,
-      this.bloqueado,
-      this.labelText,
-      this.externalController})
-      : controller = TextEditingController(
-          text: dataInicial != null
-              ? '${dataInicial.day}/${dataInicial.month}/${dataInicial.year}'
-              : null,
-        );
+
+  const DateInput({
+    super.key,
+    required this.onComplete,
+    this.dataInicial,
+    this.bloqueado,
+    this.labelText,
+    this.externalController,
+  });
+
+  /// "dd/MM/aaaa" -> data, ou null se incompleto ou inexistente (ex.: 31/02/2024).
+  static DateTime? interpretar(String texto) {
+    final m = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$').firstMatch(texto);
+    if (m == null) return null;
+    final d = int.parse(m[1]!), mes = int.parse(m[2]!), a = int.parse(m[3]!);
+    final data = DateTime(a, mes, d);
+    return data.day == d && data.month == mes && data.year == a ? data : null;
+  }
+
+  static String formatar(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year.toString().padLeft(4, '0')}';
+
+  @override
+  State<DateInput> createState() => _DateInputState();
+}
+
+class _DateInputState extends State<DateInput> {
+  late final TextEditingController _controller =
+      widget.externalController ??
+      TextEditingController(
+        text: widget.dataInicial != null ? DateInput.formatar(widget.dataInicial!) : null,
+      );
+  final _mascara = MaskTextInputFormatter(
+    mask: '##/##/####',
+    filter: {'#': RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  @override
+  void dispose() {
+    if (widget.externalController == null) _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _escolher() async {
+    final atual = DateInput.interpretar(_controller.text) ?? widget.dataInicial;
+    final data = await showDatePicker(
+      context: context,
+      initialDate: atual,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+    if (data == null) return;
+    _controller.text = DateInput.formatar(data);
+    widget.onComplete(data);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      ignoring: bloqueado ?? false,
-      child: DateFormatField(
-        controller: externalController ?? controller,
-        onComplete: onComplete,
-        type: DateFormatType.type2,
-        initialDate: dataInicial,
-        decoration: InputDecoration(
-          labelText: labelText,
-          border: const OutlineInputBorder(),
+    return TextField(
+      controller: _controller,
+      readOnly: widget.bloqueado ?? false,
+      keyboardType: TextInputType.number,
+      inputFormatters: [_mascara],
+      onChanged: (v) => widget.onComplete(DateInput.interpretar(v)),
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        hintText: 'dd/mm/aaaa',
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          onPressed: (widget.bloqueado ?? false) ? null : _escolher,
+          icon: const Icon(Icons.calendar_month),
         ),
       ),
     );

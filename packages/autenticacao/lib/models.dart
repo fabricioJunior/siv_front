@@ -1,6 +1,7 @@
 library models;
 
 export 'domain/models/token.dart';
+export 'domain/models/resultado_renovacao_token.dart';
 export 'domain/models/licenciado.dart';
 export 'domain/models/usuario.dart';
 export 'domain/models/terminal_do_usuario.dart';

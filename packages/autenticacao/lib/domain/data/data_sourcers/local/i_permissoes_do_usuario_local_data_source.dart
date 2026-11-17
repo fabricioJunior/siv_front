@@ -9,4 +9,7 @@ abstract class IPermissoesDoUsuarioLocalDataSource<
     int? idGrupo,
     String? nomeGrupo,
   });
+
+  /// Remove as permissoes cujo componenteId nao esta em [componenteIds].
+  Future<void> removerExceto(Set<String> componenteIds);
 }

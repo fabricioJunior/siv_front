@@ -23,7 +23,7 @@ class _FonteLocal implements ILeitorDataDatasource {
 
   @override
   Future<LeitorData?> getData(String codigo, {int? tabelaDePrecoId}) async =>
-      _por((p) => p.codigoDeBarras == codigo);
+      _por((p) => p.temCodigo(codigo));
 
   @override
   Future<LeitorData?> getDataPorProdutoId(

@@ -53,6 +53,7 @@ class ReferenciaBloc extends Bloc<ReferenciaEvent, ReferenciaState> {
         unidadeMedida: event.unidadeMedida,
         descricao: event.descricao,
         composicao: event.composicao,
+        material: event.material,
         cuidados: event.cuidados,
         ncm: event.ncm,
         pesoGramas: event.pesoGramas,

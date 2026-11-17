@@ -49,6 +49,8 @@ export 'package:produtos/presentantion/pages/produto_page.dart';
 export 'package:produtos/presentantion/blocs/etiquetas_bloc/etiquetas_bloc.dart';
 export 'package:produtos/presentantion/pages/etiquetas_page.dart';
 export 'package:produtos/presentantion/pages/impressao_de_etiquetas_page.dart';
+export 'package:produtos/presentantion/pages/etiquetas_promocao_page.dart';
+export 'package:produtos/presentantion/blocs/etiquetas_promocao_bloc/etiquetas_promocao_bloc.dart';
 export 'package:produtos/presentantion/modals/produto_visualizacao_modal.dart';
 export 'package:produtos/presentantion/blocs/referencia_cadastro_bloc/referencia_cadastro_bloc.dart';
 export 'package:produtos/presentantion/pages/referencia_cadastro_page.dart';

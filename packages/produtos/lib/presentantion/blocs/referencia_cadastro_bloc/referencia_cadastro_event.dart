@@ -58,16 +58,18 @@ class ReferenciaCadastroOpcionaisAlterados extends ReferenciaCadastroEvent {
   final String? unidadeMedida;
   final String? descricao;
   final String? composicao;
+  final String? material;
   final String? cuidados;
   const ReferenciaCadastroOpcionaisAlterados({
     this.unidadeMedida,
     this.descricao,
     this.composicao,
+    this.material,
     this.cuidados,
   });
 
   @override
-  List<Object?> get props => [unidadeMedida, descricao, composicao, cuidados];
+  List<Object?> get props => [unidadeMedida, descricao, composicao, material, cuidados];
 }
 
 class ReferenciaCadastroPrecoAlterado extends ReferenciaCadastroEvent {

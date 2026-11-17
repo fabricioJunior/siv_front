@@ -44,6 +44,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final ReenviarEmailPedido _reenviarEmailPedido;
   final LinkCompartilhamentoPedido _linkCompartilhamentoPedido;
   final EmbalarPedido _embalarPedido;
+  final ListarRetiradaPendentesPedido _listarRetiradaPendentesPedido;
   final IAcessoGlobalSessao _acessoGlobalSessao;
   final RecuperarFormasDePagamento _recuperarFormasDePagamento;
   final RecuperarEnderecosDaPessoa _recuperarEnderecosDaPessoa;
@@ -82,6 +83,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._recuperarEnderecosDaPessoa,
     this._aplicarDescontosPromocionaisPedido,
     this._salvarOpcoesFiscaisPedido,
+    this._listarRetiradaPendentesPedido,
   ) : super(const PedidoState.initial()) {
     on<PedidoIniciou>(_onIniciou);
     on<PedidoCampoAlterado>(_onCampoAlterado);
@@ -116,6 +118,151 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoEmailReenviou>(_onEmailReenviou);
     on<PedidoLinkCompartilhamentoSolicitou>(_onLinkCompartilhamentoSolicitou);
     on<PedidoEmbalou>(_onEmbalou);
+    on<PedidoRetiradaPendentesCarregou>(_onRetiradaPendentesCarregou);
+    on<PedidoRetirouJunto>(_onRetirouJunto);
+    on<PedidoAcertoFechou>(_onAcertoFechou);
+    on<PedidoPagamentoNaEntregaAlterado>(_onPagamentoNaEntregaAlterado);
+    on<PedidoRecarregou>(_onRecarregou);
+  }
+
+  FutureOr<void> _onRetiradaPendentesCarregou(
+    PedidoRetiradaPendentesCarregou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+    try {
+      final lista = await _listarRetiradaPendentesPedido.call(state.id!);
+      emit(state.copyWith(
+        outrosPedidosPendentes: lista,
+        limparOutrosPedidosPendentes: lista.isEmpty,
+      ));
+    } catch (_) {
+      // Sem a lista só some o "Retirar junto"; a retirada em si segue.
+      emit(state.copyWith(limparOutrosPedidosPendentes: true));
+    }
+  }
+
+  FutureOr<void> _onRetirouJunto(
+    PedidoRetirouJunto event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+    final id = state.id!;
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _confirmarRetiradaPedido.call(id, event.codigo);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao confirmar retirada.')));
+      addError(e, s);
+      return;
+    }
+    String? erroLote;
+    if (event.pedidoIds.isNotEmpty) {
+      try {
+        await _confirmarRetiradaLotePedido.call(event.pedidoIds);
+      } catch (e) {
+        erroLote = mensagemDeErroApi(
+            e, 'Retirada confirmada, mas falhou a dos pedidos selecionados.');
+      }
+    }
+    await _recarregarComDependencias(emit, PedidoStep.retiradaConfirmada);
+    if (erroLote != null) {
+      emit(state.copyWith(step: PedidoStep.falha, erro: erroLote));
+    }
+  }
+
+  FutureOr<void> _onAcertoFechou(
+    PedidoAcertoFechou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+    final id = state.id!;
+    final caixaId = _acessoGlobalSessao.caixaIdDaSessao;
+    if (caixaId == null) {
+      emit(state.copyWith(
+        step: PedidoStep.falha,
+        erro: 'Abra um caixa para fechar o pedido.',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(step: PedidoStep.processando, erro: null));
+    String? erro;
+    var pedido = state.pedido;
+    Future<void> entregar() async {
+      if (pedido?.situacaoEntrega == 'entregue') return;
+      await _confirmarEntregaPedido.call(id);
+    }
+
+    Future<void> faturar() async {
+      if (pedido?.situacao == 'encerrado' || pedido?.situacao == 'faturado') return;
+      await _faturarPedido.call(id, caixaId: caixaId);
+    }
+
+    try {
+      for (final e in event.recebidos.entries) {
+        await _confirmarPagamentoPedido.call(id, e.key, valorConfirmado: e.value);
+      }
+      if (faturaEntregaDepoisDeEntregar) {
+        await entregar();
+        await faturar();
+      } else {
+        await faturar();
+        await entregar();
+      }
+    } catch (e, s) {
+      erro = mensagemDeErroApi(e, 'Falha ao fechar o acerto.');
+      addError(e, s);
+    }
+    await _recarregarComDependencias(emit, PedidoStep.acertoFechado);
+    if (erro != null) emit(state.copyWith(step: PedidoStep.falha, erro: erro));
+  }
+
+  FutureOr<void> _onPagamentoNaEntregaAlterado(
+    PedidoPagamentoNaEntregaAlterado event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null ||
+        state.pedido?.pagamentoNaEntrega == event.pagamentoNaEntrega) {
+      emit(state.copyWith(step: PedidoStep.pagamentoNaEntregaSalvo));
+      return;
+    }
+    emit(state.copyWith(step: PedidoStep.processando, erro: null));
+    try {
+      final salvo = await _atualizarPedido.call(
+        _toModel(state, pagamentoNaEntrega: event.pagamentoNaEntrega),
+      );
+      emit(
+        PedidoState.fromModel(
+          salvo,
+          step: PedidoStep.pagamentoNaEntregaSalvo,
+          pagamentos: state.pagamentos,
+          eventos: state.eventos,
+          itens: state.itens,
+          formasDePagamentoPorId: state.formasDePagamentoPorId,
+          enderecoEntregaResumo: state.enderecoEntregaResumo,
+        ),
+      );
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(e, 'Falha ao salvar o momento do pagamento.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onRecarregou(
+    PedidoRecarregou event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null || state.step == PedidoStep.processando) return;
+    try {
+      await _recarregarComDependencias(emit, PedidoStep.editando);
+    } catch (_) {
+      // Polling: falha de rede não derruba a tela; a próxima rodada tenta de novo.
+    }
   }
 
   FutureOr<void> _onIniciou(
@@ -965,7 +1112,14 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
         pagamentos: dependencias.$1,
         eventos: dependencias.$2,
         itens: dependencias.$3,
-      ).copyWith(ultimoPagamentoAdicionado: ultimoPagamentoAdicionado),
+        formasDePagamentoPorId: state.formasDePagamentoPorId,
+        enderecoEntregaResumo: state.enderecoEntregaResumo,
+      ).copyWith(
+        ultimoPagamentoAdicionado: ultimoPagamentoAdicionado,
+        outrosPedidosPendentes: step == PedidoStep.retiradaConfirmada
+            ? const []
+            : state.outrosPedidosPendentes,
+      ),
     );
   }
 
@@ -1058,7 +1212,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     return null;
   }
 
-  Pedido _toModel(PedidoState state) {
+  Pedido _toModel(PedidoState state, {bool? pagamentoNaEntrega}) {
     return Pedido.create(
       id: state.id,
       pessoaId: int.tryParse(state.pessoaId ?? ''),
@@ -1073,6 +1227,8 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       tipo: state.tipo,
       fiscal: state.fiscal,
       observacao: state.observacao?.trim(),
+      pagamentoNaEntrega:
+          pagamentoNaEntrega ?? state.pedido?.pagamentoNaEntrega ?? false,
       criadoEm: state.pedido?.criadoEm,
       atualizadoEm: state.pedido?.atualizadoEm,
       situacao: state.pedido?.situacao,

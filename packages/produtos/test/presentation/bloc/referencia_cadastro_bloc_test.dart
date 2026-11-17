@@ -110,12 +110,13 @@ class _CriarReferenciaFake extends CriarReferencia {
     int? marcaId,
     String? descricao,
     String? composicao,
+    String? material,
     String? cuidados,
     String? ncm,
     int? pesoGramas,
     EsperaReferencia? espera,
   }) async {
-    enviado = {'categoriaId': categoriaId, 'id': id, 'idExterno': idExterno, 'espera': espera};
+    enviado = {'categoriaId': categoriaId, 'id': id, 'idExterno': idExterno, 'espera': espera, 'material': material};
     return Referencia.create(id: id, nome: nome);
   }
 }
@@ -336,6 +337,21 @@ void main() {
     bloc.add(const ReferenciaCadastroCustoAlterado(custo: '12,50'));
     await bloc.stream.firstWhere((s) => s.custo == '12,50');
     await bloc.close();
+  });
+
+  test('material digitado vai pra criação; vazio vai nulo', () async {
+    for (final (digitado, esperado) in [('JEANS', 'JEANS'), ('  ', null)]) {
+      final criar = _CriarReferenciaFake();
+      final bloc = await atePreco(build(criar: criar, fake: true));
+      bloc.add(ReferenciaCadastroOpcionaisAlterados(material: digitado));
+      await bloc.stream.firstWhere((s) => s.material == digitado);
+      bloc.add(const ReferenciaCadastroDefinirNaChegadaAlterado(true));
+      await bloc.stream.firstWhere((s) => s.definirNaChegada);
+      bloc.add(ReferenciaCadastroProximo());
+      await bloc.stream.firstWhere((s) => s.step == ReferenciaCadastroStep.concluido);
+      expect(criar.enviado!['material'], esperado);
+      await bloc.close();
+    }
   });
 
   group('referência esperada', () {

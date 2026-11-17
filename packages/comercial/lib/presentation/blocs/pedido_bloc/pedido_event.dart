@@ -246,3 +246,31 @@ class PedidoItemConferiuPorCodigo extends PedidoEvent {
     required this.quantidade,
   });
 }
+
+/// Carrega os outros pedidos de retirada pendentes do cliente (antes de confirmar, "retirar junto").
+class PedidoRetiradaPendentesCarregou extends PedidoEvent {}
+
+/// Confirma a retirada deste pedido (codigo vazio = sem código) e, em seguida, a dos [pedidoIds].
+class PedidoRetirouJunto extends PedidoEvent {
+  final String codigo;
+  final List<int> pedidoIds;
+
+  PedidoRetirouJunto({this.codigo = '', this.pedidoIds = const []});
+}
+
+/// Fecha o acerto da entrega com pagamento ao entregador: confirma os pagamentos em
+/// [recebidos] (pagamentoId -> valor), confirma a entrega e fatura. Para no 1º erro.
+class PedidoAcertoFechou extends PedidoEvent {
+  final Map<int, double> recebidos;
+
+  PedidoAcertoFechou(this.recebidos);
+}
+
+class PedidoPagamentoNaEntregaAlterado extends PedidoEvent {
+  final bool pagamentoNaEntrega;
+
+  PedidoPagamentoNaEntregaAlterado(this.pagamentoNaEntrega);
+}
+
+/// Recarrega pedido, pagamentos e itens sem alterar o fluxo (polling da cobrança online).
+class PedidoRecarregou extends PedidoEvent {}

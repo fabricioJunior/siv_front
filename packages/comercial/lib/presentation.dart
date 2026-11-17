@@ -81,11 +81,13 @@ export 'presentation/blocs/ecommerce_configuracao_bloc/ecommerce_configuracao_bl
 export 'presentation/blocs/ecommerce_referencias_bloc/ecommerce_referencias_bloc.dart';
 export 'presentation/blocs/ecommerce_referencia_detalhe_bloc/ecommerce_referencia_detalhe_bloc.dart';
 export 'presentation/blocs/ecommerce_banners_bloc/ecommerce_banners_bloc.dart';
+export 'presentation/blocs/ecommerce_chaves_mcp_bloc/ecommerce_chaves_mcp_bloc.dart';
 export 'presentation/pages/ecommerces_page.dart';
 export 'presentation/pages/ecommerce_configuracao_page.dart';
 export 'presentation/pages/ecommerce_referencias_page.dart';
 export 'presentation/pages/ecommerce_referencia_detalhe_page.dart';
 export 'presentation/pages/ecommerce_banner_preview_page.dart';
+export 'presentation/pages/ecommerce_agente_ia_page.dart';
 export 'presentation/blocs/lista_personalizada_bloc/lista_personalizada_bloc.dart';
 export 'presentation/blocs/listas_personalizadas_bloc/listas_personalizadas_bloc.dart';
 export 'presentation/pages/lista_personalizada_page.dart';

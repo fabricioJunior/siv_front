@@ -701,6 +701,7 @@ class _NomeStepState extends State<_NomeStep> {
   late final _unidade = TextEditingController(text: widget.state.unidadeMedida);
   late final _descricao = TextEditingController(text: widget.state.descricao);
   late final _composicao = TextEditingController(text: widget.state.composicao);
+  late final _material = TextEditingController(text: widget.state.material);
   late final _cuidados = TextEditingController(text: widget.state.cuidados);
   late final _codigoFornecedor = TextEditingController(
     text: widget.state.codigoNoFornecedor,
@@ -713,6 +714,7 @@ class _NomeStepState extends State<_NomeStep> {
       _unidade,
       _descricao,
       _composicao,
+      _material,
       _cuidados,
       _codigoFornecedor,
     ]) {
@@ -834,6 +836,12 @@ class _NomeStepState extends State<_NomeStep> {
                 _unidade,
                 (v) => ReferenciaCadastroOpcionaisAlterados(unidadeMedida: v),
                 hint: 'Ex: unidade, metro, kg',
+              ),
+              _campo(
+                'Material (tipo de tecido)',
+                _material,
+                (v) => ReferenciaCadastroOpcionaisAlterados(material: v),
+                hint: 'Ex: JEANS, ALFAIATARIA, MALHA',
               ),
               _campo(
                 'Descrição',

@@ -21,6 +21,7 @@ import 'package:produtos/data/repositorios/referencias_pendentes_peso_repository
 import 'package:produtos/domain/data/remote/i_referencias_pendentes_peso_remote_data_source.dart';
 import 'package:produtos/data/remote/produtos_remote_datasource.dart';
 import 'package:produtos/data/remote/etiquetas_remote_datasource.dart';
+import 'package:produtos/data/remote/promocoes_etiquetas_gateway.dart';
 import 'package:produtos/data/remote/codigos_do_produto_remote_data_source.dart';
 import 'package:produtos/data/remote/codigos_de_barras_da_referencia_remote_data_source.dart';
 import 'package:produtos/data/repositorios/codigos_de_barras_da_referencia_repository.dart';
@@ -585,6 +586,19 @@ void _presentantion() {
 
   sl.registerFactory<ImpressaoEtiquetasBloc>(
     () => ImpressaoEtiquetasBloc(sl(), sl(), sl(), sl(), sl(), sl()),
+  );
+
+  sl.registerFactory<IPromocoesEtiquetasGateway>(
+    () => PromocoesEtiquetasGateway(informacoesParaRequest: sl()),
+  );
+  sl.registerFactory<RecuperarPromocoesParaEtiqueta>(
+    () => RecuperarPromocoesParaEtiqueta(sl()),
+  );
+  sl.registerFactory<RecuperarItensDaPromocaoParaEtiqueta>(
+    () => RecuperarItensDaPromocaoParaEtiqueta(sl()),
+  );
+  sl.registerFactory<EtiquetasPromocaoBloc>(
+    () => EtiquetasPromocaoBloc(sl(), sl(), sl(), sl(), sl()),
   );
 
   sl.registerFactory<ProdutoBloc>(

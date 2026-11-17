@@ -221,6 +221,12 @@ final _itensProdutosFilhos = <_ItemFilhoNav>[
     grupo: 'ETIQUETAS',
   ),
   const _ItemFilhoNav(
+    label: 'Etiqueta de promoção',
+    rota: '/etiquetas_promocao',
+    componentesNecessarios: ['PRDFM012'],
+    grupo: 'ETIQUETAS',
+  ),
+  const _ItemFilhoNav(
     label: 'Modelos de etiqueta',
     rota: '/etiquetas',
     componentesNecessarios: ['PRDFM003'],

@@ -21,6 +21,7 @@ class ReferenciaCadastroState extends Equatable {
   final String unidadeMedida;
   final String descricao;
   final String composicao;
+  final String material;
   final String cuidados;
   // Referência esperada: fornecedor/código ficam no passo do nome; a escolha de
   // variações, a quantidade esperada e a foto, no passo do preço.
@@ -47,6 +48,7 @@ class ReferenciaCadastroState extends Equatable {
     this.unidadeMedida = '',
     this.descricao = '',
     this.composicao = '',
+    this.material = '',
     this.cuidados = '',
     this.fornecedor,
     this.codigoNoFornecedor = '',
@@ -85,6 +87,7 @@ class ReferenciaCadastroState extends Equatable {
     String? unidadeMedida,
     String? descricao,
     String? composicao,
+    String? material,
     String? cuidados,
     SelectData? Function()? fornecedor,
     String? codigoNoFornecedor,
@@ -109,6 +112,7 @@ class ReferenciaCadastroState extends Equatable {
       unidadeMedida: unidadeMedida ?? this.unidadeMedida,
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
+      material: material ?? this.material,
       cuidados: cuidados ?? this.cuidados,
       fornecedor: fornecedor == null ? this.fornecedor : fornecedor(),
       codigoNoFornecedor: codigoNoFornecedor ?? this.codigoNoFornecedor,
@@ -139,6 +143,7 @@ class ReferenciaCadastroState extends Equatable {
     unidadeMedida,
     descricao,
     composicao,
+    material,
     cuidados,
     fornecedor?.id,
     codigoNoFornecedor,

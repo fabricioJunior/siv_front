@@ -24,6 +24,7 @@ class ReferenciaAtualizou extends ReferenciaEvent {
   final String? unidadeMedida;
   final String? descricao;
   final String? composicao;
+  final String? material;
   final String? cuidados;
   final String? ncm;
   final int? pesoGramas;
@@ -39,6 +40,7 @@ class ReferenciaAtualizou extends ReferenciaEvent {
     this.unidadeMedida,
     this.descricao,
     this.composicao,
+    this.material,
     this.cuidados,
     this.ncm,
     this.pesoGramas,
@@ -56,6 +58,7 @@ class ReferenciaAtualizou extends ReferenciaEvent {
     unidadeMedida,
     descricao,
     composicao,
+    material,
     cuidados,
     ncm,
     pesoGramas,

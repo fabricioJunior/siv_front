@@ -67,6 +67,10 @@ class PedidoDto implements Pedido {
   final DateTime? retiradoEm;
   @override
   final DateTime? conferidoEm;
+  @override
+  final bool exigeCodigoRetirada;
+  @override
+  final bool pagamentoNaEntrega;
 
   const PedidoDto({
     this.id,
@@ -102,6 +106,8 @@ class PedidoDto implements Pedido {
     this.empresaCnpj,
     this.retiradoEm,
     this.conferidoEm,
+    this.exigeCodigoRetirada = true,
+    this.pagamentoNaEntrega = false,
   });
 
   factory PedidoDto.fromJson(Map<String, dynamic> json) {
@@ -139,6 +145,8 @@ class PedidoDto implements Pedido {
       empresaCnpj: json['empresaCnpj']?.toString(),
       retiradoEm: _toDate(json['retiradoEm']),
       conferidoEm: _toDate(json['conferidoEm']),
+      exigeCodigoRetirada: json['exigeCodigoRetirada'] as bool? ?? true,
+      pagamentoNaEntrega: json['pagamentoNaEntrega'] as bool? ?? false,
     );
   }
 
@@ -177,6 +185,8 @@ class PedidoDto implements Pedido {
       empresaCnpj: pedido.empresaCnpj,
       retiradoEm: pedido.retiradoEm,
       conferidoEm: pedido.conferidoEm,
+      exigeCodigoRetirada: pedido.exigeCodigoRetirada,
+      pagamentoNaEntrega: pedido.pagamentoNaEntrega,
     );
   }
 
@@ -192,6 +202,7 @@ class PedidoDto implements Pedido {
       'previsaoDeEntrega': _toDateOnly(previsaoDeEntrega),
       'tipo': tipo,
       'fiscal': fiscal ?? false,
+      'pagamentoNaEntrega': pagamentoNaEntrega,
       'observacao': observacao ?? '',
       'modalidadeEntrega': modalidadeEntrega ?? 'retirada',
       if (enderecoEntregaId != null) 'enderecoEntregaId': enderecoEntregaId,
@@ -209,6 +220,7 @@ class PedidoDto implements Pedido {
       'previsaoDeFaturamento': _toDateOnly(previsaoDeFaturamento),
       'previsaoDeEntrega': _toDateOnly(previsaoDeEntrega),
       'fiscal': fiscal,
+      'pagamentoNaEntrega': pagamentoNaEntrega,
       'observacao': observacao,
       'modalidadeEntrega': modalidadeEntrega,
       if (enderecoEntregaId != null) 'enderecoEntregaId': enderecoEntregaId,
@@ -251,6 +263,8 @@ class PedidoDto implements Pedido {
         empresaCnpj,
         retiradoEm,
         conferidoEm,
+        exigeCodigoRetirada,
+        pagamentoNaEntrega,
       ];
 
   @override

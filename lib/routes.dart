@@ -4,6 +4,7 @@ import 'package:autenticacao/domain/models/licenciado.dart';
 import 'package:autenticacao/domain/usecases/recuperar_usuarios.dart';
 import 'package:comercial/models.dart' show Consignacao;
 import 'package:comercial/pages.dart';
+import 'package:comercial/presentation/blocs/ecommerce_chaves_mcp_bloc/ecommerce_chaves_mcp_bloc.dart' show EcommerceChavesMcpBloc;
 import 'package:comercial/use_cases.dart'
     show BuscarResumoCreditoDevolucao, GetComprasDoCliente;
 import 'package:comercial/presentation/widgets/lista_seletores.dart';
@@ -237,6 +238,32 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: _rotaProtegida(
         route: '/sangria',
         child: SangriaPage(caixaId: caixaId),
+      ),
+    );
+  },
+  '/despesas_do_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/despesas_do_caixa',
+        child: DespesasDoCaixaPage(caixaId: caixaId),
+      ),
+    );
+  },
+  '/despesa_do_caixa': (context) {
+    final caixaIdArg = args(context)['caixaId'];
+    final caixaId = caixaIdArg is int
+        ? caixaIdArg
+        : int.tryParse(caixaIdArg?.toString() ?? '') ?? 0;
+
+    return _rotaProtegidaPorCaixaAberto(
+      child: _rotaProtegida(
+        route: '/despesa_do_caixa',
+        child: DespesaDoCaixaPage(caixaId: caixaId),
       ),
     );
   },
@@ -565,6 +592,19 @@ Map<String, Widget Function(BuildContext)> routes = {
       child: ecommerceId is int
           ? EcommerceReferenciasPage(ecommerceId: ecommerceId, tituloCanal: routeArgs['titulo'] as String?)
           : const ListasPersonalizadasPage(abaInicial: ListasAba.vitrine),
+    );
+  },
+  '/ecommerce_agente_ia': (context) {
+    final routeArgs = args(context);
+    return _rotaProtegida(
+      route: '/ecommerce_agente_ia',
+      child: EcommerceAgenteIaPage(
+        ecommerceId: routeArgs['ecommerceId'] as int,
+        tituloCanal: routeArgs['titulo'] as String?,
+        urlMcp: '${sl<ApiBaseUrlConfig>().urlBase}/v1/mcp/vendas',
+        temPermissao: PermissaoPorNome.acessoPermitido('MCPFM001'),
+        criarBloc: () => sl<EcommerceChavesMcpBloc>(),
+      ),
     );
   },
   '/ecommerce_pedidos': (context) {
@@ -1299,6 +1339,20 @@ Map<String, Widget Function(BuildContext)> routes = {
       ),
     );
   },
+  '/etiquetas_promocao': (context) {
+    return _rotaProtegida(
+      route: '/etiquetas_promocao',
+      child: EtiquetasPromocaoPage(
+        tabelasDePrecoSeletor: (data) => TabelasDePrecoSeletor(
+          modo: TabelasDePrecoSeletorModo.unica,
+          itemsSelecionadosInicial: data.itemsSelecionadosInicial,
+          onChanged: data.onChanged,
+          onlyView: data.onlyView,
+          titulo: 'Tabela de preco',
+        ),
+      ),
+    );
+  },
 
   //Preços:
   '/tabelas_de_preco': (context) {
@@ -1809,6 +1863,7 @@ const Map<String, List<String>> _componentesDaRota = {
   '/ecommerces': ['ECOFM001'],
   '/configuracao_ecommerce': ['ECOFM001'],
   '/ecommerce_referencias': ['ECOFM002'],
+  '/ecommerce_agente_ia': ['MCPFM001'],
   '/ecommerce_vitrine': ['ECOFM001'],
   '/ecommerce_pedidos': ['PEDFC001'],
   '/ecommerce_promocoes': ['PROMFC001'],
@@ -1866,8 +1921,12 @@ const Map<String, List<String>> _componentesDaRota = {
   ],
   '/etiquetas': ['PRDFM003'],
   '/impressao_etiquetas': ['PRDFM012'],
+  // ponytail: reutiliza o componente da impressao de etiquetas ate existir um proprio.
+  '/etiquetas_promocao': ['PRDFM012'],
   '/formas_de_pagamento': ['GERFM001'],
   '/lancar_despesa': ['DESFM003'],
+  '/despesas_do_caixa': ['FCXFM005'],
+  '/despesa_do_caixa': ['FCXFM005'],
   '/controle_despesas': ['DESFM003'],
   '/categoria_despesa': ['DESFM001'],
   '/origem_pagamento_despesa': ['DESFM002'],

@@ -75,6 +75,12 @@ class ContagensEmAndamentoCubit extends Cubit<ContagensEmAndamentoState> {
   ContagensEmAndamentoCubit(this._obter, {this.funcionarioId})
     : super(const ContagensEmAndamentoState());
 
+  // A requisição pode terminar depois que a tela (e o cubit) foi fechada.
+  @override
+  void emit(ContagensEmAndamentoState state) {
+    if (!isClosed) super.emit(state);
+  }
+
   Future<void> carregar() async {
     final id = ++_requisicao;
     _pagina = 1;

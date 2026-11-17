@@ -52,6 +52,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
   final _unidadeMedidaController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _composicaoController = TextEditingController();
+  final _materialController = TextEditingController();
   final _cuidadosController = TextEditingController();
   final _ncmController = TextEditingController();
   final _pesoController = TextEditingController();
@@ -93,6 +94,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     _unidadeMedidaController.dispose();
     _descricaoController.dispose();
     _composicaoController.dispose();
+    _materialController.dispose();
     _cuidadosController.dispose();
     _ncmController.dispose();
     _pesoController.dispose();
@@ -108,6 +110,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     _unidadeMedidaController.text = referencia.unidadeMedida ?? '';
     _descricaoController.text = referencia.descricao ?? '';
     _composicaoController.text = referencia.composicao ?? '';
+    _materialController.text = referencia.material ?? '';
     _cuidadosController.text = referencia.cuidados ?? '';
     _ncmController.text = referencia.ncm ?? '';
     _pesoController.text = referencia.pesoGramas?.toString() ?? '';
@@ -191,6 +194,8 @@ class _ReferenciaPageState extends State<ReferenciaPage>
         unidadeMedida: _sanitizeOptional(_unidadeMedidaController.text),
         descricao: _sanitizeOptional(_descricaoController.text),
         composicao: _sanitizeOptional(_composicaoController.text),
+        // '' (não null) limpa o material no backend; null não é enviado.
+        material: _materialController.text.trim(),
         cuidados: _sanitizeOptional(_cuidadosController.text),
         ncm: _sanitizeOptional(_ncmController.text),
         pesoGramas: int.tryParse(_pesoController.text.trim()),
@@ -768,6 +773,14 @@ class _ReferenciaPageState extends State<ReferenciaPage>
         Text(
           'Aparecem na etiqueta, no e-commerce e na nota fiscal.',
           style: textos.apoio.copyWith(color: cores.textoApoio),
+        ),
+        const SizedBox(height: 16),
+        const _RotuloCampo('MATERIAL (TIPO DE TECIDO)'),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _materialController,
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(hintText: 'Ex: JEANS, ALFAIATARIA'),
         ),
         const SizedBox(height: 16),
         const _RotuloCampo('DESCRIÇÃO'),

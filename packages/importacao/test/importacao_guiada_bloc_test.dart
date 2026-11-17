@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:core/arquivos.dart';
+import 'package:core/remote_data_sourcers.dart' show HttpException;
 import 'package:core/sync.dart' show ImportacaoProgressoEvent;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:importacao/domain/data/remote/i_importacao_remote_data_source.dart';
@@ -23,6 +24,7 @@ class _RemotoFake implements IImportacaoRemoteDataSource {
         })
       >[];
   Object? erroAoBaixar;
+  Object? erroNaPrevia;
 
   @override
   Future<List<ImportacaoGuiada>> listarUltimas() async => ultimas;
@@ -37,7 +39,10 @@ class _RemotoFake implements IImportacaoRemoteDataSource {
   Future<ImportacaoPrevia> previa(
     ImportacaoEtapa etapa, {
     int? tabelaDePrecoId,
-  }) async => const ImportacaoPrevia(total: 0, colunas: [], linhas: []);
+  }) async {
+    if (erroNaPrevia != null) throw erroNaPrevia!;
+    return const ImportacaoPrevia(total: 0, colunas: [], linhas: []);
+  }
 
   @override
   Future<Uint8List> baixarModelo(
@@ -317,6 +322,26 @@ void main() {
         'tabelaDePrecoId': '4',
         'funcionarioId': '9',
       });
+    });
+
+    test('prévia 404 (servidor sem a rota): segue sem prévia e sem mensagem de erro', () async {
+      remoto.erroNaPrevia = HttpException('Cannot GET', statusCode: 404);
+
+      bloc.add(const ImportacaoGuiadaPreviaCarregou(ImportacaoEtapa.clientes));
+      await _ate(bloc, (s) => !s[ImportacaoEtapa.clientes].carregandoPrevia);
+
+      final etapa = bloc.state[ImportacaoEtapa.clientes];
+      expect(etapa.previa, isNull);
+      expect(etapa.erroPrevia, isNull);
+    });
+
+    test('prévia com outro erro continua mostrando a mensagem', () async {
+      remoto.erroNaPrevia = HttpException('boom', statusCode: 500);
+
+      bloc.add(const ImportacaoGuiadaPreviaCarregou(ImportacaoEtapa.clientes));
+      await _ate(bloc, (s) => s[ImportacaoEtapa.clientes].erroPrevia != null);
+
+      expect(bloc.state[ImportacaoEtapa.clientes].erroPrevia, isNotNull);
     });
 
     test('erro do servidor desliga o "enviando" e mostra a mensagem', () async {

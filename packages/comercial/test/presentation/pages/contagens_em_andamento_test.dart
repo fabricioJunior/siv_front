@@ -285,4 +285,11 @@ void main() {
       expect(find.text('Nova contagem'), findsOneWidget);
     });
   });
+
+  test('fechar o cubit durante a requisição não lança "Cannot emit after close"', () async {
+    final cubit = _cubit(_Remote((_) => const ContagensEmAndamentoPagina(itens: [], total: 0, totalDoFuncionario: 0)));
+    final carga = cubit.carregar();
+    await cubit.close();
+    await carga;
+  });
 }

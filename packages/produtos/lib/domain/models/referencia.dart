@@ -16,6 +16,7 @@ abstract class Referencia implements Equatable {
   int? get marcaId;
   String? get descricao;
   String? get composicao;
+  String? get material;
   String? get cuidados;
   String? get ncm;
   int? get pesoGramas;
@@ -40,6 +41,7 @@ abstract class Referencia implements Equatable {
     int? marcaId,
     String? descricao,
     String? composicao,
+    String? material,
     String? cuidados,
     String? ncm,
     int? pesoGramas,
@@ -66,6 +68,7 @@ abstract class Referencia implements Equatable {
     marcaId,
     descricao,
     composicao,
+    material,
     cuidados,
     ncm,
     pesoGramas,
@@ -107,6 +110,8 @@ class _ReferenciaImpl implements Referencia {
   @override
   final String? composicao;
   @override
+  final String? material;
+  @override
   final String? cuidados;
   @override
   final String? ncm;
@@ -141,6 +146,7 @@ class _ReferenciaImpl implements Referencia {
     this.marcaId,
     this.descricao,
     this.composicao,
+    this.material,
     this.cuidados,
     this.ncm,
     this.pesoGramas,
@@ -166,6 +172,7 @@ class _ReferenciaImpl implements Referencia {
     int? marcaId,
     String? descricao,
     String? composicao,
+    String? material,
     String? cuidados,
     String? ncm,
     int? pesoGramas,
@@ -190,6 +197,7 @@ class _ReferenciaImpl implements Referencia {
       marcaId: marcaId ?? this.marcaId,
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
+      material: material ?? this.material,
       cuidados: cuidados ?? this.cuidados,
       ncm: ncm ?? this.ncm,
       pesoGramas: pesoGramas ?? this.pesoGramas,
@@ -217,6 +225,7 @@ class _ReferenciaImpl implements Referencia {
     marcaId,
     descricao,
     composicao,
+    material,
     cuidados,
     ncm,
     pesoGramas,
@@ -247,6 +256,7 @@ extension ReferenciaCopyWith on Referencia {
     int? marcaId,
     String? descricao,
     String? composicao,
+    String? material,
     String? cuidados,
     String? ncm,
     int? pesoGramas,
@@ -272,6 +282,7 @@ extension ReferenciaCopyWith on Referencia {
         marcaId: marcaId,
         descricao: descricao,
         composicao: composicao,
+        material: material,
         cuidados: cuidados,
         ncm: ncm,
         pesoGramas: pesoGramas,
@@ -298,6 +309,7 @@ extension ReferenciaCopyWith on Referencia {
       marcaId: marcaId ?? this.marcaId,
       descricao: descricao ?? this.descricao,
       composicao: composicao ?? this.composicao,
+      material: material ?? this.material,
       cuidados: cuidados ?? this.cuidados,
       ncm: ncm ?? this.ncm,
       pesoGramas: pesoGramas ?? this.pesoGramas,

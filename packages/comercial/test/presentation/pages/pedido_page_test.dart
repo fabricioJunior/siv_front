@@ -532,6 +532,7 @@ void main() {
         AplicarDescontosPromocionaisPedido(repository: r),
         SalvarOpcoesFiscaisPedido(repository: r),
         ListarRetiradaPendentesPedido(repository: r),
+        ConverterPedidoParaBalcao(repository: r),
       ),
     );
     sl.registerFactory<PagamentosRealizadosBloc>(

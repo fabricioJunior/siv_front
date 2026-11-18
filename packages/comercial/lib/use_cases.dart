@@ -49,6 +49,7 @@ export 'domain/use_cases/remover_item_pedido.dart';
 export 'domain/use_cases/conferir_item_pedido.dart';
 export 'domain/use_cases/conferir_item_pedido_por_codigo.dart';
 export 'domain/use_cases/assumir_pedido.dart';
+export 'domain/use_cases/converter_pedido_para_balcao.dart';
 export 'domain/use_cases/reenviar_email_pedido.dart';
 export 'domain/use_cases/reenviar_email_embalado_pedido.dart';
 export 'domain/use_cases/link_compartilhamento_pedido.dart';

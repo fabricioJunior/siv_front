@@ -39,6 +39,8 @@ abstract class IPedidosRepository {
   Future<void> cancelarPedido(int id, {required String motivoCancelamento});
   Future<Pedido> assumirPedido(int id, {required int funcionarioId});
 
+  Future<Pedido> converterParaBalcao(int id, {required int funcionarioId});
+
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
     required int formaDePagamentoId,

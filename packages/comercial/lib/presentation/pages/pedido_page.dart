@@ -224,6 +224,55 @@ class _PedidoPageState extends State<PedidoPage> {
     }
   }
 
+  Future<void> _converterEmBalcao(BuildContext context) async {
+    final bloc = context.read<PedidoBloc>();
+    Funcionario? selecionado;
+
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Converter em pedido de balcão'),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'O pedido deixa de ser online: o link de pagamento enviado '
+                  'ao cliente é cancelado e o fechamento segue como venda de '
+                  'balcão. Escolha o vendedor responsável.',
+                ),
+                const SizedBox(height: 12),
+                FuncionarioSeletor(
+                  itemsSelecionadosInicial: const [],
+                  onFuncionarioChanged: (selecionados) {
+                    selecionado =
+                        selecionados.isEmpty ? null : selecionados.first;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Fechar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Converter'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmou != true || selecionado == null || !mounted) return;
+    bloc.add(PedidoConvertidoEmBalcao(selecionado!.id));
+  }
+
   Future<void> _assumirPedido(BuildContext context) async {
     final bloc = context.read<PedidoBloc>();
     Funcionario? selecionado;
@@ -1381,6 +1430,16 @@ class _PedidoPageState extends State<PedidoPage> {
           rotulo: 'Converter em entrega',
           icone: Icons.change_circle_outlined,
           onTap: () => _abrirConverterEmEntrega(context),
+        ),
+      if ((p?.origem == 'ecommerce' || p?.origem == 'ia_vendas') &&
+          p?.situacaoPagamento == 'pendente' &&
+          p?.situacao != 'encerrado' &&
+          p?.situacao != 'cancelado')
+        ItemMaisAcao(
+          letra: 'B',
+          rotulo: 'Converter em pedido de balcão',
+          icone: Icons.storefront_outlined,
+          onTap: () => _converterEmBalcao(context),
         ),
       ItemMaisAcao(
         letra: 'H',

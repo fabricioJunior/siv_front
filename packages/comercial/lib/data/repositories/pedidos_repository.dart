@@ -80,6 +80,11 @@ class PedidosRepository implements IPedidosRepository {
   }
 
   @override
+  Future<Pedido> converterParaBalcao(int id, {required int funcionarioId}) {
+    return remoteDataSource.converterParaBalcao(id, funcionarioId: funcionarioId);
+  }
+
+  @override
   Future<Pedido> criarPedido(Pedido pedido) {
     return remoteDataSource.criarPedido(pedido);
   }

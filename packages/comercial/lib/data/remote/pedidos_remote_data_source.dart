@@ -111,6 +111,15 @@ class PedidosRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<Pedido> converterParaBalcao(int id, {required int funcionarioId}) async {
+    final response = await put(
+      pathParameters: {'id': '$id/converter-balcao'},
+      body: {'funcionarioId': funcionarioId},
+    );
+    return PedidoDto.fromJson(response.body as Map<String, dynamic>);
+  }
+
+  @override
   Future<Pedido> criarPedido(Pedido pedido) async {
     final response =
         await post(body: PedidoDto.fromModel(pedido).toCreateJson());

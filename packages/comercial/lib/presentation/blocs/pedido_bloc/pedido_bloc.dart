@@ -41,6 +41,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
   final ConferirItemPedido _conferirItemPedido;
   final ConferirItemPedidoPorCodigo _conferirItemPedidoPorCodigo;
   final AssumirPedido _assumirPedido;
+  final ConverterPedidoParaBalcao _converterPedidoParaBalcao;
   final ReenviarEmailPedido _reenviarEmailPedido;
   final LinkCompartilhamentoPedido _linkCompartilhamentoPedido;
   final EmbalarPedido _embalarPedido;
@@ -84,6 +85,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     this._aplicarDescontosPromocionaisPedido,
     this._salvarOpcoesFiscaisPedido,
     this._listarRetiradaPendentesPedido,
+    this._converterPedidoParaBalcao,
   ) : super(const PedidoState.initial()) {
     on<PedidoIniciou>(_onIniciou);
     on<PedidoCampoAlterado>(_onCampoAlterado);
@@ -115,6 +117,7 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
     on<PedidoItemConferiu>(_onItemConferiu);
     on<PedidoItemConferiuPorCodigo>(_onItemConferiuPorCodigo);
     on<PedidoAssumiu>(_onAssumiu);
+    on<PedidoConvertidoEmBalcao>(_onConvertidoEmBalcao);
     on<PedidoEmailReenviou>(_onEmailReenviou);
     on<PedidoLinkCompartilhamentoSolicitou>(_onLinkCompartilhamentoSolicitou);
     on<PedidoEmbalou>(_onEmbalou);
@@ -1037,6 +1040,26 @@ class PedidoBloc extends Bloc<PedidoEvent, PedidoState> {
       emit(state.copyWith(
           step: PedidoStep.falha,
           erro: mensagemDeErroApi(e, 'Falha ao assumir pedido.')));
+      addError(e, s);
+    }
+  }
+
+  FutureOr<void> _onConvertidoEmBalcao(
+    PedidoConvertidoEmBalcao event,
+    Emitter<PedidoState> emit,
+  ) async {
+    if (state.id == null) return;
+
+    try {
+      emit(state.copyWith(step: PedidoStep.processando, erro: null));
+      await _converterPedidoParaBalcao.call(state.id!,
+          funcionarioId: event.funcionarioId);
+      await _recarregarComDependencias(emit, PedidoStep.dadosSalvos);
+    } catch (e, s) {
+      emit(state.copyWith(
+          step: PedidoStep.falha,
+          erro: mensagemDeErroApi(
+              e, 'Falha ao converter o pedido em pedido de balcão.')));
       addError(e, s);
     }
   }

@@ -39,6 +39,9 @@ abstract class IPedidosRemoteDataSource {
   Future<void> cancelarPedido(int id, {required String motivoCancelamento});
   Future<Pedido> assumirPedido(int id, {required int funcionarioId});
 
+  /// Pedido online ainda não pago vira pedido de balcão (cancela as cobranças online pendentes).
+  Future<Pedido> converterParaBalcao(int id, {required int funcionarioId});
+
   Future<PedidoPagamento> adicionarPagamento(
     int id, {
     required int formaDePagamentoId,

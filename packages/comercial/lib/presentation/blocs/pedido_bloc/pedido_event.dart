@@ -113,6 +113,13 @@ class PedidoConferiu extends PedidoEvent {
 // encerrado sem passar por PedidoConferiu. Não mexe em situacao.
 class PedidoMarcouConferido extends PedidoEvent {}
 
+/// Pedido online não pago vira pedido de balcão, com o vendedor informado.
+class PedidoConvertidoEmBalcao extends PedidoEvent {
+  final int funcionarioId;
+
+  PedidoConvertidoEmBalcao(this.funcionarioId);
+}
+
 class PedidoAssumiu extends PedidoEvent {
   final int funcionarioId;
 

@@ -63,6 +63,11 @@ void main() {
     // T1 e-commerce retirada
     _Caso('T1 sem vendedor -> assumir', _p(origem: 'ecommerce', func: null),
         TipoTrilhaPedido.ecommerceRetirada, IdEtapaPedido.assumir, AcaoPedido.assumirPedido),
+    // Pedido do agente de IA: mesma trilha do site (o backend exige assumir e conferir antes de faturar).
+    _Caso('T1 ia_vendas sem vendedor -> assumir', _p(origem: 'ia_vendas', func: null),
+        TipoTrilhaPedido.ecommerceRetirada, IdEtapaPedido.assumir, AcaoPedido.assumirPedido),
+    _Caso('T1 ia_vendas assumido -> conferir', _p(origem: 'ia_vendas'),
+        TipoTrilhaPedido.ecommerceRetirada, IdEtapaPedido.conferir, AcaoPedido.concluirConferencia),
     _Caso('T1 em andamento assumido -> conferir', _p(origem: 'ecommerce'),
         TipoTrilhaPedido.ecommerceRetirada, IdEtapaPedido.conferir, AcaoPedido.concluirConferencia),
     _Caso(

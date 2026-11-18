@@ -261,6 +261,9 @@ void _useCases() {
   sl.registerFactory<AssumirPedido>(
     () => AssumirPedido(repository: sl()),
   );
+  sl.registerFactory<ConverterPedidoParaBalcao>(
+    () => ConverterPedidoParaBalcao(repository: sl()),
+  );
   sl.registerFactory<ReenviarEmailPedido>(
     () => ReenviarEmailPedido(repository: sl()),
   );
@@ -623,6 +626,7 @@ void _presentation() {
 
   sl.registerFactory<PedidoBloc>(
     () => PedidoBloc(
+      sl(),
       sl(),
       sl(),
       sl(),

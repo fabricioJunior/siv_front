@@ -354,7 +354,8 @@ TrilhaPedido derivarTrilhaPedido(
     );
   }
 
-  if (pedido.origem == 'ecommerce') {
+  // Pedido online: do site (ecommerce) ou do agente de IA (ia_vendas). O backend exige assumir/conferência dos dois.
+  if (pedido.origem == 'ecommerce' || pedido.origem == 'ia_vendas') {
     final base = [IdEtapaPedido.assumir, IdEtapaPedido.conferir, IdEtapaPedido.embalar];
     return entrega
         ? _monta(TipoTrilhaPedido.ecommerceEntrega,

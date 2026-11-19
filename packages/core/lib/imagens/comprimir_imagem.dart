@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 
+import 'comprimir_imagem_nativa.dart';
+
 const limiteBytesImagem = 1024 * 1024;
 
 /// Reduz [bytes] para no máximo [maxBytes] (JPEG). Devolve o original se já couber
@@ -11,6 +13,9 @@ Future<Uint8List> comprimirImagem(
   int maxBytes = limiteBytesImagem,
 }) async {
   if (bytes.length <= maxBytes) return bytes;
+  // Web: compressão do navegador (não trava a UI); em Dart puro só como fallback.
+  final nativa = await comprimirImagemNativa(bytes, maxBytes: maxBytes);
+  if (nativa != null) return nativa;
   return compute(_comprimir, (bytes, maxBytes));
 }
 

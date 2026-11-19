@@ -134,9 +134,7 @@ class ReferenciaMidiasBloc
       var ultimoPercentualEmitido = -1;
 
       try {
-        final bytes = event.validarAssociacao
-            ? await comprimirImagem(imagem.bytes!)
-            : imagem.bytes!;
+        final bytes = await comprimirImagem(imagem.bytes!);
         final comprimida = !identical(bytes, imagem.bytes);
         final midiaCriada = await _criarReferenciaMidia.call(
           bytes: bytes,

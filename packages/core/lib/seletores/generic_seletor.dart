@@ -614,7 +614,10 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
   void _atualizarDimensoesCampo() {
     final renderBox =
         _fieldKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
+    // O campo pode estar na árvore sem ter passado por layout (aba/dialog fora
+    // de tela, lista preguiçosa): ler `size` assim lança "RenderBox was not
+    // laid out". O próximo build agenda a medição de novo.
+    if (renderBox == null || !renderBox.attached || !renderBox.hasSize) {
       return;
     }
 
@@ -638,7 +641,7 @@ class _SeletorGenericoState<T> extends State<SeletorGenerico<T>> {
     final overlayBox = Overlay.of(context, rootOverlay: true)
         .context
         .findRenderObject() as RenderBox?;
-    if (overlayBox != null) {
+    if (overlayBox != null && overlayBox.hasSize) {
       final posicaoCampo = renderBox.localToGlobal(
         Offset.zero,
         ancestor: overlayBox,

@@ -160,7 +160,10 @@ class _PromocaoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(_descricaoDesconto(item)),
-            Text('${_formatarData(item.dataInicio)} a ${_formatarData(item.dataFim)}'),
+            Text(
+              '${_formatarData(item.dataInicio)}${item.horaInicio == null ? '' : ' ${item.horaInicio}'} a '
+              '${_formatarData(item.dataFim)}${item.horaFim == null ? '' : ' ${item.horaFim}'}',
+            ),
             const SizedBox(height: 4),
             Text(
               item.ativa ? 'Ativa' : 'Inativa',

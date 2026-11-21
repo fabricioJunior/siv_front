@@ -18,6 +18,10 @@ class PromocaoDto implements Promocao {
   @override
   final DateTime dataFim;
   @override
+  final String? horaInicio;
+  @override
+  final String? horaFim;
+  @override
   final TipoDesconto tipoDesconto;
   @override
   final double? valorPercentual;
@@ -84,6 +88,8 @@ class PromocaoDto implements Promocao {
     this.regras,
     required this.dataInicio,
     required this.dataFim,
+    this.horaInicio,
+    this.horaFim,
     required this.tipoDesconto,
     this.valorPercentual,
     this.valorDescontoMaximo,
@@ -124,6 +130,8 @@ class PromocaoDto implements Promocao {
       regras: json['regras'] as String?,
       dataInicio: _parseData(json['dataInicio']),
       dataFim: _parseData(json['dataFim']),
+      horaInicio: _parseHora(json['horaInicio']),
+      horaFim: _parseHora(json['horaFim']),
       tipoDesconto: TipoDesconto.fromString(json['tipoDesconto'] as String?),
       valorPercentual: _parseDouble(json['valorPercentual']),
       valorDescontoMaximo: _parseDouble(json['valorDescontoMaximo']),
@@ -184,6 +192,8 @@ class PromocaoDto implements Promocao {
       regras: promocao.regras,
       dataInicio: promocao.dataInicio,
       dataFim: promocao.dataFim,
+      horaInicio: promocao.horaInicio,
+      horaFim: promocao.horaFim,
       tipoDesconto: promocao.tipoDesconto,
       valorPercentual: promocao.valorPercentual,
       valorDescontoMaximo: promocao.valorDescontoMaximo,
@@ -225,6 +235,8 @@ class PromocaoDto implements Promocao {
       if (regras != null) 'regras': regras,
       'dataInicio': _formatData(dataInicio),
       'dataFim': _formatData(dataFim),
+      'horaInicio': horaInicio,
+      'horaFim': horaFim,
       'tipoDesconto': tipoDesconto.value,
       if (valorPercentual != null) 'valorPercentual': valorPercentual,
       if (valorDescontoMaximo != null)
@@ -276,6 +288,8 @@ class PromocaoDto implements Promocao {
         regras,
         dataInicio,
         dataFim,
+        horaInicio,
+        horaFim,
         tipoDesconto,
         valorPercentual,
         valorDescontoMaximo,
@@ -313,6 +327,12 @@ class PromocaoDto implements Promocao {
 
 DateTime _parseData(dynamic value) {
   return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
+}
+
+// MySQL TIME ('HH:mm:ss') -> 'HH:mm'; nulo/vazio = dia todo.
+String? _parseHora(dynamic value) {
+  final s = value?.toString() ?? '';
+  return s.length >= 5 ? s.substring(0, 5) : null;
 }
 
 DateTime? _parseDateTime(dynamic value) {

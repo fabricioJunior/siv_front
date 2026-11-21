@@ -7,6 +7,8 @@ class PromocaoState extends Equatable {
   final String? regras;
   final DateTime? dataInicio;
   final DateTime? dataFim;
+  final String? horaInicio;
+  final String? horaFim;
   final TipoDesconto tipoDesconto;
   final double? valorPercentual;
   final double? valorDescontoMaximo;
@@ -45,6 +47,8 @@ class PromocaoState extends Equatable {
     this.regras,
     this.dataInicio,
     this.dataFim,
+    this.horaInicio,
+    this.horaFim,
     this.tipoDesconto = TipoDesconto.percentual,
     this.valorPercentual,
     this.valorDescontoMaximo,
@@ -87,6 +91,8 @@ class PromocaoState extends Equatable {
         regras = origem.regras,
         dataInicio = origem.dataInicio,
         dataFim = origem.dataFim,
+        horaInicio = origem.horaInicio,
+        horaFim = origem.horaFim,
         tipoDesconto = origem.tipoDesconto,
         valorPercentual = origem.valorPercentual,
         valorDescontoMaximo = origem.valorDescontoMaximo,
@@ -123,6 +129,8 @@ class PromocaoState extends Equatable {
     String? regras,
     DateTime? dataInicio,
     DateTime? dataFim,
+    String? horaInicio,
+    String? horaFim,
     TipoDesconto? tipoDesconto,
     double? valorPercentual,
     double? valorDescontoMaximo,
@@ -162,6 +170,8 @@ class PromocaoState extends Equatable {
       regras: regras ?? this.regras,
       dataInicio: dataInicio ?? this.dataInicio,
       dataFim: dataFim ?? this.dataFim,
+      horaInicio: horaInicio ?? this.horaInicio,
+      horaFim: horaFim ?? this.horaFim,
       tipoDesconto: tipoDesconto ?? this.tipoDesconto,
       valorPercentual: valorPercentual ?? this.valorPercentual,
       valorDescontoMaximo: valorDescontoMaximo ?? this.valorDescontoMaximo,
@@ -208,6 +218,8 @@ class PromocaoState extends Equatable {
         regras,
         dataInicio,
         dataFim,
+        horaInicio,
+        horaFim,
         tipoDesconto,
         valorPercentual,
         valorDescontoMaximo,

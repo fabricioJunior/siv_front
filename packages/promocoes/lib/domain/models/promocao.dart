@@ -66,6 +66,8 @@ abstract class Promocao implements Equatable {
   String? get regras;
   DateTime get dataInicio;
   DateTime get dataFim;
+  String? get horaInicio;
+  String? get horaFim;
   TipoDesconto get tipoDesconto;
   double? get valorPercentual;
   double? get valorDescontoMaximo;
@@ -104,6 +106,8 @@ abstract class Promocao implements Equatable {
     String? regras,
     required DateTime dataInicio,
     required DateTime dataFim,
+    String? horaInicio,
+    String? horaFim,
     required TipoDesconto tipoDesconto,
     double? valorPercentual,
     double? valorDescontoMaximo,
@@ -144,6 +148,8 @@ abstract class Promocao implements Equatable {
         regras,
         dataInicio,
         dataFim,
+        horaInicio,
+        horaFim,
         tipoDesconto,
         valorPercentual,
         valorDescontoMaximo,
@@ -194,6 +200,10 @@ class _PromocaoImpl implements Promocao {
   final DateTime dataInicio;
   @override
   final DateTime dataFim;
+  @override
+  final String? horaInicio;
+  @override
+  final String? horaFim;
   @override
   final TipoDesconto tipoDesconto;
   @override
@@ -261,6 +271,8 @@ class _PromocaoImpl implements Promocao {
     this.regras,
     required this.dataInicio,
     required this.dataFim,
+    this.horaInicio,
+    this.horaFim,
     required this.tipoDesconto,
     this.valorPercentual,
     this.valorDescontoMaximo,
@@ -301,6 +313,8 @@ class _PromocaoImpl implements Promocao {
         regras,
         dataInicio,
         dataFim,
+        horaInicio,
+        horaFim,
         tipoDesconto,
         valorPercentual,
         valorDescontoMaximo,

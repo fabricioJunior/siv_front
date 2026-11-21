@@ -107,11 +107,15 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
       rotulo: 'Início',
       data: state.dataInicio,
       onSelecionado: (d) => _onCampoAlterado(context, dataInicio: d),
+      hora: state.horaInicio,
+      onHora: (h) => _onCampoAlterado(context, horaInicio: h),
     );
     final fim = CampoData(
       rotulo: 'Fim',
       data: state.dataFim,
       onSelecionado: (d) => _onCampoAlterado(context, dataFim: d),
+      hora: state.horaFim,
+      onHora: (h) => _onCampoAlterado(context, horaFim: h),
     );
 
     return Column(
@@ -407,6 +411,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
     String? regras,
     DateTime? dataInicio,
     DateTime? dataFim,
+    String? horaInicio,
+    String? horaFim,
     TipoDesconto? tipoDesconto,
     double? valorPercentual,
     double? valorDescontoMaximo,
@@ -440,6 +446,8 @@ class _PromocaoFormPageState extends State<PromocaoFormPage> {
             regras: regras,
             dataInicio: dataInicio,
             dataFim: dataFim,
+            horaInicio: horaInicio,
+            horaFim: horaFim,
             tipoDesconto: tipoDesconto,
             valorPercentual: valorPercentual,
             valorDescontoMaximo: valorDescontoMaximo,

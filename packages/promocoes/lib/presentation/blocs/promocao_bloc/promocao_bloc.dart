@@ -82,6 +82,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         regras: event.regras,
         dataInicio: event.dataInicio,
         dataFim: event.dataFim,
+        horaInicio: event.horaInicio,
+        horaFim: event.horaFim,
         tipoDesconto: event.tipoDesconto,
         valorPercentual: event.valorPercentual,
         valorDescontoMaximo: event.valorDescontoMaximo,
@@ -125,6 +127,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
       final nome = state.nome?.trim() ?? '';
       final dataInicio = state.dataInicio;
       final dataFim = state.dataFim;
+      final horaInicio = (state.horaInicio ?? '').isEmpty ? null : state.horaInicio;
+      final horaFim = (state.horaFim ?? '').isEmpty ? null : state.horaFim;
 
       if (nome.isEmpty || dataInicio == null || dataFim == null) {
         emit(
@@ -141,6 +145,21 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
           state.copyWith(
             step: PromocaoStep.validacaoInvalida,
             erro: 'A data de fim não pode ser anterior à data de início.',
+          ),
+        );
+        return;
+      }
+
+      if (horaInicio != null &&
+          horaFim != null &&
+          dataInicio.year == dataFim.year &&
+          dataInicio.month == dataFim.month &&
+          dataInicio.day == dataFim.day &&
+          horaFim.compareTo(horaInicio) < 0) {
+        emit(
+          state.copyWith(
+            step: PromocaoStep.validacaoInvalida,
+            erro: 'A hora de fim não pode ser anterior à hora de início no mesmo dia.',
           ),
         );
         return;
@@ -203,6 +222,8 @@ class PromocaoBloc extends Bloc<PromocaoEvent, PromocaoState> {
         regras: state.regras,
         dataInicio: dataInicio,
         dataFim: dataFim,
+        horaInicio: horaInicio,
+        horaFim: horaFim,
         tipoDesconto: state.tipoDesconto,
         valorPercentual: state.valorPercentual,
         valorDescontoMaximo: state.valorDescontoMaximo,

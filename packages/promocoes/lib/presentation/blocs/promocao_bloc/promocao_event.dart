@@ -14,6 +14,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
   final String? regras;
   final DateTime? dataInicio;
   final DateTime? dataFim;
+  final String? horaInicio;
+  final String? horaFim;
   final TipoDesconto? tipoDesconto;
   final double? valorPercentual;
   final double? valorDescontoMaximo;
@@ -51,6 +53,8 @@ class PromocaoCampoAlterado extends PromocaoEvent {
     this.regras,
     this.dataInicio,
     this.dataFim,
+    this.horaInicio,
+    this.horaFim,
     this.tipoDesconto,
     this.valorPercentual,
     this.valorDescontoMaximo,

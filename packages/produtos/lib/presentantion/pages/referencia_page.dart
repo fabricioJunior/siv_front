@@ -649,32 +649,7 @@ class _ReferenciaPageState extends State<ReferenciaPage>
               ),
               if (_verCusto) ...[
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _RotuloCampo('CUSTO DE COMPRA (R\$)'),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        controller: _custoController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          TextInputFormatter.withFunction(
-                            (old, nw) =>
-                                nw.text.isEmpty ||
-                                    regexValorDigitando.hasMatch(nw.text)
-                                ? nw
-                                : old,
-                          ),
-                        ],
-                        readOnly: !_editarCusto,
-                        decoration: const InputDecoration(hintText: '0,00'),
-                      ),
-                    ],
-                  ),
-                ),
+                Expanded(child: _campoCusto()),
               ],
             ],
           ),
@@ -737,6 +712,30 @@ class _ReferenciaPageState extends State<ReferenciaPage>
     );
   }
 
+  Widget _campoCusto() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _RotuloCampo('CUSTO DE COMPRA (R\$)'),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _custoController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            TextInputFormatter.withFunction(
+              (old, nw) =>
+                  nw.text.isEmpty || regexValorDigitando.hasMatch(nw.text)
+                  ? nw
+                  : old,
+            ),
+          ],
+          readOnly: !_editarCusto,
+          decoration: const InputDecoration(hintText: '0,00'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDetalhesTab({bool compacto = false}) {
     final cores = context.sivColors;
     final textos = context.sivTextos;
@@ -763,6 +762,10 @@ class _ReferenciaPageState extends State<ReferenciaPage>
             quantidadeEsperada: _quantidadeEsperadaController,
             referenciaId: widget.idReferencia,
           ),
+          if (_verCusto) ...[
+            const SizedBox(height: 16),
+            _campoCusto(),
+          ],
           const SizedBox(height: 20),
         ],
         Text(

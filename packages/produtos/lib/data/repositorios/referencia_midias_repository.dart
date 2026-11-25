@@ -82,4 +82,19 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
       referenciaId,
     );
   }
+
+  @override
+  Future<void> registrarFotoUrl({
+    required int referenciaId,
+    required String url,
+    String? urlMiniatura,
+    required String origem,
+  }) {
+    return referenciaMidiasRemoteDataSource.registrarFotoUrl(
+      referenciaId: referenciaId,
+      url: url,
+      urlMiniatura: urlMiniatura,
+      origem: origem,
+    );
+  }
 }

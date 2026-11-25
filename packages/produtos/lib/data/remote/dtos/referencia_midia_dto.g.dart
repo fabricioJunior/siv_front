@@ -10,6 +10,7 @@ ReferenciaMidiaDto _$ReferenciaMidiaDtoFromJson(Map<String, dynamic> json) =>
     ReferenciaMidiaDto(
       id: (json['id'] as num).toInt(),
       url: json['url'] as String,
+      urlMiniatura: json['urlMiniatura'] as String?,
       isDefault: json['isDefault'] as bool,
       isPublic: json['isPublic'] as bool,
       referenciaId: (json['referenciaId'] as num).toInt(),

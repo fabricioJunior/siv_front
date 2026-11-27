@@ -25,6 +25,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
   final RegistrarContagemEntrada _registrarContagem;
   final RegistrarContagemLivreEntrada _registrarContagemLivre;
   final AssociarContagemLivreEntrada _associarContagemLivre;
+  final DesassociarContagemLivreEntrada _desassociarContagemLivre;
   final CorrigirContagemEntrada _corrigirContagem;
   final DecidirDivergenciaEntrada _decidirDivergencia;
   final RegistrarEtiquetasEntrada _registrarEtiquetas;
@@ -46,6 +47,7 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     this._registrarContagem,
     this._registrarContagemLivre,
     this._associarContagemLivre,
+    this._desassociarContagemLivre,
     this._corrigirContagem,
     this._decidirDivergencia,
     this._registrarEtiquetas,
@@ -146,6 +148,13 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
             : 'Contagem associada à referência',
         aoConcluir: (_) => e.descricao == null ? null : e.referenciaId,
         seguirEtapa: true,
+      ),
+    );
+    on<PedidoEntradaDesassociouContagemLivre>(
+      (e, emit) => _salvar(
+        emit,
+        () => _desassociarContagemLivre(_pedidoId!, e.referenciaId, e.itens),
+        'Associação desfeita: voltou para "sem referência"',
       ),
     );
   }

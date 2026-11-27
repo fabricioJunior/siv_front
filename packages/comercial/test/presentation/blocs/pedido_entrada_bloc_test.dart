@@ -118,6 +118,17 @@ class _Remoto implements IPedidoEntradaRemoteDataSource {
   }
 
   @override
+  Future<EntradaResumo> desassociarContagemLivre(
+    int pedidoId,
+    int referenciaId,
+    List<ItemContagem> itens,
+  ) async {
+    this.referenciaId = referenciaId;
+    this.itens = itens;
+    return EntradaResumo.fromJson(_json(livre: true));
+  }
+
+  @override
   Future<EntradaResumo> associarContagemLivre(
     int pedidoId,
     List<int> ids, {
@@ -170,6 +181,7 @@ void main() {
       RegistrarContagemEntrada(remoto),
       RegistrarContagemLivreEntrada(remoto),
       AssociarContagemLivreEntrada(remoto),
+      DesassociarContagemLivreEntrada(remoto),
       CorrigirContagemEntrada(remoto),
       DecidirDivergenciaEntrada(remoto),
       RegistrarEtiquetasEntrada(remoto),
@@ -226,6 +238,19 @@ void main() {
     expect(remoto.categoriaId, isNull);
     expect(st.resumo!.contagensLivres, isEmpty);
     expect(st.resumo!.contagens, hasLength(1));
+  });
+
+  test('desfaz a associação: manda referência e itens e devolve o resumo', () async {
+    bloc.add(
+      const PedidoEntradaDesassociouContagemLivre(77, [
+        ItemContagem(descricao: 'Blusa X', corId: 1, tamanhoId: 2, quantidade: 3),
+      ]),
+    );
+    final st = await bloc.stream.firstWhere((s) => s.mensagem != null);
+
+    expect(remoto.referenciaId, 77);
+    expect(remoto.itens!.single.descricao, 'Blusa X');
+    expect(st.resumo!.contagensLivres, isNotEmpty);
   });
 
   test('associa criando referência (pré-cadastro)', () async {

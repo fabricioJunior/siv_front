@@ -95,6 +95,14 @@ abstract class IPedidoEntradaRemoteDataSource {
     String? nome,
   });
 
+  /// Desfaz a associação: [itens] (descrição + cor + tamanho + estampa +
+  /// quantidade) voltam a ser contagem sem referência.
+  Future<EntradaResumo> desassociarContagemLivre(
+    int pedidoId,
+    int referenciaId,
+    List<ItemContagem> itens,
+  );
+
   /// Conferência em lote: [deltas] (produtoId -> variação do lido; negativo
   /// remove). Uma chamada, uma transação no servidor.
   Future<EntradaResumo> registrarLeituras(

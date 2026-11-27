@@ -429,14 +429,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
-  date_format_field:
-    dependency: transitive
-    description:
-      name: date_format_field
-      sha256: d07a428bd253454ff3123f2e57511cf6ec101d1135af3b79cebb40e1bee8bab8
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   dbus:
     dependency: transitive
     description:

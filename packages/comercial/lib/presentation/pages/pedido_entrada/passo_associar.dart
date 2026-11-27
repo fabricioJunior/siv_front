@@ -32,9 +32,9 @@ class PassoAssociar extends StatefulWidget {
 class _PassoAssociarState extends State<PassoAssociar> {
   int _totalVisto = 0;
 
-  /// descrição -> "REF 41433 · criada agora": só aparece quando o grupo já
-  /// saiu da lista (associação aceita pelo servidor).
-  final _associados = <String, String>{};
+  /// descrição -> associação feita: só aparece quando o grupo já saiu da lista
+  /// (aceita pelo servidor) e guarda o que precisa para desfazer.
+  final _associados = <String, _Associado>{};
 
   Map<String, List<ContagemLivre>> get _grupos {
     final g = <String, List<ContagemLivre>>{};
@@ -60,6 +60,24 @@ class _PassoAssociarState extends State<PassoAssociar> {
       context.read<PedidoEntradaBloc>().add(
             PedidoEntradaAssociouContagemLivre([for (final c in itens) c.id]),
           );
+
+  /// Erro na associação: devolve o grupo para "sem referência" (a referência
+  /// criada, se houver, continua cadastrada).
+  void _desfazer(String descricao, _Associado a) {
+    _associados.remove(descricao);
+    context.read<PedidoEntradaBloc>().add(
+          PedidoEntradaDesassociouContagemLivre(a.referenciaId, [
+            for (final c in a.itens)
+              ItemContagem(
+                descricao: c.descricao,
+                corId: c.corId,
+                tamanhoId: c.tamanhoId,
+                estampaId: c.estampaId,
+                quantidade: c.quantidade,
+              ),
+          ]),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +118,23 @@ class _PassoAssociarState extends State<PassoAssociar> {
                 if (!grupos.containsKey(e.key))
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text('✓ ${e.key} → ${e.value}',
-                        key: Key('associado_${e.key}'),
-                        style: textos.apoio
-                            .copyWith(color: cores.conferidoTexto)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text('✓ ${e.key} → ${e.value.rotulo}',
+                              key: Key('associado_${e.key}'),
+                              style: textos.apoio
+                                  .copyWith(color: cores.conferidoTexto)),
+                        ),
+                        TextButton(
+                          key: Key('desfazer_${e.key}'),
+                          onPressed: widget.salvando
+                              ? null
+                              : () => _desfazer(e.key, e.value),
+                          child: const Text('DESFAZER'),
+                        ),
+                      ],
+                    ),
                   ),
               if (variacoes.isNotEmpty) ...[
                 Text('VARIAÇÕES NOVAS · cadastrar',
@@ -147,8 +178,8 @@ class _PassoAssociarState extends State<PassoAssociar> {
                   itens: e.value,
                   salvando: widget.salvando,
                   seletores: widget.seletores,
-                  onAssociou: (ref, criada) => _associados[e.key] =
-                      'REF $ref · ${criada ? 'criada agora' : 'associada'}',
+                  onAssociou: (ref, criada) =>
+                      _associados[e.key] = _Associado(ref, criada, e.value),
                 ),
             ],
           ),
@@ -171,6 +202,16 @@ class _PassoAssociarState extends State<PassoAssociar> {
       ],
     );
   }
+}
+
+class _Associado {
+  final int referenciaId;
+  final bool criada;
+  final List<ContagemLivre> itens;
+  const _Associado(this.referenciaId, this.criada, this.itens);
+
+  String get rotulo =>
+      'REF $referenciaId · ${criada ? 'criada agora' : 'associada'}';
 }
 
 class _GrupoVariacao extends StatelessWidget {

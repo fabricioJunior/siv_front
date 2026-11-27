@@ -157,6 +157,7 @@ void main() {
       RegistrarContagemEntrada(remoto),
       RegistrarContagemLivreEntrada(remoto),
       AssociarContagemLivreEntrada(remoto),
+      DesassociarContagemLivreEntrada(remoto),
       CorrigirContagemEntrada(remoto),
       DecidirDivergenciaEntrada(remoto),
       RegistrarEtiquetasEntrada(remoto),

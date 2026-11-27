@@ -188,6 +188,17 @@ class PedidoEntradaAssociouContagemLivre extends PedidoEntradaEvent {
   List<Object?> get props => [ids, referenciaId, categoriaId, nome, descricao];
 }
 
+/// Desfaz a associação de um grupo: as quantidades voltam a ser contagem sem
+/// referência (a referência criada, se houver, continua cadastrada).
+class PedidoEntradaDesassociouContagemLivre extends PedidoEntradaEvent {
+  final int referenciaId;
+  final List<ItemContagem> itens;
+  const PedidoEntradaDesassociouContagemLivre(this.referenciaId, this.itens);
+
+  @override
+  List<Object?> get props => [referenciaId, itens.length];
+}
+
 /// Bipe LOCAL (sem rede): soma [delta] (+1 bipe, -1 remover) às leituras
 /// pendentes de envio do produto.
 class PedidoEntradaLeu extends PedidoEntradaEvent {

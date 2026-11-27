@@ -1,3 +1,4 @@
+import 'package:comercial/domain/use_cases/cancelar_pedido.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
@@ -11,6 +12,8 @@ import 'package:comercial/presentation/pages/pedido_entrada/trilha_entrada.dart'
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
 import 'package:core/leitor.dart';
+import 'package:core/presentation.dart';
+import 'package:core/remote_data_sourcers.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +95,50 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
     _bloc.add(const PedidoEntradaZerouLeituras());
     final fim = await _bloc.stream.firstWhere((s) => !s.salvando);
     return fim.erro == null;
+  }
+
+  /// Exclui (cancela) o pedido inteiro, com motivo. Só antes de faturar.
+  Future<void> _excluirPedido() async {
+    final motivoController = TextEditingController();
+    final motivo = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Excluir pedido #${widget.pedidoId}?'),
+        content: TextField(
+          key: const Key('excluir_pedido_motivo'),
+          controller: motivoController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Motivo',
+            helperText: 'A contagem deste pedido deixa de valer.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            key: const Key('excluir_pedido_confirmar'),
+            onPressed: () {
+              final m = motivoController.text.trim();
+              if (m.isNotEmpty) Navigator.pop(ctx, m);
+            },
+            child: const Text('EXCLUIR'),
+          ),
+        ],
+      ),
+    );
+    if (motivo == null || !mounted) return;
+    try {
+      await sl<CancelarPedido>()(widget.pedidoId, motivoCancelamento: motivo);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensagemDeErroApi(e, 'Falha ao excluir o pedido.'))),
+      );
+    }
   }
 
   /// Sair do Conferir (trocar de passo ou voltar) com leituras pendentes:
@@ -274,15 +321,25 @@ class _PedidoEntradaPageState extends State<PedidoEntradaPage> {
                         );
                       } else if (v == 'atualizar') {
                         _bloc.add(PedidoEntradaCarregou(widget.pedidoId));
+                      } else if (v == 'excluir') {
+                        _excluirPedido();
                       }
                     },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
                         value: 'historico',
                         child: Text('Histórico do pedido'),
                       ),
-                      PopupMenuItem(
+                      const PopupMenuItem(
                           value: 'atualizar', child: Text('Atualizar')),
+                      if (resumo != null &&
+                          !(state.faturado || resumo.etapa == 'faturado') &&
+                          PermissaoPorNome.acessoPermitido('PEDFM006'))
+                        const PopupMenuItem(
+                          key: Key('entrada_menu_excluir'),
+                          value: 'excluir',
+                          child: Text('Excluir pedido'),
+                        ),
                     ],
                   ),
                 ],

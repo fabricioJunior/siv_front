@@ -154,6 +154,18 @@ class AssociarContagemLivreEntrada {
       );
 }
 
+class DesassociarContagemLivreEntrada {
+  final IPedidoEntradaRemoteDataSource _remote;
+  DesassociarContagemLivreEntrada(this._remote);
+
+  Future<EntradaResumo> call(
+    int pedidoId,
+    int referenciaId,
+    List<ItemContagem> itens,
+  ) =>
+      _remote.desassociarContagemLivre(pedidoId, referenciaId, itens);
+}
+
 class CorrigirContagemEntrada {
   final IPedidoEntradaRemoteDataSource _remote;
   CorrigirContagemEntrada(this._remote);

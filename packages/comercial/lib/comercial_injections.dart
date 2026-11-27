@@ -911,6 +911,9 @@ void _presentation() {
   sl.registerFactory<AssociarContagemLivreEntrada>(
     () => AssociarContagemLivreEntrada(sl()),
   );
+  sl.registerFactory<DesassociarContagemLivreEntrada>(
+    () => DesassociarContagemLivreEntrada(sl()),
+  );
   sl.registerFactory<CorrigirContagemEntrada>(
     () => CorrigirContagemEntrada(sl()),
   );
@@ -944,7 +947,7 @@ void _presentation() {
   sl.registerFactory<PedidoEntradaBloc>(
     () => PedidoEntradaBloc(
       sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), //
-      sl(), sl(), sl(), sl(), sl(), sl(), sl(),
+      sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(),
     ),
   );
 

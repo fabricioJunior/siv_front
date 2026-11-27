@@ -271,6 +271,25 @@ class PedidoEntradaRemoteDataSource extends RemoteDataSourceBase
       );
 
   @override
+  Future<EntradaResumo> desassociarContagemLivre(
+    int pedidoId,
+    int referenciaId,
+    List<ItemContagem> itens,
+  ) async =>
+      _resumo(
+        (await post(
+          body: {
+            'referenciaId': referenciaId,
+            'itens': itens.map((i) => i.toJson()).toList(),
+          },
+          pathParameters: {
+            'path': '/$pedidoId/entrada/contagem-livre/desassociar',
+          },
+        ))
+            .body,
+      );
+
+  @override
   Future<EntradaResumo> registrarLeituras(
     int pedidoId,
     Map<int, int> deltas, {

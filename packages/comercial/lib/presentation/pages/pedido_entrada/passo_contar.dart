@@ -4,7 +4,9 @@ import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cas
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/cartao_linha_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/adicionar_foto_contagem.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/fotos_livres.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -601,6 +603,18 @@ class _PassoContarState extends State<PassoContar> {
                       onExcluir: widget.salvando
                           ? null
                           : () => _excluirLivre(e.key.$1, e.value),
+                      rodape: FotosLivres(
+                        descricao: e.key.$1,
+                        fotos: _r.fotosDaDescricao(e.key.$1),
+                        onAdicionar: widget.salvando
+                            ? null
+                            : () => adicionarFotoLivre(
+                                context, _r.pedidoId, e.key.$1),
+                        onRemover: widget.salvando
+                            ? null
+                            : (f) => removerFotoLivre(
+                                context, _r.pedidoId, f.id),
+                      ),
                     ),
                 ],
               ),
@@ -745,6 +759,7 @@ class _PassoContarState extends State<PassoContar> {
     required VoidCallback? onTap,
     VoidCallback? onExcluir,
     bool esperada = false,
+    Widget? rodape,
   }) {
     final textos = context.sivTextos;
     final cores = context.sivColors;
@@ -792,6 +807,11 @@ class _PassoContarState extends State<PassoContar> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textos.apoio),
+                  if (rodape != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: rodape,
+                    ),
                 ],
               ),
             ),

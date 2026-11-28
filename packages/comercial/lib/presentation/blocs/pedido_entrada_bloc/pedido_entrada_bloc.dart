@@ -57,6 +57,9 @@ class PedidoEntradaBloc extends Bloc<PedidoEntradaEvent, PedidoEntradaState> {
     this._copiaLocal,
   ) : super(const PedidoEntradaState()) {
     on<PedidoEntradaCarregou>(_onCarregou);
+    on<PedidoEntradaAtualizouResumo>(
+      (e, emit) => emit(state.copyWith(resumo: e.resumo)),
+    );
     on<PedidoEntradaImportouNfe>(_onImportou);
     on<PedidoEntradaCriouPorContagem>(_onCriouPorContagem);
     on<PedidoEntradaVinculouLinha>(

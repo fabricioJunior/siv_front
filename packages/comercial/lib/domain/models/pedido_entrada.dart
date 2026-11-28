@@ -227,6 +227,34 @@ class ContagemLivre extends Equatable {
       [id, descricao, corId, tamanhoId, quantidade, referenciaId, estampaId];
 }
 
+/// Foto (fornecedor ou tirada na contagem) de um produto contado sem
+/// referência, agrupada pela descrição.
+class FotoLivre extends Equatable {
+  final int id;
+  final String descricao;
+  final String url;
+
+  /// 'fornecedor' | 'chegada'
+  final String origem;
+
+  const FotoLivre({
+    required this.id,
+    required this.descricao,
+    required this.url,
+    required this.origem,
+  });
+
+  factory FotoLivre.fromJson(Map<String, dynamic> j) => FotoLivre(
+        id: _int(j['id']) ?? 0,
+        descricao: j['descricao'] as String? ?? '',
+        url: j['url'] as String? ?? '',
+        origem: j['origem'] as String? ?? 'chegada',
+      );
+
+  @override
+  List<Object?> get props => [id, descricao, url, origem];
+}
+
 /// Situação de um item na conferência (lido × contado).
 enum SituacaoConferencia {
   pendente,
@@ -521,6 +549,7 @@ class EntradaResumo extends Equatable {
   final List<EntradaLinha> linhas;
   final List<EntradaContagem> contagens;
   final List<ContagemLivre> contagensLivres;
+  final List<FotoLivre> fotosLivres;
   final double totalNfe;
   final double totalContado;
   final List<String> pendencias;
@@ -541,6 +570,7 @@ class EntradaResumo extends Equatable {
     required this.linhas,
     required this.contagens,
     this.contagensLivres = const [],
+    this.fotosLivres = const [],
     required this.totalNfe,
     required this.totalContado,
     required this.pendencias,
@@ -576,6 +606,9 @@ class EntradaResumo extends Equatable {
       contagensLivres: ((j['contagensLivres'] as List<dynamic>?) ?? const [])
           .map((c) => ContagemLivre.fromJson(c as Map<String, dynamic>))
           .toList(),
+      fotosLivres: ((j['fotosLivres'] as List<dynamic>?) ?? const [])
+          .map((f) => FotoLivre.fromJson(f as Map<String, dynamic>))
+          .toList(),
       totalNfe: _num(totais['nfe']),
       totalContado: _num(totais['contado']),
       pendencias:
@@ -596,6 +629,9 @@ class EntradaResumo extends Equatable {
           .toList(),
     );
   }
+
+  List<FotoLivre> fotosDaDescricao(String descricao) =>
+      fotosLivres.where((f) => f.descricao == descricao).toList();
 
   /// Contagem de produto sem referência (a associar).
   List<ContagemLivre> get livresSemReferencia =>
@@ -627,6 +663,7 @@ class EntradaResumo extends Equatable {
         linhas,
         contagens,
         contagensLivres,
+        fotosLivres,
         pendencias,
         etapa,
         etiquetas,

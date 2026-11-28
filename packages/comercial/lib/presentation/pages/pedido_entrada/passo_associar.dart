@@ -4,6 +4,7 @@ import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cas
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/foto_ampliada_dialog.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/fotos_livres.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
 import 'package:core/injecoes.dart';
@@ -214,6 +215,7 @@ class _PassoAssociarState extends State<PassoAssociar> {
                   salvando: widget.salvando,
                   seletores: widget.seletores,
                   sugestoes: _sugestoes(e.key),
+                  fotos: widget.resumo.fotosDaDescricao(e.key),
                   onAssociou: (ref, criada) =>
                       _associados[e.key] = _Associado(ref, criada, e.value),
                 ),
@@ -317,6 +319,7 @@ class _GrupoAssociar extends StatefulWidget {
   final bool salvando;
   final SeletoresEntrada seletores;
   final List<ReferenciaEsperada> sugestoes;
+  final List<FotoLivre> fotos;
   final void Function(int referenciaId, bool criada) onAssociou;
 
   const _GrupoAssociar({
@@ -326,6 +329,7 @@ class _GrupoAssociar extends StatefulWidget {
     required this.salvando,
     required this.seletores,
     this.sugestoes = const [],
+    this.fotos = const [],
     required this.onAssociou,
   });
 
@@ -476,6 +480,14 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
                   );
                 },
               ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (widget.fotos.isNotEmpty) ...[
+            FotosLivres(
+              descricao: widget.descricao,
+              fotos: widget.fotos,
+              tamanho: 88,
             ),
             const SizedBox(height: 8),
           ],

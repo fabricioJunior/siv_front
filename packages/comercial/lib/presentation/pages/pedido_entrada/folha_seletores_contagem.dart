@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/foto_ampliada_dialog.dart';
 import 'package:core/bloc.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/models.dart';
 
 /// Abre a folha de seleção de cores (múltipla) ligada ao [VariacoesProdutoBloc].
 /// Devolve os itens marcados (null = cancelou).
@@ -71,19 +74,23 @@ Future<Map<int, String>?> abrirFolhaEstampa({
 Future<ReferenciaParecida?> abrirFolhaReferencia({
   required BuildContext context,
   required BuscaReferenciasParecidas buscar,
+  List<ReferenciaEsperada> esperadas = const [],
 }) {
   return showModalBottomSheet<ReferenciaParecida>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     enableDrag: false,
-    builder: (ctx) => _FolhaReferencia(buscar: buscar),
+    builder: (ctx) => _FolhaReferencia(buscar: buscar, esperadas: esperadas),
   );
 }
 
 class _FolhaReferencia extends StatefulWidget {
   final BuscaReferenciasParecidas buscar;
-  const _FolhaReferencia({required this.buscar});
+
+  /// Esperadas do fornecedor: vêm primeiro e trazem as fotos.
+  final List<ReferenciaEsperada> esperadas;
+  const _FolhaReferencia({required this.buscar, required this.esperadas});
 
   @override
   State<_FolhaReferencia> createState() => _FolhaReferenciaState();
@@ -140,7 +147,6 @@ class _FolhaReferenciaState extends State<_FolhaReferencia> {
   @override
   Widget build(BuildContext context) {
     final textos = context.sivTextos;
-    final cores = context.sivColors;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: FractionallySizedBox(
@@ -163,60 +169,138 @@ class _FolhaReferenciaState extends State<_FolhaReferencia> {
               ),
             ),
             if (_carregando) const LinearProgressIndicator(minHeight: 2),
-            Expanded(
-              child: _falhou
-                  ? Center(
-                      child: Text(
-                        'Não foi possível buscar. Tente de novo.',
-                        style: textos.apoio,
+            Expanded(child: _lista(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _lista(BuildContext context) {
+    final textos = context.sivTextos;
+    if (_falhou && widget.esperadas.isEmpty) {
+      return Center(
+        child: Text('Não foi possível buscar. Tente de novo.',
+            style: textos.apoio),
+      );
+    }
+    final esp = widget.esperadas
+        .where((e) => esperadaCorresponde(e, _busca.text))
+        .toList();
+    final idsEsp = {for (final e in widget.esperadas) e.id};
+    final outros = _itens.where((r) => !idsEsp.contains(r.id)).toList();
+    if (!_carregando && esp.isEmpty && outros.isEmpty) {
+      return Center(
+        child: Text('Nenhuma referência encontrada.', style: textos.apoio),
+      );
+    }
+    return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: [
+        if (esp.isNotEmpty) ...[
+          _rotuloSecao('AGUARDANDO DO FORNECEDOR', context),
+          for (final e in esp)
+            _linha(
+              context,
+              ReferenciaParecida(id: e.id, nome: e.nome),
+              esperada: e,
+            ),
+        ],
+        if (outros.isNotEmpty) ...[
+          if (esp.isNotEmpty) _rotuloSecao('TODAS', context),
+          for (final r in outros) _linha(context, r),
+        ],
+      ],
+    );
+  }
+
+  Widget _linha(
+    BuildContext context,
+    ReferenciaParecida r, {
+    ReferenciaEsperada? esperada,
+  }) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    final fotos = esperada?.fotos ?? const <ReferenciaMidiaSimples>[];
+    final codigo = esperada?.codigoNoFornecedor;
+    return InkWell(
+      key: Key('referencia_${r.id}'),
+      onTap: () => Navigator.of(context).pop(r),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 60),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            if (esperada != null)
+              fotos.isEmpty
+                  ? SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Icon(Icons.image_not_supported_outlined,
+                          size: 20, color: cores.textoDesabilitado),
+                    )
+                  : GestureDetector(
+                      key: Key('foto_referencia_${r.id}'),
+                      onTap: () => showFotoAmpliada(
+                        context,
+                        referenciaNome: r.nome,
+                        referenciaCodigo: [
+                          if (codigo != null && codigo.isNotEmpty)
+                            'Cód. $codigo',
+                          'REF ${r.id}',
+                        ].join(' · '),
+                        fotos: fotos,
+                        onContar: () => Navigator.of(context).pop(r),
+                      ),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: fotos.first.doFornecedor
+                                ? const Color(0xFF34495E)
+                                : const Color(0xFFCFD8DC),
+                            width: 2,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: Image.network(
+                            fotos.first.urlParaMiniatura,
+                            fit: BoxFit.cover,
+                            cacheWidth: 144,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.broken_image_outlined,
+                              color: cores.textoApoio,
+                            ),
+                          ),
+                        ),
                       ),
                     )
-                  : (!_carregando && _itens.isEmpty)
-                      ? Center(
-                          child: Text(
-                            'Nenhuma referência encontrada.',
-                            style: textos.apoio,
-                          ),
-                        )
-                      : ListView.builder(
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.manual,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          itemCount: _itens.length,
-                          itemBuilder: (_, i) {
-                            final r = _itens[i];
-                            return InkWell(
-                              key: Key('referencia_${r.id}'),
-                              onTap: () => Navigator.of(context).pop(r),
-                              child: Container(
-                                height: 52,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.sell_outlined,
-                                      size: 18,
-                                      color: cores.textoDesabilitado,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        '${r.nome} · REF ${r.id}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: textos.corpo,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+            else
+              Icon(Icons.sell_outlined, size: 18, color: cores.textoDesabilitado),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    r.nome,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textos.corpo,
+                  ),
+                  Text(
+                    [
+                      'REF ${r.id}',
+                      if (codigo != null && codigo.isNotEmpty) 'Cód. $codigo',
+                    ].join(' · '),
+                    style: textos.apoio,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

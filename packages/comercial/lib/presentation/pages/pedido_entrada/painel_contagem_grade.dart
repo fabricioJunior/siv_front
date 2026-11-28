@@ -1496,6 +1496,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             final r = await abrirFolhaReferencia(
               context: context,
               buscar: buscar,
+              esperadas: widget.esperadas,
             );
             if (r == null || !mounted) return;
             setState(() {

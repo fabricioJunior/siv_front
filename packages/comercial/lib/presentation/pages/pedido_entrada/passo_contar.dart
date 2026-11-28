@@ -2,6 +2,7 @@ import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
 import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cases.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
+import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/cartao_linha_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
@@ -97,8 +98,10 @@ class _PassoContarState extends State<PassoContar> {
 
   /// Contagens de uma referência, já com as variações novas (para recontar).
   List<EntradaContagem> _existentesDa(int refId, [int? estampaId]) => [
-        ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == estampaId),
-        for (final c in _r.variacoesNovas.where((c) => estampaId == null && c.referenciaId == refId))
+        ..._r.contagens
+            .where((c) => c.referenciaId == refId && c.estampaId == estampaId),
+        for (final c in _r.variacoesNovas
+            .where((c) => estampaId == null && c.referenciaId == refId))
           EntradaContagem(
             produtoId: 0,
             linhaId: null,
@@ -118,21 +121,35 @@ class _PassoContarState extends State<PassoContar> {
   void _abrir(_Edicao e) {
     if (ehMobile(context)) {
       final bloc = context.read<PedidoEntradaBloc>();
+      // A rota nova fica fora do provider da página: repassa o bloc das
+      // variações, senão o painel cai nos seletores antigos.
+      VariacoesProdutoBloc? variacoes;
+      try {
+        variacoes = context.read<VariacoesProdutoBloc>();
+      } catch (_) {}
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           fullscreenDialog: true,
-          builder: (ctx) => Scaffold(
-            body: SafeArea(
-              child: _painel(
-                e,
-                onSalvar: (livre, itens) {
-                  Navigator.of(ctx).pop();
-                  _enviar(bloc, livre, itens);
-                },
-                onFechar: () => Navigator.of(ctx).pop(),
+          builder: (ctx) {
+            final tela = Scaffold(
+              body: SafeArea(
+                child: _painel(
+                  e,
+                  onSalvar: (livre, itens) {
+                    Navigator.of(ctx).pop();
+                    _enviar(bloc, livre, itens);
+                  },
+                  onFechar: () => Navigator.of(ctx).pop(),
+                ),
               ),
-            ),
-          ),
+            );
+            return variacoes == null
+                ? tela
+                : BlocProvider<VariacoesProdutoBloc>.value(
+                    value: variacoes,
+                    child: tela,
+                  );
+          },
         ),
       );
     } else {
@@ -233,7 +250,8 @@ class _PassoContarState extends State<PassoContar> {
           referenciaId: refId,
           referenciaNome: itens.first.referenciaNome,
           existentes: [
-            ..._r.contagens.where((c) => c.referenciaId == refId && c.estampaId == null),
+            ..._r.contagens
+                .where((c) => c.referenciaId == refId && c.estampaId == null),
             for (final c in itens)
               EntradaContagem(
                 produtoId: 0,
@@ -320,12 +338,14 @@ class _PassoContarState extends State<PassoContar> {
 
   // --- exclusão ---------------------------------------------------------------
 
-  Future<void> _excluir(String titulo, {required VoidCallback confirmar}) async {
+  Future<void> _excluir(String titulo,
+      {required VoidCallback confirmar}) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir contagem?'),
-        content: Text('Remove a contagem de “$titulo”. Fica registrado no histórico.'),
+        content: Text(
+            'Remove a contagem de “$titulo”. Fica registrado no histórico.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -386,7 +406,8 @@ class _PassoContarState extends State<PassoContar> {
     final semRef = _gruposLivres.length;
     final variacoes = _r.variacoesNovas.length;
     final livres = semRef + variacoes;
-    final temContagem = _r.contagens.isNotEmpty || _r.contagensLivres.isNotEmpty;
+    final temContagem =
+        _r.contagens.isNotEmpty || _r.contagensLivres.isNotEmpty;
     final lista = _lista(context, mobile);
     final edicao = _edicao;
 
@@ -465,7 +486,8 @@ class _PassoContarState extends State<PassoContar> {
     final livres = _gruposLivres;
     final nfe = _r.nfe != null;
     final variacoesNovas = _gruposVariacoes;
-    final vazio = !nfe && refs.isEmpty && livres.isEmpty && variacoesNovas.isEmpty;
+    final vazio =
+        !nfe && refs.isEmpty && livres.isEmpty && variacoesNovas.isEmpty;
 
     final conteudo = ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -495,16 +517,17 @@ class _PassoContarState extends State<PassoContar> {
           ),
           for (final e in refs.entries)
             _linhaGrupo(
-              chave: Key('entrada_grupo_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
+              chave: Key(
+                  'entrada_grupo_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
               titulo: _tituloRef(e.value),
               resumo: e.value
                   .map((c) =>
                       '${c.corNome ?? '-'} ${c.tamanhoNome ?? ''}·${qtd(c.quantidade)}')
                   .join(' · '),
               total: e.value.fold<double>(0, (s, c) => s + c.quantidade),
-              onTap: widget.salvando ? null : () => _editarRef(e.key.$1, e.value),
-              onExcluir:
-                  widget.salvando ? null : () => _excluirRef(e.value),
+              onTap:
+                  widget.salvando ? null : () => _editarRef(e.key.$1, e.value),
+              onExcluir: widget.salvando ? null : () => _excluirRef(e.value),
               esperada: _idsEsperadas.contains(e.key.$1),
             ),
           if (variacoesNovas.isNotEmpty) ...[
@@ -526,7 +549,8 @@ class _PassoContarState extends State<PassoContar> {
                   for (final e in variacoesNovas.entries)
                     _linhaGrupo(
                       chave: Key('entrada_variacao_${e.key}'),
-                      titulo: e.value.first.referenciaNome ?? e.value.first.descricao,
+                      titulo: e.value.first.referenciaNome ??
+                          e.value.first.descricao,
                       resumo: e.value
                           .map((c) =>
                               '${_corNome(c.corId)} ${_tamNome(c.tamanhoId)}·${qtd(c.quantidade)}')
@@ -562,7 +586,8 @@ class _PassoContarState extends State<PassoContar> {
                   ),
                   for (final e in livres.entries)
                     _linhaGrupo(
-                      chave: Key('entrada_sem_ref_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
+                      chave: Key(
+                          'entrada_sem_ref_${e.key.$1}${e.key.$2 == 0 ? '' : '_${e.key.$2}'}'),
                       titulo: _tituloLivre(e.key.$1, e.value),
                       resumo: e.value
                           .map((c) =>
@@ -695,7 +720,8 @@ class _PassoContarState extends State<PassoContar> {
               onPressed: widget.salvando
                   ? null
                   : () => _abrir(
-                        const _Edicao(titulo: 'Contar', novo: true, livre: true),
+                        const _Edicao(
+                            titulo: 'Contar', novo: true, livre: true),
                       ),
               icon: const Icon(Icons.add),
               label: const Text('CONTAR SEM REFERÊNCIA'),

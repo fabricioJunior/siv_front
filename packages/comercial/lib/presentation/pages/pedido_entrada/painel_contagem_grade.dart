@@ -1486,6 +1486,45 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         const SizedBox(height: 12),
       ];
     }
+    final buscar = widget.buscarParecidas;
+    if (_mobile && buscar != null) {
+      return [
+        _rotulo('REFERÊNCIA', cores, textos),
+        InkWell(
+          key: const Key('resumo_referencia_linha'),
+          onTap: () async {
+            final r = await abrirFolhaReferencia(
+              context: context,
+              buscar: buscar,
+            );
+            if (r == null || !mounted) return;
+            setState(() {
+              _referenciaId = r.id;
+              _referenciaNome = r.nome;
+            });
+          },
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: cores.superficie,
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text('Toque para escolher', style: textos.apoio),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ];
+    }
     if (widget.referenciaSeletor == null) return const [];
     return [
       widget.referenciaSeletor!(

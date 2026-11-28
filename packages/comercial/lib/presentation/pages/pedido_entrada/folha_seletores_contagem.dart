@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:core/bloc.dart';
@@ -62,6 +64,165 @@ Future<Map<int, String>?> abrirFolhaEstampa({
       selecionados: selecionados,
     ),
   );
+}
+
+/// Folha de busca de referência (única): digita, a lista filtra no servidor,
+/// tocar escolhe e fecha. Devolve null se cancelar.
+Future<ReferenciaParecida?> abrirFolhaReferencia({
+  required BuildContext context,
+  required BuscaReferenciasParecidas buscar,
+}) {
+  return showModalBottomSheet<ReferenciaParecida>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    enableDrag: false,
+    builder: (ctx) => _FolhaReferencia(buscar: buscar),
+  );
+}
+
+class _FolhaReferencia extends StatefulWidget {
+  final BuscaReferenciasParecidas buscar;
+  const _FolhaReferencia({required this.buscar});
+
+  @override
+  State<_FolhaReferencia> createState() => _FolhaReferenciaState();
+}
+
+class _FolhaReferenciaState extends State<_FolhaReferencia> {
+  final _busca = TextEditingController();
+  Timer? _debounce;
+  int _seq = 0;
+  List<ReferenciaParecida> _itens = const [];
+  bool _carregando = true;
+  bool _falhou = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar('');
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _busca.dispose();
+    super.dispose();
+  }
+
+  void _digitou(String t) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () => _carregar(t));
+  }
+
+  Future<void> _carregar(String texto) async {
+    final seq = ++_seq;
+    setState(() {
+      _carregando = true;
+      _falhou = false;
+    });
+    try {
+      final r = await widget.buscar(texto.trim());
+      if (!mounted || seq != _seq) return;
+      setState(() {
+        _itens = r;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _seq) return;
+      setState(() {
+        _carregando = false;
+        _falhou = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = context.sivTextos;
+    final cores = context.sivColors;
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: FractionallySizedBox(
+        heightFactor: 0.92,
+        child: Column(
+          children: [
+            _cabecalho(context, 'Referência', textos),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextField(
+                key: const Key('busca_referencia'),
+                controller: _busca,
+                autofocus: true,
+                onChanged: _digitou,
+                decoration: const InputDecoration(
+                  hintText: 'Buscar referência por nome',
+                  prefixIcon: Icon(Icons.search, size: 18),
+                  isDense: true,
+                ),
+              ),
+            ),
+            if (_carregando) const LinearProgressIndicator(minHeight: 2),
+            Expanded(
+              child: _falhou
+                  ? Center(
+                      child: Text(
+                        'Não foi possível buscar. Tente de novo.',
+                        style: textos.apoio,
+                      ),
+                    )
+                  : (!_carregando && _itens.isEmpty)
+                      ? Center(
+                          child: Text(
+                            'Nenhuma referência encontrada.',
+                            style: textos.apoio,
+                          ),
+                        )
+                      : ListView.builder(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.manual,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          itemCount: _itens.length,
+                          itemBuilder: (_, i) {
+                            final r = _itens[i];
+                            return InkWell(
+                              key: Key('referencia_${r.id}'),
+                              onTap: () => Navigator.of(context).pop(r),
+                              child: Container(
+                                height: 52,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.sell_outlined,
+                                      size: 18,
+                                      color: cores.textoDesabilitado,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        '${r.nome} · REF ${r.id}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: textos.corpo,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

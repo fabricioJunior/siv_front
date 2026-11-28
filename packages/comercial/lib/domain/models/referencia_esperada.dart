@@ -1,4 +1,5 @@
 import 'package:core/equals.dart';
+import 'package:produtos/models.dart';
 
 /// Um SKU da referência esperada (liso e estampado da mesma cor/tamanho são
 /// linhas separadas, cada uma com o seu contado).
@@ -51,6 +52,9 @@ class ReferenciaEsperada extends Equatable {
   final List<String> estampas;
   final List<VariacaoEsperada> variacoes;
 
+  /// Fotos da referência (fornecedor, chegada ou site).
+  final List<ReferenciaMidiaSimples> fotos;
+
   const ReferenciaEsperada({
     required this.id,
     required this.nome,
@@ -63,6 +67,7 @@ class ReferenciaEsperada extends Equatable {
     this.quantidadeEsperada,
     this.estampas = const [],
     this.variacoes = const [],
+    this.fotos = const [],
   });
 
   factory ReferenciaEsperada.fromJson(Map<String, dynamic> json) {
@@ -81,8 +86,28 @@ class ReferenciaEsperada extends Equatable {
       variacoes: ((json['variacoes'] as List?) ?? const [])
           .map((v) => VariacaoEsperada.fromJson(v as Map<String, dynamic>))
           .toList(),
+      fotos: ((json['fotos'] as List?) ?? const [])
+          .map((f) => ReferenciaMidiaSimples.fromJson(f as Map<String, dynamic>))
+          .toList(),
     );
   }
+
+  /// Copia adicionando foto tirada na chegada localmente (sem reload).
+  ReferenciaEsperada comFotoChegada(ReferenciaMidiaSimples foto) =>
+      ReferenciaEsperada(
+        id: id,
+        nome: nome,
+        codigoNoFornecedor: codigoNoFornecedor,
+        foto: this.foto,
+        nova: nova,
+        aguardandoPrimeiraEntrada: aguardandoPrimeiraEntrada,
+        aguardandoReposicao: aguardandoReposicao,
+        resumoGrade: resumoGrade,
+        quantidadeEsperada: quantidadeEsperada,
+        estampas: estampas,
+        variacoes: variacoes,
+        fotos: [...fotos, foto],
+      );
 
   @override
   List<Object?> get props => [
@@ -97,6 +122,7 @@ class ReferenciaEsperada extends Equatable {
     quantidadeEsperada,
     estampas,
     variacoes,
+    fotos,
   ];
 }
 

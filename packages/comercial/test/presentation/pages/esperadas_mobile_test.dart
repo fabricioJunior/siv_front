@@ -4,6 +4,8 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'permissoes_fake.dart';
+
 const _lista = [
   ReferenciaEsperada(
     id: 887004302,
@@ -42,6 +44,8 @@ Widget _painel() => MaterialApp(
     );
 
 void main() {
+  setUp(() => registrarPermissoes({'PRDFM015'}));
+
   testWidgets('mobile 360px: abas e lista de esperadas sem overflow', (t) async {
     await _mobile(t);
     await t.pumpWidget(_painel());
@@ -53,7 +57,7 @@ void main() {
     expect(find.text('SEM REFERÊNCIA'), findsOneWidget);
   });
 
-  testWidgets('mobile: itens com ao menos 72px, foto de 52px e áreas de toque de 44px', (t) async {
+  testWidgets('mobile: itens com ao menos 72px, foto de 64px e áreas de toque de 44px', (t) async {
     await _mobile(t);
     await t.pumpWidget(_painel());
     await t.pumpAndSettle();
@@ -61,9 +65,9 @@ void main() {
     for (final id in [887004302, 2, 3]) {
       expect(t.getSize(find.byKey(Key('esperada_$id'))).height, greaterThanOrEqualTo(72));
     }
-    // foto/placeholder de 52px
+    // foto/placeholder de 64px
     final fotos = t.widgetList<SizedBox>(find.byWidgetPredicate(
-        (w) => w is SizedBox && w.width == 52 && w.height == 52));
+        (w) => w is SizedBox && w.width == 64 && w.height == 64));
     expect(fotos, isNotEmpty);
 
     for (final f in ['todas', 'primeiraEntrada', 'reposicao']) {

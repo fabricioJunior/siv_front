@@ -11,6 +11,7 @@ export 'domain/models/referencias_busca.dart';
 export 'domain/models/produto.dart';
 export 'domain/models/novo_produto_combinacao.dart';
 export 'domain/models/referencia_midia.dart';
+export 'domain/models/referencia_midia_simples.dart';
 export 'domain/models/etiqueta.dart';
 export 'domain/models/etiqueta_impressao_item.dart';
 export 'domain/models/etiqueta_promocao.dart';

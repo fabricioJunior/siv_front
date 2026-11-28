@@ -1,6 +1,8 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
 import 'package:comercial/domain/models/referencia_esperada.dart';
+import 'package:comercial/domain/models/variacao_opcao.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/folha_seletores_contagem.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/grade_fixa.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/lista_esperadas.dart';
 import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_produto_bloc.dart';
@@ -818,11 +820,9 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
         ],
         if (_focoMobile && _telaCheia)
           ..._resumoSeletores(cores, textos)
+        else if (_telaCheia)
+          ..._blocoSeletoresTelaCheia(cores, textos)
         else ...[
-        if (_telaCheia)
-          _variacao('COR', _cores, '+ cor', _escolherCores, _removerCor,
-              'cor', cores, textos)
-        else
           widget.corSeletor(
             SeletorData(
               onChanged: (itens) {
@@ -833,43 +833,37 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
               },
             ),
           ),
-        const SizedBox(height: 12),
-        if (widget.linha == null && widget.estampaSeletor != null) ...[
-          // Editando uma contagem já estampada a estampa fica fixa (outra estampa = outra contagem).
-          if (widget.estampaIdInicial != null)
-            Text(
-              'Estampa: ${widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'}',
-              key: const Key('contagem_estampa_fixa'),
-              style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
-            )
-          else if (_telaCheia)
-            _variacao('ESTAMPA', _estampas, '+ estampa', _escolherEstampa,
-                _removerEstampa, 'estampa', cores, textos)
+          const SizedBox(height: 12),
+          if (widget.linha == null && widget.estampaSeletor != null) ...[
+            // Editando uma contagem já estampada a estampa fica fixa.
+            if (widget.estampaIdInicial != null)
+              Text(
+                'Estampa: ${widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'}',
+                key: const Key('contagem_estampa_fixa'),
+                style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+              )
+            else
+              widget.estampaSeletor!(
+                SeletorData(
+                  compacto: true,
+                  onChanged: _estampasMudaram,
+                ),
+              ),
+            const SizedBox(height: 12),
+          ],
+          if (_variacoes != null)
+            _tipoTamanho(cores, textos)
           else
-            widget.estampaSeletor!(
+            widget.tamanhoSeletor(
               SeletorData(
-                compacto: true,
-                onChanged: _estampasMudaram,
+                onChanged: (itens) {
+                  _tamanhosSeletor
+                    ..clear()
+                    ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
+                  _sincronizarSeletores();
+                },
               ),
             ),
-          const SizedBox(height: 12),
-        ],
-        if (_telaCheia)
-          _variacao('TAMANHO', _tamanhos, '+ tam.', _escolherTamanhos,
-              _removerTamanho, 'tam', cores, textos)
-        else if (_variacoes != null)
-          _tipoTamanho(cores, textos)
-        else
-          widget.tamanhoSeletor(
-            SeletorData(
-              onChanged: (itens) {
-                _tamanhosSeletor
-                  ..clear()
-                  ..addEntries(itens.map((i) => MapEntry(i.id, i.nome)));
-                _sincronizarSeletores();
-              },
-            ),
-          ),
         ],
         const SizedBox(height: 16),
         if (_cores.isNotEmpty && _tamanhos.isNotEmpty) ...[
@@ -905,6 +899,288 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     );
   }
 
+  // --- bloco de 3 linhas resumo (tela cheia mobile) -------------------------
+
+  List<Widget> _blocoSeletoresTelaCheia(SivColors cores, SivTextStyles textos) {
+    final bloc = _variacoes;
+    if (bloc == null) return const [];
+
+    final temEstampa = widget.estampaSeletor != null &&
+        widget.estampaIdInicial == null &&
+        widget.linha == null;
+    final nCores = _cores.length;
+    final nTamanhos = _tamanhos.length;
+    final nEstampas = _estampas.length;
+    final nCombinacoes = nCores * (nTamanhos == 0 ? 0 : nTamanhos);
+
+    String resumoCores() {
+      if (nCores == 0) return 'Toque para escolher';
+      final nomes = _cores.values.toList();
+      if (nomes.length <= 4) return nomes.join(', ');
+      return '${nomes.take(4).join(', ')} +${nomes.length - 4}';
+    }
+
+    String resumoTamanhos() {
+      if (nTamanhos == 0) return 'Toque para escolher';
+      final nomes = _tamanhos.values.toList();
+      if (nomes.length <= 4) return nomes.join(', ');
+      return '${nomes.take(4).join(', ')} +${nomes.length - 4}';
+    }
+
+    String resumoEstampa() {
+      if (nEstampas == 0 && _estampas.isEmpty) return 'Sem estampa';
+      return _estampas.values.join(', ');
+    }
+
+    Widget linhaResumo({
+      required Key key,
+      required String rotulo,
+      required String resumo,
+      required VoidCallback onTap,
+    }) =>
+        InkWell(
+          key: key,
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 66),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rotulo,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 1.6,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          resumo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.black45),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    // "Usar grade da referência"
+    Widget botaoGradeReferencia() {
+      final refId = _referenciaId;
+      if (refId == null || _variacoes == null) return const SizedBox.shrink();
+      return TextButton.icon(
+        key: const Key('usar_grade_referencia'),
+        onPressed: _usarGradeReferencia,
+        icon: const Icon(Icons.grid_on, size: 16),
+        label: Text(
+          nCores > 0 || nTamanhos > 0
+              ? 'Usar grade da referência · $nCores cor${nCores != 1 ? 'es' : ''} · $nTamanhos tam.'
+              : 'Usar a grade da referência',
+        ),
+      );
+    }
+
+    Widget rodapeContar() => Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              key: const Key('btn_contar_combinacoes'),
+              onPressed: nCombinacoes > 0 ? () {} : null,
+              child: Text(
+                nCombinacoes == 0
+                    ? 'CONTAR 0 COMBINAÇÕES'
+                    : 'CONTAR $nCombinacoes COMBINAÇÃO${nCombinacoes != 1 ? 'S' : ''}',
+              ),
+            ),
+          ),
+        );
+
+    return [
+      Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          side: BorderSide(color: Color(0x241D1F20)),
+        ),
+        child: Column(
+          children: [
+            linhaResumo(
+              key: const Key('resumo_cores_linha'),
+              rotulo: 'CORES · $nCores selecionadas',
+              resumo: resumoCores(),
+              onTap: () async {
+                final usadas = {
+                  for (final c in widget.existentes)
+                    if (c.corId != null) c.corId!,
+                  for (final c in widget.existentesDaReferencia
+                          ?.call(_referenciaId ?? -1, null) ??
+                      const <EntradaContagem>[])
+                    if (c.corId != null) c.corId!,
+                };
+                final r = await abrirFolhaCores(
+                  context: context,
+                  bloc: bloc,
+                  selecionados: Map.from(_cores),
+                  usadas: usadas,
+                );
+                if (r == null || !mounted) return;
+                _coresSeletor
+                  ..clear()
+                  ..addAll(r);
+                _sincronizarSeletores();
+              },
+            ),
+            const Divider(height: 1),
+            linhaResumo(
+              key: const Key('resumo_tamanhos_linha'),
+              rotulo: 'TAMANHOS · $nTamanhos selecionados',
+              resumo: resumoTamanhos(),
+              onTap: () async {
+                final r = await abrirFolhaTamanhos(
+                  context: context,
+                  bloc: bloc,
+                  selecionados: Map.from(_tamanhos),
+                );
+                if (r == null || !mounted) return;
+                _tamanhosSeletor
+                  ..clear()
+                  ..addAll(r);
+                _sincronizarSeletores();
+              },
+            ),
+            if (temEstampa) ...[
+              const Divider(height: 1),
+              if (widget.estampaIdInicial != null)
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(
+                    'Estampa: ${widget.estampaNomeInicial ?? '#${widget.estampaIdInicial}'}',
+                    key: const Key('contagem_estampa_fixa'),
+                    style: textos.corpo.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                )
+              else
+                linhaResumo(
+                  key: const Key('resumo_estampa_linha'),
+                  rotulo: 'ESTAMPA · $nEstampas selecionada',
+                  resumo: resumoEstampa(),
+                  onTap: () async {
+                    final r = await abrirFolhaEstampa(
+                      context: context,
+                      bloc: bloc,
+                      selecionados: Map.from(_estampas),
+                    );
+                    if (r == null || !mounted) return;
+                    _estampasMudaran(r);
+                  },
+                ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+      botaoGradeReferencia(),
+      rodapeContar(),
+      const SizedBox(height: 16),
+    ];
+  }
+
+  /// Preenche cores e tamanhos com as variações já existentes na referência.
+  Future<void> _usarGradeReferencia() async {
+    final bloc = _variacoes;
+    final refId = _referenciaId;
+    if (bloc == null || refId == null) return;
+
+    // Espera o bloc carregar se necessário
+    var estado = bloc.state;
+    if (estado.cores.status != VariacaoStatus.sucesso ||
+        estado.tamanhos.status != VariacaoStatus.sucesso) {
+      if (estado.cores.status == VariacaoStatus.falha ||
+          estado.tamanhos.status == VariacaoStatus.falha) {
+        bloc.add(const VariacoesCarregadas());
+      }
+      estado = await bloc.stream.firstWhere(
+        (s) =>
+            s.cores.status != VariacaoStatus.carregando &&
+            s.tamanhos.status != VariacaoStatus.carregando,
+      );
+    }
+    if (!mounted) return;
+
+    // Coleta as variações usadas nas contagens existentes desta referência
+    final existentesRef = widget.existentesDaReferencia?.call(refId, null) ??
+        widget.existentes.where((e) => e.referenciaId == refId).toList();
+
+    if (existentesRef.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Referência ainda não tem contagens com cor e tamanho.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      for (final c in existentesRef) {
+        if (c.corId != null) {
+          final nome = c.corNome ??
+              estado.cores.itens
+                  .firstWhere(
+                    (o) => o.id == c.corId,
+                    orElse: () => VariacaoOpcao(id: c.corId!, nome: '#${c.corId}'),
+                  )
+                  .nome;
+          _coresSeletor[c.corId!] = nome;
+          _cores[c.corId!] = nome;
+        }
+        if (c.tamanhoId != null) {
+          final nome = c.tamanhoNome ??
+              estado.tamanhos.itens
+                  .firstWhere(
+                    (o) => o.id == c.tamanhoId,
+                    orElse: () =>
+                        TamanhoOpcao(id: c.tamanhoId!, nome: '#${c.tamanhoId}'),
+                  )
+                  .nome;
+          _tamanhosSeletor[c.tamanhoId!] = nome;
+          _tamanhos[c.tamanhoId!] = nome;
+        }
+      }
+      _ordenarTamanhos();
+      nomesCor.addAll(_cores);
+      nomesTamanho.addAll(_tamanhos);
+    });
+  }
+
+  /// Atualiza as estampas via mapa direto (usado pelas folhas de tela cheia).
+  void _estampasMudaran(Map<int, String> novo) => setState(() {
+        final antes = _estampas.keys.toSet();
+        _estampas
+          ..clear()
+          ..addAll(novo);
+        final ref = _referenciaId;
+        if (_esperadaEscolhida != null && ref != null) {
+          for (final est in _estampas.keys.where((e) => !antes.contains(e))) {
+            _preencherExistentes(ref, est);
+          }
+          _ordenarTamanhos();
+        }
+      });
+
   void _estampasMudaram(List<SelectData> itens) => setState(() {
         final antes = _estampas.keys.toSet();
         _estampas
@@ -932,9 +1208,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     }
   }
 
-  bool get _telaCheia =>
-      _variacoes != null &&
-      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+  bool get _telaCheia => _variacoes != null;
 
   String? get _subtituloSeletor => _referenciaId == null
       ? null
@@ -942,48 +1216,6 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
 
   SelectData _sd(int id, String nome) =>
       SelectData(id: id, nome: nome, data: const {});
-
-  void _aviso(String t) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
-
-  /// Linha "RÓTULO  [chip ×] ... [+ botão]"; tocar no chip remove.
-  Widget _variacao(
-    String rotulo,
-    Map<int, String> itens,
-    String botao,
-    VoidCallback abrir,
-    void Function(int id) remover,
-    String chave,
-    SivColors cores,
-    SivTextStyles textos,
-  ) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _rotulo(rotulo, cores, textos),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final e in itens.entries)
-                  InputChip(
-                    key: Key('chip_${chave}_${e.key}'),
-                    label: Text(e.value),
-                    onDeleted: () => remover(e.key),
-                  ),
-                OutlinedButton(
-                  key: Key('add_$chave'),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(48, 44)),
-                  onPressed: abrir,
-                  child: Text(botao),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
 
   Future<void> _escolherCores() async {
     final usadas = {
@@ -1013,14 +1245,6 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     _sincronizarSeletores();
   }
 
-  void _removerCor(int id) {
-    if (_comValor(cor: id, tam: null)) {
-      return _aviso('Zere as quantidades desta cor antes de remover.');
-    }
-    _coresSeletor.remove(id);
-    _sincronizarSeletores();
-  }
-
   Future<void> _escolherEstampa() async {
     final r = await VariacaoTelaCheia.abrir(
       context,
@@ -1043,20 +1267,6 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     ]);
   }
 
-  void _removerEstampa(int id) {
-    final comValor = _celulas.entries.any((e) {
-      final p = e.key.split('|');
-      return p.length > 2 && p[2] == '$id' && _ler(e.value) != null;
-    });
-    if (comValor) {
-      return _aviso('Zere as quantidades desta estampa antes de remover.');
-    }
-    _estampasMudaram([
-      for (final e in _estampas.entries)
-        if (e.key != id) _sd(e.key, e.value),
-    ]);
-  }
-
   Future<void> _escolherTamanhos() async {
     final bloc = _variacoes!;
     final r = await TamanhosVariacaoTelaCheia.abrir(
@@ -1075,14 +1285,6 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
             .where((t) => r.contains(t.id))
             .map((t) => MapEntry(t.id, t.nome)),
       );
-    _sincronizarSeletores();
-  }
-
-  void _removerTamanho(int id) {
-    if (_comValor(cor: null, tam: id)) {
-      return _aviso('Zere as quantidades deste tamanho antes de remover.');
-    }
-    _tamanhosSeletor.remove(id);
     _sincronizarSeletores();
   }
 
@@ -1277,6 +1479,46 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
                   icon: const Icon(Icons.close, size: 18),
                 ),
             ],
+          ),
+        ),
+        const SizedBox(height: 12),
+      ];
+    }
+    final buscar = widget.buscarParecidas;
+    if (buscar != null) {
+      return [
+        _rotulo('REFERÊNCIA', cores, textos),
+        InkWell(
+          key: const Key('resumo_referencia_linha'),
+          onTap: () async {
+            final r = await abrirFolhaReferencia(
+              context: context,
+              buscar: buscar,
+              esperadas: widget.esperadas,
+            );
+            if (r == null || !mounted) return;
+            setState(() {
+              _referenciaId = r.id;
+              _referenciaNome = r.nome;
+            });
+          },
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: cores.superficie,
+              border: Border.all(color: cores.hairline),
+              borderRadius: BorderRadius.circular(SivDimensoes.raio),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text('Toque para escolher', style: textos.apoio),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 12),

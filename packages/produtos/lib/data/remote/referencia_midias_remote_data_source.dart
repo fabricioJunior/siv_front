@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:core/remote_data_sourcers.dart';
@@ -111,6 +112,49 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
           .map((item) => ReferenciaMidiaDto.fromJson(item))
           .toList(growable: false);
     });
+  }
+
+  @override
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  }) async {
+    final response = await postFile(
+      field: 'file',
+      bytes: bytes,
+      fileName: fileName,
+      fileType: FileType.image,
+      pathParameters: {'referenciaId': referenciaId.toString(), 'id': 'contagem'},
+      body: {'origem': origem},
+    );
+    return ReferenciaMidiaDto.fromJson(response.body);
+  }
+
+  @override
+  Future<void> registrarFotoUrl({
+    required int referenciaId,
+    required String url,
+    String? urlMiniatura,
+    required String origem,
+  }) async {
+    final uri = uriBase.replace(
+      path: '/v1/referencias/$referenciaId/midias/urls',
+    );
+    final body = {
+      'fotos': [
+        {
+          'url': url,
+          if (urlMiniatura != null) 'urlMiniatura': urlMiniatura,
+          'origem': origem,
+        },
+      ],
+    };
+    final response = await httpClient.post(uri: uri, body: jsonEncode(body));
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Erro ao registrar foto: ${response.statusCode}');
+    }
   }
 }
 

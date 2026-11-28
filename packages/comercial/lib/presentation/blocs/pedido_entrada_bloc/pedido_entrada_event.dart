@@ -15,6 +15,15 @@ class PedidoEntradaCarregou extends PedidoEntradaEvent {
   List<Object?> get props => [pedidoId];
 }
 
+/// Troca o resumo por um já obtido fora do bloc (ex.: upload de foto).
+class PedidoEntradaAtualizouResumo extends PedidoEntradaEvent {
+  final EntradaResumo resumo;
+  const PedidoEntradaAtualizouResumo(this.resumo);
+
+  @override
+  List<Object?> get props => [resumo];
+}
+
 class PedidoEntradaImportouNfe extends PedidoEntradaEvent {
   final String filePath;
   final int tabelaPrecoId;

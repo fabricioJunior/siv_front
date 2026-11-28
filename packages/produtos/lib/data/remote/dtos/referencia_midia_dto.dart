@@ -32,6 +32,7 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
   ReferenciaMidiaDto({
     required this.id,
     required this.url,
+    this.urlMiniatura,
     required this.isDefault,
     required this.isPublic,
     required this.referenciaId,
@@ -41,6 +42,9 @@ class ReferenciaMidiaDto implements ReferenciaMidia {
     this.estampa,
     this.origem = 'site',
   });
+
+  @override
+  final String? urlMiniatura;
 
   @override
   @JsonKey(name: 'description')
@@ -65,6 +69,7 @@ extension ToDto on ReferenciaMidia {
     return ReferenciaMidiaDto(
       id: id,
       url: url,
+      urlMiniatura: urlMiniatura,
       isDefault: ePrincipal,
       isPublic: ePublica,
       referenciaId: referenciaId,

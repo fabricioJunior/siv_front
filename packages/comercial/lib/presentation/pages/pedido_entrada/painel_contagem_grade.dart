@@ -1208,9 +1208,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
     }
   }
 
-  bool get _telaCheia =>
-      _variacoes != null &&
-      MediaQuery.sizeOf(context).width < SivDimensoes.breakpointMenuDrawer;
+  bool get _telaCheia => _variacoes != null;
 
   String? get _subtituloSeletor => _referenciaId == null
       ? null
@@ -1487,7 +1485,7 @@ class _PainelContagemGradeState extends State<PainelContagemGrade> {
       ];
     }
     final buscar = widget.buscarParecidas;
-    if (_mobile && buscar != null) {
+    if (buscar != null) {
       return [
         _rotulo('REFERÊNCIA', cores, textos),
         InkWell(

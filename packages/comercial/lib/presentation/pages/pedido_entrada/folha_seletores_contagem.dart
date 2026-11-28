@@ -22,6 +22,7 @@ Future<Map<int, String>?> abrirFolhaCores({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
     enableDrag: false,
     builder: (ctx) => _FolhaCores(
       bloc: bloc,
@@ -42,6 +43,7 @@ Future<Map<int, String>?> abrirFolhaTamanhos({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
     enableDrag: false,
     builder: (ctx) => _FolhaTamanhos(
       bloc: bloc,
@@ -61,6 +63,7 @@ Future<Map<int, String>?> abrirFolhaEstampa({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
     enableDrag: false,
     builder: (ctx) => _FolhaEstampa(
       bloc: bloc,
@@ -80,6 +83,7 @@ Future<ReferenciaParecida?> abrirFolhaReferencia({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
     enableDrag: false,
     builder: (ctx) => _FolhaReferencia(buscar: buscar, esperadas: esperadas),
   );

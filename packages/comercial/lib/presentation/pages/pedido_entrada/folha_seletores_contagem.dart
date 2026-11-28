@@ -5,9 +5,11 @@ import 'package:comercial/presentation/blocs/variacoes_produto_bloc/variacoes_pr
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/foto_ampliada_dialog.dart';
 import 'package:core/bloc.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
+import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart' as midias_repo;
 import 'package:produtos/models.dart';
 
 /// Abre a folha de seleção de cores (múltipla) ligada ao [VariacoesProdutoBloc].
@@ -219,14 +221,107 @@ class _FolhaReferenciaState extends State<_FolhaReferencia> {
     );
   }
 
+  final _fotosCache = <int, Future<List<ReferenciaMidiaSimples>>>{};
+
+  /// Fotos da referência: as da esperada, ou buscadas no cadastro (só das
+  /// linhas que aparecem na tela). Fornecedor/chegada vêm primeiro.
+  Future<List<ReferenciaMidiaSimples>> _fotosDe(
+    int id,
+    List<ReferenciaMidiaSimples> daEsperada,
+  ) =>
+      _fotosCache.putIfAbsent(id, () async {
+        if (daEsperada.isNotEmpty) return daEsperada;
+        try {
+          final midias = await sl<midias_repo.IReferenciaMidiasRepository>()
+              .recuperarReferenciasMidias(id);
+          final fotos = [
+            for (final m in midias)
+              ReferenciaMidiaSimples(
+                url: m.url,
+                urlMiniatura: m.urlMiniatura,
+                origem: m.origem,
+              ),
+          ];
+          int peso(ReferenciaMidiaSimples f) => f.doSite ? 1 : 0;
+          fotos.sort((a, b) => peso(a).compareTo(peso(b)));
+          return fotos;
+        } catch (_) {
+          return const [];
+        }
+      });
+
+  Widget _miniatura(
+    BuildContext context,
+    ReferenciaParecida r,
+    ReferenciaEsperada? esperada,
+  ) {
+    final cores = context.sivColors;
+    final codigo = esperada?.codigoNoFornecedor;
+    return FutureBuilder<List<ReferenciaMidiaSimples>>(
+      future: _fotosDe(r.id, esperada?.fotos ?? const []),
+      builder: (_, snap) {
+        final fotos = snap.data ?? const <ReferenciaMidiaSimples>[];
+        if (fotos.isEmpty) {
+          return SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(
+              snap.connectionState == ConnectionState.done
+                  ? Icons.image_not_supported_outlined
+                  : Icons.sell_outlined,
+              size: 20,
+              color: cores.textoDesabilitado,
+            ),
+          );
+        }
+        return GestureDetector(
+          key: Key('foto_referencia_${r.id}'),
+          onTap: () => showFotoAmpliada(
+            context,
+            referenciaNome: r.nome,
+            referenciaCodigo: [
+              if (codigo != null && codigo.isNotEmpty) 'Cód. $codigo',
+              'REF ${r.id}',
+            ].join(' · '),
+            fotos: fotos,
+            onContar: () => Navigator.of(context).pop(r),
+          ),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: fotos.first.doFornecedor
+                    ? const Color(0xFF34495E)
+                    : const Color(0xFFCFD8DC),
+                width: 2,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: Image.network(
+                fotos.first.urlParaMiniatura,
+                fit: BoxFit.cover,
+                cacheWidth: 144,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.broken_image_outlined,
+                  color: cores.textoApoio,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _linha(
     BuildContext context,
     ReferenciaParecida r, {
     ReferenciaEsperada? esperada,
   }) {
     final textos = context.sivTextos;
-    final cores = context.sivColors;
-    final fotos = esperada?.fotos ?? const <ReferenciaMidiaSimples>[];
     final codigo = esperada?.codigoNoFornecedor;
     return InkWell(
       key: Key('referencia_${r.id}'),
@@ -236,55 +331,7 @@ class _FolhaReferenciaState extends State<_FolhaReferencia> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            if (esperada != null)
-              fotos.isEmpty
-                  ? SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Icon(Icons.image_not_supported_outlined,
-                          size: 20, color: cores.textoDesabilitado),
-                    )
-                  : GestureDetector(
-                      key: Key('foto_referencia_${r.id}'),
-                      onTap: () => showFotoAmpliada(
-                        context,
-                        referenciaNome: r.nome,
-                        referenciaCodigo: [
-                          if (codigo != null && codigo.isNotEmpty)
-                            'Cód. $codigo',
-                          'REF ${r.id}',
-                        ].join(' · '),
-                        fotos: fotos,
-                        onContar: () => Navigator.of(context).pop(r),
-                      ),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: fotos.first.doFornecedor
-                                ? const Color(0xFF34495E)
-                                : const Color(0xFFCFD8DC),
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: Image.network(
-                            fotos.first.urlParaMiniatura,
-                            fit: BoxFit.cover,
-                            cacheWidth: 144,
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.broken_image_outlined,
-                              color: cores.textoApoio,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-            else
-              Icon(Icons.sell_outlined, size: 18, color: cores.textoDesabilitado),
+            _miniatura(context, r, esperada),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

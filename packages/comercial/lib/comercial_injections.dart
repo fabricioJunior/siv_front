@@ -44,6 +44,10 @@ void _remoteDataSources() {
     () => PedidoEntradaRemoteDataSource(informacoesParaRequest: sl()),
   );
 
+  sl.registerFactory<IFotosLivresRemoteDataSource>(
+    () => FotosLivresRemoteDataSource(informacoesParaRequest: sl()),
+  );
+
   sl.registerFactory<IRelatorioPedidosContagemRemoteDataSource>(
     () => RelatorioPedidosContagemRemoteDataSource(informacoesParaRequest: sl()),
   );

@@ -26,6 +26,23 @@ class FakeMidiasRepo implements IReferenciaMidiasRepository {
   FakeMidiasRepo(this.midias);
 
   @override
+  Future<void> registrarFotoUrl({
+    required int referenciaId,
+    required String url,
+    String? urlMiniatura,
+    required String origem,
+  }) async {}
+
+  @override
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  }) async =>
+      midia(0, origem: origem);
+
+  @override
   Future<List<ReferenciaMidia>> recuperarReferenciasMidias(int referenciaId) async => midias;
 
   @override

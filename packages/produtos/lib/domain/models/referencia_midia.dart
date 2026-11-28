@@ -1,6 +1,7 @@
 abstract class ReferenciaMidia {
   int get id;
   String get url;
+  String? get urlMiniatura;
   int get referenciaId;
   bool get ePrincipal;
   bool get ePublica;
@@ -9,12 +10,13 @@ abstract class ReferenciaMidia {
   String? get cor;
   String? get estampa;
 
-  /// 'site' (vitrine/e-commerce) ou 'fornecedor' (uso interno: nunca pública nem capa).
+  /// 'site' | 'fornecedor' | 'chegada'
   String get origem;
 
   factory ReferenciaMidia.create({
     required int id,
     required String url,
+    String? urlMiniatura,
     required int referenciaId,
     required bool ePrincipal,
     required bool ePublica,
@@ -31,6 +33,8 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
   final int id;
   @override
   final String url;
+  @override
+  final String? urlMiniatura;
   @override
   final int referenciaId;
   @override
@@ -52,6 +56,7 @@ class _ReferenciaMidiaImpl implements ReferenciaMidia {
   _ReferenciaMidiaImpl({
     required this.id,
     required this.url,
+    this.urlMiniatura,
     required this.referenciaId,
     required this.ePrincipal,
     required this.ePublica,
@@ -67,4 +72,9 @@ enum TipoReferenciaMidia { imagem, video, documento }
 
 extension ReferenciaMidiaOrigem on ReferenciaMidia {
   bool get doFornecedor => origem == 'fornecedor';
+  bool get daCHegada => origem == 'chegada';
+  bool get doSite => origem == 'site';
+
+  /// URL preferencial para miniatura: urlMiniatura se disponível, senão url.
+  String get urlParaMiniatura => urlMiniatura ?? url;
 }

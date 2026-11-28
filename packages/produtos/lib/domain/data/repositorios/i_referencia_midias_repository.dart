@@ -35,4 +35,20 @@ abstract class IReferenciaMidiasRepository {
     required int referenciaId,
     required int id,
   });
+
+  /// Registra URL de foto tirada na chegada (sem upload de arquivo).
+  Future<void> registrarFotoUrl({
+    required int referenciaId,
+    required String url,
+    String? urlMiniatura,
+    required String origem,
+  });
+
+  /// Foto interna da contagem (origem 'fornecedor' ou 'chegada'); exige PRDFM015.
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  });
 }

@@ -7,4 +7,10 @@ abstract class IReferenciaMidiasRepository {
     List<dynamic> midias,
   ); // dynamic para aceitar ReferenciaMidiaUpload
   Future<void> removerMidia(int referenciaId, int midiaId);
+  Future<void> registrarFotoUrl({
+    required int referenciaId,
+    required String url,
+    String? urlMiniatura,
+    required String origem,
+  });
 }

@@ -1,8 +1,13 @@
 import 'package:comercial/domain/models/pedido_entrada.dart';
+import 'package:comercial/domain/models/referencia_esperada.dart';
+import 'package:comercial/domain/use_cases/pedido_entrada/pedido_entrada_use_cases.dart';
 import 'package:comercial/presentation/blocs/pedido_entrada_bloc/pedido_entrada_bloc.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/foto_ampliada_dialog.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/fotos_livres.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/painel_contagem_grade.dart';
 import 'package:core/bloc.dart';
+import 'package:core/injecoes.dart';
 import 'package:core/presentation.dart';
 import 'package:core/seletores.dart';
 import 'package:core/tema.dart';
@@ -35,6 +40,37 @@ class _PassoAssociarState extends State<PassoAssociar> {
   /// descrição -> associação feita: só aparece quando o grupo já saiu da lista
   /// (aceita pelo servidor) e guarda o que precisa para desfazer.
   final _associados = <String, _Associado>{};
+
+  /// Esperadas do fornecedor para sugestões de associação.
+  List<ReferenciaEsperada> _esperadas = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarEsperadas();
+  }
+
+  Future<void> _carregarEsperadas() async {
+    try {
+      final lista =
+          await sl<ObterEsperadasEntrada>().call(widget.resumo.pedidoId);
+      if (mounted) setState(() => _esperadas = lista);
+    } catch (_) {
+      // sem sugestões, fluxo segue normalmente
+    }
+  }
+
+  /// Sugestões para um grupo pelo nome/descrição (top-3 por similaridade de nome).
+  List<ReferenciaEsperada> _sugestoes(String descricao) {
+    final termo = semAcento(descricao.trim());
+    if (termo.isEmpty) return const [];
+    return _esperadas
+        .where((e) =>
+            semAcento(e.nome).contains(termo) ||
+            termo.contains(semAcento(e.nome.split(' ').first)))
+        .take(3)
+        .toList();
+  }
 
   Map<String, List<ContagemLivre>> get _grupos {
     final g = <String, List<ContagemLivre>>{};
@@ -178,6 +214,8 @@ class _PassoAssociarState extends State<PassoAssociar> {
                   itens: e.value,
                   salvando: widget.salvando,
                   seletores: widget.seletores,
+                  sugestoes: _sugestoes(e.key),
+                  fotos: widget.resumo.fotosDaDescricao(e.key),
                   onAssociou: (ref, criada) =>
                       _associados[e.key] = _Associado(ref, criada, e.value),
                 ),
@@ -280,6 +318,8 @@ class _GrupoAssociar extends StatefulWidget {
   final List<ContagemLivre> itens;
   final bool salvando;
   final SeletoresEntrada seletores;
+  final List<ReferenciaEsperada> sugestoes;
+  final List<FotoLivre> fotos;
   final void Function(int referenciaId, bool criada) onAssociou;
 
   const _GrupoAssociar({
@@ -288,6 +328,8 @@ class _GrupoAssociar extends StatefulWidget {
     required this.itens,
     required this.salvando,
     required this.seletores,
+    this.sugestoes = const [],
+    this.fotos = const [],
     required this.onAssociou,
   });
 
@@ -300,6 +342,13 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
   bool _naoCadastrada = false;
   int? _referenciaId;
   final bool _podeCriar = PermissaoPorNome.acessoPermitido('PRDFM003');
+
+  void _selecionarSugestao(ReferenciaEsperada e) {
+    setState(() {
+      _referenciaId = e.id;
+      _criar = false;
+    });
+  }
 
   void _associar([int? criadaId]) {
     final ref = criadaId ?? _referenciaId;
@@ -399,6 +448,49 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (widget.sugestoes.isNotEmpty) ...[
+            Text(
+              'Aguardando do fornecedor',
+              style: textos.rotulo.copyWith(color: cores.textoApoio),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 108,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.sugestoes.length,
+                itemBuilder: (ctx, i) {
+                  final s = widget.sugestoes[i];
+                  final selecionada = _referenciaId == s.id;
+                  return _CardSugestao(
+                    key: Key('sugestao_${s.id}'),
+                    esperada: s,
+                    selecionada: selecionada,
+                    onSelecionar: () => _selecionarSugestao(s),
+                    onAmplifcarFoto: s.fotos.isEmpty
+                        ? null
+                        : (indice) => showFotoAmpliada(
+                              context,
+                              referenciaNome: s.nome,
+                              referenciaCodigo: 'REF ${s.id}',
+                              fotos: s.fotos,
+                              indiceInicial: indice,
+                              onAssociar: () => _selecionarSugestao(s),
+                            ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (widget.fotos.isNotEmpty) ...[
+            FotosLivres(
+              descricao: widget.descricao,
+              fotos: widget.fotos,
+              tamanho: 88,
+            ),
+            const SizedBox(height: 8),
+          ],
           Text(widget.descricao,
               style: textos.corpo.copyWith(fontWeight: FontWeight.w600)),
           Text('$resumo · ${qtd(pecas)} peças', style: textos.apoio),
@@ -460,10 +552,102 @@ class _GrupoAssociarState extends State<_GrupoAssociar> {
                       : _referenciaId != null
                           ? _associar
                           : null,
-              child: Text(_criar ? 'Criar referência nova' : 'Associar'),
+              child: Text(_criar
+                  ? 'Criar referência nova'
+                  : _referenciaId != null
+                      ? 'ASSOCIAR A REF $_referenciaId'
+                      : 'Associar'),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Card de sugestão do fornecedor (rolagem horizontal em _GrupoAssociar).
+class _CardSugestao extends StatelessWidget {
+  final ReferenciaEsperada esperada;
+  final bool selecionada;
+  final VoidCallback onSelecionar;
+  final void Function(int indice)? onAmplifcarFoto;
+
+  const _CardSugestao({
+    super.key,
+    required this.esperada,
+    required this.selecionada,
+    required this.onSelecionar,
+    this.onAmplifcarFoto,
+  });
+
+  static const double _fotoLado = 88.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = context.sivColors;
+    final textos = context.sivTextos;
+    final foto = esperada.fotos.isNotEmpty ? esperada.fotos.first : null;
+
+    return GestureDetector(
+      onTap: onSelecionar,
+      child: Container(
+        width: 96,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(SivDimensoes.raio),
+          border: Border.all(
+            color: selecionada
+                ? Theme.of(context).colorScheme.primary
+                : cores.hairline,
+            width: selecionada ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: foto != null && onAmplifcarFoto != null
+                  ? () => onAmplifcarFoto!(0)
+                  : onSelecionar,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(SivDimensoes.raio - 1),
+                ),
+                child: foto != null
+                    ? Image.network(
+                        foto.urlParaMiniatura,
+                        width: 96,
+                        height: _fotoLado,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => SizedBox(
+                          width: 96,
+                          height: _fotoLado,
+                          child: Icon(Icons.image_outlined,
+                              color: cores.textoApoio),
+                        ),
+                      )
+                    : Container(
+                        width: 96,
+                        height: _fotoLado,
+                        color: cores.hairline,
+                        child: const Icon(Icons.camera_alt_outlined,
+                            color: Color(0xFFFFA000)),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Text(
+                esperada.nome,
+                style: textos.apoio.copyWith(
+                  fontWeight:
+                      selecionada ? FontWeight.w700 : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

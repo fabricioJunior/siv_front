@@ -6,6 +6,8 @@ import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'permissoes_fake.dart';
+
 const _aurora = ReferenciaEsperada(
   id: 1,
   nome: 'Áurora',
@@ -33,7 +35,8 @@ Widget _app(Widget child) => MaterialApp(
     );
 
 void main() {
-  setUp(() {
+  setUp(() async {
+    await registrarPermissoes({'PRDFM015'});
     nomesCor.clear();
     nomesTamanho.clear();
   });
@@ -94,7 +97,7 @@ void main() {
         contadoPorReferencia: const {},
         onEscolher: (_) {},
       )));
-      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.camera_alt_outlined), findsOneWidget);
     });
   });
 

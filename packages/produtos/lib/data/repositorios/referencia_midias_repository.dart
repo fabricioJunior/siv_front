@@ -84,6 +84,21 @@ class ReferenciaMidiasRepository implements IReferenciaMidiasRepository {
   }
 
   @override
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  }) {
+    return referenciaMidiasRemoteDataSource.registrarFotoContagem(
+      bytes: bytes,
+      fileName: fileName,
+      referenciaId: referenciaId,
+      origem: origem,
+    );
+  }
+
+  @override
   Future<void> registrarFotoUrl({
     required int referenciaId,
     required String url,

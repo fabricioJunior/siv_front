@@ -40,4 +40,13 @@ abstract class IReferenciaMidiasRemoteDataSource {
     String? urlMiniatura,
     required String origem,
   });
+
+  /// Foto interna da contagem (origem 'fornecedor' ou 'chegada'): exige a
+  /// permissão PRDFM015, nunca é pública nem capa.
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  });
 }

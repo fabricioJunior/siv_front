@@ -43,4 +43,12 @@ abstract class IReferenciaMidiasRepository {
     String? urlMiniatura,
     required String origem,
   });
+
+  /// Foto interna da contagem (origem 'fornecedor' ou 'chegada'); exige PRDFM015.
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  });
 }

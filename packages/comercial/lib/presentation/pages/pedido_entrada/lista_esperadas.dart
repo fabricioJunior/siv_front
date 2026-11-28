@@ -1,12 +1,10 @@
 import 'package:comercial/domain/models/referencia_esperada.dart';
+import 'package:comercial/presentation/pages/pedido_entrada/adicionar_foto_contagem.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/componentes_entrada.dart';
 import 'package:comercial/presentation/pages/pedido_entrada/foto_ampliada_dialog.dart';
 import 'package:core/borda_tracejada.dart';
-import 'package:core/imagens.dart';
-import 'package:core/injecoes.dart';
 import 'package:core/tema.dart';
 import 'package:flutter/material.dart';
-import 'package:produtos/domain/data/repositorios/i_referencia_midias_repository.dart' as midias_repo;
 import 'package:produtos/models.dart';
 
 enum FiltroEsperadas { todas, primeiraEntrada, reposicao }
@@ -60,40 +58,10 @@ class _ListaEsperadasState extends State<ListaEsperadas> {
       };
 
   Future<void> _tirarFoto(BuildContext context, ReferenciaEsperada e) async {
-    final imagens = await showSelecionarImagemModal(context);
-    if (imagens == null || imagens.isEmpty) return;
-    final imagem = imagens.first;
-    if (imagem.url == null && imagem.bytes == null) return;
-
-    // Para foto tirada na câmera só temos bytes/path local — sem upload de arquivo,
-    // o backend espera uma URL já hospedada. Como o endpoint novo aceita apenas URL,
-    // exibimos a imagem local até o próximo carregamento.
-    // ponytail: foto armazenada só localmente (sem upload de bytes); upgrade quando
-    // o app tiver serviço de upload de arquivos para S3/CDN.
-    final urlLocal = imagem.path ?? '';
-    final fotoLocal = ReferenciaMidiaSimples(
-      url: urlLocal,
-      origem: 'chegada',
-    );
-
-    setState(() {
-      _fotosChegada.putIfAbsent(e.id, () => []).add(fotoLocal);
-    });
-
-    widget.onFotoChegadaRegistrada?.call(e.id, fotoLocal);
-
-    // Tenta registrar no backend se tiver URL (não bytes locais).
-    if (imagem.url != null && imagem.url!.isNotEmpty) {
-      try {
-        await sl<midias_repo.IReferenciaMidiasRepository>().registrarFotoUrl(
-          referenciaId: e.id,
-          url: imagem.url!,
-          origem: 'chegada',
-        );
-      } catch (_) {
-        // falha silenciosa: foto já visível localmente
-      }
-    }
+    final foto = await adicionarFotoContagem(context, e.id);
+    if (foto == null || !mounted) return;
+    setState(() => _fotosChegada.putIfAbsent(e.id, () => []).add(foto));
+    widget.onFotoChegadaRegistrada?.call(e.id, foto);
   }
 
   @override
@@ -391,6 +359,14 @@ class _MiniaturasEsperada extends StatelessWidget {
   Widget build(BuildContext context) {
     final cores = context.sivColors;
 
+    if (fotos.isEmpty && !podeAdicionarFotoContagem) {
+      return SizedBox(
+        width: _lado,
+        height: _lado,
+        child: Icon(Icons.image_not_supported_outlined,
+            color: cores.textoDesabilitado),
+      );
+    }
     if (fotos.isEmpty) {
       // atalho tracejado âmbar para tirar foto
       return GestureDetector(
@@ -424,7 +400,7 @@ class _MiniaturasEsperada extends StatelessWidget {
     final foto = fotos.first;
     final temMais = fotos.length > 1;
 
-    return GestureDetector(
+    final miniatura = GestureDetector(
       onTap: () => onAmplifcar(0),
       child: Stack(
         children: [
@@ -499,6 +475,25 @@ class _MiniaturasEsperada extends StatelessWidget {
             ),
         ],
       ),
+    );
+
+    if (!podeAdicionarFotoContagem) return miniatura;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        miniatura,
+        TextButton.icon(
+          key: const Key('esperada_mais_foto'),
+          onPressed: onTirarFoto,
+          icon: const Icon(Icons.add_a_photo_outlined, size: 14),
+          label: const Text('FOTO', style: TextStyle(fontSize: 10)),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(_lado, 28),
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ],
     );
   }
 }

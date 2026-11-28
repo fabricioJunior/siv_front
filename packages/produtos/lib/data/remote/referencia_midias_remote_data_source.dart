@@ -115,6 +115,24 @@ class ReferenciaMidiasRemoteDataSource extends RemoteDataSourceBase
   }
 
   @override
+  Future<ReferenciaMidia> registrarFotoContagem({
+    required Uint8List bytes,
+    required String fileName,
+    required int referenciaId,
+    required String origem,
+  }) async {
+    final response = await postFile(
+      field: 'file',
+      bytes: bytes,
+      fileName: fileName,
+      fileType: FileType.image,
+      pathParameters: {'referenciaId': referenciaId.toString(), 'id': 'contagem'},
+      body: {'origem': origem},
+    );
+    return ReferenciaMidiaDto.fromJson(response.body);
+  }
+
+  @override
   Future<void> registrarFotoUrl({
     required int referenciaId,
     required String url,
